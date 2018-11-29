@@ -10,11 +10,11 @@
 # *******************************************   LEARNING FUNCTIONS *****************************************************
 '''
 
+* `BayesGLM`
 * `Kohonen`
 * `Hebbian`
 * `ContrastiveHebbian`
 * `Reinforcement`
-* `BayesGLM`
 * `BackPropagation`
 * `TDLearning`
 
@@ -44,11 +44,24 @@ __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'LEARNING_ACTIVATION_FUNCTION','LEARNING_ACTIVATION_INPUT','LEARNING_ACTIVATION_OUTPUT',
            'LEARNING_ERROR_OUTPUT','AUTOASSOCIATIVE']
 
+AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
+
+# Inidices of terms in variable:
 LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
-AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
+
+# Other indices
+WT_MATRIX_SENDERS_DIM = 0
+WT_MATRIX_RECEIVERS_DIM = 1
+
+# Argument and attribute names:
+ACTIVATION_INPUT = 'activation_input'
+ACTIVATION_OUTPUT = 'activation_output'
+ERROR_SIGNAL = 'error_signal'
+ERROR_MATRIX = 'error_matrix'
+
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 
@@ -68,7 +81,7 @@ class LearningFunction(Function_Base):
     Attributes
     ----------
 
-    variable : list or np.array
+    variable : list or array
         most LearningFunctions take a list or 2d array that must contain three items:
 
         * the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);
@@ -137,6 +150,342 @@ class LearningFunction(Function_Base):
                                     format(LEARNING_RATE, self.name, learning_rate))
 
 
+class BayesGLM(LearningFunction):
+    """
+    BayesGLM(                   \
+        default_variable=None,  \
+        mu_0=0,                 \
+        sigma_0=1,              \
+        gamma_shape_0=1,        \
+        gamma_size_0=1,         \
+        params=None,            \
+        prefs=None)
+
+    Use Bayesian linear regression to find means and distributions of weights that predict dependent variable(s).
+
+    `function <BayesGLM.function>` uses a normal linear model:
+
+     .. math::
+        dependent\ variable(s) = predictor(s)\ \Theta + \epsilon,
+
+     with predictor(s) in `variable <BayesGLM.variable>`\[0] and dependent variable(s) in `variable
+     <BayesGLM.variable>`\[1], and a normal-gamma prior distribution of weights (:math:`\Theta`), to update
+     the weight distribution parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n
+     <BayesGLM.gamma_shape_n>`, and `gamma_size_n <BayesGLM.gamma_size_n>`, and returns an array of prediction
+     weights sampled from the multivariate normal-gamma distribution [based on Falk Lieder's BayesianGLM.m,
+     adapted for Python by Yotam Sagiv and for PsyNeuLink by Jon Cohen; useful reference:
+    `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
+
+    .. hint::
+       The **mu_0** or **sigma_0** arguments of the consructor can be used in place of **default_variable** to define
+       the size of the predictors array and, correspondingly, the weights array returned by the function (see
+       **Parameters** below).
+
+    Arguments
+    ---------
+
+    default_variable : 3d array : default None
+        first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors, one for
+        each sample to be fit;  second item must be a 2d array of equal length to the first item, with a 1d array
+        containing a scalar that is the dependent (to-be-predicted) value for the corresponding sample in the first
+        item.  If `None` is specified, but either **mu_0** or **sigma_0 is specified, then the they are used to
+        determine the shape of `variable <BayesGLM.variable>`.  If neither **mu_0** nor **sigma_0** are specified,
+        then the shape of `variable <BayesGLM.variable>` is determined by the first call to its `function
+        <BayesGLM.function>`, as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`,
+        `gamma_shape_prior <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
+
+    mu_0 : int, float or 1d array : default 0
+        specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
+        the prediction weights returned by the function).  If a scalar is specified, the same value will be used
+        for all elements of `mu_prior <BayesGLM.mu_prior>`;  if it is an array, it must be the same length as
+        the predictor array(s) in axis 0 of **default_variable**.  If **default_variable** is not specified, the
+        specification for **mu_0** is used to determine the shape of `variable <BayesGLM.variable>` and
+        `sigma_prior <BayesGLM.sigma_prior>`.
+
+    sigma_0 : int, float or 1d array : default 0
+        specifies initial value of `sigma_prior <BayesGLM.Lambda_prior>` (the prior for the variance of the distribution
+        for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
+        all elements of `Lambda_prior <BayesGLM.Lambda_prior>`;  if it is an array, it must be the same length as the
+        predictor array(s) in axis 0 of **default_variable**.  If neither **default_variable** nor **mu_0** is
+        specified, the specification for **sigma_0** is used to determine their shapes.
+
+    gamma_shape_0 : int or float : default 1
+        specifies the shape of the gamma distribution from which samples of the weights are drawn (see documentation
+        for `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
+
+    gamma_size_0 : int or float : default 1
+        specifies the size of the gamma distribution from which samples of the weights are drawn (see documentation for
+        `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 3d array
+        samples used to update parameters of prediction weight distributions.
+        variable[0] is a 2d array of predictor vectors, all of the same length;
+        variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.
+
+    mu_0 : int, float or 2d array
+        determines the initial prior(s) for the means of the distributions of the prediction weights;
+        if it is a scalar, that value is assigned as the priors for all means.
+
+    mu_prior : 2d array
+        current priors for the means of the distributions of the predictions weights.
+
+    mu_n : 2d array
+        current means for the distributions of the prediction weights.
+
+    sigma_0 : int, float or 2d array
+        value used to determine the initial prior(s) for the variances of the distributions of the prediction
+        weights; if it is a scalar, that value is assigned as the priors for all variances.
+
+    Lambda_prior :  2d array
+        current priors for the variances of the distributions of the predictions weights.
+
+    Lambda_n :  2d array
+        current variances for the distributions of the prediction weights.
+
+    gamma_shape_0 : int or float
+        determines the initial value used for the shape parameter of the gamma distribution used to sample the
+        prediction weights.
+
+    gamma_shape_prior : int or float
+        current prior for the shape parameter of the gamma distribution used to sample the prediction weights.
+
+    gamma_shape_n : int or float
+        current value of the shape parameter of the gamma distribution used to sample the prediction weights.
+
+    gamma_size_0 : int or float
+        determines the initial value used for the size parameter of the gamma distribution used to sample the
+        prediction weights.
+
+    gamma_size_prior : int or float
+        current prior for the size parameter of the gamma distribution used to sample the prediction weights.
+
+    gamma_size_n : 2d array with single scalar value
+        current value of the size parameter of the gamma distribution used to sample the prediction weights.
+
+    weights_sample : 1d array
+        last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
+        `function <BayesGLM.function>`.
+
+    owner : Component
+        `Mechanism <Mechanism>` to which the Function belongs.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+    class Params(LearningFunction.Params):
+        variable = Param([np.array([0, 0, 0]), np.array([0])], read_only=True)
+        value = Param(np.array([0]), read_only=True, aliases=['sample_weights'])
+
+        Lambda_0 = 0
+        Lambda_prior = 0
+        Lambda_n = 0
+
+        mu_0 = 0
+        mu_prior = 0
+        mu_n = 0
+
+        sigma_0 = 1
+
+        gamma_shape_0 = 1
+        gamma_shape_n = 1
+        gamma_shape_prior = 1
+
+        gamma_size_0 = 1
+        gamma_size_n = 1
+        gamma_size_prior = 1
+
+    def __init__(self,
+                 default_variable = None,
+                 mu_0=0,
+                 sigma_0=1,
+                 gamma_shape_0=1,
+                 gamma_size_0=1,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        self.user_specified_default_variable = default_variable
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mu_0=mu_0,
+                                                  sigma_0=sigma_0,
+                                                  gamma_shape_0=gamma_shape_0,
+                                                  gamma_size_0=gamma_size_0,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def _handle_default_variable(self, default_variable=None, size=None):
+
+        # If default_variable was not specified by user...
+        if default_variable is None and size in {None, NotImplemented}:
+            #  but mu_0 and/or sigma_0 was specified as an array...
+            if isinstance(self.mu_0, (list, np.ndarray)) or isinstance(self.sigma_0, (list, np.ndarray)):
+                # if both are specified, make sure they are the same size
+                if (isinstance(self.mu_0, (list, np.ndarray))
+                        and isinstance(self.sigma_0, (list, np.ndarray))
+                        and len(self.mu_0) != len(self.self.sigma_0)):
+                    raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
+                                        format(repr('mu_0'), len(self.mu_0),
+                                                    repr('sigma_0'), len(self.self.sigma_0),
+                                                         self.__class.__.__name__))
+                # allow their size to determine the size of variable
+                if isinstance(self.mu_0, (list, np.ndarray)):
+                    default_variable = [np.zeros_like(self.mu_0), np.zeros((1,1))]
+                else:
+                    default_variable = [np.zeros_like(self.sigma_0), np.zeros((1,1))]
+
+        return super()._handle_default_variable(default_variable=default_variable, size=size)
+
+    def initialize_priors(self):
+        '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
+        `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
+        to their initial (_0) values, and assign current (_n) values to the priors'''
+
+        variable = np.array(self.instance_defaults.variable)
+        variable = self.instance_defaults.variable
+        if np.array(variable).dtype != object:
+            variable = np.atleast_2d(variable)
+
+        n = len(variable[0])
+
+        if isinstance(self.mu_0, (int, float)):
+            self.mu_prior = np.full((n, 1),self.mu_0)
+        else:
+            if len(self.mu_0) != n:
+                raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
+                                    format(len(self.mu_0), n))
+            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
+
+        if isinstance(self.sigma_0, (int, float)):
+            Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
+        else:
+            if len(self.sigma_0) != n:
+                raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
+                                    format(len(self.sigma_0), n))
+            Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
+        self.Lambda_prior = Lambda_0
+
+        # before we see any data, the posterior is the prior
+        self.mu_n = self.mu_prior
+        self.Lambda_n = self.Lambda_prior
+        self.gamma_shape_n = self.gamma_shape_0
+        self.gamma_size_n = self.gamma_size_0
+
+    def reinitialize(self, *args):
+        # If variable passed during execution does not match default assigned during initialization,
+        #    reassign default and re-initialize priors
+        if DEFAULT_VARIABLE in args[0]:
+            self.instance_defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
+                                                        np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
+            self.initialize_priors()
+
+    def function(
+        self,
+        variable=None,
+        execution_id=None,
+        params=None,
+        context=None):
+        '''
+
+        Arguments
+        ---------
+
+        variable : 2d or 3d array : default ClassDefaults.variable
+           if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
+           be a 1d array containing the dependent variable to be predicted by the predictors;
+           if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
+           1d arrays of scalar predictors, and the second item be a 2d array containing 1d arrays each of which
+           contains a scalar dependent variable for the corresponding predictor vector.
+
+        params : Dict[param keyword: param value] : default None
+           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+           function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+           arguments of the constructor.
+
+        Returns
+        -------
+
+        sample weights : 1d array
+            array of weights drawn from updated weight distributions.
+
+        '''
+
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            self.initialize_priors()
+
+        # # MODIFIED 10/26/18 OLD:
+        # # If variable passed during execution does not match default assigned during initialization,
+        # #    reassign default and re-initialize priors
+        # elif np.array(variable).shape != self.instance_defaults.variable.shape:
+        #     self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
+        #     self.initialize_priors()
+        # MODIFIED 10/26/18 END
+
+        # Today's prior is yesterday's posterior
+        Lambda_prior = self.get_current_function_param('Lambda_n', execution_id)
+        mu_prior = self.get_current_function_param('mu_n', execution_id)
+        gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
+        gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
+
+        variable = self._check_args(
+            [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
+            execution_id,
+            params,
+            context
+        )
+        predictors = variable[0]
+        dependent_vars = variable[1]
+
+        # online update rules as per the given reference
+        Lambda_n = (predictors.T @ predictors) + Lambda_prior
+        mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
+        gamma_shape_n = gamma_shape_prior + dependent_vars.shape[1]
+        gamma_size_n = gamma_size_prior + (dependent_vars.T @ dependent_vars) \
+            + (mu_prior.T @ Lambda_prior @ mu_prior) \
+            - (mu_n.T @ Lambda_n @ mu_n)
+
+        self.parameters.Lambda_prior.set(Lambda_prior, execution_id)
+        self.parameters.mu_prior.set(mu_prior, execution_id)
+        self.parameters.gamma_shape_prior.set(gamma_shape_prior, execution_id)
+        self.parameters.gamma_size_prior.set(gamma_size_prior, execution_id)
+
+        self.parameters.Lambda_n.set(Lambda_n, execution_id)
+        self.parameters.mu_n.set(mu_n, execution_id)
+        self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
+        self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
+
+        return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
+
+    def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n):
+        '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
+        `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
+        <BayesGLM.gamma_size_n>`.'''
+        phi = np.random.gamma(gamma_shape_n / 2, gamma_size_n / 2)
+        return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
+
+
 class Kohonen(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Kohonen(                       \
@@ -177,10 +526,10 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable: List[array(float64), array(float64), 2d np.array[[float64]]] : default ClassDefaults.variable
+    variable: List[array(float64), array(float64), 2d array[[float64]]] : default ClassDefaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
-    learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
+    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <Kohonen.function>`; supersedes any specification  for the
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Kohonen.learning_rate>` for details).
@@ -206,17 +555,17 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     Attributes
     ----------
 
-    variable: List[array(float64), array(float64), 2d np.array[[float64]]]
+    variable: List[array(float64), array(float64), 2d array[[float64]]]
         input pattern, array of activation values, and weight matrix  used to generate the weight change matrix
         returned by `function <Kohonen.function>`.
 
-    learning_rate : float, 1d or 2d np.array
+    learning_rate : float, 1d or 2d array
         used by the `function <Kohonen.function>` to scale the weight change matrix returned by the `function
         <Kohonen.function>`.  If specified, it supersedes any learning_rate specified for the `Process
         <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Kohonen.owner>`
-        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d np.array, it is
+        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
         multiplied Hadamard (elementwise) by the `variable` <Kohonen.variable>` before calculating the weight change
-        matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
+        matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
         `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the `owner
         <Kohonen.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
         for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
@@ -348,7 +697,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : np.array or List[1d array, 1d array, 2d array] : default ClassDefaults.variable
+        variable : array or List[1d array, 1d array, 2d array] : default ClassDefaults.variable
            input pattern, array of activation values, and matrix used to calculate the weights changes.
 
         params : Dict[param keyword: param value] : default None
@@ -435,7 +784,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d np.array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default ClassDefaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -444,7 +793,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         in `variable <Hebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
+    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Hebbian.learning_rate>` for details).
@@ -465,7 +814,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     Attributes
     ----------
 
-    variable: 1d np.array
+    variable: 1d array
         activation values, the pair-wise products of which are used to generate the weight change matrix returned by
         the `function <Hebbian.function>`.
 
@@ -475,13 +824,13 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         `variable <Hebbian.variable>`.
     COMMENT
 
-    learning_rate : float, 1d or 2d np.array
+    learning_rate : float, 1d or 2d array
         used by the `function <Hebbian.function>` to scale the weight change matrix returned by the `function
         <Hebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
         <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Hebbian.owner>`
-        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d np.array, it is
+        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
         multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight change
-        matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
+        matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
         `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the `owner
         <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
         for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
@@ -564,7 +913,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : List[number] or 1d np.array : default ClassDefaults.variable
+        variable : List[number] or 1d array : default ClassDefaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
@@ -654,7 +1003,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d np.array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default ClassDefaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -663,7 +1012,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         in `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
+    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <ContrastiveHebbian.function>`; supersedes any specification
         for the `Process` and/or `System` to which the function's `owner <ContrastiveHebbian.owner>` belongs (see
         `learning_rate <ContrastiveHebbian.learning_rate>` for details).
@@ -684,7 +1033,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     Attributes
     ----------
 
-    variable: 1d np.array
+    variable: 1d array
         activation values, the pair-wise products of which are used to generate the weight change matrix returned by
         the `function <ContrastiveHebbian.function>`.
 
@@ -694,13 +1043,13 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
-    learning_rate : float, 1d or 2d np.array
+    learning_rate : float, 1d or 2d array
         used by the `function <ContrastiveHebbian.function>` to scale the weight change matrix returned by the `function
         <ContrastiveHebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
         <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner
         <ContrastiveHebbian.owner>` belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it
-        is a 1d np.array, it is multiplied Hadamard (elementwise) by the `variable` <ContrastiveHebbian.variable>`
-        before calculating the weight change matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by
+        is a 1d array, it is multiplied Hadamard (elementwise) by the `variable` <ContrastiveHebbian.variable>`
+        before calculating the weight change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by
         the weight change matrix; if it is `None`, then the `learning_rate <Process.learning_rate>` specified for the
         Process to which the `owner <ContrastiveHebbian.owner>` belongs is used;  and, if that is `None`, then the
         `learning_rate <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
@@ -860,6 +1209,7 @@ def _error_signal_getter(owning_component=None, execution_id=None):
     return owning_component.parameters.variable.get(execution_id)[LEARNING_ERROR_OUTPUT]
 
 
+
 class Reinforcement(LearningFunction):  # -----------------------------------------------------------------------------
     """
     Reinforcement(                     \
@@ -869,43 +1219,46 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         name=None,                     \
         prefs=None)
 
-    Implements a function that returns an error term for a single item in an input array, scaled by the learning_rate.
+    Calculate error term for a single item in an input array, scaled by the learning_rate.
 
-    Reinforcement takes an array with a single non-zero value (`activation_output <Reinforcement.activation_output>`),
-    and returns an array of the same length with the single non-zero value replaced by the `error_signal
-    <Reinforcement.error_signal>` scaled by the `learning_rate <Reinforcement.learning_rate>`.
+    `function <Reinforcement.function>` takes an array (`activation_output <Reinforcement.activation_output>`) with
+    only one non-zero value, and returns an array of the same length with the one non-zero value replaced by
+    :math:`\\Delta w` -- the `error_signal <Reinforcement.error_signal>` scaled by the `learning_rate
+    <Reinforcement.learning_rate>`:
+
+    .. math::
+        \\Delta w_i = learning\_rate * error\_signal_i\ if\ activation\_output_i \\neq 0,\ otherwise\ 0
+
     The non-zero item in `activation_output <Reinforcement.activation_output>` can be thought of as the predicted
     likelihood of a stimulus or value of an action, and the `error_signal <Reinforcement.error_signal>` as the error in
     the prediction for that value.
 
+    .. _Reinforcement_Note:
+
     .. note::
        To preserve compatibility with other LearningFunctions:
 
-       * the **variable** argument of both the constructor and calls to the Reinforcement `function
-         <Reinforcement.function>` must have three items, although only the 2nd and 3rd items are used
-         (for the `activation_output <Reinforcement.activation_output>` and `error_signal
-         <Reinforcement.error_signal>` attributes, respectively);
+       * the **variable** argument of both the constructor and calls to `function <Reinforcement.function>`
+         must have three items, although only the 2nd and 3rd items are used; these are referenced by the
+         `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`
+         attributes, respectively (the first item is used by other LearningFunctions as their `activation_input
+         <LearningFunction.activation_input>` attribute).
        ..
-       * the Reinforcement `function <Reinforcement.function>` returns two copies of the error array
+       * `function <Reinforcement.function>` returns two copies of the error array
          (the first is a "place-marker", where a matrix of weights changes is often returned).
 
     Arguments
     ---------
 
-    default_variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+    default_variable : List or 2d array : default ClassDefaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
 
-           * `activation_input <Reinforcement.activation_input>` (1d np.array);
+           * `activation_input <Reinforcement.activation_input>` (1d array) (not used);
 
-           * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value);
+           * `activation_output <Reinforcement.activation_output>` (1d array with only one non-zero value);
 
-           * `error_signal <Reinforcement.error_signal>`  (1d np.array with a single value).
-
-    COMMENT:
-    activation_function : Function or function : SoftMax
-        specifies the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`.
-    COMMENT
+           * `error_signal <Reinforcement.error_signal>`  (1d array with a single scalar element).
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
@@ -928,7 +1281,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     Attributes
     ----------
 
-    variable: 2d np.array
+    variable: 2d array
         specifies three values used as input to the `function <Reinforcement.function>`:
 
             * `activation_input <Reinforcement.activation_input>`,
@@ -937,23 +1290,17 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
             * `error_signal <Reinforcement.error_signal>`.
 
-    activation_input : 1d np.array
+    activation_input : 1d array
         first item of `variable <Reinforcement.variable>`;  this is not used (it is implemented for compatibility
-        with other `LearningFunctions <LearningFunction>`).
+        with other LearningFunctions).
 
-    activation_output : 1d np.array
-        an array containing a single "prediction" or "action" value as one of its elements, the remainder of which
-        are zero.
+    activation_output : 1d array
+        second item of `variable <Reinforcement.variable>`;  contains a single "prediction" or "action" value as one
+        of its elements, the others of which are zero.
 
-    error_signal : 1d np.array
-        contains a single item, specifying the error associated with the non-zero item in `activation_output
-        <Reinforcement.activation_output>`.
-
-    COMMENT:
-    activation_function : Function or function : SoftMax
-        the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
-        return an array with a single non-zero value.
-    COMMENT
+    error_signal : 1d array
+        third item of `variable <Reinforcement.variable>`; contains a single scalar value, specifying the error
+        associated with the non-zero item in `activation_output <Reinforcement.activation_output>`.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -1033,7 +1380,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             if np.count_nonzero(variable[LEARNING_ACTIVATION_OUTPUT]) != 1:
                 raise ComponentError(
-                    "Second item ({}) of variable for {} must be an array with a single non-zero value "
+                    "Second item ({}) of variable for {} must be an array with only one non-zero value "
                     "(if output Mechanism being trained uses softmax,"
                     " its \'output\' arg may need to be set to to PROB)".
                     format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
@@ -1053,31 +1400,21 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  params=None,
                  context=None,
                  **kwargs):
-        """Return an error array for the specified item of activation_output scaled by the learning_rate.
-
-        Returns a 1d error array with a single non-zero value in the same position as the non-zero item
-        in `activation_output <Reinforcement.activation_output>` (2nd item of the **variable** argument),
-        that is the `error_signal <Reinforcement.error_signal>` (3rd item of
-        **variable** argument) scaled by the `learning_rate <Reinforement.learning_rate>`.
-
-        .. note::
-           In order to preserve compatibilty with other `LearningFunctions <LearningFunction>`:
-
-               * **variable** must have three items, although only the 2nd and 3rd are not used;
-               ..
-               * `function <Reinforcement.function>` returns two copies of the error array.
+        """
 
         Arguments
         ---------
 
         variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
-           must have three items that are the values for (in order):
+           must have three items that are (in order):
 
-               * `activation_input <Reinforcement.activation_input>` (not used),
+               * `activation_input <Reinforcement.activation_input>` (not used);
 
-               * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
+               * `activation_output <Reinforcement.activation_output>` (1d array with only one non-zero value);
 
-               * `error_signal <Reinforcement.error_signal>` (1d np.array with a single item).
+               * `error_signal <Reinforcement.error_signal>` (1d array with a single scalar element);
+
+           (see `note <Reinforcement_Note>` above).
 
         params : Dict[param keyword: param value] : default None
            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1087,15 +1424,15 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         Returns
         -------
 
-        error array : List[1d np.array, 1d np.array]
-            Two copies of a 1d array with a single non-zero error term.
+        error array : List[1d array, 1d array]
+            Both 1d arrays are the same, with a single non-zero error term (see `note <Reinforcement_Note>` above).
 
         """
 
         self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        output = self.get_current_function_param('activation_output', execution_id)
-        error = self.get_current_function_param('error_signal', execution_id)
+        output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
+        error = self.get_current_function_param(ERROR_SIGNAL, execution_id)
         learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -1115,351 +1452,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         return [error_array, error_array]
 
 
-class BayesGLM(LearningFunction):
-    """
-    BayesGLM(                   \
-        default_variable=None,  \
-        mu_0=0,                 \
-        sigma_0=1,              \
-        gamma_shape_0=1,        \
-        gamma_size_0=1,         \
-        params=None,            \
-        prefs=None)
-
-    Implements Bayesian linear regression that fits means and distributions of weights to predict dependent variable(s)
-    in `variable <BayesGLM.variable>`\\[1] from predictor vector(s) in `variable <BayesGLM.variable>`\\[0].
-
-    Uses a normal linear model variable[1] = variable[0]\Theta + \epsilon, with normal-gamma prior distribution
-    and returns a vector of prediction weights sampled from the multivariate normal-gamma distribution.
-    [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen;
-    useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
-
-    .. hint::
-       The **mu_0** or **sigma_0** arguments of the consructor can be used in place of **default_variable** to define
-       the size of the predictors array and, correspondingly, the weights array returned by the function (see
-       **Parameters** below).
-
-    Arguments
-    ---------
-
-    default_variable : 3d array : default None
-        first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors, one for
-        each sample to be fit;  second item must be a 2d array of equal length to the first item, with a 1d array
-        containing a scalar that is the dependent (to-be-predicted) value for the corresponding sample in the first
-        item.  If `None` is specified, but either **mu_0** or **sigma_0 is specified, then the they are used to
-        determine the shape of `variable <BayesGLM.variable>`.  If neither **mu_0** nor **sigma_0** are specified,
-        then the shape of `variable <BayesGLM.variable>` is determined by the first call to its `function
-        <BayesGLM.function>`, as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`,
-        `gamma_shape_prior <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
-
-    mu_0 : int, float or 1d array : default 0
-        specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
-        the prediction weights returned by the function).  If a scalar is specified, the same value will be used
-        for all elements of `mu_prior <BayesGLM.mu_prior>`;  if it is an array, it must be the same length as
-        the predictor array(s) in axis 0 of **default_variable**.  If **default_variable** is not specified, the
-        specification for **mu_0** is used to determine the shape of `variable <BayesGLM.variable>` and
-        `sigma_prior <BayesGLM.sigma_prior>`.
-
-    sigma_0 : int, float or 1d array : default 0
-        specifies initial value of `sigma_prior <BayesGLM.Lambda_prior>` (the prior for the variance of the distribution
-        for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
-        all elements of `Lambda_prior <BayesGLM.Lambda_prior>`;  if it is an array, it must be the same length as the
-        predictor array(s) in axis 0 of **default_variable**.  If neither **default_variable** nor **mu_0** is
-        specified, the specification for **sigma_0** is used to determine their shapes.
-
-    gamma_shape_0 : int or float : default 1
-        specifies the shape of the gamma distribution from which samples of the weights are drawn (see documentation
-        for `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
-
-    gamma_size_0 : int or float : default 1
-        specifies the size of the gamma distribution from which samples of the weights are drawn (see documentation for
-        `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : 3d array
-        samples used to update parameters of prediction weight distributions.
-        variable[0] is a 2d array of predictor vectors, all of the same length;
-        variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.
-
-    mu_0 : int, float or 2d np.array
-        determines the initial prior(s) for the means of the distributions of the prediction weights;
-        if it is a scalar, that value is assigned as the priors for all means.
-
-    mu_prior : 2d np.array
-        current priors for the means of the distributions of the predictions weights.
-
-    mu_n : 2d np.array
-        current means for the distributions of the prediction weights.
-
-    sigma_0 : int, float or 2d np.array
-        value used to determine the initial prior(s) for the variances of the distributions of the prediction
-        weights; if it is a scalar, that value is assigned as the priors for all variances.
-
-    Lambda_prior :  2d np.array
-        current priors for the variances of the distributions of the predictions weights.
-
-    Lambda_n :  2d np.array
-        current variances for the distributions of the prediction weights.
-
-    gamma_shape_0 : int or float
-        determines the initial value used for the shape parameter of the gamma distribution used to sample the
-        prediction weights.
-
-    gamma_shape_prior : int or float
-        current prior for the shape parameter of the gamma distribution used to sample the prediction weights.
-
-    gamma_shape_n : int or float
-        current value of the shape parameter of the gamma distribution used to sample the prediction weights.
-
-    gamma_size_0 : int or float
-        determines the initial value used for the size parameter of the gamma distribution used to sample the
-        prediction weights.
-
-    gamma_size_prior : int or float
-        current prior for the size parameter of the gamma distribution used to sample the prediction weights.
-
-    gamma_size_n : 2d array with single scalar value
-        current value of the size parameter of the gamma distribution used to sample the prediction weights.
-
-    function : function
-        updates mean (`mu_n <BayesGLM.mu_n>`) and variance (`Lambda_n <BayesGLM.Lambda_n>`) of weight distributions
-        to improve prediction of of dependent variable sample(s) in `variable <BayesGLM.variable>`\\[1] from
-        predictor vector(s) in `variable <BayesGLM.variable>`\\[1].  Returns a vector of weights `weights_sample
-        <BayesGLM.weights_sample>`) sampled from the weight disributions.
-
-    weights_sample : 1d np.array
-        last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
-        `function <BayesGLM.function>`.
-
-    owner : Component
-        `Mechanism <Mechanism>` to which the Function belongs.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-    """
-    class Params(LearningFunction.Params):
-        variable = Param([np.array([0, 0, 0]), np.array([0])], read_only=True)
-        value = Param(np.array([0]), read_only=True, aliases=['sample_weights'])
-
-        Lambda_0 = 0
-        Lambda_prior = 0
-        Lambda_n = 0
-
-        mu_0 = 0
-        mu_prior = 0
-        mu_n = 0
-
-        sigma_0 = 1
-
-        gamma_shape_0 = 1
-        gamma_shape_n = 1
-        gamma_shape_prior = 1
-
-        gamma_size_0 = 1
-        gamma_size_n = 1
-        gamma_size_prior = 1
-
-    def __init__(self,
-                 default_variable = None,
-                 mu_0=0,
-                 sigma_0=1,
-                 gamma_shape_0=1,
-                 gamma_size_0=1,
-                 params=None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        self.user_specified_default_variable = default_variable
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(mu_0=mu_0,
-                                                  sigma_0=sigma_0,
-                                                  gamma_shape_0=gamma_shape_0,
-                                                  gamma_size_0=gamma_size_0,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
-
-    def _handle_default_variable(self, default_variable=None, size=None):
-
-        # If default_variable was not specified by user...
-        if default_variable is None and size in {None, NotImplemented}:
-            #  but mu_0 and/or sigma_0 was specified as an array...
-            if isinstance(self.mu_0, (list, np.ndarray)) or isinstance(self.sigma_0, (list, np.ndarray)):
-                # if both are specified, make sure they are the same size
-                if (isinstance(self.mu_0, (list, np.ndarray))
-                        and isinstance(self.sigma_0, (list, np.ndarray))
-                        and len(self.mu_0) != len(self.self.sigma_0)):
-                    raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
-                                        format(repr('mu_0'), len(self.mu_0),
-                                                    repr('sigma_0'), len(self.self.sigma_0),
-                                                         self.__class.__.__name__))
-                # allow their size to determine the size of variable
-                if isinstance(self.mu_0, (list, np.ndarray)):
-                    default_variable = [np.zeros_like(self.mu_0), np.zeros((1,1))]
-                else:
-                    default_variable = [np.zeros_like(self.sigma_0), np.zeros((1,1))]
-
-        return super()._handle_default_variable(default_variable=default_variable, size=size)
-
-    def initialize_priors(self):
-        '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
-        `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
-        to their initial (_0) values, and assign current (_n) values to the priors'''
-
-        variable = np.array(self.instance_defaults.variable)
-        variable = self.instance_defaults.variable
-        if np.array(variable).dtype != object:
-            variable = np.atleast_2d(variable)
-
-        n = len(variable[0])
-
-        if isinstance(self.mu_0, (int, float)):
-            self.mu_prior = np.full((n, 1),self.mu_0)
-        else:
-            if len(self.mu_0) != n:
-                raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.mu_0), n))
-            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
-
-        if isinstance(self.sigma_0, (int, float)):
-            Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
-        else:
-            if len(self.sigma_0) != n:
-                raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.sigma_0), n))
-            Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
-        self.Lambda_prior = Lambda_0
-
-        # before we see any data, the posterior is the prior
-        self.mu_n = self.mu_prior
-        self.Lambda_n = self.Lambda_prior
-        self.gamma_shape_n = self.gamma_shape_0
-        self.gamma_size_n = self.gamma_size_0
-
-    def reinitialize(self, *args):
-        # If variable passed during execution does not match default assigned during initialization,
-        #    reassign default and re-initialize priors
-        if DEFAULT_VARIABLE in args[0]:
-            self.instance_defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
-                                                        np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
-            self.initialize_priors()
-
-    def function(
-        self,
-        variable=None,
-        execution_id=None,
-        params=None,
-        context=None
-    ):
-        '''Use predictor(s) and dependent variable(s) in `variable <BayesGLM.variable>` to update weight distribution
-        parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`,
-        and `gamma_size_n <BayesGLM.gamma_size_n>`, and return an array of weights sampled from the distributions.
-
-        Arguments
-        ---------
-
-        variable : 2d or 3d array : default ClassDefaults.variable
-           if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
-           be a 1d array containing the dependent variable to be predicted by the predictors;
-           if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
-           1d arrays of scalar predictors, and the second item be a 2d array containing 1d arrays each of which
-           contains a scalar dependent variable for the corresponding predictor vector.
-
-        params : Dict[param keyword: param value] : default None
-           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-           function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-           arguments of the constructor.
-
-        Returns
-        -------
-
-        sample weights : 1d np.array
-            array of weights drawn from updated weight distributions.
-
-        '''
-
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            self.initialize_priors()
-
-        # # MODIFIED 10/26/18 OLD:
-        # # If variable passed during execution does not match default assigned during initialization,
-        # #    reassign default and re-initialize priors
-        # elif np.array(variable).shape != self.instance_defaults.variable.shape:
-        #     self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
-        #     self.initialize_priors()
-        # MODIFIED 10/26/18 END
-
-        # Today's prior is yesterday's posterior
-        Lambda_prior = self.get_current_function_param('Lambda_n', execution_id)
-        mu_prior = self.get_current_function_param('mu_n', execution_id)
-        gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
-        gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
-
-        variable = self._check_args(
-            [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
-            execution_id,
-            params,
-            context
-        )
-        predictors = variable[0]
-        dependent_vars = variable[1]
-
-        # online update rules as per the given reference
-        Lambda_n = (predictors.T @ predictors) + Lambda_prior
-        mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
-        gamma_shape_n = gamma_shape_prior + dependent_vars.shape[1]
-        gamma_size_n = gamma_size_prior + (dependent_vars.T @ dependent_vars) \
-            + (mu_prior.T @ Lambda_prior @ mu_prior) \
-            - (mu_n.T @ Lambda_n @ mu_n)
-
-        self.parameters.Lambda_prior.set(Lambda_prior, execution_id)
-        self.parameters.mu_prior.set(mu_prior, execution_id)
-        self.parameters.gamma_shape_prior.set(gamma_shape_prior, execution_id)
-        self.parameters.gamma_size_prior.set(gamma_size_prior, execution_id)
-
-        self.parameters.Lambda_n.set(Lambda_n, execution_id)
-        self.parameters.mu_n.set(mu_n, execution_id)
-        self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
-        self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
-
-        return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
-
-    def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n):
-        '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
-        `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
-        <BayesGLM.gamma_size_n>`.'''
-        phi = np.random.gamma(gamma_shape_n / 2, gamma_size_n / 2)
-        return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
-
-
-# Argument names:
-ERROR_MATRIX = 'error_matrix'
-WT_MATRIX_SENDERS_DIM = 0
-WT_MATRIX_RECEIVERS_DIM = 1
-ACTIVATION_INPUT = 'activation_input'
-ACTIVATION_OUTPUT = 'activation_output'
-
 class BackPropagation(LearningFunction):
     """
     BackPropagation(                                     \
@@ -1470,11 +1462,14 @@ class BackPropagation(LearningFunction):
         name=None,                                       \
         prefs=None)
 
-    Implements a `function <BackPropagation.function>` that calculate a matrix of weight changes using the
-    `backpropagation <https://en.wikipedia.org/wiki/Backpropagation>`_
-     (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
-    learning algorithm.  The weight change matrix is computed as:
+    Calculate and return a matrix of weight changes and weighted error signal from arrays of inputs, outputs and error
+    terms.
 
+    `function <BackPropagation.function>` calculates a matrix of weight changes using the
+    `backpropagation <https://en.wikipedia.org/wiki/Backpropagation>`_ (`Generalized Delta Rule
+    <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_) learning algorithm, computed as:
+
+    COMMENT:
         *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate>` * `activation_input
         <BackPropagation.activation_input>` * :math:`\\frac{\delta E}{\delta W}`
 
@@ -1484,7 +1479,7 @@ class BackPropagation(LearningFunction):
 
                  is the derivative of the `error_signal <BackPropagation.error_signal>` with respect to the weights;
 
-               :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\cdot`
+               :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\bullet`
                `error_signal <BackPropagation.error_signal>`
 
                  is the derivative of the error with respect to `activation_output
@@ -1499,27 +1494,50 @@ class BackPropagation(LearningFunction):
 
                  is the derivative of the activation function responsible for generating `activation_output
                  <BackPropagation.activation_output>` at the point that generates each of its entries.
+    COMMENT
+
+        .. math::
+            weight\_change\_matrix = learning\_rate * activation\_input * \\frac{\delta E}{\delta W}
+
+        where
+
+        .. math::
+            \\frac{\delta E}{\delta W} = \\frac{\delta E}{\delta A} * \\frac{\delta A}{\delta W}
+
+        is the derivative of the error_signal with respect to the weights, in which:
+
+          :math:`\\frac{\delta E}{\delta A} = error\_matrix \\bullet error\_signal`
+
+          is the derivative of the error with respect to activation_output (i.e., the weighted contribution to the
+          error_signal of each unit that receives activity from the weight matrix being learned), and
+
+          :math:`\\frac{\delta A}{\delta W} = activation\_derivative\_fct(input=activation\_input,output=activation\_output)`
+
+          is the derivative of the activation function responsible for generating activation_output
+          at the point that generates each of its entries.
 
     The values of `activation_input <BackPropagation.activation_input>`, `activation_output
     <BackPropagation.activation_output>` and  `error_signal <BackPropagation.error_signal>` are specified as
     items of the `variable <BackPropgation.variable>` both in the constructor for the BackPropagation Function,
     and in calls to its `function <BackPropagation.function>`.  Although `error_matrix <BackPropagation.error_matrix>`
     is not specified in the constructor, it is required as an argument of the `function <BackPropagation.function>`;
-    it is assumed that it's value is determined in context at the time of execution (e.g., by a LearningMechanism that
-    uses the BackPropagation LearningFunction).
+    it is assumed that it's value is determined in context at the time of execution (e.g., by a `LearningMechanism`
+    that uses the BackPropagation LearningFunction).
 
-    The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as
-    :math:`\\frac{\delta E}{\delta W}`.
+    The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as the
+    `error_signal <BackPropagation.error_signal>` it receives weighted by the contribution made by each
+    element of `activation_output <BackPropagation.activation_output>` as a function of the
+    `error_matrix <BackPropagation.error_matrix>` :math:`\\frac{\delta E}{\delta W}`.
 
     Arguments
     ---------
 
-    variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+    variable : List or 2d array [length 3 in axis 0] : default ClassDefaults.variable
        specifies a template for the three items provided as the variable in the call to the
        `function <BackPropagation.function>` (in order):
-       `activation_input <BackPropagation.activation_input>` (1d np.array),
-       `activation_output <BackPropagation.activation_output>` (1d np.array),
-       `error_signal <BackPropagation.error_signal>` (1d np.array).
+       `activation_input <BackPropagation.activation_input>` (1d array),
+       `activation_output <BackPropagation.activation_output>` (1d array),
+       `error_signal <BackPropagation.error_signal>` (1d array).
 
     activation_derivative_fct : Function or function
         specifies the derivative for the function of the Mechanism that generates
@@ -1532,7 +1550,7 @@ class BackPropagation(LearningFunction):
     COMMENT
 
     COMMENT:
-    error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
+    error_matrix : List, 2d array, np.matrix, ParameterState, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
         If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
@@ -1560,16 +1578,16 @@ class BackPropagation(LearningFunction):
     Attributes
     ----------
 
-    variable: 2d np.array
+    variable: 2d array
         contains the three values used as input to the `function <BackPropagation.function>`:
        `activation_input <BackPropagation.activation_input>`,
        `activation_output <BackPropagation.activation_output>`, and
        `error_signal <BackPropagation.error_signal>`.
 
-    activation_input : 1d np.array
+    activation_input : 1d array
         the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>`.
 
-    activation_output : 1d np.array
+    activation_output : 1d array
         the output of the function for which the matrix being modified provides the input;
         same as 2nd item of `variable <BackPropagation.variable>`.
 
@@ -1577,12 +1595,12 @@ class BackPropagation(LearningFunction):
         the derivative for the function of the Mechanism that generates
         `activation_output <BackPropagation.activation_output>`.
 
-    error_signal : 1d np.array
+    error_signal : 1d array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>`.
 
-    error_matrix : 2d np.array or ParameterState
+    error_matrix : 2d array or ParameterState
         matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
         is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterState`,
         it refers to the MATRIX parameterState of the `MappingProjection` being learned.
@@ -1597,12 +1615,6 @@ class BackPropagation(LearningFunction):
 
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
-
-    function : function
-         the function that computes the weight change matrix, and returns that along with the
-         `error_signal <BackPropagation.error_signal>` received, weighted by the contribution made by each element of
-         `activation_output <BackPropagation.activation_output>` as a function of the
-         `error_matrix <BackPropagation.error_matrix>`.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -1669,8 +1681,8 @@ class BackPropagation(LearningFunction):
 
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items: "
-                                 "activation_input, activation_output, and error_signal)".
-                                 format(self.name, variable))
+                                 "{}, {}, and {})".
+                                 format(self.name, variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
 
         return variable
 
@@ -1771,20 +1783,20 @@ class BackPropagation(LearningFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms.
-
-        Note that both variable and error_matrix must be specified for the function to execute.
+        """
+        .. note::
+           Both variable and error_matrix must be specified for the function to execute.
 
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3 in axis 0]
+        variable : List or 2d array [length 3 in axis 0]
            must have three items that are the values for (in order):
-           `activation_input <BackPropagation.activation_input>` (1d np.array),
-           `activation_output <BackPropagation.activation_output>` (1d np.array),
-           `error_signal <BackPropagation.error_signal>` (1d np.array).
+           `activation_input <BackPropagation.activation_input>` (1d array),
+           `activation_output <BackPropagation.activation_output>` (1d array),
+           `error_signal <BackPropagation.error_signal>` (1d array).
 
-        error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
+        error_matrix : List, 2d array, np.matrix, ParameterState, or MappingProjection
             matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
             of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
             its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
@@ -1798,14 +1810,10 @@ class BackPropagation(LearningFunction):
         Returns
         -------
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
-
-        weighted error signal : 1d np.array
-            `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
-            `activation_output <BackPropagation.activation_output>` as a function of
-            `error_matrix <BackPropagation.error_matrix>`.
-
+        weight change matrix, weighted error signal : List[2d array, 1d array]
+            the modifications to make to the matrix, `error_signal <BackPropagation.error_signal>` weighted by the
+            contribution made by each element of `activation_output <BackPropagation.activation_output>` as a
+            function of `error_matrix <BackPropagation.error_matrix>`.
         """
 
         self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
@@ -1845,7 +1853,7 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(error_matrix, self.get_current_function_param('error_signal', execution_id))
+        dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, execution_id))
 
         # Derivative of the output activity
         activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
@@ -1862,9 +1870,8 @@ class BackPropagation(LearningFunction):
 
 
 class TDLearning(Reinforcement):
-    """
-    This class is used to implement temporal difference learning via the
-    `Reinforcement` function. See `Reinforcement` for class details.
+    """Implement temporal difference learning using the `Reinforcement` Function
+    (see `Reinforcement` for class details).
     """
     componentName = TDLEARNING_FUNCTION
 
@@ -1889,7 +1896,6 @@ class TDLearning(Reinforcement):
         # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
         # params=params)
         super().__init__(default_variable=default_variable,
-                         # activation_function=activation_function,
                          learning_rate=learning_rate,
                          params=params,
                          owner=owner,
@@ -1899,12 +1905,10 @@ class TDLearning(Reinforcement):
         variable = super(Reinforcement, self)._validate_variable(variable, context)
 
         if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items "
-                                 "(input, output, and error arrays)".format(self.name,
-                                                                            variable))
+            raise ComponentError("Variable for {} ({}) must have three items (input, output, and error arrays)".
+                                 format(self.name, variable))
 
         if len(variable[LEARNING_ERROR_OUTPUT]) != len(variable[LEARNING_ACTIVATION_OUTPUT]):
-            raise ComponentError("Error term does not match the length of the"
-                                 "sample sequence")
+            raise ComponentError("Error term does not match the length of the sample sequence")
 
         return variable

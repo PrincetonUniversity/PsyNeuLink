@@ -16,7 +16,6 @@
 * `Tanh`
 * `ReLU`
 * `Gaussian`
-* `Normal`
 * `SoftMax`
 * `LinearMatrix`
 
@@ -69,7 +68,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
 from psyneulink.core.llvm import helpers
 
 __all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
-           'Gaussian', 'Normal', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
+           'Gaussian', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
 
 BOUNDS = 'bounds'
 MODE = 'mode'
@@ -618,7 +617,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
     .. math::
-        output * (1-output)
+        gain * scale * output * (1-output)
 
     Arguments
     ---------
@@ -883,7 +882,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{1}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(variable+bias-x\_0)+offset)}})^2}
+        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(
+       variable+bias-x\_0)+offset)}})^2}
 
     Arguments
     ---------
@@ -1097,7 +1097,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self.get_current_function_param(OFFSET, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
 
-        # FIX: ASSUMES ALL SCALE IS DEFAULT;  MULTIPLY BY SCALE?
         from math import e
         return gain*scale / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
 
@@ -1290,15 +1289,18 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     .. math::
       scale*\\frac{e^{-\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
 
-    and:
+    where :math:`\\sigma` = `standard_deviation <Gaussian.standard_deviation>`
+
+    .. note::
+        the value returned is deterministic (i.e., the value of the probability density function at variable),
+        not a randomly chosen sample from the Gaussian distribution; for the latter, use `NormalDist` and set
+        `mean <NormalDist.mean>` equal to variable.
 
     `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Logistic.variable>`:
 
     .. math::
 
        \\frac{-(variable-bias)*e^{-\\frac{(variable-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma^{3}}
-
-    where :math:`\\sigma` = `standard_deviation <Gaussian.standard_deviation>`
 
     Arguments
     ---------
@@ -1404,44 +1406,45 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     def get_param_ids(self):
         return STANDARD_DEVIATION, BIAS, SCALE, OFFSET
 
-    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #
-    #     standard_deviation_ptr, builder = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
-    #     bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-    #     scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-    #     offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-    #
-    #     standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
-    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-    #
-    #     exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-    #
-    #     numerator = builder.load(ptri)
-    #     numerator = builder.fsub(bias, numerator)
-    #     numerator = builder.fmul(numerator, numerator)
-    #     numerator = builder.fneg(numerator)
-    #
-    #     denom = builder.fmul(standard_deviation, standard_deviation)
-    #     denom = builder.fmul(2, denom)
-    #     numerator = builder.fdiv(denom, numerator)
-    #     numerator = builder.call(exp_f, [numerator])
-    #
-    #     denom = builder.fmul(2, PI)
-    #     denom = builder.fmul(standard_deviation, denom)
-    #     denom = builder.sqrtpd(denom)
-    #     val = builder.fdiv(denom,numerator)
-    #
-    #     val = builder.fmul(scale, val)
-    #     val = builder.fadd(offset, val)
-    #
-    #     val = builder.fadd(ctx.float_ty(1), val)
-    #     val = builder.fdiv(ctx.float_ty(1), val)
-    #
-    #     builder.store(val, ptro)
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        standard_deviation_ptr, builder = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
+        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+
+        standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+
+        numerator = builder.load(ptri)
+        numerator = builder.fsub(bias, numerator)
+        numerator = builder.fmul(numerator, numerator)
+        numerator = builder.fneg(numerator)
+
+        denom = builder.fmul(standard_deviation, standard_deviation)
+        denom = builder.fmul(2, denom)
+        numerator = builder.fdiv(denom, numerator)
+        numerator = builder.call(exp_f, [numerator])
+
+        from math import pi
+        denom = ctx.float_ty(2 * pi)
+        denom = builder.fmul(standard_deviation, denom)
+        denom = builder.sqrtpd(denom)
+        val = builder.fdiv(denom,numerator)
+
+        val = builder.fmul(scale, val)
+        val = builder.fadd(offset, val)
+
+        val = builder.fadd(ctx.float_ty(1), val)
+        val = builder.fdiv(ctx.float_ty(1), val)
+
+        builder.store(val, ptro)
 
     def function(self,
                  variable=None,
@@ -1511,125 +1514,126 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         return self.convert_output_type(result)
 
 
-class Normal(TransferFunction):  # -----------------------------------------------------------------------------------
-    """
-    Normal(              \
-         default_variable, \
-         variance=1.0,     \
-         bias=0.0,         \
-         scale=1.0,        \
-         offset=0.0,       \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
-
-    .. _Normal_Function:
-
-    Sample from the normal distribution for each element of `variable <Normal.variable>`, centered on each
-    element's value.
-
-    Arguments
-    ---------
-
-    default_variable : number or array : default ClassDefaults.variable
-        specifies a template for the value used as the mean for the Guassian transform.
-
-    variance : float : default 1.0
-        specifies "width" of the Normal transform applied to each element of `variable <Normal.variable>`.
-
-    bias : float : default 0.0
-        value to add to each element after applying height and before applying Normal transform.
-
-    scale : float : default 1.0
-        value by which to multiply each element after applying Normal transform.
-
-    offset : float : default 0.0
-        value to add to each element after applying Normal transform and `scale <Normal.scale>`.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        value used as the mean of the Normal transform.
-
-    variance : float : default 1.0
-        variance used for Normal transform.
-
-    bias : float : default 0.0
-        value added to each element after applying height and before applying the Normal transform.
-
-    scale : float : default 0.0
-        value by which each element is multiplied after applying the Normal transform.
-
-    offset : float : default 0.0
-        value added to each element after applying the Normal transform and scale.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = NORMAL_FUNCTION
-    # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
-
-    bounds = (None,None)
-    multiplicative_param = VARIANCE
-    additive_param = BIAS
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    class Params(TransferFunction.Params):
-        variance = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Param(0.0, modulable=True)
-        offset = Param(0.0, modulable=True)
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 variance: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
-                 params=None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(variance=variance,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+# Another TransferFunction (e.g. Linear or Logistic) with noise=NormalDist should be used in place of this:
+# class Normal(TransferFunction):  # -----------------------------------------------------------------------------------
+#     """
+#     Normal(              \
+#          default_variable, \
+#          variance=1.0,     \
+#          bias=0.0,         \
+#          scale=1.0,        \
+#          offset=0.0,       \
+#          params=None,      \
+#          owner=None,       \
+#          name=None,        \
+#          prefs=None        \
+#          )
+#
+#     .. _Normal_Function:
+#
+#     Sample from the normal distribution for each element of `variable <Normal.variable>`, centered on each
+#     element's value.
+#
+#     Arguments
+#     ---------
+#
+#     default_variable : number or array : default ClassDefaults.variable
+#         specifies a template for the value used as the mean for the Guassian transform.
+#
+#     variance : float : default 1.0
+#         specifies "width" of the Normal transform applied to each element of `variable <Normal.variable>`.
+#
+#     bias : float : default 0.0
+#         value to add to each element after applying height and before applying Normal transform.
+#
+#     scale : float : default 1.0
+#         value by which to multiply each element after applying Normal transform.
+#
+#     offset : float : default 0.0
+#         value to add to each element after applying Normal transform and `scale <Normal.scale>`.
+#
+#     params : Dict[param keyword: param value] : default None
+#         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+#         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+#         arguments of the constructor.
+#
+#     owner : Component
+#         `component <Component>` to which to assign the Function.
+#
+#     name : str : default see `name <Function.name>`
+#         specifies the name of the Function.
+#
+#     prefs : PreferenceSet or specification dict : default Function.classPreferences
+#         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+#
+#     Attributes
+#     ----------
+#
+#     variable : number or array
+#         value used as the mean of the Normal transform.
+#
+#     variance : float : default 1.0
+#         variance used for Normal transform.
+#
+#     bias : float : default 0.0
+#         value added to each element after applying height and before applying the Normal transform.
+#
+#     scale : float : default 0.0
+#         value by which each element is multiplied after applying the Normal transform.
+#
+#     offset : float : default 0.0
+#         value added to each element after applying the Normal transform and scale.
+#
+#     owner : Component
+#         `component <Component>` to which the Function has been assigned.
+#
+#     name : str
+#         the name of the Function; if it is not specified in the **name** argument of the constructor, a
+#         default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+#
+#     prefs : PreferenceSet or specification dict : Function.classPreferences
+#         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+#         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+#         <LINK>` for details).
+#     """
+#
+#     componentName = NORMAL_FUNCTION
+#     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
+#
+#     bounds = (None,None)
+#     multiplicative_param = VARIANCE
+#     additive_param = BIAS
+#
+#     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+#
+#     class Params(TransferFunction.Params):
+#         variance = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+#         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+#         scale = Param(0.0, modulable=True)
+#         offset = Param(0.0, modulable=True)
+#
+#     @tc.typecheck
+#     def __init__(self,
+#                  default_variable=None,
+#                  variance: parameter_spec = 1.0,
+#                  bias: parameter_spec = 0.0,
+#                  scale: parameter_spec = 1.0,
+#                  offset: parameter_spec = 0.0,
+#                  params=None,
+#                  owner=None,
+#                  prefs: is_pref_set = None):
+#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+#         params = self._assign_args_to_param_dicts(variance=variance,
+#                                                   bias=bias,
+#                                                   scale=scale,
+#                                                   offset=offset,
+#                                                   params=params)
+#
+#         super().__init__(default_variable=default_variable,
+#                          params=params,
+#                          owner=owner,
+#                          prefs=prefs,
+#                          context=ContextFlags.CONSTRUCTOR)
 
     def get_param_ids(self):
         return VARIANCE, BIAS, SCALE, OFFSET
