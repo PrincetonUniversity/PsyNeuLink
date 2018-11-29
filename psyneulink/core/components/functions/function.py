@@ -10127,17 +10127,34 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
             if np.abs(y0tilde) > threshold:
-                y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
+                #y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
+                y0tilde = -1 * (y0tilde < 0) * threshold + (y0tilde >=0 ) * threshold
+
             x0tilde = y0tilde / drift_rate_normed
 
-            with np.errstate(over='raise', under='raise'):
+            with np.errstate(over='ignore', under='ignore'):
                 try:
+                    # rt = ztilde * np.tanh(ztilde * atilde) + \
+                    #      ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
+                    #          np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
+                    # er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
+                    #      ((1 - np.exp(-2 * x0tilde * atilde)) / (
+                    #      np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
+
+                    exp_neg2_x0tilde_atilde = np.nanmax([1e-12, np.exp(-2 * x0tilde * atilde)])
+                    exp_2_ztilde_atilde = np.nanmin([1e12, np.exp(2 * ztilde * atilde)])
+                    exp_neg2_ztilde_atilde = np.nanmax([1e-12, np.exp(-2 * ztilde * atilde)])
+
                     rt = ztilde * np.tanh(ztilde * atilde) + \
-                         ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
-                             np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                    er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
-                         ((1 - np.exp(-2 * x0tilde * atilde)) / (
-                         np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
+                         ((2 * ztilde * (1 - exp_neg2_x0tilde_atilde)) / (
+                                 exp_2_ztilde_atilde - exp_neg2_ztilde_atilde) - x0tilde)
+                    er = 1 / (1 + exp_2_ztilde_atilde) - \
+                         ((1 - exp_neg2_x0tilde_atilde) / (exp_2_ztilde_atilde - exp_neg2_ztilde_atilde))
+
+                    if rt < 0:
+                        rt = 0
+
+                    rt = rt + t0
 
                 except FloatingPointError:
                     # Per Mike Shvartsman:
@@ -10206,37 +10223,40 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
         moments = {}
 
-        moments["mean_rt_plus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (X + Z) * coth(X + Z))
+        # Lets ignore any divide by zeros we get or NaN errors. This will allow the NaN's to propogate.
+        with np.errstate(divide='ignore', invalid='ignore'):
+            moments["mean_rt_plus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (X + Z) * coth(X + Z))
 
-        moments["mean_rt_minus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
+            moments["mean_rt_minus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
 
-        moments["var_rt_plus"] = noise**4. / (drift_rate**4) * \
+            moments["var_rt_plus"] = noise**4. / (drift_rate**4) * \
                               (4 * Z**2. * (csch(2 * Z))**2 + 2 * Z * coth(2 * Z) - (Z + X)**2. *
                                (csch(Z + X))**2 - (Z + X) * coth(Z + X))
 
-        moments["var_rt_minus"] = noise**4. / (drift_rate**4) * \
+            moments["var_rt_minus"] = noise**4. / (drift_rate**4) * \
                                (4 * Z**2. * (csch(2 * Z)) ** 2 + 2 * Z*coth(2 * Z) - (Z - X)**2. *
                                 (csch(Z - X))**2 - (Z - X) * coth(Z - X))
 
-        moments["skew_rt_plus"] = noise**6. / (drift_rate** 6) * \
+            moments["skew_rt_plus"] = noise**6. / (drift_rate** 6) * \
                                (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
                                 (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z + X)**2. *
                                 (csch(Z + X))**2 - 2 * (Z + X)**3. * coth(Z + X) * (csch(Z + X))**2 - 3 *
                                 (Z + X) * coth(Z + X))
 
-        moments["skew_rt_minus"] = noise**6. / (drift_rate**6) * \
+            moments["skew_rt_minus"] = noise**6. / (drift_rate**6) * \
                                 (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
                                  (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z - X)**2. *
                                  (csch(Z - X))**2 - 2 * (Z - X)**3. * coth(Z - X) *
                                  (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
 
-        # divide third central moment by var_rt**1.5 to get skewness
-        moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
-        moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
+            # divide third central moment by var_rt**1.5 to get skewness
+            moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
+            moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
 
-        # Add the non-decision time to the mean RTs
-        moments['mean_rt_plus'] += t0
-        moments['mean_rt_minus'] += t0
+            # Add the non-decision time to the mean RTs
+            moments['mean_rt_plus'] += t0
+            moments['mean_rt_minus'] += t0
+
 
         return moments
 
