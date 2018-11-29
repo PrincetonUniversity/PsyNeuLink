@@ -1406,44 +1406,45 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     def get_param_ids(self):
         return STANDARD_DEVIATION, BIAS, SCALE, OFFSET
 
-    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #
-    #     standard_deviation_ptr, builder = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
-    #     bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-    #     scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-    #     offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-    #
-    #     standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
-    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-    #
-    #     exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-    #
-    #     numerator = builder.load(ptri)
-    #     numerator = builder.fsub(bias, numerator)
-    #     numerator = builder.fmul(numerator, numerator)
-    #     numerator = builder.fneg(numerator)
-    #
-    #     denom = builder.fmul(standard_deviation, standard_deviation)
-    #     denom = builder.fmul(2, denom)
-    #     numerator = builder.fdiv(denom, numerator)
-    #     numerator = builder.call(exp_f, [numerator])
-    #
-    #     denom = builder.fmul(2, PI)
-    #     denom = builder.fmul(standard_deviation, denom)
-    #     denom = builder.sqrtpd(denom)
-    #     val = builder.fdiv(denom,numerator)
-    #
-    #     val = builder.fmul(scale, val)
-    #     val = builder.fadd(offset, val)
-    #
-    #     val = builder.fadd(ctx.float_ty(1), val)
-    #     val = builder.fdiv(ctx.float_ty(1), val)
-    #
-    #     builder.store(val, ptro)
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        standard_deviation_ptr, builder = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
+        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+
+        standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+
+        numerator = builder.load(ptri)
+        numerator = builder.fsub(bias, numerator)
+        numerator = builder.fmul(numerator, numerator)
+        numerator = builder.fneg(numerator)
+
+        denom = builder.fmul(standard_deviation, standard_deviation)
+        denom = builder.fmul(2, denom)
+        numerator = builder.fdiv(denom, numerator)
+        numerator = builder.call(exp_f, [numerator])
+
+        import math pi
+        denom = ctx.get_builtin(2*pi, [ctx.float_ty])
+        denom = builder.fmul(standard_deviation, denom)
+        denom = builder.sqrtpd(denom)
+        val = builder.fdiv(denom,numerator)
+
+        val = builder.fmul(scale, val)
+        val = builder.fadd(offset, val)
+
+        val = builder.fadd(ctx.float_ty(1), val)
+        val = builder.fdiv(ctx.float_ty(1), val)
+
+        builder.store(val, ptro)
 
     def function(self,
                  variable=None,
