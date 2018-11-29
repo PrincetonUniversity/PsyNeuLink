@@ -12,6 +12,7 @@
 
 * `Integrator`
 * `SimpleIntegrator`
+* `InteractiveActivation`
 * `ConstantIntegrator`
 * `Buffer`
 * `AdaptiveIntegrator`
@@ -63,7 +64,7 @@ __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantInte
            'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator',
            'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY',
            'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME',
-           'kwBogaczEtAl', 'kwNavarrosAndFuss', 'BogaczEtAl', 'NF_Results', 'NavarroAndFuss']
+           'kwBogaczEtAl', 'kwNavarrosAndFuss', 'BogaczEtAl', 'NF_Results', 'NavarroAndFuss', 'InteractiveActivation']
 
 
 class IntegratorFunction(Function_Base):
@@ -771,6 +772,256 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
         new_value = variable
 
         value = previous_value + (new_value * rate) + noise
+
+        adjusted_value = value + offset
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(adjusted_value, execution_id)
+
+        return self.convert_output_type(adjusted_value)
+
+
+class InteractiveActivation(Integrator):  # ----------------------------------------------------------------------------
+    """
+    InteractiveActivation(      \
+        default_variable=None,  \
+        rate=1.0,               \
+        max_val=1.0,            \
+        min_val=-1.0,           \
+        noise=0.0,              \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _InteractiveActivation:
+
+    Integrate current value of `variable <InteractiveActivation.variable>` toward an asymptotic maximum
+    value for positive inputs and toward an asymptotic mininum value for negative inputs.
+
+    Implements a generalized version of the interactive activation function used to update unit activites in
+    `McClelland and Rumelhart (1981) <https://stanford.edu/~jlmcc/papers/RumelhartMcClelland82.pdf>`_.
+
+    `function <InteractiveActivation.function>` returns:
+
+    .. math::
+
+        if\ variable > 0:\ previous\_value + rate * variable * (max\_val-previous\_value) + noise
+
+    .. math::
+        if\ variable < 0:\ previous\_value + rate * variable * (previous\_value-min\_value) + noise
+
+    .. math::
+        if\ variable = 0:\ previous\_value
+
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        `variable <InteractiveActivation.default_variable>` (see `rate <InteractiveActivation.rate>` for details).
+
+    max_val : float, list or 1d array : default 1.0
+        specifies the maximum asymptotic value toward which integration occurs for positive values of `variable
+        <InteractiveActivation.variable>`.  If it is a list or array, it must be the same length as `variable
+        <InteractiveActivation.default_variable>`; all values must be greater than the corresponding values of
+        `min_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.max_val>` for details).
+
+    min_val : float, list or 1d array : default 1.0
+        specifies the minimum asymptotic value toward which integration occurs for negative values of `variable
+        <InteractiveActivation.variable>`.  If it is a list or array, it must be the same length as `variable
+        <InteractiveActivation.default_variable>`; all values must be greater than the corresponding values of
+        `max_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.min_val>` for details).
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <InteractiveActivation.function>`. (see
+        `noise <InteractiveActivation.noise>` for details).
+
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `default_variable <InteractiveActivation.default_variable>` (see `initializer <InteractiveActivation.initializer>`
+        for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value some portion of which (determined by `rate <InteractiveActivation.rate>`) will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    rate : float or 1d np.array
+        determines the rate of integration based on current and prior values. If it has a single element, it applies
+        to all elements of `variable <InteractiveActivation.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+
+    max_val : float or 1d np.array
+        determines the maximum asymptotic value toward which integration occurs for positive values of `variable
+        <InteractiveActivation.variable>`.  If it has a single element, it applies to all elements of `variable
+        <InteractiveActivation.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+
+    min_val : float or 1d np.array
+        determines the minimum asymptotic value toward which integration occurs for negative values of `variable
+        <InteractiveActivation.variable>`.  If it has a single element, it applies to all elements of `variable
+        <InteractiveActivation.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+
+    noise : float, function, list, or 1d np.array
+        specifies random value to be added in each call to `function <InteractiveActivation.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
+
+        If noise is specified as a single float or function, while `variable <InteractiveActivation.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
+
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
+
+    initializer : float, 1d np.array or list
+        determines the starting value for integration (i.e., the value to which
+        `previous_value <InteractiveActivation.previous_value>` is set.
+
+        If initializer is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
+
+    previous_value : 1d np.array : default ClassDefaults.variable
+        stores previous value with which `variable <InteractiveActivation.variable>` is integrated.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = SIMPLE_INTEGRATOR_FUNCTION
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    class Params(Integrator.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        max_val = Param(1.0)
+        min_val = Param(-1.0)
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: parameter_spec = 1.0,
+                 max_val: parameter_spec = 1.0,
+                 min_val: parameter_spec = -1.0,
+                 noise=0.0,
+                 offset=None,
+                 initializer=None,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  max_val=max_val,
+                                                  min_val=min_val,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+
+        Arguments
+        ---------
+
+        variable : number, list or np.array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+        max_val = np.array(self.get_current_function_param(MAX_VAL, execution_id)).astype(float)
+        min_val = np.array(self.get_current_function_param(MIN_VAL, execution_id)).astype(float)
+
+        offset = self.get_current_function_param(OFFSET, execution_id)
+        if offset is None:
+            offset = 0.0
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+        previous_value = self.get_previous_value(execution_id)
+        new_value = variable
+
+        # value = previous_value + (new_value * rate) + noise
+        if variable > 0:
+            value = previous_value + rate * new_value * (max_val-previous_value) + noise
+        elif variable < 0:
+            value = previous_value + rate * new_value * (max_val-previous_value) + noise
+        else:
+            value = previous_value
 
         adjusted_value = value + offset
 
