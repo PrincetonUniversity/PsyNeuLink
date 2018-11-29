@@ -18,11 +18,24 @@ from .builtins import _generate_cpu_builtins_module
 _dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 
 try:
-    import pycuda
-    from pycuda import autoinit as pycuda_default
-    import pycuda.compiler
-    ptx_enabled = _dumpenv.find("cuda") != -1
-except:
+    if _dumpenv.find("cuda") != -1:
+        import pycuda
+        # Do not continue if the version is too old
+        if pycuda.VERSION[0] >= 2018:
+            import pycuda.driver
+            # pyCUDA needs to be built against 5.5+ to enable Linker
+            if pycuda.driver.get_version()[0] > 5:
+                from pycuda import autoinit as pycuda_default
+                import pycuda.compiler
+                ptx_enabled = True
+            else:
+                raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
+        else:
+            raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
+    else:
+        ptx_enabled = False
+except Exception as e:
+    print("WARNING: Failed to enable CUDA/PTX:", e)
     ptx_enabled = False
 
 
