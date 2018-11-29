@@ -213,9 +213,6 @@ _ptx_builtin_source = """
 __device__ __noinline__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
 __device__ __noinline__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
 __device__ __noinline__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
-__global__ void __dummy_log ({type} *a) {{ a[0] = __pnl_builtin_log(a[0]); }}
-__global__ void __dummy_exp ({type} *a) {{ a[0] = __pnl_builtin_exp(a[0]); }}
-__global__ void __dummy_pow ({type} *a) {{ a[0] = __pnl_builtin_pow(a[0], a[1]); }}
 """
 
 class ptx_jit_engine(jit_engine):
@@ -224,23 +221,23 @@ class ptx_jit_engine(jit_engine):
             self._modules = {}
             self._target_machine = tm
 
-            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='ptx').decode()
-            # Remove directives. This will be appended to llvm generated code
-            self._generated_builtins = re.sub(r"\.(version|target|address_size).*","", self._generated_builtins)
+            # -dc option tells the compiler that the code will be used for linking
+            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='cubin', options=['-dc'])
 
         def set_object_cache(cache):
             pass
 
         def add_module(self, module):
             try:
+                # LLVM can't produce CUBIN for some reason
                 ptx = self._target_machine.emit_assembly(module)
-                # Remove extern directive. log, exp, and pow are implemented
-                # in the generated ptx. Ideally these would be linked,
-                # but linker is not yet avialable in pycuda
-                ptx = re.sub(r"\.extern", ".visible", ptx + self._generated_builtins)
-                ptx_mod = pycuda.driver.module_from_buffer(ptx.encode())
+                mod = pycuda.compiler.DynamicModule()
+                mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
+                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, "pnl.ptx")
+                ptx_mod = mod.link()
+
             except Exception as e:
-                print("FAILED to generate PTX:", e)
+                print("FAILED to generate PTX module:", e)
                 print(ptx)
                 return None
 
