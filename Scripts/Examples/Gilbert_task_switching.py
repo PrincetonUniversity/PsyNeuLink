@@ -19,10 +19,10 @@ WORD_OUTPUT_LAYER = pnl.RecurrentTransferMechanism(size = 3,
                                                    function=pnl.Logistic(offset= -6),
                                                    name='WORD INPUT LAYER')
 
-COLOR_OUTPUT_LAYER = pnl.RecurrentTransferMechanism(size = 3,
+COLOR_OUTPUT_LAYER = pnl.IntegratorMechanism(size = 3,
                                                    auto= 0.0,
                                                    hetero= -2.0,
-                                                   function=pnl.Logistic(offset= -6),
+                                                   function= pnl.InteractiveActivation #(offset= -6),
                                                    name='COLOR OUTPUT LAYER')
 
 TASK_DEMAND_LAYER = pnl.RecurrentTransferMechanism(size = 3,
