@@ -4,7 +4,7 @@ import numpy as np
 from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl, NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
-@pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")
+#@pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")
 def test_nf_vs_bogacz():
     """
     This test compares the NavarroAndFuss() and bogaczEtAl (renamed DriftDiffusionAnalytical) against eachother.

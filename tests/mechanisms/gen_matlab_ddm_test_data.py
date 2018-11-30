@@ -1,7 +1,14 @@
+import os
+
 import numpy as np
 
 from psyneulink.core.components.functions.integratorfunctions import NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
+
+# Get location of this script so we can write txt files to this directory
+# regardless of the working directory. I feel like there must be a better way to
+# do this?
+__location__ = os.path.dirname(os.path.realpath(__file__))
 
 def gen_matlab_ddm_test_data(non_degenerate_only=False):
     """
@@ -22,7 +29,7 @@ def gen_matlab_ddm_test_data(non_degenerate_only=False):
     )
 
     NUM_CHECKS = 5000
-    res = np.zeros(shape=(NUM_CHECKS, 12))
+    res = np.zeros(shape=(NUM_CHECKS, 15))
     rng = np.random.RandomState(100)
     for i in range(NUM_CHECKS):
 
@@ -54,9 +61,10 @@ def gen_matlab_ddm_test_data(non_degenerate_only=False):
             ([r_stim, r_drift_rate, r_threshold, r_starting_point, r_bias, r_t0, r_noise], np.squeeze(results_nf[1:6])))
 
     if non_degenerate_only:
-        np.savetxt('matlab_ddm_code_ground_truth_non_degenerate.csv', res)
+        np.savetxt(os.path.join(__location__, 'matlab_ddm_code_ground_truth_non_degenerate.csv'), res)
     else:
-        np.savetxt('matlab_ddm_code_ground_truth.csv', res)
+        np.savetxt(os.path.join(__location__, 'matlab_ddm_code_ground_truth.csv'), res)
+
 
 if __name__ == "__main__":
     gen_matlab_ddm_test_data(non_degenerate_only=True)

@@ -4775,9 +4775,8 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         moments = BogaczEtAl._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, t0)
 
         return rt, er, \
-               moments['mean_rt_plus'], moments['mean_rt_minus'], \
-               moments['var_rt_plus'], moments['var_rt_minus'], \
-               moments['skew_rt_plus'], moments['skew_rt_minus']
+               moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'], \
+               moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
 
     @staticmethod
     def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_point, t0):
@@ -5135,4 +5134,4 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
 
         results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
-        return self.convert_output_type(results)
+        return results
