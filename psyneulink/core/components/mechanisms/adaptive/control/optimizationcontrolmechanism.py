@@ -666,7 +666,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  num_estimates:int=1,
                  search_function:tc.optional(tc.any(is_function_type))=None,
                  search_termination_function:tc.optional(tc.any(is_function_type))=None,
-                 search_space:tc.optional(tc.any(list, np.ndarray))=None,
+                 search_space=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -800,13 +800,22 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_control_allocation_search_space(self, execution_id=None):
 
         control_signal_sample_lists = []
-        for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
+
+        # KAM added 11/30 as a way to use self.search_space rather than controlsignal.allocation_samples in order
+        # to get gratton script working. Should converge on one way of specifying search_space, or rules for priority
+        # when multiple methods of speciying search_space are used
+        if self.search_space is not None:
+            for control_signal in self.control_signals:
+                control_signal_sample_lists.append(self.search_space)
+        else:
+            for control_signal in self.control_signals:
+                control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
 
         # Construct control_allocation_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+
         control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
 
         # Insure that ControlSignal in each sample is in its own 1d array
@@ -815,6 +824,7 @@ class OptimizationControlMechanism(ControlMechanism):
         control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
 
         self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
+
         return control_allocation_search_space
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
