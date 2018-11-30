@@ -47,11 +47,12 @@ from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError,  MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import \
-    INTEGRATOR_FUNCTION_TYPE, INTEGRATOR_FUNCTION, NOISE, RATE, INITIALIZER, SIMPLE_INTEGRATOR_FUNCTION, OFFSET, \
-    CONSTANT_INTEGRATOR_FUNCTION, SCALE, BUFFER_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, \
-    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, DECAY, \
-    FHN_INTEGRATOR_FUNCTION, INCREMENT, ACCUMULATOR_INTEGRATOR_FUNCTION, FUNCTION, INPUT_STATES, OUTPUT_STATES, \
-    LCAMechanism_INTEGRATOR_FUNCTION, UTILITY_INTEGRATOR_FUNCTION, OPERATION
+ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, BUFFER_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, DECAY, \
+DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FHN_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, INITIALIZER, INPUT_STATES, \
+INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, \
+LCAMechanism_INTEGRATOR_FUNCTION, MAX_VAL, MIN_VAL, NOISE, OFFSET,  \
+OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES,  RATE, SCALE, SIMPLE_INTEGRATOR_FUNCTION, \
+TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
@@ -926,7 +927,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         <LINK>` for details).
     """
 
-    componentName = SIMPLE_INTEGRATOR_FUNCTION
+    componentName = INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -940,7 +941,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     class Params(Integrator.Params):
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         max_val = Param(1.0)
-        min_val = Param(-1.0)
+        min_val = Param(1.0)
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
@@ -948,7 +949,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  max_val: parameter_spec = 1.0,
-                 min_val: parameter_spec = -1.0,
+                 min_val: parameter_spec = 1.0,
                  noise=0.0,
                  offset=None,
                  initializer=None,
@@ -1003,8 +1004,9 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        max_val = np.array(self.get_current_function_param(MAX_VAL, execution_id)).astype(float)
-        min_val = np.array(self.get_current_function_param(MIN_VAL, execution_id)).astype(float)
+        # only works with "max_val". Keyword MAX_VAL = "MAX_VAL", not max_val
+        max_val = np.array(self.get_current_function_param("max_val", execution_id)).astype(float)
+        min_val = np.array(self.get_current_function_param("min_val", execution_id)).astype(float)
 
         offset = self.get_current_function_param(OFFSET, execution_id)
         if offset is None:
@@ -1015,22 +1017,42 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         previous_value = self.get_previous_value(execution_id)
         new_value = variable
 
-        # value = previous_value + (new_value * rate) + noise
-        if variable > 0:
-            value = previous_value + rate * new_value * (max_val-previous_value) + noise
-        elif variable < 0:
-            value = previous_value + rate * new_value * (max_val-previous_value) + noise
-        else:
-            value = previous_value
+
+        intermediate_value = np.atleast_2d(previous_value + rate*new_value)
+
+        value = intermediate_value.copy()
+        var = np.atleast_2d(variable)
+        prev = np.atleast_2d(previous_value)
+        for i in range(len(var)):
+            for j in range(len(var[i])):
+                print("prev = ", prev)
+                print("max_val = ", max_val)
+                print("min_val = ", min_val)
+                print("intermediate_value = ", intermediate_value)
+                print("noise = ", noise)
+                print("value = ", value)
+                if var[i][j] > 0:
+                    value[i][j] = intermediate_value[i][j] * (max_val - prev[i][j]) + noise
+                elif var[i][j] < 0:
+                    value[i][j] = intermediate_value[i][j] * (prev[i][j] - min_val) + noise
+                else:
+                    value[i][j] = previous_value
 
         adjusted_value = value + offset
-
+        print("value = ", value)
+        print("offset = ", offset)
+        print("adjusted_value = ", adjusted_value)
+        print("owner = ", self.owner_name)
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            print("prev val before = ", self.get_previous_value(execution_id))
+            print(self.parameters.context.get(execution_id).initialization_status)
             self.parameters.previous_value.set(adjusted_value, execution_id)
+            print("prev val after = ", self.get_previous_value(execution_id))
 
+        print()
         return self.convert_output_type(adjusted_value)
 
 
@@ -1263,7 +1285,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         #    (don't want to count it as an execution step)
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
-
         return self.convert_output_type(adjusted_value)
 
 
