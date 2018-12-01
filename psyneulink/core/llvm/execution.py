@@ -112,21 +112,15 @@ class FuncExecution(CUDAExecution):
         return _convert_ctype_to_python(ct_vo)
 
 
-class MechExecution:
+class MechExecution(FuncExecution):
 
     def __init__(self, mechanism, execution_id):
         self._mechanism = mechanism
-        self._bin_func = mechanism._llvmBinFunction
+        super().__init__(mechanism, execution_id)
 
-        par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
-
-        self.__param_struct = par_struct_ty(*mechanism._get_param_initializer(execution_id))
-
-        if mechanism._nv_state is None:
-            self.__context_struct = context_struct_ty(*mechanism._get_context_initializer(execution_id))
-        else:
+        if mechanism._nv_state is not None:
             # TODO: This should consider execution_id
-            self.__context_struct = mechanism._nv_state
+            self._context_struct = mechanism._nv_state
 
     def execute(self, variable):
         # convert to 3d. we always assume that:
@@ -134,18 +128,12 @@ class MechExecution:
         # b) input states take vector of projection outputs
         # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
-        _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
-        ct_vi = new_var.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = vo_ty()
-
-        self._bin_func(ctypes.byref(self.__param_struct),
-                       ctypes.byref(self.__context_struct),
-                       ct_vi, ctypes.byref(ct_vo))
+        res = super().execute(new_var)
 
         # store updated context
         # TODO: This should consider execution_id
-        self._mechanism._nv_state = self.__context_struct
-        return _convert_ctype_to_python(ct_vo)
+        self._mechanism._nv_state = self._context_struct
+        return res
 
 
 class CompExecution:
