@@ -39,36 +39,13 @@ def _tupleize(x):
         return x if x is not None else tuple()
 
 
-class FuncExecution:
-
-    def __init__(self, function, execution_id):
-        self._function = function
-        self._bin_func = function._llvmBinFunction
-
-        par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
-
-        self.__param_struct = par_struct_ty(*function._get_param_initializer(execution_id))
-
-        self.__context_struct = context_struct_ty(*function._get_context_initializer(execution_id))
-
+class CUDAExecution:
+    def __init__(self):
         self.__cuda_params = None
         self.__cuda_context = None
         self.__cuda_out_buf = None
 
-    def execute(self, variable):
-        new_var = np.asfarray(variable)
-        _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
-        ct_vi = new_var.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = vo_ty()
-
-        self._bin_func(ctypes.byref(self.__param_struct),
-                       ctypes.byref(self.__context_struct),
-                       ct_vi, ctypes.byref(ct_vo))
-
-        return _convert_ctype_to_python(ct_vo)
-
     def _get_buffer(self, data):
-        address = ctypes.addressof(data)
         # Return dummy buffer. CUDA does not handle 0 size well.
         if ctypes.sizeof(data) == 0:
             return bytearray(b'aaaa')
@@ -77,13 +54,13 @@ class FuncExecution:
     @property
     def _cuda_params(self):
         if self.__cuda_params is None:
-            self.__cuda_params = jit_engine.pycuda.driver.to_device(self._get_buffer(self.__param_struct))
+            self.__cuda_params = jit_engine.pycuda.driver.to_device(self._get_buffer(self._param_struct))
         return self.__cuda_params
 
     @property
     def _cuda_context(self):
         if self.__cuda_context is None:
-            self.__cuda_context = jit_engine.pycuda.driver.to_device(self._get_buffer(self.__context_struct))
+            self.__cuda_context = jit_engine.pycuda.driver.to_device(self._get_buffer(self._context_struct))
         return self.__cuda_context
 
     @property
@@ -95,17 +72,45 @@ class FuncExecution:
         return self.__cuda_out_buf
 
     def cuda_execute(self, variable):
+        # Create input parameter
         new_var = np.asfarray(variable)
         data_in = jit_engine.pycuda.driver.In(new_var)
 
         self._bin_func.cuda_call(self._cuda_params, self._cuda_context,
                                  data_in, self._cuda_out_buf)
+
+        # Copy the result from the device
         vo_ty = self._bin_func.byref_arg_types[3]
-        size = ctypes.sizeof(vo_ty)
-        out_buf = bytearray(size)
+        out_buf = bytearray(ctypes.sizeof(vo_ty))
         jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_out_buf)
         ct_res = vo_ty.from_buffer(out_buf)
         return _convert_ctype_to_python(ct_res)
+
+
+class FuncExecution(CUDAExecution):
+
+    def __init__(self, function, execution_id):
+        super().__init__()
+        self._function = function
+        self._bin_func = function._llvmBinFunction
+
+        par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
+
+        self._param_struct = par_struct_ty(*function._get_param_initializer(execution_id))
+
+        self._context_struct = context_struct_ty(*function._get_context_initializer(execution_id))
+
+    def execute(self, variable):
+        new_var = np.asfarray(variable)
+        _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
+        ct_vi = new_var.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = vo_ty()
+
+        self._bin_func(ctypes.byref(self._param_struct),
+                       ctypes.byref(self._context_struct),
+                       ct_vi, ctypes.byref(ct_vo))
+
+        return _convert_ctype_to_python(ct_vo)
 
 
 class MechExecution:
