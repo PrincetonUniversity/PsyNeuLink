@@ -1126,8 +1126,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                              self.integrator_function.__class__.__name__))
                     self.integrator_function.parameters.rate.set(integration_rate)
 
-
-
         self.has_integrated = True
 
     def _instantiate_output_states(self, context=None):
