@@ -1148,7 +1148,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None, **kwargs):
 
-        integration_rate = self.get_current_mechanism_param("integration_rate", execution_id)
+        integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
 
         current_input = self.integrator_function.execute(
             function_variable,
