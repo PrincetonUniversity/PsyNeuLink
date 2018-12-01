@@ -204,7 +204,7 @@ from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinis
 from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 
 __all__ = [
-    'CONVERGENCE', 'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
+    'CONVERGENCE', 'EXTERNAL', 'EXTERNAL_INDEX',
     'RECURRENT', 'RECURRENT_INDEX', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
     'UPDATE'
 ]
@@ -228,8 +228,6 @@ class RecurrentTransferError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-DECAY = 'decay'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
