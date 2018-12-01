@@ -329,7 +329,7 @@ from psyneulink.core.components.functions.function import Function, \
     is_function_type
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator, IntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
@@ -347,8 +347,9 @@ from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
-    'INITIAL_VALUE', 'CLIP', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
-    'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
+    'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 
+    'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 
+    'TransferError', 'TransferMechanism',
 ]
 
 from psyneulink.core import llvm as pnlvm
@@ -357,6 +358,7 @@ from llvmlite import ir
 
 # TransferMechanism parameter keywords:
 CLIP = "clip"
+INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_RATE = "integration_rate"
 INITIAL_VALUE = 'initial_value'
 
@@ -470,6 +472,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     function=Linear,                                                              \
     initial_value=None,                                                           \
     noise=0.0,                                                                    \
+    integrator_function=AdaptiveIntegrator,                                       \
     integration_rate=0.5,                                                         \
     integrator_mode=False,                                                        \
     on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,                           \
@@ -548,6 +551,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         or its `integrator_function <TransferMechanism.integrator_function>`, depending on whether `integrator_mode
         <TransferMechanism.integrator_mode>` is `True` or `False`. See `noise <TransferMechanism.noise>` for details.
 
+    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+        specifies function to use in `integration_mode <TransferMechanism.integration_mode>`.
+    
     integration_rate : float : default 0.5
         specifies the smoothing factor used for exponential time averaging of input when the TransferMechanism is
         executed with `integrator_mode` set to `True`.
@@ -667,6 +673,19 @@ class TransferMechanism(ProcessingMechanism_Base):
             function with a fixed output, then the noise will simply be an offset that remains the same across all
             executions.
 
+    integrator_function :  IntegratorFunction
+        the `IntegratorFunction` Function used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
+        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
+
+        .. note::
+            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter
+            specifies the `rate <AdaptiveIntegrator.rate>` of the `AdaptiveIntegrator` Function.
+
+    integration_rate : float
+        the rate used for exponential time averaging of the TransferMechanism's `variable
+        <TransferMechanism>` when it is executed with `integrator_mode <TransferMechanism.integrator_mode>`
+        set to True (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
+
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
         to exponentially time average its `variable <TransferMechanism.variable>` when it executes.
@@ -696,7 +715,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             leak and time_step_size were previoulsy mentioned, but don't appear in the integrator_mode equation above
             COMMENT
 
-
     on_resume_integrator_mode : keyword
         specifies how the `integrator_function <TransferMechanism.integrator_function>` should resume its accumulation
         when the Mechanism was most recently in "Instantaneous Mode" (integrator_mode = False) and has just switched to
@@ -713,19 +731,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
                 <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
                 <TransferMechanism.initial_value>`
-
-    integrator_function :  Function
-        the `AdaptiveIntegrator` Function used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
-        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
-
-        .. note::
-            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter
-            specifies the `rate <AdaptiveIntegrator.rate>` of the `AdaptiveIntegrator` Function.
-
-    integration_rate : float
-        the rate used for exponential time averaging of the TransferMechanism's `variable
-        <TransferMechanism>` when it is executed with `integrator_mode <TransferMechanism.integrator_mode>`
-        set to True (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
     clip : list [float, float]
         specifies the allowable range for the result of `function <TransferMechanism.function>`.  The 1st item (index
@@ -810,11 +815,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         clip = None
         noise = Param(0.0, modulable=True)
         convergence_criterion = Param(0.01, modulable=True)
+        integrator_function = Param(IntegratorFunction, read_only=True)
         integration_rate = Param(0.5, modulable=True)
         integrator_mode = Param(False, setter=_integrator_mode_setter)
         integrator_function_value = Param([[0]], read_only=True)
         has_integrated = Param(False, user=False)
-
         max_passes = Param(1000, stateful=False)
         on_resume_integrator_mode = Param(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         convergence_function = Param(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
@@ -831,6 +836,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
+                 integrator_function=AdaptiveIntegrator,
                  integration_rate=0.5,
                  integrator_mode=False,
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
@@ -858,6 +864,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   input_states=input_states,
                                                   output_states=output_states,
                                                   noise=noise,
+                                                  integrator_function=integrator_function,
                                                   integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
                                                   clip=clip,
@@ -866,7 +873,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   max_passes=max_passes,
                                                   params=params)
         self.on_resume_integrator_mode = on_resume_integrator_mode
-        self.integrator_function = None
+        # self.integrator_function = None
         self.has_integrated = False
         self._current_variable_index = 0
         self.integrator_function_value = None
@@ -930,8 +937,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
                                         "specified as the {} param of {} must be the same shape ({}) as its {}".
                                         format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
-
-
+        
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set:
             initial_value = target_set[INITIAL_VALUE]
@@ -955,6 +961,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                 target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
+        # Validate INTEGRATOR_FUNCTION:
+        if INTEGRATOR_FUNCTION in target_set:
+            integtr_fct = target_set[INTEGRATOR_FUNCTION]
+            if not (isinstance(integtr_fct, IntegratorFunction) 
+                    or (isinstance(integtr_fct, type) and issubclass(integtr_fct, IntegratorFunction))):
+                raise TransferError("The function specified for the {} arg of {} ({}) must be an {}".
+                                    format(repr(INTEGRATOR_FUNCTION), self.name, integtr_fct),
+                                    IntegratorFunction.__class__.__name__)
+        
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set:
             integration_rate = target_set[INTEGRATION_RATE]
