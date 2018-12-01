@@ -89,16 +89,15 @@ class CUDAExecution:
 
 class FuncExecution(CUDAExecution):
 
-    def __init__(self, function, execution_id):
+    def __init__(self, component, execution_id):
         super().__init__()
-        self._function = function
-        self._bin_func = function._llvmBinFunction
+        self._bin_func = component._llvmBinFunction
 
         par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        self._param_struct = par_struct_ty(*function._get_param_initializer(execution_id))
+        self._param_struct = par_struct_ty(*component._get_param_initializer(execution_id))
 
-        self._context_struct = context_struct_ty(*function._get_context_initializer(execution_id))
+        self._context_struct = context_struct_ty(*component._get_context_initializer(execution_id))
 
     def execute(self, variable):
         new_var = np.asfarray(variable)
