@@ -242,8 +242,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.learningfunctions import BayesGLM
-from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, \
-    GradientOptimization
+from psyneulink.core.components.functions.optimizationfunctions import GradientOptimization, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -471,7 +470,6 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         convergence_criterion = 0.001
         max_iterations = 1000
         feature_predictors = None
-        feature_values = None
         modulation = ModulationParam.MULTIPLICATIVE
 
         current_state = Param(None, read_only=True)
@@ -683,7 +681,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     def _instantiate_learning_function(self):
         '''Instantiate attributes for LVOCControlMechanism's learning_function'''
 
-        self.current_state = PredictionVector(self.get_feature_values(),
+        self.current_state = PredictionVector(self.defaults.feature_values,
                                               self.control_signals,
                                               self.prediction_terms)
 

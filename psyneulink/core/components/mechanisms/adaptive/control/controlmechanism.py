@@ -346,8 +346,8 @@ import threading
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, Composition_Base, System_Base
@@ -671,6 +671,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         compute_net_outcome = Param(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
 
         costs = Param(None, read_only=True, getter=_control_mechanism_costs_getter)
+
+        simulation_ids = Param(list, user=False)
 
         modulation = ModulationParam.MULTIPLICATIVE
 
@@ -1254,9 +1256,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def monitored_output_states_weights_and_exponents(self):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
 
-    @property
-    def outcome(self):
-        return self.variable[0]
+    # @property
+    # def outcome(self):
+    #     return self.variable[0]
 
     @property
     def control_allocation(self):

@@ -55,7 +55,8 @@ class CompositionFunctionApproximator(Composition):
     provided by an `OptimizationControlmechanism`.
 
     '''
-    def __init__(self, name=None):
+
+    def __init__(self, name=None, **param_defaults):
         '''
 
         Arguments
@@ -86,7 +87,7 @@ class CompositionFunctionApproximator(Composition):
 
         '''
         # self.function = function
-        super().__init__(name=name)
+        super().__init__(name=name, **param_defaults)
 
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None, context=None):
         '''Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target
@@ -95,16 +96,20 @@ class CompositionFunctionApproximator(Composition):
                                                    format(CompositionFunctionApproximator.__name__,
                                                           self.__class__.__name__, repr('adapt')))
 
-    def evaluate(self, feature_values, control_allocation, num_estimates, context=None):
+    def evaluate(self, feature_values, control_allocation, num_estimates, base_execution_id=None, execution_id=None, context=None):
         '''Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
         '''
 
         # FIX: AUGEMENT TO USE NUM_ESTIMATES
-        return self.function(feature_values, control_allocation)
+        return self.function(feature_values, control_allocation, execution_id=execution_id)
 
     @property
     def prediction_parameters(self):
         raise CompositionFunctionApproximatorError("Subclass of {} ({}) must implement {} attribute.".
                                                    format(CompositionFunctionApproximator.__name__, self.__class__.__name__,
                                                           repr('prediction_parameters')))
+
+    @property
+    def runs_simulations(self):
+        return False

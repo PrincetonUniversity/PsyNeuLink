@@ -384,6 +384,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import itertools
 import numpy as np
 import typecheck as tc
@@ -396,6 +397,7 @@ from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism imp
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
+from psyneulink.core.components.states.featureinputstate import FeatureInputState
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
@@ -417,6 +419,10 @@ __all__ = [
 AGENT_REP = 'agent_rep'
 FEATURES = 'features'
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
+
+
+def _parse_feature_values_from_variable(variable):
+    return np.array(np.array(variable[1:]).tolist())
 
 
 class OptimizationControlMechanismError(Exception):
@@ -636,6 +642,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         agent_rep = Param(None, stateful=False, loggable=False)
 
+        feature_values = Param(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
+
         features = None
         num_estimates = 1
         search_space = None
@@ -658,7 +666,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  num_estimates:int=1,
                  search_function:tc.optional(tc.any(is_function_type))=None,
                  search_termination_function:tc.optional(tc.any(is_function_type))=None,
-                 search_space:tc.optional(tc.any(list, np.ndarray))=None,
+                 search_space=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -736,6 +744,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_input_states(context=context)
 
+        for i in range(1, len(self.input_states)):
+            state = self.input_states[i]
+            if len(state.path_afferents) > 1:
+                raise OptimizationControlMechanismError("Invalid FeatureInputState on {}. {} should receive exactly one"
+                                                        " projection, but it receives {} projections."
+                                                        .format(self.name, state.name, len(state.path_afferents)))
 
         # KAM Removed the exception below 11/6/2018 because it was rejecting valid
         # monitored_output_state spec on ObjectiveMechanism
@@ -786,13 +800,22 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_control_allocation_search_space(self, execution_id=None):
 
         control_signal_sample_lists = []
-        for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
+
+        # KAM added 11/30 as a way to use self.search_space rather than controlsignal.allocation_samples in order
+        # to get gratton script working. Should converge on one way of specifying search_space, or rules for priority
+        # when multiple methods of speciying search_space are used
+        if self.search_space is not None:
+            for control_signal in self.control_signals:
+                control_signal_sample_lists.append(self.search_space)
+        else:
+            for control_signal in self.control_signals:
+                control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
 
         # Construct control_allocation_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+
         control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
 
         # Insure that ControlSignal in each sample is in its own 1d array
@@ -801,6 +824,7 @@ class OptimizationControlMechanism(ControlMechanism):
         control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
 
         self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
+
         return control_allocation_search_space
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
@@ -814,6 +838,8 @@ class OptimizationControlMechanism(ControlMechanism):
         # # Get feature_values based on agent_rep
         # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
 
+        self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
+
         # Save state before any simulations
         if hasattr(self.agent_rep, "save_state"):
             self.agent_rep.save_state()
@@ -826,8 +852,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Assign default net_outcome if it is not yet specified (presumably first trial)
         # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
+        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
+                 self.control_signals]
         try:
-            costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in self.control_signals]
             net_outcome = variable[0] - self.combine_costs(costs)
         except AttributeError:
             net_outcome = [0]
@@ -835,7 +862,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
-            self.agent_rep.adapt(self.get_feature_values(variable, execution_id), control_allocation, net_outcome, execution_id=execution_id)
+            self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
         except AttributeError as e:
             # If error is due to absence of adapt method, OK; otherwise, raise exception
             if not 'has no attribute \'adapt\'' in e.args[0]:
@@ -861,6 +888,18 @@ class OptimizationControlMechanism(ControlMechanism):
         # Return optimal control_allocation
         return optimal_control_allocation
 
+    def _set_up_simulation(self, base_execution_id=None):
+        sim_execution_id = self.get_next_sim_id(base_execution_id)
+
+        try:
+            self.parameters.simulation_ids.get(base_execution_id).append(sim_execution_id)
+        except AttributeError:
+            self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
+
+        self.agent_rep._initialize_from_context(sim_execution_id, base_execution_id, override=False)
+
+        return sim_execution_id
+
     def evaluation_function(self, control_allocation, execution_id=None):
         '''Compute `EVC <OptimizationControlMechanism_EVC>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
@@ -876,20 +915,40 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
-        return self.agent_rep.evaluate(self.get_feature_values(control_allocation, execution_id),
-                                       control_allocation,
-                                       self.parameters.num_estimates.get(execution_id),
-                                       context=self.function_object.parameters.context.get(execution_id))
+        if self.agent_rep.runs_simulations:
+            sim_execution_id = self._set_up_simulation(execution_id)
 
-    def apply_control_allocation(self, control_allocation, runtime_params, context):
+            result = self.agent_rep.evaluate(
+                self.parameters.feature_values.get(execution_id),
+                control_allocation,
+                self.parameters.num_estimates.get(execution_id),
+                base_execution_id=execution_id,
+                execution_id=sim_execution_id,
+                context=self.function_object.parameters.context.get(execution_id)
+            )
+        else:
+            result = self.agent_rep.evaluate(
+                self.parameters.feature_values.get(execution_id),
+                control_allocation,
+                self.parameters.num_estimates.get(execution_id),
+                execution_id=execution_id,
+                context=self.function_object.parameters.context.get(execution_id)
+            )
+
+        return result
+
+    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
         specified `control_allocation <ControlMechanism.control_allocation>`.'''
-        for i in range(len(control_allocation)):
-            if self.value is None:
-                self.value = self.instance_defaults.value
-            self.value[i] = np.atleast_1d(control_allocation[i])
+        value = self.parameters.value.get(execution_id)
+        if value is None:
+            value = copy.deepcopy(self.instance_defaults.value)
 
-        self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
+        for i in range(len(control_allocation)):
+            value[i] = np.atleast_1d(control_allocation[i])
+
+        self.parameters.value.set(value, execution_id)
+        self._update_output_states(value, execution_id=execution_id, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     # @property
     # def feature_values(self):
@@ -897,13 +956,6 @@ class OptimizationControlMechanism(ControlMechanism):
     #         return self.agent_rep._get_predicted_input()
     #     else:
     #         return np.array(np.array(self.variable[1:]).tolist())
-
-    def get_feature_values(self, variable=None, execution_id=None):
-        try:
-            var = variable[1:]
-        except TypeError:
-            var = self.parameters.variable.get(execution_id)[1:]
-        return np.array(np.array(var).tolist())
 
     # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
@@ -966,6 +1018,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
+        for feature in parsed_features:
+            if isinstance(feature, dict):
+                feature['state_type'] = FeatureInputState
+            else:
+                if not isinstance(feature, FeatureInputState):
+                    raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
+                                                            .format(self.name, feature))
         return parsed_features
 
     @tc.typecheck
@@ -1022,12 +1081,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def _dependent_components(self):
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
+
         return list(itertools.chain(
             super()._dependent_components,
-            [
-                self.objective_mechanism,
-                self.agent_rep,
-            ],
+            [self.objective_mechanism],
+            [self.agent_rep] if isinstance(self.agent_rep, CompositionFunctionApproximator) else [],
             [self.search_function] if isinstance(self.search_function, Function_Base) else [],
             [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],
         ))

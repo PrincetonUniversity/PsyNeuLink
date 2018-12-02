@@ -757,8 +757,6 @@ class EVCControlMechanism(ControlMechanism):
         combine_outcome_and_cost_function = Param(LinearCombination, stateful=False, loggable=False)
         save_all_values_and_policies = Param(False, stateful=False, loggable=False)
 
-        simulation_ids = Param(list, user=False)
-
         modulation = ModulationParam.MULTIPLICATIVE
 
         EVC_max = Param(None, read_only=True)

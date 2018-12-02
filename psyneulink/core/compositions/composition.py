@@ -415,16 +415,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     class Params(Parameters):
         results = Param([], loggable=False)
+        simulation_results = Param([], loggable=False)
 
     class _CompilationData(Parameters):
         execution = None
 
-
-    def __init__(self,
-                 name=None,
-                 model_based_optimizer=None,
-                 enable_model_based_optimizer=None,
-                 external_input_sources=None):
+    def __init__(
+        self,
+        name=None,
+        model_based_optimizer=None,
+        enable_model_based_optimizer=None,
+        external_input_sources=None,
+        **param_defaults
+    ):
         # also sets name
         register_category(
             entry=self,
@@ -449,7 +452,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM_states = {}
 
         self.enable_model_based_optimizer = enable_model_based_optimizer
-        self.simulation_results = []
         self.default_execution_id = self.name
         self.execution_ids = [self.default_execution_id]
         self.model_based_optimizer = model_based_optimizer
@@ -481,7 +483,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
 
         self.parameters = self.Params(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(owner=self)
+        self.defaults = Defaults(owner=self, **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
         # Compiled resources
         self.__generated_wrappers = {}
         self.__compiled_mech = {}
@@ -616,6 +618,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
 
+            try:
+                # activate any projections the node requires
+                node._activate_projections_for_compositions(self)
+            except AttributeError:
+                pass
+
         if hasattr(node, "aux_components"):
 
             projections = []
@@ -692,6 +700,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.external_input_sources[self.model_based_optimizer] = self.model_based_optimizer.shadow_external_inputs
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
+
+        optimizer._activate_projections_for_compositions(self)
         self._analyze_graph()
 
     def _get_control_signals_for_system(self, control_signals=None):
@@ -1909,21 +1919,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._assign_context_values(execution_id=None, composition=self)
         return execution_id
-
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        for c_node in self.c_nodes:
-            c_node._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        for proj in self.projections:
-            proj._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        self.input_CIM._assign_context_values(execution_id, base_execution_id, **kwargs)
-        for proj in self.input_CIM.efferents:
-            proj._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        self.output_CIM._assign_context_values(execution_id, base_execution_id, **kwargs)
-        for proj in self.output_CIM.afferents:
-            proj._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
         # clamp type of this list is same as the one the user set for the whole composition; return all nodes
@@ -3144,6 +3139,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return __execution.extract_node_output(self.output_CIM)
 
+        # control phase
+        execution_phase = self.parameters.context.get(execution_id).execution_phase
+        if (
+            execution_phase != ContextFlags.INITIALIZING
+            and execution_phase != ContextFlags.SIMULATION
+            and self.enable_model_based_optimizer
+        ):
+            if self.model_based_optimizer:
+                self.model_based_optimizer.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
+                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id, runtime_params=runtime_params, context=context)
+
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
@@ -3151,40 +3158,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
 
-        # control phase
-        if self.context.execution_phase != ContextFlags.INITIALIZING \
-                and self.context.execution_phase != ContextFlags.SIMULATION \
-                and self.enable_model_based_optimizer:
-            if self.model_based_optimizer:
-                # self.model_based_optimizer.objective_mechanism.execute(context=context)
-                # KAM - temporary solution for assiging control signal values
-                control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                self.model_based_optimizer.apply_control_allocation(control_allocation, runtime_params=None, context=None)
-
-        # # MODIFIED 11/19/19 OLD:
-        # self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
-        # self.output_CIM.execute(context=ContextFlags.PROCESSING)
-        #
-        # output_values = []
-        # for i in range(0, len(self.output_CIM.output_states)):
-        #     output_values.append(self.output_CIM.output_states[i].value)
-        # MODIFIED 11/19/19 END
-
         return output_values
 
-    # def _update_predicted_input(self, execution_id=None, context=None):
-    #     predicted_input = {}
-    #     for prediction_mechanism in self.prediction_mechanisms:
-    #         origin_node = self.prediction_origin_pairs[prediction_mechanism]
-    #         node_output = []
-    #         for output_state in prediction_mechanism.output_states:
-    #             node_output.append(output_state.parameters.value.get(execution_id))
-    #         predicted_input[origin_node] = node_output
-    #     return predicted_input
+    def reinitialize(self, values, execution_context=NotImplemented):
+        if execution_context is NotImplemented:
+            execution_context = self.default_execution_id
 
-    def reinitialize(self, values):
         for i in range(self.stateful_nodes):
-            self.stateful_nodes[i].reinitialize(values[i])
+            self.stateful_nodes[i].reinitialize(values[i], execution_context=execution_context)
 
     def run(
         self,
@@ -3285,7 +3266,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             output value of the final Node executed in the composition : various
         '''
-
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
@@ -3306,13 +3286,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reinitialize_values = {}
 
         for node in reinitialize_values:
-            node.reinitialize(*reinitialize_values[node])
+            node.reinitialize(*reinitialize_values[node], execution_context=execution_id)
 
-        if self.context.execution_phase != ContextFlags.SIMULATION:
+        try:
+            if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
+                self._analyze_graph()
+        except AttributeError:
+            # if context is None, it has not been created for this execution_id yet, so it is not
+            # in a simulation
             self._analyze_graph()
 
         results = []
-        self._analyze_graph()
 
         execution_id = self._assign_execution_ids(execution_id)
 
@@ -4144,21 +4128,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._assign_context_values(execution_id, base_execution_id, **kwargs)
 
-    def evaluate(self,
-                 predicted_input=None,
-                 control_allocation=None,
-                 num_trials=1,
-                 runtime_params=None,
-                 context=None):
+    def evaluate(
+        self,
+        predicted_input=None,
+        control_allocation=None,
+        num_trials=1,
+        runtime_params=None,
+        base_execution_id=None,
+        execution_id=None,
+        context=None
+    ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
            `net_outcome <ModelBasedOptimizationControlMechanism.net_outcome>` of the Composition, according to its
            `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
-
-        # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
-        # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
-        # be modified to return anything, this may not be necessary
 
         # These attrs are set during composition.before_simulation
         reinitialize_values = self.sim_reinitialize_values
@@ -4169,22 +4153,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         # Assign control_allocation current being sampled
         if control_allocation is not None:
-            self.model_based_optimizer.apply_control_allocation(control_allocation,
-                                                                   runtime_params=runtime_params,
-                                                                   context=context)
+            self.model_based_optimizer.apply_control_allocation(
+                control_allocation,
+                execution_id=execution_id,
+                runtime_params=runtime_params,
+                context=context
+            )
 
-        execution_id = self._get_unique_id()
         net_control_allocation_outcomes = []
-        # other_simulation_data = []
+
         for i in range(num_trials):
             inputs = {}
             for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
                 inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j][i]
 
-            self.context.execution_phase = ContextFlags.SIMULATION
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
             for output_state in self.output_states:
                 for proj in output_state.efferents:
-                    proj.context.execution_phase = ContextFlags.PROCESSING
+                    proj.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
             self.run(inputs=inputs,
                      reinitialize_values=reinitialize_values,
@@ -4192,17 +4178,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      runtime_params=runtime_params,
                      context=context)
 
+            # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
             if context.initialization_status != ContextFlags.INITIALIZING:
-                self.simulation_results.append(self.output_values)
+                try:
+                    self.parameters.simulation_results.get(base_execution_id).append(self.get_output_values(execution_id))
+                except AttributeError:
+                    self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
-            # call_after_simulation_data = None
-            #
-            # if call_after_simulation:
-            #     call_after_simulation_data = call_after_simulation()
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
-            self.context.execution_phase = ContextFlags.PROCESSING
-            net_control_allocation_outcomes.append(self.model_based_optimizer.net_outcome)
-            # other_simulation_data.append(call_after_simulation_data)
+            outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
+            net_outcome = outcome - self.model_based_optimizer.combine_costs(
+                [
+                    c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
+                    for c in self.model_based_optimizer.control_signals
+                ]
+            )
+            net_control_allocation_outcomes.append(net_outcome)
 
         return net_control_allocation_outcomes
 
@@ -4236,6 +4228,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def get_input_values(self, execution_context=None):
         return [input_state.parameters.value.get(execution_context) for input_state in self.input_CIM.input_states]
+
+    @property
+    def runs_simulations(self):
+        return True
+
+    @property
+    def simulation_results(self):
+        return self.parameters.simulation_results.get(self.default_execution_id)
 
     #  For now, external_input_states == input_states and external_input_values == input_values
     #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)
@@ -4313,4 +4313,5 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             [self.input_CIM, self.output_CIM],
             self.input_CIM.efferents,
             self.output_CIM.afferents,
+            [self.model_based_optimizer] if self.model_based_optimizer is not None else []
         ))
