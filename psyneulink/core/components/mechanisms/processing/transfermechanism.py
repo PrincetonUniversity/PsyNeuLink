@@ -816,7 +816,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         clip = None
         noise = Param(0.0, modulable=True)
         convergence_criterion = Param(0.01, modulable=True)
-        integrator_function = Param(IntegratorFunction, read_only=True)
         integration_rate = Param(0.5, modulable=True)
         integrator_mode = Param(False, setter=_integrator_mode_setter)
         integrator_function_value = Param([[0]], read_only=True)
