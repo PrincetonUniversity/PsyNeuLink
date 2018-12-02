@@ -1067,21 +1067,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         if isinstance(self.convergence_function, Function):
             self._convergence_function = self.convergence_function.function
 
-        self._instantiate_integrator_function(context=context)
+        # self._instantiate_integrator_function(context=context)
 
-    def _instantiate_integrator_function(self, context=None):
-
-        variable = self._parse_function_variable(self.instance_defaults.variable, context=context)
-
-        noise = self.get_current_mechanism_param(NOISE)
-        initial_value = self.get_current_mechanism_param(INITIAL_VALUE)
-        integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE)
+    def _instantiate_integrator_function(self, variable, noise, initializer, rate, execution_id, context=None):
 
         if isinstance(self.integrator_function, type):
             self.integrator_function = self.integrator_function(variable,
-                                                                initializer=initial_value,
+                                                                initializer=initializer,
                                                                 noise=noise,
-                                                                rate=integration_rate,
+                                                                rate=rate,
                                                                 owner=self)
         # User specified integrator_function in constructor
         # If the values of any of these parameters differ from the default on either the Mechanism or function:
@@ -1091,42 +1085,42 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             if hasattr(self.integrator_function, NOISE):
                 # Check if user specified Mechanism's param, and if so, use it
-                if self.noise != self.class_defaults.noise:
+                if noise != self.class_defaults.noise:
                     # Warn if function's param was specified and it is not the same as Mechanism's specification
                     if (self.integrator_function.noise != self.integrator_function.class_defaults.noise
-                            and self.noise != self.integrator_function.noise):
+                            and noise != self.integrator_function.noise):
                         warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
                                       "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
                                       format(repr(NOISE), self.name, noise,
                                              repr(NOISE), self.integrator_function.noise, repr(INTEGRATOR_FUNCTION),
                                              self.integrator_function.__class__.__name__))
-                    self.integrator_function.parameters.noise.set(noise)
+                    self.integrator_function.parameters.noise.set(noise, execution_id)
 
             if hasattr(self.integrator_function, INITIALIZER):
                 # Check if user specified Mechanism's param, and if so, use it
-                if self.initial_value != self.class_defaults.initial_value:
+                if initializer != self.class_defaults.initial_value:
                     # Warn if function's param was specified and it is not the same as Mechanism's specification
                     if (self.integrator_function.initializer != self.integrator_function.class_defaults.initializer
-                            and self.initial_value != self.integrator_function.initializer):
+                            and initializer != self.integrator_function.initializer):
                         warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
                                       "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
-                                      format(repr(INITIAL_VALUE), self.name, initial_value,
+                                      format(repr(INITIAL_VALUE), self.name, initializer,
                                              repr(INITIALIZER), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
                                              self.integrator_function.__class__.__name__))
-                    self.integrator_function.parameters.initializer.set(initial_value)
+                    self.integrator_function.parameters.initializer.set(initializer, execution_id)
 
             if hasattr(self.integrator_function, RATE):
                 # Check if user specified Mechanism's param, and if so, use it
-                if self.integration_rate != self.class_defaults.integration_rate:
+                if rate != self.class_defaults.integration_rate:
                     # Warn if function's param was specified and it is not the same as Mechanism's specification
                     if (self.integrator_function.rate != self.integrator_function.class_defaults.rate
-                            and self.integration_rate != self.integrator_function.rate):
+                            and rate != self.integrator_function.rate):
                         warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
                                       "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
-                                      format(repr(INTEGRATION_RATE), self.name, integration_rate,
+                                      format(repr(INTEGRATION_RATE), self.name, rate,
                                              repr(RATE), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
                                              self.integrator_function.__class__.__name__))
-                    self.integrator_function.parameters.rate.set(integration_rate)
+                    self.integrator_function.parameters.rate.set(rate, execution_id)
 
         self.has_integrated = True
 
@@ -1151,6 +1145,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None, **kwargs):
 
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
+
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            self._instantiate_integrator_function(variable=function_variable,
+                                                  noise=noise,
+                                                  initializer=initial_value,
+                                                  rate=integration_rate,
+                                                  execution_id=execution_id,
+                                                  context=context)
 
         current_input = self.integrator_function.execute(
             function_variable,
