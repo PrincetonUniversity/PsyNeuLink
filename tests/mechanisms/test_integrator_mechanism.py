@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
+import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
@@ -379,37 +380,66 @@ class TestIntegratorFunctions:
     @pytest.mark.mimo
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
-    def test_integrator_multiple_input(self, mode):
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+    def test_integrator_multiple_input(self, benchmark, mode):
         I = IntegratorMechanism(
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[1], [2]],
             input_states=['a', 'b'],
         )
-        val = I.execute([[1], [2]], bin_execute=(mode=='LLVM'))
         if mode == 'Python':
+            val = I.execute([[1], [2]])
             val = [x.value for x in I.output_states]
+            benchmark(I.execute, [[1], [2]])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.execute([[1], [2]])
+            benchmark(e.execute, [[1], [2]])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.cuda_execute([[1], [2]])
+            benchmark(e.cuda_execute, [[1], [2]])
+
         assert np.allclose(val, [[3]])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
-    def test_integrator_multiple_output(self, mode):
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+    def test_integrator_multiple_output(self, benchmark, mode):
         I = IntegratorMechanism(
             default_variable=[5],
             output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'],
         )
-        val = I.execute([5], bin_execute=(mode=='LLVM'))
         if mode == 'Python':
+            val = I.execute([5])
             val = [x.value for x in I.output_states]
+            benchmark(I.execute, [5])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.execute([5])
+            benchmark(e.execute, [5])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.cuda_execute([5])
+            benchmark(e.cuda_execute, [5])
+
         assert np.allclose(val, [[2.5], [2.5]])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
-    def test_integrator_multiple_input_output(self, mode):
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+    def test_integrator_multiple_input_output(self, benchmark, mode):
         I = IntegratorMechanism(
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[1], [2]],
@@ -417,41 +447,97 @@ class TestIntegratorFunctions:
             output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
                            {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
         )
-        val = I.execute([[1], [2]], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = I.execute([[1], [2]])
+            val = [x.value for x in I.output_states]
+            benchmark(I.execute, [[1], [2]])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.execute([[1], [2]])
+            benchmark(e.execute, [[1], [2]])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.cuda_execute([[1], [2]])
+            benchmark(e.cuda_execute, [[1], [2]])
+
         if mode == 'Python':
             val = [x.value for x in I.output_states]
         assert np.allclose(val, [[5], [3]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.benchmark(group="ControlMechanism")
-    @pytest.mark.parametrize("mode, var", it.product(['Python', 'LLVM'], ['scalar']))
-    def test_FHN_simple(self, benchmark, mode, var):
-        var =  [1.0] if var == 'scalar' else [1.0, 3.0]
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+    def test_FHN_simple_scalar(self, benchmark, mode):
+        var = [1.0]
         I = IntegratorMechanism(name="I",
                 default_variable=[var],
                 function=FHNIntegrator())
 
-        res = I.execute([var], bin_execute=(mode=='LLVM'))
-        if len(var) == 1:
-            #LLVM version returns output of all mechanisms (1)
-            # so check that part
-            assert np.allclose(res[0], [0.05127053])
-        else:
-            assert np.allclose(res[0], [0.05127053, 0.15379818])
+        if mode == 'Python':
+            val = I.execute(var)
+            val = [x.value for x in I.output_states]
+            benchmark(I.execute, var)
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.execute(var)
+            benchmark(e.execute, var)
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.cuda_execute(var)
+            benchmark(e.cuda_execute, var)
 
-        benchmark(I.execute, var, bin_execute=(mode=='LLVM'))
-
+        assert np.allclose(val[0], [0.05127053])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"), pytest.mark.skip])])
+    def test_FHN_simple_vector(self, benchmark, mode):
+        var = [1.0, 3.0]
+        I = IntegratorMechanism(name="I",
+                default_variable=[var],
+                function=FHNIntegrator())
+
+        if mode == 'Python':
+            val = I.execute([var])
+            # LLVM versions report values of output states. Collect it here
+            val = [x.value for x in I.output_states]
+            benchmark(I.execute, var)
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.execute([var])
+            benchmark(e.execute, var)
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.cuda_execute(var)
+            benchmark(e.cuda_execute, var)
+
+        assert np.allclose(val[0], [0.05127053, 0.15379818])
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_integrator(self, benchmark, mode):
         I = IntegratorMechanism(
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(slope=5.0))
-        val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = benchmark(e.execute, [1.0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = benchmark(e.cuda_execute, [1.0 for i in range(VECTOR_SIZE)])
+
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -578,12 +664,24 @@ class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
-    def test_integrator_no_function(self, mode):
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+    def test_integrator_no_function(self, benchmark, mode):
         I = IntegratorMechanism()
-        # P = Process(pathway=[I])
-        val = I.execute(10, bin_execute=(mode=='LLVM'))
-        assert val == 5
+        if mode == 'Python':
+            val = I.execute(10)
+            benchmark(I.execute, 10)
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.execute([10])
+            benchmark(e.execute, [10])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(I, None)
+            val = e.cuda_execute([10])
+            benchmark(e.cuda_execute, [10])
+
         assert np.allclose(val, [[5.0]])
 
 class TestIntegratorInputs:
