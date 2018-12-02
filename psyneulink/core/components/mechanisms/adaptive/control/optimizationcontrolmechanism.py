@@ -827,6 +827,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return control_allocation_search_space
 
+    def _parse_allocation_samples(self):
+        pass
+
+    def _instantiate_
+
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 

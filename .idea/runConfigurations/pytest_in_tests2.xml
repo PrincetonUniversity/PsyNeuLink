@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="py.test in tests" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
+  <configuration default="false" name="pytest in tests" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
     <module name="PsyNeuLink (Dropbox)" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
