@@ -1430,5 +1430,5 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.integrator_function] if self.integrator_function is not None else [],
+            [self.integrator_function] if isinstance(self.integrator_function, IntegratorFunction) else [],
         ))
