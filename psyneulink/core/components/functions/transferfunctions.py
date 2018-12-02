@@ -1244,6 +1244,32 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         result = np.maximum(gain * (variable - bias), bias, leak * (variable - bias))
         return self.convert_output_type(result)
 
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+        leak_ptr, builder = ctx.get_param_ptr(self, builder, params, LEAK)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
+
+        # Maxnum for some reason needs full function prototype
+        max_f = ctx.get_builtin("maxnum", [ctx.float_ty],
+            ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+        var = builder.load(ptri)
+        val = builder.fsub(var, bias)
+        val1 = builder.fmul(val, gain)
+        val2 = builder.fmul(val, leak)
+
+        val = builder.call(max_f, [val1, bias])
+        # TODO: WHat is the third param to np.maximum
+        # val = builder.call(max_f, [val, val2])
+
+        builder.store(val, ptro)
+
     def derivative(self, input, output=None, execution_id=None):
         """
         derivative(input)
