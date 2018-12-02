@@ -48,7 +48,8 @@ class TestTransferMechanismInputs:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_inputs_list_of_floats(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -64,6 +65,9 @@ class TestTransferMechanismInputs:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, var)
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, var)
 
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
@@ -142,7 +146,8 @@ class TestTransferMechanismNoise:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_array_var_float_noise(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -159,6 +164,9 @@ class TestTransferMechanismNoise:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -199,7 +207,8 @@ class TestTransferMechanismNoise:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise2")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_array_var_normal_array_noise2(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -216,6 +225,9 @@ class TestTransferMechanismNoise:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -411,7 +423,8 @@ class TestTransferMechanismFunctions:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Logistic")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_logistic_fun(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -426,6 +439,9 @@ class TestTransferMechanismFunctions:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -455,7 +471,8 @@ class TestTransferMechanismFunctions:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Exponential")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_exponential_fun(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -470,13 +487,17 @@ class TestTransferMechanismFunctions:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism SoftMax")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_softmax_fun(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -491,6 +512,9 @@ class TestTransferMechanismFunctions:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
 
@@ -557,7 +581,8 @@ class TestTransferMechanismTimeConstant:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_integration_rate_0_8(self, benchmark, mode):
         T = TransferMechanism(
             name='T',
@@ -575,6 +600,11 @@ class TestTransferMechanismTimeConstant:
             val1 = e.execute([1 for i in range(VECTOR_SIZE)])
             val2 = e.execute([1 for i in range(VECTOR_SIZE)])
             benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val1 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
+            val2 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
+            benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
@@ -583,7 +613,8 @@ class TestTransferMechanismTimeConstant:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_smoothin_factor_1_0(self, benchmark, mode):
         T = TransferMechanism(
             name='T',
@@ -597,6 +628,9 @@ class TestTransferMechanismTimeConstant:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
@@ -604,7 +638,8 @@ class TestTransferMechanismTimeConstant:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=0")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_integration_rate_0_0(self, benchmark, mode):
         T = TransferMechanism(
             name='T',
@@ -618,6 +653,9 @@ class TestTransferMechanismTimeConstant:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -1018,7 +1056,8 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.mimo
     @pytest.mark.benchmark(group="MIMO")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_transfer_mech_2d_variable(self, benchmark, mode):
         T = TransferMechanism(
             name='T',
@@ -1030,6 +1069,9 @@ class TestTransferMechanismMultipleInputStates:
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [[1.0, 2.0], [3.0, 4.0]])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.cuda_execute, [[1.0, 2.0], [3.0, 4.0]])
         assert np.allclose(val, [[3., 5.], [7., 9.]])
 
     @pytest.mark.mechanism
@@ -1048,13 +1090,17 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.mimo
     @pytest.mark.benchmark(group="MIMO")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_multiple_output_states_for_multiple_input_states(self, benchmark, mode):
         T = TransferMechanism(input_states=['a','b','c'])
         if mode == 'Python':
             val = benchmark(T.execute, [[1], [2], [3]])
             assert all(a==b for a,b in zip(T.output_values,val))
         elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T, None)
+            val = benchmark(e.execute, [[1], [2], [3]])
+        elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(T, None)
             val = benchmark(e.execute, [[1], [2], [3]])
 
