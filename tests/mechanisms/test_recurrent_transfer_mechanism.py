@@ -110,19 +110,17 @@ class TestRecurrentTransferMechanismInputs:
             default_variable=[0, 0, 0, 0]
         )
         if mode == 'Python':
-            val1 = R.execute([10, 12, 0, -1])
-            val2 = R.execute([1, 2, 3, 0])
-            benchmark(R.execute, [1, 2, 3, 0])
+            EX = R.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R, None)
-            val1 = e.execute([10, 12, 0, -1])
-            val2 = e.execute([1, 2, 3, 0])
-            benchmark(e.execute, [1, 2, 3, 0])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(R, None)
-            val1 = e.cuda_execute([10, 12, 0, -1])
-            val2 = e.cuda_execute([1, 2, 3, 0])
-            benchmark(e.cuda_execute, [1, 2, 3, 0])
+            EX = e.cuda_execute
+
+        val1 = EX([10, 12, 0, -1])
+        val2 = EX([1, 2, 3, 0])
+        benchmark(EX, [1, 2, 3, 0])
 
         np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
         np.testing.assert_allclose(val2, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
@@ -139,16 +137,15 @@ class TestRecurrentTransferMechanismInputs:
             size=4
         )
         if mode == 'Python':
-            val = R.execute([10.0, 10.0, 10.0, 10.0])
-            benchmark(R.execute, [10.0, 10.0, 10.0, 10.0])
+            EX = R.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R, None)
-            val = e.execute([10.0, 10.0, 10.0, 10.0])
-            benchmark(e.execute, [10.0, 10.0, 10.0, 10.0])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(R, None)
-            val = e.cuda_execute([10.0, 10.0, 10.0, 10.0])
-            benchmark(e.cuda_execute, [10.0, 10.0, 10.0, 10.0])
+            EX = e.cuda_execute
+
+        val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
 
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
@@ -166,28 +163,20 @@ class TestRecurrentTransferMechanismInputs:
                                        integration_rate=0.01,
                                        output_states = [RECURRENT_OUTPUT.RESULT])
         if mode == 'Python':
-            val1 = R.execute([[1.0, 2.0]])
-            val2 = R.execute([[1.0, 2.0]])
-            # execute 10 times
-            for i in range(10):
-                val = R.execute([[1.0, 2.0]])
-            benchmark(R.execute, [[1.0, 2.0]])
+            EX = R.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R, None)
-            val1 = e.execute([[1.0, 2.0]])
-            val2 = e.execute([[1.0, 2.0]])
-            # execute 10 times
-            for i in range(10):
-                val = e.execute([[1.0, 2.0]])
-            benchmark(e.execute, [[1.0, 2.0]])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(R, None)
-            val1 = e.cuda_execute([[1.0, 2.0]])
-            val2 = e.cuda_execute([[1.0, 2.0]])
-            # execute 10 times
-            for i in range(10):
-                val = e.cuda_execute([[1.0, 2.0]])
-            benchmark(e.cuda_execute, [[1.0, 2.0]])
+            EX = e.cuda_execute
+
+        val1 = EX([[1.0, 2.0]])
+        val2 = EX([[1.0, 2.0]])
+        # execute 10 times
+        for i in range(10):
+            val = EX([[1.0, 2.0]])
+        benchmark(EX, [[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.50249998, 0.50499983]])
         assert np.allclose(val2, [[0.50497484, 0.50994869]])
@@ -218,17 +207,16 @@ class TestRecurrentTransferMechanismInputs:
         )
         np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
         if mode == 'Python':
-            val = R.execute([10])
-            benchmark(R.execute, [1])
+            EX = R.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R, None)
-            val = e.execute([10])
-            benchmark(e.execute, [1])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(R, None)
-            val = e.cuda_execute([10])
-            benchmark(e.cuda_execute, [1])
+            EX = e.cuda_execute
 
+        val = EX([10])
+        benchmark(EX, [1])
         np.testing.assert_allclose(val, [[10.]])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
