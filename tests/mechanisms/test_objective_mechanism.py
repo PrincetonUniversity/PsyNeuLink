@@ -22,12 +22,14 @@ class TestObjectiveMechanism:
             default_variable=[0 for i in range(VECTOR_SIZE)],
         )
         if mode == 'Python':
-            val = benchmark(O.execute, [10.0 for i in range(VECTOR_SIZE)])
+            EX = O.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(O, None)
-            val =  benchmark(e.execute, [10.0 for i in range(VECTOR_SIZE)])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(O, None)
-            val =  benchmark(e.cuda_execute, [10.0 for i in range(VECTOR_SIZE)])
+            EX = e.cuda_execute
+
+        val = benchmark(EX, [10.0 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
