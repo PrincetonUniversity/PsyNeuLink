@@ -13,6 +13,7 @@
 * `OptimizationFunction`
 * `GradientOptimization`
 * `GridSearch`
+* `GaussianProcess`
 
 Overview
 --------
@@ -44,6 +45,11 @@ SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 DIRECTION = 'direction'
 
 
+class OptimizationFunctionError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+
 class OptimizationFunction(Function_Base):
     """
     OptimizationFunction(                            \
@@ -65,9 +71,9 @@ class OptimizationFunction(Function_Base):
     until terminated by `search_termination_function <OptimizationFunction.search_termination_function>`.
     Subclasses can override this to implement their own optimization function or call an external one.
 
-    .. _OptimizationFunction_Process:
+    .. _OptimizationFunction_Procedure:
 
-    **Default Optimization Process**
+    **Default Optimization Procedure**
 
     When `function <OptimizationFunction.function>` is executed, it iterates over the following steps:
 
@@ -135,13 +141,13 @@ class OptimizationFunction(Function_Base):
 
     objective_function : function or method : default None
         specifies function used to evaluate sample in each iteration of the `optimization process
-        <OptimizationFunction_Process>`; if it is not specified, a default function is used that simply returns
+        <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply returns
         the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
         <OptimizationFunction_Defaults>`).
 
     search_function : function or method : default None
         specifies function used to select a sample for `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Process>`.  It **must be specified**
+        in each iteration of the `optimization process <OptimizationFunction_Procedure>`.  It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
         executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
@@ -149,14 +155,14 @@ class OptimizationFunction(Function_Base):
 
     search_space : list or np.ndarray : default None
         specifies samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Process>`. It **must be specified**
+        in each iteration of the `optimization process <OptimizationFunction_Procedure>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
         executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
         (see `note <OptimizationFunction_Defaults>`).
 
     search_termination_function : function or method : None
-        specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
+        specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
         It **must be specified** if the `objective_function <OptimizationFunction.objective_function>` is not
         overridden.  If it is required and not specified, the optimization process executes exactly once
         (see `note <OptimizationFunction_Defaults>`).
@@ -164,15 +170,15 @@ class OptimizationFunction(Function_Base):
     save_samples : bool
         specifies whether or not to save and return the values of the samples used to evalute `objective_function
         <OptimizationFunction.objective_function>` over all iterations of the `optimization process
-        <OptimizationFunction_Process>`.
+        <OptimizationFunction_Procedure>`.
 
     save_values : bool
         specifies whether or not to save and return the values of `objective_function
         <OptimizationFunction.objective_function>` for samples evaluated in all iterations of the
-        `optimization process <OptimizationFunction_Process>`.
+        `optimization process <OptimizationFunction_Procedure>`.
 
     max_iterations : int : default 1000
-        specifies the maximum number of times the `optimization process <OptimizationFunction_Process>` is allowed
+        specifies the maximum number of times the `optimization process <OptimizationFunction_Procedure>` is allowed
         to iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.
 
 
@@ -181,40 +187,40 @@ class OptimizationFunction(Function_Base):
 
     variable : ndarray
         first sample evaluated by `objective_function <OptimizationFunction.objective_function>` (i.e., one used to
-        evaluate it in the first iteration of the `optimization process <OptimizationFunction_Process>`).
+        evaluate it in the first iteration of the `optimization process <OptimizationFunction_Procedure>`).
 
     objective_function : function or method
-        used to evaluate the sample in each iteration of the `optimization process <OptimizationFunction_Process>`.
+        used to evaluate the sample in each iteration of the `optimization process <OptimizationFunction_Procedure>`.
 
     search_function : function, method or None
         used to select a sample evaluated by `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Process>`.  `NotImplemented` if
+        in each iteration of the `optimization process <OptimizationFunction_Procedure>`.  `NotImplemented` if
         the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
 
     search_space : list or np.ndarray
         samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Process>`;  `NotImplemented` if
+        in each iteration of the `optimization process <OptimizationFunction_Procedure>`;  `NotImplemented` if
         the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
 
     search_termination_function : function or method
-        used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
+        used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
 
     iteration : int
-        the current iteration of the `optimization process <OptimizationFunction_Process>`.
+        the current iteration of the `optimization process <OptimizationFunction_Procedure>`.
 
     max_iterations : int : default 1000
-        specifies the maximum number of times the `optimization process <OptimizationFunction_Process>` is allowed
+        specifies the maximum number of times the `optimization process <OptimizationFunction_Procedure>` is allowed
         to iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.
 
     save_samples : bool
         determines whether or not to save the values of the samples used to evalute `objective_function
         <OptimizationFunction.objective_function>` over all iterations of the `optimization process
-        <OptimizationFunction_Process>`.
+        <OptimizationFunction_Procedure>`.
 
     save_values : bool
         determines whether or not to save and return the values of `objective_function
         <OptimizationFunction.objective_function>` for samples evaluated in all iterations of the
-        `optimization process <OptimizationFunction_Process>`.
+        `optimization process <OptimizationFunction_Procedure>`.
     """
 
     componentType = OPTIMIZATION_FUNCTION_TYPE
@@ -330,14 +336,14 @@ class OptimizationFunction(Function_Base):
         '''Find the sample that yields the optimal value of `objective_function
         <OptimizationFunction.objective_function>`.
 
-        See `optimization process <OptimizationFunction_Process>` for details.
+        See `optimization process <OptimizationFunction_Procedure>` for details.
 
         Returns
         -------
 
         optimal sample, optimal value, saved_samples, saved_values : array, array, list, list
             first array contains sample that yields the optimal value of the `optimization process
-            <OptimizationFunction_Process>`, and second array contains the value of `objective_function
+            <OptimizationFunction_Procedure>`, and second array contains the value of `objective_function
             <OptimizationFunction.objective_function>` for that sample.  If `save_samples
             <OptimizationFunction.save_samples>` is `True`, first list contains all the values sampled in the order
             they were evaluated; otherwise it is empty.  If `save_values <OptimizationFunction.save_values>` is `True`,
@@ -440,9 +446,9 @@ class GradientOptimization(OptimizationFunction):
     <GradientOptimization.objective_function>` it generates, and return the sample that generates either the
     highest (**direction=*ASCENT*) or lowest (**direction=*DESCENT*) value.
 
-    .. _GradientOptimization_Process:
+    .. _GradientOptimization_Procedure:
 
-    **Optimization Process**
+    **Optimization Procedure**
 
     When `function <GradientOptimization.function>` is executed, it iterates over the folowing steps:
 
@@ -494,7 +500,7 @@ class GradientOptimization(OptimizationFunction):
 
     objective_function : function or method
         specifies function used to evaluate `variable <GradientOptimization.variable>`
-        in each iteration of the `optimization process  <GradientOptimization_Process>`;
+        in each iteration of the `optimization process  <GradientOptimization_Procedure>`;
         it must be specified and it must return a scalar value.
 
     direction : ASCENT or DESCENT : default ASCENT
@@ -504,18 +510,18 @@ class GradientOptimization(OptimizationFunction):
 
     step_size : int or float : default 1.0
         specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
-        iteration of the `optimization process <GradientOptimization_Process>`;  if `annealing_function
+        iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
         <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
         `step_size <GradientOptimization.step_size>`.
 
     annealing_function : function or method : default None
         specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
-        iteration of the `optimization process <GradientOptimization_Process>`;  must take accept two parameters —
-        `step_size <GradientOptimization.step_size>` and `iteration <GradientOptimization_Process>`, in that
+        iteration of the `optimization process <GradientOptimization_Procedure>`;  must take accept two parameters —
+        `step_size <GradientOptimization.step_size>` and `iteration <GradientOptimization_Procedure>`, in that
         order — and return a scalar value, that is used for the next iteration of optimization.
 
     convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
-        specifies the parameter used to terminate the `optimization process <GradientOptimization_Process>`.
+        specifies the parameter used to terminate the `optimization process <GradientOptimization_Procedure>`.
         *VARIABLE*: process terminates when the most recent sample differs from the previous one by less than
         `convergence_threshold <GradientOptimization.convergence_threshold>`;  *VALUE*: process terminates when the
         last value returned by `objective_function <GradientOptimization.objective_function>` differs from the
@@ -525,33 +531,33 @@ class GradientOptimization(OptimizationFunction):
         specifies the change in value of `convergence_criterion` below which the optimization process is terminated.
 
     max_iterations : int : default 1000
-        specifies the maximum number of times the `optimization process<GradientOptimization_Process>` is allowed to
+        specifies the maximum number of times the `optimization process<GradientOptimization_Procedure>` is allowed to
         iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.
 
     save_samples : bool
         specifies whether or not to save and return all of the samples used to evaluate `objective_function
-        <GradientOptimization.objective_function>` in the `optimization process<GradientOptimization_Process>`.
+        <GradientOptimization.objective_function>` in the `optimization process<GradientOptimization_Procedure>`.
 
     save_values : bool
         specifies whether or not to save and return the values of `objective_function
         <GradientOptimization.objective_function>` for all samples evaluated in the `optimization
-        process<GradientOptimization_Process>`
+        process<GradientOptimization_Procedure>`
 
     Attributes
     ----------
 
     variable : ndarray
-        sample used as the starting point for the `optimization process <GradientOptimization_Process>` (i.e., one
+        sample used as the starting point for the `optimization process <GradientOptimization_Procedure>` (i.e., one
         used to evaluate `objective_function <GradientOptimization.objective_function>` in the first iteration).
 
     objective_function : function or method
         function used to evaluate `variable <GradientOptimization.variable>`
-        in each iteration of the `optimization process <GradientOptimization_Process>`;
+        in each iteration of the `optimization process <GradientOptimization_Procedure>`;
         it must be specified and it must return a scalar value.
 
     gradient_function : function
         function used to compute the gradient in each iteration of the `optimization process
-        <GradientOptimization_Process>` (see `Gradient Calculation <GradientOptimization_Gradient_Calculation>` for
+        <GradientOptimization_Procedure>` (see `Gradient Calculation <GradientOptimization_Gradient_Calculation>` for
         details).
 
     direction : ASCENT or DESCENT
@@ -561,20 +567,20 @@ class GradientOptimization(OptimizationFunction):
 
     step_size : int or float
         determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
-        iteration of the `optimization process <GradientOptimization_Process>`;  if `annealing_function
+        iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
         <GradientOptimization.annealing_function>` is specified, `step_size <GradientOptimization.step_size>`
         determines the initial value.
 
     annealing_function : function or method
         function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
-        process <GradientOptimization_Process>`;  if `None`, no call is made and the same `step_size
+        process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step_size
         <GradientOptimization.step_size>` is used in each iteration.
 
     iteration : int
-        the currention iteration of the `optimization process <GradientOptimization_Process>`.
+        the currention iteration of the `optimization process <GradientOptimization_Procedure>`.
 
     convergence_criterion : VARIABLE or VALUE
-        determines parameter used to terminate the `optimization process<GradientOptimization_Process>`.
+        determines parameter used to terminate the `optimization process<GradientOptimization_Procedure>`.
         *VARIABLE*: process terminates when the most recent sample differs from the previous one by less than
         `convergence_threshold <GradientOptimization.convergence_threshold>`;  *VALUE*: process terminates when the
         last value returned by `objective_function <GradientOptimization.objective_function>` differs from the
@@ -582,20 +588,20 @@ class GradientOptimization(OptimizationFunction):
 
     convergence_threshold : int or float
         determines the change in value of `convergence_criterion` below which the `optimization process
-        <GradientOptimization_Process>` is terminated.
+        <GradientOptimization_Procedure>` is terminated.
 
     max_iterations : int
-        determines the maximum number of times the `optimization process<GradientOptimization_Process>` is allowed to
+        determines the maximum number of times the `optimization process<GradientOptimization_Procedure>` is allowed to
         iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.
 
     save_samples : bool
         determines whether or not to save and return all of the samples used to evaluate `objective_function
-        <GradientOptimization.objective_function>` in the `optimization process<GradientOptimization_Process>`.
+        <GradientOptimization.objective_function>` in the `optimization process<GradientOptimization_Procedure>`.
 
     save_values : bool
         determines whether or not to save and return the values of `objective_function
         <GradientOptimization.objective_function>` for all samples evaluated in the `optimization
-        process<GradientOptimization_Process>`
+        process<GradientOptimization_Procedure>`
     """
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
@@ -702,7 +708,10 @@ class GradientOptimization(OptimizationFunction):
             evaluated; otherwise it is empty.
         '''
 
-        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,execution_id=execution_id, params=params, context=context)
+        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,
+                                                                                  execution_id=execution_id,
+                                                                                  params=params,
+                                                                                  context=context)
         return_all_samples = return_all_values = []
         if self.parameters.save_samples.get(execution_id):
             return_all_samples = all_samples
@@ -772,9 +781,9 @@ class GridSearch(OptimizationFunction):
     Search over all samples in `search_space <GridSearch.search_space>` for the one that optimizes the value of
     `objective_function <GridSearch.objective_function>`.
 
-    .. _GridSearch_Process:
+    .. _GridSearch_Procedure:
 
-    **Grid Search Process**
+    **Grid Search Procedure**
 
     When `function <GridSearch.function>` is executed, it iterates over the folowing steps:
 
@@ -798,7 +807,7 @@ class GridSearch(OptimizationFunction):
         `objective_function <GridSearch.objective_function>`.
 
     objective_function : function or method
-        specifies function used to evaluate sample in each iteration of the `optimization process <GridSearch_Process>`;
+        specifies function used to evaluate sample in each iteration of the `optimization process <GridSearch_Procedure>`;
         it must be specified and must return a scalar value.
 
     search_space : list or array
@@ -809,51 +818,51 @@ class GridSearch(OptimizationFunction):
         <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the lowest value is sought.
 
     max_iterations : int : default 1000
-        specifies the maximum number of times the `optimization process<GridSearch_Process>` is allowed to iterate;
+        specifies the maximum number of times the `optimization process<GridSearch_Procedure>` is allowed to iterate;
         if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
 
     save_samples : bool
         specifies whether or not to return all of the samples used to evaluate `objective_function
-        <GridSearch.objective_function>` in the `optimization process <GridSearch_Process>`
+        <GridSearch.objective_function>` in the `optimization process <GridSearch_Procedure>`
         (i.e., a copy of the `search_space <GridSearch.search_space>`.
 
     save_values : bool
         specifies whether or not to save and return the values of `objective_function <GridSearch.objective_function>`
-        for all samples evaluated in the `optimization process <GridSearch_Process>`.
+        for all samples evaluated in the `optimization process <GridSearch_Procedure>`.
 
     Attributes
     ----------
 
     variable : ndarray
         first sample evaluated by `objective_function <GridSearch.objective_function>` (i.e., one used to evaluate it
-        in the first iteration of the `optimization process <GridSearch_Process>`).
+        in the first iteration of the `optimization process <GridSearch_Procedure>`).
 
     objective_function : function or method
-        function used to evaluate sample in each iteration of the `optimization process <GridSearch_Process>`.
+        function used to evaluate sample in each iteration of the `optimization process <GridSearch_Procedure>`.
 
     search_space : list or array
         contains samples used to evaluate `objective_function <GridSearch.objective_function>` in iterations of the
-        `optimization process <GridSearch_Process>`.
+        `optimization process <GridSearch_Procedure>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         determines the direction of optimization:  if *MAXIMIZE*, the greatest value of `objective_function
         <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
 
     iteration : int
-        the currention iteration of the `optimization process <GridSearch_Process>`.
+        the currention iteration of the `optimization process <GridSearch_Procedure>`.
 
     max_iterations : int
-        determines the maximum number of times the `optimization process<GridSearch_Process>` is allowed to iterate;
+        determines the maximum number of times the `optimization process<GridSearch_Procedure>` is allowed to iterate;
         if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
 
     save_samples : True
         determines whether or not to save and return all samples evaluated by the `objective_function
-        <GridSearch.objective_function>` in the `optimization process <GridSearch_Process>` (if the process
+        <GridSearch.objective_function>` in the `optimization process <GridSearch_Procedure>` (if the process
         completes, this should be identical to `search_space <GridSearch.search_space>`.
 
     save_values : bool
         determines whether or not to save and return the value of `objective_function
-        <GridSearch.objective_function>` for all samples evaluated in the `optimization process <GridSearch_Process>`.
+        <GridSearch.objective_function>` for all samples evaluated in the `optimization process <GridSearch_Procedure>`.
     """
 
     componentName = GRID_SEARCH_FUNCTION
@@ -1047,3 +1056,257 @@ class GridSearch(OptimizationFunction):
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
         return iteration != len(self.parameters.search_space.get(execution_id))
+
+
+class GaussianProcess(OptimizationFunction):
+    """
+    GaussianProcess(                 \
+        default_variable=None,       \
+        objective_function=None,     \
+        direction=MAXIMIZE,          \
+        max_iterations=1000,         \
+        save_samples=False,          \
+        save_values=False,           \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None                   \
+        )
+
+    Draw samples from bounds specified in `search_space <GaussianProcess.search_space>` and return one that
+    optimizes the value of `objective_function <GaussianProcess.objective_function>`.
+
+    .. _GaussianProcess_Procedure:
+
+    **Gaussian Process Procedure**
+
+    When `function <GaussianProcess.function>` is executed, it iterates over the folowing steps:
+
+        - draw sample along each dimension of variable with bound specified for each in `search_space
+          <GaussianProcess.search_space>`;
+        ..
+        - compute value of `objective_function <GaussianProcess.objective_function>` for that sample;
+
+    The current iteration is contained in `iteration <GaussianProcess.iteration>`. Iteration continues until [
+    FRED: FILL IN THE BLANK], or `max_iterations <GaussianProcess.max_iterations>` is execeeded.  The function
+    returns the sample that yielded either the highest (if `direction <GaussianProcess.direction>`
+    is *MAXIMIZE*) or lowest (if `direction <GaussianProcess.direction>` is *MINIMIZE*) value of the `objective_function
+    <GaussianProcess.objective_function>`, along with the value for that sample, as well as lists containing all of the
+    samples evaluated and their values if either `save_samples <GaussianProcess.save_samples>` or `save_values
+    <GaussianProcess.save_values>` is `True`, respectively.
+
+    Arguments
+    ---------
+
+    default_variable : list or ndarray : default None
+        specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
+        `objective_function <GaussianProcess.objective_function>`.
+
+    objective_function : function or method
+        specifies function used to evaluate sample in each iteration of the `optimization process
+        <GaussianProcess_Procedure>`; it must be specified and must return a scalar value.
+
+    search_space : list or array
+        specifies bounds of the samples used to evaluate `objective_function <GaussianProcess.objective_function>`
+        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a tuple the first element
+        of which specifies the lower bound and the second of which specifies the upper bound.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        specifies the direction of optimization:  if *MAXIMIZE*, the highest value of `objective_function
+        <GaussianProcess.objective_function>` is sought;  if *MINIMIZE*, the lowest value is sought.
+
+    max_iterations : int : default 1000
+        specifies the maximum number of times the `optimization process<GaussianProcess_Procedure>` is allowed to
+        iterate; if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
+
+    save_samples : bool
+        specifies whether or not to return all of the samples used to evaluate `objective_function
+        <GaussianProcess.objective_function>` in the `optimization process <GaussianProcess_Procedure>`
+        (i.e., a copy of the `search_space <GaussianProcess.search_space>`.
+
+    save_values : bool
+        specifies whether or not to save and return the values of `objective_function <GaussianProcess.objective_function>`
+        for all samples evaluated in the `optimization process <GaussianProcess_Procedure>`.
+
+    Attributes
+    ----------
+
+    variable : ndarray
+        template for sample evaluated by `objective_function <GaussianProcess.objective_function>`.
+
+    objective_function : function or method
+        function used to evaluate sample in each iteration of the `optimization process <GaussianProcess_Procedure>`.
+
+    search_space : list or array
+        contains tuples specifying bounds within which each dimension of `variable <GaussianProcess.variable>` is
+        sampled, and used to evaluate `objective_function <GaussianProcess.objective_function>` in iterations of the
+        `optimization process <GaussianProcess_Procedure>`.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        determines the direction of optimization:  if *MAXIMIZE*, the greatest value of `objective_function
+        <GaussianProcess.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+
+    iteration : int
+        the currention iteration of the `optimization process <GaussianProcess_Procedure>`.
+
+    max_iterations : int
+        determines the maximum number of times the `optimization process<GaussianProcess_Procedure>` is allowed to iterate;
+        if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
+
+    save_samples : True
+        determines whether or not to save and return all samples evaluated by the `objective_function
+        <GaussianProcess.objective_function>` in the `optimization process <GaussianProcess_Procedure>` (if the process
+        completes, this should be identical to `search_space <GaussianProcess.search_space>`.
+
+    save_values : bool
+        determines whether or not to save and return the value of `objective_function
+        <GaussianProcess.objective_function>` for all samples evaluated in the `optimization process <GaussianProcess_Procedure>`.
+    """
+
+    componentName = GRID_SEARCH_FUNCTION
+
+    class Params(OptimizationFunction.Params):
+        variable = Param([[0], [0]], read_only=True)
+
+        save_samples = True
+        save_values = True
+
+        direction = MAXIMIZE
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 search_space=None,
+                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
+                 save_values:tc.optional(bool)=False,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 **kwargs):
+
+        search_function = self._gaussian_process_sampler
+        search_termination_function = self._gaussian_process_satisfied
+        self._return_values = save_values
+
+        self.direction = direction
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+
+        super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         search_function=search_function,
+                         search_space=search_space,
+                         search_termination_function=search_termination_function,
+                         save_samples=True,
+                         save_values=True,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
+        if SEARCH_SPACE in request_set:
+            search_space = request_set[SEARCH_SPACE]
+            # search_space must be specified
+            if search_space is None:
+                raise OptimizationFunctionError("The {} arg must be specified for a {}".
+                                                format(repr(SEARCH_SPACE), self.__class__.__name__))
+            # must be a list or array
+            if not isinstance(search_space, (list, np.ndarray)):
+                raise OptimizationFunctionError("The specification for the {} arg of {} must be a list or array".
+                                                format(repr(SEARCH_SPACE), self.__class__.__name__))
+            # must have same number of items as variable
+            if len(search_space) != len(self.instance_defaults.variable):
+                raise OptimizationFunctionError("The number of items in {} for {} ([]) must equal that of its {} ({})".
+                                                format(repr(SEARCH_SPACE), self.__class__.__name__, len(search_space),
+                                                       repr(VARIABLE), len(self.instance_defaults.variable)))
+            # every item must be a tuple with two elements, both of which are scalars, and first must be <= second
+            for i in search_space:
+                if not isinstance(i, tuple) or len(i) != 2:
+                    raise OptimizationFunctionError("Item specified for {} of {} ({}) is not a tuple with two items".
+                                                    format(repr(SEARCH_SPACE), self.__class__.__name__, i))
+                if not all([np.isscalar(j) for j in i]):
+                    raise OptimizationFunctionError("Both elements of item specified for {} of {} ({}) must be scalars".
+                                                    format(repr(SEARCH_SPACE), self.__class__.__name__, i))
+                if not i[0] < i[1]:
+                    raise OptimizationFunctionError("First element of item in {} specified for {} ({}) "
+                                                    "must be less than or equal to its second element".
+                                                    format(repr(SEARCH_SPACE), self.__class__.__name__, i))
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the sample that yields the optimal value of `objective_function <GaussianProcess.objective_function>`,
+        and possibly all samples evaluated and their corresponding values.
+
+        Optimal value is defined by `direction <GaussianProcess.direction>`:
+        - if *MAXIMIZE*, returns greatest value
+        - if *MINIMIZE*, returns least value
+
+        Returns
+        -------
+
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <GaussianProcess.objective_function>`, depending on `direction <GaussianProcess.direction>`, and the
+            second array contains the value of the function for that sample. If `save_samples
+            <GaussianProcess.save_samples>` is `True`, first list contains all the values sampled in the order they were
+            evaluated; otherwise it is empty.  If `save_values <GaussianProcess.save_values>` is `True`, second list
+            contains the values returned by `objective_function <GaussianProcess.objective_function>` for all the
+            samples in the order they were evaluated; otherwise it is empty.
+        '''
+
+        return_all_samples = return_all_values = []
+
+        # Enforce no MPI for now
+        MPI_IMPLEMENTATION = False
+        if MPI_IMPLEMENTATION:
+            # FIX: WORRY ABOUT THIS LATER
+            pass
+
+        else:
+            last_sample, last_value, all_samples, all_values = super().function(
+                    variable=variable,
+                    execution_id=execution_id,
+                    params=params,
+                    context=context
+            )
+
+            return_optimal_value = max(all_values)
+            return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
+            # if self._return_samples:
+            #     return_all_samples = all_samples
+            if self._return_values:
+                return_all_values = all_values
+
+        return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
+
+    # FRED: THESE ARE THE SHELLS FOR THE METHODS I BELIEVE YOU NEED:
+    def _gaussian_process_sample(self, variable, sample_num, execution_id=None):
+        '''Draw and return sample from search_space.'''
+        # FRED: YOUR CODE HERE
+        # NOTES:
+        #   This method is assigned as the search function of GaussianProcess,
+        #     and should return a sample that will be evaluated in the call to GaussianProcess' `objective_function`
+        #     (in the context of use with an OptimizationControlMechanism, a sample is a control_allocation,
+        #     and the objective_function is the evaluate method of the agent_rep).
+        #   You have accessible:
+        #     variable arg:  the last sample evaluated
+        #     sample_num:  number of current iteration in the search/sampling process
+        #     self.search_space:  self.parameters.search_space.get(execution_id), which you can assume will be a
+        #                         list of tuples, each of which contains the sampling bounds for each dimension;
+        #                         so its length = length of a sample
+        #     (the extra stuff in getting the search space is to support statefulness in parallelization of sims)
+        return # [SAMPLE:  VECTOR SAME SHAPE AS VARIABLE]
+
+    def _gaussian_process_satisfied(self, variable, value, iteration, execution_id=None):
+        '''Determine whether search should be terminated;  return `True` if so, `False` if not.'''
+        # FRED: YOUR CODE HERE
+        return # [BOOLEAN, SPECIFIYING WHETHER TO END THE SEARCH/SAMPLING PROCESS]
