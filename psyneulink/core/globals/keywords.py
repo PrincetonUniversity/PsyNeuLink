@@ -601,6 +601,7 @@ ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 GRADIENT_OPTIMIZATION_FUNCTION = "GradientOptimization Function"
 GRID_SEARCH_FUNCTION = 'GridSearch Function'
+GAUSSIAN_PROCESS_FUNCTION = 'GaussianProcess Function'
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbian Learning Function'
 KOHONEN_FUNCTION = 'Kohonen Learning Function'

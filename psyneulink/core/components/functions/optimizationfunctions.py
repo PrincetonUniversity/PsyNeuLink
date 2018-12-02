@@ -30,11 +30,13 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
+from psyneulink.core.globals.keywords import \
+    DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
+    OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import call_with_pruned_args
 
-__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch',
+__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',
            'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE']
 
@@ -1162,7 +1164,7 @@ class GaussianProcess(OptimizationFunction):
         <GaussianProcess.objective_function>` for all samples evaluated in the `optimization process <GaussianProcess_Procedure>`.
     """
 
-    componentName = GRID_SEARCH_FUNCTION
+    componentName = GAUSSIAN_PROCESS_FUNCTION
 
     class Params(OptimizationFunction.Params):
         variable = Param([[0], [0]], read_only=True)
