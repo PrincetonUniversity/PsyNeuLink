@@ -92,20 +92,22 @@ class TestLCControlMechanism:
             default_variable = 10.0
         )
         if mode == 'Python':
-            val = LC.execute([10.0])
+            EX = LC.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(LC, None)
-            val = e.execute([10.0])
-            benchmark(e.execute, [10.0])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(LC, None)
-            val = e.cuda_execute([10.0])
-            benchmark(e.cuda_execute, [10.0])
+            EX = e.cuda_execute
+
+        val = EX([10.0])
+
         # LLVM returns combination of all output states so let's do that for
         # Python as well
         if mode == 'Python':
             val = [s.value for s in LC.output_states]
-            benchmark(LC.execute, [[10.0]])
+
+        benchmark(EX, [10.0])
         assert np.allclose(val, [3.00139776, 3.00139776, 3.00139776, 3.00139776])
 
 
