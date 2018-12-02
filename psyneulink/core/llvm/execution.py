@@ -51,16 +51,19 @@ class CUDAExecution:
             return bytearray(b'aaaa')
         return bytearray(data)
 
+    def _get_device_buffer(self, data):
+        return jit_engine.pycuda.driver.to_device(self._get_buffer(data))
+
     @property
     def _cuda_params(self):
         if self.__cuda_params is None:
-            self.__cuda_params = jit_engine.pycuda.driver.to_device(self._get_buffer(self._param_struct))
+            self.__cuda_params = self._get_device_buffer(self._param_struct)_
         return self.__cuda_params
 
     @property
     def _cuda_context(self):
         if self.__cuda_context is None:
-            self.__cuda_context = jit_engine.pycuda.driver.to_device(self._get_buffer(self._context_struct))
+            self.__cuda_context = self._get_devicebuffer(self._context_struct)
         return self.__cuda_context
 
     @property
