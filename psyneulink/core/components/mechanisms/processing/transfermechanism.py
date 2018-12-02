@@ -1071,12 +1071,14 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_integrator_function(self, context=None):
 
+        variable = self._parse_function_variable(self.instance_defaults.variable, context=context)
+
         noise = self.get_current_mechanism_param(NOISE)
         initial_value = self.get_current_mechanism_param(INITIAL_VALUE)
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE)
 
         if isinstance(self.integrator_function, type):
-            self.integrator_function = self.integrator_function(self.instance_defaults.variable,
+            self.integrator_function = self.integrator_function(variable,
                                                                 initializer=initial_value,
                                                                 noise=noise,
                                                                 rate=integration_rate,
