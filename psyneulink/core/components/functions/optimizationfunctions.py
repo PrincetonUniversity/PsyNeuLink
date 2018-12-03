@@ -28,6 +28,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink.core.components.states.modulatorysignals.controlsignal import SampleIterator
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
@@ -233,7 +234,7 @@ class OptimizationFunction(Function_Base):
         objective_function = Param(lambda x: 0, stateful=False, loggable=False)
         search_function = Param(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Param(lambda x, y, z: True, stateful=False, loggable=False)
-        search_space = Param([0], stateful=False, loggable=False)
+        search_space = Param([SampleIterator([0])], stateful=False, loggable=False)
 
         save_samples = False
         save_values = False
@@ -280,7 +281,7 @@ class OptimizationFunction(Function_Base):
             self.search_termination_function = search_termination_function
 
         if search_space is None:
-            self.search_space = [0]
+            self.search_space = [SampleIterator([0])]
             self._unspecified_args.append(SEARCH_SPACE)
         else:
             self.search_space = search_space
@@ -870,7 +871,11 @@ class GridSearch(OptimizationFunction):
     componentName = GRID_SEARCH_FUNCTION
 
     class Params(OptimizationFunction.Params):
-        variable = Param([[0], [0]], read_only=True)
+        # # MODIFIED 12/3/18 OLD:
+        # variable = Param([[0], [0]], read_only=True)
+        # MODIFIED 12/3/18 NEW: [JDC]
+        variable = Param([SampleIterator([0]),SampleIterator([0])], read_only=True)
+        # MODIFIED 12/3/18 END
 
         save_samples = True
         save_values = True
@@ -1054,11 +1059,38 @@ class GridSearch(OptimizationFunction):
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
-        return self.parameters.search_space.get(execution_id)[sample_num]
+        return self.grid[sample_num]
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
-        return iteration != len(self.parameters.search_space.get(execution_id))
+        return iteration != len(self.grid)
 
+    @property
+    def grid(self):
+
+        try:
+            return self._grid
+
+        except AttributeError:
+            sample_lists = []
+
+            # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+            #     (one sample from the allocationSample of each ControlSignal)
+            # Reference for implementation below:
+            # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+
+            if self.search_space is not None:
+                  for i in self.search_space:
+                      sample_lists.append(i())
+            else:
+                assert False
+
+            grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
+
+            # Insure that ControlSignal in each sample is in its own 1d array
+            re_shape = (grid.shape[0], grid.shape[1], 1)
+
+            self._grid = grid.reshape(re_shape)
+            return self._grid
 
 class GaussianProcess(OptimizationFunction):
     """

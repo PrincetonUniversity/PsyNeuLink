@@ -401,7 +401,8 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.featureinputstate import FeatureInputState
 from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
+from psyneulink.core.components.states.modulatorysignals.controlsignal import \
+    ControlSignal, ControlSignalCosts, SampleIterator
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
@@ -414,7 +415,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable, is_iter
 
 __all__ = [
-    'OptimizationControlMechanism', 'OptimizationControlMechanismError', 'SampleSpec',
+    'OptimizationControlMechanism', 'OptimizationControlMechanismError',
     'AGENT_REP', 'FEATURES', 'SHADOW_EXTERNAL_INPUTS'
 ]
 
@@ -792,13 +793,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
-        # TEMP:
-        a = self.control_allocation_search_space
-        s = self._get_control_allocation_grid_space()
-        # assert all(s == t for s, t = zip(s,t))
-        # assert True
-
-
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()
 
@@ -806,35 +800,34 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
-    # FIX: MOVE THIS TO GridSearch
-    def _get_control_allocation_grid_space(self, execution_id=None):
-
-        control_signal_sample_lists = []
-
-        # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-        #     (one sample from the allocationSample of each ControlSignal)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-
-        if self.search_space is not None:
-              for i in self.search_space:
-                  control_signal_sample_lists.append(list(i))
-        else:
-            for control_signal in self.control_signals:
-                control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
-
-
-        control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
-
-        # Insure that ControlSignal in each sample is in its own 1d array
-        re_shape = (control_allocation_search_space.shape[0], control_allocation_search_space.shape[1], 1)
-
-        control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
-
-        self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
-
-        return control_allocation_search_space
-
+    # # FIX: MOVE THIS TO GridSearch
+    # def _get_control_allocation_grid_space(self, execution_id=None):
+    #
+    #     control_signal_sample_lists = []
+    #
+    #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+    #     #     (one sample from the allocationSample of each ControlSignal)
+    #     # Reference for implementation below:
+    #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+    #
+    #     if self.search_space is not None:
+    #           for i in self.search_space:
+    #               control_signal_sample_lists.append(list(i))
+    #     else:
+    #         for control_signal in self.control_signals:
+    #             control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
+    #
+    #
+    #     control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
+    #
+    #     # Insure that ControlSignal in each sample is in its own 1d array
+    #     re_shape = (control_allocation_search_space.shape[0], control_allocation_search_space.shape[1], 1)
+    #
+    #     control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
+    #
+    #     self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
+    #
+    #     return control_allocation_search_space
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''

@@ -124,9 +124,9 @@ all of the `ControlProjections <ControlProjection>` that project from that Contr
 *Allocation, Function and Intensity*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
-which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
-which to use (such as the `EVCControlMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
+*Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to which
+it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine which to
+use (such as the `EVCControlMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
@@ -304,6 +304,7 @@ from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
+from collections import namedtuple
 
 from psyneulink.core.components.component import function_type, method_type
 # import Components
@@ -319,17 +320,19 @@ from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_st
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+from psyneulink.core.globals.keywords import \
+    ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, \
+    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from psyneulink.core.globals.utilities import is_numeric, is_iter, iscompatible, \
+    kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
     'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
-    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'kpAdjustmentCost', 'kpAllocation', 'kpCost',
-    'kpCostRange', 'kpDurationCost', 'kpIntensity', 'kpIntensityCost',
+    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'SampleSpec',
 ]
 
 # class OutputStateLog(IntEnum):
@@ -355,18 +358,160 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
-
-# Attributes / KVO keypaths
-# kpLog = "Control Signal Log"
-kpAllocation = "Control Signal Allocation"
-kpIntensity = "Control Signal Intensity"
-kpCostRange = "Control Signal Cost Range"
-kpIntensityCost = "Control Signal Intensity Cost"
-kpAdjustmentCost = "Control Signal Adjustment Cost"
-kpDurationCost = "Control Signal duration_cost"
-kpCost = "Control Signal Cost"
-
 COST_OPTIONS = 'cost_options'
+
+
+# FIX: USE THESE TO REPLACE ONE AT BOTTOM WHEN UPGRADE TO PYTHON 3.5.2 OR 3.6
+# class SampleSpec(NamedTuple):
+#     begin: numbers.Number
+#     end: numbers.Number
+#     generator: callable
+
+# SampleSpec = namedtuple('SampleSpec', [('begin', numbers.Number), ('end', numbers.Number), ('generator', callable)])
+
+# SampleSpec = namedtuple('SampleSpec', 'begin, end, num, generator')
+
+class SampleSpec():
+    '''Specify equivalent of tuple for use by SampleIterator'''
+    @tc.typecheck
+    def __init__(self,
+                 begin:tc.any(int, float),
+                 end:tc.any(int, float),
+                 num:tc.optional(tc.any(int, float))=None,
+                 generator:tc.optional(tc.any(is_iter, is_function_type))=None
+                 ):
+        '''Must specify either begin, end and num or generator'''
+        if  (begin is None or end is None or num is None) and generator is None:
+            raise ControlSignalError("Must specify either {}, {} and {} or {} for {}".
+                                     format(repr('begin'), repr('end'), repr('num'), repr('generator'),
+                                            self.__class__.__name__))
+        self.begin = begin
+        self.end = end
+        self.num = num
+        self.generator = generator
+
+
+class SampleIterator():
+    '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
+    @tc.typecheck
+    def __init__(self, sample_spec:tc.any(list, SampleSpec)):
+        '''Create SampleIterator from list or SampleSpec.
+
+        If **sample_spec** is a list, create iterator from it that is called by __next__.
+        If **sample_spec** is a SampleSpec, use its SampleSpec.generator item (which can be a function or an iterator)
+            to generate an iterator called by __next__;  if SampleSpec.num is specified (i.e., it is not None),
+            it determines the number of samples that can be generated from SampleSpec.generator  before call to
+            __next__ generates a `StopIteration` exception; otherwise only a single value is returned.
+
+        Can be called to generate list from itself.
+
+        Arguments
+        ---------
+
+        sample_spec : list or SampleSpec
+            specifies what to use for `iterator <SampleIterator.iterator>`.
+
+        Attributes
+        ----------
+
+        begin : number
+            first item of list or SampleSpec.begin
+
+        end : number
+            last item of list or SampleSpec.end
+
+        num : int
+            length of list or SampleSpec.num.
+
+        Returns
+        -------
+
+        List(self) : list
+
+        '''
+
+        if isinstance(sample_spec, list):
+            self.begin = sample_spec[0]
+            self.end = sample_spec[-1]
+            self.num = len(sample_spec)
+            self._iterator = iter(sample_spec)
+
+        # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
+        elif isinstance(sample_spec, SampleSpec) :
+            if not np.isscalar(sample_spec.begin):
+                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
+                              "must be a scalar".format(repr('begin'), sample_spec.begin)
+            if not np.isscalar(sample_spec.end):
+                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
+                              "must be a scalar".format(repr('end'), sample_spec.end)
+            if sample_spec.generator and not (is_iter(sample_spec.generator) or is_function_type(sample_spec.generator)):
+                assert False, "PROGRAM ERROR: \'generator\' item of SampleSpec in sample_spec argument of " \
+                              "SampleIterator ({}) must be a function or iterator".format(sample_spec.generator)
+
+            # FIX: ADD SUPPORT FOR RANGE-LIKE BEHAVIOR:  CONSTRUCT GENERATOR FROM begin, end and num
+            #      IF num IS AN INT, USE AS SUCH;  IF IT IS A FLOAT, USE AS STEP
+
+            self.begin = float(sample_spec.begin)
+            self.end = float(sample_spec.end)
+            self.num = sample_spec.num
+
+            if sample_spec.generator is None:
+                assert not None in {self.begin, self.end, self.num}, \
+                    'PROGRAM ERROR: {} should have either {}, {} and {} or {}'.\
+                        format(repr('begin'), repr('end'), repr('num'),repr('generator'),)
+                if isinstance(self.num, int):
+                    if self.num == 1:
+                        step = 0
+                    else:
+                        step = (self.end - self.begin) / (self.num-1)
+                    def sample_gen():
+                        for n in range(0, self.num):
+                            yield self.begin + n * step
+                else:
+                    step = self.num
+                    def sample_gen():
+                        result = self.begin
+                        while result < self.end:
+                            yield result
+                            result += step
+                self._iterator = sample_gen()
+
+            elif is_iter(sample_spec.generator):
+                self._iterator = sample_spec.generator
+
+            elif is_function_type(sample_spec.generator):
+                if sample_spec.num:
+                    def sample_gen():
+                        for n in range(0, self.num):
+                            yield sample_spec.generator()
+                    self._iterator = sample_gen()
+                else:
+                    self._iterator = sample_spec.generator
+            else:
+                assert False, 'PROGRAM ERROR: {} item of {} passed to sample_spec arg of {} ' \
+                              'is not an iterator or a function_type'.\
+                              format(repr('generator'), SampleSpec.__name__, self.__class__.__name__)
+
+        else:
+            assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
+                          format(repr('sample_spec'), self.__class__.__name__, SampleSpec.__name__)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if is_iter(self._iterator):
+            item = next(self._iterator)
+        else:
+            item = self._iterator()
+        if item == StopIteration:
+            raise StopIteration  # signals "the end"
+        return item
+
+    def __call__(self):
+        return list(self)
+
+
 class ControlSignalCosts(IntEnum):
     """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
 
@@ -427,7 +572,7 @@ class ControlSignal(ModulatorySignal):
         intensity_cost_function=Exponential,                      \
         adjustment_cost_function=Linear,                          \
         duration_cost_function=Integrator,                        \
-        combine_costs_function=Reduce(operation=SUM),          \
+        combine_costs_function=Reduce(operation=SUM),             \
         allocation_samples=self.ClassDefaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
         projections=None                                          \
@@ -495,7 +640,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to combine the results of any cost functions that are enabled, the result of
         which is assigned as the ControlSignal's `cost <ControlSignal.cost>` attribute.
 
-    allocation_samples : list : default range(0.1, 1, 0.1)
+    allocation_samples : list, 1d array, or SampleSpec : default SampleSpec(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
         `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
@@ -538,9 +683,10 @@ class ControlSignal(ModulatorySignal):
     last_allocation : float
         value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
 
-    allocation_samples : list : DEFAULT_SAMPLE_VALUES
-        set of values to sample by the ControlSignal's `owner <ControlSignal.owner>` to determine its
-        `control_allocation <ControlMechanism.control_allocation>`.
+    allocation_samples : SampleIterator
+        iterator created from **allocation_samples** specification that generates a set of values to sample by the
+        ControlSignal's `owner <ControlSignal.owner>` to determine its `control_allocation
+        <ControlMechanism.control_allocation>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
@@ -756,12 +902,12 @@ class ControlSignal(ModulatorySignal):
                          )
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate allocation_samples and control_signal cost functions
+        """Validate cost functions and allocation_samples
 
         Checks if:
         - cost functions are all appropriate
-        - allocation_samples is a list or 1d np.array
-        - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
+           (i.e., are references to valid ControlProjection costFunctions (listed in self.costFunctions)
+        - allocation_samples is a list, array or SampleSpec
 
         """
 
@@ -835,10 +981,12 @@ class ControlSignal(ModulatorySignal):
                     request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
             elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
                 pass
+            elif isinstance(allocation_samples, SampleSpec):
+                pass
             else:
                 raise ControlSignalError("allocation_samples argument ({}) in {} must be "
-                                             "a list or 1D np.array of numbers".
-                                         format(allocation_samples, self.name))
+                                         "a list or 1D array of numbers, or a {}".
+                                         format(allocation_samples, self.name, SampleSpec.__name__))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 

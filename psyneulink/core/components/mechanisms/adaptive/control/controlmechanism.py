@@ -345,7 +345,6 @@ import numpy as np
 import threading
 import typecheck as tc
 import warnings
-from collections import namedtuple
 
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
@@ -357,11 +356,14 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+from psyneulink.core.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
+    PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import CNodeRole, ContentAddressableList, is_iterable, is_iter
+from psyneulink.core.globals.utilities import CNodeRole, ContentAddressableList, is_iterable
 
 __all__ = [
     'CONTROL_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -390,101 +392,6 @@ def _is_control_spec(spec):
 class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
-
-
-# FIX: USE THESE TO REPLACE ONE AT BOTTOM WHEN UPGRADE TO PYTHON 3.5.2 OR 3.6
-# class SampleSpec(NamedTuple):
-#     begin: numbers.Number
-#     end: numbers.Number
-#     generator: callable
-
-# SampleSpec = namedtuple('SampleSpec', [('begin', numbers.Number), ('end', numbers.Number), ('generator', callable)])
-
-SampleSpec = namedtuple('SampleSpec', 'begin, end, num, generator')
-
-
-class SampleIterator():
-    '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
-    @tc.typecheck
-    def __init__(self, sample_spec:tc.any(list, SampleSpec)):
-        '''Create SampleIterator from list or SampleSpec.
-
-        If **sample_spec** is a list, create iterator from it that is called by __next__.
-        If **sample_spec** is a SampleSpec, use its SampleSpec.generator item (which can be a function or an iterator)
-            to generate an iterator called by __next__;  if SampleSpec.num is specified (i.e., it is not None),
-            it determines the number of samples that can be generated from SampleSpec.generator  before call to
-            __next__ generates a `StopIteration` exception; otherwise only a single value is returned.
-
-        Arguments
-        ---------
-
-        sample_spec : list or SampleSpec
-            specifies what to use for `iterator <SampleIterator.iterator>`.
-
-        Attributes
-        ----------
-
-        begin : number
-            first item of list or SampleSpec.begin
-
-        end : number
-            last item of list or SampleSpec.end
-
-        num : int
-            length of list or SampleSpec.num.
-        '''
-
-        if isinstance(sample_spec, list):
-            self.begin = sample_spec[0]
-            self.end = sample_spec[-1]
-            self.num = len(sample_spec)
-            self._iterator = iter(sample_spec)
-
-        # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
-        elif isinstance(sample_spec, SampleSpec) :
-            if not np.isscalar(sample_spec.begin):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('begin'), sample_spec.begin)
-            if not np.isscalar(sample_spec.end):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('end'), sample_spec.end)
-            if not (is_iter(sample_spec.generator) or is_function_type(sample_spec.generator)):
-                assert False, "PROGRAM ERROR: \'generator\' item of SampleSpec in sample_spec argument of " \
-                              "SampleIterator ({}) must be a function or iterator".format(sample_spec.generator)
-
-            self.begin = sample_spec.begin
-            self.end = sample_spec.end
-            self.num = sample_spec.num
-            if is_iter(sample_spec.generator):
-                self._iterator = sample_spec.generator
-            elif is_function_type(sample_spec.generator):
-                if sample_spec.num:
-                    def sample_gen():
-                        for n in range(0, sample_spec.num):
-                            yield sample_spec.generator()
-                    self._iterator = sample_gen()
-                else:
-                    self._iterator = sample_spec.generator
-            else:
-                assert False, 'PROGRAM ERROR: {} item of {} passed to sample_spec arg of {} ' \
-                              'is not an iterator or a function_type'.\
-                              format(repr('generator'), SampleSpec.__name__, self.__class__.__name__)
-
-        else:
-            assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
-                          format(repr('sample_spec'), self.__class__.__name__, SampleSpec.__name__)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if is_iter(self._iterator):
-            item = next(self._iterator)
-        else:
-            item = self._iterator()
-        if item == StopIteration:
-            raise StopIteration  # signals "the end"
-        return item
 
 
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
@@ -688,7 +595,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
         `control_allocation <ControlMechanism.control_allocation>`.
 
-    control_allocation : 2d np.array
+    control_allocation : 2d array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals` attribute;  the control_allocation is the same as the
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
