@@ -2349,12 +2349,6 @@ class Mechanism_Base(Mechanism):
                                             ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value.get(execution_id))
 
-        # MODIFIED 10/28/18 OLD:  [JDC: DUPLICATES SAME ON COMPONENT AND THUS DOUBLE-INCREMENTS]
-        # if self.parameters.context.get(execution_id).initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
-        #     self._increment_execution_count()
-        #     self._update_current_execution_time(context=context, execution_id=execution_id)
-        # MODIFIED 10/28/18 END
-
         return value
 
     def run(

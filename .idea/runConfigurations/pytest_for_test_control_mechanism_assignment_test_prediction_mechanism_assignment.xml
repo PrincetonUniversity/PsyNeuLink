@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="pytest for test_control_mechanism_assignment.test_prediction_mechanism_assignment" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
-    <module name="PsyNeuLink (Dropbox)" />
+  <configuration default="false" factoryName="py.test" name="pytest for test_control_mechanism_assignment.test_prediction_mechanism_assignment" nameIsGenerated="true" singleton="true" type="tests">
+    <module name="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <option name="SDK_HOME" value="" />

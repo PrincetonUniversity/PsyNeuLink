@@ -789,6 +789,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                            SEARCH_SPACE: self.control_allocation_search_space
                                            })
 
+        # test_local_search_space = self._get_control_allocation_grid_space
+
         # self.search_function = self.function_object.search_function
         # self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
@@ -801,33 +803,33 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator()
 
     # # FIX: MOVE THIS TO GridSearch
-    # def _get_control_allocation_grid_space(self, execution_id=None):
-    #
-    #     control_signal_sample_lists = []
-    #
-    #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-    #     #     (one sample from the allocationSample of each ControlSignal)
-    #     # Reference for implementation below:
-    #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    #
-    #     if self.search_space is not None:
-    #           for i in self.search_space:
-    #               control_signal_sample_lists.append(list(i))
-    #     else:
-    #         for control_signal in self.control_signals:
-    #             control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
-    #
-    #
-    #     control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
-    #
-    #     # Insure that ControlSignal in each sample is in its own 1d array
-    #     re_shape = (control_allocation_search_space.shape[0], control_allocation_search_space.shape[1], 1)
-    #
-    #     control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
-    #
-    #     self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
-    #
-    #     return control_allocation_search_space
+    def _get_control_allocation_grid_space(self, execution_id=None):
+
+        control_signal_sample_lists = []
+
+        # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+        #     (one sample from the allocationSample of each ControlSignal)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+
+        if self.search_space is not None:
+              for i in self.search_space:
+                  control_signal_sample_lists.append(list(i))
+        else:
+            for control_signal in self.control_signals:
+                control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
+
+
+        control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
+
+        # Insure that ControlSignal in each sample is in its own 1d array
+        re_shape = (control_allocation_search_space.shape[0], control_allocation_search_space.shape[1], 1)
+
+        control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
+
+        self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
+
+        return control_allocation_search_space
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
@@ -1086,6 +1088,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 if isinstance(a, range):
                     a = list(a)
                 control_allocation_search_space.append(SampleIterator(sample_spec=a))
+            # FIX: DOES THIS NEED TO BE STATEFUL?
             # self.parameters._control_allocation_search_space.set(control_allocation_search_space, override=True)
             self._control_allocation_search_space = control_allocation_search_space
 

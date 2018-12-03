@@ -1059,38 +1059,77 @@ class GridSearch(OptimizationFunction):
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
-        return self.grid[sample_num]
+        sample = self.grid[sample_num]
+        return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
-        return iteration != len(self.grid)
+
+        # # MODIFIED 12/3/18 OLD:
+        # return iteration != len(self.grid)
+        # MODIFIED 12/3/18 NEW:
+        try:
+            return iteration != len(self._grid)
+        except AttributeError:
+            return True
+        # MODIFIED 12/3/18 END
 
     @property
     def grid(self):
 
-        try:
+        # # MODIFIED 12/3/18 OLD:
+        # try:
+        #     return self._grid
+        #     # raise AttributeError
+        #
+        # except AttributeError:
+        #     sample_lists = []
+        #
+        #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+        #     #     (one sample from the allocationSample of each ControlSignal)
+        #     # Reference for implementation below:
+        #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        #
+        #     if self.search_space is not None:
+        #           for i in self.search_space:
+        #               sample_lists.append(i())
+        #     else:
+        #         assert False
+        #
+        #     grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
+        #
+        #     # Insure that ControlSignal in each sample is in its own 1d array
+        #     re_shape = (grid.shape[0], grid.shape[1], 1)
+        #
+        #     self._grid = grid.reshape(re_shape)
+        #     return self._grid
+        # MODIFIED 12/3/18 NEW:
+        if hasattr(self, '_grid') and self.context.initialization_status != ContextFlags.INITIALIZING:
             return self._grid
 
-        except AttributeError:
-            sample_lists = []
+        sample_lists = []
 
-            # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-            #     (one sample from the allocationSample of each ControlSignal)
-            # Reference for implementation below:
-            # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+        #     (one sample from the allocationSample of each ControlSignal)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
 
-            if self.search_space is not None:
-                  for i in self.search_space:
-                      sample_lists.append(i())
-            else:
-                assert False
+        # from itertools import product
+        # test_grid = list(product(self.search_space))
 
-            grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
+        if self.search_space is not None:
+              for i in self.search_space:
+                  sample_lists.append(i())
+        else:
+            assert False
 
-            # Insure that ControlSignal in each sample is in its own 1d array
-            re_shape = (grid.shape[0], grid.shape[1], 1)
+        grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
 
-            self._grid = grid.reshape(re_shape)
-            return self._grid
+        # Insure that ControlSignal in each sample is in its own 1d array
+        re_shape = (grid.shape[0], grid.shape[1], 1)
+
+        self._grid = grid.reshape(re_shape)
+        return self._grid
+        # MODIFIED 12/3/18 END
 
 class GaussianProcess(OptimizationFunction):
     """
