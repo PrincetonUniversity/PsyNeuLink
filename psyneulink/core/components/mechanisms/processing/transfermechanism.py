@@ -836,7 +836,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  integration_rate=0.5,
                  integrator_mode=False,
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
@@ -858,7 +858,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_states = [RESULTS]
 
         initial_value = self._parse_arg_initial_value(initial_value)
-        self.integrator_function = integrator_function
+        self.integrator_function = integrator_function or AdaptiveIntegrator
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
