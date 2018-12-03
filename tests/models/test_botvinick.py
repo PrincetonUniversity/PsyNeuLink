@@ -1,7 +1,8 @@
 import numpy as np
-#import matplotlib.pyplot as plt
-import psyneulink as pnl
 import pytest
+
+import psyneulink as pnl
+import psyneulink.core.llvm as pnlvm
 
 # This script implements Figure 1 of Botvinick, M. M., Braver, T. S., Barch, D. M., Carter, C. S., & Cohen, J. D. (2001).
 # Conflict monitoring and cognitive control. Psychological Review, 108, 624–652.
@@ -21,13 +22,19 @@ import psyneulink.core.components.functions.transferfunctions
 @pytest.mark.model
 @pytest.mark.benchmark
 @pytest.mark.parametrize("reps", [1, 10, 100])
-@pytest.mark.parametrize("mode", ['Python', 'LLVM', 'LLVMExec', 'LLVMRun'])
+@pytest.mark.parametrize("mode", ['Python', 'LLVM', 'LLVMExec', 'LLVMRun', 'PTXExec'])
 def test_botvinick_model(benchmark, mode, reps):
     if reps > 1 and not pytest.config.getoption("--stress"):
         benchmark.disabled = True
         benchmark(lambda _:0,0)
         pytest.skip("not stressed")
         return # This should not be reached
+
+    # Skip PTX here, pytest does not know how to combine marks
+    if mode.startswith('PTX') and not pnlvm.ptx_enabled:
+        benchmark.disabled = True
+        benchmark(lambda _:0,0)
+        pytest.skip("ptx/cuda not enabled/avilable")
 
     benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
 
@@ -297,7 +304,7 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[2][ntrials0 - 1][1], [0.94524311])
         assert np.allclose(res[2][-1][1], [0.89963791])
 
-    if mode[:4] == 'LLVM' or reps != 10:
+    if mode != 'Python' or reps != 10:
         return
     r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY') #get logged DECISION_ENERGY dictionary
     energy = r2['DECISION_ENERGY']                                #save logged DECISION_ENERGY
