@@ -92,9 +92,10 @@ class CUDAExecution:
 
 class FuncExecution(CUDAExecution):
 
-    def __init__(self, component, execution_id):
+    def __init__(self, component, execution_ids=[None]):
         super().__init__()
         self._bin_func = component._llvmBinFunction
+        execution_id = execution_ids[0]
 
         par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
 

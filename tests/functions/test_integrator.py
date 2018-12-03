@@ -61,7 +61,7 @@ def test_basic(func, variable, params, expected, benchmark):
 def test_llvm(func, variable, params, expected, benchmark):
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f, None)
+    m = pnlvm.execution.FuncExecution(f)
     m.execute(variable)
     m.execute(variable)
     res = benchmark(m.execute, variable)
@@ -79,7 +79,7 @@ def test_llvm(func, variable, params, expected, benchmark):
 def test_ptx_cuda(func, variable, params, expected, benchmark):
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f, None)
+    m = pnlvm.execution.FuncExecution(f)
     m.cuda_execute(variable)
     m.cuda_execute(variable)
     res = benchmark(m.cuda_execute, variable)
