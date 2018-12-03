@@ -40,9 +40,9 @@ def _tupleize(x):
 
 
 class CUDAExecution:
-    def __init__(self):
-        self.__cuda_params = None
-        self.__cuda_context = None
+    def __init__(self, buffers=['param_struct', 'context_struct']):
+        for b in buffers:
+            setattr(self, "_buffer_cuda_" + b, None)
         self.__cuda_out_buf = None
 
     def _get_buffer(self, data):
@@ -54,17 +54,16 @@ class CUDAExecution:
     def _get_device_buffer(self, data):
         return jit_engine.pycuda.driver.to_device(self._get_buffer(data))
 
-    @property
-    def _cuda_params(self):
-        if self.__cuda_params is None:
-            self.__cuda_params = self._get_device_buffer(self._param_struct)_
-        return self.__cuda_params
+    def __getattr__(self, attribute):
+        if not attribute.startswith("_cuda"):
+            return getattr(super(), attribute)
 
-    @property
-    def _cuda_context(self):
-        if self.__cuda_context is None:
-            self.__cuda_context = self._get_devicebuffer(self._context_struct)
-        return self.__cuda_context
+        private_attr = "_buffer" + attribute
+        if getattr(self, private_attr) is None:
+            new_buffer = self._get_device_buffer(getattr(self, attribute[5:]))
+            setattr(self, private_attr, new_buffer)
+
+        return getattr(self, private_attr)
 
     @property
     def _cuda_out_buf(self):
@@ -79,7 +78,8 @@ class CUDAExecution:
         new_var = np.asfarray(variable)
         data_in = jit_engine.pycuda.driver.In(new_var)
 
-        self._bin_func.cuda_call(self._cuda_params, self._cuda_context,
+        self._bin_func.cuda_call(self._cuda_param_struct,
+                                 self._cuda_context_struct,
                                  data_in, self._cuda_out_buf)
 
         # Copy the result from the device
