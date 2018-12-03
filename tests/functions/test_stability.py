@@ -49,7 +49,7 @@ def test_basic(variable, metric, normalize, expected, benchmark):
 def test_llvm(variable, metric, normalize, expected, benchmark):
     f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.execute, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1
@@ -64,7 +64,7 @@ def test_llvm(variable, metric, normalize, expected, benchmark):
 def test_ptx_cuda(variable, metric, normalize, expected, benchmark):
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.cuda_execute, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1

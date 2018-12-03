@@ -2479,9 +2479,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute:
             try:
                 self.__bin_initialize(execution_id)
-                if bin_execute == 'LLVMExec':
+                if str(bin_execute).endswith('Exec'):
                     __execution = self._compilation_data.execution.get(execution_id)
-                    __execution.execute(inputs)
+                    if bin_execute.startswith('LLVM'):
+                        __execution.execute(inputs)
+                    elif bin_execute.startswith('PTX'):
+                        __execution.cuda_execute(inputs)
                     return __execution.extract_node_output(self.output_CIM)
 
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
@@ -2806,13 +2809,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
-        if bin_execute == 'LLVMRun':
+        if str(bin_execute).endswith('Run'):
             # initialize from base context but don't overwrite any values already set for this execution_id
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
             self.__bin_initialize(execution_id)
-            results += self._compilation_data.execution.get(execution_id).run(inputs, num_trials, num_inputs_sets)
+            EX = self._compilation_data.execution.get(execution_id)
+            if bin_execute.startswith('LLVM'):
+                results += EX.run(inputs, num_trials, num_inputs_sets)
+            elif bin_execute.startswith('PTX'):
+                results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
             full_results = self.parameters.results.get(execution_id)
             if full_results is None:
@@ -3029,7 +3036,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def __bin_initialize(self, execution_id=None):
         if self._compilation_data.execution.get(execution_id) is None:
-            self._compilation_data.execution.set(pnlvm.CompExecution(self, execution_id), execution_id)
+            self._compilation_data.execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
         is_mech = isinstance(node, Mechanism)
