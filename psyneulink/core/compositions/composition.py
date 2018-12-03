@@ -2479,9 +2479,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute:
             try:
                 self.__bin_initialize(execution_id)
-                if bin_execute == 'LLVMExec':
+                if bin_execute.endswith('Exec'):
                     __execution = self._compilation_data.execution.get(execution_id)
-                    __execution.execute(inputs)
+                    if bin_execute.startswith('LLVM'):
+                        __execution.execute(inputs)
+                    elif bin_execute.startswith('PTX'):
+                        __execution.cuda_execute(inputs)
                     return __execution.extract_node_output(self.output_CIM)
 
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]

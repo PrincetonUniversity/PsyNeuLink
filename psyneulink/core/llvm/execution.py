@@ -139,9 +139,10 @@ class MechExecution(FuncExecution):
         return res
 
 
-class CompExecution:
+class CompExecution(CUDAExecution):
 
     def __init__(self, composition, execution_id):
+        super().__init__(buffers=['context_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self.__frozen_vals = None
         self.__conds = None
@@ -255,3 +256,19 @@ class CompExecution:
                           self._data_struct, inputs, outputs, runs_count,
                           input_count)
         return _convert_ctype_to_python(outputs)
+
+    def cuda_execute(self, inputs):
+        bin_exec = self._composition._get_bin_execution()
+        # Create input buffer
+        inputs = self._get_input_struct(inputs)
+        input_data = bytearray(inputs)
+        data_in = jit_engine.pycuda.driver.to_device(input_data)
+
+        bin_exec.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
+                           data_in, self._cuda_data_struct, self._cuda_conditions)
+
+        # Copy the data struct from the device
+        vo_ty = bin_exec.byref_arg_types[3]
+        out_buf = bytearray(ctypes.sizeof(vo_ty))
+        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_data_struct)
+        self._data_struct = vo_ty.from_buffer(out_buf)
