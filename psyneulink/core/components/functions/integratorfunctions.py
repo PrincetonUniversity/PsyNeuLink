@@ -1714,7 +1714,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     class Params(Integrator.Params):
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Param(0.02, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1722,7 +1721,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset=0.0,
-                 time_step_size=0.02,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -1733,7 +1731,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                                   initializer=initializer,
                                                   noise=noise,
                                                   offset=offset,
-                                                  time_step_size=time_step_size,
                                                   params=params)
 
         super().__init__(
@@ -2110,10 +2107,10 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
+                 threshold=100.0,
                  time_step_size=1.0,
                  t0=0.0,
                  initializer=None,
-                 threshold=100.0,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
