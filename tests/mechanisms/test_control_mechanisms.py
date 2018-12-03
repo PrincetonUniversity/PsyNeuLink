@@ -94,10 +94,10 @@ class TestLCControlMechanism:
         if mode == 'Python':
             EX = LC.execute
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(LC, None)
+            e = pnlvm.execution.MechExecution(LC)
             EX = e.execute
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(LC, None)
+            e = pnlvm.execution.MechExecution(LC)
             EX = e.cuda_execute
 
         val = EX([10.0])

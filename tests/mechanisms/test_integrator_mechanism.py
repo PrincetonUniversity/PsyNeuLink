@@ -395,11 +395,11 @@ class TestIntegratorFunctions:
             val = [x.value for x in I.output_states]
             benchmark(I.execute, [[1], [2]])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.execute([[1], [2]])
             benchmark(e.execute, [[1], [2]])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.cuda_execute([[1], [2]])
             benchmark(e.cuda_execute, [[1], [2]])
 
@@ -422,11 +422,11 @@ class TestIntegratorFunctions:
             val = [x.value for x in I.output_states]
             benchmark(I.execute, [5])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.execute([5])
             benchmark(e.execute, [5])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.cuda_execute([5])
             benchmark(e.cuda_execute, [5])
 
@@ -452,11 +452,11 @@ class TestIntegratorFunctions:
             val = [x.value for x in I.output_states]
             benchmark(I.execute, [[1], [2]])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.execute([[1], [2]])
             benchmark(e.execute, [[1], [2]])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.cuda_execute([[1], [2]])
             benchmark(e.cuda_execute, [[1], [2]])
 
@@ -481,11 +481,11 @@ class TestIntegratorFunctions:
             val = [x.value for x in I.output_states]
             benchmark(I.execute, var)
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.execute(var)
             benchmark(e.execute, var)
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.cuda_execute(var)
             benchmark(e.cuda_execute, var)
 
@@ -509,11 +509,11 @@ class TestIntegratorFunctions:
             val = [x.value for x in I.output_states]
             benchmark(I.execute, var)
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.execute([var])
             benchmark(e.execute, var)
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.cuda_execute(var)
             benchmark(e.cuda_execute, var)
 
@@ -532,10 +532,10 @@ class TestIntegratorFunctions:
         if mode == 'Python':
             val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = benchmark(e.execute, [1.0 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = benchmark(e.cuda_execute, [1.0 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
@@ -674,11 +674,11 @@ class TestIntegratorFunctions:
             val = I.execute(10)
             benchmark(I.execute, 10)
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.execute([10])
             benchmark(e.execute, [10])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(I, None)
+            e = pnlvm.execution.MechExecution(I)
             val = e.cuda_execute([10])
             benchmark(e.cuda_execute, [10])
 

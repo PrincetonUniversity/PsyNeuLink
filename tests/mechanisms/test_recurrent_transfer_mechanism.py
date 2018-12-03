@@ -112,10 +112,10 @@ class TestRecurrentTransferMechanismInputs:
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.execute
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
         val1 = EX([10, 12, 0, -1])
@@ -139,10 +139,10 @@ class TestRecurrentTransferMechanismInputs:
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.execute
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
         val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
@@ -165,10 +165,10 @@ class TestRecurrentTransferMechanismInputs:
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.execute
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
         val1 = EX([[1.0, 2.0]])
@@ -209,10 +209,10 @@ class TestRecurrentTransferMechanismInputs:
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.execute
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R, None)
+            e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
         val = EX([10])

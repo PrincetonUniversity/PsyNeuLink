@@ -118,9 +118,9 @@ class FuncExecution(CUDAExecution):
 
 class MechExecution(FuncExecution):
 
-    def __init__(self, mechanism, execution_id):
+    def __init__(self, mechanism, execution_ids = [None]):
         self._mechanism = mechanism
-        super().__init__(mechanism, execution_id)
+        super().__init__(mechanism, execution_ids)
 
         if mechanism._nv_state is not None:
             # TODO: This should consider execution_id

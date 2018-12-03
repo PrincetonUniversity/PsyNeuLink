@@ -24,10 +24,10 @@ class TestObjectiveMechanism:
         if mode == 'Python':
             EX = O.execute
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(O, None)
+            e = pnlvm.execution.MechExecution(O)
             EX = e.execute
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(O, None)
+            e = pnlvm.execution.MechExecution(O)
             EX = e.cuda_execute
 
         val = benchmark(EX, [10.0 for i in range(VECTOR_SIZE)])

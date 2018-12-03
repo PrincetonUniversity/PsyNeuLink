@@ -63,10 +63,10 @@ class TestTransferMechanismInputs:
         if mode == 'Python':
             val = benchmark(T.execute, var)
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, var)
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, var)
 
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
@@ -162,10 +162,10 @@ class TestTransferMechanismNoise:
         if mode == 'Python':
             val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
@@ -223,10 +223,10 @@ class TestTransferMechanismNoise:
         if mode == 'Python':
             val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
@@ -437,10 +437,10 @@ class TestTransferMechanismFunctions:
         if mode == 'Python':
             val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
 
@@ -462,10 +462,10 @@ class TestTransferMechanismFunctions:
         if mode == 'Python':
             EX = T.execute
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             EX = e.execute
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             EX = e.cuda_execute
 
         val1 = EX([0 for i in range(VECTOR_SIZE)])
@@ -495,10 +495,10 @@ class TestTransferMechanismFunctions:
         if mode == 'Python':
             val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
@@ -520,10 +520,10 @@ class TestTransferMechanismFunctions:
         if mode == 'Python':
             val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
@@ -606,12 +606,12 @@ class TestTransferMechanismTimeConstant:
             val2 = T.execute([1 for i in range(VECTOR_SIZE)])
             benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val1 = e.execute([1 for i in range(VECTOR_SIZE)])
             val2 = e.execute([1 for i in range(VECTOR_SIZE)])
             benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val1 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
             val2 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
             benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
@@ -636,10 +636,10 @@ class TestTransferMechanismTimeConstant:
         if mode == 'Python':
             val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
@@ -661,10 +661,10 @@ class TestTransferMechanismTimeConstant:
         if mode == 'Python':
             val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
 
@@ -686,7 +686,7 @@ class TestTransferMechanismTimeConstant:
         elif mode == 'LLVM':
             val = T.execute([1, 1, 1, 1], bin_execute=True)
 # TODO: convert to execution
-#            e = pnlvm.execution.MechExecution(T, None)
+#            e = pnlvm.execution.MechExecution(T)
 #            val = e.execute([1, 1, 1, 1])
         assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
 
@@ -697,7 +697,7 @@ class TestTransferMechanismTimeConstant:
         elif mode == 'LLVM':
             val = T.execute([1, 2, -3, 0], bin_execute=True)
 # TODO: convert to execution
-#            e = pnlvm.execution.MechExecution(T, None)
+#            e = pnlvm.execution.MechExecution(T)
 #            val = e.execute([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
@@ -1077,10 +1077,10 @@ class TestTransferMechanismMultipleInputStates:
         if mode == 'Python':
             val = benchmark(T.execute, [[1.0, 2.0], [3.0, 4.0]])
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [[1.0, 2.0], [3.0, 4.0]])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.cuda_execute, [[1.0, 2.0], [3.0, 4.0]])
         assert np.allclose(val, [[3., 5.], [7., 9.]])
 
@@ -1108,10 +1108,10 @@ class TestTransferMechanismMultipleInputStates:
             val = benchmark(T.execute, [[1], [2], [3]])
             assert all(a==b for a,b in zip(T.output_values,val))
         elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [[1], [2], [3]])
         elif mode == 'PTX':
-            e = pnlvm.execution.MechExecution(T, None)
+            e = pnlvm.execution.MechExecution(T)
             val = benchmark(e.execute, [[1], [2], [3]])
 
         assert len(T.variable)==3
