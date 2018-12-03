@@ -3036,7 +3036,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def __bin_initialize(self, execution_id=None):
         if self._compilation_data.execution.get(execution_id) is None:
-            self._compilation_data.execution.set(pnlvm.CompExecution(self, execution_id), execution_id)
+            self._compilation_data.execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
         is_mech = isinstance(node, Mechanism)

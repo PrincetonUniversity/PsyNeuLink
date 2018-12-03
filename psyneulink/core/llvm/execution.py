@@ -142,11 +142,12 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
-    def __init__(self, composition, execution_id):
+    def __init__(self, composition, execution_ids = [None]):
         super().__init__(buffers=['context_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self.__frozen_vals = None
         self.__conds = None
+        execution_id = execution_ids[0]
 
         # At least the input_CIM wrapper should be generated
         with LLVMBuilderContext() as ctx:
