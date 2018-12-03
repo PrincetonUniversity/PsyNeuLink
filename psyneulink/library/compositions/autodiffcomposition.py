@@ -242,8 +242,11 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
 
+        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate)
+
         # since this does not pass params argument, defaults will not be automatically set..
         super(AutodiffComposition, self).__init__(name=name)
+        # super(AutodiffComposition, self).__init__(params=params, name=name)
 
         self.learning_enabled = learning_enabled
         self.optimizer_type = optimizer_type
@@ -253,7 +256,7 @@ class AutodiffComposition(Composition):
 
         # pytorch representation of model and associated training parameters
         self.pytorch_representation = None
-        self.learning_rate = learning_rate
+        self.learning_rate = learning_rate  # possibly remove this line
         self.optimizer = None
         self.loss = self.defaults.loss
 
@@ -276,28 +279,32 @@ class AutodiffComposition(Composition):
         self.scheduler = None
 
     # CLEANUP: move some of what's done in the method below to a "validate_params" type of method
-    def _build_pytorch_representation(self):
+    def _build_pytorch_representation(self, execution_id = None):
         if self.scheduler is None:  # if learning_enabled has never been run yet
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.ordered_execution_sets is None:
             self.ordered_execution_sets = list(self.scheduler.run())
-        if self.pytorch_representation is None:
-            self.pytorch_representation = PytorchModelCreator(self.graph_processing,
-                                                              self.param_init_from_pnl,
-                                                              self.ordered_execution_sets)
+        if self.parameters.pytorch_representation.get(execution_id) is None:
+            model = PytorchModelCreator(self.graph_processing,
+                                      self.param_init_from_pnl,
+                                      self.ordered_execution_sets)
+            self.parameters.pytorch_representation.set(model, execution_id)
          # Set up optimizer function
         if self.optimizer_type is None:
-            if self.optimizer is None:
-                self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
+            if self.parameters.optimizer.get(execution_id) is None:
+                opt = optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
+                self.parameters.optimizer.set(opt, execution_id)
         else:
             if self.optimizer_type not in ['sgd', 'adam']:
                 raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                                "Currently, Stochastic Gradient Descent and Adam are the only available "
                                                "optimizers (specified as 'sgd' or 'adam').")
             if self.optimizer_type == 'sgd':
-                self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
+                opt = optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
+                self.parameters.optimizer.set(opt, execution_id)
             else:
-                self.optimizer = optim.Adam(self.pytorch_representation.parameters(), lr=self.learning_rate)
+                opt = optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
+                self.parameters.optimizer.set(opt, execution_id)
         if self.loss_type is None:
             if self.loss is None:
                 self.loss = nn.MSELoss(reduction='sum')
@@ -312,25 +319,6 @@ class AutodiffComposition(Composition):
                 self.loss = nn.CrossEntropyLoss(reduction='sum')
         if not isinstance(self.learning_rate, (int, float)):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
-
-    def _reshape_for_autodiff(self, stimuli):
-        TEMP = self.get_ordered_exec_sets(self.graph_processing)
-        order = {"inputs": TEMP[0],
-                 "targets": TEMP[-1]}
-        pytorch_stimuli = {}
-        for stimulus_type in order:
-            pytorch_list = []
-            # iterate over nodes in pytorch's desired order, add corresponding inputs from CIM
-            # output to pytorch list in that order. convert them to torch tensors in the process
-            for i in range(len(order[stimulus_type])):
-                # get output state corresponding to ith node in pytorch's desired order, add
-                # the value of the output state to pytorch list at position i
-                node = order[stimulus_type][i].component
-                value = stimuli[stimulus_type][node]
-                value_for_pytorch = torch.from_numpy(np.asarray(value).copy()).double()
-                pytorch_list.append(value_for_pytorch)
-            pytorch_stimuli[stimulus_type] = pytorch_list
-        return pytorch_stimuli
 
     def _has_required_keys(self, input_dict):
         required_keys = set(["inputs", "targets"])
@@ -491,14 +479,13 @@ class AutodiffComposition(Composition):
                 bin_execute=False,
                 context=None
                 ):
+        execution_id = self._assign_execution_ids(execution_id)
         if self.learning_enabled:
             # TBI: How are we supposed to use base_execution_id and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
-            self._build_pytorch_representation()
 
-            if execution_id is None:
-                execution_id = self._assign_execution_ids(execution_id)
+            self._build_pytorch_representation(execution_id)
 
             autodiff_inputs = inputs["inputs"]
             autodiff_targets = inputs["targets"]
@@ -506,7 +493,7 @@ class AutodiffComposition(Composition):
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
 
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs)
+            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id)
             
             return output
 
@@ -537,7 +524,7 @@ class AutodiffComposition(Composition):
         termination_processing=None,
         termination_learning=None,
         execution_id=None,
-        num_trials=None,
+        num_trials=1,
         call_before_time_step=None,
         call_after_time_step=None,
         call_before_pass=None,
@@ -550,12 +537,13 @@ class AutodiffComposition(Composition):
         initial_values=None,
         runtime_params=None):
         # TBI: Handle trials, timesteps, etc
+        execution_id = self._assign_execution_ids(execution_id)
         if self.learning_enabled:
 
             self._analyze_graph()
 
-            if self.refresh_losses:
-                self.losses = []
+            if self.refresh_losses or (self.parameters.losses.get(execution_id) is None):
+                self.parameters.losses.set([], execution_id)
             adjusted_stimuli = self._adjust_stimulus_dict(inputs)
             if num_trials is not None:
                 for trial_num in range(num_trials):
@@ -564,7 +552,8 @@ class AutodiffComposition(Composition):
             else:
                 for stimulus in adjusted_stimuli:
                     return self.execute(inputs=stimulus)
-        return super(AutodiffComposition, self).run(inputs=inputs,
+        else:
+            return super(AutodiffComposition, self).run(inputs=inputs,
                                                     scheduler_processing=scheduler_processing,
                                                     scheduler_learning=scheduler_learning,
                                                     termination_processing=termination_processing,
@@ -646,61 +635,6 @@ class AutodiffComposition(Composition):
             if len([vert.component for vert in self.graph.vertices if isinstance(vert.component, MappingProjection)]) == 0:
                 raise AutodiffCompositionError("Targets specified for {0}, but {0} has no trainable parameters."
                                                .format(self.name))
-
-    # defines order in which mechanisms can be executed from processing graph
-    def get_ordered_exec_sets(self, processing_graph):
-
-        # set up lists of ordered execution sets, terminal nodes
-        ordered_exec_sets = []
-        terminal_nodes = []
-
-        # create list of terminal nodes in processing graph
-        for i in range(len(processing_graph.vertices)):
-            node = processing_graph.vertices[i]
-            if len(node.children) == 0:
-                terminal_nodes.append(node)
-
-        # iterate over terminal nodes, call recursive function to create ordered execution sets
-        for i in range(len(terminal_nodes)):
-            node = terminal_nodes[i]
-            ordered_exec_sets, node_pos = self.get_node_pos(node, ordered_exec_sets)
-
-        return ordered_exec_sets
-
-    # recursive helper function for get_ordered_exec_sets
-    def get_node_pos(self, node, ordered_exec_sets):
-
-        # if node has already been put in execution sets
-        for i in range(len(ordered_exec_sets)):
-            if (node in ordered_exec_sets[i]):
-                return ordered_exec_sets, i
-
-        # if node has no parents
-        if len(node.parents) == 0:
-            if len(ordered_exec_sets) < 1:
-                ordered_exec_sets.append([node])
-            else:
-                ordered_exec_sets[0].append(node)
-            return ordered_exec_sets, 0
-
-        # if node has parents
-        else:
-
-            # call function on parents, find parent path with max length
-            max_dist = -1
-            for i in range(len(node.parents)):
-                parent = node.parents[i]
-                ordered_exec_sets, dist = self.get_node_pos(parent, ordered_exec_sets)
-                dist += 1
-                if dist > max_dist:
-                    max_dist = dist
-
-            # set node at position = max_dist in the ordered execution sets list
-            if len(ordered_exec_sets) < (max_dist+1):
-                ordered_exec_sets.append([node])
-            else:
-                ordered_exec_sets[max_dist].append(node)
-            return ordered_exec_sets, max_dist
 
     # gives user weights and biases of the model (from the pytorch representation)
     def get_parameters(self, execution_id=NotImplemented):

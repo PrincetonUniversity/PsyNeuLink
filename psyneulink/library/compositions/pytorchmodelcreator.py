@@ -93,7 +93,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                 # forward computation if we do not have origin node
                 else:
-                    value = torch.zeros(len(component.input_states[0].parameters.value.get(execution_id))).double()
+                    value = torch.zeros(len(component.input_states[0].defaults.value)).double()
                     for input_node, weights in afferents.items():
                         value += torch.matmul(self.component_to_forward_info[input_node.component][0], weights)
                     if biases is not None:
