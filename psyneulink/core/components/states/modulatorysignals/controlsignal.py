@@ -314,6 +314,7 @@ from psyneulink.core.components.functions.function import _is_modulation_param, 
 from psyneulink.core.components.functions.integratorfunctions import IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
+from psyneulink.core.components.functions.optimizationfunctions import SampleSpec
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
@@ -326,13 +327,13 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_iter, iscompatible, \
+from psyneulink.core.globals.utilities import is_numeric, iscompatible, \
     kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
     'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
-    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'SampleSpec',
+    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION',
 ]
 
 # class OutputStateLog(IntEnum):
@@ -359,157 +360,6 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
 COST_OPTIONS = 'cost_options'
-
-
-# FIX: USE THESE TO REPLACE ONE AT BOTTOM WHEN UPGRADE TO PYTHON 3.5.2 OR 3.6
-# class SampleSpec(NamedTuple):
-#     begin: numbers.Number
-#     end: numbers.Number
-#     generator: callable
-
-# SampleSpec = namedtuple('SampleSpec', [('begin', numbers.Number), ('end', numbers.Number), ('generator', callable)])
-
-# SampleSpec = namedtuple('SampleSpec', 'begin, end, num, generator')
-
-class SampleSpec():
-    '''Specify equivalent of tuple for use by SampleIterator'''
-    @tc.typecheck
-    def __init__(self,
-                 begin:tc.any(int, float),
-                 end:tc.any(int, float),
-                 num:tc.optional(tc.any(int, float))=None,
-                 generator:tc.optional(tc.any(is_iter, is_function_type))=None
-                 ):
-        '''Must specify either begin, end and num or generator'''
-        if  (begin is None or end is None or num is None) and generator is None:
-            raise ControlSignalError("Must specify either {}, {} and {} or {} for {}".
-                                     format(repr('begin'), repr('end'), repr('num'), repr('generator'),
-                                            self.__class__.__name__))
-        self.begin = begin
-        self.end = end
-        self.num = num
-        self.generator = generator
-
-
-class SampleIterator():
-    '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
-    @tc.typecheck
-    def __init__(self, sample_spec:tc.any(list, SampleSpec)):
-        '''Create SampleIterator from list or SampleSpec.
-
-        If **sample_spec** is a list, create iterator from it that is called by __next__.
-        If **sample_spec** is a SampleSpec, use its SampleSpec.generator item (which can be a function or an iterator)
-            to generate an iterator called by __next__;  if SampleSpec.num is specified (i.e., it is not None),
-            it determines the number of samples that can be generated from SampleSpec.generator  before call to
-            __next__ generates a `StopIteration` exception; otherwise only a single value is returned.
-
-        Can be called to generate list from itself.
-
-        Arguments
-        ---------
-
-        sample_spec : list or SampleSpec
-            specifies what to use for `iterator <SampleIterator.iterator>`.
-
-        Attributes
-        ----------
-
-        begin : number
-            first item of list or SampleSpec.begin
-
-        end : number
-            last item of list or SampleSpec.end
-
-        num : int
-            length of list or SampleSpec.num.
-
-        Returns
-        -------
-
-        List(self) : list
-
-        '''
-
-        if isinstance(sample_spec, list):
-            self.begin = sample_spec[0]
-            self.end = sample_spec[-1]
-            self.num = len(sample_spec)
-            self._iterator = iter(sample_spec)
-
-        # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
-        elif isinstance(sample_spec, SampleSpec) :
-            if not np.isscalar(sample_spec.begin):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('begin'), sample_spec.begin)
-            if not np.isscalar(sample_spec.end):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('end'), sample_spec.end)
-            if sample_spec.generator and not (is_iter(sample_spec.generator) or is_function_type(sample_spec.generator)):
-                assert False, "PROGRAM ERROR: \'generator\' item of SampleSpec in sample_spec argument of " \
-                              "SampleIterator ({}) must be a function or iterator".format(sample_spec.generator)
-
-            # FIX: ADD SUPPORT FOR RANGE-LIKE BEHAVIOR:  CONSTRUCT GENERATOR FROM begin, end and num
-            #      IF num IS AN INT, USE AS SUCH;  IF IT IS A FLOAT, USE AS STEP
-
-            self.begin = float(sample_spec.begin)
-            self.end = float(sample_spec.end)
-            self.num = sample_spec.num
-
-            if sample_spec.generator is None:
-                assert not None in {self.begin, self.end, self.num}, \
-                    'PROGRAM ERROR: {} should have either {}, {} and {} or {}'.\
-                        format(repr('begin'), repr('end'), repr('num'),repr('generator'),)
-                if isinstance(self.num, int):
-                    if self.num == 1:
-                        step = 0
-                    else:
-                        step = (self.end - self.begin) / (self.num-1)
-                    def sample_gen():
-                        for n in range(0, self.num):
-                            yield self.begin + n * step
-                else:
-                    step = self.num
-                    def sample_gen():
-                        result = self.begin
-                        while result < self.end:
-                            yield result
-                            result += step
-                self._iterator = sample_gen()
-
-            elif is_iter(sample_spec.generator):
-                self._iterator = sample_spec.generator
-
-            elif is_function_type(sample_spec.generator):
-                if sample_spec.num:
-                    def sample_gen():
-                        for n in range(0, self.num):
-                            yield sample_spec.generator()
-                    self._iterator = sample_gen()
-                else:
-                    self._iterator = sample_spec.generator
-            else:
-                assert False, 'PROGRAM ERROR: {} item of {} passed to sample_spec arg of {} ' \
-                              'is not an iterator or a function_type'.\
-                              format(repr('generator'), SampleSpec.__name__, self.__class__.__name__)
-
-        else:
-            assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
-                          format(repr('sample_spec'), self.__class__.__name__, SampleSpec.__name__)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if is_iter(self._iterator):
-            item = next(self._iterator)
-        else:
-            item = self._iterator()
-        if item == StopIteration:
-            raise StopIteration  # signals "the end"
-        return item
-
-    def __call__(self):
-        return list(self)
 
 
 class ControlSignalCosts(IntEnum):
@@ -1007,6 +857,7 @@ class ControlSignal(ModulatorySignal):
         self._initialize_cost_attributes()
 
         # Assign instance attributes
+        # FIX: GET RID OF paramsCurrent HERE??
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
 
     def _instantiate_cost_attributes(self):

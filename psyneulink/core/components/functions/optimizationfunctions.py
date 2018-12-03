@@ -28,18 +28,18 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.components.states.modulatorysignals.controlsignal import SampleIterator
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Param
-from psyneulink.core.globals.utilities import call_with_pruned_args
+from psyneulink.core.globals.utilities import call_with_pruned_args, is_iter
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',
-           'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE']
+           'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE', 'SampleSpec'
+           ]
 
 OBJECTIVE_FUNCTION = 'objective_function'
 SEARCH_FUNCTION = 'search_function'
@@ -47,10 +47,160 @@ SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 DIRECTION = 'direction'
 
-
 class OptimizationFunctionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+# FIX: USE THESE TO REPLACE ONE AT BOTTOM WHEN UPGRADE TO PYTHON 3.5.2 OR 3.6
+# class SampleSpec(NamedTuple):
+#     begin: numbers.Number
+#     end: numbers.Number
+#     generator: callable
+
+# SampleSpec = namedtuple('SampleSpec', [('begin', numbers.Number), ('end', numbers.Number), ('generator', callable)])
+
+# SampleSpec = namedtuple('SampleSpec', 'begin, end, num, generator')
+
+class SampleSpec():
+    '''Specify equivalent of tuple for use by SampleIterator'''
+    @tc.typecheck
+    def __init__(self,
+                 begin:tc.any(int, float),
+                 end:tc.any(int, float),
+                 num:tc.optional(tc.any(int, float))=None,
+                 generator:tc.optional(tc.any(is_iter, is_function_type))=None
+                 ):
+        '''Must specify either begin, end and num or generator'''
+        if  (begin is None or end is None or num is None) and generator is None:
+            raise OptimizationFunctionError("Must specify either {}, {} and {} or {} for {}".
+                                            format(repr('begin'), repr('end'), repr('num'), repr('generator'),
+                                                   self.__class__.__name__))
+        self.begin = begin
+        self.end = end
+        self.num = num
+        self.generator = generator
+
+
+class SampleIterator():
+    '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
+    @tc.typecheck
+    def __init__(self, sample_spec:tc.any(list, SampleSpec)):
+        '''Create SampleIterator from list or SampleSpec.
+
+        If **sample_spec** is a list, create iterator from it that is called by __next__.
+        If **sample_spec** is a SampleSpec, use its SampleSpec.generator item (which can be a function or an iterator)
+            to generate an iterator called by __next__;  if SampleSpec.num is specified (i.e., it is not None),
+            it determines the number of samples that can be generated from SampleSpec.generator  before call to
+            __next__ generates a `StopIteration` exception; otherwise only a single value is returned.
+
+        Can be called to generate list from itself.
+
+        Arguments
+        ---------
+
+        sample_spec : list or SampleSpec
+            specifies what to use for `iterator <SampleIterator.iterator>`.
+
+        Attributes
+        ----------
+
+        begin : number
+            first item of list or SampleSpec.begin
+
+        end : number
+            last item of list or SampleSpec.end
+
+        num : int
+            length of list or SampleSpec.num.
+
+        Returns
+        -------
+
+        List(self) : list
+
+        '''
+
+        if isinstance(sample_spec, list):
+            self.begin = sample_spec[0]
+            self.end = sample_spec[-1]
+            self.num = len(sample_spec)
+            self._iterator = iter(sample_spec)
+
+        # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
+        elif isinstance(sample_spec, SampleSpec) :
+            if not np.isscalar(sample_spec.begin):
+                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
+                              "must be a scalar".format(repr('begin'), sample_spec.begin)
+            if not np.isscalar(sample_spec.end):
+                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
+                              "must be a scalar".format(repr('end'), sample_spec.end)
+            if sample_spec.generator and not (is_iter(sample_spec.generator) or is_function_type(sample_spec.generator)):
+                assert False, "PROGRAM ERROR: \'generator\' item of SampleSpec in sample_spec argument of " \
+                              "SampleIterator ({}) must be a function or iterator".format(sample_spec.generator)
+
+            # FIX: ADD SUPPORT FOR RANGE-LIKE BEHAVIOR:  CONSTRUCT GENERATOR FROM begin, end and num
+            #      IF num IS AN INT, USE AS SUCH;  IF IT IS A FLOAT, USE AS STEP
+
+            self.begin = float(sample_spec.begin)
+            self.end = float(sample_spec.end)
+            self.num = sample_spec.num
+
+            if sample_spec.generator is None:
+                assert not None in {self.begin, self.end, self.num}, \
+                    'PROGRAM ERROR: {} should have either {}, {} and {} or {}'.\
+                        format(repr('begin'), repr('end'), repr('num'),repr('generator'),)
+                if isinstance(self.num, int):
+                    if self.num == 1:
+                        step = 0
+                    else:
+                        step = (self.end - self.begin) / (self.num-1)
+                    def sample_gen():
+                        for n in range(0, self.num):
+                            yield self.begin + n * step
+                else:
+                    step = self.num
+                    def sample_gen():
+                        result = self.begin
+                        while result < self.end:
+                            yield result
+                            result += step
+                self._iterator = sample_gen()
+
+            elif is_iter(sample_spec.generator):
+                self._iterator = sample_spec.generator
+
+            elif is_function_type(sample_spec.generator):
+                if sample_spec.num:
+                    def sample_gen():
+                        for n in range(0, self.num):
+                            yield sample_spec.generator()
+                    self._iterator = sample_gen()
+                else:
+                    self._iterator = sample_spec.generator
+            else:
+                assert False, 'PROGRAM ERROR: {} item of {} passed to sample_spec arg of {} ' \
+                              'is not an iterator or a function_type'.\
+                              format(repr('generator'), SampleSpec.__name__, self.__class__.__name__)
+
+        else:
+            assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
+                          format(repr('sample_spec'), self.__class__.__name__, SampleSpec.__name__)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if is_iter(self._iterator):
+            item = next(self._iterator)
+        else:
+            item = self._iterator()
+        if item == StopIteration:
+            raise StopIteration  # signals "the end"
+        return item
+
+    def __call__(self):
+        return list(self)
 
 
 class OptimizationFunction(Function_Base):
@@ -1088,6 +1238,10 @@ class GridSearch(OptimizationFunction):
         #     #     (one sample from the allocationSample of each ControlSignal)
         #     # Reference for implementation below:
         #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        #
+        #     # from itertools import product
+        #     # test_grid = list(product(self.search_space))
+        #
         #
         #     if self.search_space is not None:
         #           for i in self.search_space:
