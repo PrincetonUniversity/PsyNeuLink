@@ -1188,7 +1188,7 @@ class GaussianProcess(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
-        search_function = self._gaussian_process_sampler
+        search_function = self._gaussian_process_sample
         search_termination_function = self._gaussian_process_satisfied
         self._return_values = save_values
 

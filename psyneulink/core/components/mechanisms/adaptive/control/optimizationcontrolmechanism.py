@@ -388,8 +388,10 @@ import copy
 import itertools
 import numpy as np
 import typecheck as tc
+import numbers
 
-from collections import Iterable
+from collections import Iterable, namedtuple
+from typing import NamedTuple
 
 from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
@@ -409,10 +411,10 @@ from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNA
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_iterable
+from psyneulink.core.globals.utilities import is_iterable, is_iter
 
 __all__ = [
-    'OptimizationControlMechanism', 'OptimizationControlMechanismError',
+    'OptimizationControlMechanism', 'OptimizationControlMechanismError', 'SampleSpec',
     'AGENT_REP', 'FEATURES', 'SHADOW_EXTERNAL_INPUTS'
 ]
 
@@ -790,6 +792,13 @@ class OptimizationControlMechanism(ControlMechanism):
         # self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
+        # TEMP:
+        a = self.control_allocation_search_space
+        s = self._get_control_allocation_grid_space()
+        # assert all(s == t for s, t = zip(s,t))
+        # assert True
+
+
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()
 
@@ -797,24 +806,23 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
-    def _get_control_allocation_search_space(self, execution_id=None):
+    # FIX: MOVE THIS TO GridSearch
+    def _get_control_allocation_grid_space(self, execution_id=None):
 
         control_signal_sample_lists = []
 
-        # KAM added 11/30 as a way to use self.search_space rather than controlsignal.allocation_samples in order
-        # to get gratton script working. Should converge on one way of specifying search_space, or rules for priority
-        # when multiple methods of speciying search_space are used
+        # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+        #     (one sample from the allocationSample of each ControlSignal)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+
         if self.search_space is not None:
-            for control_signal in self.control_signals:
-                control_signal_sample_lists.append(self.search_space)
+              for i in self.search_space:
+                  control_signal_sample_lists.append(list(i))
         else:
             for control_signal in self.control_signals:
                 control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
 
-        # Construct control_allocation_search_space:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
 
         control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
 
@@ -827,10 +835,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return control_allocation_search_space
 
-    def _parse_allocation_samples(self):
-        pass
-
-    def _instantiate_
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
@@ -1067,9 +1071,33 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return input_state_specs
 
+    # @property
+    # def control_allocation_search_space(self):
+    #     return self._get_control_allocation_search_space()
+    #
     @property
     def control_allocation_search_space(self):
-        return self._get_control_allocation_search_space()
+        '''Return list of SampleIterators for allocation_samples of control_signals
+
+        Assign the `allocation_samples <ControlSignal.allocation_samples>` for each `ControlSignal` in `control_signals
+        <ControlMechanism.control_signals>` to a `SampleIterator` in list and return list
+        '''
+
+        try:
+            return self._control_allocation_search_space
+
+        except AttributeError:
+            control_allocation_search_space = []
+
+            for a in [c.allocation_samples for c in self.control_signals]:
+                if isinstance(a, range):
+                    a = list(a)
+                control_allocation_search_space.append(SampleIterator(sample_spec=a))
+            # self.parameters._control_allocation_search_space.set(control_allocation_search_space, override=True)
+            self._control_allocation_search_space = control_allocation_search_space
+
+            return self._control_allocation_search_space
+
 
     # ******************************************************************************************************************
     # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep

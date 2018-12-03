@@ -32,6 +32,7 @@ CONTENTS
 * `is_matrix_spec`
 * `is_numeric`
 * `is_numeric_or_none`
+* `is_iter`
 * `iscompatible`
 * `is_value_spec`
 * `is_unit_interval`
@@ -103,8 +104,8 @@ __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'CNodeRole', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
-    'insert_list', 'is_matrix_spec',
-    'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
+    'insert_list', 'is_matrix_spec', 'is_modulation_operation',
+    'is_iter', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
@@ -250,6 +251,10 @@ def parameter_spec(param, numeric_only=None):
         return True
     return False
 
+def is_iter(x):
+    if hasattr(x, '__iter__'):
+        return True
+    return False
 
 def is_numeric_or_none(x):
     if x is None:
