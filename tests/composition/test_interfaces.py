@@ -6,6 +6,7 @@ from timeit import timeit
 import numpy as np
 import pytest
 
+import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.interfacefunctions import Identity
@@ -137,7 +138,9 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.parametrize("mode", ['Python',
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             ])
     def test_connect_compositions_with_simple_states(self, mode):
 
         comp1 = Composition(name="first_composition")
@@ -209,7 +212,9 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.parametrize("mode", ['Python',
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             ])
     def test_connect_compositions_with_complicated_states(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
@@ -281,7 +286,9 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.parametrize("mode", ['Python',
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             ])
     def test_compositions_as_origin_nodes(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
@@ -364,7 +371,9 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.parametrize("mode", ['Python',
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             ])
     def test_compositions_as_origin_nodes_multiple_trials(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
