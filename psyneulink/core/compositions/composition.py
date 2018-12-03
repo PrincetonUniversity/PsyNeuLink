@@ -2479,7 +2479,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute:
             try:
                 self.__bin_initialize(execution_id)
-                if bin_execute.endswith('Exec'):
+                if str(bin_execute).endswith('Exec'):
                     __execution = self._compilation_data.execution.get(execution_id)
                     if bin_execute.startswith('LLVM'):
                         __execution.execute(inputs)
@@ -2809,7 +2809,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
-        if bin_execute.endswith('Run'):
+        if str(bin_execute).endswith('Run'):
             # initialize from base context but don't overwrite any values already set for this execution_id
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
