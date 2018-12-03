@@ -267,7 +267,7 @@ class AutodiffComposition(Composition):
         self.losses = []
 
         # ordered execution sets for the pytorch model
-        self.ordered_execution_sets = None
+        self.execution_sets = None
 
         # patience is the "bad" epochs (with no progress in average loss) the model tolerates in one training session
         # before ending training
@@ -282,12 +282,13 @@ class AutodiffComposition(Composition):
     def _build_pytorch_representation(self, execution_id = None):
         if self.scheduler is None:  # if learning_enabled has never been run yet
             self.scheduler = Scheduler(graph=self.graph_processing)
-        if self.ordered_execution_sets is None:
-            self.ordered_execution_sets = list(self.scheduler.run())
+        if self.execution_sets is None:
+            self.execution_sets = list(self.scheduler.run())
         if self.parameters.pytorch_representation.get(execution_id) is None:
             model = PytorchModelCreator(self.graph_processing,
-                                      self.param_init_from_pnl,
-                                      self.ordered_execution_sets)
+                                        self.param_init_from_pnl,
+                                        self.execution_sets,
+                                        execution_id)
             self.parameters.pytorch_representation.set(model, execution_id)
          # Set up optimizer function
         if self.optimizer_type is None:
@@ -545,13 +546,19 @@ class AutodiffComposition(Composition):
             if self.refresh_losses or (self.parameters.losses.get(execution_id) is None):
                 self.parameters.losses.set([], execution_id)
             adjusted_stimuli = self._adjust_stimulus_dict(inputs)
-            if num_trials is not None:
-                for trial_num in range(num_trials):
-                    stimulus_index = trial_num % len(adjusted_stimuli)
-                    return self.execute(inputs=adjusted_stimuli[stimulus_index])
-            else:
-                for stimulus in adjusted_stimuli:
-                    return self.execute(inputs=stimulus)
+            if num_trials is None:
+                num_trials = len(adjusted_stimuli)
+
+            results = []
+            for trial_num in range(num_trials):
+                stimulus_index = trial_num % len(adjusted_stimuli)
+                trial_output = self.execute(
+                    inputs=adjusted_stimuli[stimulus_index],
+                    execution_id=execution_id,
+                )
+                results.append(trial_output)
+            return results
+
         else:
             return super(AutodiffComposition, self).run(inputs=inputs,
                                                     scheduler_processing=scheduler_processing,

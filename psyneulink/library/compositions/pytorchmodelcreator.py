@@ -21,7 +21,7 @@ __all__ = ['PytorchModelCreator']
 class PytorchModelCreator(torch.nn.Module):
 
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, processing_graph, param_init_from_pnl, ordered_execution_sets, execution_id=None):
+    def __init__(self, processing_graph, param_init_from_pnl, execution_sets, execution_id=None):
 
         if not torch_available:
             raise Exception('Pytorch python module (torch) is not installed. Please install it with '
@@ -29,14 +29,14 @@ class PytorchModelCreator(torch.nn.Module):
 
         super(PytorchModelCreator, self).__init__()
 
-        self.ordered_execution_sets = ordered_execution_sets  # saved for use in the forward method
+        self.execution_sets = execution_sets  # saved for use in the forward method
         self.component_to_forward_info = {}  # dict mapping PNL nodes to their forward computation information
         self.projections_to_pytorch_weights = {}  # dict mapping PNL projections to Pytorch weights
         self.mechanisms_to_pytorch_biases = {}  # dict mapping PNL mechanisms to Pytorch biases
         self.params = nn.ParameterList()  # list that Pytorch optimizers will use to keep track of parameters
 
-        for i in range(len(self.ordered_execution_sets)):
-            for component in self.ordered_execution_sets[i]:
+        for i in range(len(self.execution_sets)):
+            for component in self.execution_sets[i]:
 
                 value = None  # the node's (its mechanism's) value
                 biases = None  # the node's bias parameters
@@ -60,12 +60,16 @@ class PytorchModelCreator(torch.nn.Module):
                         input_component = mapping_proj.sender.owner
                         input_node = processing_graph.comp_to_vertex[input_component]
 
+                        proj_matrix = mapping_proj.parameters.matrix.get(execution_id)
+                        if proj_matrix is None:
+                            proj_matrix = mapping_proj.parameters.matrix.get(None)
+
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
                         if param_init_from_pnl:
-                            weights = nn.Parameter(torch.tensor(mapping_proj.parameters.matrix.get(execution_id).copy()).double())
+                            weights = nn.Parameter(torch.tensor(proj_matrix.copy()).double())
                         else:
-                            weights = nn.Parameter(torch.rand(np.shape(mapping_proj.parameters.matrix.get(execution_id))).double())
+                            weights = nn.Parameter(torch.rand(np.shape(proj_matrix)).double())
                         afferents[input_node] = weights
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
@@ -79,8 +83,8 @@ class PytorchModelCreator(torch.nn.Module):
 
         outputs = {}  # dict for storing values of terminal (output) nodes
 
-        for i in range(len(self.ordered_execution_sets)):
-            for component in self.ordered_execution_sets[i]:
+        for i in range(len(self.execution_sets)):
+            for component in self.execution_sets[i]:
 
                 # get forward computation info for current component
                 biases = self.component_to_forward_info[component][1]
@@ -104,7 +108,7 @@ class PytorchModelCreator(torch.nn.Module):
                 self.component_to_forward_info[component][0] = value
 
                 # save value in output list if we're at a node in the last execution set
-                if i == len(self.ordered_execution_sets) - 1:
+                if i == len(self.execution_sets) - 1:
                     outputs[component] = value
 
         return outputs
@@ -113,7 +117,10 @@ class PytorchModelCreator(torch.nn.Module):
     # parameters and uses them to create a function object representing the function, then returns it
     def function_creator(self, node, execution_id=None):
         def get_fct_param_value(param_name):
-            return float(node.function_object.get_current_function_param(param_name, execution_id))
+            val = node.function_object.get_current_function_param(param_name, execution_id)
+            if val is None:
+                val = node.function_object.get_current_function_param(param_name, None)
+            return float(val)
 
         if isinstance(node.function_object, Linear):
             slope = get_fct_param_value('slope')

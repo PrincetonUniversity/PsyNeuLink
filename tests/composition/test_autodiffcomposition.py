@@ -589,7 +589,7 @@ class TestTrainingCorrectness:
                         correct_value = targets_dict[node][i]
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
-                assert np.allclose(np.round(result[i][j]), correct_value)
+                assert np.allclose(np.round(result[0][i][j]), correct_value)
 
 @pytest.mark.skipif(
     not torch_available,
