@@ -1038,33 +1038,33 @@ class ControlSignal(ModulatorySignal):
             ])
         )
 
-    @property
-    def allocation_samples(self):
-        return self._allocation_samples
-
-    @allocation_samples.setter
-    def allocation_samples(self, samples):
-        if isinstance(samples, (list, np.ndarray)):
-            self._allocation_samples = list(samples)
-            return
-        if isinstance(samples, tuple):
-            self._allocation_samples = samples
-            sample_range = samples
-        elif samples == AUTO:
-
-            # (7/21/17 CW) Note that since the time of writing this "stub", the value of AUTO in Keywords.py has changed
-            # from True to "auto" due to the addition of "auto" as a parameter for RecurrentTransferMechanisms! Just FYI
-
-            # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
-            raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
-                                     format(ALLOCATION_SAMPLES))
-        else:
-            sample_range = self.ClassDefaults.allocation_samples
-        self._allocation_samples = []
-        i = sample_range[0]
-        while i < sample_range[1]:
-            self._allocation_samples.append(i)
-            i += sample_range[2]
+    # @property
+    # def allocation_samples(self):
+    #     return self._allocation_samples
+    #
+    # @allocation_samples.setter
+    # def allocation_samples(self, samples):
+    #     if isinstance(samples, (list, np.ndarray)):
+    #         self._allocation_samples = list(samples)
+    #         return
+    #     if isinstance(samples, tuple):
+    #         self._allocation_samples = samples
+    #         sample_range = samples
+    #     elif samples == AUTO:
+    #
+    #         # (7/21/17 CW) Note that since the time of writing this "stub", the value of AUTO in Keywords.py has changed
+    #         # from True to "auto" due to the addition of "auto" as a parameter for RecurrentTransferMechanisms! Just FYI
+    #
+    #         # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
+    #         raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
+    #                                  format(ALLOCATION_SAMPLES))
+    #     else:
+    #         sample_range = self.ClassDefaults.allocation_samples
+    #     self._allocation_samples = []
+    #     i = sample_range[0]
+    #     while i < sample_range[1]:
+    #         self._allocation_samples.append(i)
+    #         i += sample_range[2]
 
     @property
     def intensity(self):

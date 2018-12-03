@@ -152,32 +152,35 @@ class SampleIterator():
                         format(repr('begin'), repr('end'), repr('num'),repr('generator'),)
                 if isinstance(self.num, int):
                     if self.num == 1:
-                        step = 0
+                        step_size = 0
                     else:
-                        step = (self.end - self.begin) / (self.num-1)
-                    def sample_gen():
-                        for n in range(0, self.num):
-                            yield self.begin + n * step
+                        step_size = (self.end - self.begin) / (self.num-1)
+                    def sample_gen(begin, num, step):
+                        for n in range(0, num):
+                            yield begin + n * step
+                    self._iterator = sample_gen(self.begin, self.num, step_size)
+
                 else:
-                    step = self.num
-                    def sample_gen():
-                        result = self.begin
-                        while result < self.end:
+                    def sample_gen(begin, end, step):
+                        result = begin
+                        while result < end:
                             yield result
                             result += step
-                self._iterator = sample_gen()
+                    self._iterator = sample_gen(self.begin, self.end, self.num)
 
             elif is_iter(sample_spec.generator):
                 self._iterator = sample_spec.generator
 
             elif is_function_type(sample_spec.generator):
                 if sample_spec.num:
-                    def sample_gen():
-                        for n in range(0, self.num):
+                    def sample_gen(num):
+                        for n in range(0, num):
                             yield sample_spec.generator()
-                    self._iterator = sample_gen()
+                    self._iterator = sample_gen(self.num)
                 else:
-                    self._iterator = sample_spec.generator
+                    def sample_gen():
+                        yield sample_spec.generator()
+                    self._iterator = sample_gen()
             else:
                 assert False, 'PROGRAM ERROR: {} item of {} passed to sample_spec arg of {} ' \
                               'is not an iterator or a function_type'.\
@@ -1209,8 +1212,12 @@ class GridSearch(OptimizationFunction):
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
-        sample = self.grid[sample_num]
-        return sample
+        from itertools import product               # KAM 12/3/2018 in progress
+        sample = product(self.search_space)
+        allocation = []
+        for item in sample:
+            allocation.append(next(item[0]))
+        return allocation
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
 
@@ -1218,72 +1225,72 @@ class GridSearch(OptimizationFunction):
         # return iteration != len(self.grid)
         # MODIFIED 12/3/18 NEW:
         try:
-            return iteration != len(self._grid)
+            return iteration != 5       # KAM Temp hack because we no longer have a grid to get the length of
         except AttributeError:
             return True
         # MODIFIED 12/3/18 END
 
-    @property
-    def grid(self):
-
-        # # MODIFIED 12/3/18 OLD:
-        # try:
-        #     return self._grid
-        #     # raise AttributeError
-        #
-        # except AttributeError:
-        #     sample_lists = []
-        #
-        #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-        #     #     (one sample from the allocationSample of each ControlSignal)
-        #     # Reference for implementation below:
-        #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        #
-        #     # from itertools import product
-        #     # test_grid = list(product(self.search_space))
-        #
-        #
-        #     if self.search_space is not None:
-        #           for i in self.search_space:
-        #               sample_lists.append(i())
-        #     else:
-        #         assert False
-        #
-        #     grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
-        #
-        #     # Insure that ControlSignal in each sample is in its own 1d array
-        #     re_shape = (grid.shape[0], grid.shape[1], 1)
-        #
-        #     self._grid = grid.reshape(re_shape)
-        #     return self._grid
-        # MODIFIED 12/3/18 NEW:
-        if hasattr(self, '_grid') and self.context.initialization_status != ContextFlags.INITIALIZING:
-            return self._grid
-
-        sample_lists = []
-
-        # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-        #     (one sample from the allocationSample of each ControlSignal)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-
-        # from itertools import product
-        # test_grid = list(product(self.search_space))
-
-        if self.search_space is not None:
-              for i in self.search_space:
-                  sample_lists.append(i())
-        else:
-            assert False
-
-        grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
-
-        # Insure that ControlSignal in each sample is in its own 1d array
-        re_shape = (grid.shape[0], grid.shape[1], 1)
-
-        self._grid = grid.reshape(re_shape)
-        return self._grid
-        # MODIFIED 12/3/18 END
+    # @property
+    # def grid(self):
+    #
+    #     # # MODIFIED 12/3/18 OLD:
+    #     # try:
+    #     #     return self._grid
+    #     #     # raise AttributeError
+    #     #
+    #     # except AttributeError:
+    #     #     sample_lists = []
+    #     #
+    #     #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+    #     #     #     (one sample from the allocationSample of each ControlSignal)
+    #     #     # Reference for implementation below:
+    #     #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+    #     #
+    #     #     # from itertools import product
+    #     #     # test_grid = list(product(self.search_space))
+    #     #
+    #     #
+    #     #     if self.search_space is not None:
+    #     #           for i in self.search_space:
+    #     #               sample_lists.append(i())
+    #     #     else:
+    #     #         assert False
+    #     #
+    #     #     grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
+    #     #
+    #     #     # Insure that ControlSignal in each sample is in its own 1d array
+    #     #     re_shape = (grid.shape[0], grid.shape[1], 1)
+    #     #
+    #     #     self._grid = grid.reshape(re_shape)
+    #     #     return self._grid
+    #     # MODIFIED 12/3/18 NEW:
+    #     if hasattr(self, '_grid') and self.context.initialization_status != ContextFlags.INITIALIZING:
+    #         return self._grid
+    #
+    #     sample_lists = []
+    #
+    #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
+    #     #     (one sample from the allocationSample of each ControlSignal)
+    #     # Reference for implementation below:
+    #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+    #
+    #     # from itertools import product
+    #     # test_grid = list(product(self.search_space))
+    #
+    #     if self.search_space is not None:
+    #           for i in self.search_space:
+    #               sample_lists.append(i())
+    #     else:
+    #         assert False
+    #
+    #     grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
+    #
+    #     # Insure that ControlSignal in each sample is in its own 1d array
+    #     re_shape = (grid.shape[0], grid.shape[1], 1)
+    #
+    #     self._grid = grid.reshape(re_shape)
+    #     return self._grid
+    #     # MODIFIED 12/3/18 END
 
 class GaussianProcess(OptimizationFunction):
     """
