@@ -110,12 +110,11 @@ class TestMiscTrainingFunctionality:
 
         # mini version of xor.execute just to build up pytorch representation
         xor._analyze_graph()
-        xor.ordered_execution_sets = xor.get_ordered_exec_sets(xor.graph_processing)
-        xor._build_pytorch_representation()
+        xor._build_pytorch_representation(execution_id=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
-        assert np.allclose(hid_map.parameters.matrix.get(xor),
+        assert np.allclose(hid_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
-        assert np.allclose(out_map.parameters.matrix.get(xor),
+        assert np.allclose(out_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
@@ -239,13 +238,13 @@ class TestMiscTrainingFunctionality:
         pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
         # assert that projections are still what they were initialized as
-        assert np.allclose(hid_map.parameters.matrix.get(xor), hid_m)
-        assert np.allclose(out_map.parameters.matrix.get(xor), out_m)
+        assert np.allclose(hid_map.parameters.matrix.get(None), hid_m)
+        assert np.allclose(out_map.parameters.matrix.get(None), out_m)
 
         # assert that projections didn't change during training with the pytorch
         # parameters (they should now be different)
-        assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(xor))
-        assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(xor))
+        assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
+        assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
     # test whether the autodiff composition's get_parameters method works as desired
     def test_get_params(self):
@@ -293,8 +292,10 @@ class TestMiscTrainingFunctionality:
 
         # mini version of xor.execute just to build up pytorch representation
         xor._analyze_graph()
-        xor.ordered_execution_sets = xor.get_ordered_exec_sets(xor.graph_processing)
-        xor._build_pytorch_representation()
+        # CW changed 12/3/18
+        xor._build_pytorch_representation(xor.default_execution_id)
+        # OLD
+        # xor._build_pytorch_representation()
 
         # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
         # and get the parameters straight from pytorch
@@ -304,9 +305,9 @@ class TestMiscTrainingFunctionality:
 
         # check that parameter copies obtained from get_parameters are the same as the
         # projections and parameters from pytorch
-        assert np.allclose(hid_map.parameters.matrix.get(xor), weights_get_params[hid_map])
+        assert np.allclose(hid_map.parameters.matrix.get(None), weights_get_params[hid_map])
         assert np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-        assert np.allclose(out_map.parameters.matrix.get(xor), weights_get_params[out_map])
+        assert np.allclose(out_map.parameters.matrix.get(None), weights_get_params[out_map])
         assert np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
         # call run to train the pytorch parameters
@@ -588,7 +589,7 @@ class TestTrainingCorrectness:
                         correct_value = targets_dict[node][i]
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
-                assert np.allclose(np.round(result[0][i][j]), correct_value)
+                assert np.allclose(np.round(result[i][j]), correct_value)
 
 @pytest.mark.skipif(
     not torch_available,
