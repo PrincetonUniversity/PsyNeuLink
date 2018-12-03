@@ -139,7 +139,8 @@ class TestConnectCompositionsViaCIMS:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
+                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
                              ])
     def test_connect_compositions_with_simple_states(self, mode):
 
@@ -213,7 +214,8 @@ class TestConnectCompositionsViaCIMS:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
+                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
                              ])
     def test_connect_compositions_with_complicated_states(self, mode):
 
@@ -287,7 +289,8 @@ class TestConnectCompositionsViaCIMS:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
+                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
                              ])
     def test_compositions_as_origin_nodes(self, mode):
 
@@ -372,7 +375,8 @@ class TestConnectCompositionsViaCIMS:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
+                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
                              ])
     def test_compositions_as_origin_nodes_multiple_trials(self, mode):
 
