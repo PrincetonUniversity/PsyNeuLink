@@ -272,3 +272,28 @@ class CompExecution(CUDAExecution):
         out_buf = bytearray(ctypes.sizeof(vo_ty))
         jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_data_struct)
         self._data_struct = vo_ty.from_buffer(out_buf)
+
+    def cuda_run(self, inputs, runs, num_input_sets):
+        bin_run = self._composition._get_bin_run()
+        # Create input buffer
+        inputs = self._get_run_input_struct(inputs, num_input_sets)
+        input_data = bytearray(inputs)
+        data_in = jit_engine.pycuda.driver.to_device(input_data)
+
+        # Create output buffer
+        output_type = (bin_run.byref_arg_types[4] * runs)
+        output_size = ctypes.sizeof(output_type)
+        data_out  = jit_engine.pycuda.driver.mem_alloc(output_size)
+
+        runs_count = jit_engine.pycuda.driver.In(np.int32(runs))
+        input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
+
+        bin_run.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
+                          self._cuda_data_struct, data_in, data_out, runs_count,
+                          input_count)
+
+        # Copy the data struct from the device
+        out_buf = bytearray(output_size)
+        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, data_out)
+        outputs = output_type.from_buffer(out_buf)
+        return _convert_ctype_to_python(outputs)
