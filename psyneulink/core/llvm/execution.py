@@ -153,18 +153,18 @@ class CompExecution:
 
         # Context
         c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
-        self.__context_struct = c_context(*composition._get_context_initializer(execution_id))
+        self._context_struct = c_context(*composition._get_context_initializer(execution_id))
 
         # Params
         c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
-        self.__param_struct = c_param(*self._composition._get_param_initializer(execution_id))
+        self._param_struct = c_param(*self._composition._get_param_initializer(execution_id))
         # Data
         c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
-        self.__data_struct = c_data(*self._composition._get_data_initializer(execution_id))
+        self._data_struct = c_data(*self._composition._get_data_initializer(execution_id))
 
 
     @property
-    def __conditions(self):
+    def _conditions(self):
         if self.__conds is None:
             bin_exec = self._composition._get_bin_execution()
             gen = helpers.ConditionGenerator(None, self._composition)
@@ -175,17 +175,17 @@ class CompExecution:
         return self.extract_node_output(node, self.__frozen_vals)
 
     def extract_node_output(self, node, data = None):
-        data = self.__data_struct if data == None else data
-        field = self.__data_struct._fields_[0][0]
-        res_struct = getattr(self.__data_struct, field)
+        data = self._data_struct if data == None else data
+        field = self._data_struct._fields_[0][0]
+        res_struct = getattr(self._data_struct, field)
         index = self._composition._get_node_index(node)
         field = res_struct._fields_[index][0]
         res_struct = getattr(res_struct, field)
         return _convert_ctype_to_python(res_struct)
 
     def insert_node_output(self, node, data):
-        my_field_name = self.__data_struct._fields_[0][0]
-        my_res_struct = getattr(self.__data_struct, my_field_name)
+        my_field_name = self._data_struct._fields_[0][0]
+        my_res_struct = getattr(self._data_struct, my_field_name)
         index = self._composition._get_node_index(node)
         node_field_name = my_res_struct._fields_[index][0]
         setattr(my_res_struct, node_field_name, _tupleize(data))
@@ -215,7 +215,7 @@ class CompExecution:
         return c_input(*_tupleize(run_inputs))
 
     def freeze_values(self):
-        self.__frozen_vals = copy.deepcopy(self.__data_struct)
+        self.__frozen_vals = copy.deepcopy(self._data_struct)
 
     def execute_node(self, node, inputs = None, execution_id=None):
         # We need to reconstruct the inputs here if they were not provided.
@@ -236,14 +236,14 @@ class CompExecution:
 
         assert node in self._composition._all_nodes
         bin_node = self._composition._get_bin_mechanism(node)
-        bin_node.wrap_call(self.__context_struct, self.__param_struct,
-                           inputs, self.__frozen_vals, self.__data_struct)
+        bin_node.wrap_call(self._context_struct, self._param_struct,
+                           inputs, self.__frozen_vals, self._data_struct)
 
     def execute(self, inputs):
         inputs = self._get_input_struct(inputs)
         bin_exec = self._composition._get_bin_execution()
-        bin_exec.wrap_call(self.__context_struct, self.__param_struct,
-                           inputs, self.__data_struct, self.__conditions)
+        bin_exec.wrap_call(self._context_struct, self._param_struct,
+                           inputs, self._data_struct, self._conditions)
 
     def run(self, inputs, runs, num_input_sets):
         bin_run = self._composition._get_bin_run()
@@ -251,7 +251,7 @@ class CompExecution:
         outputs = (bin_run.byref_arg_types[4] * runs)()
         runs_count = ctypes.c_int(runs)
         input_count = ctypes.c_int(num_input_sets)
-        bin_run.wrap_call(self.__context_struct, self.__param_struct,
-                          self.__data_struct, inputs, outputs, runs_count,
+        bin_run.wrap_call(self._context_struct, self._param_struct,
+                          self._data_struct, inputs, outputs, runs_count,
                           input_count)
         return _convert_ctype_to_python(outputs)
