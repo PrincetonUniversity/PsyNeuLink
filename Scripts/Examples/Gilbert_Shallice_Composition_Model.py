@@ -229,6 +229,3 @@ WORD_OUTPUT_LAYER.log.print_entries()
 COLOR_OUTPUT_LAYER.log.print_entries()
 
 ### SYSTEM
-
-
-
