@@ -1078,17 +1078,19 @@ class GridSearch(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    # MODIFIED 12/4/18 NEW: [JDC]
     # def _instantiate_attributes_before_function(self, function=None, context=None):
     #     super()._instantiate_attributes_before_function(function=function, context=context)
     #     from itertools import product
     #     self._grid = product(*[s() for s in self.search_space])
     #     assert True
 
-    def _instantiate_attributes_after_function(self, context=None):
-        super()._instantiate_attributes_before_function(context=context)
-        from itertools import product
-        self._grid = product(*[s() for s in self.search_space])
-        assert True
+    # def _instantiate_attributes_after_function(self, context=None):
+    #     super()._instantiate_attributes_before_function(context=context)
+    #     from itertools import product
+    #     self._grid = product(*[s() for s in self.search_space])
+    #     assert True
+    # MODIFIED 12/4/18 END
 
     def function(self,
                  variable=None,
@@ -1238,10 +1240,12 @@ class GridSearch(OptimizationFunction):
         #     allocation.append(next(item[0]))
         # return allocation
 
+        # MODIFIED 12/4/18 NEW: [JDC]
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            p = product(*[s for s in self.search_space])
-        x = next(p,None)  # JDC Added
+            self._grid = product(*[s for s in self.search_space])
+        x = next(self._grid,None)  # JDC Added
         return x
+        # MODIFIED 12/4/18 END
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
 
