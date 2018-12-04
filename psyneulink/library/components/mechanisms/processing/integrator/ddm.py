@@ -103,7 +103,7 @@ function representing an analytic solution is selected, the mechanism generates 
 When the path integration function is selected, the mechanism carries out step-wise integration of the process; each
 execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Execution` for additional details).
 
-The `value <DDM.value>` of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
+The `value <DDM.value>` of the DDM Mechanism may have up to ten items. The first two of these are always assigned, and
 are represented by the DDM Mechanism's two default `output_states <DDM.output_states>`: `DECISION_VARIABLE
 <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`.  Other `output_states <DDM.output_states>` may be
 automatically assigned, depending on the `function <DDM.function>` that has been assigned to the DDM, as shown in the
@@ -130,11 +130,24 @@ table below:
 | <DDM_PROBABILITY_LOWER_THRESHOLD>` |       X                 |        X                |                            |
 +------------------------------------+-------------------------+-------------------------+----------------------------+
 | `RT_CORRECT_MEAN                   |                         |                         |                            |
-| <DDM_RT_CORRECT_MEAN>`             |                         |        X                |                            |
+| <DDM_RT_CORRECT_MEAN>`             |       X                 |        X                |                            |
 +------------------------------------+-------------------------+-------------------------+----------------------------+
 | `RT_CORRECT_VARIANCE               |                         |                         |                            |
-| <DDM_RT_CORRECT_MEAN>`             |                         |        X                |                            |
+| <DDM_RT_CORRECT_VARIANCE>`         |       X                 |        X                |                            |
 +------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_CORRECT_SKEW                   |                         |                         |                            |
+| <DDM_RT_CORRECT_SKEW>`             |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_INCORRECT_MEAN                 |                         |                         |                            |
+| <DDM_RT_INCORRECT_MEAN>`           |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_INCORRECT_VARIANCE             |                         |                         |                            |
+| <DDM_RT_INCORRECT_VARIANCE>`       |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_INCORRECT_SKEW                 |                         |                         |                            |
+| <DDM_RT_INCORRECT_SKEW>`           |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+
 
 .. _DDM_Custom_OutputStates:
 
@@ -157,16 +170,22 @@ Analytic Solutions
 ^^^^^^^^^^^^^^^^^^
 
 The two Drift Diffusion Model `Functions <Function>` that calculate analytic solutions are `BogaczEtAl <BogaczEtAl>`
-and `NavarroAndFuss <NavarroAndFuss>`. When one of these functions is specified as the DDM Mechanism's
+and `NavarroAndFuss <NavarroAndFuss>`. `NavarroAndFuss <NavarroAndFuss>` is deprecated and requires MATLAB to be
+installed on the system with Python bindings. `BogaczEtAl <BogaczEtAl>` contains all its functionality.
+When one of these functions is specified as the DDM Mechanism's
 `function <DDM.function>`, the mechanism generates a single estimate of the outcome for the decision process (see
 `DDM_Execution` for details).
 
 In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, both Functions
 return an accuracy value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>`
 OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
-OutputState;  the `NavarroAndFuss <NavarroAndFuss>` Function also returns expected values for mean correct response time
-(`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>` and variance of correct response times
-(`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+OutputState;  the `NavarroAndFuss <NavarroAndFuss>` Function also returns moments (mean, variance, and skew) for
+conditional (correct\positive or incorrect\negative) response time distributions. These are; the mean RT for correct
+responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
+(`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses (`RT_CORRECT_SKEW <DDM_RT_CORRECT_SKEW>`,
+the mean RT for incorrect responses  (`RT_INCORRECT_MEAN <DDM_RT_INCORRECT_MEAN>`, the RT variance for incorrect
+responses (`RT_INCORRECT_VARIANCE <DDM_RT_INCORRECT_VARIANCE>`, the RT skew for incorrect responses
+(`RT_INCORRECT_SKEW <DDM_RT_INCORRECT_SKEW>`.
 
 Examples for each, that illustrate all of their parameters, are shown below:
 
@@ -393,12 +412,12 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or l
                               {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
-                              {NAME: RT_CORRECT_MEAN},              # (NavarroAndFuss only)
-                              {NAME: RT_CORRECT_VARIANCE},          # (NavarroAndFuss only)
-                              {NAME: RT_CORRECT_SKEW},              # (NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_MEAN},            # (NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_VARIANCE},        # (NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_SKEW},            # (NavarroAndFuss only)
+                              {NAME: RT_CORRECT_MEAN},              # (BogaczEtAl and NavarroAndFuss only)
+                              {NAME: RT_CORRECT_VARIANCE},          # (BogaczEtAl and NavarroAndFuss only)
+                              {NAME: RT_CORRECT_SKEW},              # (BogaczEtAl and NavarroAndFuss only)
+                              {NAME: RT_INCORRECT_MEAN},            # (BogaczEtAl and NavarroAndFuss only)
+                              {NAME: RT_INCORRECT_VARIANCE},        # (BogaczEtAl and NavarroAndFuss only)
+                              {NAME: RT_INCORRECT_SKEW},            # (BogaczEtAl and NavarroAndFuss only)
                               ]
 
 # This is a convenience class that provides list of standard_output_state names in IDE
@@ -605,12 +624,12 @@ class DDM(ProcessingMechanism_Base):
             DDM is a subclass Type of the Mechanism Category of the Component class
             It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
                 two alternative forced choice (2AFC) decision making:
-                - Bogacz et al. (2006) analytic solution:
-                    generates error rate (ER) and decision time (DT);
-                    ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-                - Navarro and Fuss (2009) analytic solution:
-                    generates error rate (ER), decision time (DT) and their distributions;
-                    ER is used to stochastically generate a decision outcome (+ or - valued) on every run
+                - analytical solution (Bogacz et al. (2006), Shenhav et al., Srivastava et al. (2016))
+                     - stochastically estimated decion outcome (convert mean ER into value between 1 and -1)
+                     - mean ER
+                     - mean RT
+                     - mean, variance, and skew of RT for correct (posititive threshold) responses
+                     - mean, variance, and skew of RT for incorrect (negative threshold) responses
                 - stepwise integrator that simulates each step of the integration process
         Class attributes
         ----------------
@@ -1044,8 +1063,9 @@ class DDM(ProcessingMechanism_Base):
         Currently implements only trial-level DDM (analytic solution) and returns:
             - stochastically estimated decion outcome (convert mean ER into value between 1 and -1)
             - mean ER
-            - mean DT
-            - mean ER and DT variabilty (kwNavarroAndFuss ony)
+            - mean RT
+            - mean, variance, and skew of RT for correct (posititive threshold) responses
+            - mean, variance, and skew of RT for incorrect (negative threshold) responses
         Return current decision variable (self.outputState.value) and other output values (self.output_states[].value
         Arguments:
         # CONFIRM:
@@ -1062,8 +1082,8 @@ class DDM(ProcessingMechanism_Base):
             - decision variable (float)
             - mean error rate (float)
             - mean RT (float)
-            - correct mean RT (float) - Navarro and Fuss only
-            - correct mean ER (float) - Navarro and Fuss only
+            - mean, variance, and skew of RT for correct (posititive threshold) responses
+            - mean, variance, and skew of RT for incorrect (negative threshold) responses
 
         :param self:
         :param variable (float)
@@ -1136,37 +1156,6 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
 
             return return_value
-
-            # def _out_update(self, particle, drift, noise, time_step_size, decay):
-            #     ''' Single update for OU (special case l=0 is DDM)'''
-            #     return particle + time_step_size * (decay * particle + drift)
-            #                     + random.normal(0, noise) * sqrt(time_step_size)
-
-
-            # def _ddm_update(self, particle, a, s, dt):
-            #     return self._out_update(particle, a, s, dt, decay=0)
-
-
-            # def _ddm_rt(self, x0, t0, a, s, z, dt):
-            #     samps = 0
-            #     particle = x0
-            #     while abs(particle) < z:
-            #         samps = samps + 1
-            #         particle = self._out_update(particle, a, s, dt, decay=0)
-            #     # return -rt for errors as per convention
-            #     return (samps * dt + t0) if particle > 0 else -(samps * dt + t0)
-
-            # def _ddm_distr(self, n, x0, t0, a, s, z, dt):
-            #     return np.fromiter((self._ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
-
-
-            # def terminate_function(self, context=None):
-            #     """Terminate the process
-            #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-            #     returns output
-            #     Returns: value
-            #     """
-            #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
 
     def reinitialize(self, *args, execution_context=None):
         from psyneulink.core.components.functions.integratorfunctions import Integrator
