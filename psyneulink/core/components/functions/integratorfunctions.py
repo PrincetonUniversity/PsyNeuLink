@@ -4837,10 +4837,9 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
                                 (csch(Z - X))**2 - (Z - X) * coth(Z - X))
 
             moments["skew_rt_plus"] = noise**6. / (drift_rate** 6) * \
-                               (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
-                                (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z + X)**2. *
-                                (csch(Z + X))**2 - 2 * (Z + X)**3. * coth(Z + X) * (csch(Z + X))**2 - 3 *
-                                (Z + X) * coth(Z + X))
+                               (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) * (csch(2 * Z))**2 +
+                                6 * Z * coth(2 * Z) - 3 * (Z + X)**2. * (csch(Z + X))**2 -
+                                2 * (Z + X)**3. * coth(Z + X) * (csch(Z + X))**2 - 3 * (Z + X) * coth(Z + X))
 
             moments["skew_rt_minus"] = noise**6. / (drift_rate**6) * \
                                 (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *

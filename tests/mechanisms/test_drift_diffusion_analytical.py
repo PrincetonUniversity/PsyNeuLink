@@ -9,7 +9,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.ddm import D
 # directory. I feel like there must be a better way to do this?
 __location__ = os.path.dirname(os.path.realpath(__file__))
 
-def check_drift_diffusion_analytical(B, data):
+def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
     """
     Helper function to check a BogaczEtAl Function against a set of data. Format of the
     data follows the following column ordering:
@@ -36,13 +36,17 @@ def check_drift_diffusion_analytical(B, data):
 
         results_b = B.execute(r_stim)
 
-        ABS_TOL = 1e-10
-        assert np.isclose(results_b[1], ground_truth[0], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[2], ground_truth[1], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[3], ground_truth[2], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[4], ground_truth[3], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[5], ground_truth[4], atol=ABS_TOL, equal_nan=True)
+        # Lets drop the singleton dimension
+        results_b = np.squeeze(results_b)
 
+        # Check that all components of the results are close, skip the first one since it is stochastic and should
+        # depended on the others. Not the best approach but trouble with getting the same random seeds requires it for
+        # now. If we are doing degenerate cases, then don't check conditional moments, these can vary wildly because
+        # implementation differences of coth and csch between Python and MATLAB
+        if degenerate_cases:
+            assert np.allclose(results_b[1:6], ground_truth[0:5], atol=1e-10, equal_nan=True)
+        else:
+            assert np.allclose(results_b[1:], ground_truth, atol=1e-10, equal_nan=True)
 
 def test_drift_difussion_analytical_shenhav_compat_mode():
 
@@ -56,7 +60,7 @@ def test_drift_difussion_analytical_shenhav_compat_mode():
     # Load a CSV containing random sampled test values
     data = np.loadtxt(os.path.join(__location__, 'matlab_ddm_code_ground_truth.csv'))
 
-    check_drift_diffusion_analytical(B, data)
+    check_drift_diffusion_analytical(B, data, degenerate_cases=True)
 
 def test_drift_difussion_analytical():
 
@@ -70,4 +74,4 @@ def test_drift_difussion_analytical():
     # Load a CSV containing random sampled test values
     data = np.loadtxt(os.path.join(__location__, 'matlab_ddm_code_ground_truth_non_degenerate.csv'))
 
-    check_drift_diffusion_analytical(B, data)
+    check_drift_diffusion_analytical(B, data, degenerate_cases=True)

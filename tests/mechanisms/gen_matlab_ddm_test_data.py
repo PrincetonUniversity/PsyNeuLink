@@ -28,8 +28,8 @@ def gen_matlab_ddm_test_data(non_degenerate_only=False):
         function=NavarroAndFuss()
     )
 
-    NUM_CHECKS = 5000
-    res = np.zeros(shape=(NUM_CHECKS, 15))
+    NUM_CHECKS = 2500
+    res = np.zeros(shape=(NUM_CHECKS, 16))
     rng = np.random.RandomState(100)
     for i in range(NUM_CHECKS):
 
@@ -58,7 +58,7 @@ def gen_matlab_ddm_test_data(non_degenerate_only=False):
 
         results_nf = NF.execute(r_stim)
         res[i, :] = np.concatenate(
-            ([r_stim, r_drift_rate, r_threshold, r_starting_point, r_bias, r_t0, r_noise], np.squeeze(results_nf[1:6])))
+            ([r_stim, r_drift_rate, r_threshold, r_starting_point, r_bias, r_t0, r_noise], np.squeeze(results_nf[1:])))
 
     if non_degenerate_only:
         np.savetxt(os.path.join(__location__, 'matlab_ddm_code_ground_truth_non_degenerate.csv'), res)

@@ -4,7 +4,7 @@ import numpy as np
 from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl, NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
-#@pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")
+@pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")
 def test_nf_vs_bogacz():
     """
     This test compares the NavarroAndFuss() and bogaczEtAl (renamed DriftDiffusionAnalytical) against eachother.
@@ -21,7 +21,7 @@ def test_nf_vs_bogacz():
         function=BogaczEtAl(shenhav_et_al_compat_mode=True)
     )
 
-    NUM_CHECKS = 5000
+    NUM_CHECKS = 2500
     rng = np.random.RandomState(100)
     for i in range(NUM_CHECKS):
         r_stim = rng.uniform(-5, 5)
@@ -58,9 +58,21 @@ def test_nf_vs_bogacz():
         results_nf = NF.execute(r_stim)
         results_b = B.execute(r_stim)
 
-        ABS_TOL = 1e-10
-        assert np.isclose(results_b[1], results_nf[1], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[2], results_nf[2], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[3], results_nf[3], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[4], results_nf[4], atol=ABS_TOL, equal_nan=True)
-        assert np.isclose(results_b[5], results_nf[5], atol=ABS_TOL, equal_nan=True)
+        # Check that all components of the results are close, skip the first one since it is stochastic and should
+        # depended on the others. Not the best approach but trouble with getting the same random seeds requires it for
+        # now.
+        #assert np.allclose(results_b[1:], results_nf[1:], atol=1e-10, equal_nan=True)
+        assert np.isclose(results_b[1], results_nf[1], atol=1e-10, equal_nan=True)
+        assert np.isclose(results_b[2], results_nf[2], atol=1e-10, equal_nan=True)
+        assert np.isclose(results_b[3], results_nf[3], atol=1e-10, equal_nan=True)
+        assert np.isclose(results_b[4], results_nf[4], atol=1e-10, equal_nan=True)
+        assert np.isclose(results_b[5], results_nf[5], atol=1e-10, equal_nan=True)
+
+        # Comment out tests for some moments, in degenerate cases because of different
+        # implementations of trig functions thes can be very different between MATLAB and
+        # Python it seems.
+        #assert np.isclose(results_b[6], results_nf[6], atol=1e-10, equal_nan=True)
+        #assert np.isclose(results_b[7], results_nf[7], atol=1e-10, equal_nan=True)
+        #assert np.isclose(results_b[8], results_nf[8], atol=1e-10, equal_nan=True)
+        #assert np.isclose(results_b[9], results_nf[9], atol=1e-10, equal_nan=True)
+
