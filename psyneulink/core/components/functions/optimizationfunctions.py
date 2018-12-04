@@ -1066,7 +1066,7 @@ class GridSearch(OptimizationFunction):
         search_function = self._traverse_grid
         search_termination_function = self._grid_complete
         self._return_values = save_values
-
+        self.num_iterations = 1
         self.direction = direction
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1259,7 +1259,7 @@ class GridSearch(OptimizationFunction):
 
 
         try:
-            return iteration != 16
+            return iteration != self.num_iterations
         except AttributeError:
             return True
         # MODIFIED 12/3/18 END
