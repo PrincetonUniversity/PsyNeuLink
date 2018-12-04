@@ -72,7 +72,7 @@ def test_basic(func, variable, integration_method, params, expected, benchmark):
 def test_llvm(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
 
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = e.execute(variable)
     res = e.execute(variable)
     res = e.execute(variable)
@@ -94,7 +94,7 @@ def test_llvm(func, variable, integration_method, params, expected, benchmark):
 def test_cuda_ptx(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
 
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = e.execute(variable)
     res = e.execute(variable)
     res = e.execute(variable)

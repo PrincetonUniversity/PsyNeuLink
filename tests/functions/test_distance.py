@@ -87,7 +87,7 @@ def test_llvm(variable, metric, normalize, fail, expected, benchmark):
         pytest.xfail(fail)
         return
     f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.execute, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
@@ -108,7 +108,7 @@ def test_ptx_cuda(variable, metric, normalize, fail, expected, benchmark):
         pytest.xfail(fail)
         return
     f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.cuda_execute, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
