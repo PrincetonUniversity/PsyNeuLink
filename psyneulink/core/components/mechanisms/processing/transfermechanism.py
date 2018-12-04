@@ -625,7 +625,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     -------
     instance of TransferMechanism : TransferMechanism
 
-
     Attributes
     ----------
 
