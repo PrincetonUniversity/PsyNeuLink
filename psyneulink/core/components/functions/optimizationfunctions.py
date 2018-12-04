@@ -1036,6 +1036,9 @@ class GridSearch(OptimizationFunction):
         # MODIFIED 12/3/18 NEW: [JDC]
         variable = Param([SampleIterator([0]),SampleIterator([0])], read_only=True)
         # MODIFIED 12/3/18 END
+        # MODIFIED 12/4/18 NEW: [JDC]
+        grid = Param(None)
+        # MODIFIED 12/4/18 END
 
         save_samples = True
         save_values = True
@@ -1240,10 +1243,17 @@ class GridSearch(OptimizationFunction):
         #     allocation.append(next(item[0]))
         # return allocation
 
-        # MODIFIED 12/4/18 NEW: [JDC]
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
-            self._grid = product(*[s for s in self.search_space])
-        x = next(self._grid,None)  # JDC Added
+        # # MODIFIED 12/4/18 NEW: [JDC]
+        # if self.context.initialization_status == ContextFlags.INITIALIZING:
+        #     self._grid = product(*[s for s in self.search_space])
+        # x = next(self._grid,None)  # JDC Added
+        # return x
+        # MODIFIED 12/4/18 NEWER: [JDC]
+        grid = self.parameters.grid.get(execution_id)
+        if grid is None:
+            self.parameters.grid.set(product(*[s for s in self.search_space]))
+            grid = self.parameters.grid.get(execution_id)
+        x = next(grid,None)  # JDC Added
         return x
         # MODIFIED 12/4/18 END
 
