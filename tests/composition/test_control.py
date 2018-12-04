@@ -406,7 +406,7 @@ class TestModelBasedOptimizationControlMechanisms:
             Input: [0.5, 0.123],
             Reward: [20, 20]
         }
-        # print("- - - - - - - - RUN - - - - - - - -")
+
         # comp.show_graph()
         comp.run(
             inputs=stim_list_dict,

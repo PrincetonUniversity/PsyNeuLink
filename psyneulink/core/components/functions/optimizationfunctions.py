@@ -24,6 +24,7 @@ Functions that return the sample of a variable yielding the optimized value of a
 
 import warnings
 
+import itertools
 import numpy as np
 import typecheck as tc
 
@@ -153,13 +154,13 @@ class SampleIterator(Iterator):
                         format(repr('begin'), repr('end'), repr('num'),repr('generator'),)
                 if isinstance(self.num, int):
                     if self.num == 1:
-                        step_size = 0
+                        self.step_size = 0
                     else:
-                        step_size = (self.end - self.begin) / (self.num-1)
+                        self.step_size = (self.end - self.begin) / (self.num-1)
                     def sample_gen(begin, num, step):
                         for n in range(0, num):
                             yield begin + n * step
-                    self._iterator = sample_gen(self.begin, self.num, step_size)
+                    self._iterator = sample_gen(self.begin, self.num, self.step_size)
 
                 else:
                     def sample_gen(begin, end, step):
@@ -167,7 +168,9 @@ class SampleIterator(Iterator):
                         while result < end:
                             yield result
                             result += step
-                    self._iterator = sample_gen(self.begin, self.end, self.num)
+                    self.step_size = self.num
+                    self.num = int((self.end - self.begin)/self.step_size)
+                    self._iterator = sample_gen(self.begin, self.end, self.step_size)
 
             elif is_iter(sample_spec.generator):
                 self._iterator = sample_spec.generator
@@ -1094,6 +1097,14 @@ class GridSearch(OptimizationFunction):
     #     self._grid = product(*[s() for s in self.search_space])
     #     assert True
     # MODIFIED 12/4/18 END
+    def reinitialize(self, *args, execution_id=None):
+
+        super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
+
+        self.grid = itertools.product(*[s for s in self.search_space])
+        self.num_iterations = 1
+        for signal in self.search_space:
+            self.num_iterations *= signal.num
 
     def function(self,
                  variable=None,
@@ -1236,34 +1247,19 @@ class GridSearch(OptimizationFunction):
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
-        from itertools import product               # KAM 12/3/2018 in progress
-        # sample = product(self.search_space)
-        # allocation = []
-        # for item in sample:
-        #     allocation.append(next(item[0]))
-        # return allocation
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            return [signal.begin for signal in self.search_space]
 
-        # # MODIFIED 12/4/18 NEW: [JDC]
-        # if self.context.initialization_status == ContextFlags.INITIALIZING:
-        #     self._grid = product(*[s for s in self.search_space])
-        # x = next(self._grid,None)  # JDC Added
-        # return x
-        # MODIFIED 12/4/18 NEWER: [JDC]
-        grid = self.parameters.grid.get(execution_id)
-        if grid is None:
-            self.parameters.grid.set(product(*[s for s in self.search_space]))
-            grid = self.parameters.grid.get(execution_id)
-        x = next(grid,None)  # JDC Added
+        x = next(self.grid, None)
+        # TEST PRINT (KAM 12/4/18)
+        print("control allocation = ", x)
         return x
-        # MODIFIED 12/4/18 END
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
 
-        # # MODIFIED 12/3/18 OLD:
-        # return iteration != len(self.grid)
-        # MODIFIED 12/3/18 NEW:
+
         try:
-            return iteration != 5       # KAM Temp hack because we no longer have a grid to get the length of
+            return iteration != 16
         except AttributeError:
             return True
         # MODIFIED 12/3/18 END
