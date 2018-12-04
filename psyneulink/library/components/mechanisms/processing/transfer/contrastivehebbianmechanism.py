@@ -306,6 +306,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.learningfunctions import Hebbian, ContrastiveHebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
@@ -437,6 +438,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 continuous=True,                                    \
                 clamp=HARD_CLAMP,                                   \
                 function=Linear,                                    \
+                integrator_functon=AdapativeIntegrator,             \
                 combination_function=LinearCombination,             \
                 matrix=HOLLOW_MATRIX,                               \
                 auto=None,                                          \
@@ -528,6 +530,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     continuous : bool : default True
         specifies whether or not to reinitialize `current_activity <ContrastiveHebbianMechanism.current_activity>`
         at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of a trial.
+
+    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+        specifies `IntegratorFunction` to use in `integration_mode <ContrastiveHebbianMechanism.integration_mode>`.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input if `integrator_mode
@@ -677,7 +682,17 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         the Mechanism's `previous_value <ContrastiveHebbianMechanism.previous_value>` attribute) are set to
         `initial_value <ContrastiveHebbianMechanism.initial_value>`.
 
-    initial_value :  value, list or np.ndarray
+    integrator_function :  IntegratorFunction
+        the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
+        `True` (see `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` for details).
+
+        .. note::
+            The ContrastiveHebbianMechanism's `integration_rate <ContrastiveHebbianMechanism.integration_rate>`, `noise
+            <ContrastiveHebbianMechanism.noise>`, and `initial_value <ContrastiveHebbianMechanism.initial_value>`
+            parameters specify the respective parameters of its `integrator_function` (with **initial_value**
+            corresponding to `initializer <IntegratorFunction.initializer>` of integrator_function.
+
+     initial_value :  value, list or np.ndarray
         determines the starting value for time-averaged input if `integrator_mode
         <ContrastiveHebbianMechanism.integrator_mode>` is `True`. See TransferMechanism's `initial_value
         <TransferMechanism.initial_value>` for additional details.
@@ -927,6 +942,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  matrix=HOLLOW_MATRIX,
                  auto=None,
                  hetero=None,
+                 integrator_function=AdaptiveIntegrator,
                  initial_value=None,
                  noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,
@@ -1011,8 +1027,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                   output_states=output_states,
                                                   params=params)
 
-        super().__init__(
-                         default_variable=default_variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          combination_function=combination_function,
@@ -1021,6 +1036,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          auto=auto,
                          hetero=hetero,
                          has_recurrent_input_state=True,
+                         integrator_function=integrator_function,
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=integrator_mode,

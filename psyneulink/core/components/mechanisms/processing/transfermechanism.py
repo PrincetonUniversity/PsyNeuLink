@@ -471,9 +471,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     size=None,                                                                    \
     input_states=None,                                                            \
     function=Linear,                                                              \
+    integrator_function=AdaptiveIntegrator,                                       \
     initial_value=None,                                                           \
     noise=0.0,                                                                    \
-    integrator_function=AdaptiveIntegrator,                                       \
     integration_rate=0.5,                                                         \
     integrator_mode=False,                                                        \
     on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,                           \
@@ -540,6 +540,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
 
+    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+        specifies `IntegratorFunction` to use in `integration_mode <TransferMechanism.integration_mode>`.
+
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
         <TransferMechanism.integrator_mode>` is True).
@@ -552,9 +555,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         or its `integrator_function <TransferMechanism.integrator_function>`, depending on whether `integrator_mode
         <TransferMechanism.integrator_mode>` is `True` or `False`. See `noise <TransferMechanism.noise>` for details.
 
-    integrator_function : IntegratorFunction : default AdaptiveIntegrator
-        specifies function to use in `integration_mode <TransferMechanism.integration_mode>`.
-    
     integration_rate : float : default 0.5
         specifies the smoothing factor used for exponential time averaging of input when the TransferMechanism is
         executed with `integrator_mode` set to `True`.
@@ -645,6 +645,16 @@ class TransferMechanism(ProcessingMechanism_Base):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
 
+    integrator_function :  IntegratorFunction
+        the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
+        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
+
+        .. note::
+            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
+            <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
+            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
+            to `initializer <IntegratorFunction.initializer>` of integrator_function.
+
     initial_value :  value, list or np.ndarray
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
         <TransferMechanism.integrator_mode>` is `True` and `integration_rate <TransferMechanism.integration_rate>` is
@@ -673,14 +683,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             distribution on each execution. If `noise <TransferMechanism.noise>` is specified as a float or as a
             function with a fixed output, then the noise will simply be an offset that remains the same across all
             executions.
-
-    integrator_function :  IntegratorFunction
-        the `IntegratorFunction` Function used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
-        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
-
-        .. note::
-            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter
-            specifies the `rate <AdaptiveIntegrator.rate>` of the `AdaptiveIntegrator` Function.
 
     integration_rate : float
         the rate used for exponential time averaging of the TransferMechanism's `variable
@@ -834,9 +836,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  function=Linear,
+                 integrator_function=AdaptiveIntegrator,
                  initial_value=None,
                  noise=0.0,
-                 integrator_function=None,
                  integration_rate=0.5,
                  integrator_mode=False,
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
@@ -858,7 +860,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_states = [RESULTS]
 
         initial_value = self._parse_arg_initial_value(initial_value)
-        self.integrator_function = integrator_function or AdaptiveIntegrator
+        self.integrator_function = integrator_function or AdaptiveIntegrator # In case any subclass set it to None
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
@@ -1065,8 +1067,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if isinstance(self.convergence_function, Function):
             self._convergence_function = self.convergence_function.function
-
-        # self._instantiate_integrator_function(context=context)
 
     def _instantiate_integrator_function(self, variable, noise, initializer, rate, execution_id, context=None):
 

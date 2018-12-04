@@ -176,6 +176,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.globals.keywords import INITIALIZING, KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -260,6 +261,9 @@ class KWTAMechanism(RecurrentTransferMechanism):
         1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
         **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
         equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
+
+    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+        specifies `IntegratorFunction` to use in `integration_mode <KWTAMechanism.integration_mode>`.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -348,6 +352,15 @@ class KWTAMechanism(RecurrentTransferMechanism):
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
         back to its `primary inputState <Mechanism_InputStates>`.
 
+    integrator_function :  IntegratorFunction
+        the `IntegratorFunction` used when `integrator_mode <KWTAMechanism.integrator_mode>` is set to
+        `True` (see `integrator_mode <KWTAMechanism.integrator_mode>` for details).
+
+        .. note::
+            The KWTAMechanism's `integration_rate <KWTAMechanism.integration_rate>`, `noise
+            <KWTAMechanism.noise>`, and `initial_value <KWTAMechanism.initial_value>` parameters
+            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
+            to `initializer <IntegratorFunction.initializer>` of integrator_function.
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
@@ -507,6 +520,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  matrix=None,
                  auto: is_numeric_or_none=None,
                  hetero: is_numeric_or_none=None,
+                 integrator_function=AdaptiveIntegrator,
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
                  integration_rate: is_numeric_or_none = 0.5,
@@ -552,6 +566,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                          matrix=matrix,
                          auto=auto,
                          hetero=hetero,
+                         integrator_function=integrator_function,
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
                          noise=noise,
