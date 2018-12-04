@@ -48,7 +48,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
-                        biases = nn.Parameter(torch.zeros(len(component.input_states[0].parameters.value.get(execution_id))).double())
+                        biases = nn.Parameter(torch.zeros(len(component.input_states[0].parameters.value.get(None))).double())
                         self.params.append(biases)
                         self.mechanisms_to_pytorch_biases[component] = biases
 
@@ -60,6 +60,7 @@ class PytorchModelCreator(torch.nn.Module):
                         input_component = mapping_proj.sender.owner
                         input_node = processing_graph.comp_to_vertex[input_component]
 
+                        # CW 12/3/18: Check this logic later
                         proj_matrix = mapping_proj.parameters.matrix.get(execution_id)
                         if proj_matrix is None:
                             proj_matrix = mapping_proj.parameters.matrix.get(None)
@@ -77,6 +78,10 @@ class PytorchModelCreator(torch.nn.Module):
                 node_forward_info = [value, biases, function, afferents]
 
                 self.component_to_forward_info[component] = node_forward_info
+
+        # CW 12/3/18: this copies by reference so it only needs to be called during init, rather than
+        # every time the weights are updated
+        self.copy_weights_to_psyneulink(execution_id)
 
     # performs forward computation for the model
     def forward(self, inputs, execution_id=None):
@@ -111,7 +116,17 @@ class PytorchModelCreator(torch.nn.Module):
                 if i == len(self.execution_sets) - 1:
                     outputs[component] = value
 
+        self.copy_outputs_to_psyneulink(outputs, execution_id)
         return outputs
+
+    def copy_weights_to_psyneulink(self, execution_id=None):
+        for projection, weights in self.projections_to_pytorch_weights.items():
+            projection.parameters.matrix.set(weights.detach().numpy(), execution_id)
+
+    def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
+        for component, value in outputs.items():
+            component.parameters.value.set(value, execution_id)
+            component.output_state.parameters.value.set(value, execution_id)
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it
