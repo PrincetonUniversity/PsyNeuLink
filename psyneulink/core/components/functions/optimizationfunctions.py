@@ -559,6 +559,8 @@ class OptimizationFunction(Function_Base):
             # Compute new value based on new sample
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
 
+            self._report_value(new_value)
+
             iteration += 1
             max_iterations = self.parameters.max_iterations.get(execution_id)
             if max_iterations and iteration > max_iterations:
@@ -576,6 +578,10 @@ class OptimizationFunction(Function_Base):
                 self.parameters.saved_values.set(values, execution_id, override=True)
 
         return new_sample, new_value, samples, values
+
+    def _report_value(self, new_value):
+        pass
+
 
 ASCENT = 'ascent'
 DESCENT = 'descent'
@@ -1072,6 +1078,18 @@ class GridSearch(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    #     super()._instantiate_attributes_before_function(function=function, context=context)
+    #     from itertools import product
+    #     self._grid = product(*[s() for s in self.search_space])
+    #     assert True
+
+    def _instantiate_attributes_after_function(self, context=None):
+        super()._instantiate_attributes_before_function(context=context)
+        from itertools import product
+        self._grid = product(*[s() for s in self.search_space])
+        assert True
+
     def function(self,
                  variable=None,
                  execution_id=None,
@@ -1531,7 +1549,7 @@ class GaussianProcess(OptimizationFunction):
     # FRED: THESE ARE THE SHELLS FOR THE METHODS I BELIEVE YOU NEED:
     def _gaussian_process_sample(self, variable, sample_num, execution_id=None):
         '''Draw and return sample from search_space.'''
-        # FRED: YOUR CODE HERE
+        # FRED: YOUR CODE HERE;  THIS IS THE search_function METHOD OF OptimizationControlMechanism (i.e., PARENT)
         # NOTES:
         #   This method is assigned as the search function of GaussianProcess,
         #     and should return a sample that will be evaluated in the call to GaussianProcess' `objective_function`
@@ -1544,9 +1562,10 @@ class GaussianProcess(OptimizationFunction):
         #                         list of tuples, each of which contains the sampling bounds for each dimension;
         #                         so its length = length of a sample
         #     (the extra stuff in getting the search space is to support statefulness in parallelization of sims)
-        return # [SAMPLE:  VECTOR SAME SHAPE AS VARIABLE]
+        return self._opt.ask() # [SAMPLE:  VECTOR SAME SHAPE AS VARIABLE]
 
     def _gaussian_process_satisfied(self, variable, value, iteration, execution_id=None):
         '''Determine whether search should be terminated;  return `True` if so, `False` if not.'''
-        # FRED: YOUR CODE HERE
+        # FRED: YOUR CODE HERE;    THIS IS THE search_termination_function METHOD OF OptimizationControlMechanism (
+        # i.e., PARENT)
         return # [BOOLEAN, SPECIFIYING WHETHER TO END THE SEARCH/SAMPLING PROCESS]
