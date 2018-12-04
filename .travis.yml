@@ -3,16 +3,18 @@ language: python
 python:
     - 3.5
     - 3.6
-
-sudo: false
+    - 3.7
 
 install:
   - pip install coveralls
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
-os:
-  - linux
+os: linux
+
+dist: xenial
+
+env: PYTHONWARNINGS="ignore::DeprecationWarning"
 
 # Cache installed python packages
 cache:
@@ -32,19 +34,12 @@ before_cache:
 
 matrix:
   include:
-  - python: 3.7
-    dist: xenial # Python 3.7 is only available on xenial because of deps
-    sudo: required
-    env:
-        - PYTHONWARNINGS="ignore::DeprecationWarning"
-
   - os: osx
     python: 3.5
-    language: generic
+    language: minimal
     env:
         - PYTHON=3.5.4
         - PYTHON_PKG_VERSION=macosx10.6
-        - PRIV=sudo
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
@@ -53,11 +48,10 @@ matrix:
 
   - os: osx
     python: 3.6
-    language: generic
+    language: minimal
     env:
         - PYTHON=3.6.7
         - PYTHON_PKG_VERSION=macosx10.9
-        - PRIV=sudo
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
@@ -66,11 +60,10 @@ matrix:
 
   - os: osx
     python: 3.7
-    language: generic
+    language: minimal
     env:
         - PYTHON=3.7.1
         - PYTHON_PKG_VERSION=macosx10.9
-        - PRIV=sudo
         - PYTHONWARNINGS="ignore::DeprecationWarning"
     # Cache installed python virtual env and homebrew downloads
     cache:
@@ -87,7 +80,7 @@ before_install: |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     FILE=python-$PYTHON-$PYTHON_PKG_VERSION.pkg
     curl -O -#  https://www.python.org/ftp/python/$PYTHON/$FILE
-    $PRIV installer -pkg $FILE -target /
+    sudo installer -pkg $FILE -target /
     python3 --version
     # Check if the cached version is available
     if [ "x`$HOME/venv/bin/python --version`" == "xPython $PYTHON" ] ; then

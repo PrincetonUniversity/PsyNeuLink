@@ -23,7 +23,7 @@ def test_basic(size, benchmark):
 def test_llvm(size, benchmark):
     variable = np.random.rand(size)
     f = Functions.Identity(default_variable=variable)
-    m = pnlvm.execution.FuncExecution(f, None)
+    m = pnlvm.execution.FuncExecution(f)
     res = benchmark(m.execute, variable)
     assert np.allclose(res, variable)
 
@@ -37,6 +37,6 @@ def test_llvm(size, benchmark):
 def test_ptx_cuda(size, benchmark):
     variable = np.random.rand(size)
     f = Functions.Identity(default_variable=variable)
-    m = pnlvm.execution.FuncExecution(f, None)
+    m = pnlvm.execution.FuncExecution(f)
     res = benchmark(m.cuda_execute, variable)
     assert np.allclose(res, variable)

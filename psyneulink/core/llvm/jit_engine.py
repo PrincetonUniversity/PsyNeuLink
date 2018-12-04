@@ -18,11 +18,24 @@ from .builtins import _generate_cpu_builtins_module
 _dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 
 try:
-    import pycuda
-    from pycuda import autoinit as pycuda_default
-    import pycuda.compiler
-    ptx_enabled = _dumpenv.find("cuda") != -1
-except:
+    if _dumpenv.find("cuda") != -1:
+        import pycuda
+        # Do not continue if the version is too old
+        if pycuda.VERSION[0] >= 2018:
+            import pycuda.driver
+            # pyCUDA needs to be built against 5.5+ to enable Linker
+            if pycuda.driver.get_version()[0] > 5:
+                from pycuda import autoinit as pycuda_default
+                import pycuda.compiler
+                ptx_enabled = True
+            else:
+                raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
+        else:
+            raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
+    else:
+        ptx_enabled = False
+except Exception as e:
+    print("WARNING: Failed to enable CUDA/PTX:", e)
     ptx_enabled = False
 
 
@@ -210,12 +223,9 @@ class cpu_jit_engine(jit_engine):
              self._jit_engine.set_object_cache(self._object_cache)
 
 _ptx_builtin_source = """
-__device__ __noinline__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
-__device__ __noinline__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
-__device__ __noinline__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
-__global__ void __dummy_log ({type} *a) {{ a[0] = __pnl_builtin_log(a[0]); }}
-__global__ void __dummy_exp ({type} *a) {{ a[0] = __pnl_builtin_exp(a[0]); }}
-__global__ void __dummy_pow ({type} *a) {{ a[0] = __pnl_builtin_pow(a[0], a[1]); }}
+__device__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
+__device__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
+__device__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
 """
 
 class ptx_jit_engine(jit_engine):
@@ -224,23 +234,23 @@ class ptx_jit_engine(jit_engine):
             self._modules = {}
             self._target_machine = tm
 
-            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='ptx').decode()
-            # Remove directives. This will be appended to llvm generated code
-            self._generated_builtins = re.sub(r"\.(version|target|address_size).*","", self._generated_builtins)
+            # -dc option tells the compiler that the code will be used for linking
+            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='cubin', options=['-dc'])
 
         def set_object_cache(cache):
             pass
 
         def add_module(self, module):
             try:
+                # LLVM can't produce CUBIN for some reason
                 ptx = self._target_machine.emit_assembly(module)
-                # Remove extern directive. log, exp, and pow are implemented
-                # in the generated ptx. Ideally these would be linked,
-                # but linker is not yet avialable in pycuda
-                ptx = re.sub(r"\.extern", ".visible", ptx + self._generated_builtins)
-                ptx_mod = pycuda.driver.module_from_buffer(ptx.encode())
+                mod = pycuda.compiler.DynamicModule()
+                mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
+                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, "pnl.ptx")
+                ptx_mod = mod.link()
+
             except Exception as e:
-                print("FAILED to generate PTX:", e)
+                print("FAILED to generate PTX module:", e)
                 print(ptx)
                 return None
 

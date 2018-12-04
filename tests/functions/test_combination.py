@@ -150,10 +150,10 @@ def test_linear_combination_function(func, variable, params, expected, bin_execu
     f = func(default_variable=variable, **params)
     benchmark.group = "LinearCombinationFunction " + func.componentName;
     if (bin_execute == 'LLVM'):
-        e = pnlvm.execution.FuncExecution(f, None)
+        e = pnlvm.execution.FuncExecution(f)
         res = benchmark(e.execute, variable)
     elif (bin_execute == 'PTX'):
-        e = pnlvm.execution.FuncExecution(f, None)
+        e = pnlvm.execution.FuncExecution(f)
         res = benchmark(e.cuda_execute, variable)
     else:
         res = benchmark(f.function, variable)
@@ -260,7 +260,7 @@ def test_linear_combination_function_in_mechanism_llvm(operation, input, size, i
     f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
     benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.execute, input)
     if expected is None:
         if operation == pnl.SUM:
@@ -281,7 +281,7 @@ def test_linear_combination_function_in_mechanism_ptx_cuda(operation, input, siz
     f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
     benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
-    e = pnlvm.execution.FuncExecution(f, None)
+    e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.cuda_execute, input)
     if expected is None:
         if operation == pnl.SUM:
