@@ -921,21 +921,19 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep.runs_simulations:
             sim_execution_id = self._set_up_simulation(execution_id)
 
-            result = self.agent_rep.evaluate(
-                self.parameters.feature_values.get(execution_id),
-                control_allocation,
-                self.parameters.num_estimates.get(execution_id),
-                base_execution_id=execution_id,
-                execution_id=sim_execution_id,
-                context=self.function_object.parameters.context.get(execution_id)
+            result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+                                             control_allocation,
+                                             self.parameters.num_estimates.get(execution_id),
+                                             base_execution_id=execution_id,
+                                             execution_id=sim_execution_id,
+                                             context=self.function_object.parameters.context.get(execution_id)
             )
         else:
-            result = self.agent_rep.evaluate(
-                self.parameters.feature_values.get(execution_id),
-                control_allocation,
-                self.parameters.num_estimates.get(execution_id),
-                execution_id=execution_id,
-                context=self.function_object.parameters.context.get(execution_id)
+            result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+                                             control_allocation,
+                                             self.parameters.num_estimates.get(execution_id),
+                                             execution_id=execution_id,
+                                             context=self.function_object.parameters.context.get(execution_id)
             )
 
         return result
@@ -1085,7 +1083,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             for a in [c.allocation_samples for c in self.control_signals]:
                 # FIX: HANDLE THIS IN INSTANTIATION OF allocation_sample
-                if isinstance(a, range):
+                if isinstance(a, (range, np.ndarray)):
                     a = list(a)
                 control_allocation_search_space.append(SampleIterator(sample_spec=a))
             # FIX: DOES THIS NEED TO BE STATEFUL?

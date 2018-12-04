@@ -85,7 +85,7 @@ class SampleSpec():
 class SampleIterator():
     '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
     @tc.typecheck
-    def __init__(self, sample_spec:tc.any(list, SampleSpec)):
+    def __init__(self, sample_spec:tc.any(list, np.ndarray, SampleSpec)):
         '''Create SampleIterator from list or SampleSpec.
 
         If **sample_spec** is a list, create iterator from it that is called by __next__.
@@ -1213,11 +1213,16 @@ class GridSearch(OptimizationFunction):
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
         from itertools import product               # KAM 12/3/2018 in progress
-        sample = product(self.search_space)
-        allocation = []
-        for item in sample:
-            allocation.append(next(item[0]))
-        return allocation
+        # sample = product(self.search_space)
+        # allocation = []
+        # for item in sample:
+        #     allocation.append(next(item[0]))
+        # return allocation
+
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            p = product(*[s() for s in self.search_space])
+        x = next(p,None)  # JDC Added
+        return x
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
 

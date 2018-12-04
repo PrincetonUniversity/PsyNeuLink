@@ -4153,12 +4153,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         # Assign control_allocation current being sampled
         if control_allocation is not None:
-            self.model_based_optimizer.apply_control_allocation(
-                control_allocation,
-                execution_id=execution_id,
-                runtime_params=runtime_params,
-                context=context
-            )
+            self.model_based_optimizer.apply_control_allocation(control_allocation,
+                                                                execution_id=execution_id,
+                                                                runtime_params=runtime_params,
+                                                                context=context)
 
         net_control_allocation_outcomes = []
 
