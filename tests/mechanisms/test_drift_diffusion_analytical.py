@@ -2,7 +2,7 @@ import pytest
 import os
 import numpy as np
 
-from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl
+from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionAnalytical
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 # Get location of this script so we can load the txt files present in it regardless of the working
@@ -11,7 +11,7 @@ __location__ = os.path.dirname(os.path.realpath(__file__))
 
 def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
     """
-    Helper function to check a BogaczEtAl Function against a set of data. Format of the
+    Helper function to check a DriftDiffusionAnalytical Function against a set of data. Format of the
     data follows the following column ordering:
 
     stim, drift_rate, threshold, starting_point, bias, t0, noise, mean ER, mean RT,
@@ -50,11 +50,11 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
 
 def test_drift_difussion_analytical_shenhav_compat_mode():
 
-    # Create a BogaczEtAl Function, make sure to set shenav_et_al_compat_mode=True to get exact behavior
+    # Create a DriftDiffusionAnalytical Function, make sure to set shenav_et_al_compat_mode=True to get exact behavior
     # of old MATLAB code (Matlab/DDMFunctions/ddmSimFRG.m)
     B = DDM(
         name='DDM',
-        function=BogaczEtAl(shenhav_et_al_compat_mode=True)
+        function=DriftDiffusionAnalytical(shenhav_et_al_compat_mode=True)
     )
 
     # Load a CSV containing random sampled test values
@@ -64,11 +64,11 @@ def test_drift_difussion_analytical_shenhav_compat_mode():
 
 def test_drift_difussion_analytical():
 
-    # Create a BogaczEtAl Function, setting shenav_et_al_compat_mode=False (the defualt) should only
+    # Create a DriftDiffusionAnalytical Function, setting shenav_et_al_compat_mode=False (the defualt) should only
     # really change degenerate input cases, this test tests non-degenerate cases.
     B = DDM(
         name='DDM',
-        function=BogaczEtAl()
+        function=DriftDiffusionAnalytical()
     )
 
     # Load a CSV containing random sampled test values

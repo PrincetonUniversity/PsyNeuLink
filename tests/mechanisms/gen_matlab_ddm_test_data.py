@@ -15,7 +15,7 @@ def gen_matlab_ddm_test_data(non_degenerate_only=False):
     This function generates CSV files that contain samples of random DDM simulation
     parameters and their results evaluated using the NavarroAndFuss() Function.
     NavarroAndFuss() depends on MATLAB and its functionality has been implemented
-    completely in BogaczEtAl Function. These text files are used to run compatibility
+    completely in DriftDiffusionAnalytical Function. These text files are used to run compatibility
     checks against the old code without needing MATLAB runtime.
 
     :param non_degenerate_only: Whether to sample degenerate cases; where

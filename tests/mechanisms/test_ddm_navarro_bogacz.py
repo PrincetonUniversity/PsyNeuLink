@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl, NavarroAndFuss
+from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionAnalytical, NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 @pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")
@@ -14,11 +14,11 @@ def test_nf_vs_bogacz():
         function=NavarroAndFuss()
     )
 
-    # Create a BogaczEtAl Function, make sure to set shenav_et_al_compat_mode=True to get exact behavior
+    # Create a DriftDiffusionAnalytical Function, make sure to set shenav_et_al_compat_mode=True to get exact behavior
     # of old MATLAB code (Matlab/DDMFunctions/ddmSimFRG.m)
     B = DDM(
         name='DDM',
-        function=BogaczEtAl(shenhav_et_al_compat_mode=True)
+        function=DriftDiffusionAnalytical(shenhav_et_al_compat_mode=True)
     )
 
     NUM_CHECKS = 2500

@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl
+from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
@@ -37,7 +37,7 @@ def test_danglingControlledMech():
 
     # Decision Mechanisms
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(1.0),
             threshold=(0.1654),
             noise=(0.5),
@@ -70,7 +70,7 @@ def test_danglingControlledMech():
 
     # add another DDM but do not add to system
     second_DDM = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(
                 1.0,
                 ControlProjection(

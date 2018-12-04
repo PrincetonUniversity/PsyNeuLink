@@ -9,7 +9,7 @@ from psyneulink.core.components.functions.distributionfunctions import NormalDis
     UniformDist, GammaDist, WaldDist
 from psyneulink.core.components.functions.integratorfunctions import Integrator, SimpleIntegrator, ConstantIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    AGTUtilityIntegrator, BogaczEtAl, NavarroAndFuss
+    AGTUtilityIntegrator, DriftDiffusionAnalytical, NavarroAndFuss
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -98,7 +98,7 @@ class TestProcessingMechanismFunctions:
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_BogaczEtAl_function(self):
-        PM1 = ProcessingMechanism(function=BogaczEtAl)
+        PM1 = ProcessingMechanism(function=DriftDiffusionAnalytical)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 

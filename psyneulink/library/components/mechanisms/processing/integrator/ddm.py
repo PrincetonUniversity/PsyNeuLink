@@ -37,11 +37,11 @@ specifying DDM as its **mech_spec** argument.  The model implementation is selec
 argument. The function selection can be simply the name of a DDM function::
 
     >>> import psyneulink as pnl
-    >>> my_DDM = pnl.DDM(function=pnl.BogaczEtAl)
+    >>> my_DDM = pnl.DDM(function=pnl.DriftDiffusionAnalytical)
 
 or a call to the function with arguments specifying its parameters::
 
-    >>> my_DDM = pnl.DDM(function=pnl.BogaczEtAl(drift_rate=0.2, threshold=1.0))
+    >>> my_DDM = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=0.2, threshold=1.0))
 
 
 COMMENT:
@@ -113,7 +113,7 @@ table below:
 |                                    |                     **Function**                                               |
 |                                    |                      *(type)*                                                  |
 +                                    +-------------------------+-------------------------+----------------------------+
-|                                    | `BogaczEtAl`            | `NavarroAndFuss`        | `DriftDiffusionIntegrator` |
+|                                    | `DriftDiffusionAnalytical`            | `NavarroAndFuss`        | `DriftDiffusionIntegrator` |
 |                                    |   (`analytic            |   (`analytic            |   (`path integration)      |
 | **OutputStates:**                  |   <DDM_Analytic_Mode>`) |   <DDM_Analytic_Mode>`) |   <DDM_Integration_Mode>`) |
 +------------------------------------+-------------------------+-------------------------+----------------------------+
@@ -169,9 +169,9 @@ any Mechanism, `customized OutputStates <OutputState_Customization>` can also be
 Analytic Solutions
 ^^^^^^^^^^^^^^^^^^
 
-The two Drift Diffusion Model `Functions <Function>` that calculate analytic solutions are `BogaczEtAl <BogaczEtAl>`
+The two Drift Diffusion Model `Functions <Function>` that calculate analytic solutions are `DriftDiffusionAnalytical <DriftDiffusionAnalytical>`
 and `NavarroAndFuss <NavarroAndFuss>`. `NavarroAndFuss <NavarroAndFuss>` is deprecated and requires MATLAB to be
-installed on the system with Python bindings. `BogaczEtAl <BogaczEtAl>` contains all its functionality.
+installed on the system with Python bindings. `DriftDiffusionAnalytical <DriftDiffusionAnalytical>` contains all its functionality.
 When one of these functions is specified as the DDM Mechanism's
 `function <DDM.function>`, the mechanism generates a single estimate of the outcome for the decision process (see
 `DDM_Execution` for details).
@@ -189,10 +189,10 @@ responses (`RT_INCORRECT_VARIANCE <DDM_RT_INCORRECT_VARIANCE>`, the RT skew for 
 
 Examples for each, that illustrate all of their parameters, are shown below:
 
-`BogaczEtAl <BogaczEtAl>` Function::
+`DriftDiffusionAnalytical <DriftDiffusionAnalytical>` Function::
 
     >>> my_DDM_BogaczEtAl = pnl.DDM(
-    ...     function=pnl.BogaczEtAl(
+    ...     function=pnl.DriftDiffusionAnalytical(
     ...         drift_rate=0.08928,
     ...         starting_point=0.5,
     ...         threshold=0.2645,
@@ -265,13 +265,13 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
     for the functions used in TRIAL mode, or in a params dictionary assigned to the `params` argument,
     using the keywords in the list below, as in the following example::
         my_DDM = DDM(
-            function=BogaczEtAl(drift_rate=0.1),
+            function=DriftDiffusionAnalytical(drift_rate=0.1),
             params={
                 DRIFT_RATE:(0.2, ControlProjection),
                 STARTING_POINT:-0.5
             },
         )
-    The parameters for the DDM when `function <DDM.function>` is set to `BogaczEtAl` or `NavarroAndFuss` are:
+    The parameters for the DDM when `function <DDM.function>` is set to `DriftDiffusionAnalytical` or `NavarroAndFuss` are:
 
     .. _DDM_Drift_Rate:
 
@@ -356,7 +356,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import method_type
 from psyneulink.core.components.functions.integratorfunctions import Integrator, DriftDiffusionIntegrator, THRESHOLD, \
-    STARTING_POINT, BogaczEtAl, NF_Results, NavarroAndFuss
+    STARTING_POINT, DriftDiffusionAnalytical, NF_Results, NavarroAndFuss
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -412,12 +412,12 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or l
                               {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
-                              {NAME: RT_CORRECT_MEAN},              # (BogaczEtAl and NavarroAndFuss only)
-                              {NAME: RT_CORRECT_VARIANCE},          # (BogaczEtAl and NavarroAndFuss only)
-                              {NAME: RT_CORRECT_SKEW},              # (BogaczEtAl and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_MEAN},            # (BogaczEtAl and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_VARIANCE},        # (BogaczEtAl and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_SKEW},            # (BogaczEtAl and NavarroAndFuss only)
+                              {NAME: RT_CORRECT_MEAN},              # (DriftDiffusionAnalytical and NavarroAndFuss only)
+                              {NAME: RT_CORRECT_VARIANCE},          # (DriftDiffusionAnalytical and NavarroAndFuss only)
+                              {NAME: RT_CORRECT_SKEW},              # (DriftDiffusionAnalytical and NavarroAndFuss only)
+                              {NAME: RT_INCORRECT_MEAN},            # (DriftDiffusionAnalytical and NavarroAndFuss only)
+                              {NAME: RT_INCORRECT_VARIANCE},        # (DriftDiffusionAnalytical and NavarroAndFuss only)
+                              {NAME: RT_INCORRECT_SKEW},            # (DriftDiffusionAnalytical and NavarroAndFuss only)
                               ]
 
 # This is a convenience class that provides list of standard_output_state names in IDE
@@ -610,7 +610,7 @@ class DDM(ProcessingMechanism_Base):
     DDM(                    \
     default_variable=None,  \
     size=None,              \
-    function=BogaczEtAl,    \
+    function=DriftDiffusionAnalytical,    \
     params=None,            \
     name=None,              \
     prefs=None)
@@ -637,7 +637,7 @@ class DDM(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
             + paramClassDefaults (dict): {
-                                          kwDDM_AnalyticSolution: kwBogaczEtAl,
+                                          kwDDM_AnalyticSolution: kwDriftDiffusionAnalytical,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
                                                                   STARTING_POINT:<>
                                                                   THRESHOLD:<>
@@ -678,7 +678,7 @@ class DDM(ProcessingMechanism_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    function : IntegratorFunction : default BogaczEtAl
+    function : IntegratorFunction : default DriftDiffusionAnalytical
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
 
@@ -705,9 +705,9 @@ class DDM(ProcessingMechanism_Base):
         the input to Mechanism's execute method.  Serves as the "stimulus" component of the `function <DDM.function>`'s
         **drift_rate** parameter.
 
-    function :  IntegratorFunction : default BogaczEtAl
+    function :  IntegratorFunction : default DriftDiffusionAnalytical
         the function used to `execute <DDM_Execution>` the decision process; determines the mode of execution.
-        If it is `BogaczEtAl <BogaczEtAl>` or `NavarroAndFuss <NavarroAndFuss>`, an `analytic solution
+        If it is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>` or `NavarroAndFuss <NavarroAndFuss>`, an `analytic solution
         <DDM_Analytic_Mode>` is calculated (note:  the latter requires that the MatLab engine is installed); if it is
         an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION*,
         then `numerical step-wise integration <DDM_Integration_Mode>` is carried out.  See `DDM_Modes` and
@@ -784,7 +784,7 @@ class DDM(ProcessingMechanism_Base):
 
     class Params(ProcessingMechanism_Base.Params):
         function = Param(
-            BogaczEtAl(
+            DriftDiffusionAnalytical(
                 drift_rate=1.0,
                 starting_point=0.0,
                 threshold=1.0,
@@ -806,14 +806,14 @@ class DDM(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
+                 # function:tc.enum(type(DriftDiffusionAnalytical), type(NavarroAndFuss))=DriftDiffusionAnalytical(drift_rate=1.0,
                  # input_states:tc.optional(tc.any(list, dict))=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=SCALAR,
-                 function=BogaczEtAl(drift_rate=1.0,
-                                     starting_point=0.0,
-                                     threshold=1.0,
-                                     noise=0.5,
-                                     t0=.200),
+                 function=DriftDiffusionAnalytical(drift_rate=1.0,
+                                                   starting_point=0.0,
+                                                   threshold=1.0,
+                                                   noise=0.5,
+                                                   t0=.200),
                  output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  name=None,
@@ -998,7 +998,7 @@ class DDM(ProcessingMechanism_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        functions = {BogaczEtAl, NavarroAndFuss, DriftDiffusionIntegrator}
+        functions = {DriftDiffusionAnalytical, NavarroAndFuss, DriftDiffusionIntegrator}
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
@@ -1118,7 +1118,7 @@ class DDM(ProcessingMechanism_Base):
                 context=context
             )
 
-            if isinstance(self.function.__self__, BogaczEtAl):
+            if isinstance(self.function.__self__, DriftDiffusionAnalytical):
                 return_value = np.zeros(shape=(10,1))
                 return_value[self.RESPONSE_TIME_INDEX] = result[0]
                 return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[1]

@@ -22,7 +22,7 @@
 * `LCAIntegrator`
 * `FHNIntegrator`
 * `AGTUtilityIntegrator`
-* `BogaczEtAl`
+* `DriftDiffusionAnalytical`
 * `NavarroAndFuss`
 
 Overview
@@ -64,7 +64,7 @@ __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantInte
            'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator',
            'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY',
            'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME',
-           'kwBogaczEtAl', 'kwNavarrosAndFuss', 'BogaczEtAl', 'NF_Results', 'NavarroAndFuss', 'InteractiveActivation']
+           'kwDriftDiffusionAnalytical', 'kwNavarrosAndFuss', 'DriftDiffusionAnalytical', 'NF_Results', 'NavarroAndFuss', 'InteractiveActivation']
 
 
 class IntegratorFunction(Function_Base):
@@ -4438,20 +4438,20 @@ STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 # NOISE = 'noise' -- Defined in Keywords
 NON_DECISION_TIME = 't0'
 # DDM solution options:
-kwBogaczEtAl = "BogaczEtAl"
+kwDriftDiffusionAnalytical = "DriftDiffusionAnalytical"
 kwNavarrosAndFuss = "NavarroAndFuss"
 
 
-def _BogaczEtAl_bias_getter(owning_component=None, execution_id=None):
+def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=None):
     starting_point = owning_component.parameters.starting_point.get(execution_id)
     threshold = owning_component.parameters.threshold.get(execution_id)
     return (starting_point + threshold) / (2 * threshold)
 
 
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
-class BogaczEtAl(IntegratorFunction):  # -------------------------------------------------------------------------------
+class DriftDiffusionAnalytical(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
-    BogaczEtAl(                 \
+    DriftDiffusionAnalytical(                 \
         default_variable=None,  \
         drift_rate=1.0,         \
         threshold=1.0,          \
@@ -4463,7 +4463,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         prefs=None              \
         )
 
-    .. _BogaczEtAl:
+    .. _DriftDiffusionAnalytical:
 
     Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
     drift diffusion process as described in `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_.
@@ -4477,24 +4477,24 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     drift_rate : float, list or 1d np.array : default 1.0
         specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     threshold : float, list or 1d np.array : default 1.0
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     starting_point : float, list or 1d np.array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-        array, it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        array, it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     noise : float, list or 1d np.array : default 0.0
         specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-        `default_variable <BogaczEtAl.default_variable>` and all elements must be floats from 0 to 1.
+        `default_variable <DriftDiffusionAnalytical.default_variable>` and all elements must be floats from 0 to 1.
 
     t0 : float, list or 1d np.array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-        list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
+        list or array, it must be the same length as  `default_variable <DriftDiffusionAnalytical.default_variable>` and all
         elements must be floats from 0 to 1.
 
     params : Dict[param keyword: param value] : default None
@@ -4541,8 +4541,8 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     bias : float or 1d np.array
         normalized starting point:
-        (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
-        (2 * `threshold <BogaczEtAl.threshold>`)
+        (`starting_point <DriftDiffusionAnalytical.starting_point>` + `threshold <DriftDiffusionAnalytical.threshold>`) /
+        (2 * `threshold <DriftDiffusionAnalytical.threshold>`)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4558,7 +4558,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     """
 
-    componentName = kwBogaczEtAl
+    componentName = kwDriftDiffusionAnalytical
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -4568,7 +4568,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         threshold = Param(1.0, modulable=True)
         noise = Param(0.5, modulable=True)
         t0 = .200
-        bias = Param(0.5, read_only=True, getter=_BogaczEtAl_bias_getter)
+        bias = Param(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
 
     @tc.typecheck
     def __init__(self,
@@ -4772,7 +4772,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
         # Compute moments (mean, variance, skew) of condiational response time distributions
-        moments = BogaczEtAl._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, t0)
+        moments = DriftDiffusionAnalytical._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, t0)
 
         return rt, er, \
                moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'], \
@@ -4867,21 +4867,21 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
             :math:`RR = delay_{ITI} + \\frac{Z}{A} + ED`;
 
-        the derivative of :math:`\\frac{1}{RR}` with respect to the `threshold <BogaczEtAl.threshold>` is:
+        the derivative of :math:`\\frac{1}{RR}` with respect to the `threshold <DriftDiffusionAnalytical.threshold>` is:
 
             :math:`\\frac{1}{A} - \\frac{E}{A} - 2\\frac{A}{c^2}ED`;
 
-        and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
+        and the derivative of 1/RR with respect to the `drift_rate <DriftDiffusionAnalytical.drift_rate>` is:
 
             :math:`-\\frac{Z}{A^2} + \\frac{Z}{A^2}E - \\frac{2Z}{c^2}ED`
 
         where:
 
-            *A* = `drift_rate <BogaczEtAl.drift_rate>`,
+            *A* = `drift_rate <DriftDiffusionAnalytical.drift_rate>`,
 
-            *Z* = `threshold <BogaczEtAl.threshold>`,
+            *Z* = `threshold <DriftDiffusionAnalytical.threshold>`,
 
-            *c* = `noise <BogaczEtAl.noise>`,
+            *c* = `noise <DriftDiffusionAnalytical.noise>`,
 
             *E* = :math:`e^{-2\\frac{ZA}{c^2}}`,
 
@@ -4894,8 +4894,8 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         -------
 
         derivatives :  List[float, float)
-            of :math:`\\frac{1}{RR}` with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate
-            <BogaczEtAl.drift_rate>`.
+            of :math:`\\frac{1}{RR}` with respect to `threshold <DriftDiffusionAnalytical.threshold>` and `drift_rate
+            <DriftDiffusionAnalytical.drift_rate>`.
 
         """
         Z = output or self.get_current_function_param(THRESHOLD, execution_id)
@@ -4956,24 +4956,24 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
 
     drift_rate : float, list or 1d np.array : default 1.0
         specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     threshold : float, list or 1d np.array : default 1.0
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     starting_point : float, list or 1d np.array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-        array, it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        array, it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     noise : float, list or 1d np.array : default 0.0
         specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-        `default_variable <BogaczEtAl.default_variable>` and all elements must be floats from 0 to 1.
+        `default_variable <DriftDiffusionAnalytical.default_variable>` and all elements must be floats from 0 to 1.
 
     t0 : float, list or 1d np.array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-        list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
+        list or array, it must be the same length as  `default_variable <DriftDiffusionAnalytical.default_variable>` and all
         elements must be floats from 0 to 1.
 
     params : Dict[param keyword: param value] : default None
@@ -5016,8 +5016,8 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
 
     bias : float or 1d np.array
         normalized starting point:
-        (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
-        (2 * `threshold <BogaczEtAl.threshold>`)
+        (`starting_point <DriftDiffusionAnalytical.starting_point>` + `threshold <DriftDiffusionAnalytical.threshold>`) /
+        (2 * `threshold <DriftDiffusionAnalytical.threshold>`)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.

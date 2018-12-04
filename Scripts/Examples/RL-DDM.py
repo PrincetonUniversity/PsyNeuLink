@@ -21,14 +21,14 @@ input_layer = pnl.TransferMechanism(
 # Takes sum of input layer elements as external component of drift rate
 # Notes:
 #    - drift_rate parameter in constructor for DDM is the "internally modulated" component of the drift_rate;
-#    - arguments to DDM's function (BogaczEtAl) are specified as CONTROL, so that their values will be determined
+#    - arguments to DDM's function (DriftDiffusionAnalytical) are specified as CONTROL, so that their values will be determined
 #        by the EVCControlMechanism of the System to which the action_selection Mechanism is assigned (see below)
 #    - the input_format argument specifies that the input to the DDM should be one-hot encoded two-element array
 #    - the output_states argument specifies use of the DECISION_VARIABLE_ARRAY OutputState, which encodes the
 #        response in the same format as the ARRAY input_format/.
 action_selection = pnl.DDM(
         input_format=pnl.ARRAY,
-        function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
+        function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(
                 drift_rate=pnl.CONTROL,
                 threshold=pnl.CONTROL,
                 starting_point=pnl.CONTROL,

@@ -49,7 +49,7 @@ Automatic_Component.loggable_items
 Automatic_Component.set_log_conditions('value')
 
 # Decision Mechanisms
-Decision = pnl.DDM(function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
+Decision = pnl.DDM(function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(
         drift_rate=1.0,
         threshold=0.2645,
         # noise=(0.5),

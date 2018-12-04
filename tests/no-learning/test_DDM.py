@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl
+from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionAnalytical
 from psyneulink.core.components.process import Process
 from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, IDENTITY_MATRIX
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
@@ -9,7 +9,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.ddm import D
 # does not run a system, can be used to ensure that running processes alone still works
 def test_DDM():
     myMechanism = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(1.0),
             threshold=(10.0),
             starting_point=0.0,
@@ -18,14 +18,14 @@ def test_DDM():
     )
 
     myMechanism_2 = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=2.0,
             threshold=20.0),
         name='My_DDM_2'
     )
 
     myMechanism_3 = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=3.0,
             threshold=30.0
         ),
