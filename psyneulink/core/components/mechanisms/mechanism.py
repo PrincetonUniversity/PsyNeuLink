@@ -2151,7 +2151,6 @@ class Mechanism_Base(Mechanism):
                 bin_execute=False):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
-
         COMMENT:
             Update InputState(s) and parameter(s), call subclass _execute, update OutputState(s), and assign self.value
 
