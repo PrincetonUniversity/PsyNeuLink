@@ -82,7 +82,8 @@ class SampleSpec():
         self.generator = generator
 
 
-class SampleIterator():
+from typing import Iterator
+class SampleIterator(Iterator):
     '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
     @tc.typecheck
     def __init__(self, sample_spec:tc.any(list, np.ndarray, SampleSpec)):
@@ -1220,7 +1221,7 @@ class GridSearch(OptimizationFunction):
         # return allocation
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            p = product(*[s() for s in self.search_space])
+            p = product(*[s for s in self.search_space])
         x = next(p,None)  # JDC Added
         return x
 
