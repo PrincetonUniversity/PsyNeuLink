@@ -570,7 +570,9 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-
+        print('sem_net.output_CIM.output_states: ', sem_net.output_CIM.output_states)
+        print('sem_net.output_CIM.input_states: ', sem_net.output_CIM.input_states)
+        print('sem_net.output_CIM.input_state.all_afferents: ', sem_net.output_CIM.input_state.all_afferents)
         result = sem_net.run(inputs=[{'inputs': inputs_dict,
                                       'targets': targets_dict,
                                       'epochs': eps}])
