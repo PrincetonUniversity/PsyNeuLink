@@ -1267,23 +1267,23 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def control_allocation(self):
         return self.value
 
-    @property
-    def costs(self):
-        # FIX: 11/9/19 LOCALLY MANAGE STATEF     ULNESS OF ControlSignals AND costs [JDC]
-        # MODIFIED 11/9/18 OLD:
-        return [c.compute_costs(c.variable) for c in self.control_signals]
-        # # MODIFIED 11/9/18 NEW:
-        # return [c.compute_costs(c.variable, c.last_intensity) for c in self.control_signals]
-        # MODIFIED 11/9/18 END
+    # @property
+    # def costs(self):
+    #     # FIX: 11/9/19 LOCALLY MANAGE STATEF     ULNESS OF ControlSignals AND costs [JDC]
+    #     # MODIFIED 11/9/18 OLD:
+    #     return [c.compute_costs(c.variable) for c in self.control_signals]
+    #     # # MODIFIED 11/9/18 NEW:
+    #     # return [c.compute_costs(c.variable, c.last_intensity) for c in self.control_signals]
+    #     # MODIFIED 11/9/18 END
 
-    @property
-    def combined_costs(self):
-        return self.combine_costs(self.costs)
-
-    @property
-    def net_outcome(self):
-        # return self.compute_net_outcome(self.outcome, self.costs)
-        return self.outcome - self.combined_costs
+    # @property
+    # def combined_costs(self):
+    #     return self.combine_costs(self.costs)
+    #
+    # @property
+    # def net_outcome(self):
+    #     # return self.compute_net_outcome(self.outcome, self.costs)
+    #     return self.outcome - self.combined_costs
 
     @property
     def control_projections(self):

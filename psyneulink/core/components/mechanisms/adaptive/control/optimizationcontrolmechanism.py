@@ -801,35 +801,6 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
-    # # # FIX: MOVE THIS TO GridSearch
-    # def _get_control_allocation_grid_space(self, execution_id=None):
-    #
-    #     control_signal_sample_lists = []
-    #
-    #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-    #     #     (one sample from the allocationSample of each ControlSignal)
-    #     # Reference for implementation below:
-    #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    #
-    #     if self.search_space is not None:
-    #           for i in self.search_space:
-    #               control_signal_sample_lists.append(list(i))
-    #     else:
-    #         for control_signal in self.control_signals:
-    #             control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
-    #
-    #
-    #     control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
-    #
-    #     # Insure that ControlSignal in each sample is in its own 1d array
-    #     re_shape = (control_allocation_search_space.shape[0], control_allocation_search_space.shape[1], 1)
-    #
-    #     control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
-    #
-    #     self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
-    #
-    #     return control_allocation_search_space
-
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
@@ -843,33 +814,31 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
 
-        # Save state before any simulations
-        if hasattr(self.agent_rep, "save_state"):
-            self.agent_rep.save_state()
-
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation.get(execution_id)
         if control_allocation is None:
             control_allocation = [c.instance_defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
+        # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
+
         # Assign default net_outcome if it is not yet specified (presumably first trial)
         # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-                 self.control_signals]
-        try:
-            net_outcome = variable[0] - self.combine_costs(costs)
-        except AttributeError:
-            net_outcome = [0]
-        # FIX: END
-
-        # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
-        try:
-            self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
-        except AttributeError as e:
-            # If error is due to absence of adapt method, OK; otherwise, raise exception
-            if not 'has no attribute \'adapt\'' in e.args[0]:
-                raise AttributeError(e.args[0])
+        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
+        #          self.control_signals]
+        # try:
+        #     net_outcome = variable[0] - self.combine_costs(costs)
+        # except AttributeError:
+        #     net_outcome = [0]
+        # # FIX: END
+        #
+        # # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
+        # try:
+        #     self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
+        # except AttributeError as e:
+        #     # If error is due to absence of adapt method, OK; otherwise, raise exception
+        #     if not 'has no attribute \'adapt\'' in e.args[0]:
+        #         raise AttributeError(e.args[0])
 
         # Get control_allocation that optmizes EVC using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -887,7 +856,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # If error is due to absence of adapt method, OK; otherwise, raise exception
             if not 'has no attribute \'_after_agent_rep_execution\'' in e.args[0]:
                 raise AttributeError(e.args[0])
-
         # Return optimal control_allocation
         return optimal_control_allocation
 
@@ -954,7 +922,8 @@ class OptimizationControlMechanism(ControlMechanism):
             value[i] = np.atleast_1d(control_allocation[i])
 
         self.parameters.value.set(value, execution_id)
-        self._update_output_states(value, execution_id=execution_id, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
+        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
+                                   context=ContextFlags.COMPOSITION)
 
     # @property
     # def feature_values(self):
@@ -1068,10 +1037,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return input_state_specs
 
-    # @property
-    # def control_allocation_search_space(self):
-    #     return self._get_control_allocation_search_space()
-    #
     @property
     def control_allocation_search_space(self):
         '''Return list of SampleIterators for allocation_samples of control_signals'''

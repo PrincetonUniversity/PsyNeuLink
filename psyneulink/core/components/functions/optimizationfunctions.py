@@ -562,8 +562,9 @@ class OptimizationFunction(Function_Base):
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
 
             # Compute new value based on new sample
+            print("\nSTART: Run simulation [", new_sample, "]")
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
-
+            print("STOP: Run simulation\n")
             self._report_value(new_value)
 
             iteration += 1
@@ -1226,6 +1227,7 @@ class GridSearch(OptimizationFunction):
                 params=params,
                 context=context
             )
+            print("all values = ", all_values)
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:

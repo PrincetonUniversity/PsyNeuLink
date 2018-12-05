@@ -407,15 +407,14 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         return value
 
-    def _update_output_states(self, owner_value, execution_id=None, runtime_params=None, context=None):
+    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
         '''Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
-        :param owner_value:
         '''
 
-        super()._update_output_states(None, execution_id, runtime_params, context)
+        super()._update_output_states(execution_id, runtime_params, context)
 
         from psyneulink.core.components.process import Process
         if self.parameters.learning_enabled.get(execution_id) and self.parameters.context.get(execution_id).composition and not isinstance(self.parameters.context.get(execution_id).composition, Process):

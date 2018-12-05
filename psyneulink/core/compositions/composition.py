@@ -682,7 +682,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if hasattr(node, "shadow_external_inputs"):
             self.external_input_sources[node] = node.shadow_external_inputs
 
-
     def add_model_based_optimizer(self, optimizer):
         """
         Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
@@ -3149,6 +3148,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.model_based_optimizer:
                 self.model_based_optimizer.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                 control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
+                print("apply final control allocation")
                 self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -3441,34 +3441,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.parameters.results.set(full_results, execution_id)
         return trial_output
 
-    def save_state(self):
-        saved_state = {}
-        for node in self.stateful_nodes:
-            # "save" the current state of each stateful mechanism by storing the values of each of its stateful
-            # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
-            # the reinitialize method on each stateful mechanism.
-            reinitialization_value = []
-
-            if isinstance(node, Composition):
-                # TBI: Store state for a Composition, Reinitialize Composition
-                pass
-            elif isinstance(node, Mechanism):
-                if isinstance(node.function_object, Integrator):
-                    for attr in node.function_object.stateful_attributes:
-                        reinitialization_value.append(getattr(node.function_object, attr))
-                elif hasattr(node, "integrator_function"):
-                    if isinstance(node.integrator_function, Integrator):
-                        for attr in node.integrator_function.stateful_attributes:
-                            reinitialization_value.append(getattr(node.integrator_function, attr))
-
-            saved_state[node] = reinitialization_value
-
-        node_values = {}
-        for node in self.c_nodes:
-            node_values[node] = (node.value, node.output_values)
-
-        self.sim_reinitialize_values, self.sim_node_values = saved_state, node_values
-        return saved_state, node_values
+    # def save_state(self):
+    #     saved_state = {}
+    #     for node in self.stateful_nodes:
+    #         # "save" the current state of each stateful mechanism by storing the values of each of its stateful
+    #         # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
+    #         # the reinitialize method on each stateful mechanism.
+    #         reinitialization_value = []
+    #
+    #         if isinstance(node, Composition):
+    #             # TBI: Store state for a Composition, Reinitialize Composition
+    #             pass
+    #         elif isinstance(node, Mechanism):
+    #             if isinstance(node.function_object, Integrator):
+    #                 for attr in node.function_object.stateful_attributes:
+    #                     reinitialization_value.append(getattr(node.function_object, attr))
+    #             elif hasattr(node, "integrator_function"):
+    #                 if isinstance(node.integrator_function, Integrator):
+    #                     for attr in node.integrator_function.stateful_attributes:
+    #                         reinitialization_value.append(getattr(node.integrator_function, attr))
+    #
+    #         saved_state[node] = reinitialization_value
+    #
+    #     node_values = {}
+    #     for node in self.c_nodes:
+    #         node_values[node] = (node.value, node.output_values)
+    #
+    #     self.sim_reinitialize_values, self.sim_node_values = saved_state, node_values
+    #     return saved_state, node_values
 
     # def _get_predicted_input(self, execution_id=None, context=None):
     #     """
@@ -4145,7 +4145,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            reset to pre-simulation values at the end of the simulation. '''
 
         # These attrs are set during composition.before_simulation
-        reinitialize_values = self.sim_reinitialize_values
+        # reinitialize_values = self.sim_reinitialize_values
 
         # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
         #      (i.e., DOES IT ASSIGN THE SAME CONTROLSIGNAL VALUES FOR ALL SIMULATIONS?)
@@ -4171,7 +4171,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proj.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
             self.run(inputs=inputs,
-                     reinitialize_values=reinitialize_values,
+                     # reinitialize_values=reinitialize_values,
                      execution_id=execution_id,
                      runtime_params=runtime_params,
                      context=context)
@@ -4184,14 +4184,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-
             outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
-            net_outcome = outcome - self.model_based_optimizer.combine_costs(
-                [
-                    c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
-                    for c in self.model_based_optimizer.control_signals
-                ]
-            )
+            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
+            combined_costs = self.model_based_optimizer.combine_costs(all_costs)
+            # KAM Modified 12/5/18 to use OCM's compute_net_outcome fn rather than hard-coded difference
+            print("outcome = ", outcome)
+            print("combined_costs = ", combined_costs)
+            net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, combined_costs)
+            print(net_outcome, " [net outcome]")
+            # net_outcome = outcome - self.model_based_optimizer.combine_costs(
+            #     [
+            #         c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
+            #         for c in self.model_based_optimizer.control_signals
+            #     ]
+            # )
             net_control_allocation_outcomes.append(net_outcome)
 
         return net_control_allocation_outcomes

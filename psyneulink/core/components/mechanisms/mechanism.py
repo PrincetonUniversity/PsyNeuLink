@@ -2096,7 +2096,8 @@ class Mechanism_Base(Mechanism):
         if isinstance(self.function_object, Integrator):
             new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context=execution_context, override=True)
-            self._update_output_states(None, context="REINITIALIZING", execution_id=parse_execution_context(execution_context))
+            self._update_output_states(execution_id=parse_execution_context(execution_context),
+                                       context="REINITIALIZING")
 
         # If the mechanism has an auxiliary integrator function:
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
@@ -2109,7 +2110,8 @@ class Mechanism_Base(Mechanism):
                     execution_context=execution_context,
                     override=True
                 )
-                self._update_output_states(None, context="REINITIALIZING", execution_id=parse_execution_context(execution_context))
+                self._update_output_states(execution_id=parse_execution_context(execution_context),
+                                           context="REINITIALIZING")
 
             elif self.integrator_function is None:
                 if hasattr(self, "integrator_mode"):
@@ -2342,7 +2344,7 @@ class Mechanism_Base(Mechanism):
         self.parameters.value.set(value, execution_context=execution_id, override=True)
 
         # UPDATE OUTPUT STATE(S)
-        self._update_output_states(None, execution_id=execution_id, runtime_params=runtime_params, context=context)
+        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (self.parameters.context.get(execution_id).execution_phase &
@@ -2460,7 +2462,7 @@ class Mechanism_Base(Mechanism):
             if state.name in self.function_params:
                 self.function_params.__additem__(state.name, state.value)
 
-    def _update_output_states(self, owner_value=None, execution_id=None, runtime_params=None, context=None):
+    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
 
         owner_value arg can be used to override existing (or absent) value of owner as variable for OutputStates
@@ -2469,8 +2471,6 @@ class Mechanism_Base(Mechanism):
         """
         for i in range(len(self.output_states)):
             state = self.output_states[i]
-            if owner_value is not None:
-                state.parameters.variable.set(owner_value[i], execution_id, override=True)
             state.update(execution_id=execution_id, params=runtime_params, context=context)
 
     def initialize(self, value, execution_context=None):
@@ -2489,7 +2489,7 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
         self.parameters.value.set(np.atleast_1d(value), execution_context, override=True)
-        self._update_output_states(None, execution_id=execution_context, context="INITIAL_VALUE")
+        self._update_output_states(execution_id=execution_context, context="INITIAL_VALUE")
 
     def _get_input_param_struct_type(self, ctx):
         gen = (ctx.get_param_struct_type(state) for state in self.input_states)
