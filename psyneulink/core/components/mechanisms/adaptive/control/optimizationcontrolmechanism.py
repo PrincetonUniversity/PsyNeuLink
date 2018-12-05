@@ -1069,33 +1069,8 @@ class OptimizationControlMechanism(ControlMechanism):
     #
     @property
     def control_allocation_search_space(self):
-        '''Return list of SampleIterators for allocation_samples of control_signals
-
-        Assign the `allocation_samples <ControlSignal.allocation_samples>` for each `ControlSignal` in `control_signals
-        <ControlMechanism.control_signals>` to a `SampleIterator` in list and return list
-        '''
-
-        # # MODIFIED 12/4/18 OLD:
-        # try:
-        #     return self._control_allocation_search_space
-        #
-        # except AttributeError:
-        #
-        #     control_allocation_search_space = []
-        #
-        #     for a in [c.allocation_samples for c in self.control_signals]:
-        #         # FIX: HANDLE THIS IN INSTANTIATION OF allocation_sample
-        #         if isinstance(a, (range, np.ndarray)):
-        #             a = list(a)
-        #         control_allocation_search_space.append(SampleIterator(sample_spec=a))
-        #     # FIX: DOES THIS NEED TO BE STATEFUL?
-        #     # self.parameters._control_allocation_search_space.set(control_allocation_search_space, override=True)
-        #     self._control_allocation_search_space = control_allocation_search_space
-        #
-        #    return self._control_allocation_search_space
-        # # MODIFIED 12/4/18 NEW [JDC]:
+        '''Return list of SampleIterators for allocation_samples of control_signals'''
         return [c.allocation_samples for c in self.control_signals]
-        # MODIFIED 12/4/18 END
 
     # ******************************************************************************************************************
     # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep

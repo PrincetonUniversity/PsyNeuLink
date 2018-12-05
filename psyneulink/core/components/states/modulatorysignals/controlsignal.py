@@ -860,15 +860,10 @@ class ControlSignal(ModulatorySignal):
 
     def _instantiate_allocation_samples(self, context=None):
         '''Assign `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
-
-        # # MODIFIED 12/4/18 OLD:
-        # self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
-        # MODIFIED 12/4/18 NEW: [JDC]
-        a = self.parameters.allocation_samples.get()
+        a = self.paramsCurrent[ALLOCATION_SAMPLES]
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
         self.parameters.allocation_samples.set(SampleIterator(sample_spec=a))
-        # MODIFIED 12/4/18 END
 
     def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
