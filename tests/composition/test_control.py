@@ -2,7 +2,7 @@ import functools
 import numpy as np
 import pytest
 import psyneulink as pnl
-
+from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec
 class TestControlMechanisms:
 
     def test_lvoc(self):
@@ -664,3 +664,17 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for simulation in range(len(comp.simulation_results)):
             np.allclose(expected_sim_results_array[simulation], comp.simulation_results[simulation])
+
+class TestSampleIterator:
+
+    def test_int(self):
+        spec = SampleSpec(step=2,
+                          begin=0,
+                          end=10)
+        sample_iterator = SampleIterator(sample_spec=spec)
+
+        print(next(sample_iterator))
+        print(next(sample_iterator))
+        print(next(sample_iterator))
+        print(next(sample_iterator))
+        print(next(sample_iterator))
