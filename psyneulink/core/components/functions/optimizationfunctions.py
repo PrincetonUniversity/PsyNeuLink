@@ -69,16 +69,18 @@ class SampleSpec():
     def __init__(self,
                  begin:tc.any(int, float),
                  end:tc.any(int, float),
+                 step:tc.any(int, float),
                  num:tc.optional(tc.any(int, float))=None,
                  generator:tc.optional(tc.any(is_iter, is_function_type))=None
                  ):
-        '''Must specify either begin, end and num or generator'''
-        if  (begin is None or end is None or num is None) and generator is None:
-            raise OptimizationFunctionError("Must specify either {}, {} and {} or {} for {}".
-                                            format(repr('begin'), repr('end'), repr('num'), repr('generator'),
-                                                   self.__class__.__name__))
+        '''Must specify either begin, end and step or num, or else a generator'''
+        if  (begin is None or end is None or (step is None and num is None)) and generator is None:
+            raise OptimizationFunctionError("Must specify either {}, {} and {} or {}, or else {}, for {}".
+                                            format(repr('begin'), repr('end'), repr('step'), repr('num'),
+                                                   repr('generator'), self.__class__.__name__))
         self.begin = begin
         self.end = end
+        self.step = step
         self.num = num
         self.generator = generator
 
@@ -1084,19 +1086,6 @@ class GridSearch(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    # MODIFIED 12/4/18 NEW: [JDC]
-    # def _instantiate_attributes_before_function(self, function=None, context=None):
-    #     super()._instantiate_attributes_before_function(function=function, context=context)
-    #     from itertools import product
-    #     self._grid = product(*[s() for s in self.search_space])
-    #     assert True
-
-    # def _instantiate_attributes_after_function(self, context=None):
-    #     super()._instantiate_attributes_before_function(context=context)
-    #     from itertools import product
-    #     self._grid = product(*[s() for s in self.search_space])
-    #     assert True
-    # MODIFIED 12/4/18 END
     def reinitialize(self, *args, execution_id=None):
 
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
@@ -1247,84 +1236,23 @@ class GridSearch(OptimizationFunction):
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
+        '''Get next sample from grid.
+        This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
+        '''
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return [signal.begin for signal in self.search_space]
-
-        x = next(self.grid, None)
-        # TEST PRINT (KAM 12/4/18)
-        print("control allocation = ", x)
-        return x
+        return next(self.grid, None)
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
-
-
+        '''Return False when search of grid is complete
+        This is assigned as the `search_termination_function <OptimizationFunction.search_termination_function>`
+        of the `OptimizationFunction`.
+        '''
         try:
             return iteration != self.num_iterations
         except AttributeError:
             return True
-        # MODIFIED 12/3/18 END
 
-    # @property
-    # def grid(self):
-    #
-    #     # # MODIFIED 12/3/18 OLD:
-    #     # try:
-    #     #     return self._grid
-    #     #     # raise AttributeError
-    #     #
-    #     # except AttributeError:
-    #     #     sample_lists = []
-    #     #
-    #     #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-    #     #     #     (one sample from the allocationSample of each ControlSignal)
-    #     #     # Reference for implementation below:
-    #     #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    #     #
-    #     #     # from itertools import product
-    #     #     # test_grid = list(product(self.search_space))
-    #     #
-    #     #
-    #     #     if self.search_space is not None:
-    #     #           for i in self.search_space:
-    #     #               sample_lists.append(i())
-    #     #     else:
-    #     #         assert False
-    #     #
-    #     #     grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
-    #     #
-    #     #     # Insure that ControlSignal in each sample is in its own 1d array
-    #     #     re_shape = (grid.shape[0], grid.shape[1], 1)
-    #     #
-    #     #     self._grid = grid.reshape(re_shape)
-    #     #     return self._grid
-    #     # MODIFIED 12/3/18 NEW:
-    #     if hasattr(self, '_grid') and self.context.initialization_status != ContextFlags.INITIALIZING:
-    #         return self._grid
-    #
-    #     sample_lists = []
-    #
-    #     # Construct set of all permutations of allocation_samples for ControlSignals in control_signals
-    #     #     (one sample from the allocationSample of each ControlSignal)
-    #     # Reference for implementation below:
-    #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    #
-    #     # from itertools import product
-    #     # test_grid = list(product(self.search_space))
-    #
-    #     if self.search_space is not None:
-    #           for i in self.search_space:
-    #               sample_lists.append(i())
-    #     else:
-    #         assert False
-    #
-    #     grid = np.array(np.meshgrid(*sample_lists)).T.reshape(-1, len(self.search_space))
-    #
-    #     # Insure that ControlSignal in each sample is in its own 1d array
-    #     re_shape = (grid.shape[0], grid.shape[1], 1)
-    #
-    #     self._grid = grid.reshape(re_shape)
-    #     return self._grid
-    #     # MODIFIED 12/3/18 END
 
 class GaussianProcess(OptimizationFunction):
     """

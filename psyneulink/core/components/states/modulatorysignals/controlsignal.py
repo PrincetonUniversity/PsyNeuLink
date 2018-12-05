@@ -314,7 +314,7 @@ from psyneulink.core.components.functions.function import _is_modulation_param, 
 from psyneulink.core.components.functions.integratorfunctions import IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
-from psyneulink.core.components.functions.optimizationfunctions import SampleSpec
+from psyneulink.core.components.functions.optimizationfunctions import SampleSpec, SampleIterator
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
@@ -711,13 +711,12 @@ class ControlSignal(ModulatorySignal):
             context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
-        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
+        # This is included in case ControlSignal was created by another Componente (such as ControlProjection)
+        #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
 
-        # Note: assign is not currently used by ControlSignal;
-        #       it is included here for consistency with OutputState and possible use by subclasses.
-
+        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
         # If index has not been specified, but the owner has, control_allocation has been determined, so use that
         index = index or SEQUENTIAL
 
@@ -757,7 +756,7 @@ class ControlSignal(ModulatorySignal):
         Checks if:
         - cost functions are all appropriate
            (i.e., are references to valid ControlProjection costFunctions (listed in self.costFunctions)
-        - allocation_samples is a list, array or SampleSpec
+        - allocation_samples is a list, array, range or SampleSpec
 
         """
 
@@ -831,11 +830,13 @@ class ControlSignal(ModulatorySignal):
                     request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
             elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
                 pass
-            elif isinstance(allocation_samples, SampleSpec):
+            elif isinstance(allocation_samples, range):
+                pass
+            elif isinstance(allocation_samples, (SampleSpec, SampleIterator)):
                 pass
             else:
                 raise ControlSignalError("allocation_samples argument ({}) in {} must be "
-                                         "a list or 1D array of numbers, or a {}".
+                                         "a list or 1D array of numbers, a range, or a {}".
                                          format(allocation_samples, self.name, SampleSpec.__name__))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -853,14 +854,18 @@ class ControlSignal(ModulatorySignal):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        self._instantiate_cost_functions()
-        self._initialize_cost_attributes()
+        self._instantiate_allocation_samples(context=context)
+        self._instantiate_cost_functions(context=context)
+        self._initialize_cost_attributes(context=context)
 
-        # Assign instance attributes
-        # FIX: GET RID OF paramsCurrent HERE??
-        self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
+    def _instantiate_allocation_samples(self, context=None):
+        '''Assign `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
+        a = self.paramsCurrent[ALLOCATION_SAMPLES]
+        if isinstance(a, (range, np.ndarray)):
+            a = list(a)
+        self.parameters.allocation_samples.set(SampleIterator(sample_spec=a))
 
-    def _instantiate_cost_attributes(self):
+    def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
@@ -872,7 +877,7 @@ class ControlSignal(ModulatorySignal):
             self.duration_cost = 0
             self.cost = self.defaults.cost = self.intensity_cost
 
-    def _instantiate_cost_functions(self):
+    def _instantiate_cost_functions(self, context=None):
         # Instantiate cost functions (if necessary) and assign to attributes
         if self.cost_options:
             self.assign_costs(self.cost_options)
@@ -903,7 +908,7 @@ class ControlSignal(ModulatorySignal):
             self.intensity_change = [0]
             # MODIFIED 11/9/18 END
 
-    def _initialize_cost_attributes(self):
+    def _initialize_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
