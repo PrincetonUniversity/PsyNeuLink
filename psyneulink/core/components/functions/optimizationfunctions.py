@@ -120,14 +120,14 @@ class SampleSpec():
           **begin**, **end**, **step** and/or **count** arguments:
 
           * **begin**, **end**, **step**:  behavior analogous to the Python range() function, with the exceptions that
-            floats are allowed, and the sequence generated is inclusive of **end**.  A
+            floats are allowed, and the sequence generated is inclusive of **end**.
 
-          * **begin**, **end**, **count**: **step** set to :math:`\\frac{end-begin)}{count}`.  B
+          * **begin**, **end**, **count**: **step** set to :math:`\\frac{end-begin)}{count}`.
 
-          * **begin**, **step**, **count**:  generates **count** number of items with increments of **step**.  C
+          * **begin**, **step**, **count**:  generates **count** number of items with increments of **step**.
 
           * **begin**, **end**, **step**, **count**:  checks that **step** and **count** are compatible
-            and, if not, generates an error.  D
+            and, if not, generates an error.
 
         .. _SampleSpec_Generator:
 
@@ -149,7 +149,6 @@ class SampleSpec():
         '''
 
         # FIX: WRAP generator AS A UDF
-        # FIX: REWORK AS BEGIN OR GENERATOR AND THEN UNDER BEGIN TEST FOR NECESSARY COMBINATIONS
         if  (begin is None or end is None or (step is None and count is None)) and generator is None:
             raise OptimizationFunctionError("Must specify either {}, {} and {} or {}, or else {}, for {}".
                                             format(repr('begin'), repr('end'), repr('step'), repr('count'),
@@ -170,7 +169,7 @@ class SampleSpec():
                                                 format(repr('begin'),repr('end'), repr('count'),
                                                        self.__class__.__name__))
 
-            # begin, end, **count**: step = end-begin/count  B
+            # begin, end, **count**: step = end-begin/count
             if step is None:
                 if end is None or count is None:
                     raise OptimizationFunctionError("If {} is not specified then both {} and {} must be specified "
@@ -179,11 +178,11 @@ class SampleSpec():
                                                            self.__class__.__name__))
                 step = (end-begin)/count
 
-            # begin, end, step:  ~ range()  A
+            # begin, end, step:  ~ range()
             elif count is None:
                 count = ((end-begin)//step)+1
 
-            # begin, step, count: count number of items with increments of step  C
+            # begin, step, count: count number of items with increments of step
             elif end is None:
                 end = begin + step * count
 
