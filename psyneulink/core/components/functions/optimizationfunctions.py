@@ -237,13 +237,16 @@ class SampleIterator(Iterator):
         Attributes
         ----------
 
-        begin : number
+        begin : scalar
             first item of list or SampleSpec.begin
 
-        end : number
+        end : scalar
             last item of list or SampleSpec.end
 
-        num : int
+        step : scalar
+            length of list or SampleSpec.count.
+
+        count : int
             length of list or SampleSpec.count.
 
         Returns
@@ -256,7 +259,7 @@ class SampleIterator(Iterator):
         if isinstance(specification, list):
             self.begin = specification[0]
             self.end = specification[-1]
-            self.num = len(specification)
+            self.count = len(specification)
             self._iterator = iter(specification)
 
         elif isinstance(specification, SampleSpec) :
@@ -269,8 +272,6 @@ class SampleIterator(Iterator):
                     while result < end:
                         yield result
                         result += step
-                self.step_size = self.num
-                self.num = int((self.end - self.begin)/self.step_size)
                 self._iterator = sample_gen(self.begin, self.end, self.step_size)
 
             elif is_iter(specification.generator):
@@ -278,10 +279,10 @@ class SampleIterator(Iterator):
 
             elif is_function_type(specification.generator):
                 if specification.count:
-                    def sample_gen(num):
-                        for n in range(0, num):
+                    def sample_gen(count):
+                        for n in range(0, count):
                             yield specification.generator()
-                    self._iterator = sample_gen(self.num)
+                    self._iterator = sample_gen(self.count)
                 else:
                     def sample_gen():
                         yield specification.generator()
@@ -1192,7 +1193,7 @@ class GridSearch(OptimizationFunction):
         self.grid = itertools.product(*[s for s in self.search_space])
         self.num_iterations = 1
         for signal in self.search_space:
-            self.num_iterations *= signal.num
+            self.num_iterations *= signal.count
 
     def function(self,
                  variable=None,
