@@ -2463,8 +2463,8 @@ class Mechanism_Base(Mechanism):
     def _update_output_states(self, owner_value=None, execution_id=None, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
 
-        owner_value arg can be used to override existing (or absent) value of owner and assign a specified
-        (set of) value(s).
+        owner_value arg can be used to override existing (or absent) value of owner as variable for OutputStates
+        and assign a specified (set of) value(s).
 
         """
         for i in range(len(self.output_states)):
