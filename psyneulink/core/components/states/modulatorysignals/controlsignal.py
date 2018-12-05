@@ -863,7 +863,7 @@ class ControlSignal(ModulatorySignal):
         a = self.paramsCurrent[ALLOCATION_SAMPLES]
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
-        self.parameters.allocation_samples.set(SampleIterator(sample_spec=a))
+        self.parameters.allocation_samples.set(SampleIterator(specification=a))
 
     def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:

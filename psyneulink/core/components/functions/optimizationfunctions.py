@@ -116,18 +116,18 @@ class SampleSpec():
 
         .. _SampleSpec_Sequence:
 
-        * *Explicitly specificy a reqular sequence of values*, using an appropriate combination of the
+        * *Explicitly specificy a finite reqular sequence of values*, using an appropriate combination of the
           **begin**, **end**, **step** and/or **count** arguments:
 
           * **begin**, **end**, **step**:  behavior analogous to the Python range() function, with the exceptions that
-            floats are allowed, and the sequence generated is inclusive of **end**
+            floats are allowed, and the sequence generated is inclusive of **end**.  A
 
-          * **begin**, **end**, **count**: **step** set to :math:`\\frac{end-begin)}{count}`.
+          * **begin**, **end**, **count**: **step** set to :math:`\\frac{end-begin)}{count}`.  B
 
-          * **begin**, **step**, **count**:  generates **count** number of items with increments of **step**.
+          * **begin**, **step**, **count**:  generates **count** number of items with increments of **step**.  C
 
           * **begin**, **end**, **step**, **count**:  checks that **step** and **count** are compatible
-            and, if not, generates an error
+            and, if not, generates an error.  D
 
         .. _SampleSpec_Generator:
 
@@ -169,8 +169,30 @@ class SampleSpec():
                 raise OptimizationFunctionError("If {} is specified then either {} or {} must be specified for {}".
                                                 format(repr('begin'),repr('end'), repr('count'),
                                                        self.__class__.__name__))
-            if step is None :
+
+            # begin, end, **count**: step = end-begin/count  B
+            if step is None:
+                if end is None or count is None:
+                    raise OptimizationFunctionError("If {} is not specified then both {} and {} must be specified "
+                                                    "so that step can be calculated from them {}".
+                                                    format(repr('step'),repr('end'), repr('count'),
+                                                           self.__class__.__name__))
                 step = (end-begin)/count
+
+            # begin, end, step:  ~ range()  A
+            elif count is None:
+                count = ((end-begin)//step)+1
+
+            # begin, step, count: count number of items with increments of step  C
+            elif end is None:
+                end = begin + step * count
+
+            # begin, end, step, count:   that step and count are compatible
+            elif (((end-begin)//step)+1) != count:
+                raise OptimizationFunctionError("The {} ({}) and {} ({}) ags specified for {} are not compatible,"
+                                                "given the {} ({})".
+                                                format(repr('step'), step, repr('count'), count,self.__class__.__name__,
+                                                       repr('begin'), begin))
 
         # Generator specification:
         else:
@@ -240,38 +262,17 @@ class SampleIterator(Iterator):
 
         elif isinstance(specification, SampleSpec) :
 
-            self.begin = float(specification.begin)
-
-            if specification.count is not None:
-                self.num = specification.count
-                self.end = float(specification.end)
-            else:
-                self.num = self.
-                # FIX: COMPUTE FROM STEP
+            self.begin, self.end, self.step, self.count, self.generator = specification
 
             if specification.generator is None:
-                assert not None in {self.begin, self.end, self.num}, \
-                    'PROGRAM ERROR: {} should have either {}, {} and {} or {}'.\
-                        format(repr('begin'), repr('end'), repr('num'),repr('generator'),)
-                if isinstance(self.num, int):
-                    if self.num == 1:
-                        self.step_size = 0
-                    else:
-                        self.step_size = (self.end - self.begin) / (self.num-1)
-                    def sample_gen(begin, num, step):
-                        for n in range(0, num):
-                            yield begin + n * step
-                    self._iterator = sample_gen(self.begin, self.num, self.step_size)
-
-                else:
-                    def sample_gen(begin, end, step):
-                        result = begin
-                        while result < end:
-                            yield result
-                            result += step
-                    self.step_size = self.num
-                    self.num = int((self.end - self.begin)/self.step_size)
-                    self._iterator = sample_gen(self.begin, self.end, self.step_size)
+                def sample_gen(begin, end, step):
+                    result = begin
+                    while result < end:
+                        yield result
+                        result += step
+                self.step_size = self.num
+                self.num = int((self.end - self.begin)/self.step_size)
+                self._iterator = sample_gen(self.begin, self.end, self.step_size)
 
             elif is_iter(specification.generator):
                 self._iterator = specification.generator
