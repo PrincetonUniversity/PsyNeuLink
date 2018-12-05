@@ -940,7 +940,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
-        specified `control_allocation <ControlMechanism.control_allocation>`.'''
+        specified `control_allocation <ControlMechanism.control_allocation>`.
+
+        Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
+        <OptimizationControlMechanism.agent_rep>`.
+        '''
+
         value = self.parameters.value.get(execution_id)
         if value is None:
             value = copy.deepcopy(self.instance_defaults.value)
