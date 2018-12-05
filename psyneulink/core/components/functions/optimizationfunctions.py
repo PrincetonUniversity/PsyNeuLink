@@ -104,36 +104,84 @@ class SampleSpec():
     '''
     @tc.typecheck
     def __init__(self,
-                 begin:tc.any(int, float),
+                 begin:tc.optional(tc.any(int, float))=None,
                  end:tc.optional(tc.any(int, float))=None,
                  step:tc.optional(tc.any(int, float))=None,
-                 count:tc.optional(tc.any(int, float))=None,
-                 generator:tc.optional(is_function_type)=None
+                 count:tc.optional(float)=None,
+                 generator:tc.optional(tc.any(is_iter, is_function_type))=None
                  ):
         '''Specify list or parameters for generating one, for use by SampleIterator.
 
-        Like range except:  allows floats for all parameters (except count);  intervals are inclusive of end.
+        There are two ways of specyiyfing a SampleSpec to define a space of samples, as described below.
 
-        Options:
-        * begin, end, step:  behaves like range (but allows floats).
-        * begin, end, count: step set to (end-begin)/count.
-        * begin, step, count:  generates count number of items with increments of step.
-        * begin, end, step, count:  checks if step and count are compatible and, if not, issues an error
-        * generator (alone): must either be a function that does not take any parameters (e.g., a `DistributionFunction` (that
-              returns a randomly chosen value) or a function that specifies its own start and increment values, and
-              maintains its own state)
-        * begin, generator:   
+        .. _SampleSpec_Sequence:
 
+        * *Explicitly specificy a reqular sequence of values*, using an appropriate combination of the
+          **begin**, **end**, **step** and/or **count** arguments:
 
-        * begin, end, generator:  uses function
+          * **begin**, **end**, **step**:  behavior analogous to the Python range() function, with the exceptions that
+            floats are allowed, and the sequence generated is inclusive of **end**
 
+          * **begin**, **end**, **count**: **step** set to :math:`\\frac{end-begin)}{count}`.
 
-        Must specify either begin, end and step or num, or else a generator'''
+          * **begin**, **step**, **count**:  generates **count** number of items with increments of **step**.
+
+          * **begin**, **end**, **step**, **count**:  checks that **step** and **count** are compatible
+            and, if not, generates an error
+
+        .. _SampleSpec_Generator:
+
+        * *Specificy a generator*, in the form of a function that is called repeatedly to generate a sequence of values;
+          COMMENT:
+          the **begin**, **end**, **step** and/or **count** arguments may be used to parameterize the function,
+          depending on the function that is assigned to the **generator** argument.
+          COMMENT
+
+          * **generator** (alone): must be a function that does not take any arguments and returns a single value on
+          each call (e.g., a `DistributionFunction`).
+          COMMENT:
+          it may take as additional parameters ones named *begin*, *end*,
+          *step* and/or *count* that are used to parameterize it when it is used to construct a `UserDefinedFunction`.
+          COMMENT
+
+          * **generator** with **count**: creates an interator using **generator** as the function for its __next__
+            method.
+        '''
+
+        # FIX: WRAP generator AS A UDF
         # FIX: REWORK AS BEGIN OR GENERATOR AND THEN UNDER BEGIN TEST FOR NECESSARY COMBINATIONS
         if  (begin is None or end is None or (step is None and count is None)) and generator is None:
             raise OptimizationFunctionError("Must specify either {}, {} and {} or {}, or else {}, for {}".
                                             format(repr('begin'), repr('end'), repr('step'), repr('count'),
                                                    repr('generator'), self.__class__.__name__))
+
+        if begin is None and generator is None:
+            raise OptimizationFunctionError("Must specify either {} along with some combination of {}, {} and {}, "
+                                            "or {} as arguments for {}".
+                                            format(repr('begin'), repr('end'), repr('step'), repr('count'),
+                                                   repr('generator'), self.__class__.__name__))
+        # Explicit sequence specification
+        if begin is not None:
+            if generator is not None:
+                raise OptimizationFunctionError("Can't specify both {} and {} as arguments for {}".
+                                                format(repr('begin'), repr('generator'), self.__class__.__name__))
+            if end is None and count is None:
+                raise OptimizationFunctionError("If {} is specified then either {} or {} must be specified for {}".
+                                                format(repr('begin'),repr('end'), repr('count'),
+                                                       self.__class__.__name__))
+            if step is None :
+                step = (end-begin)/count
+
+        # Generator specification:
+        else:
+            if not all(None in {end, step}):
+                raise OptimizationFunctionError("Specification of {} or {} has no effect when {} is specified for {}".
+                                                format(repr('end'), repr('step'), repr('generator'),
+                                                       self.__class__.__name__))
+
+        # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
+        # Validate entries of specification
+
         self.begin = begin
         self.end = end
         self.step = step
@@ -145,29 +193,24 @@ from typing import Iterator
 class SampleIterator(Iterator):
     '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
     @tc.typecheck
-    def __init__(self, sample_spec:tc.any(list, np.ndarray, SampleSpec)):
+    def __init__(self, specification:tc.any(list, np.ndarray, SampleSpec)):
         '''Create SampleIterator from list or SampleSpec.
 
-        If **sample_spec** is a list, create iterator from it that is called by __next__.
-        If **sample_spec** is a SampleSpec:
-          - if step is specified:
-              use begin, end and step to create a list
-                  if count is specified, check that it is consistent with the length of the list
-                  genereate an iterator from the list
-          - if step is not specified:
-                  check that begin is specified and create iterator from those
+        If **specification** is a list, create iterator from it that is called by __next__.
 
-        , use its SampleSpec.generator item (which can be a function or an iterator)
-            to generate an iterator called by __next__;  if SampleSpec.num is specified (i.e., it is not None),
-            it determines the number of samples that can be generated from SampleSpec.generator  before call to
-            __next__ generates a `StopIteration` exception; otherwise only a single value is returned.
+        If **specification** is a SampleSpec:
+          - if step is specified, use begin, end and step or count to genereate an iterator from a list
+          - if step is not specified, use generator item (which can be a function or an iterator)
+            to generate an iterator called by __next__;  if count is specified in SampleSpec (i.e., it is not None),
+            it determines the number of samples that can be generated from the generator before call to
+            __next__ generates a `StopIteration` exception; otherwise, it can be called indefinitely.
 
         Can be called to generate list from itself.
 
         Arguments
         ---------
 
-        sample_spec : list or SampleSpec
+        specification : list or SampleSpec
             specifies what to use for `iterator <SampleIterator.iterator>`.
 
         Attributes
@@ -180,7 +223,7 @@ class SampleIterator(Iterator):
             last item of list or SampleSpec.end
 
         num : int
-            length of list or SampleSpec.num.
+            length of list or SampleSpec.count.
 
         Returns
         -------
@@ -189,41 +232,24 @@ class SampleIterator(Iterator):
 
         '''
 
-        if isinstance(sample_spec, list):
-            self.begin = sample_spec[0]
-            self.end = sample_spec[-1]
-            self.num = len(sample_spec)
-            self._iterator = iter(sample_spec)
+        if isinstance(specification, list):
+            self.begin = specification[0]
+            self.end = specification[-1]
+            self.num = len(specification)
+            self._iterator = iter(specification)
 
-        # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
-        # Validate entries of sample_spec
-        elif isinstance(sample_spec, SampleSpec) :
-            if not np.isscalar(sample_spec.begin):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('begin'), sample_spec.begin)
-            if not np.isscalar(sample_spec.end):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('end'), sample_spec.end)
-            if not np.isscalar(sample_spec.step):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('step'), sample_spec.step)
-            if not isinstance(sample_spec.step, int):
-                assert False, "PROGRAM ERROR: {} item of SampleSpec in sample_spec argument of SampleIterator ({}) " \
-                              "must be a scalar".format(repr('count'), sample_spec.count)
-            if sample_spec.generator and not (is_iter(sample_spec.generator) or is_function_type(sample_spec.generator)):
-                assert False, "PROGRAM ERROR: \'generator\' item of SampleSpec in sample_spec argument of " \
-                              "SampleIterator ({}) must be a function or iterator".format(sample_spec.generator)
+        elif isinstance(specification, SampleSpec) :
 
-            self.begin = float(sample_spec.begin)
+            self.begin = float(specification.begin)
 
-            if sample_spec.count is not None:
-                self.num = sample_spec.count
-                self.end = float(sample_spec.end)
+            if specification.count is not None:
+                self.num = specification.count
+                self.end = float(specification.end)
             else:
                 self.num = self.
                 # FIX: COMPUTE FROM STEP
 
-            if sample_spec.generator is None:
+            if specification.generator is None:
                 assert not None in {self.begin, self.end, self.num}, \
                     'PROGRAM ERROR: {} should have either {}, {} and {} or {}'.\
                         format(repr('begin'), repr('end'), repr('num'),repr('generator'),)
@@ -247,27 +273,27 @@ class SampleIterator(Iterator):
                     self.num = int((self.end - self.begin)/self.step_size)
                     self._iterator = sample_gen(self.begin, self.end, self.step_size)
 
-            elif is_iter(sample_spec.generator):
-                self._iterator = sample_spec.generator
+            elif is_iter(specification.generator):
+                self._iterator = specification.generator
 
-            elif is_function_type(sample_spec.generator):
-                if sample_spec.count:
+            elif is_function_type(specification.generator):
+                if specification.count:
                     def sample_gen(num):
                         for n in range(0, num):
-                            yield sample_spec.generator()
+                            yield specification.generator()
                     self._iterator = sample_gen(self.num)
                 else:
                     def sample_gen():
-                        yield sample_spec.generator()
+                        yield specification.generator()
                     self._iterator = sample_gen()
             else:
-                assert False, 'PROGRAM ERROR: {} item of {} passed to sample_spec arg of {} ' \
+                assert False, 'PROGRAM ERROR: {} item of {} passed to specification arg of {} ' \
                               'is not an iterator or a function_type'.\
                               format(repr('generator'), SampleSpec.__name__, self.__class__.__name__)
 
         else:
             assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
-                          format(repr('sample_spec'), self.__class__.__name__, SampleSpec.__name__)
+                          format(repr('specification'), self.__class__.__name__, SampleSpec.__name__)
 
     def __iter__(self):
         return self
