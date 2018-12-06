@@ -1090,11 +1090,15 @@ class GridSearch(OptimizationFunction):
     def reinitialize(self, *args, execution_id=None):
 
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
+        self.reinitialize_grid()
 
+    def reinitialize_grid(self):
         self.grid = itertools.product(*[s for s in self.search_space])
-        self.num_iterations = 1
-        for signal in self.search_space:
-            self.num_iterations *= signal.num
+        # self.num_iterations = 1
+        # for signal in self.search_space:
+        #     self.num_iterations *= signal.num
+        self.num_iterations = np.product([s.num for s in self.search_space])
+
 
     def function(self,
                  variable=None,
@@ -1221,6 +1225,7 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
+            # self.reinitialize_grid()
             last_sample, last_value, all_samples, all_values = super().function(
                 variable=variable,
                 execution_id=execution_id,
@@ -1243,7 +1248,12 @@ class GridSearch(OptimizationFunction):
         '''
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return [signal.begin for signal in self.search_space]
-        return next(self.grid, None)
+        try:
+            sample = next(self.grid)
+        except StopIteration:
+            raise OptimizationFunctionError("Expired grid in {} run from {} (current_execution_count: {})".
+                format(self.__class__.__name__, self.owner.name, self.owner.current_execution_count))
+        return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
         '''Return False when search of grid is complete

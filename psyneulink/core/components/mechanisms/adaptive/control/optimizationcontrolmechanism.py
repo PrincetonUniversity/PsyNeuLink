@@ -849,6 +849,8 @@ class OptimizationControlMechanism(ControlMechanism):
             context=context
         )
 
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.value),1))
+
         # Give agent_rep a chance to clean up
         try:
             self.agent_rep._after_agent_rep_execution(context=context)
