@@ -264,7 +264,6 @@ class SampleIterator(Iterator):
             self._iterator = np.nditer(np.array(specification))
 
         elif isinstance(specification, SampleSpec) :
-
             self.begin, self.end, self.step, self.count, self.generator = specification
 
             if specification.generator is None:
@@ -297,23 +296,27 @@ class SampleIterator(Iterator):
             assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
                           format(repr('specification'), self.__class__.__name__, SampleSpec.__name__)
 
+        self.__next__ = self._iterator
+
     def __iter__(self):
         return self
 
-    def __next__(self):
-        if is_iter(self._iterator):
-            item = next(self._iterator)
-        else:
-            item = self._iterator()
-        if item == StopIteration:
-            raise StopIteration  # signals "the end"
-        return item
+    # def __next__(self):
+        # return self._iterator
+        # if is_iter(self._iterator):
+        #     item = next(self._iterator)
+        # else:
+        #     item = self._iterator()
+        # if item == StopIteration:
+        #     raise StopIteration  # signals "the end"
+        # return item
 
     def __call__(self):
+        # return list(self.__next__)
         return list(self)
 
     def reset(self):
-        self._iterator.reset()
+        self.__next__.reset()
 
 
 class OptimizationFunction(Function_Base):
@@ -1204,7 +1207,7 @@ class GridSearch(OptimizationFunction):
     def reset_grid(self):
         for s in self.search_space:
             s.reset()
-        self.grid = itertools.product(*[s for s in self.search_space])
+        self.grid = itertools.product(*[s.__next__ for s in self.search_space])
 
     def function(self,
                  variable=None,
