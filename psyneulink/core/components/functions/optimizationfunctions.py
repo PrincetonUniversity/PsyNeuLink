@@ -318,9 +318,9 @@ class SampleIterator(Iterator):
     def __call__(self):
         return list(self)
 
-    def reset(self):
+    def reset(self, head=None):
         # self.__next__.reset()
-        self.head = self.begin
+        self.head = head or self.begin
 
 
 class OptimizationFunction(Function_Base):
