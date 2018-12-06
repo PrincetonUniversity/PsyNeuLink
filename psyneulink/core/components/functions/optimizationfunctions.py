@@ -265,25 +265,25 @@ class SampleIterator(Iterator):
             self.end = specification[-1]
             self.step = None
             self.count = len(specification)
-            # self.head = self.begin
+            self.head = self.begin
             # self._iterator = np.nditer(np.array(specification))
             def sample_gen(begin, end, step):
-                self._result = begin
-                while self._result < end:
-                    yield self._result
-                    self._result += step
+                # self.head = begin
+                while self.head < end:
+                    yield self.head
+                    self.head += step
             self._iterator = sample_gen(self.begin, self.end, self.step)
 
         elif isinstance(specification, SampleSpec) :
             self.begin, self.end, self.step, self.count, self.generator = specification
-            # self.head = self.begin
+            self.head = self.begin
 
             if specification.generator is None:
                 def sample_gen(begin, end, step):
-                    self._result = begin
-                    while self._result < end:
-                        yield self._result
-                        self._result += step
+                    # self.head = begin
+                    while self.head < end:
+                        yield self.head
+                        self.head += step
                 self._iterator = sample_gen(self.begin, self.end, self.step)
 
             elif is_iter(specification.generator):
@@ -291,10 +291,9 @@ class SampleIterator(Iterator):
 
             elif is_function_type(specification.generator):
                 if specification.count:
+                    self.begin = 0
                     def sample_gen(count):
-                        self.begin = 0
-                        self._result = self.begin
-                        while self._result < count:
+                        while self.head < count:
                         # for n in range(0, count):
                             yield specification.generator()
                     self._iterator = sample_gen(self.count)
@@ -321,7 +320,7 @@ class SampleIterator(Iterator):
 
     def reset(self):
         # self.__next__.reset()
-        self._result = self.begin
+        self.head = self.begin
 
 
 class OptimizationFunction(Function_Base):
