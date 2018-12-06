@@ -47,11 +47,11 @@ from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError,  MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import \
-    INTEGRATOR_FUNCTION_TYPE, INTEGRATOR_FUNCTION, NOISE, RATE, INITIALIZER, SIMPLE_INTEGRATOR_FUNCTION, OFFSET, \
-    CONSTANT_INTEGRATOR_FUNCTION, SCALE, BUFFER_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, \
-    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, DECAY, \
-    FHN_INTEGRATOR_FUNCTION, INCREMENT, ACCUMULATOR_INTEGRATOR_FUNCTION, FUNCTION, INPUT_STATES, OUTPUT_STATES, \
-    LCAMechanism_INTEGRATOR_FUNCTION, UTILITY_INTEGRATOR_FUNCTION, OPERATION
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, BUFFER_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, \
+    DECAY, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FHN_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, INITIALIZER, \
+    INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, \
+    LCAMechanism_INTEGRATOR_FUNCTION, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, \
+    RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
@@ -64,8 +64,8 @@ __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantInte
            'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator',
            'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY',
            'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME',
-           'kwDriftDiffusionAnalytical', 'kwNavarrosAndFuss', 'DriftDiffusionAnalytical', 'NF_Results', 'NavarroAndFuss', 'InteractiveActivation']
-
+           'kwDriftDiffusionAnalytical', 'kwNavarrosAndFuss', 'DriftDiffusionAnalytical', 'NF_Results', 'NavarroAndFuss',
+           'InteractiveActivation']
 
 class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
@@ -367,8 +367,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        # use np.broadcast_to to guarantee that all initializer type attributes take on the same
-        # shape as variable
+        # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.instance_defaults.variable):
             for attr in self.initializers:
                 setattr(self, attr, np.broadcast_to(getattr(self, attr), self.instance_defaults.variable.shape).copy())
@@ -788,7 +787,8 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     """
     InteractiveActivation(      \
         default_variable=None,  \
-        rate=1.0,               \
+        decay=1.0,              \
+        rest=0.0,               \
         max_val=1.0,            \
         min_val=-1.0,           \
         noise=0.0,              \
@@ -804,19 +804,25 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     value for positive inputs and toward an asymptotic mininum value for negative inputs.
 
     Implements a generalized version of the interactive activation function used to update unit activites in
-    `McClelland and Rumelhart (1981) <https://stanford.edu/~jlmcc/papers/RumelhartMcClelland82.pdf>`_.
+    `McClelland and Rumelhart (1981)
+    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.298.4480&rep=rep1&type=pdf>`_.
+
 
     `function <InteractiveActivation.function>` returns:
 
     .. math::
+        previous\_value + (variable * distance\_from\_asymptote) - (decay * distance\_from\_rest) + noise
 
-        if\ variable > 0:\ previous\_value + rate * variable * (max\_val-previous\_value) + noise
-
-    .. math::
-        if\ variable < 0:\ previous\_value + rate * variable * (previous\_value-min\_value) + noise
+    where:
 
     .. math::
-        if\ variable = 0:\ previous\_value
+        if\ variable > 0,\ distance\_from\_asymptote = max\_val - previous\_value
+
+    .. math::
+        if\ variable < 0,\ distance\_from\_asymptote = previous\_value - min\_val
+
+    .. math::
+        if\ variable = 0,\ distance\_from\_asymptote = 0
 
 
     Arguments
@@ -826,9 +832,18 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <InteractiveActivation.default_variable>` (see `rate <InteractiveActivation.rate>` for details).
+    rest : float, list or 1d np.array : default 0.0
+        specifies the initial value and one toward which value `decays <InteractiveActivation.decay>`.
+        If it is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
+        COMMENT:
+        its value(s) must be between `max_val <InteractiveActivation.max_val>` and `min_val
+        <InteractiveActivation.min_val>`.
+        COMMENT
+
+    decay : float, list or 1d np.array : default 1.0
+        specifies the rate of at which activity decays toward `rest <InteractiveActivation.rest>`.
+        If it is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`;
+        its value(s) must be in the interval [0,1].
 
     max_val : float, list or 1d array : default 1.0
         specifies the maximum asymptotic value toward which integration occurs for positive values of `variable
@@ -843,13 +858,13 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         `max_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.min_val>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <InteractiveActivation.function>`. (see
-        `noise <InteractiveActivation.noise>` for details).
+        specifies random value to be added in each call to `function <InteractiveActivation.function>`
+        (see `noise <InteractiveActivation.noise>` for details).
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <InteractiveActivation.default_variable>` (see `initializer <InteractiveActivation.initializer>`
-        for details).
+        `default_variable <InteractiveActivation.default_variable>`
+        (see `initializer <InteractiveActivation.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -872,10 +887,19 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         current input value some portion of which (determined by `rate <InteractiveActivation.rate>`) will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
-    rate : float or 1d np.array
+    rate : float or 1d np.array in interval [0,1]
         determines the rate of integration based on current and prior values. If it has a single element, it applies
         to all elements of `variable <InteractiveActivation.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+
+    rest : float, list or 1d np.array
+        determines the initial value and one toward which value `decays <InteractiveActivation.decay>` (similar
+        to *bias* in other IntegratorFunctions).
+
+    decay : float, list or 1d np.array
+        determines the rate of at which activity decays toward `rest <InteractiveActivation.rest>` (similary to
+        *rate* in other IntegratorFuncgtions).  If it is a list or array, it must be the same length as `variable
+        <InteractiveActivation.default_variable>`.
 
     max_val : float or 1d np.array
         determines the maximum asymptotic value toward which integration occurs for positive values of `variable
@@ -926,27 +950,30 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         <LINK>` for details).
     """
 
-    componentName = SIMPLE_INTEGRATOR_FUNCTION
+    componentName = INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         NOISE: None,
-        RATE: None
+        DECAY: None,
+        REST: None
     })
 
     multiplicative_param = RATE
     additive_param = OFFSET
 
     class Params(Integrator.Params):
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        decay = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rest = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_val = Param(1.0)
-        min_val = Param(-1.0)
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        min_val = Param(1.0)
+        offset = Param(0.0)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
+                 decay: parameter_spec = 1.0,
+                 rest: parameter_spec = 0.0,
                  max_val: parameter_spec = 1.0,
                  min_val: parameter_spec = -1.0,
                  noise=0.0,
@@ -956,8 +983,14 @@ class InteractiveActivation(Integrator):  # ------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if initializer is None:
+            initializer = rest
+        if default_variable is None:
+            default_variable = initializer
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
+        params = self._assign_args_to_param_dicts(decay=decay,
+                                                  rest=rest,
                                                   max_val=max_val,
                                                   min_val=min_val,
                                                   initializer=initializer,
@@ -974,6 +1007,17 @@ class InteractiveActivation(Integrator):  # ------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.has_initializers = True
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
+
+        if DECAY in request_set and request_set[DECAY] is not None:
+            decay = request_set[DECAY]
+            if np.isscalar(decay):
+                decay = [decay]
+            if not all(0.0 <= d <= 1.0 for d in decay):
+                raise FunctionError("All values specified for {} argument of {} ({}) must be in interval [0,1]".                                    format(repr(DECAY), self.__class__.__name__, decay))
 
     def function(self,
                  variable=None,
@@ -1002,36 +1046,52 @@ class InteractiveActivation(Integrator):  # ------------------------------------
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        max_val = np.array(self.get_current_function_param(MAX_VAL, execution_id)).astype(float)
-        min_val = np.array(self.get_current_function_param(MIN_VAL, execution_id)).astype(float)
-
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        if offset is None:
-            offset = 0.0
+        decay = np.array(self.get_current_function_param(DECAY, execution_id)).astype(float)
+        rest = np.array(self.get_current_function_param(REST, execution_id)).astype(float)
+        # only works with "max_val". Keyword MAX_VAL = "MAX_VAL", not max_val
+        max_val = np.array(self.get_current_function_param("max_val", execution_id)).astype(float)
+        min_val = np.array(self.get_current_function_param("min_val", execution_id)).astype(float)
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+
+        current_input = variable
+
+        # FIX: ?CLEAN THIS UP BY SETTING initializer IN __init__ OR OTHER RELEVANT PLACE?
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            if rest.ndim == 0 or len(rest)==1:
+                # self.parameters.previous_value.set(np.full_like(current_input, rest), execution_id)
+                self._initialize_previous_value(np.full_like(current_input, rest), execution_id)
+            elif np.atleast_2d(rest).shape == current_input.shape:
+                # self.parameters.previous_value.set(rest, execution_id)
+                self._initialize_previous_value(rest, execution_id)
+            else:
+                raise FunctionError("The {} argument of {} ({}) must be an int or float, "
+                                    "or a list or array of the same length as its variable ({})".
+                                    format(repr(REST), self.__class__.__name__, rest, len(variable)))
         previous_value = self.get_previous_value(execution_id)
-        new_value = variable
 
-        # value = previous_value + (new_value * rate) + noise
-        if variable > 0:
-            value = previous_value + rate * new_value * (max_val-previous_value) + noise
-        elif variable < 0:
-            value = previous_value + rate * new_value * (max_val-previous_value) + noise
-        else:
-            value = previous_value
+        current_input = np.atleast_2d(variable)
+        prev_val = np.atleast_2d(previous_value)
 
-        adjusted_value = value + offset
+        dist_from_asymptote = np.zeros_like(current_input)
+        for i in range(len(current_input)):
+            for j in range(len(current_input[i])):
+                if current_input[i][j] > 0:
+                    dist_from_asymptote[i][j] = (max_val - prev_val[i][j])
+                elif current_input[i][j] < 0:
+                    dist_from_asymptote[i][j] =  (prev_val[i][j] - min_val)
+                else:
+                    dist_from_asymptote[i][j] =  0
 
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
+        dist_from_rest = prev_val - rest
+
+        new_value = previous_value + (current_input * dist_from_asymptote) - (decay * dist_from_rest) + noise
+
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(adjusted_value, execution_id)
+            self.parameters.previous_value.set(new_value, execution_id)
 
-        return self.convert_output_type(adjusted_value)
+        return self.convert_output_type(new_value)
 
 
 class ConstantIntegrator(Integrator):  # -------------------------------------------------------------------------------
@@ -1263,7 +1323,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         #    (don't want to count it as an execution step)
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
-
         return self.convert_output_type(adjusted_value)
 
 
@@ -1654,7 +1713,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     class Params(Integrator.Params):
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Param(0.02, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1662,7 +1720,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset=0.0,
-                 time_step_size=0.02,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -1673,7 +1730,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                                   initializer=initializer,
                                                   noise=noise,
                                                   offset=offset,
-                                                  time_step_size=time_step_size,
                                                   params=params)
 
         super().__init__(
@@ -2050,10 +2106,10 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
+                 threshold=100.0,
                  time_step_size=1.0,
                  t0=0.0,
                  initializer=None,
-                 threshold=100.0,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
