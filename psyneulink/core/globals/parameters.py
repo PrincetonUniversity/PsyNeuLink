@@ -255,6 +255,9 @@ class Param(types.SimpleNamespace):
         self._inherited = _inherited
 
     def __repr__(self):
+        return '{0} :\n{1}'.format(super(types.SimpleNamespace, self).__repr__(), str(self))
+
+    def __str__(self):
         # modified from types.SimpleNamespace to exclude _-prefixed attrs
         try:
             items = (
@@ -264,7 +267,7 @@ class Param(types.SimpleNamespace):
 
             return "{}(\n\t\t{}\n\t)".format(type(self).__name__, "\n\t\t".join(items))
         except AttributeError:
-            return super().__repr__()
+            return super().__str__()
 
     def __deepcopy__(self, memo):
         result = Param(**{k: copy.deepcopy(getattr(self, k)) for k in self._param_attrs}, _owner=self._owner, _inherited=self._inherited)
