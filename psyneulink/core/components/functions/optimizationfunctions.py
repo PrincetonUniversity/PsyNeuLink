@@ -148,17 +148,30 @@ class SampleSpec():
             method.
         '''
 
-        # FIX: WRAP generator AS A UDF
-        if  (begin is None or end is None or (step is None and count is None)) and generator is None:
-            raise OptimizationFunctionError("Must specify either {}, {} and {} or {}, or else {}, for {}".
-                                            format(repr('begin'), repr('end'), repr('step'), repr('count'),
-                                                   repr('generator'), self.__class__.__name__))
+        if generator is None:
+            if count is None and step is not None:
+                count = 1.0 + (end - begin) / step
+            elif step is None and count is not None:
+                step = (end - begin) / (count - 1)
+            elif count is None and step is None:
+                raise OptimizationFunctionError("Must specify one of {}, {} or {}."
+                                                .format(repr('step'), repr('count'), repr('generator')))
+            else:
+                if not np.isclose(count, 1.0 + (end - begin) / step):
+                    raise OptimizationFunctionError("The {} ({}) and {} ({}} values specified are not comaptible."
+                                                    .format(repr('step'), step, repr('count'), count))
 
-        if begin is None and generator is None:
-            raise OptimizationFunctionError("Must specify either {} along with some combination of {}, {} and {}, "
-                                            "or {} as arguments for {}".
-                                            format(repr('begin'), repr('end'), repr('step'), repr('count'),
-                                                   repr('generator'), self.__class__.__name__))
+
+        # if  (begin is None or end is None or (step is None and count is None)) and generator is None:
+        #     raise OptimizationFunctionError("Must specify either {}, {} and {} or {}, or else {}, for {}".
+        #                                     format(repr('begin'), repr('end'), repr('step'), repr('count'),
+        #                                            repr('generator'), self.__class__.__name__))
+        #
+        # if begin is None and generator is None:
+        #     raise OptimizationFunctionError("Must specify either {} along with some combination of {}, {} and {}, "
+        #                                     "or {} as arguments for {}".
+        #                                     format(repr('begin'), repr('end'), repr('step'), repr('count'),
+        #                                            repr('generator'), self.__class__.__name__))
         # Explicit sequence specification
         if begin is not None:
             if generator is not None:
@@ -169,30 +182,6 @@ class SampleSpec():
                                                 format(repr('begin'),repr('end'), repr('count'),
                                                        self.__class__.__name__))
 
-            # begin, end, **count**: step = end-begin/count
-            if step is None:
-                if end is None or count is None:
-                    raise OptimizationFunctionError("If {} is not specified then both {} and {} must be specified "
-                                                    "so that step can be calculated from them {}".
-                                                    format(repr('step'),repr('end'), repr('count'),
-                                                           self.__class__.__name__))
-                step = (end-begin)/count
-
-            # begin, end, step:  ~ range()
-            elif count is None:
-                count = ((end-begin)//step)+1
-
-            # begin, step, count: count number of items with increments of step
-            elif end is None:
-                end = begin + step * count
-
-            # begin, end, step, count:   that step and count are compatible
-            elif (((end-begin)//step)+1) != count:
-                raise OptimizationFunctionError("The {} ({}) and {} ({}) ags specified for {} are not compatible,"
-                                                "given the {} ({})".
-                                                format(repr('step'), step, repr('count'), count,self.__class__.__name__,
-                                                       repr('begin'), begin))
-
         # Generator specification:
         else:
             if not all(None in {end, step}):
@@ -202,11 +191,11 @@ class SampleSpec():
 
         # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
         # Validate entries of specification
-
+        #
         self.begin = begin
         self.end = end
-        self.step = step
-        self.count = count
+        self.step_size = step
+        self.num_steps = count
         self.generator = generator
 
 
@@ -214,7 +203,8 @@ from typing import Iterator
 class SampleIterator(Iterator):
     '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
     @tc.typecheck
-    def __init__(self, specification:tc.any(list, np.ndarray, SampleSpec)):
+    def __init__(self,
+                 specification:tc.any(list, np.ndarray, SampleSpec)):
         '''Create SampleIterator from list or SampleSpec.
 
         If **specification** is a list, create iterator from it that is called by __next__.
@@ -260,47 +250,52 @@ class SampleIterator(Iterator):
         List(self) : list
         '''
 
+        # Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
         if isinstance(specification, list):
             self.begin = specification[0]
             self.end = specification[-1]
-            self.step = None
-            self.count = len(specification)
-            self.head = self.begin
-            # self._iterator = np.nditer(np.array(specification))
-            def sample_gen(begin, end, step):
-                # self.head = begin
-                while self.head < end:
-                    yield self.head
-                    self.head += step
-            self._iterator = sample_gen(self.begin, self.end, self.step)
+            self.step_size = None
+            self.num_steps = len(specification)
+            self.generator = specification                      # the list
 
-        elif isinstance(specification, SampleSpec) :
-            self.begin, self.end, self.step, self.count, self.generator = specification
-            self.head = self.begin
+            def generate_current_value():                        # index into the list
+                return self.generator[self.current_step]
+
+        elif isinstance(specification, SampleSpec):
+            self.begin = specification.begin
+            self.end = specification.end
+            self.step_size = specification.step_size
+            self.num_steps = specification.num_steps
+            self.generator = specification.generator
 
             if specification.generator is None:
-                def sample_gen(begin, end, step):
-                    # self.head = begin
-                    while self.head < end:
-                        yield self.head
-                        self.head += step
-                self._iterator = sample_gen(self.begin, self.end, self.step)
+                def generate_current_value():  # index into list
+                    return self.begin + self.step_size*self.current_step
 
-            elif is_iter(specification.generator):
-                self._iterator = specification.generator
+            # KAM 12/6/18 must disallow generators because they are not pickleable
+            # are there other types of valid iterators that we should allow users to pass in?
+            # elif is_iter(specification.generator):
+            #     self._iterator = specification.generator
 
             elif is_function_type(specification.generator):
-                if specification.count:
-                    self.begin = 0
-                    def sample_gen(count):
-                        while self.head < count:
-                        # for n in range(0, count):
-                            yield specification.generator()
-                    self._iterator = sample_gen(self.count)
-                else:
-                    def sample_gen():
-                        yield specification.generator()
-                    self._iterator = sample_gen()
+                self.begin = 0
+                self.end = None
+                self.step_size = 1
+                self.current_step = 0
+                self.num_steps = specification.count
+                self.head = self.begin
+
+                self.generator = specification.generator
+
+                def generate_current_value():  # index into list
+                    return self.generator()
+
+                # KAM How to handle generates with no stopping condition? Note that self.num_steps is used for
+                #       GridSearch's total num_iterations
+                # else:
+                #     def sample_gen():
+                #         yield specification.generator()
+                #     self._iterator = sample_gen()
             else:
                 assert False, 'PROGRAM ERROR: {} item of {} passed to specification arg of {} ' \
                               'is not an iterator or a function_type'.\
@@ -310,16 +305,30 @@ class SampleIterator(Iterator):
             assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
                           format(repr('specification'), self.__class__.__name__, SampleSpec.__name__)
 
-        self.__next__ = self._iterator
+        self.current_step = 0
+        self.head = self.begin
+        self.generate_current_value = generate_current_value
+
+    def __next__(self):
+        if self.current_step < self.num_steps:
+            current_value = self.generate_current_value()
+            self.current_step += 1
+            return current_value
+
+        # return None     # How do we want to handle it when the iterator runs out of iterations?
+        else:
+            raise StopIteration
 
     def __iter__(self):
-        return self.__next__
+        self.current_step = 0
+        return self
 
     def __call__(self):
         return list(self)
 
     def reset(self, head=None):
-        # self.__next__.reset()
+
+        self.current_step = 0
         self.head = head or self.begin
 
 
@@ -551,7 +560,7 @@ class OptimizationFunction(Function_Base):
             self.search_termination_function = search_termination_function
 
         if search_space is None:
-            self.search_space = [SampleIterator([0])]
+            self.search_space = [SampleIterator([1.2345])]
             self._unspecified_args.append(SEARCH_SPACE)
         else:
             self.search_space = search_space
@@ -673,9 +682,7 @@ class OptimizationFunction(Function_Base):
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
 
             # Compute new value based on new sample
-            print("\nSTART: Run simulation [", new_sample, "]")
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
-            print("STOP: Run simulation\n")
             self._report_value(new_value)
 
             iteration += 1
@@ -1151,7 +1158,7 @@ class GridSearch(OptimizationFunction):
         # # MODIFIED 12/3/18 OLD:
         # variable = Param([[0], [0]], read_only=True)
         # MODIFIED 12/3/18 NEW: [JDC]
-        variable = Param([SampleIterator([0]),SampleIterator([0])], read_only=True)
+        # variable = Param([SampleIterator([0]),SampleIterator([0])], read_only=True)
         # MODIFIED 12/3/18 END
         # MODIFIED 12/4/18 NEW: [JDC]
         grid = Param(None)
@@ -1168,7 +1175,6 @@ class GridSearch(OptimizationFunction):
     def __init__(self,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
-                 # search_space:tc.optional(tc.any(list, np.ndarray))=None,
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
                  save_values:tc.optional(bool)=False,
@@ -1189,8 +1195,8 @@ class GridSearch(OptimizationFunction):
         super().__init__(default_variable=default_variable,
                          objective_function=objective_function,
                          search_function=search_function,
-                         search_space=search_space,
                          search_termination_function=search_termination_function,
+                         search_space=search_space,
                          save_samples=True,
                          save_values=True,
                          params=params,
@@ -1205,7 +1211,9 @@ class GridSearch(OptimizationFunction):
         # for signal in self.search_space:
         #     self.num_iterations *= signal.num
         # self.grid = itertools.product(*[s for s in self.search_space])
-        self.num_iterations = np.product([s.count for s in self.search_space])
+        # KAM HACK 12/16/18
+        self.num_iterations = np.product([s.num_steps for s in args[0]['search_space']])
+
         # self.reinitialize_grid()
 
     def reset_grid(self):
@@ -1345,7 +1353,7 @@ class GridSearch(OptimizationFunction):
                 params=params,
                 context=context
             )
-            print("all values = ", all_values)
+
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:
@@ -1532,33 +1540,33 @@ class GaussianProcess(OptimizationFunction):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
-        if SEARCH_SPACE in request_set:
-            search_space = request_set[SEARCH_SPACE]
-            # search_space must be specified
-            if search_space is None:
-                raise OptimizationFunctionError("The {} arg must be specified for a {}".
-                                                format(repr(SEARCH_SPACE), self.__class__.__name__))
-            # must be a list or array
-            if not isinstance(search_space, (list, np.ndarray)):
-                raise OptimizationFunctionError("The specification for the {} arg of {} must be a list or array".
-                                                format(repr(SEARCH_SPACE), self.__class__.__name__))
-            # must have same number of items as variable
-            if len(search_space) != len(self.instance_defaults.variable):
-                raise OptimizationFunctionError("The number of items in {} for {} ([]) must equal that of its {} ({})".
-                                                format(repr(SEARCH_SPACE), self.__class__.__name__, len(search_space),
-                                                       repr(VARIABLE), len(self.instance_defaults.variable)))
-            # every item must be a tuple with two elements, both of which are scalars, and first must be <= second
-            for i in search_space:
-                if not isinstance(i, tuple) or len(i) != 2:
-                    raise OptimizationFunctionError("Item specified for {} of {} ({}) is not a tuple with two items".
-                                                    format(repr(SEARCH_SPACE), self.__class__.__name__, i))
-                if not all([np.isscalar(j) for j in i]):
-                    raise OptimizationFunctionError("Both elements of item specified for {} of {} ({}) must be scalars".
-                                                    format(repr(SEARCH_SPACE), self.__class__.__name__, i))
-                if not i[0] < i[1]:
-                    raise OptimizationFunctionError("First element of item in {} specified for {} ({}) "
-                                                    "must be less than or equal to its second element".
-                                                    format(repr(SEARCH_SPACE), self.__class__.__name__, i))
+        # if SEARCH_SPACE in request_set:
+        #     search_space = request_set[SEARCH_SPACE]
+        #     # search_space must be specified
+        #     if search_space is None:
+        #         raise OptimizationFunctionError("The {} arg must be specified for a {}".
+        #                                         format(repr(SEARCH_SPACE), self.__class__.__name__))
+        #     # must be a list or array
+        #     if not isinstance(search_space, (list, np.ndarray)):
+        #         raise OptimizationFunctionError("The specification for the {} arg of {} must be a list or array".
+        #                                         format(repr(SEARCH_SPACE), self.__class__.__name__))
+        #     # must have same number of items as variable
+        #     if len(search_space) != len(self.instance_defaults.variable):
+        #         raise OptimizationFunctionError("The number of items in {} for {} ([]) must equal that of its {} ({})".
+        #                                         format(repr(SEARCH_SPACE), self.__class__.__name__, len(search_space),
+        #                                                repr(VARIABLE), len(self.instance_defaults.variable)))
+        #     # every item must be a tuple with two elements, both of which are scalars, and first must be <= second
+        #     for i in search_space:
+        #         if not isinstance(i, tuple) or len(i) != 2:
+        #             raise OptimizationFunctionError("Item specified for {} of {} ({}) is not a tuple with two items".
+        #                                             format(repr(SEARCH_SPACE), self.__class__.__name__, i))
+        #         if not all([np.isscalar(j) for j in i]):
+        #             raise OptimizationFunctionError("Both elements of item specified for {} of {} ({}) must be scalars".
+        #                                             format(repr(SEARCH_SPACE), self.__class__.__name__, i))
+        #         if not i[0] < i[1]:
+        #             raise OptimizationFunctionError("First element of item in {} specified for {} ({}) "
+        #                                             "must be less than or equal to its second element".
+        #                                             format(repr(SEARCH_SPACE), self.__class__.__name__, i))
 
     def function(self,
                  variable=None,

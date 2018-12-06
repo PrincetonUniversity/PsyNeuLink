@@ -3148,7 +3148,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.model_based_optimizer:
                 self.model_based_optimizer.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                 control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                print("apply final control allocation")
                 self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -4188,16 +4187,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
             combined_costs = self.model_based_optimizer.combine_costs(all_costs)
             # KAM Modified 12/5/18 to use OCM's compute_net_outcome fn rather than hard-coded difference
-            print("outcome = ", outcome)
-            print("combined_costs = ", combined_costs)
             net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, combined_costs)
-            print(net_outcome, " [net outcome]")
-            # net_outcome = outcome - self.model_based_optimizer.combine_costs(
-            #     [
-            #         c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
-            #         for c in self.model_based_optimizer.control_signals
-            #     ]
-            # )
             net_control_allocation_outcomes.append(net_outcome)
 
         return net_control_allocation_outcomes

@@ -2,7 +2,7 @@ import functools
 import numpy as np
 import pytest
 import psyneulink as pnl
-from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec
+from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec, OptimizationFunctionError
 class TestControlMechanisms:
 
     def test_lvoc(self):
@@ -14,7 +14,8 @@ class TestControlMechanisms:
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
-                                                objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
+                                                objective_mechanism=pnl.ObjectiveMechanism(
+                                                    monitored_output_states=[m1, m2]),
                                                 terminal_objective_mechanism=True,
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
@@ -34,7 +35,8 @@ class TestControlMechanisms:
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
-                                                objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
+                                                objective_mechanism=pnl.ObjectiveMechanism(
+                                                    monitored_output_states=[m1, m2]),
                                                 terminal_objective_mechanism=True,
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
@@ -56,7 +58,8 @@ class TestControlMechanisms:
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                                 feature_function=pnl.LinearCombination(offset=10.0),
-                                                objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
+                                                objective_mechanism=pnl.ObjectiveMechanism(
+                                                    monitored_output_states=[m1, m2]),
                                                 terminal_objective_mechanism=True,
                                                 function=pnl.GradientOptimization(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
@@ -382,19 +385,18 @@ class TestModelBasedOptimizationControlMechanisms:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(
-                                                        features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]},
-                                                        feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-                                                        agent_rep=comp,
-                                                        function=pnl.GridSearch(),
-                                                        control_signals=[("drift_rate", Decision),
-                                                                         ("threshold", Decision)],
-                                                        objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
-                                                                                                                        Decision.PROBABILITY_UPPER_THRESHOLD,
-                                                                                                                        (Decision.RESPONSE_TIME, -1, 1)]
-                                                                                                   ),
-
-                                                        )
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp, features={
+            pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]}, feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                      monitor_for_control=[Reward,
+                                                                                                           Decision.PROBABILITY_UPPER_THRESHOLD,
+                                                                                                           (
+                                                                                                           Decision.RESPONSE_TIME,
+                                                                                                           -1, 1)]
+                                                                                      ), function=pnl.GridSearch(),
+                                                                                  control_signals=[
+                                                                                      ("drift_rate", Decision),
+                                                                                      ("threshold", Decision)])
                                        )
 
         comp.enable_model_based_optimizer = True
@@ -408,6 +410,7 @@ class TestModelBasedOptimizationControlMechanisms:
         }
 
         # comp.show_graph()
+        print(" - - - - RUN - - - - - ")
         comp.run(
             inputs=stim_list_dict,
         )
@@ -539,18 +542,16 @@ class TestModelBasedOptimizationControlMechanisms:
             comp.add_linear_processing_pathway(path)
         comp.add_c_node(Reward, required_roles=pnl.CNodeRole.TERMINAL)
 
-        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(function=pnl.GridSearch(),
-                                                                                  features={pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Flanker_Stim, Reward]},
-                                                                                  feature_function=
-                                                                                  pnl.AdaptiveIntegrator(rate=1.0),
-                                                                                  search_space=signalSearchRange,
-                                                                                  agent_rep=comp,
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp, features={
+            pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Flanker_Stim, Reward]}, feature_function=pnl.AdaptiveIntegrator(
+            rate=1.0), objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
+                                                                                       (
+                                                                                       Decision.PROBABILITY_UPPER_THRESHOLD,
+                                                                                       1, -1)]),
+                                                                                  function=pnl.GridSearch(),
                                                                                   control_signals=[
                                                                                       ("slope", Target_Rep),
-                                                                                      ("slope", Flanker_Rep)],
-                                                                                  # search_space=signalSearchRange,
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
-                                                                                                                                                  (Decision.PROBABILITY_UPPER_THRESHOLD, 1, -1)])))
+                                                                                      ("slope", Flanker_Rep)]))
         comp.enable_model_based_optimizer = True
         # configure EVC components
         comp.model_based_optimizer.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
@@ -667,14 +668,71 @@ class TestModelBasedOptimizationControlMechanisms:
 
 class TestSampleIterator:
 
-    def test_int(self):
+    def test_int_step(self):
         spec = SampleSpec(step=2,
                           begin=0,
                           end=10)
-        sample_iterator = SampleIterator(sample_spec=spec)
+        sample_iterator = SampleIterator(specification=spec)
 
-        print(next(sample_iterator))
-        print(next(sample_iterator))
-        print(next(sample_iterator))
-        print(next(sample_iterator))
-        print(next(sample_iterator))
+        expected = [0, 2, 4, 6, 8, 10]
+
+        for i in range(6):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator) is None
+
+        sample_iterator.reset()
+
+        for i in range(6):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator) is None
+
+    def test_int_count(self):
+        spec = SampleSpec(count=6,
+                          begin=0,
+                          end=10)
+        sample_iterator = SampleIterator(specification=spec)
+
+        expected = [0, 2, 4, 6, 8, 10]
+
+        for i in range(6):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator) is None
+
+        sample_iterator.reset()
+
+        for i in range(6):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator) is None
+
+    def test_neither_count_nor_step(self):
+        with pytest.raises(OptimizationFunctionError) as error_text:
+            SampleSpec(begin=0,
+                       end=10)
+        assert "Must specify one of 'step', 'count' or 'generator'" in str(error_text.value)
+
+    def test_float_step(self):
+        # Need to decide whether end should be exclusive
+        spec = SampleSpec(step=2.79,
+                          begin=0.65,
+                          end=10.25)
+        sample_iterator = SampleIterator(specification=spec)
+
+        expected = [0.65, 3.44, 6.23, 9.02, 11.81]
+
+        for i in range(5):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator) is None
+
+        sample_iterator.reset()
+
+        for i in range(5):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator) is None
+
+

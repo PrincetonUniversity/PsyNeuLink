@@ -526,14 +526,9 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
                                                   params=params)
 
-        super().__init__(objective_mechanism=objective_mechanism,
-                         learning_function=learning_function,
-                         function=function,
-                         control_signals=control_signals,
-                         modulation=modulation,
-                         params=params,
-                         name=name,
-                         prefs=prefs)
+        super().__init__(objective_mechanism=objective_mechanism, function=function, control_signals=control_signals,
+                         modulation=modulation, params=params, name=name, prefs=prefs,
+                         learning_function=learning_function)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Insure that specification of ObjectiveMechanism has projections to it'''

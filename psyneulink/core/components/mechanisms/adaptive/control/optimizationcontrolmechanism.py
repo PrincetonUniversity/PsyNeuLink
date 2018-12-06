@@ -648,7 +648,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         features = None
         num_estimates = 1
-        search_space = None
+        # search_space = None
         control_allocation_search_space = None
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -658,23 +658,16 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 features:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
-                 feature_function:tc.optional(tc.any(is_function_type))=None,
-                 # monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 origin_objective_mechanism=False,
-                 terminal_objective_mechanism=False,
-                 function:tc.optional(tc.any(is_function_type))=None,
-                 num_estimates:int=1,
-                 search_function:tc.optional(tc.any(is_function_type))=None,
-                 search_termination_function:tc.optional(tc.any(is_function_type))=None,
-                 search_space=None,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
-                 params=None,
-                 name=None,
-                 prefs:is_pref_set=None,
-                 **kwargs):
+                 features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
+                 feature_function: tc.optional(tc.any(is_function_type)) = None,
+                 objective_mechanism: tc.optional(tc.any(ObjectiveMechanism, list)) = None,
+                 origin_objective_mechanism=False, terminal_objective_mechanism=False,
+                 function: tc.optional(tc.any(is_function_type)) = None, num_estimates: int = 1,
+                 search_function: tc.optional(tc.any(is_function_type)) = None,
+                 search_termination_function: tc.optional(tc.any(is_function_type)) = None,
+                 control_signals: tc.optional(tc.any(is_iterable, ParameterState, ControlSignal)) = None,
+                 modulation: tc.optional(_is_modulation_param) = ModulationParam.MULTIPLICATIVE, params=None, name=None,
+                 prefs: is_pref_set = None, **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
 
         if kwargs:
@@ -684,7 +677,6 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep = agent_rep
         self.search_function = search_function
         self.search_termination_function = search_termination_function
-        self.search_space = search_space
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=features,
@@ -779,7 +771,6 @@ class OptimizationControlMechanism(ControlMechanism):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
 
         super()._instantiate_attributes_after_function(context=context)
-
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function_object.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
                                            OBJECTIVE_FUNCTION: self.evaluation_function,
@@ -792,7 +783,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # self.search_function = self.function_object.search_function
         # self.search_termination_function = self.function_object.search_termination_function
-        self.search_space = self.function_object.search_space
+        # self.search_space = self.function_object.search_space
 
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()

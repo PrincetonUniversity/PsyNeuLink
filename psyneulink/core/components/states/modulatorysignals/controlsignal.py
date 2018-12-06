@@ -1023,7 +1023,6 @@ class ControlSignal(ModulatorySignal):
         intensity_cost = adjustment_cost = duration_cost = 0
 
         if ControlSignalCosts.INTENSITY & cost_options:
-            print("intensity = ", intensity)
             intensity_cost = self.intensity_cost_function(intensity)
             self.parameters.intensity_cost.set(intensity_cost, execution_id)
 
@@ -1034,16 +1033,7 @@ class ControlSignal(ModulatorySignal):
         if ControlSignalCosts.DURATION & cost_options:
             duration_cost = self.duration_cost_function(self.parameters.cost.get(execution_id))
             self.parameters.duration_cost.set(duration_cost, execution_id)
-        # print("context = ", self.context.flags_string)
-        # print("intensity cost: ", intensity_cost)
-        # print("adjustment cost: ", adjustment_cost)
-        # print("duration cost: ", duration_cost)
-        # print("combine costs: ", self.combine_costs_function([
-        #         intensity_cost,
-        #         adjustment_cost,
-        #         duration_cost
-        #     ]))
-        # print()
+
         return max(
             0.0,
             self.combine_costs_function([
