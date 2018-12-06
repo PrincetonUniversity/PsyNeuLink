@@ -244,7 +244,7 @@ class SampleIterator(Iterator):
             last item of list or SampleSpec.end
 
         step : scalar
-            length of list or SampleSpec.count.
+            increment for each item of list or SampleSpec.step
 
         count : int
             length of list or SampleSpec.count.
@@ -259,6 +259,7 @@ class SampleIterator(Iterator):
         if isinstance(specification, list):
             self.begin = specification[0]
             self.end = specification[-1]
+            self.step = None
             self.count = len(specification)
             self._iterator = np.nditer(np.array(specification))
 
@@ -272,7 +273,7 @@ class SampleIterator(Iterator):
                     while result < end:
                         yield result
                         result += step
-                self._iterator = sample_gen(self.begin, self.end, self.step_size)
+                self._iterator = sample_gen(self.begin, self.end, self.step)
 
             elif is_iter(specification.generator):
                 self._iterator = specification.generator
@@ -310,6 +311,9 @@ class SampleIterator(Iterator):
 
     def __call__(self):
         return list(self)
+
+    def reset(self):
+        self._iterator.reset()
 
 
 class OptimizationFunction(Function_Base):
@@ -1193,15 +1197,14 @@ class GridSearch(OptimizationFunction):
         # self.num_iterations = 1
         # for signal in self.search_space:
         #     self.num_iterations *= signal.num
-        self.grid = itertools.product(*[s for s in self.search_space])
+        # self.grid = itertools.product(*[s for s in self.search_space])
         self.num_iterations = np.product([s.count for s in self.search_space])
         # self.reinitialize_grid()
 
     def reset_grid(self):
         for s in self.search_space:
-            s._iterator.reset()
+            s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
-
 
     def function(self,
                  variable=None,
@@ -1229,6 +1232,7 @@ class GridSearch(OptimizationFunction):
             in the order they were evaluated; otherwise it is empty.
         '''
 
+        self.reset_grid()
         return_all_samples = return_all_values = []
 
         if MPI_IMPLEMENTATION:
@@ -1328,7 +1332,6 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            self.reset_grid()
             last_sample, last_value, all_samples, all_values = super().function(
                 variable=variable,
                 execution_id=execution_id,
