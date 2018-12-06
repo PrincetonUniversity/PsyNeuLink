@@ -109,44 +109,44 @@ are represented by the DDM Mechanism's two default `output_states <DDM.output_st
 automatically assigned, depending on the `function <DDM.function>` that has been assigned to the DDM, as shown in the
 table below:
 
-+------------------------------------+--------------------------------------------------------------------------------+
-|                                    |                     **Function**                                               |
-|                                    |                      *(type)*                                                  |
-+                                    +-------------------------+-------------------------+----------------------------+
-|                                    | `DriftDiffusionAnalytical`            | `NavarroAndFuss`        | `DriftDiffusionIntegrator` |
-|                                    |   (`analytic            |   (`analytic            |   (`path integration)      |
-| **OutputStates:**                  |   <DDM_Analytic_Mode>`) |   <DDM_Analytic_Mode>`) |   <DDM_Integration_Mode>`) |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `DECISION_VARIABLE                 |                         |                         |                            |
-| <DDM_DECISION_VARIABLE>`           |       X                 |        X                |             X              |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `RESPONSE_TIME                     |                         |                         |                            |
-| <DDM_RESPONSE_TIME>`               |       X                 |        X                |             X              |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `PROBABILITY_UPPER_THRESHOLD       |                         |                         |                            |
-| <DDM_PROBABILITY_UPPER_THRESHOLD>` |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `PROBABILITY_LOWER_THRESHOLD       |                         |                         |                            |
-| <DDM_PROBABILITY_LOWER_THRESHOLD>` |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `RT_CORRECT_MEAN                   |                         |                         |                            |
-| <DDM_RT_CORRECT_MEAN>`             |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `RT_CORRECT_VARIANCE               |                         |                         |                            |
-| <DDM_RT_CORRECT_VARIANCE>`         |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `RT_CORRECT_SKEW                   |                         |                         |                            |
-| <DDM_RT_CORRECT_SKEW>`             |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `RT_INCORRECT_MEAN                 |                         |                         |                            |
-| <DDM_RT_INCORRECT_MEAN>`           |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `RT_INCORRECT_VARIANCE             |                         |                         |                            |
-| <DDM_RT_INCORRECT_VARIANCE>`       |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
-| `RT_INCORRECT_SKEW                 |                         |                         |                            |
-| <DDM_RT_INCORRECT_SKEW>`           |       X                 |        X                |                            |
-+------------------------------------+-------------------------+-------------------------+----------------------------+
++------------------------------------+---------------------------------------------------------+
+|                                    |                     **Function**                        |
+|                                    |                      *(type)*                           |
++                                    +----------------------------+----------------------------+
+|                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegrator` |
+|                                    |   (`analytic               |   (`path integration)      |
+| **OutputStates:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
++------------------------------------+----------------------------+----------------------------+
+| `DECISION_VARIABLE                 |                            |                            |
+| <DDM_DECISION_VARIABLE>`           |       X                    |          X                 |
++------------------------------------+----------------------------+----------------------------+
+| `RESPONSE_TIME                     |                            |                            |
+| <DDM_RESPONSE_TIME>`               |       X                    |          X                 |
++------------------------------------+----------------------------+----------------------------+
+| `PROBABILITY_UPPER_THRESHOLD       |                            |                            |
+| <DDM_PROBABILITY_UPPER_THRESHOLD>` |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
+| `PROBABILITY_LOWER_THRESHOLD       |                            |                            |
+| <DDM_PROBABILITY_LOWER_THRESHOLD>` |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
+| `RT_CORRECT_MEAN                   |                            |                            |
+| <DDM_RT_CORRECT_MEAN>`             |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
+| `RT_CORRECT_VARIANCE               |                            |                            |
+| <DDM_RT_CORRECT_VARIANCE>`         |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
+| `RT_CORRECT_SKEW                   |                            |                            |
+| <DDM_RT_CORRECT_SKEW>`             |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
+| `RT_INCORRECT_MEAN                 |                            |                            |
+| <DDM_RT_INCORRECT_MEAN>`           |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
+| `RT_INCORRECT_VARIANCE             |                            |                            |
+| <DDM_RT_INCORRECT_VARIANCE>`       |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
+| `RT_INCORRECT_SKEW                 |                            |                            |
+| <DDM_RT_INCORRECT_SKEW>`           |       X                    |                            |
++------------------------------------+----------------------------+----------------------------+
 
 
 .. _DDM_Custom_OutputStates:
@@ -169,29 +169,24 @@ any Mechanism, `customized OutputStates <OutputState_Customization>` can also be
 Analytic Solutions
 ^^^^^^^^^^^^^^^^^^
 
-The two Drift Diffusion Model `Functions <Function>` that calculate analytic solutions are `DriftDiffusionAnalytical <DriftDiffusionAnalytical>`
-and `NavarroAndFuss <NavarroAndFuss>`. `NavarroAndFuss <NavarroAndFuss>` is deprecated and requires MATLAB to be
-installed on the system with Python bindings. `DriftDiffusionAnalytical <DriftDiffusionAnalytical>` contains all its functionality.
-When one of these functions is specified as the DDM Mechanism's
+The Drift Diffusion Model `Functions <Function>` that calculate analytic solutions
+[Bogacz et al (2006), Srivastava et al. (2016)] is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>`
 `function <DDM.function>`, the mechanism generates a single estimate of the outcome for the decision process (see
-`DDM_Execution` for details).
-
-In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, both Functions
-return an accuracy value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>`
-OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
-OutputState;  the `NavarroAndFuss <NavarroAndFuss>` Function also returns moments (mean, variance, and skew) for
-conditional (correct\positive or incorrect\negative) response time distributions. These are; the mean RT for correct
-responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
+`DDM_Execution` for details). In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
+`RESPONSE_TIME <DDM_RESPONSE_TIME>`, the Function returns an accuracy value (represented in the
+`PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
+OutputState, and moments (mean, variance, and skew) for conditional (correct\positive or incorrect\negative) response time distributions.
+These are; the mean RT for correct responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
 (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses (`RT_CORRECT_SKEW <DDM_RT_CORRECT_SKEW>`,
 the mean RT for incorrect responses  (`RT_INCORRECT_MEAN <DDM_RT_INCORRECT_MEAN>`, the RT variance for incorrect
 responses (`RT_INCORRECT_VARIANCE <DDM_RT_INCORRECT_VARIANCE>`, the RT skew for incorrect responses
 (`RT_INCORRECT_SKEW <DDM_RT_INCORRECT_SKEW>`.
 
-Examples for each, that illustrate all of their parameters, are shown below:
+An example that illustrate all of the parameters is shown below:
 
 `DriftDiffusionAnalytical <DriftDiffusionAnalytical>` Function::
 
-    >>> my_DDM_BogaczEtAl = pnl.DDM(
+    >>> my_DDM_DriftDiffusionAnalytical = pnl.DDM(
     ...     function=pnl.DriftDiffusionAnalytical(
     ...         drift_rate=0.08928,
     ...         starting_point=0.5,
@@ -199,21 +194,8 @@ Examples for each, that illustrate all of their parameters, are shown below:
     ...         noise=0.5,
     ...         t0=0.15
     ...     ),
-    ...     name='my_DDM_BogaczEtAl'
+    ...     name='my_DDM_DriftDiffusionAnalytical'
     ... )
-
-`NavarroAndFuss <NavarroAndFuss>` Function (requires MATLAB engine)::
-
-    >>> my_DDM_NavarroAndFuss = pnl.DDM(
-    ...     function=pnl.NavarroAndFuss(
-    ...         drift_rate=0.08928,
-    ...         starting_point=0.5,
-    ...         threshold=0.2645,
-    ...         noise=0.5,
-    ...         t0=0.15
-    ...     ),
-    ...     name='my_DDM_NavarroAndFuss'
-    ... )                                   #doctest: +SKIP
 
 .. _DDM_Integration_Mode:
 
@@ -340,6 +322,21 @@ time the Mechanism is executed. The returned values accumulate on every executio
 The analytic functions return a final positon and time of the model, along with other statistics, where as the path
 integration function returns intermediate position and time values. The two types of functions can be thought of as
 happening on different time scales: trial (analytic) and time step (path integration).
+
+References
+----------
+
+*   Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006).
+    The physics of optimal decision making: A formal analysis of models of performance in two-alternative forced-choice tasks.
+    Psychological Review, 113(4), 700-765.
+    http://dx.doi.org/10.1037/0033-295X.113.4.700
+
+*   Srivastava, V., Holmes, P., Simen., P. (2016).
+    Explicit moments of decision times for single- and double-threshold drift-diffusion processes,
+    Journal of Mathematical Psychology, 75, 96-109,
+    ISSN 0022-2496,
+    https://doi.org/10.1016/j.jmp.2016.03.005.
+    (http://www.sciencedirect.com/science/article/pii/S0022249616000341)
 
 .. _DDM_Class_Reference:
 
@@ -624,7 +621,7 @@ class DDM(ProcessingMechanism_Base):
             DDM is a subclass Type of the Mechanism Category of the Component class
             It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
                 two alternative forced choice (2AFC) decision making:
-                - analytical solution (Bogacz et al. (2006), Shenhav et al., Srivastava et al. (2016))
+                - analytical solution [Bogacz et al. (2006), Srivastava et al. (2016)]
                      - stochastically estimated decion outcome (convert mean ER into value between 1 and -1)
                      - mean ER
                      - mean RT
