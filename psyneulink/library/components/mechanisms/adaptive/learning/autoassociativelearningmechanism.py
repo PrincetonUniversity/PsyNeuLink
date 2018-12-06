@@ -83,13 +83,15 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, parameter_keywords
-from psyneulink.core.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -414,7 +416,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         super()._update_output_states(execution_id, runtime_params, context)
 
-        from psyneulink import Process
+        from psyneulink.core.components.process import Process
         if self.parameters.learning_enabled.get(execution_id) and self.parameters.context.get(execution_id).composition and not isinstance(self.parameters.context.get(execution_id).composition, Process):
             learned_projection = self.activity_source.recurrent_projection
             learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)

@@ -389,13 +389,14 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, Param
-from psyneulink.core.components.functions.function import LinearMatrix
+from psyneulink.core.components.component import Component
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -985,11 +986,11 @@ class Projection_Base(Projection):
     def _get_context_struct_type(self, ctx):
         return ctx.get_context_struct_type(self.function_object)
 
-    def get_param_initializer(self, execution_id=None):
-        return self.function_object.get_param_initializer(execution_id=execution_id)
+    def _get_param_initializer(self, execution_id):
+        return self.function_object._get_param_initializer(execution_id)
 
-    def get_context_initializer(self, execution_id=None):
-        return self.function_object.get_context_initializer(execution_id=execution_id)
+    def _get_context_initializer(self, execution_id):
+        return self.function_object._get_context_initializer(execution_id)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
@@ -1059,7 +1060,6 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
     if include_matrix_spec:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
             return True
-        from psyneulink.core.components.functions.function import get_matrix
         if get_matrix(spec) is not None:
             return True
     if isinstance(spec, tuple) and len(spec) == 2:
@@ -1827,7 +1827,7 @@ def _validate_connection_request(
 
 def _get_projection_value_shape(sender, matrix):
     """Return shape of a Projection's value given its sender and matrix"""
-    from psyneulink.core.components.functions.function import get_matrix
+    from psyneulink.core.components.functions.transferfunctions import get_matrix
     matrix = get_matrix(matrix)
     return np.zeros(matrix.shape[sender.value.ndim :])
 

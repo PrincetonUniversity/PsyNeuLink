@@ -94,7 +94,7 @@ class ConditionGenerator:
 
     def get_private_condition_initializer(self, composition):
         return ((0, 0, 0),
-                tuple([(0,(-1, -1, -1)) for _ in composition.c_nodes]))
+                tuple((0,(-1, -1, -1)) for _ in composition.c_nodes))
 
     def get_condition_struct_type(self, composition = None):
         composition = self.composition if composition is None else composition

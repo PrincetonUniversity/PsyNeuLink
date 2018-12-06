@@ -1,6 +1,9 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.combinationfunctions
+import psyneulink.core.components.functions.optimizationfunctions
+import psyneulink.core.components.functions.transferfunctions
 
 
 class TestControlMechanisms:
@@ -15,7 +18,7 @@ class TestControlMechanisms:
         lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
-                                        function=pnl.GridSearch(max_iterations=1),
+                                        function=psyneulink.core.components.functions.optimizationfunctions.GridSearch(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -34,7 +37,7 @@ class TestControlMechanisms:
         lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
-                                        function=pnl.GridSearch(max_iterations=1),
+                                        function=psyneulink.core.components.functions.optimizationfunctions.GridSearch(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -51,10 +54,12 @@ class TestControlMechanisms:
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
         lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
-                                        feature_function=pnl.LinearCombination(offset=10.0),
+                                        feature_function=psyneulink.core.components.functions.combinationfunctions
+                                        .LinearCombination(offset=10.0),
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
-                                        function=pnl.GradientOptimization(max_iterations=1),
+                                        function=psyneulink.core.components.functions.optimizationfunctions
+                                        .GradientOptimization(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -72,8 +77,8 @@ class TestControlMechanisms:
         starting_value_LC = 2.0
         user_specified_gain = 1.0
 
-        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='A')
-        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='B')
+        A = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
         # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
 
         LC = pnl.LCControlMechanism(
@@ -81,7 +86,7 @@ class TestControlMechanisms:
             base_level_gain=G,
             scaling_factor_gain=k,
             objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 monitored_output_states=[B],
                 name='LC ObjectiveMechanism'
             )

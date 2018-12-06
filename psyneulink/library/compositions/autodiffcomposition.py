@@ -103,9 +103,8 @@ Class Reference
 
 """
 
-from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import InterfaceStateMap
-from psyneulink.core.components.functions.function import Linear, Logistic, ReLU
+from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.states.inputstate import InputState
@@ -115,6 +114,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.composition import RunError
 from psyneulink.core.globals.keywords import OWNER_VALUE, SOFT_CLAMP
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.scheduling.scheduler import Scheduler
 
 import numpy as np
@@ -499,7 +499,7 @@ class AutodiffComposition(Composition):
                 autodiff_epochs = inputs["epochs"]
 
             output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id)
-            
+
             return output
 
         # learning not enabled. execute as a normal composition

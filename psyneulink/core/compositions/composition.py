@@ -57,8 +57,8 @@ from collections import Iterable, OrderedDict
 from llvmlite import ir
 from psyneulink.core import llvm as pnlvm
 
-from psyneulink.core.components.component import ComponentsMeta, Defaults, Param, Parameters, function_type
-from psyneulink.core.components.functions.function import InterfaceStateMap
+from psyneulink.core.components.component import ComponentsMeta, function_type
+from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -69,6 +69,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, NO_CLAMP, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
+from psyneulink.core.globals.parameters import Defaults, Param, Parameters
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import CNodeRole, call_with_pruned_args
 from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
@@ -2479,12 +2480,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute:
             try:
                 self.__bin_initialize(execution_id)
-                if bin_execute == 'LLVMExec':
+                if str(bin_execute).endswith('Exec'):
                     __execution = self._compilation_data.execution.get(execution_id)
-                    __execution.execute(inputs)
+                    if bin_execute.startswith('LLVM'):
+                        __execution.execute(inputs)
+                    elif bin_execute.startswith('PTX'):
+                        __execution.cuda_execute(inputs)
                     return __execution.extract_node_output(self.output_CIM)
 
-                mechanisms = [n for n in self.c_nodes + [self.input_CIM, self.output_CIM] if isinstance(n, Mechanism)]
+                mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
                     self._get_node_wrapper(m)
@@ -2559,7 +2563,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for param in runtime_params[node]:
                             if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
                                                                            # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                                                                                execution_id=execution_id):
+                                                                                execution_context=execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -2594,7 +2598,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if bin_execute:
                         # Values of node with compiled wrappers are
                         # in binary data structure
-                        srcs = set([proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers])
+                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
                         for src_node in srcs:
                             assert src_node in self.c_nodes or src_node is self.input_CIM
                             data = self._compilation_data.execution.get(execution_id).extract_frozen_node_output(src_node)
@@ -2819,13 +2823,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
-        if bin_execute == 'LLVMRun':
+        if str(bin_execute).endswith('Run'):
             # initialize from base context but don't overwrite any values already set for this execution_id
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
             self.__bin_initialize(execution_id)
-            results += self._compilation_data.execution.get(execution_id).run(inputs, num_trials, num_inputs_sets)
+            EX = self._compilation_data.execution.get(execution_id)
+            if bin_execute.startswith('LLVM'):
+                results += EX.run(inputs, num_trials, num_inputs_sets)
+            elif bin_execute.startswith('PTX'):
+                results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
             full_results = self.parameters.results.get(execution_id)
             if full_results is None:
@@ -2844,7 +2852,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_before_trial, execution_context=execution_id)
 
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
-                                                                  execution_id=execution_id):
+                                                                  execution_context=execution_id):
                 break
 
         # PROCESSING ------------------------------------------------------------------------
@@ -2954,18 +2962,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         yield self.output_CIM
 
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = [ctx.get_param_struct_type(m) for m in self._all_nodes]
-        proj_param_type_list = [ctx.get_param_struct_type(p) for p in self.projections]
-        return ir.LiteralStructType([
+        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
+        return ir.LiteralStructType((
             ir.LiteralStructType(mech_param_type_list),
-            ir.LiteralStructType(proj_param_type_list)])
+            ir.LiteralStructType(proj_param_type_list)))
 
     def _get_context_struct_type(self, ctx):
-        mech_ctx_type_list = [ctx.get_context_struct_type(m) for m in self._all_nodes]
-        proj_ctx_type_list = [ctx.get_context_struct_type(p) for p in self.projections]
-        return ir.LiteralStructType([
+        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
+        proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
+        return ir.LiteralStructType((
             ir.LiteralStructType(mech_ctx_type_list),
-            ir.LiteralStructType(proj_ctx_type_list)])
+            ir.LiteralStructType(proj_ctx_type_list)))
 
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.input_CIM)
@@ -2974,7 +2982,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
+        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
 
         data = [ir.LiteralStructType(output_type_list)]
         for node in self.c_nodes:
@@ -2982,18 +2990,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             data.append(nested_data)
         return ir.LiteralStructType(data)
 
-    def get_context_initializer(self, execution_id=None):
-        mech_contexts = [tuple(m.get_context_initializer(execution_id=execution_id)) for m in self._all_nodes]
-        proj_contexts = [tuple(p.get_context_initializer(execution_id=execution_id)) for p in self.projections]
+    def _get_context_initializer(self, execution_id=None):
+        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id)) for m in self._all_nodes)
+        proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-    def get_param_initializer(self, execution_id=None):
-        mech_params = [tuple(m.get_param_initializer(execution_id=execution_id)) for m in self._all_nodes]
-        proj_params = [tuple(p.get_param_initializer(execution_id=execution_id)) for p in self.projections]
+    def _get_param_initializer(self, execution_id):
+        mech_params = (tuple(m._get_param_initializer(execution_id)) for m in self._all_nodes)
+        proj_params = (tuple(p._get_param_initializer(execution_id)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self, execution_id=None):
-        output = [[os.parameters.value.get(execution_id) for os in m.output_states] for m in self._all_nodes]
+        output = ((os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes)
         data = [output]
         for node in self.c_nodes:
             nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node, '_get_data_initializer') else []
@@ -3050,7 +3058,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def __bin_initialize(self, execution_id=None):
         if self._compilation_data.execution.get(execution_id) is None:
-            self._compilation_data.execution.set(pnlvm.CompExecution(self, execution_id), execution_id)
+            self._compilation_data.execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
         is_mech = isinstance(node, Mechanism)

@@ -894,7 +894,7 @@ class ParameterState(State_Base):
                 assert False
 
             if name is not None:
-                f_mod_param_ptr, builder = self.function_object.get_param_ptr(ctx, builder, f_params, name)
+                f_mod_param_ptr, builder = ctx.get_param_ptr(self.function_object, builder, f_params, name)
                 builder.store(f_mod, f_mod_param_ptr)
 
 
@@ -940,6 +940,10 @@ def _instantiate_parameter_states(owner, function=None, context=None):
         # Skip any parameter that has been specifically excluded
         if param_name in owner.exclude_from_parameter_states:
             continue
+        if hasattr(owner.parameters, param_name) and not getattr(owner.parameters, param_name).modulable:
+            # skip non modulable parameters
+            continue
+
         _instantiate_parameter_state(owner, param_name, param_value, context=context, function=function)
 
 
@@ -1041,6 +1045,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
     #    - they have the same name as another parameter of the component (raise exception for this)
     if param_name is FUNCTION_PARAMS:
         for function_param_name in param_value.keys():
+            if hasattr(function.parameters, function_param_name) and not getattr(function.parameters, function_param_name).modulable:
+                # skip non modulable function parameters
+                continue
+
             function_param_value = param_value[function_param_name]
 
             # IMPLEMENTATION NOTE:

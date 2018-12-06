@@ -1,26 +1,27 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
-    function=pnl.Logistic,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic,
     params={pnl.INPUT_LABELS_DICT:{'red': [-1, 30]}},
     default_variable=np.zeros((2,)))
 
 Hidden_Layer_1 = pnl.TransferMechanism(
     name='Hidden Layer_1',
-    function=pnl.Logistic(),
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
     default_variable=np.zeros((5,)))
 
 Hidden_Layer_2 = pnl.TransferMechanism(
     name='Hidden Layer_2',
-    function=pnl.Logistic(),
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
     default_variable=[0, 0, 0, 0])
 
 Output_Layer = pnl.TransferMechanism(
     name='Output Layer',
-    function=pnl.Logistic,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic,
     default_variable=[0, 0, 0])
 
 Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)

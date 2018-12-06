@@ -1,7 +1,14 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
+import psyneulink.core.llvm as pnlvm
+
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist
+from psyneulink.core.components.functions.integratorfunctions import ConstantIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, get_matrix
+from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.components.process import Process
@@ -94,35 +101,60 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0]
         )
-        val = R.execute([10, 12, 0, -1], bin_execute=(mode=='LLVM'))
-        np.testing.assert_allclose(val, [[10.0, 12.0, 0, -1]])
-        val = R.execute([1, 2, 3, 0], bin_execute=(mode=='LLVM'))
-        np.testing.assert_allclose(val, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
-        benchmark(R.execute, [1, 2, 3, 0], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val1 = EX([10, 12, 0, -1])
+        val2 = EX([1, 2, 3, 0])
+        benchmark(EX, [1, 2, 3, 0])
+
+        np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
+        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
             size=4
         )
-        val = R.execute([10.0, 10.0, 10.0, 10.0], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
+
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
-        benchmark(R.execute, [1, 2, 3, 0], bin_execute=(mode=='LLVM'))
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_recurrent_mech_integrator(self, benchmark, mode):
         R = RecurrentTransferMechanism(size=2,
                                        function=Logistic(),
@@ -130,18 +162,25 @@ class TestRecurrentTransferMechanismInputs:
                                        integrator_mode=True,
                                        integration_rate=0.01,
                                        output_states = [RECURRENT_OUTPUT.RESULT])
-        val = R.execute([[1.0, 2.0]], bin_execute=(mode=='LLVM'))
-        assert np.allclose(val, [[0.50249998, 0.50499983]])
-        val = R.execute([[1.0, 2.0]], bin_execute=(mode=='LLVM'))
-        assert np.allclose(val, [[0.50497484, 0.50994869]])
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
 
+        val1 = EX([[1.0, 2.0]])
+        val2 = EX([[1.0, 2.0]])
         # execute 10 times
         for i in range(10):
-            val = R.execute([[1.0, 2.0]], bin_execute=(mode=='LLVM'))
+            val = EX([[1.0, 2.0]])
+        benchmark(EX, [[1.0, 2.0]])
 
+        assert np.allclose(val1, [[0.50249998, 0.50499983]])
+        assert np.allclose(val2, [[0.50497484, 0.50994869]])
         assert np.allclose(val, [[0.52837327, 0.55656439]])
-
-        benchmark(R.execute, [[1.0, 2.0]], bin_execute=(mode=='LLVM'))
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -159,15 +198,26 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_recurrent_mech_no_inputs(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R'
         )
         np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
-        val = R.execute([10], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val = EX([10])
+        benchmark(EX, [1])
         np.testing.assert_allclose(val, [[10.]])
-        benchmark(R.execute, [1], bin_execute=(mode=='LLVM'))
 
     def test_recurrent_mech_inputs_list_of_strings(self):
         with pytest.raises(UtilitiesError) as error_text:

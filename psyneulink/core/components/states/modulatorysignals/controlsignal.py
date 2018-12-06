@@ -305,11 +305,14 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, function_type, method_type
+from psyneulink.core.components.component import function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.core.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.integratorfunctions import IntegratorFunction, SimpleIntegrator
+from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
+from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
@@ -317,9 +320,10 @@ from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import get_validator_by_function, get_validator_by_type_only, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
@@ -1004,7 +1008,7 @@ class ControlSignal(ModulatorySignal):
         cost_options = self.parameters.cost_options.get(execution_id)
 
         try:
-            intensity_change = self.parameters.intensity.get_delta(execution_id)
+            intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
         except TypeError:
             intensity_change = [0]
 

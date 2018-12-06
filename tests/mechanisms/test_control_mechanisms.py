@@ -3,6 +3,9 @@ import psyneulink as pnl
 import pytest
 import functools
 
+import psyneulink.core.llvm as pnlvm
+import psyneulink.core.components.functions.transferfunctions
+
 
 class TestLCControlMechanism:
 
@@ -16,8 +19,8 @@ class TestLCControlMechanism:
         starting_value_LC = 2.0
         user_specified_gain = 1.0
 
-        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='A')
-        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='B')
+        A = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
         # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
 
         P = pnl.Process(pathway=[A, B])
@@ -29,7 +32,7 @@ class TestLCControlMechanism:
             base_level_gain=G,
             scaling_factor_gain=k,
             objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 monitored_output_states=[B],
                 name='LC ObjectiveMechanism'
             )
@@ -78,7 +81,9 @@ class TestLCControlMechanism:
     @pytest.mark.mechanism
     @pytest.mark.control_mechanism
     @pytest.mark.benchmark(group="LCControlMechanism Basic")
-    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_lc_control_mech_basic(self, benchmark, mode):
 
         LC = pnl.LCControlMechanism(
@@ -86,13 +91,24 @@ class TestLCControlMechanism:
             scaling_factor_gain=0.5,
             default_variable = 10.0
         )
-        val = LC.execute([10.0], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            EX = LC.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(LC)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(LC)
+            EX = e.cuda_execute
+
+        val = EX([10.0])
+
         # LLVM returns combination of all output states so let's do that for
         # Python as well
         if mode == 'Python':
             val = [s.value for s in LC.output_states]
+
+        benchmark(EX, [10.0])
         assert np.allclose(val, [3.00139776, 3.00139776, 3.00139776, 3.00139776])
-        val = benchmark(LC.execute, [[10.0]], bin_execute=(mode=='LLVM'))
 
 
     def test_lc_control_modulated_mechanisms_all(self):

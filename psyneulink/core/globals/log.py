@@ -391,7 +391,7 @@ import typecheck as tc
 
 from psyneulink.core.globals.context import ContextFlags, _get_time
 from psyneulink.core.globals.keywords import ALL, CONTEXT, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component, parse_execution_context
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
 
 __all__ = [
     'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'
@@ -894,6 +894,7 @@ class Log:
 
     @tc.typecheck
     def log_values(self, entries, execution_context=None):
+        from psyneulink.core.globals.parameters import parse_execution_context
         """Log the value of one or more Components programmatically.
 
         This can be used to "manually" enter the `value <Component.value>` of any of a Component's `loggable_items
@@ -920,7 +921,8 @@ class Log:
             execution_id = parse_execution_context(execution_context)
             param._log_value(param.get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
 
-    def get_logged_entries(self, entries=ALL, execution_ids=NotImplemented):
+    def get_logged_entries(self, entries=ALL, execution_contexts=NotImplemented):
+        from psyneulink.core.globals.parameters import parse_execution_context
         if entries is ALL:
             entries = self.all_items
 
@@ -934,12 +936,12 @@ class Log:
                 pass
 
             log = self._get_parameter_from_item_string(item).log
-            if execution_ids is NotImplemented:
+            if execution_contexts is NotImplemented:
                 eids = log.keys()
-            elif not isinstance(execution_ids, list):
-                eids = [execution_ids]
+            elif not isinstance(execution_contexts, list):
+                eids = [execution_contexts]
             else:
-                eids = execution_ids
+                eids = execution_contexts
             eids = [parse_execution_context(eid) for eid in eids]
 
             for eid in eids:
@@ -951,7 +953,7 @@ class Log:
 
         return logged_entries
 
-    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False, execution_ids=NotImplemented):
+    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False, execution_contexts=NotImplemented):
         """Clear one or more entries either by deleting the entry or just removing its data.
 
         Arguments
@@ -995,7 +997,7 @@ class Log:
             for entry in entries:
                 if delete_entry:
                     # Delete the entire entry from the log to which it belongs
-                    self._get_parameter_from_item_string(entry).clear_log(execution_ids)
+                    self._get_parameter_from_item_string(entry).clear_log(execution_contexts)
                 else:
                     # Delete the data for the entry but leave the entry itself in the log to which it belongs
                     raise LogError('delete_entry=False currently unimplemented')
@@ -1006,7 +1008,7 @@ class Log:
                       entries:tc.optional(tc.any(str, list, is_component))=ALL,
                       width:int=120,
                       display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
-                      execution_ids=NotImplemented,
+                      execution_contexts=NotImplemented,
                       # long_context=False
                       ):
         """
@@ -1086,7 +1088,7 @@ class Log:
         if option_flags & options.CONTEXT:
             c_width = 0
             for entry in entries:
-                logged_entries = self.get_logged_entries(execution_ids=execution_ids)[entry]
+                logged_entries = self.get_logged_entries(execution_contexts=execution_contexts)[entry]
                 for eid in logged_entries:
                     for datum in logged_entries[eid]:
                         c_width = max(c_width, len(datum.context))
@@ -1131,7 +1133,7 @@ class Log:
         # for entry_name in self.logged_entries:
         for entry_name in entry_names_sorted:
             try:
-                datum = self.get_logged_entries(execution_ids=execution_ids)[entry_name]
+                datum = self.get_logged_entries(execution_contexts=execution_contexts)[entry_name]
             except KeyError:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(entry_name, self.owner.name))
@@ -1173,7 +1175,7 @@ class Log:
                 entries=None,
                 header:bool=True,
                 owner_name:bool=False,
-                execution_ids=NotImplemented,
+                execution_contexts=NotImplemented,
                 ):
         """
         nparray(                 \
@@ -1246,7 +1248,7 @@ class Log:
 
         header = 1 if header is True else 0
 
-        execution_ids = self._parse_execution_ids_arg(execution_ids, entries)
+        execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
 
         npa = [[self.execution_id_header]] if header else [[]]
 
@@ -1295,7 +1297,7 @@ class Log:
 
         return npa
 
-    def nparray_dictionary(self, entries=None, execution_ids=NotImplemented):
+    def nparray_dictionary(self, entries=None, execution_contexts=NotImplemented):
         """
         nparray_dictionary(                 \
             entries=None,        \
@@ -1358,7 +1360,7 @@ class Log:
         if not entries:
             return log_dict
 
-        execution_ids = self._parse_execution_ids_arg(execution_ids, entries)
+        execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
 
         for eid in execution_ids:
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
@@ -1388,7 +1390,7 @@ class Log:
         return log_dict
 
     @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", execution_ids=NotImplemented):
+    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", execution_contexts=NotImplemented):
         """
         csv(                           \
             entries=None,              \
@@ -1450,7 +1452,7 @@ class Log:
         csv = "'" + "', '".join([str(x) for x in npaT[0]]) + "\'" + "\n"
 
         entries = self._validate_entries_arg(entries, logged=True)
-        execution_ids = self._parse_execution_ids_arg(execution_ids, entries)
+        execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
 
         for i in range(1, len(npaT)):
             # for each execution_id
@@ -1505,22 +1507,23 @@ class Log:
                           format(repr(entry), self.owner.name))
         return entries
 
-    def _parse_execution_ids_arg(self, execution_ids, entries):
+    def _parse_execution_contexts_arg(self, execution_contexts, entries):
+        from psyneulink.core.globals.parameters import parse_execution_context
         if entries is None:
             entries = []
 
-        if execution_ids is NotImplemented:
-            all_execution_ids = set()
+        if execution_contexts is NotImplemented:
+            all_execution_contexts = set()
             for entry in entries:
                 log = self._get_parameter_from_item_string(entry).log
                 for eid in log.keys():
                     # allow adding string to set using tuple
-                    all_execution_ids.add((eid,))
-            execution_ids = [eid[0] for eid in all_execution_ids]
-        elif not isinstance(execution_ids, list):
-            execution_ids = [execution_ids]
+                    all_execution_contexts.add((eid,))
+            execution_contexts = [eid[0] for eid in all_execution_contexts]
+        elif not isinstance(execution_contexts, list):
+            execution_contexts = [execution_contexts]
 
-        execution_ids = [parse_execution_context(eid) for eid in execution_ids]
+        execution_ids = [parse_execution_context(eid) for eid in execution_contexts]
 
         return execution_ids
 
@@ -1576,7 +1579,7 @@ class Log:
             #         self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
 
             time_values.extend([item.time
-                                for item in self.get_logged_entries(execution_ids=[execution_id])[entry][execution_id]
+                                for item in self.get_logged_entries(execution_contexts=[execution_id])[entry][execution_id]
                                 if all(i is not None for i in item.time)])
 
         # Insure that all time values are assigned, get rid of duplicates, and sort

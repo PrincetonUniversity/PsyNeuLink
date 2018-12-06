@@ -460,12 +460,14 @@ import collections
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import Function, Linear, LinearCombination, Reduce
+from psyneulink.core.components.functions.function import Function
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SIZE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible

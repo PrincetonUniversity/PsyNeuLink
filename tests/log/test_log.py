@@ -3,6 +3,8 @@ import psyneulink as pnl
 
 from collections import OrderedDict
 
+import psyneulink.core.components.functions.transferfunctions
+
 
 class TestLog:
 
@@ -35,7 +37,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -65,7 +66,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -112,7 +112,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'EXECUTION',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -142,7 +141,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -170,7 +168,7 @@ class TestLog:
         assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'mod_noise': 'EXECUTION'}
         assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
-        T_1.log.print_entries(execution_ids=PS)
+        T_1.log.print_entries(execution_contexts=PS)
 
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
@@ -254,7 +252,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -284,7 +281,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -335,7 +331,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
@@ -365,7 +360,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
@@ -441,7 +435,7 @@ class TestLog:
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=pnl.Linear(slope=2.0),
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=2.0),
                                    size=2)
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
@@ -468,7 +462,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -498,7 +491,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
             'noise': 'OFF',
@@ -533,7 +525,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
@@ -568,7 +559,6 @@ class TestLog:
             'mod_convergence_criterion': 'OFF',
             'mod_integration_rate': 'OFF',
             'mod_intercept': 'OFF',
-            'mod_max_passes': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
@@ -682,7 +672,7 @@ class TestLog:
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=pnl.Linear(slope=6.0))
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
 
@@ -735,7 +725,7 @@ class TestLog:
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=pnl.Linear(slope=6.0))
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
 

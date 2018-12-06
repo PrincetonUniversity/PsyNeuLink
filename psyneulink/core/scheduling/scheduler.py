@@ -396,10 +396,7 @@ class Scheduler(object):
         '''
         self.condition_set = condition_set if condition_set is not None else ConditionSet()
 
-        self.default_execution_id = execution_id
         # stores the in order list of self.run's yielded outputs
-        self.execution_list = {self.default_execution_id: []}
-        self.clocks = {self.default_execution_id: Clock()}
         self.consideration_queue = []
         self.default_termination_conds = {
             TimeScale.RUN: Never(),
@@ -410,9 +407,13 @@ class Scheduler(object):
         if system is not None:
             self.nodes = [m for m in system.execution_list]
             self._init_consideration_queue_from_system(system)
+            if execution_id is None:
+                execution_id = system.default_execution_id
         elif composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
+            if execution_id is None:
+                execution_id = composition.default_execution_id
         elif graph is not None:
             try:
                 self.nodes = [vert.component for vert in graph.vertices]
@@ -427,6 +428,9 @@ class Scheduler(object):
             raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) '
                                  'or a graph dependency dict (kwarg graph)')
 
+        self.default_execution_id = execution_id
+        self.execution_list = {self.default_execution_id: []}
+        self.clocks = {self.default_execution_id: Clock()}
         self.counts_total = {}
         self.counts_useable = {}
         self._init_counts(execution_id=self.default_execution_id)
@@ -739,8 +743,8 @@ class Scheduler(object):
         self._reset_counts_total(TimeScale.TRIAL, execution_id)
 
         while (
-            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
-            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
+            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
+            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
         ):
             self._reset_counts_total(TimeScale.PASS, execution_id)
 
@@ -749,8 +753,8 @@ class Scheduler(object):
 
             while (
                 cur_index_consideration_queue < len(self.consideration_queue)
-                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
-                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
+                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
+                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
             ):
                 # all nodes to be added during this time step
                 cur_time_step_exec = set()
@@ -776,7 +780,7 @@ class Scheduler(object):
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
-                            if self.condition_set.conditions[current_node].is_satisfied(scheduler=self, execution_id=execution_id):
+                            if self.condition_set.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
                                 logger.debug('adding {0} to execution list'.format(current_node))
                                 logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
                                 cur_time_step_exec.add(current_node)
@@ -818,7 +822,7 @@ class Scheduler(object):
 
         self.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
-        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id):
+        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id):
             self.date_last_run_end = datetime.datetime.now()
 
         return self.execution_list[execution_id]

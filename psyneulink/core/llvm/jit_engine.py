@@ -10,9 +10,41 @@
 
 from llvmlite import binding
 
-import os
+import os, re
 
-__all__ = ['cpu_jit_engine']
+from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module, _float_ty
+from .builtins import _generate_cpu_builtins_module
+
+_dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
+
+try:
+    if _dumpenv.find("cuda") != -1:
+        import pycuda
+        # Do not continue if the version is too old
+        if pycuda.VERSION[0] >= 2018:
+            import pycuda.driver
+            # pyCUDA needs to be built against 5.5+ to enable Linker
+            if pycuda.driver.get_version()[0] > 5:
+                from pycuda import autoinit as pycuda_default
+                import pycuda.compiler
+                ptx_enabled = True
+            else:
+                raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
+        else:
+            raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
+    else:
+        ptx_enabled = False
+except Exception as e:
+    print("WARNING: Failed to enable CUDA/PTX:", e)
+    ptx_enabled = False
+
+
+__all__ = ['cpu_jit_engine', 'ptx_enabled']
+
+if ptx_enabled:
+    __all__.append('ptx_jit_engine')
+
+
 
 # Compiler binding
 __initialized = False
@@ -20,11 +52,19 @@ def _binding_initialize():
     global __initialized
     if not __initialized:
         binding.initialize()
+        if not ptx_enabled:
+            # native == currently running CPU. ASM printer includes opcode emission
+            binding.initialize_native_target()
+            binding.initialize_native_asmprinter()
+        else:
+            binding.initialize_all_targets()
+            binding.initialize_all_asmprinters()
+
         __initialized = True
 
 
 def _cpu_jit_constructor():
-    _binding_initialize()    
+    _binding_initialize()
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
@@ -32,10 +72,6 @@ def _cpu_jit_constructor():
     __pass_manager_builder.loop_vectorize = True
     __pass_manager_builder.slp_vectorize = True
     __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
-
-    # native == currently running CPU. ASM printer includes opcode emission
-    binding.initialize_native_target()
-    binding.initialize_native_asmprinter()
 
     __cpu_features = binding.get_host_cpu_features().flatten()
     __cpu_name = binding.get_host_cpu_name()
@@ -49,15 +85,55 @@ def _cpu_jit_constructor():
     __pass_manager_builder.populate(__cpu_pass_manager)
 
 
-    # And an execution engine with an empty backing module
-    # TODO: why is empty backing mod necessary?
-    # TODO: It looks like backing_mod is just another compiled module.
-    #       Can we use it to avoid recompiling builtins?
-    #       Would cross module calls work? and for GPUs?
-    __backing_mod = binding.parse_assembly("")
+    # And an execution engine with a builtins backing module
+    builtins_module = _generate_cpu_builtins_module(_float_ty)
+    __backing_mod = binding.parse_assembly(str(builtins_module))
 
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
     return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
+
+
+def _ptx_jit_constructor():
+    _binding_initialize()
+
+    # PassManagerBuilder can be shared
+    __pass_manager_builder = binding.PassManagerBuilder()
+    __pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
+    __pass_manager_builder.loop_vectorize = True
+    __pass_manager_builder.slp_vectorize = True
+    __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
+
+    # Use default device
+    # TODO: Add support for multiple devices
+    __compute_capability = pycuda_default.device.compute_capability()
+    __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
+    # Create compilation target, use 64bit triple
+    __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
+    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=3, codemodel='small')
+
+    __ptx_pass_manager = binding.ModulePassManager()
+    __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)
+#    __pass_manager_builder.populate(__ptx_pass_manager)
+
+    return __ptx_pass_manager, __ptx_target_machine
+
+
+def _try_parse_module(module):
+    if _dumpenv.find("llvm") != -1:
+        print(module)
+
+    # IR module is not the same as binding module.
+    # "assembly" in this case is LLVM IR assembly.
+    # This is intentional design decision to ease
+    # compatibility between LLVM versions.
+    try:
+        mod = binding.parse_assembly(str(module))
+        mod.verify()
+    except Exception as e:
+        print("ERROR: llvm parsing failed: {}".format(e))
+        mod = None
+
+    return mod
 
 
 class jit_engine:
@@ -67,7 +143,9 @@ class jit_engine:
         self._target_machine = None
         self.__mod = None
         self.__opt_modules = 0
-        self.__dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
+        # Add an extra reference to make sure it's not destroyed before
+        # instances of jit_engine
+        self.__dumpenv = _dumpenv
 
     def __del__(self):
         if self.__dumpenv.find("mod_count") != -1:
@@ -81,7 +159,7 @@ class jit_engine:
         # This prints generated x86 assembly
         if self.__dumpenv.find("isa") != -1:
             print("ISA assembly:")
-            print(self._target_machine.emit_assembly(self.__mod))
+            print(self._target_machine.emit_assembly(module))
 
         self._engine.add_module(module)
         self._engine.finalize_object()
@@ -95,6 +173,7 @@ class jit_engine:
             self.__mod = module
         else:
             self._remove_bin_module(self.__mod)
+            # Linking here invalidates 'module'
             self.__mod.link_in(module)
 
         self.opt_and_add_bin_module(self.__mod)
@@ -113,6 +192,20 @@ class jit_engine:
 
         return self._jit_pass_manager
 
+    # Unfortunately, this needs to be done for every jit_engine.
+    # Liking step in opt_and_add_bin_module invalidates 'mod_bundle',
+    # so it can't be linked mutliple times (in multiple engines).
+    def compile_modules(self, modules, compiled_modules):
+        # Parse generated modules and link them
+        mod_bundle = binding.parse_assembly("")
+        for m in modules:
+            new_mod = _try_parse_module(m)
+            if new_mod is not None:
+                mod_bundle.link_in(new_mod)
+                compiled_modules.add(m)
+
+        self.opt_and_append_bin_module(mod_bundle)
+
 
 class cpu_jit_engine(jit_engine):
 
@@ -128,3 +221,74 @@ class cpu_jit_engine(jit_engine):
         self._jit_engine, self._jit_pass_manager, self._target_machine = _cpu_jit_constructor()
         if self._object_cache is not None:
              self._jit_engine.set_object_cache(self._object_cache)
+
+_ptx_builtin_source = """
+__device__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
+__device__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
+__device__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
+"""
+
+class ptx_jit_engine(jit_engine):
+    class cuda_engine():
+        def __init__(self, tm):
+            self._modules = {}
+            self._target_machine = tm
+
+            # -dc option tells the compiler that the code will be used for linking
+            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='cubin', options=['-dc'])
+
+        def set_object_cache(cache):
+            pass
+
+        def add_module(self, module):
+            try:
+                # LLVM can't produce CUBIN for some reason
+                ptx = self._target_machine.emit_assembly(module)
+                mod = pycuda.compiler.DynamicModule()
+                mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
+                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, "pnl.ptx")
+                ptx_mod = mod.link()
+
+            except Exception as e:
+                print("FAILED to generate PTX module:", e)
+                print(ptx)
+                return None
+
+            self._modules[module] = ptx_mod
+
+        def finalize_object(self):
+            pass
+
+        def remove_module(self, module):
+            self._modules.pop(module, None)
+
+        def _find_kernel(self, name):
+            function = None
+            for m in self._modules.values():
+                try:
+                    function = m.get_function(name)
+                except pycuda._driver.LogicError:
+                    pass
+            return function
+
+    def __init__(self, object_cache = None):
+        super().__init__()
+        self._object_cache = object_cache
+
+    def _init(self):
+        assert self._jit_engine is None
+        assert self._jit_pass_manager is None
+        assert self._target_machine is None
+
+        self._jit_pass_manager, self._target_machine = _ptx_jit_constructor()
+        self._jit_engine = ptx_jit_engine.cuda_engine(self._target_machine)
+
+    def get_kernel(self, name):
+        kernel = self._engine._find_kernel(name + "_cuda_kernel")
+        if kernel is None:
+            function = _find_llvm_function(name);
+            wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
+            self.compile_modules([wrapper_mod], set())
+            kernel = self._engine._find_kernel(name + "_cuda_kernel")
+
+        return kernel

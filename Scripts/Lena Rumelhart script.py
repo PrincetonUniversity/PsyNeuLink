@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.axes as ax
 #matplotlib inline
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
 relations = ['is', 'has', 'can']
@@ -80,32 +81,32 @@ rels_in = pnl.TransferMechanism(name="rels_input",
 
 h1 = pnl.TransferMechanism(name="hidden_nouns",
                            size=9,
-                           function=pnl.Logistic()
+                           function=psyneulink.core.components.functions.transferfunctions.Logistic()
                             )
 
 h2 = pnl.TransferMechanism(name="hidden_mixed",
                            size=16,
-                           function=pnl.Logistic()
+                           function=psyneulink.core.components.functions.transferfunctions.Logistic()
                                )
 
 out_sig_I = pnl.TransferMechanism(name="sig_outs_I",
                                   size=len(nouns),
-                                  function=pnl.Logistic()
+                                  function=psyneulink.core.components.functions.transferfunctions.Logistic()
                                   )
 
 out_sig_is = pnl.TransferMechanism(name="sig_outs_is",
                                    size=len(is_list),
-                                   function=pnl.Logistic()
+                                   function=psyneulink.core.components.functions.transferfunctions.Logistic()
  )
 
 out_sig_has = pnl.TransferMechanism(name="sig_outs_has",
                                     size=len(has_list),
-                                    function=pnl.Logistic()
+                                    function=psyneulink.core.components.functions.transferfunctions.Logistic()
                                     )
 
 out_sig_can = pnl.TransferMechanism(name="sig_outs_can",
                                     size=len(can_list),
-                                    function=pnl.Logistic()
+                                    function=psyneulink.core.components.functions.transferfunctions.Logistic()
                                     )
 
 ###################### THIS IS THE PART WHERE I PUT IN THE FORCED RANDOM MATRICES #########################

@@ -177,8 +177,13 @@ from collections import Iterable
 from llvmlite import ir
 from types import MethodType
 
-from psyneulink.core.components.component import Param, function_type, method_type
-from psyneulink.core.components.functions.function import Distance, Function, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
+from psyneulink.core.components.component import function_type, method_type
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+from psyneulink.core.components.functions.function import Function, is_function_type
+from psyneulink.core.components.functions.learningfunctions import Hebbian
+from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
+from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -190,6 +195,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -1448,19 +1454,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         return_t = ctx.get_output_struct_type(self)
         return ir.LiteralStructType([transfer_t, projection_t, return_t])
 
-    def get_param_initializer(self, execution_id=None):
-        transfer_params = super().get_param_initializer(execution_id=execution_id)
-        projection_params = self.recurrent_projection.get_param_initializer(execution_id=execution_id)
+    def _get_param_initializer(self, execution_id):
+        transfer_params = super()._get_param_initializer(execution_id)
+        projection_params = self.recurrent_projection._get_param_initializer(execution_id)
         return tuple([transfer_params, projection_params])
 
-    def get_context_initializer(self, execution_id=None):
-        transfer_init = super().get_context_initializer(execution_id=execution_id)
-        projection_init = self.recurrent_projection.get_context_initializer(execution_id=execution_id)
+    def _get_context_initializer(self, execution_id):
+        transfer_init = super()._get_context_initializer(execution_id)
+        projection_init = self.recurrent_projection._get_context_initializer(execution_id)
 
         # Initialize to output state defaults. That is what the recurrent
         # projection finds.
-        retval_init = [tuple(os.instance_defaults.value) if not np.isscalar(os.instance_defaults.value) else os.instance_defaults.value for os in self.output_states]
-        return tuple([transfer_init, projection_init, tuple(retval_init)])
+        retval_init = (tuple(os.instance_defaults.value) if not np.isscalar(os.instance_defaults.value) else os.instance_defaults.value for os in self.output_states)
+        return tuple((transfer_init, projection_init, tuple(retval_init)))
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         real_input_type = super()._get_input_struct_type(ctx)

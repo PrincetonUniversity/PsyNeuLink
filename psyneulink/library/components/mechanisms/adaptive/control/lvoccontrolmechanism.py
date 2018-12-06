@@ -230,38 +230,36 @@ Class Reference
 ---------------
 
 """
+import typecheck as tc
 import warnings
+
 from collections import Iterable, deque
 from itertools import product
-import typecheck as tc
 # from aenum import AutoNumberEnum, auto
 from enum import Enum
 
 import numpy as np
 
-from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.learningfunctions import BayesGLM
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, \
+    GradientOptimization
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.components.shellclasses import Function
+from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, LVOC_CONTROL_MECHANISM, NAME, \
-    PARAMETER_STATES, VARIABLE, OBJECTIVE_MECHANISM, OUTCOME, FUNCTION, ALL, CONTROL_SIGNALS
+from psyneulink.core.globals.defaults import defaultControlAllocation
+from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, LVOC_CONTROL_MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared, is_iterable, powerset, tensor_power
 
 __all__ = [
@@ -729,20 +727,20 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # Initialize current_state and control_signals on first trial
             # Note:  initialize current_state to 1's so that learning_function returns specified priors
             previous_state = np.full_like(current_state.vector, 0)
-            prediction_weights = self.learning_function.function([previous_state, 0])
+            prediction_weights = self.learning_function.function([previous_state, 0], execution_id=execution_id)
         else:
             # Update prediction_weights
-            costs = [c.compute_costs(c.parameters.variable.get(execution_id)) for c in self.control_signals]
+            costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in self.control_signals]
             combined_costs = self.combine_costs(costs)
             # costs are assigned as negative in current_state.update, so add them here
             net_outcome = obj_mech_outcome - combined_costs
-            prediction_weights = self.learning_function.function([previous_state, net_outcome])
+            prediction_weights = self.learning_function.function([previous_state, net_outcome], execution_id=execution_id)
 
             # Update current_state with current feature_values and control_signals and store for next trial
             feature_values = np.array(np.array(variable[1:]).tolist())
             self.parameters.feature_values.set(feature_values, execution_id)
 
-            current_state.update_vector(self.parameters.allocation_policy.get(execution_id), feature_values)
+            current_state.update_vector(self.parameters.allocation_policy.get(execution_id), feature_values, execution_id=execution_id)
             previous_state = current_state.vector
 
         self._set_multiple_parameter_values(
@@ -974,7 +972,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
         __deepcopy__ = get_deepcopy_with_shared(shared_keys=_deepcopy_shared_keys)
 
-        def update_vector(self, variable, feature_values=None):
+        def update_vector(self, variable, feature_values=None, execution_id=None):
             '''Update vector with flattened versions of values returned from `compute_terms
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
@@ -989,14 +987,14 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
             if feature_values is not None:
                 self.terms[PV.F.value] = np.array(feature_values)
-            computed_terms = self.compute_terms(np.array(variable))
+            computed_terms = self.compute_terms(np.array(variable), execution_id=execution_id)
 
             # Assign flattened versions of specified terms to vector
             for k, v in computed_terms.items():
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
-        def compute_terms(self, control_signal_variables):
+        def compute_terms(self, control_signal_variables, execution_id=None):
             '''Calculate interaction terms.
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
             Values of entries are nd arrays.
@@ -1011,7 +1009,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # Compute value of each control_signal from its variable
             c = [None] * len(control_signal_variables)
             for i, var in enumerate(control_signal_variables):
-                c[i] = self.control_signal_functions[i](var)
+                c[i] = self.control_signal_functions[i](var, execution_id=execution_id)
             computed_terms[PV.C] = c = np.array(c)
 
             # Compute costs for new control_signal values
@@ -1020,7 +1018,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
                 costs = [None] * len(c)
                 for i, val in enumerate(c):
-                    costs[i] = -(self._compute_costs[i](val))
+                    costs[i] = -(self._compute_costs[i](val, execution_id=execution_id))
                 computed_terms[PV.COST] = np.array(costs)
 
             # Compute terms interaction that are used
@@ -1056,7 +1054,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         current_state = self.parameters.current_state.get(execution_id)
 
         terms = self.prediction_terms
-        vector = current_state.compute_terms(variable)
+        vector = current_state.compute_terms(variable, execution_id=execution_id)
         weights = self.parameters.prediction_weights.get(execution_id)
         evc = 0
 

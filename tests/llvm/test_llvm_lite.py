@@ -6,6 +6,13 @@
 from llvmlite import binding,ir
 import ctypes
 import pytest
+try:
+    import pycuda
+    from pycuda import autoinit as pycuda_default
+    # Import this after pycuda since only cuda test needs numpy
+    import numpy as np
+except:
+    pycuda = None
 
 @pytest.mark.llvm
 def test_llvm_lite():
@@ -88,3 +95,64 @@ def test_llvm_lite():
     # TODO: shutdown cleanly
     # we need to do something extra before shutdown
     #binding.shutdown()
+
+
+@pytest.mark.llvm
+@pytest.mark.skipif(pycuda is None, reason="pyCUDA modeule is not available")
+def test_llvm_lite_ptx_pycuda():
+    # Create some useful types
+    double = ir.DoubleType()
+    fnty = ir.FunctionType(ir.VoidType(), (double, double, double.as_pointer()))
+
+    # Create an empty module...
+    module = ir.Module(name=__file__)
+    # and declare a function named "fpadd" inside it
+    func = ir.Function(module, fnty, name="fpadd")
+
+    # Now implement basic addition
+    # basic blocks are sequences of instructions that have exactly one
+    # entry point and one exit point (no control flow)
+    # We only need one in this case
+    # See available operations at:
+    # http://llvmlite.readthedocs.io/en/latest/ir/builder.html#instruction-building
+    block = func.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    a, b, res = func.args
+    result = builder.fadd(a, b, name="res")
+    builder.store(result, res)
+    builder.ret_void()
+
+    # Add kernel mark metadata
+    module.add_named_metadata("nvvm.annotations",[func, "kernel", ir.IntType(32)(1)])
+
+    # Uncomment to print the module IR. This prints LLVM IR assembly.
+#    print("LLVM IR:\n", module)
+
+    binding.initialize()
+
+    binding.initialize_all_targets()
+    binding.initialize_all_asmprinters()
+
+    capability = pycuda_default.device.compute_capability()
+
+    # Create compilation target, use default triple
+    target = binding.Target.from_triple("nvptx64-nvidia-cuda")
+    target_machine = target.create_target_machine(cpu="sm_{}{}".format(capability[0], capability[1]), codemodel='small')
+
+    mod = binding.parse_assembly(str(module))
+    mod.verify()
+    ptx = target_machine.emit_assembly(mod)
+
+    # Uncomment to print generated x86 assembly
+#    print("PTX assembly:\n", ptx)
+
+    ptx_mod = pycuda.driver.module_from_buffer(ptx.encode())
+    cuda_func = ptx_mod.get_function('fpadd')
+
+    # Run the function via ctypes
+    a = np.float64(10.0)
+    b = np.float64(3.5)
+    res = np.empty(1, dtype=np.float64)
+    dev_res = pycuda.driver.Out(res)
+    cuda_func(a, b, dev_res, block=(1,1,1))
+    assert res[0] == (a + b)

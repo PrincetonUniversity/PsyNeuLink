@@ -1,4 +1,5 @@
-from psyneulink.core.components.functions.function import Linear, Logistic
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+
 try:
     import torch
     from torch import nn

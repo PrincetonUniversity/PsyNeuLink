@@ -305,12 +305,15 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import ContrastiveHebbian, Distance, Hebbian, Linear, get_matrix, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.learningfunctions import Hebbian, ContrastiveHebbian
+from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism

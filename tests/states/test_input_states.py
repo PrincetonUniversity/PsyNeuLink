@@ -2,6 +2,10 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
+import psyneulink.core.components.functions.combinationfunctions
+import psyneulink.core.components.functions.transferfunctions
+
+
 class TestInputStates:
 
     def test_combine_param_alone(self):
@@ -23,7 +27,8 @@ class TestInputStates:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_states=pnl.InputState(function=pnl.LinearCombination,
+                input_states=pnl.InputState(function=psyneulink.core.components.functions.combinationfunctions
+                                            .LinearCombination,
                                             combine=pnl.PRODUCT))
         p1 = pnl.Process(pathway=[t1, t3])
         p2 = pnl.Process(pathway=[t2, t3])
@@ -37,7 +42,7 @@ class TestInputStates:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_states=pnl.InputState(function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                input_states=pnl.InputState(function=psyneulink.core.components.functions.combinationfunctions.LinearCombination(operation=pnl.PRODUCT),
                                             combine=pnl.PRODUCT))
         p1 = pnl.Process(pathway=[t1, t3])
         p2 = pnl.Process(pathway=[t2, t3])
@@ -48,20 +53,21 @@ class TestInputStates:
 
     def test_combine_param_conflicting_fct_operation_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.LinearCombination(operation=pnl.SUM),
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions.combinationfunctions.LinearCombination(operation=pnl.SUM),
                                                                   combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with specification of 'operation' (SUM) " \
                "for LinearCombination in 'function' argument for InputState" in str(error_text.value)
 
     def test_combine_param_conflicting_function_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.Linear(), combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions
+                                                                  .transferfunctions.Linear(), combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear Function" in str(error_text.value)
 
     def test_combine_param_conflicting_fct_class_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.Linear, combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions.transferfunctions.Linear, combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear) for InputState" in str(error_text.value)
 

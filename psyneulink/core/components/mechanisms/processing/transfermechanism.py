@@ -324,8 +324,15 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, function_type, method_type
-from psyneulink.core.components.functions.function import AdaptiveIntegrator, Distance, DistributionFunction, Function, Linear, SelectionFunction, TransferFunction, UserDefinedFunction, is_function_type
+from psyneulink.core.components.component import function_type, method_type
+from psyneulink.core.components.functions.function import Function, \
+    is_function_type
+from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
+from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -333,6 +340,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DIFFERENCE, DISTRIBUTION_FUNCTION_TYPE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
@@ -342,8 +350,6 @@ __all__ = [
     'INITIAL_VALUE', 'CLIP', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
     'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
-
-import functools
 
 from psyneulink.core import llvm as pnlvm
 
@@ -1031,7 +1037,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_parameter_states(self, function=None, context=None):
 
-        from psyneulink.core.components.functions.function import Logistic
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
@@ -1106,105 +1111,34 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _get_param_struct_type(self, ctx):
-        input_param_list = []
-        for state in self.input_states:
-            input_param_list.append(ctx.get_param_struct_type(state))
-        input_param_struct = ir.LiteralStructType(input_param_list)
-
+    def _get_function_param_struct_type(self, ctx):
         param_type_list = [ctx.get_param_struct_type(self.function_object)]
         if self.integrator_mode:
             assert self.integrator_function is not None
             param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
-        function_param_struct = ir.LiteralStructType(param_type_list)
+        return ir.LiteralStructType(param_type_list)
 
-        output_param_list = []
-        for state in self.output_states:
-            output_param_list.append(ctx.get_param_struct_type(state))
-        output_param_struct = ir.LiteralStructType(output_param_list)
-
-        param_param_list = []
-        for state in self.parameter_states:
-            param_param_list.append(ctx.get_param_struct_type(state))
-        param_param_struct = ir.LiteralStructType(param_param_list)
-
-        return ir.LiteralStructType([input_param_struct, function_param_struct, output_param_struct, param_param_struct])
-
-
-    def _get_context_struct_type(self, ctx):
-        input_context_list = []
-        for state in self.input_states:
-            input_context_list.append(ctx.get_context_struct_type(state))
-        input_context_struct = ir.LiteralStructType(input_context_list)
-
+    def _get_function_context_struct_type(self, ctx):
         context_type_list = [ctx.get_context_struct_type(self.function_object)]
         if self.integrator_mode:
            assert self.integrator_function is not None
            context_type_list.append(ctx.get_context_struct_type(self.integrator_function))
 
-        function_context_struct = ir.LiteralStructType(context_type_list)
+        return ir.LiteralStructType(context_type_list)
 
-        output_context_list = []
-        for state in self.output_states:
-            output_context_list.append(ctx.get_context_struct_type(state))
-        output_context_struct = ir.LiteralStructType(output_context_list)
-
-        parameter_context_list = []
-        for state in self.parameter_states:
-            parameter_context_list.append(ctx.get_context_struct_type(state))
-        parameter_context_struct = ir.LiteralStructType(parameter_context_list)
-
-        return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct, parameter_context_struct])
-
-
-    def get_param_initializer(self, execution_id=None):
-        input_param_init_list = []
-        for state in self.input_states:
-            input_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
-        input_param_init = tuple(input_param_init_list)
-
-        function_param_list = [self.function_object.get_param_initializer(execution_id=execution_id)]
+    def _get_function_param_initializer(self, execution_id):
+        function_param_list = [self.function_object._get_param_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function.get_param_initializer(execution_id=execution_id))
-        function_param_init = tuple(function_param_list)
+            function_param_list.append(self.integrator_function._get_param_initializer(execution_id))
+        return tuple(function_param_list)
 
-        output_param_init_list = []
-        for state in self.output_states:
-            output_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
-        output_param_init = tuple(output_param_init_list)
-
-        param_param_init_list = []
-        for state in self.parameter_states:
-            param_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
-        param_param_init = tuple(param_param_init_list)
-
-        return tuple([input_param_init, function_param_init, output_param_init, param_param_init])
-
-
-    def get_context_initializer(self, execution_id=None):
-        input_context_init_list = []
-        for state in self.input_states:
-            input_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
-        input_context_init = tuple(input_context_init_list)
-
-        context_list = [self.function_object.get_context_initializer(execution_id=execution_id)]
+    def _get_function_context_initializer(self, execution_id):
+        context_list = [self.function_object._get_context_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            context_list.append(self.integrator_function.get_context_initializer(execution_id=execution_id))
-        function_context_init = tuple(context_list)
-
-        output_context_init_list = []
-        for state in self.output_states:
-            output_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
-        output_context_init = tuple(output_context_init_list)
-
-        parameter_context_init_list = []
-        for state in self.parameter_states:
-            parameter_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
-        parameter_context_init = tuple(parameter_context_init_list)
-
-        return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
+            context_list.append(self.integrator_function._get_context_initializer(execution_id))
+        return tuple(context_list)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)

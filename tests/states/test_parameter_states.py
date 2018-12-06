@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import Linear
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 
 class TestParameterStates:

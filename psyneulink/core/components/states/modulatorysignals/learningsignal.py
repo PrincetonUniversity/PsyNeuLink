@@ -171,13 +171,14 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import Linear, ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import PRIMARY
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import COMMAND_LINE, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import parameter_spec

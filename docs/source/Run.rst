@@ -1,6 +1,6 @@
 Run
 ===
 
-.. automodule:: environment
+.. automodule:: psyneulink.core.globals.environment
    :members:
    :exclude-members: random
