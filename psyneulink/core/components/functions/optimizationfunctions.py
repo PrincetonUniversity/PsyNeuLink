@@ -299,11 +299,10 @@ class SampleIterator(Iterator):
         self.__next__ = iterator
 
     def __iter__(self):
-        return self
+        return self.__next__
 
     def __call__(self):
-        # return list(self.__next__)
-        return list(self.__next__)
+        return list(self)
 
     def reset(self):
         self.__next__.reset()
@@ -1197,7 +1196,7 @@ class GridSearch(OptimizationFunction):
     def reset_grid(self):
         for s in self.search_space:
             s.reset()
-        self.grid = itertools.product(*[s.__next__ for s in self.search_space])
+        self.grid = itertools.product(*[s for s in self.search_space])
 
     def function(self,
                  variable=None,
