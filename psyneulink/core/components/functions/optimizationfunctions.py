@@ -261,7 +261,7 @@ class SampleIterator(Iterator):
             self.end = specification[-1]
             self.step = None
             self.count = len(specification)
-            self._iterator = np.nditer(np.array(specification))
+            iterator = np.nditer(np.array(specification))
 
         elif isinstance(specification, SampleSpec) :
             self.begin, self.end, self.step, self.count, self.generator = specification
@@ -272,17 +272,17 @@ class SampleIterator(Iterator):
                     while result < end:
                         yield result
                         result += step
-                self._iterator = sample_gen(self.begin, self.end, self.step)
+                iterator = sample_gen(self.begin, self.end, self.step)
 
             elif is_iter(specification.generator):
-                self._iterator = specification.generator
+                iterator = specification.generator
 
             elif is_function_type(specification.generator):
                 if specification.count:
                     def sample_gen(count):
                         for n in range(0, count):
                             yield specification.generator()
-                    self._iterator = sample_gen(self.count)
+                    iterator = sample_gen(self.count)
                 else:
                     def sample_gen():
                         yield specification.generator()
@@ -296,24 +296,14 @@ class SampleIterator(Iterator):
             assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
                           format(repr('specification'), self.__class__.__name__, SampleSpec.__name__)
 
-        self.__next__ = self._iterator
+        self.__next__ = iterator
 
     def __iter__(self):
         return self
 
-    # def __next__(self):
-        # return self._iterator
-        # if is_iter(self._iterator):
-        #     item = next(self._iterator)
-        # else:
-        #     item = self._iterator()
-        # if item == StopIteration:
-        #     raise StopIteration  # signals "the end"
-        # return item
-
     def __call__(self):
         # return list(self.__next__)
-        return list(self)
+        return list(self.__next__)
 
     def reset(self):
         self.__next__.reset()
