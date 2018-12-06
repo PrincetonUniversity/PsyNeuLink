@@ -260,7 +260,7 @@ class SampleIterator(Iterator):
             self.begin = specification[0]
             self.end = specification[-1]
             self.count = len(specification)
-            self._iterator = iter(specification)
+            self._iterator = np.nditer(np.array(specification))
 
         elif isinstance(specification, SampleSpec) :
 
@@ -1190,14 +1190,17 @@ class GridSearch(OptimizationFunction):
     def reinitialize(self, *args, execution_id=None):
 
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
-        self.reinitialize_grid()
-
-    def reinitialize_grid(self):
-        self.grid = itertools.product(*[s for s in self.search_space])
         # self.num_iterations = 1
         # for signal in self.search_space:
         #     self.num_iterations *= signal.num
-        self.num_iterations = np.product([s.num for s in self.search_space])
+        self.grid = itertools.product(*[s for s in self.search_space])
+        self.num_iterations = np.product([s.count for s in self.search_space])
+        # self.reinitialize_grid()
+
+    def reset_grid(self):
+        for s in self.search_space:
+            s._iterator.reset()
+        self.grid = itertools.product(*[s for s in self.search_space])
 
 
     def function(self,
@@ -1325,7 +1328,7 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            # self.reinitialize_grid()
+            self.reset_grid()
             last_sample, last_value, all_samples, all_values = super().function(
                 variable=variable,
                 execution_id=execution_id,
@@ -1351,8 +1354,10 @@ class GridSearch(OptimizationFunction):
         try:
             sample = next(self.grid)
         except StopIteration:
-            raise OptimizationFunctionError("Expired grid in {} run from {} (current_execution_count: {})".
-                format(self.__class__.__name__, self.owner.name, self.owner.current_execution_count))
+            raise OptimizationFunctionError("Expired grid in {} run from {} "
+                                            "(current_execution_count: {}; num_iterations: {})".
+                format(self.__class__.__name__, self.owner.name,
+                       self.owner.current_execution_count, self.num_iterations))
         return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
