@@ -249,6 +249,11 @@ class SampleIterator(Iterator):
         count : int
             length of list or SampleSpec.count.
 
+        COMMENT:
+        head : int
+            index of next item to be returned if __next__ is an iterator;  None if it is a generator
+        COMMENT
+
         Returns
         -------
 
@@ -260,28 +265,39 @@ class SampleIterator(Iterator):
             self.end = specification[-1]
             self.step = None
             self.count = len(specification)
-            iterator = np.nditer(np.array(specification))
+            # self.head = self.begin
+            # self._iterator = np.nditer(np.array(specification))
+            def sample_gen(begin, end, step):
+                self._result = begin
+                while self._result < end:
+                    yield self._result
+                    self._result += step
+            self._iterator = sample_gen(self.begin, self.end, self.step)
 
         elif isinstance(specification, SampleSpec) :
             self.begin, self.end, self.step, self.count, self.generator = specification
+            # self.head = self.begin
 
             if specification.generator is None:
                 def sample_gen(begin, end, step):
-                    result = begin
-                    while result < end:
-                        yield result
-                        result += step
-                iterator = sample_gen(self.begin, self.end, self.step)
+                    self._result = begin
+                    while self._result < end:
+                        yield self._result
+                        self._result += step
+                self._iterator = sample_gen(self.begin, self.end, self.step)
 
             elif is_iter(specification.generator):
-                iterator = specification.generator
+                self._iterator = specification.generator
 
             elif is_function_type(specification.generator):
                 if specification.count:
                     def sample_gen(count):
-                        for n in range(0, count):
+                        self.begin = 0
+                        self._result = self.begin
+                        while self._result < count:
+                        # for n in range(0, count):
                             yield specification.generator()
-                    iterator = sample_gen(self.count)
+                    self._iterator = sample_gen(self.count)
                 else:
                     def sample_gen():
                         yield specification.generator()
@@ -295,7 +311,7 @@ class SampleIterator(Iterator):
             assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
                           format(repr('specification'), self.__class__.__name__, SampleSpec.__name__)
 
-        self.__next__ = iterator
+        self.__next__ = self._iterator
 
     def __iter__(self):
         return self.__next__
@@ -304,7 +320,8 @@ class SampleIterator(Iterator):
         return list(self)
 
     def reset(self):
-        self.__next__.reset()
+        # self.__next__.reset()
+        self._result = self.begin
 
 
 class OptimizationFunction(Function_Base):
