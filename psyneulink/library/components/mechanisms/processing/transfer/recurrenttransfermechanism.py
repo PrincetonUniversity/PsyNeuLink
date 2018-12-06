@@ -183,6 +183,7 @@ from psyneulink.core.components.functions.function import Function, is_function_
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -204,7 +205,7 @@ from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinis
 from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 
 __all__ = [
-    'CONVERGENCE', 'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
+    'CONVERGENCE', 'EXTERNAL', 'EXTERNAL_INDEX',
     'RECURRENT', 'RECURRENT_INDEX', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
     'UPDATE'
 ]
@@ -228,8 +229,6 @@ class RecurrentTransferError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-DECAY = 'decay'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
@@ -446,6 +445,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         Can be modified by control.
 
+    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+        specifies `IntegratorFunction` to use in `integration_mode <RecurrentTransferMechanism.integration_mode>`.
+
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input if `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is `True`).
@@ -573,12 +575,15 @@ class RecurrentTransferMechanism(TransferMechanism):
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
-    integrator_function :
-        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function
-        <RecurrentTransferMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
-        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
-        <RecurrentTransferMechanism.integration_rate>` parameter of the RecurrentTransferMechanism corresponds to
-        the `rate <Integrator.rate>` parameter of the RecurrentTransferMechanism's `integrator_function`.
+    integrator_function :  IntegratorFunction
+        the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
+        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
+
+        .. note::
+            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
+            <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
+            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
+            to `initializer <IntegratorFunction.initializer>` of integrator_function.
 
     integrator_mode :
         **When integrator_mode is set to True:**
@@ -793,6 +798,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  matrix=HOLLOW_MATRIX,
                  auto=None,
                  hetero=None,
+                 integrator_function=AdaptiveIntegrator,
                  initial_value=None,
                  noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,
@@ -874,6 +880,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          size=size,
                          input_states=input_states,
                          function=function,
+                         integrator_function=integrator_function,
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=integrator_mode,

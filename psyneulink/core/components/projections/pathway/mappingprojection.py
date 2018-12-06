@@ -630,7 +630,7 @@ class MappingProjection(PathwayProjection_Base):
                 self._matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update self.value
-                self._instantiate_value()
+                self._instantiate_value(context=context)
 
         super()._instantiate_receiver(context=context)
 

@@ -146,6 +146,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import _
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
 from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
@@ -552,6 +553,9 @@ class LCAMechanism(RecurrentTransferMechanism):
                           "args")
         # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
+
+        integrator_function = LCAIntegrator
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   leak=leak,
@@ -567,13 +571,13 @@ class LCAMechanism(RecurrentTransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          auto=self_excitation,
                          hetero=-competition,
                          function=function,
+                         integrator_function=LCAIntegrator,
                          initial_value=initial_value,
                          noise=noise,
                          clip=clip,
@@ -587,7 +591,8 @@ class LCAMechanism(RecurrentTransferMechanism):
         leak = self.get_current_mechanism_param("leak", execution_id)
         time_step_size = self.get_current_mechanism_param("time_step_size", execution_id)
 
-        if not self.integrator_function:
+        # if not self.integrator_function:
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             self.integrator_function = LCAIntegrator(
                 function_variable,
                 initializer=initial_value,
