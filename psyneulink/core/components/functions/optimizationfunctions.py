@@ -253,7 +253,6 @@ class SampleIterator(Iterator):
         -------
 
         List(self) : list
-
         '''
 
         if isinstance(specification, list):
