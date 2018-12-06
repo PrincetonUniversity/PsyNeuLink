@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>KohonenMechanism &mdash; PsyNeuLink 0.4.8.0+1018.g900f06a documentation</title>
+  <title>KohonenMechanism &mdash; PsyNeuLink 0.4.8.0+1019.g1459d34 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1018.g900f06a documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1019.g1459d34 documentation" href="index.html"/>
         <link rel="up" title="Transfer Mechanisms" href="TransferMechanisms.html"/>
         <link rel="next" title="ContrastiveHebbianMechanism" href="ContrastiveHebbianMechanism.html"/>
         <link rel="prev" title="KWTAMechanism" href="KWTAMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1018
+                0.4.8.0+1019
               </div>
             
           
@@ -215,7 +215,7 @@ implement a form of unsupervised learning that produces the self-organized map.<
 <span id="kohonen-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.</code><code class="descname">KohonenMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=Linear</em>, <em>matrix=None</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>integration_rate=1.0</em>, <em>clip=None</em>, <em>enable_learning=True</em>, <em>learning_function=Kohonen(distance_function=GAUSSIAN)</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.</code><code class="descname">KohonenMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=Linear</em>, <em>matrix=None</em>, <em>integrator_function=AdaptiveIntegrator</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>integration_rate=1.0</em>, <em>clip=None</em>, <em>enable_learning=True</em>, <em>learning_function=Kohonen(distance_function=GAUSSIAN)</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that learns a <a class="reference external" href="https://en.wikipedia.org/wiki/Self-organizing_map">self-organized</a>
 map of its input.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -225,8 +225,8 @@ map of its input.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the input to the mechanism to use if none is provided in a call to its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
-also serves as a template to specify the length of <code class="xref any docutils literal"><span class="pre">variable</span></code> for
-<code class="xref any docutils literal"><span class="pre">function</span></code>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
+also serves as a template to specify the length of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.variable" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
 of the mechanism.</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
 if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
@@ -237,32 +237,32 @@ As an example, the following mechanisms are equivalent:</p>
 </div>
 </li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) – specifies the function used to transform the input.</li>
-<li><strong>initial_value</strong> (<a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
-<code class="xref any docutils literal"><span class="pre">integration_rate</span></code> is not 1.0).</li>
-<li><strong>noise</strong> (<em>float</em><em> or </em><em>function : default 0.0</em>) – a value added to the result of the <code class="xref any docutils literal"><span class="pre">function</span></code> or to the result of <code class="xref any docutils literal"><span class="pre">integrator_function</span></code>, depending on whether <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is True or False. See
-<code class="xref any docutils literal"><span class="pre">noise</span></code> for more details.</li>
-<li><strong>integration_rate</strong> (<em>float : default 0.5</em>) – <p>the smoothing factor for exponential time averaging of input when <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is set
-to True</p>
+<li><strong>integrator_function</strong> (<em>IntegratorFunction : default AdaptiveIntegrator</em>) – specifies <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> to use in <code class="xref any docutils literal"><span class="pre">integration_mode</span></code>.</li>
+<li><strong>initial_value</strong> (<a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a> is not 1.0).</li>
+<li><strong>noise</strong> (<em>float</em><em> or </em><em>function : default 0.0</em>) – a value added to the result of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> or to the result of
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, depending on whether <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is True or False. See <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.noise" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for more details.</li>
+<li><strong>integration_rate</strong> (<em>float : default 0.5</em>) – <p>the smoothing factor for exponential time averaging of input when <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is set to True</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">integration_rate</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span>
 <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">integration_rate</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
-<li><strong>clip</strong> (<em>list</em><em> [</em><em>float</em><em>, </em><em>float</em><em>] </em><em>: default None</em><em> (</em><em>Optional</em><em>)</em>) – specifies the allowable range for the result of <code class="xref any docutils literal"><span class="pre">function</span></code> the item in index 0 specifies the
+<li><strong>clip</strong> (<em>list</em><em> [</em><em>float</em><em>, </em><em>float</em><em>] </em><em>: default None</em><em> (</em><em>Optional</em><em>)</em>) – specifies the allowable range for the result of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> the item in index 0 specifies the
 minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
 element of the result that exceeds the specified minimum or maximum value is set to the value of
-<code class="xref any docutils literal"><span class="pre">clip</span></code> that it exceeds.</li>
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a> that it exceeds.</li>
 <li><strong>enable_learning</strong> (<em>boolean : default True</em>) – specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
 cannot be enabled until it is configured for learning by calling the Mechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning"><code class="xref any py py-meth docutils literal"><span class="pre">configure_learning</span></code></a> method.</li>
 <li><strong>learning_rate</strong> (<em>scalar</em><em>, or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.array</em><em>, or </em><em>np.matrix of numeric values: default False</em>) – specifies the learning rate used by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span> <span class="pre">function</span></code></a>.
 If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, the <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">default learning_rate for a LearningMechanism</span></a> is
 used; if it is assigned a value, that is used as the learning_rate (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_rate" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
-<li><strong>learning_function</strong> (<em>LearningFunction</em><em>, </em><a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BayesGLM.function" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.function"><em>function</em></a><em> or </em><em>method : default Kohonen</em><em>(</em><em>distance_function=GUASSIAN</em><em>)</em>) – specifies function used by <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">learning_mechanism</span></code></a> to update <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of <a href="#id1"><span class="problematic" id="id2">`</span></a>learned_projection &lt;KohonenMechanism.learned_projection&gt;.</li>
+<li><strong>learning_function</strong> (<em>LearningFunction</em><em>, </em><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function"><em>function</em></a><em> or </em><em>method : default Kohonen</em><em>(</em><em>distance_function=GUASSIAN</em><em>)</em>) – specifies function used by <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">learning_mechanism</span></code></a> to update <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of <a href="#id1"><span class="problematic" id="id2">`</span></a>learned_projection &lt;KohonenMechanism.learned_projection&gt;.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
 the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the KWTA Mechanism.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the KWTA Mechanism; see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Kohonen Mechanism.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Kohonen Mechanism; see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details.</li>
 <li><strong>context</strong> (<em>str : default componentType+INITIALIZING</em>) – string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
 </ul>
 </td>
@@ -297,7 +297,7 @@ one identified by <code class="xref any docutils literal"><span class="pre">sele
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_enabled">
 <code class="descname">learning_enabled</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_enabled" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – indicates whether <a class="reference internal" href="#kohonen-learning"><span class="std std-ref">learning is enabled</span></a>;  see <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> for additional details.</p>
+<dd><p><em>bool</em> – indicates whether <a class="reference internal" href="#kohonen-learning"><span class="std std-ref">learning is enabled</span></a>;  see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_enabled" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_enabled"><code class="xref any py py-attr docutils literal"><span class="pre">learning_enabled</span></code></a> for additional details.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -327,18 +327,31 @@ of the <a class="reference internal" href="#psyneulink.library.components.mechan
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function">
+<code class="descname">integrator_function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>IntegratorFunction</em> – the <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> used when <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is set to
+<code class="xref any docutils literal"><span class="pre">True</span></code> (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> for details).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The KohonenMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a>, <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.noise" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>, and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.initial_value" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a> parameters
+specify the respective parameters of its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (with <strong>initial_value</strong> corresponding
+to <code class="xref any docutils literal"><span class="pre">initializer</span></code> of integrator_function.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.initial_value">
 <code class="descname">initial_value</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.initial_value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value, list or np.ndarray : Transfer_DEFAULT_BIAS</em> – determines the starting value for time-averaged input
-(only relevant if <code class="xref any docutils literal"><span class="pre">integration_rate</span></code> parameter is not 1.0).</p>
+(only relevant if <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a> parameter is not 1.0).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or function : default 0.0</em> – When <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is set to True, noise is passed into the <code class="xref any docutils literal"><span class="pre">integrator_function</span></code>. Otherwise, noise is added to the output of the <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+<dd><p><em>float or function : default 0.0</em> – When <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is set to True, noise is passed into the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>. Otherwise, noise is added to the output of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
-<p>If noise is specified as a single float or function, while <code class="xref any docutils literal"><span class="pre">variable</span></code> is a list or array,
+<p>If noise is specified as a single float or function, while <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.variable" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
 noise will be applied to each variable element. In the case of a noise function, this means that the function
 will be executed separately for each variable element.</p>
 <div class="admonition note">
@@ -353,7 +366,7 @@ the noise will simply be an offset that remains the same across all executions.<
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate">
 <code class="descname">integration_rate</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float : default 0.5</em> – the smoothing factor for exponential time averaging of input when <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> is set
+<dd><p><em>float : default 0.5</em> – the smoothing factor for exponential time averaging of input when <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is set
 to True:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">integration_rate</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">integration_rate</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
 </pre></div>
@@ -361,22 +374,9 @@ to True:</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip">
-<code class="descname">clip</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list [float, float] : default None (Optional)</em> – specifies the allowable range for the result of <code class="xref any docutils literal"><span class="pre">function</span></code></p>
-<p>the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to</p>
-<blockquote>
-<div>the value of <code class="xref any docutils literal"><span class="pre">clip</span></code> that it exceeds.</div></blockquote>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function">
-<code class="descname">integrator_function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>When <em>integrator_mode</em> is set to True, the KWTA executes its <code class="xref any docutils literal"><span class="pre">integrator_function</span></code>,
-which is the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a>. See <a class="reference internal" href="IntegratorFunctions.html#adaptiveintegrator"><span class="std std-ref">AdaptiveIntegrator</span></a> for more details on what it computes.
-Keep in mind that the <code class="xref any docutils literal"><span class="pre">integration_rate</span></code> parameter of the <code class="xref any docutils literal"><span class="pre">KWTA</span></code> corresponds to the
-<code class="xref any docutils literal"><span class="pre">rate</span></code> of the <code class="xref any docutils literal"><span class="pre">KWTAIntegrator</span></code>.</p>
+<dt>
+<code class="descname">integrator_function</code></dt>
+<dd><p>When <em>integrator_mode</em> is set to True, the KohonenMechanism executes its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, which is the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a>. See <a class="reference internal" href="IntegratorFunctions.html#adaptiveintegrator"><span class="std std-ref">AdaptiveIntegrator</span></a> for more details on what it computes. Keep in mind that the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a> parameter of the KohonenMechanism corresponds to the <code class="xref any docutils literal"><span class="pre">rate</span></code> of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -386,25 +386,35 @@ Keep in mind that the <code class="xref any docutils literal"><span class="pre">
 <p>the variable of the mechanism is first passed into the following equation:</p>
 <div class="math">
 \[value = previous\_value(1-smoothing\_factor) + variable \cdot smoothing\_factor + noise\]</div>
-<p>The result of the integrator function above is then passed into the <code class="xref any docutils literal"><span class="pre">mechanism's</span> <span class="pre">function</span></code>. Note that
+<p>The result of the integrator function above is then passed into the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">mechanism's</span> <span class="pre">function</span></code></a>. Note that
 on the first execution, <em>initial_value</em> sets previous_value.</p>
 <p><strong>When integrator_mode is set to False:</strong></p>
-<p>The variable of the mechanism is passed into the <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">mechanism</span></code>. The mechanism’s
-<code class="xref any docutils literal"><span class="pre">integrator_function</span></code> is skipped entirely, and all related arguments (<em>noise</em>, <em>leak</em>,
+<p>The variable of the mechanism is passed into the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">mechanism</span></code></a>. The mechanism’s
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> is skipped entirely, and all related arguments (<em>noise</em>, <em>leak</em>,
 <em>initial_value</em>, and <em>time_step_size</em>) are ignored.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip">
+<code class="descname">clip</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list [float, float] : default None (Optional)</em> – specifies the allowable range for the result of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></p>
+<p>the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to</p>
+<blockquote>
+<div>the value of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a> that it exceeds.</div></blockquote>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.previous_input">
 <code class="descname">previous_input</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.previous_input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array of floats</em> – the value of the input on the previous execution, including the value of <a class="reference internal" href="LCAMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
+<dd><p><em>1d np.array of floats</em> – the value of the input on the previous execution, including the value of <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.value">
 <code class="descname">value</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array [array(float64)]</em> – result of executing <code class="xref any docutils literal"><span class="pre">function</span></code>; same value as first item of
-<code class="xref any docutils literal"><span class="pre">output_values</span></code>.</p>
+<dd><p><em>2d np.array [array(float64)]</em> – result of executing <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; same value as first item of
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.output_values" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -428,14 +438,14 @@ element of the Mechanism’s <a class="reference internal" href="#psyneulink.lib
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the KWTA Mechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
+<dd><p><em>str</em> – the name of the Kohonen Mechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
 default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the KWTA Mechanism; if it is not specified in the <strong>prefs</strong> argument of the
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Kohonen Mechanism; if it is not specified in the <strong>prefs</strong> argument of the
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
@@ -451,7 +461,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </table>
 <dl class="method">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning">
-<code class="descname">configure_learning</code><span class="sig-paren">(</span><em>learning_function: &lt;typecheck.framework.optional object at 0x1072f8438&gt; = None</em>, <em>learning_rate: &lt;typecheck.framework.optional object at 0x1072f84e0&gt; = None</em>, <em>learned_projection: &lt;typecheck.framework.optional object at 0x1072f8518&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configure_learning</code><span class="sig-paren">(</span><em>learning_function: &lt;typecheck.framework.optional object at 0x10512e588&gt; = None</em>, <em>learning_rate: &lt;typecheck.framework.optional object at 0x10512e630&gt; = None</em>, <em>learned_projection: &lt;typecheck.framework.optional object at 0x10512e668&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provide user-accessible-interface to _instantiate_learning_mechanism</p>
 <p>Configure KohonenMechanism for learning. Creates the following Components:</p>
 <ul class="simple">
@@ -519,7 +529,7 @@ however a different one can be specified.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1018.g900f06a',
+            VERSION:'0.4.8.0+1019.g1459d34',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
