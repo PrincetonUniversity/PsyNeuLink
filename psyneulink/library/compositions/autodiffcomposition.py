@@ -28,7 +28,7 @@ Creating an AutodiffComposition
 -------------------------------
 
 An AutodiffComposition can be created by calling the constructor, and then adding `Components <Component>` using the
-add methods of its parent class `Composition`. The most significant argument in initialization is
+add methods of its parent class `Composition`. The most unusual argument in initialization is
 **param_init_from_pnl**, which controls how parameters are set up for the internal PyTorch representation of the model.
 
 If set to True:
@@ -59,6 +59,13 @@ will train for the number of specified epochs and will not stop training early.
 case any reduction in loss counts as a significant reduction. If **min_delta** is large and positive, the model tends to
 stop earlier because it views fewer epochs as 'good'.
 
+**randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
+run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
+
+**learning_rate** specifies the learning rate for this run (default 0.001), which is passed to the **optimizer**
+argument. **optimizer** specifies the kind of optimizer used in training. The current options are 'sgd' (the default)
+or 'adam'.
+
 .. _AutodiffComposition_Structure:
 
 Structure
@@ -87,10 +94,6 @@ AutodiffComposition's `run` method (such as **inputs** and **execution_id**) are
 Composition's `run <Composition.run>` method, which specifies the number of inputs that will be run. For example, if
 your input set has size 3, setting **epochs** to 1 in AutodiffComposition is equivalent to setting **num_trials** to 3
 in Composition.
-
-**learning_rate** specifies the learning rate for this run (default 0.001), which is passed to the **optimizer**
-argument. **optimizer** specifies the kind of optimizer used in training. The current options are 'sgd' (the default)
-or 'adam'.
 
 **loss** specifies the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
 
@@ -155,7 +158,12 @@ class AutodiffComposition(Composition):
     param_init_from_pnl=True,       \
     patience=None,                  \
     min_delta=0,                    \
+    learning_rate=0.001,            \
+    learning_enabled=True,          \
+    optimizer_type=None,            \
+    loss_type=None,                 \
     randomize=False,                \
+    refresh_losses=False,           \
     name="autodiff_composition")
 
     Subclass of `Composition` that trains models more quickly by integrating with PyTorch.
@@ -176,6 +184,14 @@ class AutodiffComposition(Composition):
     min_delta : float : default 0
         the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
         Used for early stopping of training, in combination with **patience**.
+
+    learning_rate : float: default 0.001
+        the learning rate for this run, which is passed to the optimizer.
+
+    optimizer_type : str : default 'sgd'
+        the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
+
+    loss_type : str : default
 
     randomize: boolean : default False
         specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are run, but
@@ -215,7 +231,6 @@ class AutodiffComposition(Composition):
     """
 
     class Params(Composition.Params):
-        loss = Param(nn.MSELoss(reduction='sum'), stateful=False, loggable=False)
 
         optimizer = None
         learning_rate = .001
@@ -231,8 +246,8 @@ class AutodiffComposition(Composition):
                  min_delta=0,
                  learning_rate=0.001,
                  learning_enabled=True,
-                 optimizer_type=None,
-                 loss_type=None,
+                 optimizer_type='sgd',
+                 loss_type='mse',
                  randomize=None,
                  refresh_losses=False,
                  name="autodiff_composition"):
@@ -258,7 +273,7 @@ class AutodiffComposition(Composition):
         self.pytorch_representation = None
         self.learning_rate = learning_rate  # possibly remove this line
         self.optimizer = None
-        self.loss = self.defaults.loss
+        self.loss = None
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -290,34 +305,34 @@ class AutodiffComposition(Composition):
                                         self.execution_sets,
                                         execution_id)
             self.parameters.pytorch_representation.set(model, execution_id)
-         # Set up optimizer function
-        if self.optimizer_type is None:
-            if self.parameters.optimizer.get(execution_id) is None:
-                opt = optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
-                self.parameters.optimizer.set(opt, execution_id)
+        # Set up optimizer function
+        if self.optimizer_type not in ['sgd', 'adam']:
+            raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
+                                           "Currently, Stochastic Gradient Descent and Adam are the only available "
+                                           "optimizers (specified as 'sgd' or 'adam').")
+        if self.parameters.optimizer.get(execution_id) is not None:
+            logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
+                self, self.parameters.optimizer.get(execution_id)))
+        if self.optimizer_type == 'sgd':
+            opt = optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
+            self.parameters.optimizer.set(opt, execution_id)
         else:
-            if self.optimizer_type not in ['sgd', 'adam']:
-                raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
-                                               "Currently, Stochastic Gradient Descent and Adam are the only available "
-                                               "optimizers (specified as 'sgd' or 'adam').")
-            if self.optimizer_type == 'sgd':
-                opt = optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
-                self.parameters.optimizer.set(opt, execution_id)
-            else:
-                opt = optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
-                self.parameters.optimizer.set(opt, execution_id)
-        if self.loss_type is None:
-            if self.loss is None:
-                self.loss = nn.MSELoss(reduction='sum')
+            opt = optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
+            self.parameters.optimizer.set(opt, execution_id)
+
+        # Set up loss function
+        if self.loss_type not in ['mse', 'crossentropy']:
+            raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
+                                           "Currently, Mean Squared Error and Cross Entropy are the only "
+                                           "available loss functions (specified as 'mse' or 'crossentropy').")
+        if self.loss is not None:
+            logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
+                self, self.loss))
+        if self.loss_type == 'mse':
+            self.loss = nn.MSELoss(reduction='sum')
         else:
-            if self.loss_type not in ['mse', 'crossentropy']:
-                raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
-                                               "Currently, Mean Squared Error and Cross Entropy are the only "
-                                               "available loss functions (specified as 'mse' or 'crossentropy').")
-            if self.loss_type == 'mse':
-                self.loss = nn.MSELoss(reduction='sum')
-            else:
-                self.loss = nn.CrossEntropyLoss(reduction='sum')
+            self.loss = nn.CrossEntropyLoss(reduction='sum')
+
         if not isinstance(self.learning_rate, (int, float)):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
 
