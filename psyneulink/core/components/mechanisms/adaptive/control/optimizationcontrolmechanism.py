@@ -814,21 +814,21 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Assign default net_outcome if it is not yet specified (presumably first trial)
         # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-        #          self.control_signals]
-        # try:
-        #     net_outcome = variable[0] - self.combine_costs(costs)
-        # except AttributeError:
-        #     net_outcome = [0]
-        # # FIX: END
+        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
+                 self.control_signals]
+        try:
+            net_outcome = variable[0] - self.combine_costs(costs)
+        except AttributeError:
+            net_outcome = [0]
+        # FIX: END
         #
-        # # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
-        # try:
-        #     self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
-        # except AttributeError as e:
-        #     # If error is due to absence of adapt method, OK; otherwise, raise exception
-        #     if not 'has no attribute \'adapt\'' in e.args[0]:
-        #         raise AttributeError(e.args[0])
+        # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
+        try:
+            self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
+        except AttributeError as e:
+            # If error is due to absence of adapt method, OK; otherwise, raise exception
+            if not 'has no attribute \'adapt\'' in e.args[0]:
+                raise AttributeError(e.args[0])
 
         # Get control_allocation that optmizes EVC using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
