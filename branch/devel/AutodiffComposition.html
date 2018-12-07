@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+1021.g4dcd529 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+1022.gce870aa documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1021.g4dcd529 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1022.gce870aa documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Compositions.html"/>
         <link rel="next" title="Subsystems" href="Subystems.html"/>
         <link rel="prev" title="Compositions" href="Compositions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1021
+                0.4.8.0+1022
               </div>
             
           
@@ -173,8 +173,127 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="autodiffcomposition">
-<h1>AutodiffComposition<a class="headerlink" href="#autodiffcomposition" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-psyneulink.library.compositions.autodiffcomposition">
+<span id="autodiffcomposition"></span><h1>AutodiffComposition<a class="headerlink" href="#module-psyneulink.library.compositions.autodiffcomposition" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<span id="autodiffcomposition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>AutodiffComposition is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models more quickly by integrating with
+<a class="reference external" href="https://pytorch.org/">PyTorch</a>, a popular machine learning library. In situations with training,
+AutodiffComposition is used similarly to a Composition, but is much faster.</p>
+<p>The <code class="xref any docutils literal"><span class="pre">xor_in_psyneulink_and_pytorch.py</span></code> script (in the Scripts folder of the PsyNeuLink source code) is an example of
+how to use AutodiffComposition. The script also gives a comparison of runtimes.</p>
+</div>
+<div class="section" id="creating-an-autodiffcomposition">
+<span id="autodiffcomposition-creation"></span><h2>Creating an AutodiffComposition<a class="headerlink" href="#creating-an-autodiffcomposition" title="Permalink to this headline">¶</a></h2>
+<p>An AutodiffComposition can be created by calling the constructor, and then adding <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> using the
+add methods of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. The most unusual argument in initialization is
+<strong>param_init_from_pnl</strong>, which controls how parameters are set up for the internal PyTorch representation of the model.</p>
+<p>If set to True:</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Only weight parameters that correspond to projections are created. No trainable bias parameters are created, as they</dt>
+<dd>don’t exist for the autodiff composition’s mechanisms.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>The weight parameters are initialized to be perfectly identical to the autodiff composition’s projections - the</dt>
+<dd>tensor of the parameter object corresponding to a particular projection not only has the same dimensionality as
+the projection’s matrix, it has the same exact values.</dd>
+</dl>
+</li>
+<li>Pytorch functions representing mechanism functions incorporate their scalar, untrainable biases.</li>
+</ul>
+<p>If set to False:</p>
+<ul class="simple">
+<li>Both weight parameters corresponding to projections and trainable bias parameters for mechanisms are created.</li>
+<li><dl class="first docutils">
+<dt>Weight parameters have the same dimensionality as their corresponding projections. However, their values - and those</dt>
+<dd>of the bias parameters - are sampled from a random distribution.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Though trainable biases now exist, Pytorch functions representing mechanism functions still incorporate their scalar,</dt>
+<dd>untrainable biases.</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Do not add or remove Mechanisms or Projections to an AutodiffComposition after it has been run for the
+first time. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.</p>
+</div>
+<p>Two other initialization arguments are <strong>patience</strong> and <strong>min_delta</strong>, allow the model to halt training early. The
+model tracks how many consecutive ‘bad’ epochs of training have failed to significantly reduce the model’s loss. Once
+this number exceeds <strong>patience</strong>, the model stops training. By default, <strong>patience</strong> is <code class="docutils literal"><span class="pre">None</span></code>, and the model
+will train for the number of specified epochs and will not stop training early.</p>
+<p><strong>min_delta</strong> defines what threshold counts as a significant reduction in model loss. By default it is zero, in which
+case any reduction in loss counts as a significant reduction. If <strong>min_delta</strong> is large and positive, the model tends to
+stop earlier because it views fewer epochs as ‘good’.</p>
+<p><strong>learning_rate</strong> specifies the learning rate for this run (default 0.001), which is passed to the <strong>optimizer</strong>
+argument. <strong>optimizer</strong> specifies the kind of optimizer used in training. The current options are ‘sgd’ (the default)
+or ‘adam’.</p>
+<p><strong>learning_enabled</strong> specifies whether the AutodiffComposition should learn, and it defaults to True. When True, the
+AutodiffComposition trains using PyTorch, as normal. When False, the AutodiffComposition acts like an ordinary
+Composition, which does not change weights. <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is also an
+attribute, which can be toggled between runs.</p>
+<p><strong>optimizer_type</strong> specifies the kind of optimizer used in training. The current options are ‘sgd’ (which is the
+default) or ‘adam’.</p>
+<p><strong>loss_type</strong> specifies the loss function for training. The current options are ‘mse’ (the default) and ‘crossentropy’.</p>
+<p><strong>randomize</strong> specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
+run, but if <strong>randomize</strong> is True then the order in which inputs are within an epoch is random.)</p>
+<p><strong>refresh_losses</strong> specifies whether the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute is refreshed for each call to <a class="reference internal" href="Run.html#psyneulink.core.globals.environment.run" title="psyneulink.core.globals.environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run()</span></code></a>. If False, the losses
+of each run are appended to the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute. If True, the losses of each run overwrite <code class="xref any docutils literal"><span class="pre">losses</span></code> instead.</p>
+</div>
+<div class="section" id="structure">
+<span id="autodiffcomposition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>AutodiffComposition has all the attributes of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, in addition to several more.</p>
+<p>The <code class="xref any docutils literal"><span class="pre">target_CIM</span></code> attribute is analogous to the <code class="xref any docutils literal"><span class="pre">input_CIM</span></code> of
+any Composition, but instead of providing inputs, provides targets for the AutodiffComposition.</p>
+<p>The <code class="xref any docutils literal"><span class="pre">pytorch_representation</span></code> attribute holds the PyTorch representation
+of the PsyNeuLink model that AutodiffComposition contains.</p>
+<p>The <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute tracks the average loss for each training epoch.</p>
+<p>As mentioned above, the <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> attribute can be toggled to determine
+whether the AutodiffComposition learns or whether it executes like an ordinary Composition.</p>
+<p>The <code class="xref any docutils literal"><span class="pre">optimizer</span></code> attribute contains the PyTorch optimizer function used for learning. It
+is determined at initialization by the <strong>optimizer_type</strong> and <strong>learning_rate</strong> arguments.</p>
+<p>The <code class="xref any docutils literal"><span class="pre">loss</span></code> attribute contains the PyTorch loss function used for learning. It is determined
+at initialization by the <strong>loss_type</strong> arguments.</p>
+</div>
+<div class="section" id="execution">
+<span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Run.html#psyneulink.core.globals.environment.run" title="psyneulink.core.globals.environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="System.html#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as in a Composition. When
+<code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is False, the arguments are the same, since in this
+case the AutodiffComposition executes like a Composition.</p>
+<p>However, if <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is True, the <strong>inputs</strong> argument
+format is different. If <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is True, then <strong>inputs</strong> should be a
+dictionary with required keys “inputs” and “targets”, and optional key “epochs”. The value at “inputs” should be a
+dictionary relating origin mechanisms to their inputs. The value at “targets” should be a dictionary relating terminal
+mechanisms to their inputs. The value at “epochs” is an integer stating the number of epochs of training (i.e. how many
+times all inputs and targets are run). It defaults to 1. Here is an example of creating a simple AutodiffComposition
+and specifying inputs and targets:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># set up PsyNeuLink Components</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_projection</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+<span class="gp">... </span>                    <span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">receiver</span><span class="o">=</span><span class="n">my_mech_2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># create AutodiffComposition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AutodiffComposition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_c_node</span><span class="p">(</span><span class="n">my_mech_1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_c_node</span><span class="p">(</span><span class="n">my_mech_1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_projection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="n">my_projection</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">my_mech_2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># input specification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_1</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_targets</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_2</span><span class="p">:</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">my_input_dict</span><span class="p">,</span> <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">my_targets_dict</span><span class="p">,</span> <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="class-reference">
+<span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+</div>
 </div>
 
 
@@ -221,7 +340,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1021.g4dcd529',
+            VERSION:'0.4.8.0+1022.gce870aa',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
