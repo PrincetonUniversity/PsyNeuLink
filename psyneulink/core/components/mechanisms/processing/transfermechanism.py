@@ -974,6 +974,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set:
             integration_rate = target_set[INTEGRATION_RATE]
+            # if np.isscalar(integration_rate):
             if (not (isinstance(integration_rate, (int, float))
                      and 0 <= integration_rate <= 1)) and (integration_rate != None):
                 raise TransferError("integration_rate parameter ({}) for {} must be a float between 0 and 1".
