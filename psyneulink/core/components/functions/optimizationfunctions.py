@@ -440,10 +440,10 @@ class OptimizationFunction(Function_Base):
         executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
         (see `note <OptimizationFunction_Defaults>`).
 
-ZZZ
     search_space : list or array of SampleIterators : default None
-        specifies samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Procedure>`. It **must be specified**
+        specifies iterators used by `search_function <OptimizationFunction.search_function>` to generate samples
+        evaluated `objective_function <OptimizationFunction.objective_function>` in each iteration of the
+        `optimization process <OptimizationFunction_Procedure>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
         executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
@@ -451,9 +451,9 @@ ZZZ
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
-        It **must be specified** if the `objective_function <OptimizationFunction.objective_function>` is not
-        overridden.  If it is required and not specified, the optimization process executes exactly once
-        (see `note <OptimizationFunction_Defaults>`).
+        It must return a boolean value, and it  **must be specified** if the
+        `objective_function <OptimizationFunction.objective_function>` is not overridden.  If it is required and not
+        specified, the optimization process executes exactly once (see `note <OptimizationFunction_Defaults>`).
 
     save_samples : bool
         specifies whether or not to save and return the values of the samples used to evalute `objective_function
@@ -485,13 +485,17 @@ ZZZ
         in each iteration of the `optimization process <OptimizationFunction_Procedure>`.  `NotImplemented` if
         the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
 
-    search_space : list or np.ndarray
-        samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Procedure>`;  `NotImplemented` if
-        the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
+    search_space : list or array of `SampleIterators <SampleIterator>`
+        used by `search_function <OptimizationFunction.search_function>` to generate samples evaluated by
+        `objective_function <OptimizationFunction.objective_function>` in each iteration of the `optimization process
+        <OptimizationFunction_Procedure>`;  `NotImplemented` if the `objective_function
+        <OptimizationFunction.objective_function>` generates its own samples.  If it is required and not specified,
+        the optimization process executes exactly once using the value passed as its `variable
+        <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
 
-    search_termination_function : function or method
-        used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
+    search_termination_function : function or method that returns a boolean value
+        used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`; if it is required
+        and not specified, the optimization process executes exactly once (see `note <OptimizationFunction_Defaults>`).
 
     iteration : int
         the current iteration of the `optimization process <OptimizationFunction_Procedure>`.
@@ -566,7 +570,7 @@ ZZZ
             self.search_termination_function = search_termination_function
 
         if search_space is None:
-            # FIX: WHAT IS THE ARGUMENT HERE??
+            # FIX: WHAT IS THAT ARGUMENT BELOW??
             self.search_space = [SampleIterator([1.2345])]
             self._unspecified_args.append(SEARCH_SPACE)
         else:
@@ -1140,7 +1144,8 @@ class GridSearch(OptimizationFunction):
         it must be specified and must return a scalar value.
 
     search_space : list or array of SampleIterators
-        specifies iterators used to generate samples evaluated by `objective_function <GridSearch.objective_function>`.
+        specifies `SampleIterators <SampleIterator>` used to generate samples evaluated by `objective_function
+        <GridSearch.objective_function>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         specifies the direction of optimization:  if *MAXIMIZE*, the highest value of `objective_function
@@ -1170,8 +1175,11 @@ class GridSearch(OptimizationFunction):
         function used to evaluate sample in each iteration of the `optimization process <GridSearch_Procedure>`.
 
     search_space : list or array of Sampleiterators
-        contains iterators for generating samples evaluated by `objective_function <GridSearch.objective_function>`
-        in iterations of the `optimization process <GridSearch_Procedure>`.
+        contains `SampleIterators <SampleIterator>` for generating samples evaluated by `objective_function
+        <GridSearch.objective_function>` in iterations of the `optimization process <GridSearch_Procedure>`.
+
+    grid : iterator
+        generates samples from the Cartesian product of `SampleIterators in `search_space <GridSearch.search_sapce>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         determines the direction of optimization:  if *MAXIMIZE*, the greatest value of `objective_function
