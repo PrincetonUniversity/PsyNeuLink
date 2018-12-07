@@ -809,9 +809,8 @@ class LCControlMechanism(ControlMechanism):
     #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
     #         self._instantiate_output_states(context=ContextFlags.METHOD)
 
-    def _get_mech_params_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir((self.scaling_factor_gain, self.base_level_gain))
+    def _get_mech_params_type(self, ctx):
+        return ctx.convert_python_struct_to_llvm_ir((self.scaling_factor_gain, self.base_level_gain))
 
     def _get_mech_params_init(self):
         return (self.scaling_factor_gain, self.base_level_gain)

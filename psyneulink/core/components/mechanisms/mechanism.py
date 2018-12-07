@@ -2509,13 +2509,13 @@ class Mechanism_Base(Mechanism):
         param_list = [input_param_struct, function_param_struct,
                       output_param_struct, param_param_struct]
 
-        mech_params = self._get_mech_params_type()
+        mech_params = self._get_mech_params_type(ctx)
         if mech_params is not None:
             param_list.append(mech_params)
 
         return ir.LiteralStructType(param_list)
 
-    def _get_mech_params_type(self):
+    def _get_mech_params_type(self, ctx):
         pass
 
     def _get_input_context_struct_type(self, ctx):
@@ -2542,13 +2542,13 @@ class Mechanism_Base(Mechanism):
         context_list = [input_context_struct, function_context_struct,
                         output_context_struct, param_context_struct]
 
-        mech_context = self._get_mech_context_type()
+        mech_context = self._get_mech_context_type(ctx)
         if mech_context is not None:
             context_list.append(mech_context)
 
         return ir.LiteralStructType(context_list)
 
-    def _get_mech_context_type(self):
+    def _get_mech_context_type(self, ctx):
         pass
 
     def _get_output_struct_type(self, ctx):
