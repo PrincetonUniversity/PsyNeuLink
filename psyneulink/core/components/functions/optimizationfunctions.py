@@ -236,13 +236,12 @@ class SampleIterator(Iterator):
         step : scalar
             increment for each item of list or SampleSpec.step
 
-        count : int
+        num_steps : int
             length of list or SampleSpec.count.
 
-        COMMENT:
+        FIX: current_step?
         head : int
             index of next item to be returned if __next__ is an iterator;  None if it is a generator
-        COMMENT
 
         Returns
         -------
@@ -250,7 +249,8 @@ class SampleIterator(Iterator):
         List(self) : list
         '''
 
-        # Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
+        # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
+        # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
         if isinstance(specification, list):
             self.begin = specification[0]
             self.end = specification[-1]
@@ -272,8 +272,9 @@ class SampleIterator(Iterator):
                 def generate_current_value():  # index into list
                     return self.begin + self.step_size*self.current_step
 
-            # KAM 12/6/18 must disallow generators because they are not pickleable
+            # FIX KAM 12/6/18 must disallow generators because they are not pickleable
             # are there other types of valid iterators that we should allow users to pass in?
+            # JDC:  I THINK SO, E.G,. np.nditer??
             # elif is_iter(specification.generator):
             #     self._iterator = specification.generator
 
@@ -290,8 +291,9 @@ class SampleIterator(Iterator):
                 def generate_current_value():  # index into list
                     return self.generator()
 
-                # KAM How to handle generates with no stopping condition? Note that self.num_steps is used for
-                #       GridSearch's total num_iterations
+                # FIX: KAM How to handle generates with no stopping condition?
+                #      Note that self.num_steps is used for GridSearch's total num_iterations
+                #      JDC: IS THERE A PROBLEM WITH ALLOWING ONE TO BE CALLED INDEFINITELY, E.G,. DISTRIB FCT?
                 # else:
                 #     def sample_gen():
                 #         yield specification.generator()
@@ -315,7 +317,9 @@ class SampleIterator(Iterator):
             self.current_step += 1
             return current_value
 
-        # return None     # How do we want to handle it when the iterator runs out of iterations?
+        # return None     # FIX: How do we want to handle it when the iterator runs out of iterations?
+        #                        ??MEANINING None VS. StopIteration EXCEPTION?
+        #                          I THINK THE LATTER, AS THE CALL TO NEXT() CAN OVERRIDE THIS WITH AN EXTRA ARG
         else:
             raise StopIteration
 
@@ -348,8 +352,9 @@ class OptimizationFunction(Function_Base):
     prefs=None)
 
     Provides an interface to subclasses and external optimization functions. The default `function
-    <OptimizationFunction.function>` executes iteratively, evaluating samples from `search_space
-    <OptimizationFunction.search_space>` using `objective_function <OptimizationFunction.objective_function>`
+    <OptimizationFunction.function>` executes iteratively, generating samples from `search_space
+    <OptimizationFunction.search_space>` using `search_function <OptimizationFunction.search_function>`
+    and evaluating them using `objective_function <OptimizationFunction.objective_function>`,
     until terminated by `search_termination_function <OptimizationFunction.search_termination_function>`.
     Subclasses can override this to implement their own optimization function or call an external one.
 
@@ -367,8 +372,8 @@ class OptimizationFunction(Function_Base):
         - evaluate `search_termination_function <OptimizationFunction.search_termination_function>`.
 
     The current iteration is contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until all
-    values of `search_space <OptimizationFunction.search_space>` have been evaluated (i.e., `search_termination_function
-    <OptimizationFunction.search_termination_function>` returns `True`).  The `function <OptimizationFunction.function>`
+    values of `search_space <OptimizationFunction.search_space>` have been evaluated and/or `search_termination_function
+    <OptimizationFunction.search_termination_function>` returns `True`.  The `function <OptimizationFunction.function>`
     returns:
 
     - the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
@@ -404,7 +409,7 @@ class OptimizationFunction(Function_Base):
     NOTES TO DEVELOPERS:
     - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
       by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`) so
-      that subclasses are meant to be used interchangeably by OptimizationMechanisms.
+      that subclasses can be used interchangeably by OptimizationMechanisms.
 
     - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
       `reinitialize <OptimizationFunction.reinitialize>` method, that calls super().reinitialize(*args) and then
@@ -435,7 +440,8 @@ class OptimizationFunction(Function_Base):
         executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
         (see `note <OptimizationFunction_Defaults>`).
 
-    search_space : list or np.ndarray : default None
+ZZZ
+    search_space : list or array of SampleIterators : default None
         specifies samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
         in each iteration of the `optimization process <OptimizationFunction_Procedure>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
@@ -560,6 +566,7 @@ class OptimizationFunction(Function_Base):
             self.search_termination_function = search_termination_function
 
         if search_space is None:
+            # FIX: WHAT IS THE ARGUMENT HERE??
             self.search_space = [SampleIterator([1.2345])]
             self._unspecified_args.append(SEARCH_SPACE)
         else:
@@ -577,6 +584,39 @@ class OptimizationFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        if OBJECTIVE_FUNCTION in request_set and request_set[OBJECTIVE_FUNCTION] is not None:
+            if not is_function_type(request_set[OBJECTIVE_FUNCTION]):
+                raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
+                                                format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
+                                                       request_set[OBJECTIVE_FUNCTION].__name__))
+
+        if SEARCH_FUNCTION in request_set and request_set[SEARCH_FUNCTION] is not None:
+            if not is_function_type(request_set[SEARCH_FUNCTION]):
+                raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
+                                                format(repr(SEARCH_FUNCTION), self.__class__.__name__,
+                                                       request_set[SEARCH_FUNCTION].__name__))
+
+        if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
+            if not all(isinstance(s, SampleIterator) for s in request_set[SEARCH_SPACE]):
+                raise OptimizationFunctionError("All entries in list specified for {} arg of {} must be a {}".
+                                                format(repr(SEARCH_SPACE),
+                                                       self.__class__.__name__,
+                                                       SampleIterator.__name__))
+
+        if SEARCH_TERMINATION_FUNCTION in request_set and request_set[SEARCH_TERMINATION_FUNCTION] is not None:
+            if not is_function_type(request_set[SEARCH_TERMINATION_FUNCTION]):
+                raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
+                                                format(repr(SEARCH_TERMINATION_FUNCTION), self.__class__.__name__,
+                                                       request_set[SEARCH_TERMINATION_FUNCTION].__name__))
+            b = request_set[SEARCH_TERMINATION_FUNCTION]()
+            if not isinstance(b, bool):
+                raise OptimizationFunctionError("Function ({}) specified for {} arg of {} must return a boolean value".
+                                                format(request_set[SEARCH_TERMINATION_FUNCTION].__name__,
+                                                       repr(SEARCH_TERMINATION_FUNCTION),
+                                                       self.__class__.__name__))
+
     def reinitialize(self, *args, execution_id=None):
         '''Reinitialize parameters of the OptimizationFunction
 
@@ -589,6 +629,8 @@ class OptimizationFunction(Function_Base):
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
         '''
+
+        self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
             self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
@@ -1065,8 +1107,8 @@ class GridSearch(OptimizationFunction):
         prefs=None                   \
         )
 
-    Search over all samples in `search_space <GridSearch.search_space>` for the one that optimizes the value of
-    `objective_function <GridSearch.objective_function>`.
+    Search over all samples generated by `search_space <GridSearch.search_space>` for the one that optimizes the
+    value of `objective_function <GridSearch.objective_function>`.
 
     .. _GridSearch_Procedure:
 
@@ -1078,7 +1120,7 @@ class GridSearch(OptimizationFunction):
         ..
         - compute value of `objective_function <GridSearch.objective_function>` for that sample;
 
-    The current iteration is contained in `iteration <GridSearch.iteration>`. Iteration continues until all values of
+    The current iteration is contained in `iteration <GridSearch.iteration>`. Iteration continues until all values in
     `search_space <GridSearch.search_space>` have been evaluated, or `max_iterations <GridSearch.max_iterations>` is
     execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
     is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
@@ -1097,8 +1139,8 @@ class GridSearch(OptimizationFunction):
         specifies function used to evaluate sample in each iteration of the `optimization process <GridSearch_Procedure>`;
         it must be specified and must return a scalar value.
 
-    search_space : list or array
-        specifies samples used to evaluate `objective_function <GridSearch.objective_function>`.
+    search_space : list or array of SampleIterators
+        specifies iterators used to generate samples evaluated by `objective_function <GridSearch.objective_function>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         specifies the direction of optimization:  if *MAXIMIZE*, the highest value of `objective_function
@@ -1111,7 +1153,7 @@ class GridSearch(OptimizationFunction):
     save_samples : bool
         specifies whether or not to return all of the samples used to evaluate `objective_function
         <GridSearch.objective_function>` in the `optimization process <GridSearch_Procedure>`
-        (i.e., a copy of the `search_space <GridSearch.search_space>`.
+        (i.e., a copy of the samples generated from the `search_space <GridSearch.search_space>`.
 
     save_values : bool
         specifies whether or not to save and return the values of `objective_function <GridSearch.objective_function>`
@@ -1127,9 +1169,9 @@ class GridSearch(OptimizationFunction):
     objective_function : function or method
         function used to evaluate sample in each iteration of the `optimization process <GridSearch_Procedure>`.
 
-    search_space : list or array
-        contains samples used to evaluate `objective_function <GridSearch.objective_function>` in iterations of the
-        `optimization process <GridSearch_Procedure>`.
+    search_space : list or array of Sampleiterators
+        contains iterators for generating samples evaluated by `objective_function <GridSearch.objective_function>`
+        in iterations of the `optimization process <GridSearch_Procedure>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         determines the direction of optimization:  if *MAXIMIZE*, the greatest value of `objective_function
@@ -1143,9 +1185,9 @@ class GridSearch(OptimizationFunction):
         if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
 
     save_samples : True
-        determines whether or not to save and return all samples evaluated by the `objective_function
-        <GridSearch.objective_function>` in the `optimization process <GridSearch_Procedure>` (if the process
-        completes, this should be identical to `search_space <GridSearch.search_space>`.
+        determines whether or not to save and return all samples generated from `search_space <GridSearch.search_space>`
+        and evaluated by the  `objective_function <GridSearch.objective_function>` in the `optimization process
+        <GridSearch_Procedure>`.
 
     save_values : bool
         determines whether or not to save and return the value of `objective_function
@@ -1155,15 +1197,7 @@ class GridSearch(OptimizationFunction):
     componentName = GRID_SEARCH_FUNCTION
 
     class Params(OptimizationFunction.Params):
-        # # MODIFIED 12/3/18 OLD:
-        # variable = Param([[0], [0]], read_only=True)
-        # MODIFIED 12/3/18 NEW: [JDC]
-        # variable = Param([SampleIterator([0]),SampleIterator([0])], read_only=True)
-        # MODIFIED 12/3/18 END
-        # MODIFIED 12/4/18 NEW: [JDC]
         grid = Param(None)
-        # MODIFIED 12/4/18 END
-
         save_samples = True
         save_values = True
 
@@ -1205,18 +1239,12 @@ class GridSearch(OptimizationFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
     def reinitialize(self, *args, execution_id=None):
-
+        '''Assign size of `search_space <GridSearch.search_space>'''
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
-        # self.num_iterations = 1
-        # for signal in self.search_space:
-        #     self.num_iterations *= signal.num
-        # self.grid = itertools.product(*[s for s in self.search_space])
-        # KAM HACK 12/16/18
         self.num_iterations = np.product([s.num_steps for s in args[0]['search_space']])
 
-        # self.reinitialize_grid()
-
     def reset_grid(self):
+        '''Reset iterators in `search_space <GridSearch.search_space>'''
         for s in self.search_space:
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
