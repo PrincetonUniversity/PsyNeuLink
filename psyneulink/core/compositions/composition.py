@@ -2615,10 +2615,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             learning_enabled = True
                     if learning_enabled:
                         ret = node.execute(inputs=autodiff_stimuli[node],
-                                     execution_id=self._execution_id,
+                                     execution_id=execution_id,
                                      context=ContextFlags.COMPOSITION)
                     else:
-                        ret = node.execute(execution_id=self._execution_id,
+                        ret = node.execute(execution_id=execution_id,
                                      context=ContextFlags.COMPOSITION)
                     if bin_execute:
                         # Update result in binary data structure
