@@ -250,7 +250,7 @@ class AdditiveParam():
 # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
 
 
-class ModulationParam():
+class ModulationParam(Enum):
     """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
 
     COMMENT:
@@ -329,24 +329,24 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
 
     # # MODIFIED 6/27/18 OLD
     # # Get the actual parameter of owner.function_object to be modulated
-    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.value.attrib_name]
     # # Get the function parameter's value
     # function_param_value = owner.function_object.params[function_param_name]
     # # MODIFIED 6/27/18 NEW:
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
         # function_param_name = function_mod_meta_param_obj
         from psyneulink.core.globals.utilities import Modulation
-        function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj)
+        function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj.name)
         function_param_name = function_mod_meta_param_obj
         function_param_value = mod_proj.sender.parameters.value.get(execution_context)
     else:
         # Get the actual parameter of owner.function_object to be modulated
-        function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+        function_param_name = owner.function_object.params[function_mod_meta_param_obj.value.attrib_name]
         # Get the function parameter's value
         function_param_value = owner.function_object.params[function_param_name]
     # # MODIFIED 6/27/18 NEWER:
     # from psyneulink.core.globals.utilities import Modulation
-    # mod_spec = function_mod_meta_param_obj.attrib_name
+    # mod_spec = function_mod_meta_param_obj.value.attrib_name
     # if mod_spec == OVERRIDE_PARAM:
     #     function_param_name = mod_spec
     #     function_param_value = mod_proj.sender.value
