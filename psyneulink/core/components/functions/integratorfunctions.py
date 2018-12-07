@@ -1096,28 +1096,36 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         current_input = np.atleast_2d(variable)
         prev_val = np.atleast_2d(previous_value)
 
+        # # MODIFIED 12/7/18 OLD:
         # dist_from_asymptote = np.zeros_like(current_input)
+        # MODIFIED 12/7/18 NEW: [JDC]
         dist_from_asymptote = []
+        # MODIFIED 12/7/18 END
         for i in range(len(current_input)):
-            l_temp = []
+            d_i = []
             for j in range(len(current_input[i])):
                 if current_input[i][j] > 0:
-                    # FIX: 12/7/18 [JDC] FOLLOWING IS NOT GETTING ASSIGNED ON SECOND PASS THROUGH EXECUTE
-                    d = max_val - prev_val[i][j]
+                    d_j = max_val - prev_val[i][j]
                 elif current_input[i][j] < 0:
-                    d = prev_val[i][j] - min_val
+                    d_j = prev_val[i][j] - min_val
                 else:
-                    d = 0
+                    d_j = 0
+                # # MODIFIED 12/7/18 OLD:
+                # FIX: dist_from_asymptote[i][j] IS ONLY GETTING ASSIGNED ON FIRST PASS THROUGH EXECUTE
+                #      WHEN IT IS AN np.array, BUT NOT ON SUBSEQUENT PASSES (REMAINS [[0,0]]
                 # dist_from_asymptote[i][j] = d
-                l_temp.append(d)
-            # l.append(l_temp)
-            dist_from_asymptote.append(l_temp)
-            # TEST PRINT:
-            if self.context.initialization_status != ContextFlags.INITIALIZING:
-                print(d, dist_from_asymptote[i][j])
-        # TEST PRINT:
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            print(dist_from_asymptote)
+                # MODIFIED 12/7/18 NEW: [JDC]
+                d_i.append(d_j)
+                # MODIFIED 12/7/18 END
+            # MODIFIED 12/7/18 NEW: [JDC]
+            dist_from_asymptote.append(d_i)
+            # MODIFIED 12/7/18 END
+            # # TEST PRINT:
+            # if self.context.initialization_status != ContextFlags.INITIALIZING:
+            #     print(dist_from_asymptote[i][j])
+        # # TEST PRINT:
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     print(dist_from_asymptote)
 
         dist_from_rest = prev_val - rest
 
