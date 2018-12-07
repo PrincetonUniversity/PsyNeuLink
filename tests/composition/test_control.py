@@ -712,7 +712,7 @@ class TestSampleIterator:
         with pytest.raises(OptimizationFunctionError) as error_text:
             SampleSpec(begin=0,
                        end=10)
-        assert "Must specify one of 'step', 'count' or 'generator'" in str(error_text.value)
+        assert "Must specify one of 'step', 'count' or 'function'" in str(error_text.value)
 
     def test_float_step(self):
         # Need to decide whether end should be exclusive
@@ -757,3 +757,23 @@ class TestSampleIterator:
             assert np.allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
+
+    def test_list(self):
+        sample_list = [1, 2.0, 3.456, 7.8]
+        sample_iterator = SampleIterator(specification=sample_list)
+
+        for i in range(len(sample_list)):
+            assert np.allclose(next(sample_iterator), sample_list[i])
+
+        assert next(sample_iterator, None) is None
+
+        sample_iterator.reset()
+
+        for i in range(len(sample_list)):
+            assert np.allclose(next(sample_iterator), sample_list[i])
+
+        assert next(sample_iterator, None) is None
+
+        assert sample_iterator.begin == 1
+        assert sample_iterator.end == 7.8
+        assert sample_iterator.num_steps == len(sample_list)

@@ -1219,7 +1219,13 @@ class GridSearch(OptimizationFunction):
     def reinitialize(self, *args, execution_id=None):
         '''Assign size of `search_space <GridSearch.search_space>'''
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
-        self.num_iterations = np.product([s.num_steps for s in args[0]['search_space']])
+        sample_iterators = args[0]['search_space']
+        for i in sample_iterators:
+            if i.num_steps is None:
+                raise OptimizationFunctionError("Invalid search_space on {}. Each SampleIterator must have a value for "
+                                                "its 'num_steps' attribute.".format(self.name))
+
+        self.num_iterations = np.product([i.num_steps for i in sample_iterators])
 
     def reset_grid(self):
         '''Reset iterators in `search_space <GridSearch.search_space>'''
