@@ -218,7 +218,7 @@ class AutodiffComposition(Composition):
         loss = Param(nn.MSELoss(reduction='sum'), stateful=False, loggable=False)
 
         optimizer = None
-        learning_rate = .5
+        learning_rate = .001
         losses = None
         patience = None
         min_delta = 0
@@ -229,7 +229,7 @@ class AutodiffComposition(Composition):
                  param_init_from_pnl=True,
                  patience=None,
                  min_delta=0,
-                 learning_rate=0.5,
+                 learning_rate=0.001,
                  learning_enabled=True,
                  optimizer_type=None,
                  loss_type=None,
