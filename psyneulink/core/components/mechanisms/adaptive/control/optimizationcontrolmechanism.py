@@ -593,14 +593,13 @@ class OptimizationControlMechanism(ControlMechanism):
         `optimization process <OptimizationFunction_Process>`.
     COMMENT
 
-    control_allocation_search_space : list or ndarray
+    control_allocation_search_space : list of SampleIterators
         `search_space <OptimizationFunction.search_space>` assigned by default to `function
         <OptimizationControlMechanism.function>`, that determines the samples of
         `control_allocation <ControlMechanism.control_allocation>` evaluated by the `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.  This is a proprety that, unless overridden,
-        returns a list containing every possible `control_allocation <ControlMechanism.control_allocation>`, as
-        determined by the `Cartesian product <HTML REF>`_ of the `allocation_samples
-        <ControlSignal.allocation_samples>` specified for each of the OptimizationControlMechanism's
+        returns a list of the `SampleIterators <SampleIterator>` generated from the `allocation_sample
+        <ControlSignal.allocation_sample>` specifications for each of the OptimizationControlMechanism's
         `control_signals <ControlMechanism.control_signals>`.
 
     saved_samples : list

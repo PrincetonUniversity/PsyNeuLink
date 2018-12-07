@@ -126,10 +126,10 @@ all of the `ControlProjections <ControlProjection>` that project from that Contr
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to which
 it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine which to
-use (such as the `EVCControlMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
+use (e.g., `OptimizationControlMechanism`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
-ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
+ControlSignal's `allocation <ControlSignal>` attribute contains the value assigned to it by the ControlMechanism
 at the end of the previous `TRIAL` (i.e., when the ControlMechanism last executed --  see
 `ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
 `last_intensity` attribute.
@@ -207,7 +207,7 @@ ParameterState is unfamiliar, see `Parameter State documentation <ParameterState
 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
 attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
-evaluate an `control_allocation <ControlMechanism.control_allocation>`, and adjust the ControlSignal's `allocation
+evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
@@ -491,7 +491,7 @@ class ControlSignal(ModulatorySignal):
         which is assigned as the ControlSignal's `cost <ControlSignal.cost>` attribute.
 
     allocation_samples : list, 1d array, or SampleSpec : default SampleSpec(0.1, 1, 0.1)
-        specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
+        specifies the values used by the ControlSignal's `owner <ControlSignal.owner>` to determine its
         `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
@@ -534,8 +534,8 @@ class ControlSignal(ModulatorySignal):
         value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
 
     allocation_samples : SampleIterator
-        iterator created from **allocation_samples** specification that generates a set of values to sample by the
-        ControlSignal's `owner <ControlSignal.owner>` to determine its `control_allocation
+        `SampleIterator` created from **allocation_samples** specification and used to generate a set of values to
+        sample by the ControlSignal's `owner <ControlSignal.owner>` when determining its `control_allocation
         <ControlMechanism.control_allocation>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
@@ -696,7 +696,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples=Params.allocation_samples.default_value,
+                 allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Params.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,
