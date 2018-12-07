@@ -859,7 +859,7 @@ class ControlSignal(ModulatorySignal):
         self._initialize_cost_attributes(context=context)
 
     def _instantiate_allocation_samples(self, context=None):
-        '''Assign `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
+        '''Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
         a = self.paramsCurrent[ALLOCATION_SAMPLES]
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
