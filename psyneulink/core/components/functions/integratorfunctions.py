@@ -1065,12 +1065,14 @@ class InteractiveActivation(Integrator):  # ------------------------------------
 
         """
 
+        # FIX: rest AND rate CURRENTLY DON'T WORK IF THEY ARE ARRAYS
+
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         decay = np.array(self.get_current_function_param(DECAY, execution_id)).astype(float)
         rest = np.array(self.get_current_function_param(REST, execution_id)).astype(float)
-        # only works with "max_val". Keyword MAX_VAL = "MAX_VAL", not max_val
+        # FIX: only works with "max_val". Keyword MAX_VAL = "MAX_VAL", not max_val
         max_val = np.array(self.get_current_function_param("max_val", execution_id)).astype(float)
         min_val = np.array(self.get_current_function_param("min_val", execution_id)).astype(float)
 
