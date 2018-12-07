@@ -495,22 +495,22 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"), pytest.mark.skip])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_FHN_simple_vector(self, benchmark, mode):
         var = [1.0, 3.0]
         I = IntegratorMechanism(name="I",
-                default_variable=[var],
-                function=FHNIntegrator())
+                default_variable=var,
+                function=FHNIntegrator)
 
         if mode == 'Python':
-            val = I.execute([var])
+            val = I.execute(var)
             # LLVM versions report values of output states. Collect it here
             val = [x.value for x in I.output_states]
             benchmark(I.execute, var)
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(I)
-            val = e.execute([var])
+            val = e.execute(var)
             benchmark(e.execute, var)
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(I)
