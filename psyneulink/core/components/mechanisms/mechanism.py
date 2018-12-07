@@ -2147,8 +2147,7 @@ class Mechanism_Base(Mechanism):
                 input=None,
                 execution_id=None,
                 runtime_params=None,
-                context=None,
-                bin_execute=False):
+                context=None):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
         COMMENT:
@@ -2304,18 +2303,14 @@ class Mechanism_Base(Mechanism):
 
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        if bin_execute:
-            e = pnlvm.MechExecution(self, [execution_id])
-            value = e.execute(variable)
-        else:
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
-            value = self._execute(
-                variable=variable,
-                execution_id=execution_id,
-                runtime_params=runtime_params,
-                context=context
-            )
+        value = self._execute(
+            variable=variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
