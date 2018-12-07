@@ -1771,15 +1771,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             if rate < 0.0 or rate > 1.0:
                 raise FunctionError(rate_value_msg.format(rate, self.name))
 
-    def _get_context_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self)
-
-    def _get_context_initializer(self, execution_id):
-        data = np.asfarray(self.parameters.previous_value.get(execution_id)).flatten().tolist()
-        if self.instance_defaults.value.ndim > 1:
-            return (tuple(data),)
-        return tuple(data)
-
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
         offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
@@ -1794,8 +1785,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
         # FIXME: Standalone function produces 2d array value
-        if isinstance(state.type.pointee.element, ir.ArrayType):
-            assert state.type.pointee.count == 1
+        if isinstance(state.type.pointee.elements[0], ir.ArrayType):
+            assert len(state.type.pointee) == 1
             prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
         else:
             prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
@@ -1814,7 +1805,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         # FIXME: Standalone function produces 2d array value
         if isinstance(vo.type.pointee.element, ir.ArrayType):
-            assert state.type.pointee.count == 1
+            assert vo.type.pointee.count == 1
             vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
         else:
             vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -3270,25 +3261,10 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         return previous_v, previous_w, previous_time
 
-    def _get_context_struct_type(self, ctx):
-        context = (self.previous_v, self.previous_w, self.previous_time)
-        context_type = ctx.convert_python_struct_to_llvm_ir(context)
-        return context_type
-
-    def _get_context_initializer(self, execution_id):
-        previous_v = self.parameters.previous_v.get(execution_id).tolist()
-        previous_w = self.parameters.previous_w.get(execution_id).tolist()
-        previous_time = self.parameters.previous_time.get(execution_id).tolist()
-
-        v = pnlvm._tupleize(previous_v)
-        w = pnlvm._tupleize(previous_w)
-        time = pnlvm._tupleize(previous_time)
-        return (v, w, time)
-
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         zero_i32 = ctx.int32_ty(0)
 
-        # Get rid of 2d array. WHen part of a Mechanism the input,
+        # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         def _get_rid_of_2d(element):
             assert isinstance(element.type.pointee, ir.ArrayType)

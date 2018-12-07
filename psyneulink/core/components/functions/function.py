@@ -803,7 +803,11 @@ class Function_Base(Function):
             return '<no owner>'
 
     def _get_context_initializer(self, execution_id):
-        return tuple([])
+        try:
+            vals = (getattr(self.parameters, sa).get(execution_id).tolist() for sa in self.stateful_attributes)
+            return pnlvm._tupleize(vals)
+        except AttributeError:
+            return tuple([])
 
     def _get_param_ids(self, execution_id=None):
         params = []
