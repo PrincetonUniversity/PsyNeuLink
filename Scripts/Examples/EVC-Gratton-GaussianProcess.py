@@ -75,6 +75,4 @@ stim_list_dict = {
 }
 # print("- - - - - - - - RUN - - - - - - - -")
 # comp.show_graph()
-comp.run(
-    inputs=stim_list_dict,
-)
+print (comp.run(inputs=stim_list_dict))
