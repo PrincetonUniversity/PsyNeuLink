@@ -190,8 +190,8 @@ the following parameters (in addition to any specified for the `function <Transf
 
 
     * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input will be time-averaged before
-      passing through the function of the mechanism. When `integrator_mode <TransferMechanism.integrator_mode>` is set to
-      True, the TransferMechanism exponentially time-averages its input, by executing its `integrator_function
+      passing through the function of the mechanism. When `integrator_mode <TransferMechanism.integrator_mode>` is set
+      to True, the TransferMechanism integrates its input, by executing its `integrator_function
       <TransferMechanism.integrator_function>`, before executing its `function <TransferMechanism.function>`. When
       `integrator_mode <TransferMechanism.integrator_mode>` is False, the `integrator_function
       <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
@@ -556,12 +556,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         <TransferMechanism.integrator_mode>` is `True` or `False`. See `noise <TransferMechanism.noise>` for details.
 
     integration_rate : float : default 0.5
-        specifies the smoothing factor used for exponential time averaging of input when the TransferMechanism is
+        specifies the rate of integration of `variable <TransferMechanism.variable>` when the TransferMechanism is
         executed with `integrator_mode` set to `True`.
 
     integrator_mode : bool : False
         specifies whether or not the TransferMechanism should be executed using its `integrator_function
-        <TransferMechanism>` to integrate (exponentialy time-average) its `variable <TransferMechanism.variable>` (
+        <TransferMechanism>` to integrate its `variable <TransferMechanism.variable>` (
         when set to `True`), or simply report the asymptotic value of the output of its `function
         <TransferMechanism.function>` (when set to `False`).
 
@@ -684,13 +684,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             executions.
 
     integration_rate : float
-        the rate used for exponential time averaging of the TransferMechanism's `variable
-        <TransferMechanism>` when it is executed with `integrator_mode <TransferMechanism.integrator_mode>`
-        set to True (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
+        the rate at which the TransferMechanism's `variable <TransferMechanism>` is integrated when it is executed with
+        `integrator_mode <TransferMechanism.integrator_mode>` set to True (see `integrator_mode
+        <TransferMechanism.integrator_mode>` for details).
 
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
-        to exponentially time average its `variable <TransferMechanism.variable>` when it executes.
+        to integrate its `variable <TransferMechanism.variable>` when it executes.
 
         **If integrator_mode is set to** `True`:
 
@@ -974,7 +974,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set:
             integration_rate = target_set[INTEGRATION_RATE]
-            if (not (isinstance(integration_rate, (int, float)) and 0 <= integration_rate <= 1)) and (integration_rate != None):
+            if (not (isinstance(integration_rate, (int, float))
+                     and 0 <= integration_rate <= 1)) and (integration_rate != None):
                 raise TransferError("integration_rate parameter ({}) for {} must be a float between 0 and 1".
                                     format(integration_rate, self.name))
 
@@ -1094,18 +1095,19 @@ class TransferMechanism(ProcessingMechanism_Base):
                                              self.integrator_function.__class__.__name__))
                     self.integrator_function.parameters.noise.set(noise, execution_id)
 
-            if hasattr(self.integrator_function, INITIALIZER):
-                # Check if user specified Mechanism's param, and if so, use it
-                if initializer != self.class_defaults.initial_value:
-                    # Warn if function's param was specified and it is not the same as Mechanism's specification
-                    if (self.integrator_function.initializer != self.integrator_function.class_defaults.initializer
-                            and initializer != self.integrator_function.initializer):
-                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
-                                      "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
-                                      format(repr(INITIAL_VALUE), self.name, initializer,
-                                             repr(INITIALIZER), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
-                                             self.integrator_function.__class__.__name__))
-                    self.integrator_function.parameters.initializer.set(initializer, execution_id)
+            # if hasattr(self.integrator_function, INITIALIZER):
+            #     # Check if user specified Mechanism's param, and if so, use it
+            #     # FIX: 12/7/18 JDC
+            #     if initializer != self.class_defaults.initial_value:
+            #         # Warn if function's param was specified and it is not the same as Mechanism's specification
+            #         if (self.integrator_function.initializer != self.integrator_function.class_defaults.initializer
+            #                 and initializer != self.integrator_function.initializer):
+            #             warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
+            #                           "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
+            #                           format(repr(INITIAL_VALUE), self.name, initializer,
+            #                                  repr(INITIALIZER), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
+            #                                  self.integrator_function.__class__.__name__))
+            #         self.integrator_function.parameters.initializer.set(initializer, execution_id)
 
             if hasattr(self.integrator_function, RATE):
                 # Check if user specified Mechanism's param, and if so, use it
