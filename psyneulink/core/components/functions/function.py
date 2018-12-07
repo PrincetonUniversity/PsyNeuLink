@@ -151,7 +151,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
     NAME, PARAMETER_STATE_PARAMS, \
     kwComponentCategory, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Param, ParamAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -809,25 +809,28 @@ class Function_Base(Function):
         except AttributeError:
             return tuple([])
 
-    def _get_param_ids(self, execution_id=None):
-        params = []
-
-        for pc in self.parameters.names():
-            # Filter out params not allowed in get_current_function_param
-            if pc != 'function' and pc != 'value' and pc != 'variable':
+    def _get_compilation_params(self, execution_id=None):
+        # Filter out params not allowed in get_current_function_param
+        black_list = {'function', 'variable', 'value', 'context'}
+        def _is_compilation_param(p):
+            if p.name not in black_list and not isinstance(p, ParamAlias):
                 # FIXME: Move away form this
-                val = self.get_current_function_param(pc, execution_id)
-                # or are not numeric (this includes aliases)
-                if not isinstance(val, str):
-                    params.append(pc)
-        return params
+                val = self.get_current_function_param(p.name, execution_id)
+                # Check if the value is string (like integration_method)
+                return not isinstance(val, str)
+            return False
+
+        return filter(_is_compilation_param, self.parameters)
+
+    def _get_param_ids(self, execution_id=None):
+        return [p.name for p in self._get_compilation_params(execution_id)]
 
     def _get_param_values(self, execution_id=None):
         param_init = []
-        for p in self._get_param_ids():
-            param = getattr(self.parameters, p).get(execution_id)
+        for p in self._get_compilation_params(execution_id):
+            param = p.get(execution_id)
             try:
-                self.owner.parameter_states[p]
+                self.owner.parameter_states[p.name]
                 param = [param]
             except (AttributeError, TypeError):
                 pass
