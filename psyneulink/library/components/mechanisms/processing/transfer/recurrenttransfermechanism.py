@@ -462,7 +462,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         `noise <RecurrentTransferMechanism.noise>` for additional details.
 
     integration_rate : float : default 0.5
-        the rate used for exponential time averaging of input when `integrator_mode
+        the rate used for integrating `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
 
              result = (integration_rate * variable) +
@@ -624,7 +624,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             output, then the noise will simply be an offset that remains the same across all executions.
 
     integration_rate : float : default 0.5
-        the rate used for exponential time averaging of input when `integrator_mode
+        the rate used for integrating of `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
 
           result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
