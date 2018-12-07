@@ -810,12 +810,11 @@ class Function_Base(Function):
             return tuple([])
 
     def _get_compilation_params(self, execution_id=None):
-        # Filter out params not allowed in get_current_function_param
+        # Filter out known unused/invalid params
         black_list = {'function', 'variable', 'value', 'context'}
         def _is_compilation_param(p):
             if p.name not in black_list and not isinstance(p, ParamAlias):
-                # FIXME: Move away form this
-                val = self.get_current_function_param(p.name, execution_id)
+                val = p.get(execution_id)
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, str)
             return False
