@@ -63,6 +63,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Kohonen
 from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -103,6 +104,7 @@ class KohonenMechanism(TransferMechanism):
     size=None,                                             \
     function=Linear,                                       \
     matrix=None,                                           \
+    integrator_function=AdaptiveIntegrator,                \
     initial_value=None,                                    \
     noise=0.0,                                             \
     integration_rate=1.0,                                  \
@@ -123,8 +125,8 @@ class KohonenMechanism(TransferMechanism):
     default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
-        also serves as a template to specify the length of `variable <KWTA.variable>` for
-        `function <KWTA.function>`, and the `primary OutputState <OutputState_Primary>`
+        also serves as a template to specify the length of `variable <KohonenMechanism.variable>` for
+        `function <KohonenMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
         of the mechanism.
 
     size : int, list or np.ndarray of ints
@@ -143,30 +145,33 @@ class KohonenMechanism(TransferMechanism):
         <MappingProjection.matrix>` of afferent `MappingProjection` to the Mechanism.
     COMMENT
 
+    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+        specifies `IntegratorFunction` to use in `integration_mode <KohonenMechanism.integration_mode>`.
+    
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `integration_rate <KWTA.integration_rate>` is not 1.0).
+        `integration_rate <KohonenMechanism.integration_rate>` is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
     noise : float or function : default 0.0
-        a value added to the result of the `function <KWTA.function>` or to the result of `integrator_function
-        <KWTA.integrator_function>`, depending on whether `integrator_mode <KWTA.integrator_mode>` is True or False. See
-        `noise <KWTA.noise>` for more details.
+        a value added to the result of the `function <KohonenMechanism.function>` or to the result of
+        `integrator_function <KohonenMechanism.integrator_function>`, depending on whether `integrator_mode
+        <KohonenMechanism.integrator_mode>` is True or False. See `noise <KohonenMechanism.noise>` for more details.
 
     integration_rate : float : default 0.5
-        the smoothing factor for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
-        to True ::
+        the smoothing factor for exponential time averaging of input when `integrator_mode
+        <KohonenMechanism.integrator_mode>` is set to True ::
 
          result = (integration_rate * current input) +
          (1-integration_rate * result on previous time_step)
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <KWTA.function>` the item in index 0 specifies the
+        specifies the allowable range for the result of `function <KohonenMechanism.function>` the item in index 0 specifies the
         minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
         element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `clip <KWTA.clip>` that it exceeds.
+        `clip <KohonenMechanism.clip>` that it exceeds.
 
     enable_learning : boolean : default True
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -188,11 +193,11 @@ class KohonenMechanism(TransferMechanism):
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <KWTA Mechanism.name>`
-        specifies the name of the KWTA Mechanism.
+    name : str : default see `name <Kohonen Mechanism.name>`
+        specifies the name of the Kohonen Mechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the KWTA Mechanism; see `prefs <KWTA Mechanism.prefs>` for details.
+        specifies the `PreferenceSet` for the Kohonen Mechanism; see `prefs <Kohonen Mechanism.prefs>` for details.
 
     context : str : default componentType+INITIALIZING
         string used for contextualization of instantiation, hierarchical calls, executions, etc.
@@ -222,7 +227,7 @@ class KohonenMechanism(TransferMechanism):
 
     learning_enabled : bool
         indicates whether `learning is enabled <Kohonen_Learning>`;  see `learning_enabled
-        <Kohonen.learning_enabled>` for additional details.
+        <KohonenMechanism.learning_enabled>` for additional details.
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
         determines the learning rate used by the `learning_function <KohonenMechanism.learning_function>`
@@ -241,20 +246,30 @@ class KohonenMechanism(TransferMechanism):
         created automatically if `learning is specified <KohonenMechanism_Learning>`, and used to train the
         `learned_projection <KohonenMechanism.learned_projection>`.
 
+    integrator_function :  IntegratorFunction
+        the `IntegratorFunction` used when `integrator_mode <KohonenMechanism.integrator_mode>` is set to
+        `True` (see `integrator_mode <KohonenMechanism.integrator_mode>` for details).
+
+        .. note::
+            The KohonenMechanism's `integration_rate <KohonenMechanism.integration_rate>`, `noise
+            <KohonenMechanism.noise>`, and `initial_value <KohonenMechanism.initial_value>` parameters
+            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
+            to `initializer <IntegratorFunction.initializer>` of integrator_function.
+
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
-        (only relevant if `integration_rate <KWTA.integration_rate>` parameter is not 1.0).
+        (only relevant if `integration_rate <KohonenMechanism.integration_rate>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
     noise : float or function : default 0.0
-        When `integrator_mode <KWTA.integrator_mode>` is set to True, noise is passed into the `integrator_function
-        <KWTA.integrator_function>`. Otherwise, noise is added to the output of the `function <KWTA.function>`.
+        When `integrator_mode <KohonenMechanism.integrator_mode>` is set to True, noise is passed into the `integrator_function
+        <KohonenMechanism.integrator_function>`. Otherwise, noise is added to the output of the `function <KohonenMechanism.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <KWTA.default_variable>`.
+        If noise is a list or array, it must be the same length as `variable <KohonenMechanism.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <KWTA.variable>` is a list or array,
+        If noise is specified as a single float or function, while `variable <KohonenMechanism.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
 
@@ -265,23 +280,17 @@ class KohonenMechanism(TransferMechanism):
             the noise will simply be an offset that remains the same across all executions.
 
     integration_rate : float : default 0.5
-        the smoothing factor for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
+        the smoothing factor for exponential time averaging of input when `integrator_mode <KohonenMechanism.integrator_mode>` is set
         to True::
 
           result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
 
-    clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <KWTA.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <KWTA.clip>` that it exceeds.
-
     integrator_function:
-        When *integrator_mode* is set to True, the KWTA executes its `integrator_function <KWTA.integrator_function>`,
-        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
-        Keep in mind that the `integration_rate <KWTA.integration_rate>` parameter of the `KWTA` corresponds to the
-        `rate <KWTAIntegrator.rate>` of the `KWTAIntegrator`.
+        When *integrator_mode* is set to True, the KohonenMechanism executes its `integrator_function
+        <KohonenMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
+        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
+        <KohonenMechanism.integration_rate>` parameter of the KohonenMechanism corresponds to the `rate
+        <IntegratorFunction.rate>` of the `integrator_function <KohonenMechanism.integrator_function>`.
 
     integrator_mode:
         **When integrator_mode is set to True:**
@@ -291,21 +300,28 @@ class KohonenMechanism(TransferMechanism):
         .. math::
             value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
 
-        The result of the integrator function above is then passed into the `mechanism's function <KWTA.function>`. Note that
+        The result of the integrator function above is then passed into the `mechanism's function <KohonenMechanism.function>`. Note that
         on the first execution, *initial_value* sets previous_value.
 
         **When integrator_mode is set to False:**
 
-        The variable of the mechanism is passed into the `function of the mechanism <KWTA.function>`. The mechanism's
-        `integrator_function <KWTA.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
+        The variable of the mechanism is passed into the `function of the mechanism <KohonenMechanism.function>`. The mechanism's
+        `integrator_function <KohonenMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
         *initial_value*, and *time_step_size*) are ignored.
+
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <KohonenMechanism.function>`
+
+        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
+         the value of `clip <KohonenMechanism.clip>` that it exceeds.
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <KWTA.function>`; same value as first item of
-        `output_values <KWTA.output_values>`.
+        result of executing `function <KohonenMechanism.function>`; same value as first item of
+        `output_values <KohonenMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
@@ -330,11 +346,11 @@ class KohonenMechanism(TransferMechanism):
         <KohonenMechanism.output_states>`.
 
     name : str
-        the name of the KWTA Mechanism; if it is not specified in the **name** argument of the constructor, a
+        the name of the Kohonen Mechanism; if it is not specified in the **name** argument of the constructor, a
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the KWTA Mechanism; if it is not specified in the **prefs** argument of the
+        the `PreferenceSet` for the Kohonen Mechanism; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
@@ -370,6 +386,7 @@ class KohonenMechanism(TransferMechanism):
                  size=None,
                  function=Linear,
                  # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
+                 integrator_function=AdaptiveIntegrator,
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
                  integration_rate: is_numeric_or_none = 0.5,
@@ -416,6 +433,7 @@ class KohonenMechanism(TransferMechanism):
                          size=size,
                          # input_states=input_states,
                          function=function,
+                         integrator_function=integrator_function,
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
                          noise=noise,
@@ -556,10 +574,10 @@ class KohonenMechanism(TransferMechanism):
     def learning_enabled(self, value:bool):
 
         self._learning_enabled = value
-        # Enable learning for RecurrentTransferMechanism's learning_mechanism
+        # Enable learning for KohonenMechanism's learning_mechanism
         if hasattr(self, 'learning_mechanism'):
             self.learning_mechanism.learning_enabled = value
-        # If RecurrentTransferMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
+        # If KohonenMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
         elif value is True:
             warnings.warn("Learning cannot be enabled for {} because it has no {}".
                   format(self.name, LearningMechanism.__name__))

@@ -1,18 +1,18 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="pytest in tests" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
+  <configuration default="false" name="pytest in mechanisms" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs />
-    <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python35/bin/python" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+    <option name="SDK_HOME" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests/mechanisms" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="PsyNeuLink (Dropbox)" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" />
     <option name="_new_keywords" value="&quot;&quot;" />
-    <option name="_new_additionalArguments" value="&quot;&quot;" />
-    <option name="_new_target" value="&quot;$PROJECT_DIR$/tests&quot;" />
+    <option name="_new_additionalArguments" value="&quot;-n 0&quot;" />
+    <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/mechanisms&quot;" />
     <option name="_new_targetType" value="&quot;PATH&quot;" />
     <method />
   </configuration>
