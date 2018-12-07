@@ -481,7 +481,7 @@ class TestTrainingCorrectness:
 
         # COMPOSITION FOR SEMANTIC NET
         sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
-                                      optimizer_type=opt)
+                                      optimizer_type=opt, learning_rate=0.001)
 
         sem_net.add_c_node(nouns_in)
         sem_net.add_c_node(rels_in)
@@ -517,12 +517,12 @@ class TestTrainingCorrectness:
 
         truth_is = np.zeros((len(nouns), len(is_list)))
 
-        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0]
+        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0]
+        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0]
+        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1]
         truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
-        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0]
         truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
         truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
 
@@ -570,9 +570,6 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        print('sem_net.output_CIM.output_states: ', sem_net.output_CIM.output_states)
-        print('sem_net.output_CIM.input_states: ', sem_net.output_CIM.input_states)
-        print('sem_net.output_CIM.input_state.all_afferents: ', sem_net.output_CIM.input_state.all_afferents)
         result = sem_net.run(inputs=[{'inputs': inputs_dict,
                                       'targets': targets_dict,
                                       'epochs': eps}])
