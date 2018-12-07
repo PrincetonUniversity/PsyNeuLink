@@ -679,14 +679,14 @@ class TestSampleIterator:
         for i in range(6):
             assert np.allclose(next(sample_iterator), expected[i])
 
-        assert next(sample_iterator) is None
+        assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(6):
             assert np.allclose(next(sample_iterator), expected[i])
 
-        assert next(sample_iterator) is None
+        assert next(sample_iterator, None) is None
 
     def test_int_count(self):
         spec = SampleSpec(count=6,
@@ -699,14 +699,14 @@ class TestSampleIterator:
         for i in range(6):
             assert np.allclose(next(sample_iterator), expected[i])
 
-        assert next(sample_iterator) is None
+        assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(6):
             assert np.allclose(next(sample_iterator), expected[i])
 
-        assert next(sample_iterator) is None
+        assert next(sample_iterator, None) is None
 
     def test_neither_count_nor_step(self):
         with pytest.raises(OptimizationFunctionError) as error_text:
@@ -721,18 +721,39 @@ class TestSampleIterator:
                           end=10.25)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [0.65, 3.44, 6.23, 9.02, 11.81]
+        expected = [0.65, 3.44, 6.23, 9.02]
 
-        for i in range(5):
+        for i in range(4):
             assert np.allclose(next(sample_iterator), expected[i])
 
-        assert next(sample_iterator) is None
+        assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
+        for i in range(4):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator, None) is None
+
+    def test_function(self):
+        fun = pnl.NormalDist(mean=5.0).function
+        spec = SampleSpec(function=fun)
+        sample_iterator = SampleIterator(specification=spec)
+
+        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589]
+
         for i in range(5):
             assert np.allclose(next(sample_iterator), expected[i])
 
-        assert next(sample_iterator) is None
+    def test_function_with_count(self):
+        fun = pnl.NormalDist(mean=5.0).function
+        spec = SampleSpec(function=fun,
+                          count=4)
+        sample_iterator = SampleIterator(specification=spec)
 
+        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967]
 
+        for i in range(4):
+            assert np.allclose(next(sample_iterator), expected[i])
+
+        assert next(sample_iterator, None) is None
