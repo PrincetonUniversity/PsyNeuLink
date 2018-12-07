@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.4.8.0+1020.g24f7622 documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.4.8.0+1021.g4dcd529 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1020.g24f7622 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1021.g4dcd529 documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="ObjectiveFunctions" href="ObjectiveFunctions.html"/>
         <link rel="prev" title="DistributionFunctions" href="DistributionFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1020
+                0.4.8.0+1021
               </div>
             
           
@@ -198,14 +198,14 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.rate" title="psyneulink.core.components.functions.integratorfunctions.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>. (see
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.noise" title="psyneulink.core.components.functions.integratorfunctions.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -221,14 +221,14 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.rate" title="psyneulink.core.components.functions.integratorfunctions.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) that will be
+<dd><p><em>number or array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.rate" title="psyneulink.core.components.functions.integratorfunctions.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) that will be
 added to the prior value;  if it is an array, each element is independently integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
+<dd><p><em>float or 1d array</em> – determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
 all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
 applies to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.variable" title="psyneulink.core.components.functions.integratorfunctions.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
 applies to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.variable" title="psyneulink.core.components.functions.integratorfunctions.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
@@ -237,7 +237,7 @@ applies to the corresponding element of <a class="reference internal" href="#psy
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – specifies random value to be added in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+<dd><p><em>float, function, list, or 1d array</em> – specifies random value to be added in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>. If noise is
 specified as a single float or function, while <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.variable" title="psyneulink.core.components.functions.integratorfunctions.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
 noise will be applied to each variable element. In the case of a noise function, this means that the function
@@ -253,7 +253,7 @@ list or array of these), then the noise will simply be an offset that remains th
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
+<dd><p><em>1d array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>. If
 initializer is specified as a single float or function, while <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.variable" title="psyneulink.core.components.functions.integratorfunctions.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or
@@ -264,7 +264,7 @@ that the function will be executed separately for each variable element.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.variable" title="psyneulink.core.components.functions.integratorfunctions.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d array</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.variable" title="psyneulink.core.components.functions.integratorfunctions.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -331,13 +331,13 @@ steps.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <code class="xref any docutils literal"><span class="pre">initializer</span></code>
 for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -354,14 +354,14 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
+<dd><p><em>number or array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
 added to the prior value;  if it is an array, each element is independently integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the rate of integration based on current and prior values. If it has a single element, it applies
+<dd><p><em>float or 1d array</em> – determines the rate of integration based on current and prior values. If it has a single element, it applies
 to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
 applies to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
@@ -369,7 +369,7 @@ applies to the corresponding element of <a class="reference internal" href="#psy
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>float, function, list, or 1d array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or
 array, noise will be applied to each variable element. In the case of a noise function, this means that the
@@ -386,12 +386,12 @@ then the noise will simply be an offset that remains the same across all executi
 </dd></dl>
 
 <dl class="docutils">
-<dt>initializer <span class="classifier-delimiter">:</span> <span class="classifier">float, 1d np.array or list</span></dt>
+<dt>initializer <span class="classifier-delimiter">:</span> <span class="classifier">float, 1d array or list</span></dt>
 <dd><p class="first">determines the starting value for integration (i.e., the value to which
 <code class="xref any docutils literal"><span class="pre">previous_value</span></code> is set.</p>
 <p class="last">If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 </dd>
-<dt>previous_value <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ClassDefaults.variable</span></dt>
+<dt>previous_value <span class="classifier-delimiter">:</span> <span class="classifier">1d array</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ClassDefaults.variable</span></dt>
 <dd>stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</dd>
 <dt>owner <span class="classifier-delimiter">:</span> <span class="classifier">Component</span></dt>
 <dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
@@ -412,7 +412,7 @@ according to <code class="xref any docutils literal"><span class="pre">previous_
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -422,7 +422,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of integral</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -453,20 +453,24 @@ value for positive inputs and toward an asymptotic mininum value for negative in
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rest</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies the initial value and one toward which value <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decays</span></code></a>.
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the rate of at which activity increments toward either <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a> or
+<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a>, depending on the sign of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
+If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>;
+its value(s) must be in the interval [0,1].</li>
+<li><strong>rest</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies the initial value and one toward which value <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decays</span></code></a>.
 If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</li>
-<li><strong>decay</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the rate of at which activity decays toward <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a>.
+<li><strong>decay</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the rate of at which activity decays toward <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a>.
 If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>;
 its value(s) must be in the interval [0,1].</li>
 <li><strong>max_val</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the maximum asymptotic value toward which integration occurs for positive values of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>; all values must be greater than the corresponding values of
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a> for details).</li>
 <li><strong>min_val</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the minimum asymptotic value toward which integration occurs for negative values of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>; all values must be greater than the corresponding values of
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a> for details).</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.noise" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -483,50 +487,51 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
+<dd><p><em>number or array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
 added to the prior value;  if it is an array, each element is independently integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array in interval [0,1]</em> – determines the rate of integration based on current and prior values. If it has a single element, it applies
-to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
+<dd><p><em>float or 1d array in interval [0,1]</em> – determines the rate at which activity increments toward either <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a>
+(<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is positive) or <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a>
+(if <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is negative).  If it has more than one element, each element
 applies to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest">
 <code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, list or 1d np.array</em> – determines the initial value and one toward which value <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decays</span></code></a> (similar
+<dd><p><em>float, list or 1d array</em> – determines the initial value and one toward which value <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decays</span></code></a> (similar
 to <em>bias</em> in other IntegratorFunctions).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay">
 <code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, list or 1d np.array</em> – determines the rate of at which activity decays toward <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a> (similary to
+<dd><p><em>float, list or 1d array</em> – determines the rate of at which activity decays toward <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a> (similary to
 <em>rate</em> in other IntegratorFuncgtions).  If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val">
 <code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the maximum asymptotic value toward which integration occurs for positive values of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If it has a single element, it applies to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
+<dd><p><em>float or 1d array</em> – determines the maximum asymptotic value toward which integration occurs for positive values of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If it has a single element, it applies to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
 applies to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val">
 <code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the minimum asymptotic value toward which integration occurs for negative values of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If it has a single element, it applies to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
+<dd><p><em>float or 1d array</em> – determines the minimum asymptotic value toward which integration occurs for negative values of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If it has a single element, it applies to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
 applies to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>float, function, list, or 1d array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or
 array, noise will be applied to each variable element. In the case of a noise function, this means that the
@@ -543,7 +548,7 @@ then the noise will simply be an offset that remains the same across all executi
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
+<dd><p><em>float, 1d array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.previous_value" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 </dd></dl>
@@ -551,7 +556,7 @@ then the noise will simply be an offset that remains the same across all executi
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -582,7 +587,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -613,13 +618,13 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>
 for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -636,7 +641,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> –</p>
+<dd><p><em>number or array</em> –</p>
 <dl class="docutils">
 <dt><strong>Ignored</strong> by the ConstantIntegrator function. Refer to LCAIntegrator or AdaptiveIntegrator for integrator</dt>
 <dd>functions that depend on both a prior value and a new value (variable).</dd>
@@ -646,7 +651,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the rate of integration.</p>
+<dd><p><em>float or 1d array</em> – determines the rate of integration.</p>
 <p>If it has a single element, that element is added to each element of
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
 <p>If it has more than one element, each element is added to the corresponding element of
@@ -656,7 +661,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>float, function, list, or 1d array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list
 or array, noise will be applied to each variable element. In the case of a noise function, this means that
@@ -673,7 +678,7 @@ then the noise will simply be an offset that remains the same across all executi
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
+<dd><p><em>float, 1d array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
@@ -682,7 +687,7 @@ then the noise will simply be an offset that remains the same across all executi
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value to which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> will be
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores previous value to which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> will be
 added.</p>
 </dd></dl>
 
@@ -721,7 +726,7 @@ arguments of the constructor.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>updated value of integral</strong></td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">2d np.array</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">2d array</td>
 </tr>
 </tbody>
 </table>
@@ -754,12 +759,12 @@ applied to each item in the deque (including the newly added one) on each call, 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float : default None</em>) – specifies a value applied to each item in the deque on each call.</li>
 <li><strong>noise</strong> (<em>float</em><em> or </em><em>Function : default 0.0</em>) – specifies a random value added to each item in the deque on each call.</li>
 <li><strong>history</strong> (<em>int : default None</em>) – specifies the maxlen of the deque, and hence <code class="xref any docutils literal"><span class="pre">value</span></code>.</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>ndarray</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies a starting value for the deque;  if none is specified, the deque is initialized with an
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>ndarray</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies a starting value for the deque;  if none is specified, the deque is initialized with an
 empty list.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -775,7 +780,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value appended to the end of the deque.</p>
+<dd><p><em>number or array</em> – current input value appended to the end of the deque.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -817,7 +822,7 @@ if the <strong>new_previous_value</strong> argument is not specified in the call
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – state of the deque prior to appending <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.variable" title="psyneulink.core.components.functions.integratorfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> in the current call.</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – state of the deque prior to appending <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.variable" title="psyneulink.core.components.functions.integratorfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> in the current call.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -860,7 +865,7 @@ Otherwise, the new <a class="reference internal" href="#psyneulink.core.componen
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -889,13 +894,13 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the smoothing factor of the EWMA.  If it is a list or array, it must be the same length as
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the smoothing factor of the EWMA.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>
 for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -912,14 +917,14 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
+<dd><p><em>number or array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
 added to the prior value;  if it is an array, each element is independently integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the smoothing factor of the EWMA. All rate elements must be between 0 and 1 (rate = 0 –&gt; no change,
+<dd><p><em>float or 1d array</em> – determines the smoothing factor of the EWMA. All rate elements must be between 0 and 1 (rate = 0 –&gt; no change,
 <code class="xref any docutils literal"><span class="pre">variable</span></code> is ignored; rate = 1 –&gt;
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is ignored).</p>
 <p>If rate is a float, it is applied to all elements of <code class="xref any docutils literal"><span class="pre">variable</span></code> (and
@@ -931,7 +936,7 @@ to the corresponding element of <code class="xref any docutils literal"><span cl
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>float, function, list, or 1d array</em> – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list
 or array, noise will be applied to each variable element. In the case of a noise function, this means that
@@ -948,7 +953,7 @@ the noise will simply be an offset that remains the same across all executions.<
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for time-averaging (i.e., the value to which
+<dd><p><em>float, 1d array or list</em> – determines the starting value for time-averaging (i.e., the value to which
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is originally set).</p>
 <p>If initializer is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
@@ -957,7 +962,7 @@ the noise will simply be an offset that remains the same across all executions.<
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -989,7 +994,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -999,7 +1004,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of integral</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -1018,14 +1023,14 @@ threshold.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies the stimulus component of drift rate – the drift rate is the product of variable and rate</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the attentional component of drift rate – the drift rate is the product of variable and rate</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – scales the random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies the stimulus component of drift rate – the drift rate is the product of variable and rate</li>
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the attentional component of drift rate – the drift rate is the product of variable and rate</li>
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – scales the random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.time_step_size" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
 <li><strong>t0</strong> (<em>float</em>) – determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
 the DDM Mechanism.</li>
-<li><strong>initializer</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>initializer</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>threshold</strong> (<em>float : default 0.0</em>) – <p>specifies the threshold (boundaries) of the drift diffusion process (i.e., at which the
 integration process is assumed to terminate).</p>
@@ -1050,19 +1055,19 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value, which represents the stimulus component of drift.</p>
+<dd><p><em>number or array</em> – current input value, which represents the stimulus component of drift.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – specifies the attentional component of drift rate – the drift rate is the product of variable and rate</p>
+<dd><p><em>float or 1d array</em> – specifies the attentional component of drift rate – the drift rate is the product of variable and rate</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – scales the random value to be added in each call to <a href="#id5"><span class="problematic" id="id6">`</span></a>function &lt;DriftDiffusionIntegrator.function&gt; according to
+<dd><p><em>float, function, list, or 1d array</em> – scales the random value to be added in each call to <a href="#id5"><span class="problematic" id="id6">`</span></a>function &lt;DriftDiffusionIntegrator.function&gt; according to
 the standard DDM probability distribution.</p>
 <p>On each call to <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;DriftDiffusionIntegrator.function&gt;,</span> <span class="pre">:math:</span></code>sqrt{time_step_size cdot noise}
 cdot Sample,From,Normal,distribution` is added to the accumulated evidence.</p>
@@ -1085,7 +1090,7 @@ the DDM Mechanism.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
+<dd><p><em>float, 1d array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
@@ -1101,7 +1106,7 @@ the DDM Mechanism.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1153,7 +1158,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies the stimulus component of drift rate – the drift rate is the product of variable and rate</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies the stimulus component of drift rate – the drift rate is the product of variable and rate</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1163,7 +1168,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of integral</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -1181,15 +1186,15 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for  the stimulus component of drift rate – the drift rate is the product of variable and
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for  the stimulus component of drift rate – the drift rate is the product of variable and
 rate</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies  the attentional component of drift rate – the drift rate is the product of variable and rate</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – scales random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies  the attentional component of drift rate – the drift rate is the product of variable and rate</li>
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – scales random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
 <li><strong>t0</strong> (<em>float : default 0.0</em>) – represents the starting time of the model and is used to compute
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_time" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_time"><code class="xref any py py-attr docutils literal"><span class="pre">previous_time</span></code></a></li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1205,7 +1210,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – represents the stimulus component of drift. The product of
+<dd><p><em>number or array</em> – represents the stimulus component of drift. The product of
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> is multiplied
 by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> to model the accumulation of evidence during
 one step.</p>
@@ -1214,7 +1219,7 @@ one step.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – represents the attentional component of drift. The product of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and
+<dd><p><em>float or 1d array</em> – represents the attentional component of drift. The product of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is multiplied by
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> to model the accumulation of evidence during
 one step.</p>
@@ -1223,7 +1228,7 @@ one step.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – scales the random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a></p>
+<dd><p><em>float, function, list, or 1d array</em> – scales the random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a></p>
 <p>Noise must be specified as a float (or list or array of floats) because this
 value will be used to construct the standard DDM probability distribution.</p>
 </dd></dl>
@@ -1237,7 +1242,7 @@ value will be used to construct the standard DDM probability distribution.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
+<dd><p><em>float, 1d array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is originally set.)</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 </dd></dl>
@@ -1245,7 +1250,7 @@ value will be used to construct the standard DDM probability distribution.</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1285,7 +1290,7 @@ sample from Normal distribution</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – the stimulus component of drift rate in the Drift Diffusion Model.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – the stimulus component of drift rate in the Drift Diffusion Model.</td>
 </tr>
 </tbody>
 </table>
@@ -1301,7 +1306,7 @@ arguments of the constructor.</dd>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>updated value of integral</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">2d np.array</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">2d array</td>
 </tr>
 </tbody>
 </table>
@@ -1571,10 +1576,10 @@ correspond as follows:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the external stimulus</li>
-<li><strong>initial_w</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the external stimulus</li>
+<li><strong>initial_w</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code></li>
-<li><strong>initial_v</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+<li><strong>initial_v</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code></li>
 <li><strong>time_step_size</strong> (<em>float : default 0.1</em>) – specifies the time step size of numerical integration</li>
 <li><strong>t_0</strong> (<em>float : default 0.0</em>) – specifies starting value for time</li>
@@ -1610,19 +1615,19 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – External stimulus</p>
+<dd><p><em>number or array</em> – External stimulus</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.previous_v">
 <code class="descname">previous_v</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.previous_v" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores accumulated value of v during integration</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores accumulated value of v during integration</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.previous_w">
 <code class="descname">previous_w</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.previous_w" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores accumulated value of w during integration</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores accumulated value of w during integration</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1640,14 +1645,14 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.initial_w">
 <code class="descname">initial_w</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.initial_w" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, list or 1d np.array : default 0.0</em> – specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
+<dd><p><em>float, list or 1d array : default 0.0</em> – specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.initial_v">
 <code class="descname">initial_v</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.initial_v" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, list or 1d np.array : default 0.0</em> – specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+<dd><p><em>float, list or 1d array : default 0.0</em> – specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code></p>
 </dd></dl>
 
@@ -1793,7 +1798,7 @@ arguments of the constructor.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>current value of v , current value of w</strong></td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float, list, or np.array</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float, list, or array</td>
 </tr>
 </tbody>
 </table>
@@ -1810,19 +1815,19 @@ arguments of the constructor.</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the multiplicative decrement of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e.,
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the multiplicative decrement of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e.,
 the rate of exponential decay).  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code>.</li>
-<li><strong>increment</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies an amount to be added to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> in each call to
+<li><strong>increment</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies an amount to be added to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> in each call to
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.increment" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal"><span class="pre">increment</span></code></a> for details).
 If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.increment" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal"><span class="pre">increment</span></code></a> for details).</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">prevous_value</span></code></a> in each call to
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">prevous_value</span></code></a> in each call to
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d np.array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1838,14 +1843,14 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – <strong>Ignored</strong> by the AccumulatorIntegrator function. Refer to LCAIntegrator or AdaptiveIntegrator for
+<dd><p><em>number or array</em> – <strong>Ignored</strong> by the AccumulatorIntegrator function. Refer to LCAIntegrator or AdaptiveIntegrator for
 integrator functions that depend on both a prior value and a new value (variable).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the multiplicative decrement of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e., the
+<dd><p><em>float or 1d array</em> – determines the multiplicative decrement of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e., the
 rate of exponential decay) in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If it is a list or
 array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code> and each element is
 used to multiply the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e.,
@@ -1856,7 +1861,7 @@ multiply all the elements of <a class="reference internal" href="#psyneulink.cor
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.increment">
 <code class="descname">increment</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.increment" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – determines the amount added to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> in each call to
+<dd><p><em>float, function, list, or 1d array</em> – determines the amount added to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> in each call to
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> and each element is added to the corresponding element of
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e., it is used for Hadamard addition).  If it is a
@@ -1866,7 +1871,7 @@ scalar or has a single element, its value is added to all the elements of <a cla
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – determines a random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
+<dd><p><em>float, function, list, or 1d array</em> – determines a random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
 If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code> and
 each element is added to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>
 (i.e., it is used for Hadamard addition).  If it is a scalar or has a single element, its value is added to all
@@ -1884,14 +1889,14 @@ then the noise will simply be an offset that remains the same across all executi
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set. If initializer is a list or array, it must be the same length
+<dd><p><em>float, 1d array or list</em> – determines the starting value for integration (i.e., the value to which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set. If initializer is a list or array, it must be the same length
 as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value to which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores previous value to which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
 will be added.</p>
 </dd></dl>
 
@@ -1930,7 +1935,7 @@ arguments of the constructor.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>updated value of integral</strong></td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">2d np.array</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">2d array</td>
 </tr>
 </tbody>
 </table>
@@ -1949,13 +1954,13 @@ arguments of the constructor.</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – scales the contribution of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> to the accumulation of the
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – scales the contribution of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> to the accumulation of the
 <code class="xref any docutils literal"><span class="pre">value</span></code> on each time step</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>initializer</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>initializer</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1971,14 +1976,14 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
+<dd><p><em>number or array</em> – current input value some portion of which (determined by <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) will be
 added to the prior value;  if it is an array, each element is independently integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate">
 <code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – scales the contribution of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> to the
+<dd><p><em>float or 1d array</em> – scales the contribution of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> to the
 accumulation of the <code class="xref any docutils literal"><span class="pre">value</span></code> on each time step. If rate has a single element, it
 applies to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if rate has more than one element, each element
 applies to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
@@ -1987,7 +1992,7 @@ applies to the corresponding element of <a class="reference internal" href="#psy
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> – specifies a value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>float, function, list, or 1d array</em> – specifies a value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or
 array, noise will be applied to each variable element. In the case of a noise function, this means that the
@@ -2004,7 +2009,7 @@ then the noise will simply be an offset that remains the same across all executi
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, 1d np.array or list</em> – determines the starting value for integration (i.e., the value to which
+<dd><p><em>float, 1d array or list</em> – determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 </dd></dl>
@@ -2012,7 +2017,7 @@ then the noise will simply be an offset that remains the same across all executi
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d array : default ClassDefaults.variable</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2046,7 +2051,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -2056,7 +2061,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of integral</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -2085,8 +2090,8 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – TBI?</li>
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values</li>
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – TBI?</li>
 <li><strong>initial_short_term_utility</strong> (<em>float : default 0.0</em>) – specifies starting value for integration of short_term_utility</li>
 <li><strong>initial_long_term_utility</strong> (<em>float : default 0.0</em>) – specifies starting value for integration of long_term_utility</li>
 <li><strong>short_term_gain</strong> (<em>float : default 1.0</em>) – specifies gain for logistic function applied to short_term_utility</li>
@@ -2109,13 +2114,13 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – current input value used in both the short term and long term EWMA computations</p>
+<dd><p><em>number or array</em> – current input value used in both the short term and long term EWMA computations</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, PsyNeuLink Function, list or 1d np.array : default 0.0</em> – TBI?</p>
+<dd><p><em>float, PsyNeuLink Function, list or 1d array : default 0.0</em> – TBI?</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2169,14 +2174,14 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.previous_short_term_utility">
 <code class="descname">previous_short_term_utility</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.previous_short_term_utility" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated using the EWMA filter and
+<dd><p><em>1d array</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated using the EWMA filter and
 short term parameters</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.previous_long_term_utility">
 <code class="descname">previous_long_term_utility</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.previous_long_term_utility" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated using the EWMA filter and
+<dd><p><em>1d array</em> – stores previous value with which <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable" title="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated using the EWMA filter and
 long term parameters</p>
 </dd></dl>
 
@@ -2209,7 +2214,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -2219,7 +2224,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of integral</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -2251,18 +2256,18 @@ drift diffusion process as described in <a class="reference external" href="http
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
 independently for each element.</li>
-<li><strong>drift_rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the drift_rate of the drift diffusion process.  If it is a list or array,
+<li><strong>drift_rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the drift_rate of the drift diffusion process.  If it is a list or array,
 it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
-<li><strong>threshold</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
+<li><strong>threshold</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
 it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
-<li><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
+<li><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
 array, it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
 If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> and all elements must be floats from 0 to 1.</li>
-<li><strong>t0</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
+<li><strong>t0</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
 list or array, it must be the same length as  <code class="xref any docutils literal"><span class="pre">default_variable</span></code> and all
 elements must be floats from 0 to 1.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -2279,46 +2284,46 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or 1d np.array</em> – holds initial value assigned to <code class="xref std std-keyword docutils literal"><span class="pre">default_variable</span></code> argument;
+<dd><p><em>number or 1d array</em> – holds initial value assigned to <code class="xref std std-keyword docutils literal"><span class="pre">default_variable</span></code> argument;
 ignored by <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.drift_rate">
 <code class="descname">drift_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.drift_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the drift component of the drift diffusion process.</p>
+<dd><p><em>float or 1d array</em> – determines the drift component of the drift diffusion process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold">
 <code class="descname">threshold</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+<dd><p><em>float or 1d array</em> – determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
 process is assumed to terminate).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.starting_point">
 <code class="descname">starting_point</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.starting_point" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the initial value of the decision variable for the drift diffusion process.</p>
+<dd><p><em>float or 1d array</em> – determines the initial value of the decision variable for the drift diffusion process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the diffusion component of the drift diffusion process (used to specify the variance of a
+<dd><p><em>float or 1d array</em> – determines the diffusion component of the drift diffusion process (used to specify the variance of a
 Gaussian random process).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.t0">
 <code class="descname">t0</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.t0" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the assumed non-decision time to determine the response time returned by the solution.</p>
+<dd><p><em>float or 1d array</em> – determines the assumed non-decision time to determine the response time returned by the solution.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.bias">
 <code class="descname">bias</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.bias" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – normalized starting point:
+<dd><p><em>float or 1d array</em> – normalized starting point:
 (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.starting_point" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a> + <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>) /
 (2 * <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>)</p>
 </dd></dl>
@@ -2353,7 +2358,7 @@ response time (RT)</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>2d np.array</em>) – ignored.</li>
+<li><strong>variable</strong> (<em>2d array</em>) – ignored.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -2427,18 +2432,18 @@ as described in <a class="reference external" href="http://www.sciencedirect.com
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
 independently for each element.</li>
-<li><strong>drift_rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the drift_rate of the drift diffusion process.  If it is a list or array,
+<li><strong>drift_rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the drift_rate of the drift diffusion process.  If it is a list or array,
 it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
-<li><strong>threshold</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
+<li><strong>threshold</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
 it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
-<li><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
+<li><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
 array, it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.0</em>) – specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
 If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> and all elements must be floats from 0 to 1.</li>
-<li><strong>t0</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d np.array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
+<li><strong>t0</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
 list or array, it must be the same length as  <code class="xref any docutils literal"><span class="pre">default_variable</span></code> and all
 elements must be floats from 0 to 1.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -2455,46 +2460,46 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or 1d np.array</em> – holds initial value assigned to <code class="xref std std-keyword docutils literal"><span class="pre">default_variable</span></code> argument;
+<dd><p><em>number or 1d array</em> – holds initial value assigned to <code class="xref std std-keyword docutils literal"><span class="pre">default_variable</span></code> argument;
 ignored by <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.drift_rate">
 <code class="descname">drift_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.drift_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the drift component of the drift diffusion process.</p>
+<dd><p><em>float or 1d array</em> – determines the drift component of the drift diffusion process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.threshold">
 <code class="descname">threshold</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the threshold (bound) of the drift diffusion process (i.e., at which the integration
+<dd><p><em>float or 1d array</em> – determines the threshold (bound) of the drift diffusion process (i.e., at which the integration
 process is assumed to terminate).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.starting_point">
 <code class="descname">starting_point</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.starting_point" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the initial value of the decision variable for the drift diffusion process.</p>
+<dd><p><em>float or 1d array</em> – determines the initial value of the decision variable for the drift diffusion process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.noise">
 <code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the diffusion component of the drift diffusion process (used to specify the variance of a
+<dd><p><em>float or 1d array</em> – determines the diffusion component of the drift diffusion process (used to specify the variance of a
 Gaussian random process).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.t0">
 <code class="descname">t0</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.t0" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – determines the assumed non-decision time to determine the response time returned by the solution.</p>
+<dd><p><em>float or 1d array</em> – determines the assumed non-decision time to determine the response time returned by the solution.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.bias">
 <code class="descname">bias</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.bias" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> – normalized starting point:
+<dd><p><em>float or 1d array</em> – normalized starting point:
 (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.starting_point" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a> + <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>) /
 (2 * <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>)</p>
 </dd></dl>
@@ -2529,7 +2534,7 @@ correct RT mean, correct RT variance and correct RT skew.  <strong>Requires that
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>2d np.array</em>) – ignored.</li>
+<li><strong>variable</strong> (<em>2d array</em>) – ignored.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -2595,7 +2600,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1020.g24f7622',
+            VERSION:'0.4.8.0+1021.g4dcd529',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
