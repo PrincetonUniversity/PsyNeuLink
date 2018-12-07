@@ -815,6 +815,7 @@ class Function_Base(Function):
         for pc in self.parameters.names():
             # Filter out params not allowed in get_current_function_param
             if pc != 'function' and pc != 'value' and pc != 'variable':
+                # FIXME: Move away form this
                 val = self.get_current_function_param(pc, execution_id)
                 # or are not numeric (this includes aliases)
                 if not isinstance(val, str):
@@ -824,7 +825,12 @@ class Function_Base(Function):
     def _get_param_values(self, execution_id=None):
         param_init = []
         for p in self._get_param_ids():
-            param = self.get_current_function_param(p, execution_id)
+            param = getattr(self.parameters, p).get(execution_id)
+            try:
+                self.owner.parameter_states[p]
+                param = [param]
+            except (AttributeError, TypeError):
+                pass
             if not np.isscalar(param) and param is not None:
                 param = np.asfarray(param).flatten().tolist()
             param_init.append(param)
