@@ -701,22 +701,35 @@ class TestTransferMechanismTimeConstant:
 #            val = e.execute([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
+    # @pytest.mark.mechanism
+    # @pytest.mark.transfer_mechanism
+    # def test_transfer_mech_integration_rate_0_8_list(self):
+    #     with pytest.raises(TransferError) as error_text:
+    #         T = TransferMechanism(
+    #             name='T',
+    #             default_variable=[0, 0, 0, 0],
+    #             function=Linear(),
+    #             integration_rate=[0.8, 0.8, 0.8, 0.8],
+    #             integrator_mode=True
+    #         )
+    #         T.execute([1, 1, 1, 1])
+    #     assert (
+    #         "integration_rate parameter" in str(error_text.value)
+    #         and "must be a float" in str(error_text.value)
+    #     )
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_0_8_list(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=Linear(),
-                integration_rate=[0.8, 0.8, 0.8, 0.8],
-                integrator_mode=True
-            )
-            T.execute([1, 1, 1, 1])
-        assert (
-            "integration_rate parameter" in str(error_text.value)
-            and "must be a float" in str(error_text.value)
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            integration_rate=[0.8, 0.8, 0.8, 0.8],
+            integrator_mode=True
         )
+        T.execute([1, 1, 1, 1])
+        val = T.execute([1, 1, 1, 1])
+        assert np.allclose(val, [[ 0.96,  0.96,  0.96,  0.96]])
 
 
     @pytest.mark.mechanism
@@ -732,8 +745,8 @@ class TestTransferMechanismTimeConstant:
             )
             T.execute([1, 1, 1, 1])
         assert (
-            "integration_rate parameter" in str(error_text.value)
-            and "must be a float between 0 and 1" in str(error_text.value)
+            "Value(s) in \'integration_rate\' arg for" in str(error_text.value)
+            and "must be an int or float in the interval [0,1]" in str(error_text.value)
         )
 
 

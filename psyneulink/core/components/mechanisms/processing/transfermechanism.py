@@ -78,9 +78,8 @@ TransferMechanism's constructor, their value is used to specify the correspondin
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
-    ...                                                        initial_value=np.array([[0.2]),
-    ...                                                        integration_rate=0.1
-    ...                                                        ]))
+    ...                                                        initial_value=np.array([[0.2]]),
+    ...                                                        integration_rate=0.1)
 
 ``my_logistic_transfer_mechanism`` will be assigned an `AdaptiveIntegrator` (the default) as its `integrator_function
 <TrasnferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegrator.initializer>` parameter,
@@ -89,9 +88,8 @@ and ``0.`` as its `rate <AdaptiveIntegrator.rate>` parameter.  However, in this 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
     ...                                                        integrator_function=AdaptiveIntegrator(rate=0.3),
-    ...                                                        initial_value=np.array([[0.2]),
-    ...                                                        integration_rate=0.1
-    ...                                                        ]))
+    ...                                                        initial_value=np.array([[0.2]]),
+    ...                                                        integration_rate=0.1)
 
 the AdaptiveIntegrator's `rate <AdaptiveIntegrator.rate>` parameter will be assigned ``0.3``, and this will also
 be assigned to the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter, overriding

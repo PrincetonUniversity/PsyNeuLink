@@ -1739,7 +1739,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
+                 rate=1.0,
                  noise=0.0,
                  offset=0.0,
                  initializer=None,
@@ -1783,16 +1783,11 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
-                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "The length ({}) of the array specified for the {} parameter ({}) of {} "
                                 "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".format(
-                                    len(rate),
-                                    rate,
-                                    self.name,
-                                    np.array(self.instance_defaults.variable).size
-                                ),
-                                self.instance_defaults.variable
-                            )
+                                "the default input has been updated to match".
+                                    format(len(rate), repr(RATE), rate, self.name,
+                                    np.array(self.instance_defaults.variable).size, self.instance_defaults.variable))
                     else:
                         raise FunctionError(
                             "The length ({}) of the array specified for the rate parameter ({}) of {} "
@@ -1814,9 +1809,11 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                  target_set=target_set,
                                  context=context)
 
+        # FIX: 12/8/18 [JDC] REPLACE WITH USE OF all_within_range
         if RATE in target_set:
             # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
-            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
+                             "must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
             if isinstance(rate, np.ndarray) and rate.ndim > 0:
                 for r in rate:
                     if r < 0.0 or r > 1.0:
@@ -2947,12 +2944,10 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  prefs: is_pref_set = None,
                  **kwargs):
 
+        # These may be passed (as standard IntegratorFunction args) but are not used by FHN
         for k in {NOISE, INITIALIZER, RATE}:
             if k in kwargs:
                 del kwargs[k]
-        if len(kwargs):
-            raise FunctionError("Unrecognized args in constructor for {}: {}".
-                                format(self.__class__.__name__, kwargs))
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initial_v", "initial_w", "t_0"]
