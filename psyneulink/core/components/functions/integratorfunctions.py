@@ -1028,7 +1028,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
             rate = request_set[RATE]
             if np.isscalar(rate):
                 rate = [rate]
-            if not all(0.0 <= d <= 1.0 for d in rate):
+            if not all_in_range(rate, 0, 1):
                 raise FunctionError("Value(s) specified for {} argument of {} ({}) must be in interval [0,1]".
                                     format(repr(RATE), self.__class__.__name__, rate))
 
@@ -1064,8 +1064,6 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         updated value of integral : 2d array
 
         """
-
-        # FIX: rest AND rate CURRENTLY DON'T WORK IF THEY ARE ARRAYS
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
@@ -1929,7 +1927,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None

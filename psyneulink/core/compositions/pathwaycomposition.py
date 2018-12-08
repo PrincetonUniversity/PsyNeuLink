@@ -76,7 +76,8 @@ class PathwayComposition(Composition):
 
     def execute(
         self,
-        inputs,
+        inputs=None,
+        autodiff_stimuli=None,
         scheduler_processing=None,
         scheduler_learning=None,
         termination_processing=None,
@@ -96,21 +97,14 @@ class PathwayComposition(Composition):
         if isinstance(inputs, list):
             inputs = {self.get_mechanisms_by_role(CNodeRole.ORIGIN).pop(): inputs}
 
-        output = super(PathwayComposition, self).execute(
-            inputs,
-            scheduler_processing,
-            scheduler_learning,
-            termination_processing,
-            termination_learning,
-            call_before_time_step,
-            call_before_pass,
-            call_after_time_step,
-            call_after_pass,
-            execution_id,
-            base_execution_id,
-            clamp_input,
-            targets,
-            runtime_params,
-            bin_execute,
-        )
+        output = super(PathwayComposition, self).execute(inputs, scheduler_processing=scheduler_processing,
+                                                         scheduler_learning=scheduler_learning,
+                                                         termination_processing=termination_processing,
+                                                         termination_learning=termination_learning,
+                                                         call_before_time_step=call_before_time_step,
+                                                         call_before_pass=call_before_pass,
+                                                         call_after_time_step=call_after_time_step,
+                                                         call_after_pass=call_after_pass, execution_id=execution_id,
+                                                         clamp_input=clamp_input, targets=targets,
+                                                         runtime_params=runtime_params, bin_execute=bin_execute)
         return output
