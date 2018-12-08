@@ -2985,7 +2985,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   time_constant_w=time_constant_w,
                                                   params=params,
                                                   )
-
         super().__init__(
             default_variable=default_variable,
             params=params,
