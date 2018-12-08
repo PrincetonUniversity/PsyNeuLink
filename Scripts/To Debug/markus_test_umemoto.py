@@ -71,7 +71,7 @@ Automatic_Component_Flanker.set_log_conditions('value')
 
 
 # Decision Mechanisms
-Decision = pnl.DDM(function=pnl.BogaczEtAl(
+Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
        # drift_rate=(0.3),
         threshold=(thresh),
         noise=(c),
