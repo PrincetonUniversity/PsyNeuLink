@@ -5,7 +5,7 @@ import typecheck
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionIntegrator, BogaczEtAl
+from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionIntegrator, DriftDiffusionAnalytical
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import Never, WhenFinished
@@ -182,7 +182,7 @@ class TestOutputStates:
     def test_selected_input_array(self):
         action_selection = DDM(
             input_format=ARRAY,
-            function=BogaczEtAl(
+            function=DriftDiffusionAnalytical(
             ),
             output_states=[SELECTED_INPUT_ARRAY],
             name='DDM'
@@ -198,7 +198,7 @@ def test_DDM_Integrator_Bogacz():
     stim = 10
     T = DDM(
         name='DDM',
-        function=BogaczEtAl()
+        function=DriftDiffusionAnalytical()
     )
     val = float(T.execute(stim)[0])
     assert val == 1.0

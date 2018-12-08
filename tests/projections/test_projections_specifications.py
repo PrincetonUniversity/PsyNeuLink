@@ -138,8 +138,8 @@ class TestProjectionSpecificationFormats:
 
         C = pnl.ControlMechanism(control_signals=['a','b'])
         D = pnl.DDM(name='D3',
-                     function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(drift_rate=(3, C),
-                                                                                                  threshold=(2,C.control_signals['b']))
+                     function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(drift_rate=(3, C),
+                                                                                                                threshold=(2,C.control_signals['b']))
                     )
         assert D.parameter_states[
                    psyneulink.core.components.functions.integratorfunctions.DRIFT_RATE].mod_afferents[0].sender == C.control_signals[0]

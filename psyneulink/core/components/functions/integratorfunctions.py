@@ -22,7 +22,7 @@
 * `LCAIntegrator`
 * `FHNIntegrator`
 * `AGTUtilityIntegrator`
-* `BogaczEtAl`
+* `DriftDiffusionAnalytical`
 * `NavarroAndFuss`
 
 Overview
@@ -62,11 +62,10 @@ from psyneulink.core.llvm import helpers
 
 __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantIntegrator', 'Buffer',
            'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator',
-           'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator',
-           'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT',
-           'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME',
-           'kwBogaczEtAl', 'kwNavarrosAndFuss', 'BogaczEtAl', 'NF_Results', 'NavarroAndFuss', 'InteractiveActivation']
-
+           'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY',
+           'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME',
+           'kwDriftDiffusionAnalytical', 'kwNavarrosAndFuss', 'DriftDiffusionAnalytical', 'NF_Results', 'NavarroAndFuss',
+           'InteractiveActivation']
 
 class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
@@ -4525,20 +4524,20 @@ STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 # NOISE = 'noise' -- Defined in Keywords
 NON_DECISION_TIME = 't0'
 # DDM solution options:
-kwBogaczEtAl = "BogaczEtAl"
+kwDriftDiffusionAnalytical = "DriftDiffusionAnalytical"
 kwNavarrosAndFuss = "NavarroAndFuss"
 
 
-def _BogaczEtAl_bias_getter(owning_component=None, execution_id=None):
+def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=None):
     starting_point = owning_component.parameters.starting_point.get(execution_id)
     threshold = owning_component.parameters.threshold.get(execution_id)
     return (starting_point + threshold) / (2 * threshold)
 
 
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
-class BogaczEtAl(IntegratorFunction):  # -------------------------------------------------------------------------------
+class DriftDiffusionAnalytical(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
-    BogaczEtAl(                 \
+    DriftDiffusionAnalytical(                 \
         default_variable=None,  \
         drift_rate=1.0,         \
         threshold=1.0,          \
@@ -4550,7 +4549,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         prefs=None              \
         )
 
-    .. _BogaczEtAl:
+    .. _DriftDiffusionAnalytical:
 
     Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
     drift diffusion process as described in `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_.
@@ -4564,24 +4563,24 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     drift_rate : float, list or 1d array : default 1.0
         specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     threshold : float, list or 1d array : default 1.0
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     starting_point : float, list or 1d array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-        array, it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        array, it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     noise : float, list or 1d array : default 0.0
         specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-        `default_variable <BogaczEtAl.default_variable>` and all elements must be floats from 0 to 1.
+        `default_variable <DriftDiffusionAnalytical.default_variable>` and all elements must be floats from 0 to 1.
 
     t0 : float, list or 1d array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-        list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
+        list or array, it must be the same length as  `default_variable <DriftDiffusionAnalytical.default_variable>` and all
         elements must be floats from 0 to 1.
 
     params : Dict[param keyword: param value] : default None
@@ -4597,6 +4596,10 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    shenhav_et_al_compat_mode: bool : default False
+        whether Shenhav et al. compatibility mode is set. See shenhav_et_al_compat_mode property.
+
 
     Attributes
     ----------
@@ -4624,8 +4627,8 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     bias : float or 1d array
         normalized starting point:
-        (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
-        (2 * `threshold <BogaczEtAl.threshold>`)
+        (`starting_point <DriftDiffusionAnalytical.starting_point>` + `threshold <DriftDiffusionAnalytical.threshold>`) /
+        (2 * `threshold <DriftDiffusionAnalytical.threshold>`)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4638,9 +4641,10 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
+
     """
 
-    componentName = kwBogaczEtAl
+    componentName = kwDriftDiffusionAnalytical
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -4650,7 +4654,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         threshold = Param(1.0, modulable=True)
         noise = Param(0.5, modulable=True)
         t0 = .200
-        bias = Param(0.5, read_only=True, getter=_BogaczEtAl_bias_getter)
+        bias = Param(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
 
     @tc.typecheck
     def __init__(self,
@@ -4662,7 +4666,10 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
                  t0: parameter_spec = .200,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 shenhav_et_al_compat_mode=False):
+
+        self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
@@ -4687,6 +4694,47 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         # disabled because it happens during normal execution, may be confusing
         # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
         self._output_type = None
+
+    @property
+    def shenhav_et_al_compat_mode(self):
+        """
+        Get the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        the analytic computations of mean error rate and reaction time to match exactly the
+        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
+        should only effect edges cases that involve the following cases:
+
+            - Floating point overflows and underflows are ignored when computing mean RT and mean ER
+            - Exponential expressions used in cacluating mean RT and mean ER are bounded by 1e-12 to 1e12.
+            - Decision time is not permitted to be negative and will be set to 0 in these cases. Thus RT
+              will be RT = non-decision-time in these cases.
+
+        Returns
+        -------
+        Shenhav et al. compatible mode setting : (bool)
+
+        """
+        return self._shenhav_et_al_compat_mode
+
+    @shenhav_et_al_compat_mode.setter
+    def shenhav_et_al_compat_mode(self, value):
+        """
+        Set the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        the analytic computations of mean error rate and reaction time to match exactly the
+        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
+        should only effect edges cases that involve the following cases:
+
+            - Floating point overflows and underflows are ignored when computing mean RT and mean ER
+            - Exponential expressions used in cacluating mean RT and mean ER are bounded by 1e-12 to 1e12.
+            - Decision time is not permitted to be negative and will be set to 0 in these cases. Thus RT
+              will be RT = non-decision-time in these cases.
+
+        Arguments
+        ---------
+
+        value : bool
+            Set True to turn on Shenhav et al. compatibility mode, False for off.
+        """
+        self._shenhav_et_al_compat_mode = value
 
     def function(self,
                  variable=None,
@@ -4755,17 +4803,44 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
             if np.abs(y0tilde) > threshold:
-                y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
+                # First difference between Shenhav et al. DDM code and PNL's.
+                if self.shenhav_et_al_compat_mode:
+                    y0tilde = -1 * (y0tilde < 0) * threshold + (y0tilde >=0 ) * threshold
+                else:
+                    y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
+
             x0tilde = y0tilde / drift_rate_normed
 
-            with np.errstate(over='raise', under='raise'):
+            # Whether we should ignore or raise floating point over and underflow exceptions.
+            # Shenhav et al. MATLAB code ignores them.
+            ignore_or_raise = "raise"
+            if self.shenhav_et_al_compat_mode:
+                ignore_or_raise = "ignore"
+
+            with np.errstate(over=ignore_or_raise, under=ignore_or_raise):
                 try:
+                    # Lets precompute these common sub-expressions
+                    exp_neg2_x0tilde_atilde = np.exp(-2 * x0tilde * atilde)
+                    exp_2_ztilde_atilde = np.exp(2 * ztilde * atilde)
+                    exp_neg2_ztilde_atilde = np.exp(-2 * ztilde * atilde)
+
+                    if self.shenhav_et_al_compat_mode:
+                        exp_neg2_x0tilde_atilde = np.nanmax([1e-12, exp_neg2_x0tilde_atilde])
+                        exp_2_ztilde_atilde = np.nanmin([1e12, exp_2_ztilde_atilde])
+                        exp_neg2_ztilde_atilde = np.nanmax([1e-12, exp_neg2_ztilde_atilde])
+
                     rt = ztilde * np.tanh(ztilde * atilde) + \
-                         ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
-                             np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                    er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
-                         ((1 - np.exp(-2 * x0tilde * atilde)) / (
-                         np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
+                         ((2 * ztilde * (1 - exp_neg2_x0tilde_atilde)) / (
+                                 exp_2_ztilde_atilde - exp_neg2_ztilde_atilde) - x0tilde)
+                    er = 1 / (1 + exp_2_ztilde_atilde) - \
+                         ((1 - exp_neg2_x0tilde_atilde) / (exp_2_ztilde_atilde - exp_neg2_ztilde_atilde))
+
+                    # Fail safe to prevent negative mean RT's. Shenhav et al. do this.
+                    if self.shenhav_et_al_compat_mode:
+                        if rt < 0:
+                            rt = 0
+
+                    rt = rt + t0
 
                 except FloatingPointError:
                     # Per Mike Shvartsman:
@@ -4782,7 +4857,92 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
-        return rt, er
+        # Compute moments (mean, variance, skew) of condiational response time distributions
+        moments = DriftDiffusionAnalytical._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, t0)
+
+        return rt, er, \
+               moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'], \
+               moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
+
+    @staticmethod
+    def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_point, t0):
+        """
+        This is a helper function for computing the conditional decison time moments for the DDM.
+        It is based completely off of Matlab\DDMFunctions\ddm_metrics_cond_Mat.m.
+
+        :param drift_rate: The drift rate of the DDM
+        :param noise: The diffusion rate.
+        :param threshold: The symmetric threshold of the DDM
+        :param starting_point: The initial condition.
+        :param t0: The non decision time.
+        :return: A dictionary containing the following key value pairs:
+         mean_rt_plus: The mean RT of positive responses.
+         mean_rt_minus: The mean RT of negative responses.
+         var_rt_plus: The variance of RT of positive responses.
+         var_rt_minus: The variance of RT of negative responses.
+         skew_rt_plus: The skew of RT of positive responses.
+         skew_rt_minus: The skew of RT of negative responses.
+        """
+
+        #  transform starting point to be centered at 0
+        starting_point = (starting_point - 0.5) * 2.0 * threshold
+
+        if abs(drift_rate) < 0.01:
+            drift_rate = 0.01
+
+        X = drift_rate * starting_point / noise**2
+        Z = drift_rate * threshold / noise**2
+
+        X = max(-100, min(100, X))
+
+        Z = max(-100, min(100, Z))
+
+        if abs(Z) < 0.0001:
+            Z = 0.0001
+
+        def coth(x):
+            return 1/np.tanh(x)
+
+        def csch(x):
+            return 1 / np.sinh(x)
+
+        moments = {}
+
+        # Lets ignore any divide by zeros we get or NaN errors. This will allow the NaN's to propogate.
+        with np.errstate(divide='ignore', invalid='ignore'):
+            moments["mean_rt_plus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (X + Z) * coth(X + Z))
+
+            moments["mean_rt_minus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
+
+            moments["var_rt_plus"] = noise**4. / (drift_rate**4) * \
+                              (4 * Z**2. * (csch(2 * Z))**2 + 2 * Z * coth(2 * Z) - (Z + X)**2. *
+                               (csch(Z + X))**2 - (Z + X) * coth(Z + X))
+
+            moments["var_rt_minus"] = noise**4. / (drift_rate**4) * \
+                               (4 * Z**2. * (csch(2 * Z)) ** 2 + 2 * Z*coth(2 * Z) - (Z - X)**2. *
+                                (csch(Z - X))**2 - (Z - X) * coth(Z - X))
+
+            moments["skew_rt_plus"] = noise**6. / (drift_rate** 6) * \
+                               (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) * (csch(2 * Z))**2 +
+                                6 * Z * coth(2 * Z) - 3 * (Z + X)**2. * (csch(Z + X))**2 -
+                                2 * (Z + X)**3. * coth(Z + X) * (csch(Z + X))**2 - 3 * (Z + X) * coth(Z + X))
+
+            moments["skew_rt_minus"] = noise**6. / (drift_rate**6) * \
+                                (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
+                                 (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z - X)**2. *
+                                 (csch(Z - X))**2 - 2 * (Z - X)**3. * coth(Z - X) *
+                                 (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
+
+            # divide third central moment by var_rt**1.5 to get skewness
+            moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
+            moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
+
+            # Add the non-decision time to the mean RTs
+            moments['mean_rt_plus'] += t0
+            moments['mean_rt_minus'] += t0
+
+
+        return moments
 
     def derivative(self, output=None, input=None, execution_id=None):
         """
@@ -4793,21 +4953,21 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
             :math:`RR = delay_{ITI} + \\frac{Z}{A} + ED`;
 
-        the derivative of :math:`\\frac{1}{RR}` with respect to the `threshold <BogaczEtAl.threshold>` is:
+        the derivative of :math:`\\frac{1}{RR}` with respect to the `threshold <DriftDiffusionAnalytical.threshold>` is:
 
             :math:`\\frac{1}{A} - \\frac{E}{A} - 2\\frac{A}{c^2}ED`;
 
-        and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
+        and the derivative of 1/RR with respect to the `drift_rate <DriftDiffusionAnalytical.drift_rate>` is:
 
             :math:`-\\frac{Z}{A^2} + \\frac{Z}{A^2}E - \\frac{2Z}{c^2}ED`
 
         where:
 
-            *A* = `drift_rate <BogaczEtAl.drift_rate>`,
+            *A* = `drift_rate <DriftDiffusionAnalytical.drift_rate>`,
 
-            *Z* = `threshold <BogaczEtAl.threshold>`,
+            *Z* = `threshold <DriftDiffusionAnalytical.threshold>`,
 
-            *c* = `noise <BogaczEtAl.noise>`,
+            *c* = `noise <DriftDiffusionAnalytical.noise>`,
 
             *E* = :math:`e^{-2\\frac{ZA}{c^2}}`,
 
@@ -4820,8 +4980,8 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         -------
 
         derivatives :  List[float, float)
-            of :math:`\\frac{1}{RR}` with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate
-            <BogaczEtAl.drift_rate>`.
+            of :math:`\\frac{1}{RR}` with respect to `threshold <DriftDiffusionAnalytical.threshold>` and `drift_rate
+            <DriftDiffusionAnalytical.drift_rate>`.
 
         """
         Z = output or self.get_current_function_param(THRESHOLD, execution_id)
@@ -4882,24 +5042,24 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
 
     drift_rate : float, list or 1d array : default 1.0
         specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     threshold : float, list or 1d array : default 1.0
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     starting_point : float, list or 1d array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-        array, it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
+        array, it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
     noise : float, list or 1d array : default 0.0
         specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-        `default_variable <BogaczEtAl.default_variable>` and all elements must be floats from 0 to 1.
+        `default_variable <DriftDiffusionAnalytical.default_variable>` and all elements must be floats from 0 to 1.
 
     t0 : float, list or 1d array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-        list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
+        list or array, it must be the same length as  `default_variable <DriftDiffusionAnalytical.default_variable>` and all
         elements must be floats from 0 to 1.
 
     params : Dict[param keyword: param value] : default None
@@ -4942,8 +5102,8 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
 
     bias : float or 1d array
         normalized starting point:
-        (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) /
-        (2 * `threshold <BogaczEtAl.threshold>`)
+        (`starting_point <DriftDiffusionAnalytical.starting_point>` + `threshold <DriftDiffusionAnalytical.threshold>`) /
+        (2 * `threshold <DriftDiffusionAnalytical.threshold>`)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -5059,4 +5219,4 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
 
         results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
-        return self.convert_output_type(results)
+        return results
