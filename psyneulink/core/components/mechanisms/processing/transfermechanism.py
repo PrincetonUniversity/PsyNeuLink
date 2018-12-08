@@ -651,8 +651,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         .. note::
             The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
             <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
-            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
-            to `initializer <IntegratorFunction.initializer>` of integrator_function.
+            specify the respective parameters of its `integrator_function <TransferMechanism.integrator_function>`
+            (with **initial_value** corresponding to `initializer <IntegratorFunction.initializer>` of
+            integrator_function).  However, if any of these parameters are specified in the constructor for an
+            `IntegratorFunction` assigned as the **integration_function** arg of the TransferMechanism, then
+            those values take precedence over any specification of the corresponding parameters for the Mechanism.
 
     initial_value :  value, list or np.ndarray
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
