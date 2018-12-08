@@ -640,40 +640,23 @@ class TransferMechanism(ProcessingMechanism_Base):
     function : Function
         the Function used to transform the input.
 
-    COMMENT:
-       THE FOLLOWING IS THE CURRENT ASSIGNMENT
-    COMMENT
-
     integrator_function :  IntegratorFunction
         the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
         `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
-        .. note::
-            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
-            <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
-            specify the respective parameters of its `integrator_function <TransferMechanism.integrator_function>`
-            (with **initial_value** corresponding to `initializer <IntegratorFunction.initializer>` of
-            integrator_function).  However, if any of these parameters are specified in the constructor for an
-            `IntegratorFunction` assigned as the **integration_function** arg of the TransferMechanism, then
-            those values take precedence over any specification of the corresponding parameters for the Mechanism.
-
     initial_value :  value, list or np.ndarray
-        specifies the starting value for time-averaged input (only relevant if `integrator_mode
-        <TransferMechanism.integrator_mode>` is `True` and `integration_rate <TransferMechanism.integration_rate>` is
-        not 1.0).
-        COMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        COMMENT
+        specifies the starting value for the `integration_function <TransferMechanism.integrator_function>`;  only
+        relevant if `integrator_mode <TransferMechanism.integrator_mode>` is `True` and `integration_rate
+        <TransferMechanism.integration_rate>` is not 1.0 (see `integrator_mode <TransferMechanism.integrator_mode>`
+        for additional details).
 
     noise : float or function
         When `integrator_mode <TransferMechanism.integrator_mode>` is set to `True`, `noise <TransferMechanism.noise>`
-        is passed into the `integrator_function <TransferMechanism.integrator_function>`. Otherwise, noise is added
-        to the output of the `function <TransferMechanism.function>`.
-
-        If `noise <TransferMechanism.noise>` is a list or array, it must be the same length as `variable
-        <TransferMechanism.default_variable>`.
-
-        If `noise <TransferMechanism.noise>` is specified as a single float or function, while `variable
+        is passed into the `integrator_function <TransferMechanism.integrator_function>` (see `integrator_mode
+        <TransferMechanism.integrator_mode>` for additional details). Otherwise, noise is added to the output of the
+        `function <TransferMechanism.function>`. If `noise <TransferMechanism.noise>` is a list or array,
+        it must be the same length as `variable <TransferMechanism.default_variable>`. If `noise
+        <TransferMechanism.noise>` is specified as a single float or function, while `variable
         <TransferMechanism.variable>` is a list or array, `noise <TransferMechanism.noise>` will be applied to each
         element of `variable <TransferMechanism.variable>`. In the case that `noise <TransferMechanism.noise>` is
         specified as  a function, the function will be executed separately for each element of `variable
@@ -688,8 +671,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     integration_rate : float
         the rate at which the TransferMechanism's `variable <TransferMechanism>` is integrated when it is executed with
-        `integrator_mode <TransferMechanism.integrator_mode>` set to True (see `integrator_mode
-        <TransferMechanism.integrator_mode>` for details).
+        `integrator_mode <TransferMechanism.integrator_mode>` set to `True` (see `integrator_mode
+        <TransferMechanism.integrator_mode>` for additional details).
 
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
@@ -697,18 +680,23 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         **If integrator_mode is set to** `True`:
 
-            the TransferMechanism's `variable <TransferMechanism>` is first
-            passed into the `AdaptiveIntegrator` Function, that carries out the following calculation:
-
-            .. math::
-                result = previous\\_value(1-integration\\_rate) + variable \\cdot integration\\_rate + noise
-
-            where *previous_value* is set to the value of the TransferMechanism's `initial_value
-            <TransferMechanism.initial_value>` attribute on the first execution, and *integration_rate* and *noise*
-            are determined by the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` and
-            `noise <TransferMechanism.noise>` attributes, respectively.  The result is then passed to the
-            TransferMechanism's `function <TransferMechanism.function>` which computes the TransferMechanism's `value
+            the TransferMechanism's `variable <TransferMechanism>` is first passed to its `integrator_function
+            <TransferMechanism.integrator_function>`, and then the result is passed to the TransferMechanism's
+            `function <TransferMechanism.function>` which computes the TransferMechanism's `value
             <TransferMechanism.value>`.
+
+            .. note::
+                The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
+                <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
+                specify the respective parameters of its `integrator_function <TransferMechanism.integrator_function>`
+                (with `initial_value <TransferMechanism.initial_value>` corresponding to `initializer
+                <IntegratorFunction.initializer>` and `integration_rate <TransferMechanism.integration_rate>`
+                corresponding to `rate <IntegratorFunction.rate>` of `integrator_function
+                <TransferMechanism.integrator_function>`). However, if there are any disagreements between these
+                (e.g., any of these parameters is specified in the constructor for an `IntegratorFunction` assigned
+                as the **integration_function** arg of the TransferMechanism), the values specified for the
+                `integrator_function <TransferMechanism.integrator_function>` take precedence, and their value(s) are
+                assigned as those of the corresponding parameters on the TransferMechanism.
 
         **If integrator_mode is set to** `False`:
 
