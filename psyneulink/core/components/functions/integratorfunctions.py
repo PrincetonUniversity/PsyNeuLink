@@ -292,7 +292,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                             )
                     else:
                         raise FunctionError(
-                            "The length of the array specified for the rate parameter of {} ({})"
+                            "The length of the array specified for the rate parameter of {} ({}) "
                             "must match the length of the default input ({}).".format(
                                 len(rate),
                                 # rate,

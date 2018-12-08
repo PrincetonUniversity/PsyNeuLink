@@ -103,7 +103,7 @@ __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'CNodeRole', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
-    'insert_list', 'is_matrix_spec',
+    'insert_list', 'is_matrix_spec', 'all_within_range',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
@@ -260,6 +260,16 @@ def is_numeric_or_none(x):
 def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
+
+def all_within_range(x, min, max):
+    x = np.array(x)
+    try:
+        return (x>=min).all() & (x<=max).all()
+    except (ValueError, TypeError):
+        for i in x:
+            if not all_within_range(i, min, max):
+                return False
+        return True
 
 def is_matrix_spec(m):
     return isinstance(m, str) and m in MATRIX_KEYWORD_VALUES

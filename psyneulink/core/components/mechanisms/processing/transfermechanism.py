@@ -972,13 +972,21 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     IntegratorFunction.__class__.__name__)
         
         # Validate INTEGRATION_RATE:
-        if INTEGRATION_RATE in target_set:
-            integration_rate = target_set[INTEGRATION_RATE]
-            # if np.isscalar(integration_rate):
-            if (not (isinstance(integration_rate, (int, float))
-                     and 0 <= integration_rate <= 1)) and (integration_rate != None):
-                raise TransferError("integration_rate parameter ({}) for {} must be a float between 0 and 1".
-                                    format(integration_rate, self.name))
+        if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
+            # # MODIFIED 12/7/18 OLD:
+            # integration_rate = target_set[INTEGRATION_RATE]
+            # if (not (isinstance(integration_rate, (int, float))
+            #          and 0 <= integration_rate <= 1)) and (integration_rate != None):
+            #     raise TransferError("integration_rate parameter ({}) for {} must be a float between 0 and 1".
+            #                         format(integration_rate, self.name))
+            # MODIFIED 12/7/18 NEW: [JDC]
+            integration_rate = np.array(target_set[INTEGRATION_RATE])
+            if ((np.isscalar(integration_rate) and not 0 <= integration_rate <= 1)
+                    # or (not (isinstance(integration_rate, (int, float) and 0 <= integration_rate <= 1)))):
+                    or integration_rate.any(0 <= integration_rate <= 1)):
+                raise TransferError("Value(s) in {} arg for {} ({}) must be an int or float in the interval [0,1]".
+                                    format(repr(INTEGRATION_RATE), self.name, integration_rate, ))
+            # MODIFIED 12/7/18 END
 
         # Validate CLIP:
         if CLIP in target_set and target_set[CLIP] is not None:
