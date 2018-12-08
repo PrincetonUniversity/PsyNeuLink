@@ -63,7 +63,7 @@ Automatic_Component = pnl.TransferMechanism(
 
 # Decision Mechanisms
 Decision = pnl.DDM(
-    function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
+    function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(
         drift_rate=(1.0),
         threshold=(0.2645),
         noise=(0.5),

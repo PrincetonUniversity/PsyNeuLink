@@ -302,7 +302,7 @@ class TestObjectiveMechanismRoles:
 #             name='Reward'
 #         )
 #         Decision = DDM(
-#             function=BogaczEtAl(
+#             function=DriftDiffusionAnalytical(
 #                 drift_rate=(
 #                     1.0,
 #                     ControlProjection(

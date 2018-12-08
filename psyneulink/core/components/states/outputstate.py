@@ -445,7 +445,7 @@ the OutputState is assigned to a Mechanism, by including *INDEX* and *ASSIGN* en
 <OutputState_Specification>` for the OutputState, as in the following example::
 COMMENT
 
-    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
     ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
@@ -476,7 +476,7 @@ the ``DECISION ENTROPY`` OutputState could be created as follows::
 
 and then assigned either as::
 
-    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
     ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  decision_entropy_output_state])
@@ -486,7 +486,7 @@ or::
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                variable=(OWNER_VALUE, 2),
     ...                                                function=pnl.Stability(metric=pnl.ENTROPY))
-    >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
+    >>> my_mech2 = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
     ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
