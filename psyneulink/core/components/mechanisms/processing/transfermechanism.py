@@ -344,7 +344,7 @@ from psyneulink.core.globals.keywords import DIFFERENCE, DISTRIBUTION_FUNCTION_T
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
+from psyneulink.core.globals.utilities import append_type_to_name, iscompatible, all_within_range
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -940,17 +940,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
         
         # Validate INITIAL_VALUE
-        if INITIAL_VALUE in target_set:
+        if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
             initial_value = target_set[INITIAL_VALUE]
-            if initial_value is not None:
-                if not iscompatible(initial_value, self.instance_defaults.variable):
-                    raise TransferError(
-                        "The format of the initial_value parameter for {} ({}) must match its variable ({})".format(
-                            append_type_to_name(self),
-                            initial_value,
-                            self.instance_defaults.variable,
-                        )
+            if not iscompatible(initial_value, self.instance_defaults.variable):
+                raise TransferError(
+                    "The format of the initial_value parameter for {} ({}) must match its variable ({})".format(
+                        append_type_to_name(self),
+                        initial_value,
+                        self.instance_defaults.variable,
                     )
+                )
 
         # FIX: SHOULD THIS (AND INTEGRATION_RATE) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
@@ -973,20 +972,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
-            # # MODIFIED 12/7/18 OLD:
-            # integration_rate = target_set[INTEGRATION_RATE]
-            # if (not (isinstance(integration_rate, (int, float))
-            #          and 0 <= integration_rate <= 1)) and (integration_rate != None):
-            #     raise TransferError("integration_rate parameter ({}) for {} must be a float between 0 and 1".
-            #                         format(integration_rate, self.name))
-            # MODIFIED 12/7/18 NEW: [JDC]
             integration_rate = np.array(target_set[INTEGRATION_RATE])
-            if ((np.isscalar(integration_rate) and not 0 <= integration_rate <= 1)
-                    # or (not (isinstance(integration_rate, (int, float) and 0 <= integration_rate <= 1)))):
-                    or integration_rate.any(0 <= integration_rate <= 1)):
+            if not all_within_range(integration_rate, 0, 1):
                 raise TransferError("Value(s) in {} arg for {} ({}) must be an int or float in the interval [0,1]".
                                     format(repr(INTEGRATION_RATE), self.name, integration_rate, ))
-            # MODIFIED 12/7/18 END
+            if (not np.isscalar(integration_rate)
+                    and integration_rate.shape != self.instance_defaults.variable.squeeze().shape):
+                raise TransferError("{} arg for {} ({}) must be either an int or float, "
+                                    "or have the same shape as its {} ({})".
+                                    format(repr(INTEGRATION_RATE), self.name, integration_rate,
+                                           VARIABLE, self.instance_defaults.variable))
 
         # Validate CLIP:
         if CLIP in target_set and target_set[CLIP] is not None:
@@ -1104,19 +1099,19 @@ class TransferMechanism(ProcessingMechanism_Base):
                                              self.integrator_function.__class__.__name__))
                     self.integrator_function.parameters.noise.set(noise, execution_id)
 
-            # if hasattr(self.integrator_function, INITIALIZER):
-            #     # Check if user specified Mechanism's param, and if so, use it
-            #     # FIX: 12/7/18 JDC
-            #     if initializer != self.class_defaults.initial_value:
-            #         # Warn if function's param was specified and it is not the same as Mechanism's specification
-            #         if (self.integrator_function.initializer != self.integrator_function.class_defaults.initializer
-            #                 and initializer != self.integrator_function.initializer):
-            #             warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
-            #                           "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
-            #                           format(repr(INITIAL_VALUE), self.name, initializer,
-            #                                  repr(INITIALIZER), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
-            #                                  self.integrator_function.__class__.__name__))
-            #         self.integrator_function.parameters.initializer.set(initializer, execution_id)
+            if hasattr(self.integrator_function, INITIALIZER):
+                # Check if user specified Mechanism's param, and if so, use it
+                # FIX: 12/7/18 JDC
+                if initializer != self.class_defaults.initial_value:
+                    # Warn if function's param was specified and it is not the same as Mechanism's specification
+                    if (self.integrator_function.initializer != self.integrator_function.class_defaults.initializer
+                            and initializer != self.integrator_function.initializer):
+                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
+                                      "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
+                                      format(repr(INITIAL_VALUE), self.name, initializer,
+                                             repr(INITIALIZER), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
+                                             self.integrator_function.__class__.__name__))
+                    self.integrator_function.parameters.initializer.set(initializer, execution_id)
 
             if hasattr(self.integrator_function, RATE):
                 # Check if user specified Mechanism's param, and if so, use it

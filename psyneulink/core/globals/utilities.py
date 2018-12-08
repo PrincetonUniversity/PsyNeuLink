@@ -28,6 +28,7 @@ CONTENTS
 
 * `parameter_spec`
 * `optional_parameter_spec`
+* `all_within_range`
 * `is_matrix
 * `is_matrix_spec`
 * `is_numeric`
@@ -251,6 +252,21 @@ def parameter_spec(param, numeric_only=None):
     return False
 
 
+def all_within_range(x, min, max):
+    x = np.array(x)
+    try:
+        if min is not None and (x<min).all():
+            return False
+        if max is not None and (x>min).all():
+            return False
+        return True
+    except (ValueError, TypeError):
+        for i in x:
+            if not all_within_range(i, min, max):
+                return False
+        return True
+
+
 def is_numeric_or_none(x):
     if x is None:
         return True
@@ -260,16 +276,6 @@ def is_numeric_or_none(x):
 def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
-
-def all_within_range(x, min, max):
-    x = np.array(x)
-    try:
-        return (x>=min).all() & (x<=max).all()
-    except (ValueError, TypeError):
-        for i in x:
-            if not all_within_range(i, min, max):
-                return False
-        return True
 
 def is_matrix_spec(m):
     return isinstance(m, str) and m in MATRIX_KEYWORD_VALUES
