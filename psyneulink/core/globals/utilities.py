@@ -257,7 +257,7 @@ def all_within_range(x, min, max):
     try:
         if min is not None and (x<min).all():
             return False
-        if max is not None and (x>min).all():
+        if max is not None and (x>max).all():
             return False
         return True
     except (ValueError, TypeError):

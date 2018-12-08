@@ -294,9 +294,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                         raise FunctionError(
                             "The length of the array specified for the rate parameter of {} ({}) "
                             "must match the length of the default input ({}).".format(
-                                len(rate),
-                                # rate,
                                 self.name,
+                                # rate,
+                                len(rate),
                                 np.array(self.instance_defaults.variable).size,
                                 # self.instance_defaults.variable,
                             )
@@ -1098,46 +1098,16 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         current_input = np.atleast_2d(variable)
         prev_val = np.atleast_2d(previous_value)
 
-        # # MODIFIED 12/7/18 OLD: - ASSIGN TO INDEXED ELEMENT OF np.array
-        # dist_from_asymptote = np.zeros_like(current_input)
-        # for i in range(len(current_input)):
-        #     for j in range(len(current_input[i])):
-        #         if current_input[i][j] > 0:
-        #             d = max_val - prev_val[i][j]
-        #         elif current_input[i][j] < 0:
-        #             d = prev_val[i][j] - min_val
-        #         else:
-        #             d = 0
-        #         # FIX: dist_from_asymptote[i][j] IS ONLY GETTING ASSIGNED ON FIRST PASS THROUGH EXECUTE
-        #         #     WHEN IT IS AN np.array, BUT NOT ON SUBSEQUENT PASSES (REMAINS [[0,0]]
-        #         dist_from_asymptote[i][j] = d
-        #     # # TEST PRINT:
-        #     # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     #     print(dist_from_asymptote[i][j])
-        # # # TEST PRINT:
-        # # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        # #     print(dist_from_asymptote)
-        # MODIFIED 12/7/18 NEW: [JDC] - USE LIST THEN CONVERT TO np.array
-        d = []
+        dist_from_asymptote = np.zeros_like(current_input, dtype=float)
         for i in range(len(current_input)):
-            d_i = []
             for j in range(len(current_input[i])):
                 if current_input[i][j] > 0:
-                    d_j = max_val - prev_val[i][j]
+                    d = max_val - prev_val[i][j]
                 elif current_input[i][j] < 0:
-                    d_j = prev_val[i][j] - min_val
+                    d = prev_val[i][j] - min_val
                 else:
-                    d_j = 0
-                d_i.append(d_j)
-            d.append(d_i)
-            # # TEST PRINT:
-            # if self.context.initialization_status != ContextFlags.INITIALIZING:
-            #     print(dist_from_asymptote[i][j])
-        # # TEST PRINT:
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     print(dist_from_asymptote)
-        dist_from_asymptote = np.array(d)
-        # MODIFIED 12/7/18 END
+                    d = 0
+                dist_from_asymptote[i][j] = d
 
         dist_from_rest = prev_val - rest
 
