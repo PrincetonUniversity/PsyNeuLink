@@ -53,7 +53,7 @@ from psyneulink.core.globals.keywords import \
     LCAMechanism_INTEGRATOR_FUNCTION, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, \
     RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Param
-from psyneulink.core.globals.utilities import iscompatible, parameter_spec
+from psyneulink.core.globals.utilities import iscompatible, parameter_spec, all_within_range
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core import llvm as pnlvm
@@ -1028,7 +1028,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
             rate = request_set[RATE]
             if np.isscalar(rate):
                 rate = [rate]
-            if not all_in_range(rate, 0, 1):
+            if not all_within_range(rate, 0, 1):
                 raise FunctionError("Value(s) specified for {} argument of {} ({}) must be in interval [0,1]".
                                     format(repr(RATE), self.__class__.__name__, rate))
 
@@ -2515,7 +2515,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
-        time_step_size=0.05,          \
+        time_step_size=0.05,            \
         t_0=0.0,                        \
         a_v=-1/3,                       \
         b_v=0.0,                        \
@@ -2945,7 +2945,15 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  integration_method="RK4",
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
+
+        for k in {NOISE, INITIALIZER, RATE}:
+            if k in kwargs:
+                del kwargs[k]
+        if len(kwargs):
+            raise FunctionError("Unrecognized args in constructor for {}: {}".
+                                format(self.__class__.__name__, kwargs))
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initial_v", "initial_w", "t_0"]
