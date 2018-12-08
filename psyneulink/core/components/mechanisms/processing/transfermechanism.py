@@ -1084,22 +1084,22 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
                                          execution_id, context=None):
 
-        # Identify parameters passed in as the Mechainsm's values
-        mech_noise = np.array(noise).squeeze()
-        mech_init_val = np.array(initializer)
-        mech_rate = np.array(rate).squeeze()
-
         if isinstance(self.integrator_function, type):
             self.integrator_function = self.integrator_function(variable,
-                                                                initializer=mech_init_val,
-                                                                noise=mech_noise,
-                                                                rate=mech_rate,
+                                                                initializer=initializer,
+                                                                noise=noise,
+                                                                rate=rate,
                                                                 owner=self)
         # User specified integrator_function in constructor
         # If the values of any of these parameters differ from the default on either the Mechanism or function:
         #     - use the value that differs (on the assumption that that was assigned by user;
         #     - if both differ, warn and give precedence to the value specified for the Function
         else:
+
+            # Identify parameters passed in as the Mechainsm's values
+            mech_noise = np.array(noise).squeeze()
+            mech_init_val = np.array(initializer)
+            mech_rate = np.array(rate).squeeze()
 
             if hasattr(self.integrator_function, NOISE):
                 fct_noise = np.array(self.integrator_function.noise)
