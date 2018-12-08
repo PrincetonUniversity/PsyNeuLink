@@ -1115,9 +1115,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                         # Assign funciton's noise to Mechanism
                         self.parameters.noise.set(self.integrator_function.noise, execution_id)
 
-            # FIX: MECH_INIT_VAL IS GETTING SET TO SOMETHING OTHER THAN CLASS DEFAULTS BEFORE HERE
             if hasattr(self.integrator_function, INITIALIZER):
                 fct_intlzr = np.array(self.integrator_function.initializer)
+                # Check against variable, as class.default is None, but value is assigned to variable before here
                 mech_specified = not np.array_equal(mech_init_val, np.array(self.instance_defaults.variable))
                 fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
                                                    np.array(self.integrator_function.class_defaults.initializer))
