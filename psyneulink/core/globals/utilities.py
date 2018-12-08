@@ -28,6 +28,7 @@ CONTENTS
 
 * `parameter_spec`
 * `optional_parameter_spec`
+* `all_within_range`
 * `is_matrix
 * `is_matrix_spec`
 * `is_numeric`
@@ -103,7 +104,7 @@ __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'CNodeRole', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
-    'insert_list', 'is_matrix_spec',
+    'insert_list', 'is_matrix_spec', 'all_within_range',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
@@ -249,6 +250,21 @@ def parameter_spec(param, numeric_only=None):
                 return False
         return True
     return False
+
+
+def all_within_range(x, min, max):
+    x = np.array(x)
+    try:
+        if min is not None and (x<min).all():
+            return False
+        if max is not None and (x>max).all():
+            return False
+        return True
+    except (ValueError, TypeError):
+        for i in x:
+            if not all_within_range(i, min, max):
+                return False
+        return True
 
 
 def is_numeric_or_none(x):

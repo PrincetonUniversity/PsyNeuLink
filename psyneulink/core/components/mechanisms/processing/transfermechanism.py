@@ -64,26 +64,40 @@ must be set to True.
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True)
 
-When `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMechanism has an `integrator_function
-<TransferMechanism.integrator_function>` which it applies to its variable on each execution. The output of the
-`integrator_function  <TransferMechanism.integrator_function>` is then used as the input to its `function
+When `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMechanism uses its `integrator_function
+<TransferMechanism.integrator_function>` to integrate its variable on each execution. The output of the
+`integrator_function  <TransferMechanism.integrator_function>` is then used as the input to `function
 <TransferMechanism.function>`.
 
-The `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is always the
-`AdaptiveIntegrator`. Two parameters of the `AdaptiveIntegrator` are exposed on the TransferMechanism. Specifying the
-arguments **integration_rate** and/or **initial_value** in the mechanism's constructor will actually set the mechanism's
-`integrator_function <TransferMechanism.integrator_function>` to an `AdaptiveIntegrator` with those values specified for
- `rate <AdaptiveIntegrator.rate>` and `initializer <AdaptiveIntegrator.initializer>`, respectively.
+By default, the `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is
+`AdaptiveIntegrator`.  However, any `IntegratorFunction` can be assigned. A TransferMechanism has three parameters that
+are used by most IntegratorFunctions:  `initial_value <TransferMechanism.initial_value>`, `integration_rate
+<TransferMechanism.integration_rate>`, and `noise <TransferMechanism.noise>`.  If any of these are specified in the
+TransferMechanism's constructor, their value is used to specify the corresponding parameter of its `integrator_function
+<TransferMechanism.integrator_function>`.  In the following example::
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
-    ...                                                        integration_rate=0.1,
-    ...                                                        initial_value=np.array([[0.2]]))
+    ...                                                        initial_value=np.array([[0.2]]),
+    ...                                                        integration_rate=0.1)
+
+``my_logistic_transfer_mechanism`` will be assigned an `AdaptiveIntegrator` (the default) as its `integrator_function
+<TrasnferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegrator.initializer>` parameter,
+and ``0.`` as its `rate <AdaptiveIntegrator.rate>` parameter.  However, in this example::
+
+    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
+    ...                                                        integrator_mode=True,
+    ...                                                        integrator_function=AdaptiveIntegrator(rate=0.3),
+    ...                                                        initial_value=np.array([[0.2]]),
+    ...                                                        integration_rate=0.1)
+
+the AdaptiveIntegrator's `rate <AdaptiveIntegrator.rate>` parameter will be assigned ``0.3``, and this will also
+be assigned to the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter, overriding
+the specified value of ``0.1``.
 
 .. note::
     If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **integration_rate** and
-    **initial_value** are ignored, because the mechanism does not have an `integrator_function
-    <TransferMechanism.integrator_function>` to construct.
+    **initial_value** are ignored, as its `integrator_function <TransferMechanism.integrator_function>` is not executed.
 
 When switching between `integrator_mode <TransferMechanism.integrator_mode>` = True and `integrator_mode
 <TransferMechanism.integrator_mode>` = False, the behavior of the `integrator_function
@@ -108,9 +122,11 @@ Finally, the TransferMechanism has two arguments that can adjust the final resul
 **noise**. If `integrator_mode <TransferMechanism.integrator_mode>` is False, `clip <TransferMechanism.clip>` and
 `noise <TransferMechanism.noise>` modify the value returned by the mechanism's `function <TransferMechanism.function>`
 before setting it as the mechanism's value. If `integrator_mode <TransferMechanism.integrator_mode>` is True,
-**noise** is simply handed to the mechanism's `integrator_function <TransferMechanism.integrator_function>` (in the same
-manner as **integration_rate** and **initial_value**), whereas `clip <TransferMechanism.clip>` modifies the value
-returned by the mechanism's `function <TransferMechanism.function>` before setting it as the mechanism's value.
+**noise** is assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
+(as its `noise <IntegratorFunction.noise>` parameter -- in the same manner as `integration_rate
+<TransferMechanism.integration_rate>` and `initial_value <TransferMechanism.intial_value>`), whereas `clip
+<TransferMechanism.clip>` modifies the value returned by the mechanism's `function <TransferMechanism.function>`
+before setting it as the TransferMechanism's `value <TransferMechanism.value>`.
 
 .. _Transfer_Structure:
 
@@ -344,7 +360,7 @@ from psyneulink.core.globals.keywords import DIFFERENCE, DISTRIBUTION_FUNCTION_T
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
+from psyneulink.core.globals.utilities import append_type_to_name, iscompatible, all_within_range
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -640,37 +656,23 @@ class TransferMechanism(ProcessingMechanism_Base):
     function : Function
         the Function used to transform the input.
 
-    COMMENT:
-       THE FOLLOWING IS THE CURRENT ASSIGNMENT
-    COMMENT
-
     integrator_function :  IntegratorFunction
         the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
         `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
-        .. note::
-            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
-            <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
-            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
-            to `initializer <IntegratorFunction.initializer>` of integrator_function.
-
     initial_value :  value, list or np.ndarray
-        specifies the starting value for time-averaged input (only relevant if `integrator_mode
-        <TransferMechanism.integrator_mode>` is `True` and `integration_rate <TransferMechanism.integration_rate>` is
-        not 1.0).
-        COMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        COMMENT
+        specifies the starting value for the `integration_function <TransferMechanism.integrator_function>`;  only
+        relevant if `integrator_mode <TransferMechanism.integrator_mode>` is `True` and `integration_rate
+        <TransferMechanism.integration_rate>` is not 1.0 (see `integrator_mode <TransferMechanism.integrator_mode>`
+        for additional details).
 
     noise : float or function
         When `integrator_mode <TransferMechanism.integrator_mode>` is set to `True`, `noise <TransferMechanism.noise>`
-        is passed into the `integrator_function <TransferMechanism.integrator_function>`. Otherwise, noise is added
-        to the output of the `function <TransferMechanism.function>`.
-
-        If `noise <TransferMechanism.noise>` is a list or array, it must be the same length as `variable
-        <TransferMechanism.default_variable>`.
-
-        If `noise <TransferMechanism.noise>` is specified as a single float or function, while `variable
+        is passed into the `integrator_function <TransferMechanism.integrator_function>` (see `integrator_mode
+        <TransferMechanism.integrator_mode>` for additional details). Otherwise, noise is added to the output of the
+        `function <TransferMechanism.function>`. If `noise <TransferMechanism.noise>` is a list or array,
+        it must be the same length as `variable <TransferMechanism.default_variable>`. If `noise
+        <TransferMechanism.noise>` is specified as a single float or function, while `variable
         <TransferMechanism.variable>` is a list or array, `noise <TransferMechanism.noise>` will be applied to each
         element of `variable <TransferMechanism.variable>`. In the case that `noise <TransferMechanism.noise>` is
         specified as  a function, the function will be executed separately for each element of `variable
@@ -685,8 +687,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     integration_rate : float
         the rate at which the TransferMechanism's `variable <TransferMechanism>` is integrated when it is executed with
-        `integrator_mode <TransferMechanism.integrator_mode>` set to True (see `integrator_mode
-        <TransferMechanism.integrator_mode>` for details).
+        `integrator_mode <TransferMechanism.integrator_mode>` set to `True` (see `integrator_mode
+        <TransferMechanism.integrator_mode>` for additional details).
 
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
@@ -694,18 +696,23 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         **If integrator_mode is set to** `True`:
 
-            the TransferMechanism's `variable <TransferMechanism>` is first
-            passed into the `AdaptiveIntegrator` Function, that carries out the following calculation:
-
-            .. math::
-                result = previous\\_value(1-integration\\_rate) + variable \\cdot integration\\_rate + noise
-
-            where *previous_value* is set to the value of the TransferMechanism's `initial_value
-            <TransferMechanism.initial_value>` attribute on the first execution, and *integration_rate* and *noise*
-            are determined by the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` and
-            `noise <TransferMechanism.noise>` attributes, respectively.  The result is then passed to the
-            TransferMechanism's `function <TransferMechanism.function>` which computes the TransferMechanism's `value
+            the TransferMechanism's `variable <TransferMechanism>` is first passed to its `integrator_function
+            <TransferMechanism.integrator_function>`, and then the result is passed to the TransferMechanism's
+            `function <TransferMechanism.function>` which computes the TransferMechanism's `value
             <TransferMechanism.value>`.
+
+            .. note::
+                The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
+                <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
+                specify the respective parameters of its `integrator_function <TransferMechanism.integrator_function>`
+                (with `initial_value <TransferMechanism.initial_value>` corresponding to `initializer
+                <IntegratorFunction.initializer>` and `integration_rate <TransferMechanism.integration_rate>`
+                corresponding to `rate <IntegratorFunction.rate>` of `integrator_function
+                <TransferMechanism.integrator_function>`). However, if there are any disagreements between these
+                (e.g., any of these parameters is specified in the constructor for an `IntegratorFunction` assigned
+                as the **integration_function** arg of the TransferMechanism), the values specified for the
+                `integrator_function <TransferMechanism.integrator_function>` take precedence, and their value(s) are
+                assigned as those of the corresponding parameters on the TransferMechanism.
 
         **If integrator_mode is set to** `False`:
 
@@ -940,17 +947,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
         
         # Validate INITIAL_VALUE
-        if INITIAL_VALUE in target_set:
+        if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
             initial_value = target_set[INITIAL_VALUE]
-            if initial_value is not None:
-                if not iscompatible(initial_value, self.instance_defaults.variable):
-                    raise TransferError(
-                        "The format of the initial_value parameter for {} ({}) must match its variable ({})".format(
-                            append_type_to_name(self),
-                            initial_value,
-                            self.instance_defaults.variable,
-                        )
+            if not iscompatible(initial_value, self.instance_defaults.variable):
+                raise TransferError(
+                    "The format of the initial_value parameter for {} ({}) must match its variable ({})".format(
+                        append_type_to_name(self),
+                        initial_value,
+                        self.instance_defaults.variable,
                     )
+                )
 
         # FIX: SHOULD THIS (AND INTEGRATION_RATE) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
@@ -972,12 +978,17 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     IntegratorFunction.__class__.__name__)
         
         # Validate INTEGRATION_RATE:
-        if INTEGRATION_RATE in target_set:
-            integration_rate = target_set[INTEGRATION_RATE]
-            if (not (isinstance(integration_rate, (int, float))
-                     and 0 <= integration_rate <= 1)) and (integration_rate != None):
-                raise TransferError("integration_rate parameter ({}) for {} must be a float between 0 and 1".
-                                    format(integration_rate, self.name))
+        if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
+            integration_rate = np.array(target_set[INTEGRATION_RATE])
+            if not all_within_range(integration_rate, 0, 1):
+                raise TransferError("Value(s) in {} arg for {} ({}) must be an int or float in the interval [0,1]".
+                                    format(repr(INTEGRATION_RATE), self.name, integration_rate, ))
+            if (not np.isscalar(integration_rate.tolist())
+                    and integration_rate.shape != self.instance_defaults.variable.squeeze().shape):
+                raise TransferError("{} arg for {} ({}) must be either an int or float, "
+                                    "or have the same shape as its {} ({})".
+                                    format(repr(INTEGRATION_RATE), self.name, integration_rate,
+                                           VARIABLE, self.instance_defaults.variable))
 
         # Validate CLIP:
         if CLIP in target_set and target_set[CLIP] is not None:
@@ -1068,7 +1079,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if isinstance(self.convergence_function, Function):
             self._convergence_function = self.convergence_function.function
 
-    def _instantiate_integrator_function(self, variable, noise, initializer, rate, execution_id, context=None):
+    def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
+                                         execution_id, context=None):
 
         if isinstance(self.integrator_function, type):
             self.integrator_function = self.integrator_function(variable,
@@ -1078,49 +1090,82 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                 owner=self)
         # User specified integrator_function in constructor
         # If the values of any of these parameters differ from the default on either the Mechanism or function:
-        #     - use the value that differs (on the assumption that was assigned by user;
-        #     - if both differ, warn and give precedence to the value specified for the Mechanism
-        # FIX: USE reinitialize HERE??
+        #     - use the value that differs (on the assumption that that was assigned by user;
+        #     - if both differ, warn and give precedence to the value specified for the Function
         else:
-            if hasattr(self.integrator_function, NOISE):
-                # Check if user specified Mechanism's param, and if so, use it
-                if noise != self.class_defaults.noise:
-                    # Warn if function's param was specified and it is not the same as Mechanism's specification
-                    if (self.integrator_function.noise != self.integrator_function.class_defaults.noise
-                            and noise != self.integrator_function.noise):
-                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
-                                      "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
-                                      format(repr(NOISE), self.name, noise,
-                                             repr(NOISE), self.integrator_function.noise, repr(INTEGRATOR_FUNCTION),
-                                             self.integrator_function.__class__.__name__))
-                    self.integrator_function.parameters.noise.set(noise, execution_id)
 
-            # if hasattr(self.integrator_function, INITIALIZER):
-            #     # Check if user specified Mechanism's param, and if so, use it
-            #     # FIX: 12/7/18 JDC
-            #     if initializer != self.class_defaults.initial_value:
-            #         # Warn if function's param was specified and it is not the same as Mechanism's specification
-            #         if (self.integrator_function.initializer != self.integrator_function.class_defaults.initializer
-            #                 and initializer != self.integrator_function.initializer):
-            #             warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
-            #                           "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
-            #                           format(repr(INITIAL_VALUE), self.name, initializer,
-            #                                  repr(INITIALIZER), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
-            #                                  self.integrator_function.__class__.__name__))
-            #         self.integrator_function.parameters.initializer.set(initializer, execution_id)
+            # Identify parameters passed in as the Mechainsm's values
+            mech_noise = np.array(noise).squeeze()
+            mech_init_val = np.array(initializer)
+            mech_rate = np.array(rate).squeeze()
+
+            if hasattr(self.integrator_function, NOISE):
+                fct_noise = np.array(self.integrator_function.noise)
+                mech_specified = not np.array_equal(mech_noise, np.array(self.class_defaults.noise))
+                fct_specified = not np.array_equal(np.array(self.integrator_function.noise),
+                                                   np.array(self.integrator_function.class_defaults.noise))
+
+                # Mechanism and function noise are not the same
+                if not np.array_equal(mech_noise, fct_noise):
+                    # If function's noise was not specified, assign Mechanism's value to it
+                    if not fct_specified:
+                        self.integrator_function.parameters.noise.set(mech_noise, execution_id)
+                    # Otherwise, given precedence to function's value
+                    else:
+                        if mech_specified:
+                            warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
+                                          " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
+                                          format(repr(NOISE), self.name, mech_noise,
+                                                 repr(NOISE), self.integrator_function.noise,
+                                                 repr(INTEGRATOR_FUNCTION),
+                                                 self.integrator_function.__class__.__name__))
+                        # Assign funciton's noise to Mechanism
+                        self.parameters.noise.set(self.integrator_function.noise, execution_id)
+
+            if hasattr(self.integrator_function, INITIALIZER):
+                fct_intlzr = np.array(self.integrator_function.initializer)
+                # Check against variable, as class.default is None, but value is assigned to variable before here
+                mech_specified = not np.array_equal(mech_init_val, np.array(self.instance_defaults.variable))
+                fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
+                                                   np.array(self.integrator_function.class_defaults.initializer))
+
+                # Mechanism initial_value and function initializer are not the same
+                if not np.array_equal(mech_init_val, fct_intlzr):
+                    # If function's initializer was not specified, assign Mechanism's initial_value to it
+                    if not fct_specified:
+                        self.integrator_function.parameters.initializer.set(mech_init_val, execution_id)
+                    # Otherwise, given precedence to function's value
+                    else:
+                        if mech_specified:
+                            warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
+                                          " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
+                                          format(repr(INITIAL_VALUE), self.name, mech_init_val,
+                                                 repr(INITIALIZER), self.integrator_function.initializer,
+                                                 repr(INTEGRATOR_FUNCTION),
+                                                 self.integrator_function.__class__.__name__))
+                        # Assign funciton's initializer to Mechanism
+                        self.parameters.initial_value.set(self.integrator_function.initializer, execution_id)
 
             if hasattr(self.integrator_function, RATE):
-                # Check if user specified Mechanism's param, and if so, use it
-                if rate != self.class_defaults.integration_rate:
-                    # Warn if function's param was specified and it is not the same as Mechanism's specification
-                    if (self.integrator_function.rate != self.integrator_function.class_defaults.rate
-                            and rate != self.integrator_function.rate):
-                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of "
-                                      "the {} parameter ({}) for its {} ({});  the Mechanism's value will be used.".
-                                      format(repr(INTEGRATION_RATE), self.name, rate,
-                                             repr(RATE), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
-                                             self.integrator_function.__class__.__name__))
-                    self.integrator_function.parameters.rate.set(rate, execution_id)
+                fct_rate = np.array(self.integrator_function.rate)
+                mech_specified = not np.array_equal(mech_rate, np.array(self.class_defaults.integration_rate))
+                fct_specified = not np.array_equal(np.array(self.integrator_function.rate),
+                                                   np.array(self.integrator_function.class_defaults.rate))
+                # Mechanism and function rate are not the same
+                if not np.array_equal(mech_rate, fct_rate):
+                    # If function's rate was not specified, assign Mechanism's value to it
+                    if not fct_specified:
+                        self.integrator_function.parameters.rate.set(rate, execution_id)
+                    # Otherwise, warn and then give precedence to function's value
+                    else:
+                        if mech_specified:
+                            warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
+                                          " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
+                                          format(repr(INTEGRATION_RATE), self.name, rate,
+                                                 repr(RATE), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
+                                                 self.integrator_function.__class__.__name__))
+                        # Assign function's rate to Mechanism
+                        self.parameters.integration_rate.set(self.integrator_function.rate, execution_id)
 
         self.has_integrated = True
 

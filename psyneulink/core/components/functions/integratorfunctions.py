@@ -53,7 +53,7 @@ from psyneulink.core.globals.keywords import \
     LCAMechanism_INTEGRATOR_FUNCTION, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, \
     RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Param
-from psyneulink.core.globals.utilities import iscompatible, parameter_spec
+from psyneulink.core.globals.utilities import iscompatible, parameter_spec, all_within_range
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core import llvm as pnlvm
@@ -291,11 +291,11 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                             )
                     else:
                         raise FunctionError(
-                            "The length of the array specified for the rate parameter of {} ({})"
+                            "The length of the array specified for the rate parameter of {} ({}) "
                             "must match the length of the default input ({}).".format(
-                                len(rate),
-                                # rate,
                                 self.name,
+                                # rate,
+                                len(rate),
                                 np.array(self.instance_defaults.variable).size,
                                 # self.instance_defaults.variable,
                             )
@@ -1027,7 +1027,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
             rate = request_set[RATE]
             if np.isscalar(rate):
                 rate = [rate]
-            if not all(0.0 <= d <= 1.0 for d in rate):
+            if not all_within_range(rate, 0, 1):
                 raise FunctionError("Value(s) specified for {} argument of {} ({}) must be in interval [0,1]".
                                     format(repr(RATE), self.__class__.__name__, rate))
 
@@ -1064,8 +1064,6 @@ class InteractiveActivation(Integrator):  # ------------------------------------
 
         """
 
-        # FIX: rest AND rate CURRENTLY DON'T WORK IF THEY ARE ARRAYS
-
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
@@ -1097,36 +1095,16 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         current_input = np.atleast_2d(variable)
         prev_val = np.atleast_2d(previous_value)
 
-        # # MODIFIED 12/7/18 OLD:
-        # dist_from_asymptote = np.zeros_like(current_input)
-        # MODIFIED 12/7/18 NEW: [JDC]
-        dist_from_asymptote = []
-        # MODIFIED 12/7/18 END
+        dist_from_asymptote = np.zeros_like(current_input, dtype=float)
         for i in range(len(current_input)):
-            d_i = []
             for j in range(len(current_input[i])):
                 if current_input[i][j] > 0:
-                    d_j = max_val - prev_val[i][j]
+                    d = max_val - prev_val[i][j]
                 elif current_input[i][j] < 0:
-                    d_j = prev_val[i][j] - min_val
+                    d = prev_val[i][j] - min_val
                 else:
-                    d_j = 0
-                # # MODIFIED 12/7/18 OLD:
-                # FIX: dist_from_asymptote[i][j] IS ONLY GETTING ASSIGNED ON FIRST PASS THROUGH EXECUTE
-                #      WHEN IT IS AN np.array, BUT NOT ON SUBSEQUENT PASSES (REMAINS [[0,0]]
-                # dist_from_asymptote[i][j] = d
-                # MODIFIED 12/7/18 NEW: [JDC]
-                d_i.append(d_j)
-                # MODIFIED 12/7/18 END
-            # MODIFIED 12/7/18 NEW: [JDC]
-            dist_from_asymptote.append(d_i)
-            # MODIFIED 12/7/18 END
-            # # TEST PRINT:
-            # if self.context.initialization_status != ContextFlags.INITIALIZING:
-            #     print(dist_from_asymptote[i][j])
-        # # TEST PRINT:
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     print(dist_from_asymptote)
+                    d = 0
+                dist_from_asymptote[i][j] = d
 
         dist_from_rest = prev_val - rest
 
@@ -1761,7 +1739,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
+                 rate=1.0,
                  noise=0.0,
                  offset=0.0,
                  initializer=None,
@@ -1805,16 +1783,11 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
-                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "The length ({}) of the array specified for the {} parameter ({}) of {} "
                                 "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".format(
-                                    len(rate),
-                                    rate,
-                                    self.name,
-                                    np.array(self.instance_defaults.variable).size
-                                ),
-                                self.instance_defaults.variable
-                            )
+                                "the default input has been updated to match".
+                                    format(len(rate), repr(RATE), rate, self.name,
+                                    np.array(self.instance_defaults.variable).size, self.instance_defaults.variable))
                     else:
                         raise FunctionError(
                             "The length ({}) of the array specified for the rate parameter ({}) of {} "
@@ -1836,9 +1809,11 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                  target_set=target_set,
                                  context=context)
 
+        # FIX: 12/8/18 [JDC] REPLACE WITH USE OF all_within_range
         if RATE in target_set:
             # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
-            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
+                             "must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
             if isinstance(rate, np.ndarray) and rate.ndim > 0:
                 for r in rate:
                     if r < 0.0 or r > 1.0:
@@ -1948,7 +1923,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -2536,7 +2511,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
-        time_step_size=0.05,          \
+        time_step_size=0.05,            \
         t_0=0.0,                        \
         a_v=-1/3,                       \
         b_v=0.0,                        \
@@ -2966,7 +2941,13 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  integration_method="RK4",
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
+
+        # These may be passed (as standard IntegratorFunction args) but are not used by FHN
+        for k in {NOISE, INITIALIZER, RATE}:
+            if k in kwargs:
+                del kwargs[k]
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initial_v", "initial_w", "t_0"]
