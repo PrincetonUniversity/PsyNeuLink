@@ -1095,7 +1095,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     - if both differ, warn and give precedence to the value specified for the Function
         else:
 
-            # FIX: 12/9/18 USE CALL TO reinitialize HERE??
+            # FIX: 12/9/18 USE CALL TO reinitialize HERE, OR NEW METHOD (THAT SHOULD THEN BE USED BY OCM, ETC.)??
 
             # Relabel to identify parameters passed in as the Mechainsm's values,
             #    and standardize format for comparison against values specified for functiom (by user or defaults)
@@ -1104,7 +1104,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             # mech_rate = np.array(rate).squeeze()
             mech_noise, mech_init_val, mech_rate = map(lambda x: np.array(x).squeeze(), [noise, initializer, rate])
 
-            params_to_reinitialize = {}
+            # # MODIFIED 12/9/18 NEW: [JDC]
+            # params_to_reinitialize = {}
+            # MODIFIED 12/9/18 END
 
             if self.integrator_function.owner is None:
                 self.integrator_function.owner = self
