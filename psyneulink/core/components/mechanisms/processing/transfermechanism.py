@@ -1104,6 +1104,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             # mech_rate = np.array(rate).squeeze()
             mech_noise, mech_init_val, mech_rate = map(lambda x: np.array(x).squeeze(), [noise, initializer, rate])
 
+            params_to_reinitialize = {}
+
             if self.integrator_function.owner is None:
                 self.integrator_function.owner = self
 
@@ -1117,7 +1119,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_noise, fct_noise):
                     # If function's noise was not specified, assign Mechanism's value to it
                     if not fct_specified:
-                        self.integrator_function.parameters.noise.set(mech_noise, execution_id)
+                        # MODIFIED 12/9/18 OLD:
+                        # self.integrator_function.parameters.noise.set(mech_noise, execution_id)
+                        self.integrator_function.parameters.noise.set(noise, execution_id)
+                        # # MODIFIED 12/9/18 NEW: [JDC]
+                        # params_to_reinitialize = {NOISE: noise}
+                        # MODIFIED 12/9/18 END
                     # Otherwise, given precedence to function's value
                     else:
                         if mech_specified:
@@ -1141,8 +1148,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_init_val, fct_intlzr):
                     # If function's initializer was not specified, assign Mechanism's initial_value to it
                     if not fct_specified:
+                        # MODIFIED 12/9/18 OLD:
                         self.integrator_function.parameters.initializer.set(initializer, execution_id)
                         self.integrator_function._initialize_previous_value(initializer, execution_id)
+                        # # MODIFIED 12/9/18 NEW: [JDC]
+                        # params_to_reinitialize = {INITIALIZER: initializer}
+                        # MODIFIED 12/9/18 END
                     # Otherwise, give precedence to function's value
                     else:
                         if mech_specified:
@@ -1164,7 +1175,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_rate, fct_rate):
                     # If function's rate was not specified, assign Mechanism's value to it
                     if not fct_specified:
+                        # MODIFIED 12/9/18 OLD:
                         self.integrator_function.parameters.rate.set(rate, execution_id)
+                        # # MODIFIED 12/9/18 NEW: [JDC]
+                        # params_to_reinitialize = {RATE: rate}
                     # Otherwise, warn and then give precedence to function's value
                     else:
                         if mech_specified:
@@ -1175,6 +1189,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  self.integrator_function.__class__.__name__))
                         # Assign function's rate to Mechanism
                         self.parameters.integration_rate.set(self.integrator_function.rate, execution_id)
+
+            # # MODIFIED 12/9/18 NEW: [JDC]
+            # self.integrator_function.reinitialize(params_to_reinitialize)
+            # MODIFIED 12/9/18 END
 
         self.has_integrated = True
 
