@@ -1311,9 +1311,6 @@ class Mechanism_Base(Mechanism):
 
         input_state_variables = Param(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
-    class _CompilationData(Parameters):
-        nv_state = None
-
     registry = MechanismRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
@@ -1458,8 +1455,6 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-
-        self._nv_state = None
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods

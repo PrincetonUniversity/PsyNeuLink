@@ -122,22 +122,13 @@ class MechExecution(FuncExecution):
         self._mechanism = mechanism
         super().__init__(mechanism, execution_ids)
 
-        if mechanism._nv_state is not None:
-            # TODO: This should consider execution_id
-            self._context_struct = mechanism._nv_state
-
     def execute(self, variable):
         # convert to 3d. we always assume that:
         # a) the input is vector of input states
         # b) input states take vector of projection outputs
         # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
-        res = super().execute(new_var)
-
-        # store updated context
-        # TODO: This should consider execution_id
-        self._mechanism._nv_state = self._context_struct
-        return res
+        return super().execute(new_var)
 
 
 class CompExecution(CUDAExecution):
