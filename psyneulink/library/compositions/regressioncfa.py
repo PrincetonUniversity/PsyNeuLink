@@ -255,14 +255,12 @@ class RegressionCFA(CompositionFunctionApproximator):
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
         '''Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
         **net_outcome** from **feature_values** and **control_allocation**.'''
-
         prediction_vector = self.parameters.prediction_vector.get(execution_id)
         previous_state = self.parameters.previous_state.get(execution_id)
 
         if previous_state is not None:
             # Update regression_weights
             regression_weights = self.update_weights.function([previous_state, net_outcome], execution_id=execution_id)
-
             # Update vector with current feature_values and control_allocation and store for next trial
             prediction_vector.update_vector(control_allocation, feature_values, control_allocation)
             previous_state = prediction_vector.vector
@@ -270,7 +268,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # Initialize vector and control_signals on first trial
             # Note:  initialize vector to 1's so that learning_function returns specified priors
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            prediction_vector.reference_variable = control_allocation
+            # prediction_vector.reference_variable = control_allocation
             previous_state = np.full_like(prediction_vector.vector, 0)
             regression_weights = self.update_weights.function([previous_state, 0], execution_id=execution_id)
 
@@ -306,6 +304,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
             #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
+
             weights = self.parameters.regression_weights.get(execution_id)
             net_outcome = 0
 
@@ -531,7 +530,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         __deepcopy__ = get_deepcopy_with_shared(shared_keys=_deepcopy_shared_keys)
 
         # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-        def update_vector(self, variable, feature_values=None, reference_variable=None, execution_id=None):
+        def update_vector(self, variable, feature_values=None, execution_id=None):
             '''Update vector with flattened versions of values returned from the `compute_terms
             <PredictionVector.compute_terms>` method of the `prediction_vector
             <RegressorCFA.prediction_vector>`.
@@ -541,21 +540,21 @@ class RegressionCFA(CompositionFunctionApproximator):
 
             '''
 
-            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            if reference_variable is not None:
-                self.reference_variable = reference_variable
+            # # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
+            # if reference_variable is not None:
+            #     self.reference_variable = reference_variable
 
             if feature_values is not None:
                 self.terms[PV.F.value] = np.array(feature_values)
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            computed_terms = self.compute_terms(np.array(variable), self.reference_variable, execution_id=execution_id)
+            computed_terms = self.compute_terms(np.array(variable), execution_id=execution_id)
 
             # Assign flattened versions of specified terms to vector
             for k, v in computed_terms.items():
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
-        def compute_terms(self, control_allocation, ref_variables=None, execution_id=None):
+        def compute_terms(self, control_allocation, execution_id=None):
             '''Calculate interaction terms.
 
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
@@ -563,8 +562,8 @@ class RegressionCFA(CompositionFunctionApproximator):
             '''
 
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            ref_variables = ref_variables or self.reference_variable
-            self.reference_variable = ref_variables
+            # ref_variables = ref_variables or self.reference_variable
+            # self.reference_variable = ref_variables
 
             terms = self.specified_terms
             computed_terms = {}

@@ -327,8 +327,13 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.parameters.context.get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
                                                                       EVC_SIMULATION,
                                                                       controller.system.name)
+        # Get allocation_samples for all ControlSignals
+        num_control_signals = len(controller.control_signals)
+        control_signal_sample_lists = []
+        for control_signal in controller.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples.generator)
+        control_signal_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
-        control_signal_search_space = controller.parameters.control_signal_search_space.get(execution_id)
         # Print progress bar
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""
@@ -342,6 +347,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # Evaluate all combinations of control_signals (policies)
         sample = 0
         EVC_max_state_values = variable.copy()
+
         EVC_max_policy = control_signal_search_space[0] * 0.0
 
         # Parallelize using multiprocessing.Pool
