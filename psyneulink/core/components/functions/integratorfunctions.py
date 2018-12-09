@@ -1945,13 +1945,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
 
         previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-        try:
-            print('\nEXECUTION #: {}'.format(self.owner.current_execution_count))
-            assert True
-        except AttributeError:
-            pass
-        print('\nPREVIOUS VALUE: {}'.format(previous_value))
-        print('VARIABLE: {}'.format(variable))
 
         value = (1 - rate) * previous_value + rate * variable + noise
         adjusted_value = value + offset

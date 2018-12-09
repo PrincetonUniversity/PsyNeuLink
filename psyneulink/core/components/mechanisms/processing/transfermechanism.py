@@ -948,12 +948,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
-            initial_value = target_set[INITIAL_VALUE]
+            initial_value = np.array(target_set[INITIAL_VALUE])
             # Need to compare with variable, since default for initial_value on Class is None
-            # # MODIFIED 12/8/18 OLD:
+            # # MODIFIED 12/9/18 OLD:
             # if not iscompatible(initial_value, self.instance_defaults.variable):
-            # MODIFIED 12/8/18 NEW: [JDC]
-            if not iscompatible(np.atleast_2d(initial_value), self.instance_defaults.variable):
+            # # MODIFIED 12/9/18 NEW: [JDC] = WORKS WITH TRANSFERMECHANISM PARAMS BUT NOT INPUT_STATE_SPEC TESTS
+            # if not iscompatible(np.atleast_2d(initial_value), self.instance_defaults.variable):
+            # MODIFIED 12/9/18 NEWER: [JDC]: NEED TO DEAL WITH DTYPE IN WHICH ELEMENTS IN AXIS 0 ARE NOT SAME LENGTH
+            if initial_value.dtype != object:
+                initial_value = np.atleast_2d(initial_value)
+            if not iscompatible(initial_value, self.instance_defaults.variable):
             # MODIFIED 12/8/18 END
                 raise TransferError(
                         "The format of the initial_value parameter for {} ({}) must match its variable ({})".
@@ -1099,11 +1103,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # Identify parameters passed in as the Mechainsm's values
             mech_noise = np.array(noise).squeeze()
-            # MODIFIED 12/8/17 OLD:
+            # MODIFIED 12/9/17 OLD:
             mech_init_val = np.array(initializer)
-            # # MODIFIED 12/8/17 NEW: [JDC]
+            # # MODIFIED 12/9/17 NEW: [JDC] TRY AGIN??
             # mech_init_val = np.array(initializer).squeeze()
-            # MODIFIED 12/8/17 END
+            # MODIFIED 12/9/17 END
             mech_rate = np.array(rate).squeeze()
 
             # MODIFIED 12/9/18 NEW: [JDC]
@@ -1226,15 +1230,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   rate=integration_rate,
                                                   execution_id=execution_id,
                                                   context=context)
-            # MODIFIED 12/8/18 NEW: [JDC]
             # Update param assignments with ones determined to be relevant (mech vs. fct)
             #    and assigned to integrator_function in _instantiate_integrator_function
             initial_value = self.integrator_function.initializer
             integration_rate = self.integrator_function.rate
-            # noise = self.integrator_function.noise
+            # MODIFIED 12/9/19 NEW: [JDC]
+            noise = self.integrator_function.noise
+            # MODIFIED 12/8/18 END
+
             # self.integrator_function._initialize_previous_value(initial_value, execution_id)
             # self.integrator_function.context.initialization_status = ContextFlags.INITIALIZING
-            # MODIFIED 12/8/18 END
 
             # FIX 12/9/18: NEED TO ASSIGN integrator_function.previous_value HERE
 
