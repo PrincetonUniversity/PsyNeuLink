@@ -16,7 +16,7 @@ Composition Function Approximator
 ---------------------------------
 
 A `CompositionFunctionApproximator` is an abstract subclass of `Composition` that, over calls to its `adapt
-<CompositionFunctionApproximator.adapt>` method, parameterizes it `function <Composition.function>` to predict the
+<CompositionFunctionApproximator.adapt>` method, parameterizes its `function <Composition.function>` to predict the
 `net_outcome <ControlMechanism.net_outcome>` of the Composition (or part of one) controlled by an
 `OptimizationControlMechanism`, for a given set of `feature_values <OptimizationControlMechanism.feature_values>`
 and a `control_allocation <ControlMechanism.control_allocation>` provided by the OptimizationControlMechanism.
@@ -50,9 +50,8 @@ class CompositionFunctionApproximatorError(Exception):
 
 class CompositionFunctionApproximator(Composition):
     '''Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
-    <Controlmechanism.net_outcome>` for a set of `feature_values
-    <OptimizationControlmechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
-    provided by an `OptimizationControlmechanism`.
+    <Controlmechanism.net_outcome>` for a set of `feature_values <OptimizationControlmechanism.feature_values>`
+    and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlmechanism`.
 
     '''
 
@@ -100,8 +99,7 @@ class CompositionFunctionApproximator(Composition):
         '''Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
         '''
-
-        # FIX: AUGEMENT TO USE NUM_ESTIMATES
+        # FIX: AUGMENTTO USE num_estimates
         return self.function(feature_values, control_allocation, execution_id=execution_id)
 
     @property
