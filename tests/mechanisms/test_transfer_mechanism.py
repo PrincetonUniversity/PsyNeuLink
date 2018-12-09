@@ -585,6 +585,237 @@ class TestTransferMechanismFunctions:
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
 
+class TestTransferMechanismIntegratorFunctionParams:
+
+    # integration_rate array on mech: assigned to mech value
+    # integration_rate array on fct: assigned to fct value
+    # integration_rate array on both: assinged to fct value
+    # integration_rate array wrong array size error
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    # @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    # @pytest.mark.parametrize('mode', ['Python',
+    #                                   pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    #                                   pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+
+    # RATE TESTS ---------------------------------------------------------------------------
+    # def test_transfer_mech_array_assignments_mech_rate(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_mech_rate(self):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator,
+            integration_rate=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        T.execute([1 for i in range(VECTOR_SIZE)])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+
+    # def test_transfer_mech_array_assignments_fct_rate(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_fct_rate(self):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator(rate=[i/10 for i in range(VECTOR_SIZE)])
+        )
+        T.execute([1 for i in range(VECTOR_SIZE)])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+
+    # def test_transfer_mech_array_assignments_fct_over_mech_rate(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_fct_over_mech_rate(self):
+
+        T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(rate=[i/20 for i in range(VECTOR_SIZE)]),
+                integration_rate=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        T.execute([1 for i in range(VECTOR_SIZE)])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
+
+    def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    # integrator_function=AdaptiveIntegrator(rate=[i/20 for i in range(VECTOR_SIZE)]),
+                    integration_rate=[i/10 for i in range(VECTOR_SIZE+1)]
+            )
+        assert (
+            "integration_rate' arg for" in str(error_text.value)
+            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+        )
+
+    def test_transfer_mech_array_assignments_wrong_size_fct_rate(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(rate=[i/10 for i in range(VECTOR_SIZE+1)])
+            )
+        assert (
+            "integration_rate' arg for" in str(error_text.value)
+            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+        )
+
+
+    # INITIAL_VALUE/INITALIZER TESTS -------------------------------------------------------
+
+    # def test_transfer_mech_array_assignments_mech_initial_value(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_mech_initial_value(self):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator,
+            initial_value=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        T.execute([1 for i in range(VECTOR_SIZE)])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+
+    # def test_transfer_mech_array_assignments_fct_rate(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_fct_rate(self):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator(rate=[i/10 for i in range(VECTOR_SIZE)])
+        )
+        T.execute([1 for i in range(VECTOR_SIZE)])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+
+    # def test_transfer_mech_array_assignments_fct_over_mech_rate(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_fct_over_mech_rate(self):
+
+        T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(rate=[i/20 for i in range(VECTOR_SIZE)]),
+                integration_rate=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        T.execute([1 for i in range(VECTOR_SIZE)])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+
+    def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    # integrator_function=AdaptiveIntegrator(rate=[i/20 for i in range(VECTOR_SIZE)]),
+                    integration_rate=[i/10 for i in range(VECTOR_SIZE+1)]
+            )
+        assert (
+            "integration_rate' arg for" in str(error_text.value)
+            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+        )
+
+    def test_transfer_mech_array_assignments_wrong_size_fct_rate(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(rate=[i/10 for i in range(VECTOR_SIZE+1)])
+            )
+        assert (
+            "integration_rate' arg for" in str(error_text.value)
+            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+        )
+
+
+
+
+
+
+
+
 class TestTransferMechanismTimeConstant:
 
     @pytest.mark.mechanism
@@ -1059,6 +1290,7 @@ class TestTransferMechanismSize:
         assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 2
         assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
 
+
 class TestTransferMechanismMultipleInputStates:
 
     @pytest.mark.mechanism
@@ -1144,6 +1376,7 @@ class TestTransferMechanismMultipleInputStates:
     #     assert len(T.output_states)==1
     #     assert len(T.output_states[OWNER_VALUE].value)==3
     #     assert all(all(a==b for a,b in zip(x,y)) for x,y in zip(val, expected_val))
+
 
 class TestIntegratorMode:
     def test_previous_value_persistence_execute(self):

@@ -949,7 +949,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
             initial_value = target_set[INITIAL_VALUE]
-            if not iscompatible(initial_value, self.instance_defaults.variable):
+            if not iscompatible(np.atleast_2d(initial_value), self.instance_defaults.variable):
                 raise TransferError(
                     "The format of the initial_value parameter for {} ({}) must match its variable ({})".format(
                         append_type_to_name(self),
@@ -1096,7 +1096,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # Identify parameters passed in as the Mechainsm's values
             mech_noise = np.array(noise).squeeze()
-            mech_init_val = np.array(initializer)
+            mech_init_val = np.array(initializer).squeeze()
             mech_rate = np.array(rate).squeeze()
 
             if hasattr(self.integrator_function, NOISE):
@@ -1127,7 +1127,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 # Check against variable, as class.default is None, but value is assigned to variable before here
                 mech_specified = not np.array_equal(mech_init_val, np.array(self.instance_defaults.variable))
                 fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
-                                                   np.array(self.integrator_function.class_defaults.initializer))
+                                                   np.array(self.integrator_function.instance_defaults.variable))
 
                 # Mechanism initial_value and function initializer are not the same
                 if not np.array_equal(mech_init_val, fct_intlzr):
@@ -1143,7 +1143,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  repr(INITIALIZER), self.integrator_function.initializer,
                                                  repr(INTEGRATOR_FUNCTION),
                                                  self.integrator_function.__class__.__name__))
-                        # Assign funciton's initializer to Mechanism
+                        # Assign function's initializer to Mechanism
                         self.parameters.initial_value.set(self.integrator_function.initializer, execution_id)
 
             if hasattr(self.integrator_function, RATE):
@@ -1191,6 +1191,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
 
+        # # MODIFIED 12/8/18 NEW: [JDC]
+        # fct_init_status = self.integrator_function.context.initialization_status
+        # # MODIFIED 12/8/18 END
+
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             self._instantiate_integrator_function(variable=function_variable,
                                                   noise=noise,
@@ -1198,6 +1202,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   rate=integration_rate,
                                                   execution_id=execution_id,
                                                   context=context)
+            # MODIFIED 12/8/18 NEW: [JDC]
+            # Update param assignments with ones determined to be relevant (mech vs. fct)
+            #    and assigned to integrator_function in _instantiate_integrator_function
+            initial_value = self.integrator_function.initializer
+            integration_rate = self.integrator_function.rate
+            noise = self.integrator_function.noise
+            self.integrator_function._initialize_previous_value(initial_value, execution_id)
+            self.integrator_function.context.initialization_status = ContextFlags.INITIALIZING
+            # MODIFIED 12/8/18 END
 
         current_input = self.integrator_function.execute(
             function_variable,
@@ -1210,6 +1223,12 @@ class TransferMechanism(ProcessingMechanism_Base):
             },
             context=context
         )
+
+        # # MODIFIED 12/8/18 NEW: [JDC]
+        # self.integrator_function.context.initialization_status = fct_init_status
+        # MODIFIED 12/8/18 NEWER: [JDC]
+        self.integrator_function.context.initialization_status = self.context.initialization_status
+        # MODIFIED 12/8/18 END
 
         return current_input
 
