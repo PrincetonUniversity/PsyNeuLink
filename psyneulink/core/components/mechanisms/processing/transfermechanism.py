@@ -948,13 +948,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
-            initial_value = target_set[INITIAL_VALUE]
+            initial_value = np.array(target_set[INITIAL_VALUE])
+            # Need to compare with variable, since default for initial_value on Class is None
+            if initial_value.dtype != object:
+                initial_value = np.atleast_2d(initial_value)
             if not iscompatible(initial_value, self.instance_defaults.variable):
                 raise TransferError(
-                    "The format of the initial_value parameter for {} ({}) must match its variable ({})".format(
-                        append_type_to_name(self),
-                        initial_value,
-                        self.instance_defaults.variable,
+                        "The format of the initial_value parameter for {} ({}) must match its variable ({})".
+                        format(append_type_to_name(self), initial_value, self.instance_defaults.variable,
                     )
                 )
 
@@ -1083,7 +1084,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                          execution_id, context=None):
 
         if isinstance(self.integrator_function, type):
-            self.integrator_function = self.integrator_function(variable,
+            self.integrator_function = self.integrator_function(default_variable=variable,
                                                                 initializer=initializer,
                                                                 noise=noise,
                                                                 rate=rate,
@@ -1094,10 +1095,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     - if both differ, warn and give precedence to the value specified for the Function
         else:
 
-            # Identify parameters passed in as the Mechainsm's values
-            mech_noise = np.array(noise).squeeze()
-            mech_init_val = np.array(initializer)
-            mech_rate = np.array(rate).squeeze()
+            # FIX: 12/9/18 USE CALL TO reinitialize HERE??
+
+            # Relabel to identify parameters passed in as the Mechainsm's values,
+            #    and standardize format for comparison against values specified for functiom (by user or defaults)
+            # mech_noise = np.array(noise).squeeze()
+            # mech_init_val = np.array(initializer).squeeze()
+            # mech_rate = np.array(rate).squeeze()
+            mech_noise, mech_init_val, mech_rate = map(lambda x: np.array(x).squeeze(), [noise, initializer, rate])
+
+            if self.integrator_function.owner is None:
+                self.integrator_function.owner = self
 
             if hasattr(self.integrator_function, NOISE):
                 fct_noise = np.array(self.integrator_function.noise)
@@ -1124,7 +1132,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             if hasattr(self.integrator_function, INITIALIZER):
                 fct_intlzr = np.array(self.integrator_function.initializer)
-                # Check against variable, as class.default is None, but value is assigned to variable before here
+                # Check against variable, as class.default is None, but initial_value assigned to variable before here
                 mech_specified = not np.array_equal(mech_init_val, np.array(self.instance_defaults.variable))
                 fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
                                                    np.array(self.integrator_function.class_defaults.initializer))
@@ -1133,8 +1141,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_init_val, fct_intlzr):
                     # If function's initializer was not specified, assign Mechanism's initial_value to it
                     if not fct_specified:
-                        self.integrator_function.parameters.initializer.set(mech_init_val, execution_id)
-                    # Otherwise, given precedence to function's value
+                        self.integrator_function.parameters.initializer.set(initializer, execution_id)
+                        self.integrator_function._initialize_previous_value(initializer, execution_id)
+                    # Otherwise, give precedence to function's value
                     else:
                         if mech_specified:
                             warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
@@ -1143,7 +1152,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  repr(INITIALIZER), self.integrator_function.initializer,
                                                  repr(INTEGRATOR_FUNCTION),
                                                  self.integrator_function.__class__.__name__))
-                        # Assign funciton's initializer to Mechanism
+                        # Assign function's initializer to Mechanism
                         self.parameters.initial_value.set(self.integrator_function.initializer, execution_id)
 
             if hasattr(self.integrator_function, RATE):
@@ -1198,6 +1207,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   rate=integration_rate,
                                                   execution_id=execution_id,
                                                   context=context)
+            # Update param assignments with ones determined to be relevant (mech vs. fct)
+            #    and assigned to integrator_function in _instantiate_integrator_function
+            initial_value = self.integrator_function.initializer
+            integration_rate = self.integrator_function.rate
+            noise = self.integrator_function.noise
 
         current_input = self.integrator_function.execute(
             function_variable,

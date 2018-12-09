@@ -70,7 +70,6 @@ __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantInte
 class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
 
-
 # • why does integrator return a 2d array?
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
@@ -1809,7 +1808,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                  target_set=target_set,
                                  context=context)
 
-        # FIX: 12/8/18 [JDC] REPLACE WITH USE OF all_within_range
+        # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
         if RATE in target_set:
             # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
             rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
@@ -1923,7 +1922,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         Arguments
         ---------
 
-        variable : number, list or np.array : default ClassDefaults.variable
+        variable : number, list or array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
