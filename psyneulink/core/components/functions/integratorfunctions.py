@@ -1808,7 +1808,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                  target_set=target_set,
                                  context=context)
 
-        # FIX: 12/8/18 [JDC] REPLACE WITH USE OF all_within_range
+        # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
         if RATE in target_set:
             # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
             rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \

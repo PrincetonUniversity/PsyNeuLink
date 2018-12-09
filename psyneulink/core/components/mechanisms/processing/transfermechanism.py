@@ -950,15 +950,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
             initial_value = np.array(target_set[INITIAL_VALUE])
             # Need to compare with variable, since default for initial_value on Class is None
-            # # MODIFIED 12/9/18 OLD:
-            # if not iscompatible(initial_value, self.instance_defaults.variable):
-            # # MODIFIED 12/9/18 NEW: [JDC] = WORKS WITH TRANSFERMECHANISM PARAMS BUT NOT INPUT_STATE_SPEC TESTS
-            # if not iscompatible(np.atleast_2d(initial_value), self.instance_defaults.variable):
-            # MODIFIED 12/9/18 NEWER: [JDC]: NEED TO DEAL WITH DTYPE IN WHICH ELEMENTS IN AXIS 0 ARE NOT SAME LENGTH
             if initial_value.dtype != object:
                 initial_value = np.atleast_2d(initial_value)
             if not iscompatible(initial_value, self.instance_defaults.variable):
-            # MODIFIED 12/8/18 END
                 raise TransferError(
                         "The format of the initial_value parameter for {} ({}) must match its variable ({})".
                         format(append_type_to_name(self), initial_value, self.instance_defaults.variable,
@@ -1101,19 +1095,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     - if both differ, warn and give precedence to the value specified for the Function
         else:
 
-            # Identify parameters passed in as the Mechainsm's values
-            mech_noise = np.array(noise).squeeze()
-            # MODIFIED 12/9/17 OLD:
-            mech_init_val = np.array(initializer)
-            # # MODIFIED 12/9/17 NEW: [JDC] TRY AGIN??
-            # mech_init_val = np.array(initializer).squeeze()
-            # MODIFIED 12/9/17 END
-            mech_rate = np.array(rate).squeeze()
+            # FIX: 12/9/18 USE CALL TO reinitialize HERE??
 
-            # MODIFIED 12/9/18 NEW: [JDC]
+            # Relabel to identify parameters passed in as the Mechainsm's values,
+            #    and standardize format for comparison against values specified for functiom (by user or defaults)
+            # mech_noise = np.array(noise).squeeze()
+            # mech_init_val = np.array(initializer).squeeze()
+            # mech_rate = np.array(rate).squeeze()
+            mech_noise, mech_init_val, mech_rate = map(lambda x: np.array(x).squeeze(), [noise, initializer, rate])
+
             if self.integrator_function.owner is None:
                 self.integrator_function.owner = self
-            # MODIFIED 12/9/18 END
 
             if hasattr(self.integrator_function, NOISE):
                 fct_noise = np.array(self.integrator_function.noise)
@@ -1143,25 +1135,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                 # Check against variable, as class.default is None, but initial_value assigned to variable before here
                 mech_specified = not np.array_equal(mech_init_val, np.array(self.instance_defaults.variable))
                 fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
-                                                   # MODIFIED 12/9/18 OLD:
                                                    np.array(self.integrator_function.class_defaults.initializer))
-                                                   # # MODIFIED 12/9/18 NEW: [JDC] - NOTE THIS DOESN"T WORK WITH TESTS
-                                                   # np.array(self.integrator_function.instance_defaults.variable))
-                                                   # MODIFIED 12/9/18 END
 
                 # Mechanism initial_value and function initializer are not the same
                 if not np.array_equal(mech_init_val, fct_intlzr):
                     # If function's initializer was not specified, assign Mechanism's initial_value to it
                     if not fct_specified:
-                        # FIX: 12/9/18: CALL re-initialize here??? (OR BELOW WILL ALL VALUES THAT HAVE CHANGED??)
-                        # FIX: 12/9/18: NEED TO ASSIGN integrator_function.previous_value HERE
-                        # # MODIFIED 12/9/18 OLD:
-                        # self.integrator_function.parameters.initializer.set(initializer, execution_id)
-                        # # MODIFIED 12/9/18 NEW: [JDC]
-                        # self.integrator_function.reinitialize({INITIALIZER:initializer})
-                        # # MODIFIED 12/9/18 NEWER: [JDC]
+                        self.integrator_function.parameters.initializer.set(initializer, execution_id)
                         self.integrator_function._initialize_previous_value(initializer, execution_id)
-                        # MODIFIED 12/9/18 END
                     # Otherwise, give precedence to function's value
                     else:
                         if mech_specified:
@@ -1219,10 +1200,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
 
-        # # MODIFIED 12/8/18 NEW: [JDC]
-        # fct_init_status = self.integrator_function.context.initialization_status
-        # # MODIFIED 12/8/18 END
-
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             self._instantiate_integrator_function(variable=function_variable,
                                                   noise=noise,
@@ -1234,14 +1211,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             #    and assigned to integrator_function in _instantiate_integrator_function
             initial_value = self.integrator_function.initializer
             integration_rate = self.integrator_function.rate
-            # MODIFIED 12/9/19 NEW: [JDC]
             noise = self.integrator_function.noise
-            # MODIFIED 12/8/18 END
-
-            # self.integrator_function._initialize_previous_value(initial_value, execution_id)
-            # self.integrator_function.context.initialization_status = ContextFlags.INITIALIZING
-
-            # FIX 12/9/18: NEED TO ASSIGN integrator_function.previous_value HERE
 
         current_input = self.integrator_function.execute(
             function_variable,
@@ -1254,12 +1224,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             },
             context=context
         )
-
-        # # MODIFIED 12/8/18 NEW: [JDC]
-        # self.integrator_function.context.initialization_status = fct_init_status
-        # # MODIFIED 12/8/18 NEWER: [JDC]
-        # self.integrator_function.context.initialization_status = self.context.initialization_status
-        # MODIFIED 12/8/18 END
 
         return current_input
 
