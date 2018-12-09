@@ -262,7 +262,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # Update regression_weights
             regression_weights = self.update_weights.function([previous_state, net_outcome], execution_id=execution_id)
             # Update vector with current feature_values and control_allocation and store for next trial
-            prediction_vector.update_vector(control_allocation, feature_values, control_allocation)
+            prediction_vector.update_vector(control_allocation, feature_values, execution_id)
             previous_state = prediction_vector.vector
         else:
             # Initialize vector and control_signals on first trial
