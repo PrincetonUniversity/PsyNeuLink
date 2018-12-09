@@ -675,6 +675,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
 
+    # def test_transfer_mech_array_assignments_wrong_size_mech_rate(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
 
         with pytest.raises(TransferError) as error_text:
@@ -682,7 +683,6 @@ class TestTransferMechanismIntegratorFunctionParams:
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
-                    # integrator_function=AdaptiveIntegrator(rate=[i/20 for i in range(VECTOR_SIZE)]),
                     integration_rate=[i/10 for i in range(VECTOR_SIZE+1)]
             )
         assert (
@@ -690,6 +690,7 @@ class TestTransferMechanismIntegratorFunctionParams:
             and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
         )
 
+    # def test_transfer_mech_array_assignments_wrong_size_fct_rate(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_fct_rate(self):
 
         with pytest.raises(TransferError) as error_text:
@@ -704,9 +705,9 @@ class TestTransferMechanismIntegratorFunctionParams:
             and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
         )
 
-
     # INITIAL_VALUE/INITALIZER TESTS -------------------------------------------------------
 
+    # def test_transfer_mech_array_assignments_fct_mech_init_val(self, benchmark, mode):
     def test_transfer_mech_array_assignments_mech_init_val(self):
         T = TransferMechanism(
             name='T',
@@ -716,9 +717,21 @@ class TestTransferMechanismIntegratorFunctionParams:
         )
         T.execute([1 for i in range(VECTOR_SIZE)])
         val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
 
 
+    # def test_transfer_mech_array_assignments_fct_initzr(self, benchmark, mode):
     def test_transfer_mech_array_assignments_fct_initzr(self):
         T = TransferMechanism(
             name='T',
@@ -731,8 +744,21 @@ class TestTransferMechanismIntegratorFunctionParams:
         )
         T.execute([1 for i in range(VECTOR_SIZE)])
         val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
 
+
+    # def test_transfer_mech_array_assignments_fct_initzr_over_mech_init_val(self, benchmark, mode):
     def test_transfer_mech_array_assignments_fct_initlzr_over_mech_init_val(self):
         T = TransferMechanism(
             name='T',
@@ -746,10 +772,48 @@ class TestTransferMechanismIntegratorFunctionParams:
         )
         T.execute([1 for i in range(VECTOR_SIZE)])
         val = T.execute([1 for i in range(VECTOR_SIZE)])
+        # if mode == 'Python':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'LLVM':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        # elif mode == 'PTX':
+        #     T.execute([1 for i in range(VECTOR_SIZE)])
+        #     e = pnlvm.execution.MechExecution(T)
+        #     val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
 
+    # def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
 
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    initial_value=[i/10 for i in range(VECTOR_SIZE+1)]
+            )
+        assert (
+            "The format of the initial_value parameter" in str(error_text.value)
+            and "must match its variable" in str(error_text.value)
+        )
 
+    # # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self, benchmark, mode):
+    # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self):
+    #
+    #     with pytest.raises(TransferError) as error_text:
+    #         T = TransferMechanism(
+    #                 name='T',
+    #                 default_variable=[0 for i in range(VECTOR_SIZE)],
+    #                 integrator_mode=True,
+    #                 integrator_function=AdaptiveIntegrator(initializer=[i/10 for i in range(VECTOR_SIZE+1)])
+    #         )
+    #     assert (
+    #         "initializer' arg for" in str(error_text.value)
+    #         and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+    #     )
 
 
 class TestTransferMechanismTimeConstant:
