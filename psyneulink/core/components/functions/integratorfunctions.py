@@ -1922,7 +1922,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         Arguments
         ---------
 
-        variable : number, list or np.array : default ClassDefaults.variable
+        variable : number, list or array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
