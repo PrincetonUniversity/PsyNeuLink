@@ -70,7 +70,6 @@ __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantInte
 class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
 
-
 # • why does integrator return a 2d array?
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
@@ -1946,6 +1945,13 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
 
         previous_value = np.atleast_2d(self.get_previous_value(execution_id))
+        try:
+            print('\nEXECUTION #: {}'.format(self.owner.current_execution_count))
+            assert True
+        except AttributeError:
+            pass
+        print('\nPREVIOUS VALUE: {}'.format(previous_value))
+        print('VARIABLE: {}'.format(variable))
 
         value = (1 - rate) * previous_value + rate * variable + noise
         adjusted_value = value + offset

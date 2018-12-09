@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="pytest in mechanisms" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
+  <configuration default="false" name="pytest for test_transfer_mechanism.TestTransferMechanismIntegratorFunctionParams.test_transfer_mech_array_assignments_fct_rate" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
     <module name="PsyNeuLink (Dropbox)" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -11,8 +11,8 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;-n 0&quot;" />
-    <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/mechanisms&quot;" />
-    <option name="_new_targetType" value="&quot;PATH&quot;" />
+    <option name="_new_target" value="&quot;test_transfer_mechanism.TestTransferMechanismIntegratorFunctionParams.test_transfer_mech_array_assignments_fct_rate&quot;" />
+    <option name="_new_targetType" value="&quot;PYTHON&quot;" />
     <method v="2" />
   </configuration>
 </component>
