@@ -142,12 +142,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         applies to the corresponding element of `variable <Integrator.variable>`.
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <Integrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If noise is
-        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        specifies random value to be added in each call to `function <Integrator.function>`. If noise is a list or
+        array, it must be the same length as `variable <Integrator.default_variable>`. If noise is specified as a
+        single float or function, while `variable <Integrator.variable>` is a list or array, noise will be applied to
+        each variable element; if noise is a function, it is executed separately for each element of variable.
 
         Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
         value will be used to construct the standard DDM probability distribution. For all other types of integration,
@@ -158,12 +156,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     initializer : 1d array or list
         determines the starting value for integration (i.e., the value to which
-        `previous_value <Integrator.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If
-        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+        `previous_value <Integrator.previous_value>` is set. If initializer is a list or array, it must be the same
+        length as `variable <Integrator.default_variable>`. If initializer is specified as a single float or
+        function, while `variable <Integrator.variable>` is a list or array, initializer will be applied to each
+        variable element; if initializer is a function, it is executed separately for each element of variable.
 
     previous_value : 1d array
         stores previous value with which `variable <Integrator.variable>` is integrated.
