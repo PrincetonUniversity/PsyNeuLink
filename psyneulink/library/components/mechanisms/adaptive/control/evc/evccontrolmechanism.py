@@ -1059,7 +1059,7 @@ class EVCControlMechanism(ControlMechanism):
 
 
         for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
+            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id)())
 
         # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
