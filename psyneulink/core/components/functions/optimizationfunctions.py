@@ -67,7 +67,6 @@ class OptimizationFunctionError(Exception):
 
 class SampleSpec():
     '''
-<<<<<<< HEAD
     SampleSpec(   \
     begin=None,   \
     end=None,     \
@@ -77,10 +76,8 @@ class SampleSpec():
     )
 
     Specify equivalent of tuple for use by SampleIterator
-=======
     Specify the information needed to create a SampleIterator which will either (1) generate values in a range or (2)
     call a function.
->>>>>>> JDC_TEMP_sample_spec_docs
 
     (1) Generate values in a range by explicitly specifying a finite reqular sequence of values, using an appropriate
         combination of the **start**, **stop**, **step** and/or **num** arguments.
