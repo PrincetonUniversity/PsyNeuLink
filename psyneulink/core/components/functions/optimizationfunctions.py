@@ -68,14 +68,13 @@ class OptimizationFunctionError(Exception):
 class SampleSpec():
     '''
     SampleSpec(   \
-    begin=None,   \
-    end=None,     \
+    start=None,   \
+    stop=None,    \
     step=None,    \
-    count=None,   \
+    num=None,     \
     function=None \
     )
 
-    Specify equivalent of tuple for use by SampleIterator
     Specify the information needed to create a SampleIterator which will either (1) generate values in a range or (2)
     call a function.
 
@@ -84,33 +83,44 @@ class SampleSpec():
 
         * if **start**, **stop**, and **step* are specified, the behavior is similar to np.arange {LINK}. Calling
           next first returns **start**. Each subsequent call to next returns **start** + **step** * current_step.
-          Iteration stops when **num** is reached, or the current value exceeds the **stop** value.
+          Iteration stops when the current value exceeds the **stop** value.
 
         * if **start**, **stop**, and **num* are specified, the behavior is similar to np.linspace {LINK}. Calling
-          next first returns **start**. Each subsequent call to next returns **start** + **step** * current_step.
-          Iteration stops when **num** is reached, or the current value exceeds the **stop** value.
+          next first returns **start**. Each subsequent call to next returns **start** + **step** * current_step, where
+          step is set to **step** set to :math:`\\frac{stop-start)}{num - 1}`. Iteration stops when **num** is reached,
+          or the current value exceeds the **stop** value.
 
-          * **start**, **step**, **num**:  generates **num** number of items with increments of **step**.
+        * if **start**, **stop*, **step**, and **num** are all specified, then **step** and **num** must be compatible.
 
-          * **start**, **stop**, **step**, **num**:  checks that **step** and **num** are compatible
-            and, if not, generates an error.
+    (2) Specify a function, which is called repeatedly to generate a sequence of values.
 
+        * if **num** is specified, the **function** is called once on each iteration until **num** iterations are
+          complete.
 
+        * if **num** is not specified, the **function** is called once on each iteration, and iteration may continue
+          indefintely.
 
-    **start**, **stop**, and **step**
+    .. note::
+        Some OptimizationFunctions may require that their SampleIterators have a "num" attribute.
+
 
     Arguments
     ---------
 
     start : int or float
+        First sample in the sequence
 
     stop : int or float
+        Maximum value of last sample in the sequence
 
     step : int or float
+        Space between samples in sequence
 
     num :  int
+        Number of samples
 
     function : function
+        Function to be called on each iteration. Must return one sample.
 
 
     Attributes
@@ -135,39 +145,6 @@ class SampleSpec():
                  num:tc.optional(int)=None,
                  function:tc.optional(is_function_type)=None
                  ):
-        '''Specify list or parameters for generating one, for use by SampleIterator.
-
-        There are two ways of specifying a SampleSpec to define a space of samples, as described below.
-
-        .. _SampleSpec_Sequence:
-
-        * *Explicitly specify a finite reqular sequence of values*, using an appropriate combination of the
-          **start**, **stop**, **step** and/or **num** arguments:
-
-          * **start**, **stop**, **step**:  behavior analogous to the Python range() function, with the exceptions that
-            floats are allowed, and the sequence generated is inclusive of **stop**.
-
-          * **start**, **stop**, **num**: **step** set to :math:`\\frac{stop-start)}{num - 1}`.
-
-          * **start**, **step**, **num**:  generates **num** number of items with increments of **step**.
-
-          * **start**, **stop**, **step**, **num**:  checks that **step** and **num** are compatible
-            and, if not, generates an error.
-
-        .. _SampleSpec_Function:
-
-        * *Specify a function*, which will be called repeatedly to generate a sequence of values;
-
-          * **function**: must be a function that does not take any arguments and returns a single value on
-          each call (e.g., a `DistributionFunction`).
-          COMMENT:
-          it may take as additional parameters ones named *start*, *stop*,
-          *step* and/or *num* that are used to parameterize it when it is used to construct a `UserDefinedFunction`.
-          COMMENT
-
-          * **num**: if specified, will stop iteration after **num** calls to the function. Some
-          OptimizationFunctions may require that their SampleIterator has num.
-        '''
 
         if function is None:
             if start is None or stop is None:
@@ -209,7 +186,7 @@ class SampleSpec():
 class SampleIterator(Iterator):
     """
     SampleIterator(               \
-    specification=None            \
+    specification                 \
     )
 
     Creates an iterator which returns the next sample from a sequence on each call to 'next'.
@@ -243,18 +220,7 @@ class SampleIterator(Iterator):
     def __init__(self,
                  specification:tc.any(list, range, np.ndarray, SampleSpec)):
 
-        '''Create SampleIterator from list or SampleSpec.
-
-        If **specification** is a list, range or array, create iterator from it that is called by __next__.
-
-        If **specification** is a SampleSpec:
-          - if step is specified, use start, stop and step or num to genereate an iterator from a list
-          - if step is not specified, use function to generate new value on each call. If num is specified in
-            SampleSpec (i.e., it is not None), it determines the number of samples that can be generated from the
-            function before call to __next__ generates a `StopIteration` exception; otherwise, it can be called
-            indefinitely.
-
-        Can be called to generate list from itself.
+        '''
 
         Arguments
         ---------
@@ -265,29 +231,20 @@ class SampleIterator(Iterator):
         Attributes
         ----------
 
-        start : scalar
-            first item of list or SampleSpec.start.
+        start : scalar or None
+            first sample in the sequence, or None
 
-        stop : scalar
-            last item of list or SampleSpec.stop.
+        stop : scalar or None
+            last sample in the sequence, or None
 
         step : scalar
-            increment for each item of list or SampleSpec.step.
+            space between samples in the sequence, or None
 
         num : int or None
-            number of values returned before the iterator stops. If None, the iterator will go on forever.
-
-            COMMENT:
-            length of list or SampleSpec.num;  `None` if `generate_current_value` is a function.
-            COMMENT
+            number of values returned before the iterator stops. If None, the iterator may be called indefinitely.
 
         current_step : int
-            index of next item to be returned.
-
-        COMMENT:
-            generator : list or function
-                method used to generate each item returned.
-        COMMMENT
+            number of current iteration
 
         Returns
         -------
