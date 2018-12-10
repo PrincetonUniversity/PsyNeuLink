@@ -206,19 +206,22 @@ class SampleIterator(Iterator):
         ----------
 
         begin : scalar
-            first item of list or SampleSpec.begin
+            first item of list or SampleSpec.begin.
 
         end : scalar
-            last item of list or SampleSpec.end
+            last item of list or SampleSpec.end.
 
         step_size : scalar
-            increment for each item of list or SampleSpec.step
+            increment for each item of list or SampleSpec.step.
 
-        num_steps : int
-            length of list or SampleSpec.count.
+        num_steps : int or None
+            length of list or SampleSpec.count;  `None` if `generate_current_value` is a function.
 
         current_step : int
-            index of next item to be returned
+            index of next item to be returned.
+
+        generator : list or function
+            method used to generate each item returned.
 
         Returns
         -------
@@ -266,7 +269,6 @@ class SampleIterator(Iterator):
                 def generate_current_value():  # call function
                     return self.generator()
 
-
             else:
                 assert False, 'PROGRAM ERROR: {} item of {} passed to specification arg of {} ' \
                               'is not an iterator or a function_type'.\
@@ -305,6 +307,10 @@ class SampleIterator(Iterator):
         return list(self)
 
     def reset(self, head=None):
+        '''Reset iterator to a specified item
+        If called with None, resets to first item (if `generator <SampleIterators.generator>` is a list or
+        deterministic function.
+        '''
 
         self.current_step = 0
         self.head = head or self.begin
@@ -327,10 +333,15 @@ class OptimizationFunction(Function_Base):
 
     Provides an interface to subclasses and external optimization functions. The default `function
     <OptimizationFunction.function>` executes iteratively, generating samples from `search_space
-    <OptimizationFunction.search_space>` using `search_function <OptimizationFunction.search_function>`
-    and evaluating them using `objective_function <OptimizationFunction.objective_function>`,
-    until terminated by `search_termination_function <OptimizationFunction.search_termination_function>`.
-    Subclasses can override this to implement their own optimization function or call an external one.
+    <OptimizationFunction.search_space>` using `search_function <OptimizationFunction.search_function>`,
+    evaluating them using `objective_function <OptimizationFunction.objective_function>`, and reporting the
+    value of each using `report_value <OptimizationFunction.report_value>` until terminated by
+    `search_termination_function <OptimizationFunction.search_termination_function>`. Subclasses can override
+    `function <OptimizationFunction.function>` to implement their own optimization function or call an external one.
+
+    Samples in `search_space <OptimizationFunction.search_space>` are assumed a list of one or more `SampleIterator`
+    objects;  if there is more than one SampleIterator in the list, they must either generate lists of equal length
+    or ones that do not terminate (i.e., `count <SampleIterator>` = None).
 
     .. _OptimizationFunction_Procedure:
 
@@ -423,9 +434,10 @@ class OptimizationFunction(Function_Base):
         evaluated `objective_function <OptimizationFunction.objective_function>` in each iteration of the
         `optimization process <OptimizationFunction_Procedure>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
-        (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
-        executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
-        (see `note <OptimizationFunction_Defaults>`).
+        (e.g., as does `GradientOptimization`), and all of the SampleIterators in the list that are `finite
+        <SampleIterator_Finite>` must have equal `num_steps <SampleIterators.num_steps>`. If it is required and
+        not specified, the optimization process executes exactly once using the value passed as its `variable
+        <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
@@ -466,10 +478,12 @@ class OptimizationFunction(Function_Base):
     search_space : list or array of `SampleIterators <SampleIterator>`
         used by `search_function <OptimizationFunction.search_function>` to generate samples evaluated by
         `objective_function <OptimizationFunction.objective_function>` in each iteration of the `optimization process
-        <OptimizationFunction_Procedure>`;  `NotImplemented` if the `objective_function
-        <OptimizationFunction.objective_function>` generates its own samples.  If it is required and not specified,
-        the optimization process executes exactly once using the value passed as its `variable
-        <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
+        <OptimizationFunction_Procedure>`.  The number of SampleIterators in the list determines the dimensionality
+        of each sample:  in each iteration of the `optimization process <OptimizationFunction_Procedure>`, each
+        SampleIterator is called upon to provide the value for one of the dimensions of the sample.m`NotImplemented`
+        if the `objective_function <OptimizationFunction.objective_function>` generates its own samples.  If it is
+        required and not specified, the optimization process executes exactly once using the value passed as its
+        `variable <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
 
     search_termination_function : function or method that returns a boolean value
         used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`; if it is required
@@ -581,11 +595,20 @@ class OptimizationFunction(Function_Base):
                                                        request_set[SEARCH_FUNCTION].__name__))
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
-            if not all(isinstance(s, SampleIterator) for s in request_set[SEARCH_SPACE]):
+            search_space = request_set[SEARCH_SPACE]
+            if not all(isinstance(s, SampleIterator) for s in search_space):
                 raise OptimizationFunctionError("All entries in list specified for {} arg of {} must be a {}".
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
                                                        SampleIterator.__name__))
+            # Check that all finite iterators (i.e., with count!=None) are of the same length:
+            finite_iterators = [s.num_steps for s in search_space if s.num_steps is not None]
+            if not all(l==finite_iterators[0] for l in finite_iterators):
+                raise OptimizationFunctionError("All finite {}s in {} arg of {} must have the same count".
+                                                format(SampleIterator.__name__,
+                                                       repr(SEARCH_SPACE),
+                                                       self.__class__.__name__,
+                                                       ))
 
         if SEARCH_TERMINATION_FUNCTION in request_set and request_set[SEARCH_TERMINATION_FUNCTION] is not None:
             if not is_function_type(request_set[SEARCH_TERMINATION_FUNCTION]):
