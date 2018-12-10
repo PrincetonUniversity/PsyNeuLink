@@ -23,6 +23,7 @@ Functions that return the sample of a variable yielding the optimized value of a
 '''
 
 import warnings
+# from fractions import Fraction
 import itertools
 import numpy as np
 import typecheck as tc
@@ -56,17 +57,17 @@ class OptimizationFunctionError(Exception):
 
 # FIX: USE THESE TO REPLACE ONE AT BOTTOM WHEN UPGRADE TO PYTHON 3.5.2 OR 3.6
 # class SampleSpec(NamedTuple):
-#     begin: numbers.Number
-#     end: numbers.Number
+#     start: numbers.Number
+#     stop: numbers.Number
 #     generator: callable
 
-# SampleSpec = namedtuple('SampleSpec', [('begin', numbers.Number), ('end', numbers.Number), ('generator', callable)])
+# SampleSpec = namedtuple('SampleSpec', [('start', numbers.Number), ('stop', numbers.Number), ('generator', callable)])
 
-# SampleSpec = namedtuple('SampleSpec', 'begin, end, num, generator')
+# SampleSpec = namedtuple('SampleSpec', 'start, stop, num, generator')
 
-# FIX: allow SampleSpec to parse a list
 class SampleSpec():
     '''
+<<<<<<< HEAD
     SampleSpec(   \
     begin=None,   \
     end=None,     \
@@ -76,19 +77,41 @@ class SampleSpec():
     )
 
     Specify equivalent of tuple for use by SampleIterator
+=======
+    Specify the information needed to create a SampleIterator which will either (1) generate values in a range or (2)
+    call a function.
+>>>>>>> JDC_TEMP_sample_spec_docs
 
-    First three parameters operate like range (but allowing floats): begin, end, step
+    (1) Generate values in a range by explicitly specifying a finite reqular sequence of values, using an appropriate
+        combination of the **start**, **stop**, **step** and/or **num** arguments.
+
+        * if **start**, **stop**, and **step* are specified, the behavior is similar to np.arange {LINK}. Calling
+          next first returns **start**. Each subsequent call to next returns **start** + **step** * current_step.
+          Iteration stops when **num** is reached, or the current value exceeds the **stop** value.
+
+        * if **start**, **stop**, and **num* are specified, the behavior is similar to np.linspace {LINK}. Calling
+          next first returns **start**. Each subsequent call to next returns **start** + **step** * current_step.
+          Iteration stops when **num** is reached, or the current value exceeds the **stop** value.
+
+          * **start**, **step**, **num**:  generates **num** number of items with increments of **step**.
+
+          * **start**, **stop**, **step**, **num**:  checks that **step** and **num** are compatible
+            and, if not, generates an error.
+
+
+
+    **start**, **stop**, and **step**
 
     Arguments
     ---------
 
-    begin : int or float
+    start : int or float
 
-    end : int or float
+    stop : int or float
 
     step : int or float
 
-    count :  int
+    num :  int
 
     function : function
 
@@ -96,23 +119,23 @@ class SampleSpec():
     Attributes
     ----------
 
-    begin : float
+    start : float
 
-    end : float
+    stop : float
 
     step : float
 
-    count :  int
+    num :  int
 
     function : function
 
     '''
     @tc.typecheck
     def __init__(self,
-                 begin:tc.optional(tc.any(int, float))=None,
-                 end:tc.optional(tc.any(int, float))=None,
+                 start:tc.optional(tc.any(int, float))=None,
+                 stop:tc.optional(tc.any(int, float))=None,
                  step:tc.optional(tc.any(int, float))=None,
-                 count:tc.optional(int)=None,
+                 num:tc.optional(int)=None,
                  function:tc.optional(is_function_type)=None
                  ):
         '''Specify list or parameters for generating one, for use by SampleIterator.
@@ -122,16 +145,16 @@ class SampleSpec():
         .. _SampleSpec_Sequence:
 
         * *Explicitly specify a finite reqular sequence of values*, using an appropriate combination of the
-          **begin**, **end**, **step** and/or **count** arguments:
+          **start**, **stop**, **step** and/or **num** arguments:
 
-          * **begin**, **end**, **step**:  behavior analogous to the Python range() function, with the exceptions that
-            floats are allowed, and the sequence generated is inclusive of **end**.
+          * **start**, **stop**, **step**:  behavior analogous to the Python range() function, with the exceptions that
+            floats are allowed, and the sequence generated is inclusive of **stop**.
 
-          * **begin**, **end**, **count**: **step** set to :math:`\\frac{end-begin)}{count - 1}`.
+          * **start**, **stop**, **num**: **step** set to :math:`\\frac{stop-start)}{num - 1}`.
 
-          * **begin**, **step**, **count**:  generates **count** number of items with increments of **step**.
+          * **start**, **step**, **num**:  generates **num** number of items with increments of **step**.
 
-          * **begin**, **end**, **step**, **count**:  checks that **step** and **count** are compatible
+          * **start**, **stop**, **step**, **num**:  checks that **step** and **num** are compatible
             and, if not, generates an error.
 
         .. _SampleSpec_Function:
@@ -141,34 +164,34 @@ class SampleSpec():
           * **function**: must be a function that does not take any arguments and returns a single value on
           each call (e.g., a `DistributionFunction`).
           COMMENT:
-          it may take as additional parameters ones named *begin*, *end*,
-          *step* and/or *count* that are used to parameterize it when it is used to construct a `UserDefinedFunction`.
+          it may take as additional parameters ones named *start*, *stop*,
+          *step* and/or *num* that are used to parameterize it when it is used to construct a `UserDefinedFunction`.
           COMMENT
 
-          * **count**: if specified, will stop iteration after **count** calls to the function. Some
-          OptimizationFunctions may require that their SampleIterator has count.
+          * **num**: if specified, will stop iteration after **num** calls to the function. Some
+          OptimizationFunctions may require that their SampleIterator has num.
         '''
 
         if function is None:
-            if begin is None or end is None:
-                raise OptimizationFunctionError("If 'function' is not specified, then 'begin' and 'end' must be "
+            if start is None or stop is None:
+                raise OptimizationFunctionError("If 'function' is not specified, then 'start' and 'stop' must be "
                                                 "specified.")
-            if count is None and step is not None:
-                count = 1.0 + (end - begin) / step
-            elif step is None and count is not None:
-                step = (end - begin) / (count - 1)
-            elif count is None and step is None:
+            if num is None and step is not None:
+                num = 1.0 + (stop - start) / step
+            elif step is None and num is not None:
+                step = (stop - start) / (num - 1)
+            elif num is None and step is None:
                 raise OptimizationFunctionError("Must specify one of {}, {} or {}."
-                                                .format(repr('step'), repr('count'), repr('function')))
+                                                .format(repr('step'), repr('num'), repr('function')))
             else:
-                if not np.isclose(count, 1.0 + (end - begin) / step):
+                if not np.isclose(num, 1.0 + (stop - start) / step):
                     raise OptimizationFunctionError("The {} ({}) and {} ({}} values specified are not comaptible."
-                                                    .format(repr('step'), step, repr('count'), count))
+                                                    .format(repr('step'), step, repr('num'), num))
 
         elif is_function_type(function):
-            if begin is not None:
+            if start is not None:
                 raise OptimizationFunctionError("Only one of {} ({}) and {} ({}} may be specified."
-                                                .format(repr('begin'), begin, repr('function'), function))
+                                                .format(repr('start'), start, repr('function'), function))
             if step is not None:
                 raise OptimizationFunctionError("Only one of {} ({}) and {} ({}} may be specified."
                                                 .format(repr('step'), step, repr('function'), function))
@@ -179,30 +202,113 @@ class SampleSpec():
         # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
         # Validate entries of specification
         #
-        self.begin = begin
-        self.end = end
-        self.step_size = step
-        self.num_steps = count
+        self.start = start
+        self.stop = stop
+        self.step = step
+        self.num = num
         self.function = function
 
 
 class SampleIterator(Iterator):
-    '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
+    """
+    SampleIterator(               \
+    specification=None            \
+    )
+
+    Creates an iterator which returns the next sample from a sequence on each call to 'next'.
+
+    The pattern of the sequence depends on the **specification**, which may be a list, nparray, or SampleSpec. Many of
+    the patterns depend on the "current_step," which is incremented on each iteration, and set to zero when the
+    iterator is reset.
+
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | Specification                  |  what happens on each iteration           | StopIteration condition            |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | list, nparray                  | look up the item with index current_step  | list/array ends                    |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | SampleSpec(start, stop, step)  | start + step*current_step                 | current_step = num or value > stop |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | SampleSpec(start, stop, num)   | start + step*current_step                 | current_step = num or value > stop |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | SampleSpec(function, num)      | call function                             | current_step = num                 |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | SampleSpec(function)           | call function                             | iteration does not stop            |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+
+    .. note::
+        We recommend reserving the list/nparray option for cases in which the samples do not have a pattern that can be
+        represented by a SampleSpec, or the number of samples is small. The list/nparray option requires all of the
+        samples to be stored and looked up, while the SampleSpec options generate samples as needed.
+
+    """
 
     @tc.typecheck
     def __init__(self,
                  specification:tc.any(list, range, np.ndarray, SampleSpec)):
-       # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
+
+        '''Create SampleIterator from list or SampleSpec.
+
+        If **specification** is a list, range or array, create iterator from it that is called by __next__.
+
+        If **specification** is a SampleSpec:
+          - if step is specified, use start, stop and step or num to genereate an iterator from a list
+          - if step is not specified, use function to generate new value on each call. If num is specified in
+            SampleSpec (i.e., it is not None), it determines the number of samples that can be generated from the
+            function before call to __next__ generates a `StopIteration` exception; otherwise, it can be called
+            indefinitely.
+
+        Can be called to generate list from itself.
+
+        Arguments
+        ---------
+
+        specification : list or SampleSpec
+            specifies what to use for `generate_current_value <SampleIterator.generate_current_value>`.
+
+        Attributes
+        ----------
+
+        start : scalar
+            first item of list or SampleSpec.start.
+
+        stop : scalar
+            last item of list or SampleSpec.stop.
+
+        step : scalar
+            increment for each item of list or SampleSpec.step.
+
+        num : int or None
+            number of values returned before the iterator stops. If None, the iterator will go on forever.
+
+            COMMENT:
+            length of list or SampleSpec.num;  `None` if `generate_current_value` is a function.
+            COMMENT
+
+        current_step : int
+            index of next item to be returned.
+
+        COMMENT:
+            generator : list or function
+                method used to generate each item returned.
+        COMMMENT
+
+        Returns
+        -------
+
+        List(self) : list
+        '''
+
+        # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
 
         if isinstance(specification, range):
             specification = list(specification)
 
         if isinstance(specification, list):
-            self.begin = specification[0]
-            self.end = specification[-1]
-            self.step_size = None
-            self.num_steps = len(specification)
+            self.start = specification[0]
+            self.stop = specification[-1]
+            self.step = None
+            self.num = len(specification)
             self.generator = specification                       # the list
 
             def generate_current_value():                        # index into the list
@@ -211,22 +317,23 @@ class SampleIterator(Iterator):
         elif isinstance(specification, SampleSpec):
 
             if specification.function is None:
-                self.begin = specification.begin
-                self.end = specification.end
-                self.step_size = specification.step_size
-                self.num_steps = specification.num_steps
+                self.start = specification.start
+                self.stop = specification.stop
+                # self.step = Fraction(specification.step)
+                self.step = specification.step
+                self.num = specification.num
                 self.generator = None                    # ??
 
                 def generate_current_value():   # return next value in range
-                    return self.begin + self.step_size*self.current_step
+                    return float(self.start + self.step*self.current_step)
 
             elif is_function_type(specification.function):
-                self.begin = 0
-                self.end = None
-                self.step_size = 1
+                self.start = 0
+                self.stop = None
+                self.step = 1
                 self.current_step = 0
-                self.num_steps = specification.num_steps
-                self.head = self.begin
+                self.num = specification.num
+                self.head = self.start
                 self.generator = specification.function
 
                 def generate_current_value():  # call function
@@ -242,18 +349,18 @@ class SampleIterator(Iterator):
                           format(repr('specification'), self.__class__.__name__, SampleSpec.__name__)
 
         self.current_step = 0
-        self.head = self.begin
+        self.head = self.start
         self.generate_current_value = generate_current_value
 
     def __next__(self):
-        if self.num_steps is None:
+        if self.num is None:
             return self.generate_current_value()
-        if self.current_step < self.num_steps:
+        if self.current_step < self.num:
             current_value = self.generate_current_value()
             self.current_step += 1
-            if hasattr(self, 'end'):
-                if self.end is not None:
-                    if current_value <= self.end:
+            if hasattr(self, 'stop'):
+                if self.stop is not None:
+                    if current_value <= self.stop:
                         return current_value
                     else:
                         raise StopIteration
@@ -276,7 +383,7 @@ class SampleIterator(Iterator):
         '''
 
         self.current_step = 0
-        self.head = head or self.begin
+        self.head = head or self.start
 
 
 class OptimizationFunction(Function_Base):
@@ -304,7 +411,7 @@ class OptimizationFunction(Function_Base):
 
     Samples in `search_space <OptimizationFunction.search_space>` are assumed a list of one or more `SampleIterator`
     objects;  if there is more than one SampleIterator in the list, they must either generate lists of equal length
-    or ones that do not terminate (i.e., `count <SampleIterator>` = None).
+    or ones that do not terminate (i.e., `num <SampleIterator>` = None).
 
     .. _OptimizationFunction_Procedure:
 
@@ -398,7 +505,7 @@ class OptimizationFunction(Function_Base):
         `optimization process <OptimizationFunction_Procedure>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`), and all of the SampleIterators in the list that are `finite
-        <SampleIterator_Finite>` must have equal `num_steps <SampleIterators.num_steps>`. If it is required and
+        <SampleIterator_Finite>` must have equal `num <SampleIterators.num>`. If it is required and
         not specified, the optimization process executes exactly once using the value passed as its `variable
         <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
 
@@ -525,8 +632,7 @@ class OptimizationFunction(Function_Base):
             self.search_termination_function = search_termination_function
 
         if search_space is None:
-            # FIX: WHAT IS THAT ARGUMENT BELOW??
-            self.search_space = [SampleIterator([1.2345])]
+            self.search_space = [SampleIterator([0.])]
             self._unspecified_args.append(SEARCH_SPACE)
         else:
             self.search_space = search_space
@@ -564,10 +670,10 @@ class OptimizationFunction(Function_Base):
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
                                                        SampleIterator.__name__))
-            # Check that all finite iterators (i.e., with count!=None) are of the same length:
-            finite_iterators = [s.num_steps for s in search_space if s.num_steps is not None]
+            # Check that all finite iterators (i.e., with num!=None) are of the same length:
+            finite_iterators = [s.num for s in search_space if s.num is not None]
             if not all(l==finite_iterators[0] for l in finite_iterators):
-                raise OptimizationFunctionError("All finite {}s in {} arg of {} must have the same count".
+                raise OptimizationFunctionError("All finite {}s in {} arg of {} must have the same number of steps".
                                                 format(SampleIterator.__name__,
                                                        repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
@@ -728,7 +834,7 @@ class GradientOptimization(OptimizationFunction):
         default_variable=None,       \
         objective_function=None,     \
         direction=ASCENT,            \
-        step_size=1.0,               \
+        step=1.0,               \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -754,14 +860,14 @@ class GradientOptimization(OptimizationFunction):
           <GradientOptimization.gradient_function>`;
         ..
         - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified
-          `direction <GradientOptimization.direction>` and by an amount specified by `step_size
-          <GradientOptimization.step_size>` and possibly `annealing_function
+          `direction <GradientOptimization.direction>` and by an amount specified by `step
+          <GradientOptimization.step>` and possibly `annealing_function
           <GradientOptimization.annealing_function>`;
         ..
         - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
           `variable <GradientOptimization.variable>`;
         ..
-        - adjust `step_size <GradientOptimization.udpate_rate>` using `annealing_function
+        - adjust `step <GradientOptimization.udpate_rate>` using `annealing_function
           <GradientOptimization.annealing_function>`, if specified, for use in the next iteration;
         ..
         - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
@@ -806,16 +912,16 @@ class GradientOptimization(OptimizationFunction):
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    step_size : int or float : default 1.0
+    step : int or float : default 1.0
         specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
-        `step_size <GradientOptimization.step_size>`.
+        <GradientOptimization.annealing_function>` is specified, **step** specifies the intial value of
+        `step <GradientOptimization.step>`.
 
     annealing_function : function or method : default None
-        specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
+        specifies function used to adapt `step <GradientOptimization.step>` in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  must take accept two parameters —
-        `step_size <GradientOptimization.step_size>` and `iteration <GradientOptimization_Procedure>`, in that
+        `step <GradientOptimization.step>` and `iteration <GradientOptimization_Procedure>`, in that
         order — and return a scalar value, that is used for the next iteration of optimization.
 
     convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
@@ -863,16 +969,16 @@ class GradientOptimization(OptimizationFunction):
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    step_size : int or float
+    step : int or float
         determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, `step_size <GradientOptimization.step_size>`
+        <GradientOptimization.annealing_function>` is specified, `step <GradientOptimization.step>`
         determines the initial value.
 
     annealing_function : function or method
-        function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
-        process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step_size
-        <GradientOptimization.step_size>` is used in each iteration.
+        function used to adapt `step <GradientOptimization.step>` in each iteration of the `optimization
+        process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step
+        <GradientOptimization.step>` is used in each iteration.
 
     iteration : int
         the currention iteration of the `optimization process <GradientOptimization_Procedure>`.
@@ -913,7 +1019,7 @@ class GradientOptimization(OptimizationFunction):
 
         annealing_function = Param(None, stateful=False, loggable=False)
 
-        step_size = Param(1.0, modulable=True)
+        step = Param(1.0, modulable=True)
         convergence_threshold = Param(.001, modulable=True)
         max_iterations = Param(1000, modulable=True)
 
@@ -927,7 +1033,7 @@ class GradientOptimization(OptimizationFunction):
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
-                 step_size:tc.optional(tc.any(int, float))=1.0,
+                 step:tc.optional(tc.any(int, float))=1.0,
                  annealing_function:tc.optional(is_function_type)=None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
@@ -950,7 +1056,7 @@ class GradientOptimization(OptimizationFunction):
         self.annealing_function = annealing_function
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(step_size=step_size,
+        params = self._assign_args_to_param_dicts(step=step,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
                                                   params=params)
@@ -1023,17 +1129,17 @@ class GradientOptimization(OptimizationFunction):
         if self.gradient_function is None:
             return variable
 
-        # Update step_size
-        step_size = self.parameters.step_size.get(execution_id)
+        # Update step
+        step = self.parameters.step.get(execution_id)
         if sample_num != 0 and self.annealing_function:
-            step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
-            self.parameters.step_size.set(step_size, execution_id)
+            step = call_with_pruned_args(self.annealing_function, step, sample_num, execution_id=execution_id)
+            self.parameters.step.set(step, execution_id)
 
         # Compute gradients with respect to current variable
         _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
 
         # Update variable based on new gradients
-        return variable + self.parameters.direction.get(execution_id) * step_size * np.array(_gradients)
+        return variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
         previous_variable = self.parameters.previous_variable.get(execution_id)
@@ -1216,11 +1322,11 @@ class GridSearch(OptimizationFunction):
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
         sample_iterators = args[0]['search_space']
         for i in sample_iterators:
-            if i.num_steps is None:
+            if i.num is None:
                 raise OptimizationFunctionError("Invalid search_space on {}. Each SampleIterator must have a value for "
-                                                "its 'num_steps' attribute.".format(self.name))
+                                                "its 'num' attribute.".format(self.name))
 
-        self.num_iterations = np.product([i.num_steps for i in sample_iterators])
+        self.num_iterations = np.product([i.num for i in sample_iterators])
 
     def reset_grid(self):
         '''Reset iterators in `search_space <GridSearch.search_space>'''
@@ -1269,17 +1375,17 @@ class GridSearch(OptimizationFunction):
 
             chunk_size = (len(self.search_space) + (size-1)) // size
             start = chunk_size * rank
-            end = chunk_size * (rank+1)
+            stop = chunk_size * (rank+1)
             if start > len(self.search_space):
                 start = len(self.search_space)
-            if end > len(self.search_space):
-                end = len(self.search_space)
+            if stop > len(self.search_space):
+                stop = len(self.search_space)
 
             # # TEST PRINT
             # print("\nContext: {}".format(self.context.flags_string))
             # print("search_space length: {}".format(len(self.search_space)))
             # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
-            # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,end,end-start))
+            # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,stop,stop-start))
 
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             samples = np.array([[]])
@@ -1302,7 +1408,7 @@ class GridSearch(OptimizationFunction):
                       format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
                 _progress_bar_count = 0
 
-            for sample in self.search_space[start:end,:]:
+            for sample in self.search_space[start:stop,:]:
 
                 if _show_progress:
                     increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
@@ -1375,7 +1481,7 @@ class GridSearch(OptimizationFunction):
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         '''
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            return [signal.begin for signal in self.search_space]
+            return [signal.start for signal in self.search_space]
         try:
             sample = next(self.grid)
         except StopIteration:
@@ -1410,17 +1516,23 @@ class GaussianProcess(OptimizationFunction):
         prefs=None                   \
         )
 
-    Draw samples from bounds specified in `search_space <GaussianProcess.search_space>` and return one that
-    optimizes the value of `objective_function <GaussianProcess.objective_function>`.
+    Draw samples with dimensionality and bounds specified by `search_space <GaussianProcess.search_space>` and
+    return one that optimizes the value of `objective_function <GaussianProcess.objective_function>`.
 
     .. _GaussianProcess_Procedure:
 
     **Gaussian Process Procedure**
 
+    The number of items (`SampleIterators <SampleIteartor>` in `search_space <GaussianProcess.search_space>` determines
+    the dimensionality of each sample to evaluate by `objective_function <GaussianProcess.objective_function>`,
+    with the `start <SampleIterator.start>` and `stop <SampleIterator.stop>` attributes of each `SampleIterator`
+    specifying the bounds for sampling along the corresponding dimension.
+
     When `function <GaussianProcess.function>` is executed, it iterates over the folowing steps:
 
-        - draw sample along each dimension of variable with bound specified for each in `search_space
-          <GaussianProcess.search_space>`;
+        - draw sample along each dimension of `search_space <GaussianProcess.search_space>`, within bounds
+          specified by `start <SampleIterator.start>` and `stop <SampleIterator.stop>` attributes of each
+          `SampleIterator` in the `search_space <GaussianProcess.search_space>` list.
         ..
         - compute value of `objective_function <GaussianProcess.objective_function>` for that sample;
 
