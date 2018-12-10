@@ -338,17 +338,21 @@ class OptimizationFunction(Function_Base):
 
     When `function <OptimizationFunction.function>` is executed, it iterates over the following steps:
 
-        - get sample from `search_space <OptimizationFunction.search_space>` using `search_function
-          <OptimizationFunction.search_function>`.
+        - get sample from `search_space <OptimizationFunction.search_space>` by calling `search_function
+          <OptimizationFunction.search_function>`
         ..
-        - compute value of `objective_function <OptimizationFunction.objective_function>` using the sample;
+        - compute value of `objective_function <OptimizationFunction.objective_function>` for the sample
+          by calling `objective_function <OptimizationFunction.objective_function>`;
+        ..
+        - report value returned by `objective_function <OptimizationFunction.objective_function>` for the sample
+          by calling `report_value <OptimizationFunction.report_value>`;
         ..
         - evaluate `search_termination_function <OptimizationFunction.search_termination_function>`.
 
-    The current iteration is contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until all
-    values of `search_space <OptimizationFunction.search_space>` have been evaluated and/or `search_termination_function
-    <OptimizationFunction.search_termination_function>` returns `True`.  The `function <OptimizationFunction.function>`
-    returns:
+    The current iteration numberris contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until
+    all values of `search_space <OptimizationFunction.search_space>` have been evaluated and/or
+    `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`.  The `function
+    <OptimizationFunction.function>` returns:
 
     - the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
       <OptimizationFunction.objective_function>`);
@@ -724,6 +728,7 @@ class OptimizationFunction(Function_Base):
         return new_sample, new_value, samples, values
 
     def _report_value(self, new_value):
+        '''Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample.'''
         pass
 
 
