@@ -68,7 +68,7 @@ class CUDAExecution:
     @property
     def _cuda_out_buf(self):
         if self.__cuda_out_buf is None:
-            vo_ty = self._bin_func.byref_arg_types[3]
+            vo_ty = self._bin_func.byref_arg_types[3] * len(self._execution_ids)
             size = ctypes.sizeof(vo_ty)
             self.__cuda_out_buf = jit_engine.pycuda.driver.mem_alloc(size)
         return self.__cuda_out_buf
@@ -80,10 +80,12 @@ class CUDAExecution:
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_context_struct,
-                                 data_in, self._cuda_out_buf)
+                                 data_in, self._cuda_out_buf, threads=len(self._execution_ids))
 
         # Copy the result from the device
         vo_ty = self._bin_func.byref_arg_types[3]
+        if len(self._execution_ids) > 1:
+            vo_ty =  vo_ty * len(self._execution_ids)
         out_buf = bytearray(ctypes.sizeof(vo_ty))
         jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_out_buf)
         ct_res = vo_ty.from_buffer(out_buf)
@@ -95,13 +97,23 @@ class FuncExecution(CUDAExecution):
     def __init__(self, component, execution_ids=[None]):
         super().__init__()
         self._bin_func = component._llvmBinFunction
-        execution_id = execution_ids[0]
+        self._execution_ids = execution_ids
 
-        par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
+        par_struct_ty, ctx_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        self._param_struct = par_struct_ty(*component._get_param_initializer(execution_id))
+        # TODO: Consolidate these
+        if len(execution_ids) > 1:
+            par_struct_ty = par_struct_ty * len(execution_ids)
+            ctx_struct_ty = ctx_struct_ty * len(execution_ids)
 
-        self._context_struct = context_struct_ty(*component._get_context_initializer(execution_id))
+            par_initializer = (component._get_param_initializer(ex_id) for ex_id in execution_ids)
+            ctx_initializer = (component._get_context_initializer(ex_id) for ex_id in execution_ids)
+        else:
+            par_initializer = component._get_param_initializer(execution_ids[0])
+            ctx_initializer = component._get_context_initializer(execution_ids[0])
+
+        self._param_struct = par_struct_ty(*par_initializer)
+        self._context_struct = ctx_struct_ty(*ctx_initializer)
 
     def execute(self, variable):
         new_var = np.asfarray(variable)
