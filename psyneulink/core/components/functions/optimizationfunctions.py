@@ -193,49 +193,49 @@ class SampleIterator(Iterator):
                  specification:tc.any(list, range, np.ndarray, SampleSpec)):
         '''Create SampleIterator from list or SampleSpec.
 
-        If **specification** is a list, range or array, create iterator from it that is called by __next__.
-
-        If **specification** is a SampleSpec:
-          - if step is specified, use begin, end and step or count to genereate an iterator from a list
-          - if step is not specified, use function to generate new value on each call. If count is specified in
-            SampleSpec (i.e., it is not None), it determines the number of samples that can be generated from the
-            function before call to __next__ generates a `StopIteration` exception; otherwise, it can be called
-            indefinitely.
-
-        Can be called to generate list from itself.
-
-        Arguments
-        ---------
-
-        specification : list or SampleSpec
-            specifies what to use for `generate_current_value <SampleIterator.generate_current_value>`.
-
-        Attributes
-        ----------
-
-        begin : scalar
-            first item of list or SampleSpec.begin.
-
-        end : scalar
-            last item of list or SampleSpec.end.
-
-        step_size : scalar
-            increment for each item of list or SampleSpec.step.
-
-        num_steps : int or None
-            length of list or SampleSpec.count;  `None` if `generate_current_value` is a function.
-
-        current_step : int
-            index of next item to be returned.
-
-        generator : list or function
-            method used to generate each item returned.
-
-        Returns
-        -------
-
-        List(self) : list
-        '''
+        # If **specification** is a list, range or array, create iterator from it that is called by __next__.
+        #
+        # If **specification** is a SampleSpec:
+        #   - if step is specified, use begin, end and step or count to genereate an iterator from a list
+        #   - if step is not specified, use function to generate new value on each call. If count is specified in
+        #     SampleSpec (i.e., it is not None), it determines the number of samples that can be generated from the
+        #     function before call to __next__ generates a `StopIteration` exception; otherwise, it can be called
+        #     indefinitely.
+        #
+        # Can be called to generate list from itself.
+        #
+        # Arguments
+        # ---------
+        #
+        # specification : list or SampleSpec
+        #     specifies what to use for `generate_current_value <SampleIterator.generate_current_value>`.
+        #
+        # Attributes
+        # ----------
+        #
+        # begin : scalar
+        #     first item of list or SampleSpec.begin.
+        #
+        # end : scalar
+        #     last item of list or SampleSpec.end.
+        #
+        # step_size : scalar
+        #     increment for each item of list or SampleSpec.step.
+        #
+        # num_steps : int or None
+        #     length of list or SampleSpec.count;  `None` if `generate_current_value` is a function.
+        #
+        # current_step : int
+        #     index of next item to be returned.
+        #
+        # generator : list or function
+        #     method used to generate each item returned.
+        #
+        # Returns
+        # -------
+        #
+        # List(self) : list
+        # '''
 
         # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?

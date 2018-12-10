@@ -18,7 +18,7 @@ An OptimizationControlMechanism is a `ControlMechanism <ControlMechanism>` that 
 an optimal `control_allocation <ControlMechanism.control_allocation>` for a given `state
 <OptimizationControlMechanism_State>`. The `OptimizationFunction` uses the OptimizationControlMechanism's
 `evaluation_function` <OptimizationControlMechanism.evalutate_function>` to evaluate `control_allocation
-<ControlMechanism.control_allocation>` samples, and then implements the one that yield the best predicted result.
+<ControlMechanism.control_allocation>` samples, and then implements the one that yields the best predicted result.
 The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinally
 the `net_outcome <ControlMechanism.net_outcome>` computed by the OptimizationControlMechanism for the `Composition`
 (or part of one) that it controls, and its `ObjectiveFunction` seeks to maximize this, which corresponds to
@@ -240,8 +240,10 @@ that optimizes the `net_outcome <ControlMechanism.net_outcome>`. The `agent_rep
 <OptimizationControlMechanism.agent_rep>` is always itself a `Composition`, that can be either the same one that the
 OptimizationControlMechanism controls or another one that is used to estimate the `net_outcome
 <ControlMechanism.net_outcome>` for that Composition (see `above
-<OptimizationControlMechanism_Agent_Representation_Types>`).  If it is another Composition, it must meet the following
-requirem,ents:
+<OptimizationControlMechanism_Agent_Representation_Types>`).  The `evaluate <Composition.evaluate>` method of the
+Composition is assigned as the `evaluation_function <OptimizationControlMechanism.evaluation_function>` of the
+OptimizationControlMechanism.  If the `agent_rep <OptimizationControlMechanism.agent_rep>` is not the Composition
+for which the OptimizationControlMechanism is the controller, then it must meet the following requirements:
 
     * Its `evaluate <Composition.evaluate>` method must accept as its first three arguments, in order,
       values that correspond in shape to  the `feature_values <OptimizationControlMechanism.feature_values>`,
