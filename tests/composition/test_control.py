@@ -348,7 +348,7 @@ class TestModelBasedOptimizationControlMechanisms:
             name='Reward'
         )
         Decision = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=pnl.DriftDiffusionAnalytical(
                 drift_rate=(
                     1.0,
                     pnl.ControlProjection(
