@@ -783,7 +783,10 @@ class OptimizationFunction(Function_Base):
             _progress_bar_count = 0
 
         # Iterate optimization process
-        while call_with_pruned_args(self.search_termination_function, current_sample, current_value, iteration, execution_id=execution_id):
+        while not call_with_pruned_args(self.search_termination_function,
+                                        current_sample,
+                                        current_value, iteration,
+                                        execution_id=execution_id):
 
             if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
@@ -1146,7 +1149,7 @@ class GradientOptimization(OptimizationFunction):
             # self._convergence_metric = self.convergence_threshold + EPSILON
             self.parameters.previous_variable.set(variable, execution_id, override=True)
             self.parameters.previous_value.set(value, execution_id, override=True)
-            return True
+            return False
 
         # Evaluate for convergence
         if self.convergence_criterion == VALUE:
@@ -1158,7 +1161,7 @@ class GradientOptimization(OptimizationFunction):
         self.parameters.previous_variable.set(variable, execution_id, override=True)
         self.parameters.previous_value.set(value, execution_id, override=True)
 
-        return convergence_metric > self.parameters.convergence_threshold.get(execution_id)
+        return convergence_metric <= self.parameters.convergence_threshold.get(execution_id)
 
 
 MAXIMIZE = 'maximize'
@@ -1494,7 +1497,7 @@ class GridSearch(OptimizationFunction):
         of the `OptimizationFunction`.
         '''
         try:
-            return iteration != self.num_iterations
+            return iteration == self.num_iterations
         except AttributeError:
             return True
 
