@@ -103,7 +103,7 @@ class SampleSpec():
                  begin:tc.optional(tc.any(int, float))=None,
                  end:tc.optional(tc.any(int, float))=None,
                  step:tc.optional(tc.any(int, float))=None,
-                 count:tc.optional(float)=None,
+                 count:tc.optional(int)=None,
                  function:tc.optional(is_function_type)=None
                  ):
         '''Specify list or parameters for generating one, for use by SampleIterator.
