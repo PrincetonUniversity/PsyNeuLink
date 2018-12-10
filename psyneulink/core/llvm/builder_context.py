@@ -166,13 +166,12 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.add(global_id, builder.call(tid_x_f, []))
 
     # Index all pointer arguments
-    # TODO: This might need some more flexibility
     indexed_args = []
     for arg in kernel_func.args:
         if isinstance(arg.type, ir.PointerType):
             arg = builder.gep(arg, [global_id])
         indexed_args.append(arg)
-    builder.call(decl_f, kernel_func.args)
+    builder.call(decl_f, indexed_args)
     builder.ret_void()
 
     # Add kernel mark metadata
