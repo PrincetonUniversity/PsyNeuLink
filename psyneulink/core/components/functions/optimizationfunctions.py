@@ -1711,10 +1711,11 @@ class GaussianProcess(OptimizationFunction):
         #                         list of tuples, each of which contains the sampling bounds for each dimension;
         #                         so its length = length of a sample
         #     (the extra stuff in getting the search space is to support statefulness in parallelization of sims)
-        return self._opt.ask() # [SAMPLE:  VECTOR SAME SHAPE AS VARIABLE]
+        # return self._opt.ask() # [SAMPLE:  VECTOR SAME SHAPE AS VARIABLE]
+        return variable
 
     def _gaussian_process_satisfied(self, variable, value, iteration, execution_id=None):
         '''Determine whether search should be terminated;  return `True` if so, `False` if not.'''
         # FRED: YOUR CODE HERE;    THIS IS THE search_termination_function METHOD OF OptimizationControlMechanism (
         # i.e., PARENT)
-        return # [BOOLEAN, SPECIFIYING WHETHER TO END THE SEARCH/SAMPLING PROCESS]
+        return iteration==2# [BOOLEAN, SPECIFIYING WHETHER TO END THE SEARCH/SAMPLING PROCESS]

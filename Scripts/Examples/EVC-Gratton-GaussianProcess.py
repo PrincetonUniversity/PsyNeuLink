@@ -55,7 +55,7 @@ ocm = pnl.OptimizationControlMechanism(features={pnl.SHADOW_EXTERNAL_INPUTS: [In
                                        feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                        agent_rep=comp,
                                        # function=pnl.GaussianProcess,
-                                       function=pnl.GridSearch,
+                                       function=pnl.GaussianProcess,
                                        control_signals=[("drift_rate", Decision), ("threshold", Decision)],
                                        objective_mechanism=pnl.ObjectiveMechanism(
                                                                          monitor_for_control=[
