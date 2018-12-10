@@ -670,8 +670,8 @@ class TestSampleIterator:
 
     def test_int_step(self):
         spec = SampleSpec(step=2,
-                          begin=0,
-                          end=10)
+                          start=0,
+                          stop=10)
         sample_iterator = SampleIterator(specification=spec)
 
         expected = [0, 2, 4, 6, 8, 10]
@@ -688,10 +688,10 @@ class TestSampleIterator:
 
         assert next(sample_iterator, None) is None
 
-    def test_int_count(self):
-        spec = SampleSpec(count=6,
-                          begin=0,
-                          end=10)
+    def test_int_num(self):
+        spec = SampleSpec(num=6,
+                          start=0,
+                          stop=10)
         sample_iterator = SampleIterator(specification=spec)
 
         expected = [0, 2, 4, 6, 8, 10]
@@ -708,17 +708,17 @@ class TestSampleIterator:
 
         assert next(sample_iterator, None) is None
 
-    def test_neither_count_nor_step(self):
+    def test_neither_num_nor_step(self):
         with pytest.raises(OptimizationFunctionError) as error_text:
-            SampleSpec(begin=0,
-                       end=10)
-        assert "Must specify one of 'step', 'count' or 'function'" in str(error_text.value)
+            SampleSpec(start=0,
+                       stop=10)
+        assert "Must specify one of 'step', 'num' or 'function'" in str(error_text.value)
 
     def test_float_step(self):
-        # Need to decide whether end should be exclusive
+        # Need to decide whether stop should be exclusive
         spec = SampleSpec(step=2.79,
-                          begin=0.65,
-                          end=10.25)
+                          start=0.65,
+                          stop=10.25)
         sample_iterator = SampleIterator(specification=spec)
 
         expected = [0.65, 3.44, 6.23, 9.02]
@@ -745,10 +745,10 @@ class TestSampleIterator:
         for i in range(5):
             assert np.allclose(next(sample_iterator), expected[i])
 
-    def test_function_with_count(self):
+    def test_function_with_num(self):
         fun = pnl.NormalDist(mean=5.0).function
         spec = SampleSpec(function=fun,
-                          count=4)
+                          num=4)
         sample_iterator = SampleIterator(specification=spec)
 
         expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967]
@@ -774,6 +774,6 @@ class TestSampleIterator:
 
         assert next(sample_iterator, None) is None
 
-        assert sample_iterator.begin == 1
-        assert sample_iterator.end == 7.8
-        assert sample_iterator.num_steps == len(sample_list)
+        assert sample_iterator.start == 1
+        assert sample_iterator.stop == 7.8
+        assert sample_iterator.num == len(sample_list)
