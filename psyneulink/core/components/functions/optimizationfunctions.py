@@ -23,10 +23,11 @@ Functions that return the sample of a variable yielding the optimized value of a
 '''
 
 import warnings
-
 import itertools
 import numpy as np
 import typecheck as tc
+
+from typing import Iterator
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.globals.context import ContextFlags
@@ -66,6 +67,14 @@ class OptimizationFunctionError(Exception):
 # FIX: allow SampleSpec to parse a list
 class SampleSpec():
     '''
+    SampleSpec(   \
+    begin=None,   \
+    end=None,     \
+    step=None,    \
+    count=None,   \
+    function=None \
+    )
+
     Specify equivalent of tuple for use by SampleIterator
 
     First three parameters operate like range (but allowing floats): begin, end, step
@@ -177,7 +186,6 @@ class SampleSpec():
         self.function = function
 
 
-from typing import Iterator
 class SampleIterator(Iterator):
     '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
     @tc.typecheck

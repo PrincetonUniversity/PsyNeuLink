@@ -15,32 +15,46 @@ Overview
 --------
 
 An OptimizationControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an `OptimizationFunction` to find
-an `control_allocation <ControlMechanism.control_allocation>` that maximizes the `Expected Value of Control (EVC)
-<OptimizationControlMechanism_EVC>` for a given `state <OptimizationControlMechanism_State>`. The `OptimizationFunction`
-uses the OptimizationControlMechanism's `evaluation_function` <OptimizationControlMechanism.evalutate_function>` to
-evaluate the `EVC <OptimizationControlMechanism_EVC>` for samples of `control_allocation
-<ControlMechanism.control_allocation>`, and then implements the one that yields the greatest EVC for the next
-execution of the `Composition` (or part of one) that the OptimizationControlMechanism controls.
+an optimal `control_allocation <ControlMechanism.control_allocation>` for a given `state
+<OptimizationControlMechanism_State>`. The `OptimizationFunction` uses the OptimizationControlMechanism's
+`evaluation_function` <OptimizationControlMechanism.evalutate_function>` to evaluate `control_allocation
+<ControlMechanism.control_allocation>` samples, and then implements the one that yield the best predicted result.
+The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinally
+the `net_outcome <ControlMechanism.net_outcome>` computed by the OptimizationControlMechanism for the `Composition`
+(or part of one) that it controls, and its `ObjectiveFunction` seeks to maximize this, which corresponds to
+maximizing the Expected Value of Control, as described below.
 
 .. _OptimizationControlMechanism_EVC:
 
 **Expected Value of Control**
 
-All OptimizationControlMechanisms compute the `Expected Value of Control (EVC)
-<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_ for a `control_allocation <ControlMechanism.control_allocation>`
---  a cost-benefit analysis that weighs the `costs <ControlMechanism.costs>` of the ControlSignal `values
-<ControlSignal.value>` specified by a `control_allocation <ControlMechanism.control_allocation>`
-against the `outcome <ControlMechanism.outcome>` expected to result from it.  The costs are computed based on the
-`cost_options <ControlSignal.cost_options>` specified for each of the OptimizationControlMechanism's `control_signals
-<ControlMechanism.control_signals>` and its `combine_costs <ControlMechanism.combine_costs>` function.  The EVC is
-determined by its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function (assigned to
-its `net_outcome <ControlMechanism.net_outcome>` attribute), which is computed for a given `state
-<OptimizationControlMechanism_State>` by the OptimizationControlMechanism's `evaluation_function
-<OptimizationControlMechanism.evalutation_function>`.
+The `net_outcome <ControlMechanism.net_outcome>` of an OptmizationControlMechanism, like any `ControlMechanism`
+is computed as the difference between the `outcome <ControlMechanism.outcome>` computed by its `objective_mechanism
+<ControlMechanism.objective_mechanism>` and the `costs <ControlMechanism.costs>` of its `control_signals
+<ControlMechanism.control_signals>` for a given `state <OptimizationControlMechanism_State>` (i.e.,
+set of `feature_values <OptimizationControlMechanism.feature_values>` and `control_allocation
+<ControlMechanism.control_allocation>`.  If the `outcome <ControlMechanism.outcome>` is configured to measure the
+value of processing (e.g., reward received, time taken to respond, or a combination of these, etc.),
+and the `OptimizationFunction` assigned as the OptimizationControlMechanism's `function
+<OptimizationControlMechanism.function>` is configured find the `control_allocation
+<ControlMechanism.control_allocation>` that maximizes its `net_outcome <ControlMechanism.net_outcome>`,
+then the OptimizationControlMechanism is said to be maximizing the `Expected Value of Control (EVC)
+<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_.  That is, it implements a cost-benefit analysis that
+weighs the `costs <ControlMechanism.costs>` of the ControlSignal `values <ControlSignal.value>` specified by a
+`control_allocation <ControlMechanism.control_allocation>` against the `outcome <ControlMechanism.outcome>` expected
+to result from it.  The costs are computed based on the `cost_options <ControlSignal.cost_options>` specified for
+each of the OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>` and its
+`combine_costs <ControlMechanism.combine_costs>` function.  The EVC is determined by its `compute_net_outcome
+<ControlMechanism.compute_net_outcome>` function (assigned to its `net_outcome <ControlMechanism.net_outcome>`
+attribute), which is computed for a given `state <OptimizationControlMechanism_State>` by the
+OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evalutation_function>`.
 
 COMMENT:
 The table `below <OptimizationControlMechanism_Examples>` lists different
 parameterizations of OptimizationControlMechanism that implement various models of EVC Optimization.
+
+### THROUGHOUT DOCUMENT, REWORD AS "optimizing control_allocation" RATHER THAN "maximizing" / "greatest"
+
 COMMENT
 
 .. _OptimizationControlMechanism_Agent_Representation_Types:
@@ -48,13 +62,13 @@ COMMENT
 **Agent Representation and Types of Optimization**
 
 The defining characteristic of an OptimizationControlMechanism is its `agent representation
-<OptimizationControlMechanism_Agent_Rep>`, that is used to determine the `EVC <OptimizationControlMechanism_EVC>` for a
-given `state <OptimizationControlMechanism_State>` and find the `control_allocation
-<ControlMechanism.control_allocation>` that maximizes this.  The `agent_rep <OptimizationControlMechanism.agent_rep>`
+<OptimizationControlMechanism_Agent_Rep>`, that is used to determine the `net_outcome <ControlMechanism.net_outcome>
+for a given `state <OptimizationControlMechanism_State>` and find the `control_allocation
+<ControlMechanism.control_allocation>` that optimizes this.  The `agent_rep <OptimizationControlMechanism.agent_rep>`
 can be either the `Composition` to which the OptimizationControlMechanism belongs (and controls) or another one that
 is used to estimate the EVC for that Composition.  This distinction corresponds closely to the
 distnction between *model-based* and *model-free* optimization in the `machine learning <HTML REF>`_ and `cognitive
-neuroscience <HTM REF>`_ literatures, as described below.
+neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
 
 .. _OptimizationControlMechanism_Model_Free_Model_Based:
 
@@ -67,10 +81,11 @@ one to which the OptimizationControlMechanism belongs (and for which it is the `
 In each `trial`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is given the chance to adapt, by adjusting its
 parameters in order to improve its prediction of the EVC for the Composition to which the OptimizationControlMechanism
 belongs (based on the `state <OptimizationControlMechanism_State>` and `net_outcome <ControlMechanism.net_outcome>` of
-the prior trial).  The agent_rep is then used to predict the `net_outcome <ControlMechanism.net_outcome>` of
-processing on the upcoming trial, based on the current or (expected) `feature_values
+the prior trial).  The `agent_rep <OptimizationControlMechanism.agent_rep>` is then used to predict the `net_outcome
+<ControlMechanism.net_outcome>` of processing on the upcoming trial, based on the current or (expected) `feature_values
 <OptimizationControlMechanism.feature_values>` for that trial, in order to find the `control_allocation
-<ControlMechanism.control_allocation>` that yields the greatest `EVC <OptimizationControlMechanism_EVC>` for that trial.
+<ControlMechanism.control_allocation>` that optimizes
+yields the greatest `EVC <OptimizationControlMechanism_EVC>` for that trial.
 
 .. _OptimizationControlMechanism_Model_Based:
 
