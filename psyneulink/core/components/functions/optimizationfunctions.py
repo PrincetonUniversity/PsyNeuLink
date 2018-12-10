@@ -182,7 +182,7 @@ class SampleIterator(Iterator):
     '''Return sample from a list, range, iterator, or function, as specified by sample_tuple in constructor.'''
     @tc.typecheck
     def __init__(self,
-                 specification:tc.any(list, np.ndarray, SampleSpec)):
+                 specification:tc.any(list, range, np.ndarray, SampleSpec)):
         '''Create SampleIterator from list or SampleSpec.
 
         If **specification** is a list, create iterator from it that is called by __next__.
@@ -228,6 +228,10 @@ class SampleIterator(Iterator):
 
         # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
+
+        if isinstance(specification, range):
+            specification = list(specification)
+
         if isinstance(specification, list):
             self.begin = specification[0]
             self.end = specification[-1]
