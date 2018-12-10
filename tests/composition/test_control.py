@@ -506,7 +506,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # Decision Mechanisms
         Decision = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=pnl.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(0.2645),
                 noise=(0.5),
