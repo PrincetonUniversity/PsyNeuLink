@@ -185,7 +185,7 @@ class SampleIterator(Iterator):
                  specification:tc.any(list, range, np.ndarray, SampleSpec)):
         '''Create SampleIterator from list or SampleSpec.
 
-        If **specification** is a list, create iterator from it that is called by __next__.
+        If **specification** is a list, range or array, create iterator from it that is called by __next__.
 
         If **specification** is a SampleSpec:
           - if step is specified, use begin, end and step or count to genereate an iterator from a list
