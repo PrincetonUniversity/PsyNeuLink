@@ -1,6 +1,6 @@
 import numpy
 
-from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator, BogaczEtAl
+from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -37,7 +37,7 @@ class TestInit:
 
         # Decision Mechanisms
         Decision = DDM(
-            function=BogaczEtAl(
+            function=DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(0.1654),
                 noise=(0.5),

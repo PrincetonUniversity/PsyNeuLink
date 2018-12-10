@@ -2113,19 +2113,19 @@ class Mechanism_Base(Mechanism):
                 self._update_output_states(execution_id=parse_execution_context(execution_context),
                                            context="REINITIALIZING")
 
-            elif self.integrator_function is None:
+            elif self.integrator_function is None or isinstance(self.integrator_function, type):
                 if hasattr(self, "integrator_mode"):
                     raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
-                                         "(It does not have an accumulator to reinitialize.) If this Mechanism "
+                                         "(It does not have an integrator to reinitialize.) If this Mechanism "
                                          "should be stateful, try setting the integrator_mode argument to True. "
                                          .format(self.name))
                 else:
                     raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
-                                         "(It does not have an accumulator to reinitialize).".format(self.name))
+                                         "(It does not have an integrator to reinitialize).".format(self.name))
 
             else:
                 raise MechanismError("Reinitializing {} is not allowed because its integrator_function is not an "
-                                     "Integrator type function, therefore the Mechanism does not have an accumulator to"
+                                     "Integrator type function, therefore the Mechanism does not have an integrator to"
                                      " reinitialize.".format(self.name))
         else:
             raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
@@ -2152,7 +2152,6 @@ class Mechanism_Base(Mechanism):
                 context=None,
                 bin_execute=False):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
-
 
         COMMENT:
             Update InputState(s) and parameter(s), call subclass _execute, update OutputState(s), and assign self.value
@@ -2308,7 +2307,7 @@ class Mechanism_Base(Mechanism):
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         if bin_execute:
-            e = pnlvm.MechExecution(self, execution_id)
+            e = pnlvm.MechExecution(self, [execution_id])
             value = e.execute(variable)
         else:
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed

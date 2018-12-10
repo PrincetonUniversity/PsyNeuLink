@@ -1,7 +1,8 @@
 
 import numpy as np
+import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.function as Function
-import psyneulink.core.components.functions.objectivefunctions
+import psyneulink.core.components.functions.objectivefunctions as Functions
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.keywords as kw
 import pytest
@@ -34,7 +35,7 @@ names = [
 @pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(variable, metric, normalize, expected, benchmark):
-    f = psyneulink.core.components.functions.objectivefunctions.Stability(default_variable=variable, metric=metric, normalize=normalize)
+    f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -46,8 +47,24 @@ def test_basic(variable, metric, normalize, expected, benchmark):
 @pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(variable, metric, normalize, expected, benchmark):
-    f = psyneulink.core.components.functions.objectivefunctions.Stability(default_variable=variable, metric=metric, normalize=normalize)
+    f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
-    res = benchmark(f.bin_function, variable)
+    e = pnlvm.execution.FuncExecution(f)
+    res = benchmark(e.execute, variable)
+    assert np.allclose(res, expected)
+    assert np.isscalar(res) or len(res) == 1
+
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.function
+@pytest.mark.stability_function
+@pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
+@pytest.mark.benchmark
+@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
+def test_ptx_cuda(variable, metric, normalize, expected, benchmark):
+    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
+    f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
+    e = pnlvm.execution.FuncExecution(f)
+    res = benchmark(e.cuda_execute, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1

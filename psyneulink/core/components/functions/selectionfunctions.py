@@ -112,11 +112,25 @@ class OneHot(SelectionFunction):
          prefs=None        \
          )
 
-    .. _OneHot:
-
     Return an array with one non-zero value.
 
-    The `mode <OneHot.mode>` parameter determines the nature of the non-zero value:
+    .. _OneHot:
+
+    `function <Selection.function>` returns an array the same length as the first item in `variable <OneHot.variable>`,
+    with all of its values zeroed except one as specified by `mode <OneHot.mode>`:
+
+        * *MAX_VAL*: element with the maximum signed value in first item of `variable <OneHot.variable>`;
+        ..
+        * *MAX_ABS_VAL*: element with the maximum absolute value;
+        ..
+        * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
+        ..
+        * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
+        ..
+        * *PROB*: probabilistically chosen element based on probabilities passed in second item of variable;
+        ..
+        * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
+
 
     Arguments
     ---------
@@ -154,13 +168,8 @@ class OneHot(SelectionFunction):
         1st item.
 
     mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
-        determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`:
-            * *MAX_VAL*: element with the maximum signed value in the original array;
-            * *MAX_ABS_VAL*: element with the maximum absolute value;
-            * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
-            * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
-            * *PROB*: probabilistically chosen element based on probabilities passed in second item of variable;
-            * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
+        determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`
+        (see `above <OneHot>` for options).
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -260,7 +269,6 @@ class OneHot(SelectionFunction):
                  params=None,
                  context=None):
         """
-        Return array of len(`variable <Linear.variable>`) with single non-zero value specified by `mode <OneHot.mode>`.
 
         Arguments
         ---------
@@ -278,6 +286,8 @@ class OneHot(SelectionFunction):
         -------
 
         array with single non-zero value : np.array
+            specified by `mode <OneHot.mode>`.
+
 
         """
 

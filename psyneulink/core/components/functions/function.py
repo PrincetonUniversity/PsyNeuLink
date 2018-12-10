@@ -829,18 +829,6 @@ class Function_Base(Function):
     def _get_param_initializer(self, execution_id):
         return pnlvm._tupleize(self._get_param_values(execution_id))
 
-    def bin_function(self,
-                     variable=None,
-                     execution_id=None,
-                     params=None,
-                     context=None):
-
-        # TODO: Port this to llvm
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        e = pnlvm.FuncExecution(self, execution_id)
-        return e.execute(variable)
-
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
 PROPENSITY = "PROPENSITY"

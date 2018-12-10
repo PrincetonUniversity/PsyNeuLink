@@ -108,3 +108,33 @@ def setup_vxm(ctx):
     # Return
     with builder.goto_block(outer_out_block):
         builder.ret_void()
+
+def setup_pnl_intrinsics(ctx):
+    module = ctx.module
+    # Setup types
+    single_intr_ty = ir.FunctionType(ctx.float_ty, [ctx.float_ty])
+    double_intr_ty = ir.FunctionType(ctx.float_ty, (ctx.float_ty, ctx.float_ty))
+
+    # Create function declarations
+    ir.Function(module, single_intr_ty, name="__pnl_builtin_exp")
+    ir.Function(module, single_intr_ty, name="__pnl_builtin_log")
+    ir.Function(module, double_intr_ty, name="__pnl_builtin_pow")
+
+def _generate_intrinsic_wrapper(module, name, ret, args):
+    intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
+
+    func_ty = ir.FunctionType(ret, args)
+    function = ir.Function(module, func_ty, name="__pnl_builtin_" + name)
+    function.attributes.add('alwaysinline')
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.ret(builder.call(intrinsic, function.args))
+
+def _generate_cpu_builtins_module(_float_ty):
+    """ Generate function wrappers for log, exp, and pow intrinsics. """
+    module = ir.Module(name="cpu_builtins")
+    for intrinsic in ('exp', 'log'):
+        _generate_intrinsic_wrapper(module, intrinsic, _float_ty, [_float_ty])
+
+    _generate_intrinsic_wrapper(module, "pow", _float_ty, [_float_ty, _float_ty])
+    return module
