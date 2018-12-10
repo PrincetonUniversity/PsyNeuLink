@@ -66,9 +66,9 @@ The defining characteristic of an OptimizationControlMechanism is its `agent rep
 for a given `state <OptimizationControlMechanism_State>` and find the `control_allocation
 <ControlMechanism.control_allocation>` that optimizes this.  The `agent_rep <OptimizationControlMechanism.agent_rep>`
 can be either the `Composition` to which the OptimizationControlMechanism belongs (and controls) or another one that
-is used to estimate the EVC for that Composition.  This distinction corresponds closely to the
-distnction between *model-based* and *model-free* optimization in the `machine learning <HTML REF>`_ and `cognitive
-neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
+is used to estimate the `net_outcome <ControlMechanism.net_outcome>` for that Composition.  This distinction
+corresponds closely to the distinction between *model-based* and *model-free* optimization in the `machine learning
+<HTML REF>`_ and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
 
 .. _OptimizationControlMechanism_Model_Free_Model_Based:
 
@@ -79,13 +79,13 @@ neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as describe
 This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` a Composition other than the
 one to which the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`).
 In each `trial`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is given the chance to adapt, by adjusting its
-parameters in order to improve its prediction of the EVC for the Composition to which the OptimizationControlMechanism
-belongs (based on the `state <OptimizationControlMechanism_State>` and `net_outcome <ControlMechanism.net_outcome>` of
+parameters in order to improve its prediction of the `net_outcome <ControlMechanism.net_outcome>` for the Composition
+(or part of one) that is controlled by the OptimizationControlMechanism (based on the `state
+<OptimizationControlMechanism_State>` and `net_outcome <ControlMechanism.net_outcome>` of
 the prior trial).  The `agent_rep <OptimizationControlMechanism.agent_rep>` is then used to predict the `net_outcome
-<ControlMechanism.net_outcome>` of processing on the upcoming trial, based on the current or (expected) `feature_values
-<OptimizationControlMechanism.feature_values>` for that trial, in order to find the `control_allocation
-<ControlMechanism.control_allocation>` that optimizes
-yields the greatest `EVC <OptimizationControlMechanism_EVC>` for that trial.
+<ControlMechanism.net_outcome>` for `control_allocation <ControlMechanism.control_allocation>` samples to find the one
+that yields the best predicted `net_outcome <ControlMechanism.net_outcome>` of processing on the upcoming trial,
+based on the current or (expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial.
 
 .. _OptimizationControlMechanism_Model_Based:
 
@@ -93,10 +93,9 @@ yields the greatest `EVC <OptimizationControlMechanism_EVC>` for that trial.
 
 This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition to which
 the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`). On each
-`trial`, that Composition itself is used to simulate the `outcome <ControlMechanism.outcome>` of processing on the
-upcoming trial, based on the current or (expected) `feature_values <OptimizationControlMechanism.feature_values>`
-for that trial, in order to find the <ControlMechanism.control_allocation>` that yields the greatest `EVC
-<OptimizationControlMechanism_EVC>` for that trial.
+`trial`, that Composition itself is used to simulate processing on the upcoming trial, based on the current or
+(expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial, in order to find the
+<ControlMechanism.control_allocation>` that yields the best net_outcome <ControlMechanism.net_outcome>` for that trial.
 
 .. _OptimizationControlMechanism_Creation:
 
@@ -107,10 +106,9 @@ An OptimizationControlMechanism is created in the same was as any `ControlMechan
 The following arguments of its constructor are specific to the OptimizationControlMechanism:
 
 * **features** -- takes the place of the standard **input_states** argument in the constructor for a
-  Mechanism`, and specifies the values used by the OptimizationControlMechanism, together with a
-  `control_allocation <ControlMechanism.control_allocation>`, to calculate an `EVC
-  <OptimizationControlMechanism_EVC>`.  Features can be specified using any of the following, singly or combined in a
-  list:
+  Mechanism`, and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
+  <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  Features can be
+  specified using any of the following, singly or combined in a list:
 
   * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
     InputStates of the same shapes as those listed are created on the ModelFreeOptimizationControlMechanism,
@@ -125,7 +123,7 @@ The following arguments of its constructor are specific to the OptimizationContr
 
   Features can also be added to an existing OptimizationControlMechanism using its `add_features` method.  If the
   **features** argument is not specified, then the `input <Composition.input_values>` to the `Composition` on the last
-  trial of its execution is used to calculate the `EVC <OptimizationControlMechanism_EVC>` for the upcoming trial.
+  trial of its execution is used to predict the `net_outcome <ControlMechanism.net_outcome>` for the upcoming trial.
 
 .. _OptimizationControlMechanism_Feature_Function:
 
@@ -136,8 +134,9 @@ The following arguments of its constructor are specific to the OptimizationContr
   trials.
 ..
 * **agent_rep** -- specifies the `Composition` used by the OptimizationControlMechanism's `evaluation_function
-  <OptimizationControlMechanism.evaluation_function>` to calculate the `EVC <OptimizationControlMechanism_EVC>`
-  (see `below <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
+  <OptimizationControlMechanism.evaluation_function>` to calculate the predicted `net_outcome
+  <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` (see `below
+  <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
   `Composition` to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
   is assigned as that Composition's `controller <Composition.controller>`, implementing `model-based
   <OptimizationControlMechanism_Model_Based>` optimization.  If that Composition already has a `controller
@@ -166,8 +165,8 @@ the result to the OptimizationControlMechanism, which it places in its `outcome 
 attribute.  This is used by its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function, together with
 the `costs <ControlMechanism.costs>` of its `control_signals <ControlMechanism.control_signals>`, to compute the
 `net_outcome <ControlMechanism.net_outcome>` of processing for a given `state <OptimizationControlMechanism_State>`,
-and by the `evaluation` method of the OptimizationControlMechanism's `agent_rep
-<OptimizationControlMechanism.agent_rep>` to carry out the `EVC <OptimizationControlMechanism_EVC>` calculation.
+and that is returned by `evaluation` method of the OptimizationControlMechanism's `agent_rep
+<OptimizationControlMechanism.agent_rep>`.
 
 .. note::
     The `objective_mechanism <ControlMechanism.objective_mechanism>` is distinct from, and should not be
@@ -179,7 +178,7 @@ and by the `evaluation` method of the OptimizationControlMechanism's `agent_rep
     <OptimizationControlMechanism.evaluation_function>`, which is assigned as the
     `objective_function` parameter of its `function <OptimizationControlMechanism.function>`, takes the `costs
     <ControlMechanism.costs>` of the OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>`
-    into account when calculating its `net_outcome` and corresponding `EVC <OptimizationControlMechanism_EVC>`.
+    into account when calculating the `net_outcome` that it returns as its result.
 
 .. _OptimizationControlMechanism_Features:
 
@@ -194,11 +193,11 @@ different values can be specified, as can a `feature_function <OptimizationContr
 transforms these.  For OptimizationControlMechanisms that implement `model-free
 <OptimizationControlMechanism_Model_Free>` optimization, its `feature_values
 <OptimizationControlMechanism.feature_values>` are used by its `evaluation_function
-<OptimizationControlMechanism.evaluation_function>` to predict the `EVC <OptimizationControlMechanism_EVC>` for a given
-`control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that implement
+<OptimizationControlMechanism.evaluation_function>` to predict the `net_outcome <ControlMechanism.net_outcome>` for a
+given `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that implement
 `model-based <OptimizationControlMechanism_Model_Based>` optimization, the `feature_values
 <OptimizationControlMechanism.feature_values>` are used as the Composition's `input <Composition.input_values>` when
-it is executed to evaluate the `EVC <OptimizationControlMechanism_EVC>` for a given
+it is executed to evaluate the `net_outcome <ControlMechanism.net_outcome>` for a given
 `control_allocation<ControlMechanism.control_allocation>`.
 
 Features can be of two types:
@@ -237,9 +236,10 @@ The defining feature of an OptimizationControlMechanism is its agent representat
 argument of its constructor and assigned to its `agent_rep <OptimizationControlMechanism.agent_rep>` attribute.
 This designates a representation of the `Composition` (or parts of one) that the OptimizationControlMechanism controls,
 that is used to evaluate sample `control_allocations <ControlMechanism.control_allocation>` in order to find the one
-that optimizes the `EVC <OptimizationControlMechanism_EVC>`. The `agent_rep  <OptimizationControlMechanism.agent_rep>`
-is always itself a `Composition`, that can be either the same one that the OptimizationControlMechanism controls or
-another one that is used to estimate the EVC for that Composition (see `above
+that optimizes the `net_outcome <ControlMechanism.net_outcome>`. The `agent_rep
+<OptimizationControlMechanism.agent_rep>` is always itself a `Composition`, that can be either the same one that the
+OptimizationControlMechanism controls or another one that is used to estimate the `net_outcome
+<ControlMechanism.net_outcome>` for that Composition (see `above
 <OptimizationControlMechanism_Agent_Representation_Types>`).  If it is another Composition, it must meet the following
 requirem,ents:
 
@@ -259,8 +259,8 @@ requirem,ents:
 ^^^^^^^^^^
 
 The `function <OptimizationControlMechanism.function>` of an OptimizationControlMechanism is used to find the
-`control_allocation <ControlMechanism.control_allocation>` that yields the greatest `EVC
-<OptimizationControlMechanism_EVC>` for the current (or expected) `features <OptimizationControlMechanism_State>`.
+`control_allocation <ControlMechanism.control_allocation>` that optimizes the `net_outcome
+<ControlMechanism.net_outcome>` for the current (or expected) `features <OptimizationControlMechanism_State>`.
 It is generally an `OptimizationFunction`, which in turn has `objective_function
 <OptimizationFunction.objective_function>`, `search_function <OptimizationFunction.search_function>`
 and `search_termination_function <OptimizationFunction.search_termination_function>` methods, as well as a `search_space
@@ -288,20 +288,23 @@ OptimizationControlMechanism, however it must meet the following requirements:
     COMMENT
 
 If **function** argument is not specified, the `GridSearch` `OptimiziationFunction` is assigned as the default,
-which evaluates the `EVC <OptimizationControlMechanism_EVC>` using the OptimizationControlMechanism's
+which evaluates the `net_outcome <ControlMechanism.net_outcome>` using the OptimizationControlMechanism's
 `control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_spaces>` as its
-`search_space <OptimizationFunction.search_space>`.
+`search_space <OptimizationFunction.search_space>`, and returns the `control_allocation
+<ControlMechanism.control_allocation>` that yields the greatest `net_outcome <ControlMechanism.net_outcome>`,
+thus implementing a computation of `EVC <OptimizationControlMechanism_EVC>`.
 
 COMMENT:
 .. _OptimizationControlMechanism_Search_Functions:
 
 *Search Function, Search Space and Search Termination Function*
 
-The OptimizationControlMechanism may also implement `search_function <OptimizationControlMechanism.search_function>`
-and `search_termination_function <OptimizationControlMechanism.search_termination_function>` methods, as well as a
-`control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>` attribute, that will
-be passed as parameters to the `OptimizationFunction` when it is constructed.  These can be specified in the
-constructor for an `OptimizationFunction` assigned as the **function** argument of the
+Subclasses of OptimizationControlMechanism may implement their own `search_function
+<OptimizationControlMechanism.search_function>` and `search_termination_function
+<OptimizationControlMechanism.search_termination_function>` methods, as well as a
+`control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>` attribute, that are
+passed as parameters to the `OptimizationFunction` when it is constructed.  These can be specified in the
+constructor for an `OptimizationFunction` assigned as the **function** argument in the
 OptimizationControlMechanism's constructor, as long as they are compatible with the requirements of
 the OptimizationFunction and OptimizationControlMechanism.  If they are not specified, then defaults specified
 either by the OptimizationControlMechanism or the OptimizationFunction are used.
@@ -315,12 +318,12 @@ Execution
 When an OptimizationControlMechanism is executed, it carries out the following steps:
 
   * Calls `adapt` method of its `agent_rep <OptimizationControlMechanism.agent_rep>` to give that a chance to
-    modify its parameters in order to better predict the `EVC <OptimizationControlMechanism_EVC>` for a given `state
+    modify its parameters in order to better predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
     <OptimizationControlMechanism_State>`, based the state and `net_outcome <ControlMechanism.net_outcome>` of the
     previous trial.
   ..
   * Calls `function <OptimizationControlMechanism.function>` to find the `control_allocation
-    <ControlMechanism.control_allocation>` that yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The
+    <ControlMechanism.control_allocation>` that optimizes `net_outcome <ControlMechanism.net_outcome>`.  The
     way in which it searches for the best `control_allocation <ControlMechanism.control_allocation>` is determined by
     the type of `OptimzationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the way
     that it evaluates each one is determined by the OptimizationControlMechanism's `evaluation_function
@@ -328,31 +331,18 @@ When an OptimizationControlMechanism is executed, it carries out the following s
 
     * The `function <OptimizationControlMechanism.function>` selects a sample `control_allocation
       <ControlMechanism.control_allocation>` (using its `search_function <OptimizationFunction.search_function>`
-      to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the EVC for that
-      `control_allocation <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's
-      `evaluation_function` <OptimizationControlMechanism.evalutation_function>` and the current `feature_values
+      to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the predicted
+      `net_outcome <ControlMechanism.net_outcome>` for that `control_allocation
+      <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's `evaluation_function`
+      <OptimizationControlMechanism.evalutation_function>` and the current `feature_values
       <OptimizationControlMechanism.feature_values>`.
     ..
-    * It continues to evaluate the `EVC <OptimizationControlMechanism_EVC>` for `control_allocation
+    * It continues to evaluate the `net_outcome <ControlMechanism.net_outcome>` for `control_allocation
       <ControlMechanism.control_allocation>` samples until its `search_termination_function
       <OptimizationFunction.search_termination_function>` returns `True`.
-
-    COMMENT
-    * The `function <OptimizationControlMechanism.function>` selects a sample `control_allocation
-      <ControlMechanism.control_allocation>` (usually using `search_function
-      <OptimizationControlMechanism.search_function>` to select one from `control_allocation_search_space
-      <OptimizationControlMechanism.control_allocation_search_space>`), and evaluates the EVC for that
-      `control_allocation <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's
-      `evaluation_function` <OptimizationControlMechanism.evalutate_function>` and the current `feature_values
-      <OptimizationControlMechanism.feature_values>`.
-
-    * It continues to evaluate the `EVC <OptimizationControlMechanism_EVC>` for `control_allocation
-      <ControlMechanism.control_allocation>` samples until the `search_termination_function
-      <OptimizationControlMechanism.search_termination_function>` returns `True`.
-    COMMENT
     ..
-    * Finally, it implements the `control_allocation <ControlMechanism.control_allocation>` that yielded the greates
-      `EVC <OptimizationControlMechanism_EVC>`.  This is used by the OptimizationControlMechanism's `control_signals
+    * Finally, it implements the `control_allocation <ControlMechanism.control_allocation>` that yielded the optimal
+      `net_outcome <ControlMechanism.net_outcome>`.  This is used by the OptimizationControlMechanism's `control_signals
       <ControlMechanism.control_signals>` to compute their `values <ControlSignal.value>` which, in turn, are used by
       their `ControlProjections <ControlProjection>` to modulate the parameters they control when the Composition is
       next executed.
@@ -485,7 +475,7 @@ class OptimizationControlMechanism(ControlMechanism):
     features : Mechanism, OutputState, Projection, dict, or list containing any of these : default
     {SHADOW_EXTERNAL_INPUTS : ALL}
         specifies Components, the values of which are assigned to `feature_values
-        <OptimizationControlMechanism.feature_values>` and used to estimate `EVC <OptimizationControlMechanism_EVC>`.
+        <OptimizationControlMechanism.feature_values>` and used to predict `net_outcome <ControlMechanism.net_outcome>`.
         Any `InputState specification <InputState_Specification>` can be used that resolves to an `OutputState` that
         projects to the InputState. In addition, a dictionary with a *SHADOW_EXTERNAL_INPUTS* entry can be used to
         shadow inputs to the Composition's `ORIGIN` Mechanism(s) (see `above <OptimizationControlMechanism_Creation>`
@@ -497,11 +487,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep : Composition  : default Composition to which the OptimizationControlMechanism belongs
         specifies the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
-        to determine the `EVC <OptimizationControlMechanism_EVC>`.  If a Composition other than the default is assigned,
+        to predictd the `net_outcome <ControlMechanism.net_outcome>` for a given `state
+        <OptimizationControlMechanism_State>`.  If a Composition other than the default is assigned,
         it must be suitably configured (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details).
         If the default is used, the OptimizationControlMechanism is assigned as the Composition's `controller
         <Composition.controller>` unless one has already been assigned, in which case the
-        OptimizationControlMechanismit is disabled
+        OptimizationControlMechanismit is disabled.
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
@@ -516,9 +507,9 @@ class OptimizationControlMechanism(ControlMechanism):
         `search_termination_function <OptimizationFunction.search_termination_function>` parameter, unless that is
         specified in a constructor for `function <OptimizationControlMechanism.function>`.  It must take as its
         arguments an array with the same shape as `control_allocation <ControlMechanism.control_allocation>` and two
-        integers (the first representing the `EVC <OptimizationControlMechanism_EVC>` value for the current
+        integers (the first representing the `net_outcome <ControlMechanism.net_outcome>` for the current
         `control_allocation <ControlMechanism.control_allocation>`, and the second the current iteration of the
-        `optimization process <OptimizationFunction_Process>`;  it must return `True` or `False`.
+        `optimization process <OptimizationFunction_Process>`);  it must return `True` or `False`.
 
     search_space : list or ndarray
         specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
@@ -528,8 +519,8 @@ class OptimizationControlMechanism(ControlMechanism):
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
         must take as its sole argument an array with the same shape as `control_allocation
-        <ControlMechanism.control_allocation>`, and return a similar array (see `Primary Function
-        <OptimizationControlMechanism>` for additional details).
+        <ControlMechanism.control_allocation>`, and return a similar array (see `Function
+        <OptimizationControlMechanism_Function>` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
@@ -553,47 +544,28 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep : Composition
         determines the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
-        to determine the `EVC <OptimizationControlMechanism_EVC>` (see `above <OptimizationControlMechanism_Agent_Rep>`
-        for additional details).
+        to predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
+        <OptimizationControlMechanism_State>` (see `above <OptimizationControlMechanism_Agent_Rep>`for additional
+        details).
 
     function : OptimizationFunction, function or method
         takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer),
         uses its `search_function <OptimizationFunction.search_function>` to select samples of `control_allocation
         <ControlMechanism.control_allocation>` from its `search_space <OptimizationFunction.search_space>`,
         evaluates these using its `evaluation_function <OptimizationControlMechanism.evaluation_function>`, and returns
-        the one that yields the greatest `EVC <OptimizationControlMechanism_EVC>`  (see `Primary Function
+        the one that yields the optimal `net_outcome <ControlMechanism.net_outcome>` (see `Function
         <OptimizationControlMechanism_Function>` for additional details).
 
     evaluation_function : function or method
-        returns `EVC <OptimizationControlMechanism_EVC>` for a given state (i.e., combination of `feature_values
-        <OptimizationControlMechanism.feature_values>` and `control_allocation <ControlMechanism.control_allocation>`.
-        It is assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of `function
+        returns `net_outcome <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>`
+        (i.e., combination of `feature_values <OptimizationControlMechanism.feature_values>` and `control_allocation
+        <ControlMechanism.control_allocation>`. It is assigned as the `objective_function
+        <OptimizationFunction.objective_function>` parameter of `function
         <OptimizationControlMechanism.function>`, and calls the `evaluate` method of the OptimizationControlMechanism's
         `agent_rep <OptimizationControlMechanism.agent_rep>` with a `control_allocation
         <ControlMechanism.control_allocation>`, the OptimizationControlMechanism's `num_estimates
         <OptimizationControlMechanism.num_estimates>` attribute, and the current `feature_values
         <OptimizationControlMechanism.feature_values>`.
-
-    COMMENT:
-    evaluation_function : function or method
-        specifies the function used to evaluate the `EVC <OptimizationControlMechanism_EVC>` for a given
-        `control_allocation <ControlMechanism.control_allocation>`. It is assigned as the `objective_function
-        <OptimizationFunction.objective_function>` parameter of `function  <OptimizationControlMechanism.function>`,
-        unless that is specified in the constructor for an  OptimizationFunction assigned to the **function**
-        argument of the OptimizationControlMechanism's constructor.  Often it is assigned directy to the
-        OptimizationControlMechanism's `compute_EVC <OptimizationControlMechanism.compute_EVC>` method;  in some
-        cases it may implement additional operations, but should always call `compute_EVC
-        <OptimizationControlMechanism.compute_EVC>`. A custom function can be assigned, but it must take as its
-        first argument an array with the same shape as the OptimizationControlMechanism's `control_allocation
-        <ControlMechanism.control_allocation>`, and return the following four values: an array containing the
-        `control_allocation <ControlMechanism.control_allocation>` that generated the optimal `EVC
-        <OptimizationControlMechanism_EVC>`; an array containing that EVC value;  a list containing each
-        `control_allocation <ControlMechanism.control_allocation>` sampled if `function
-        <OptimizationControlMechanism.function>` has a `save_samples <OptimizationFunction.save_samples>` attribute
-        and it is `True`, otherwise it should return an empty list; and a list containing the EVC values for each
-        `control_allocation <ControlMechanism.control_allocation>` sampled if the function has a `save_values
-        <OptimizationFunction.save_values>` attribute and it is `True`, otherwise it should return an empty list.
-    COMMENT
 
     COMMENT:
     search_function : function or method
@@ -623,9 +595,10 @@ class OptimizationControlMechanism(ControlMechanism):
         is `True`;  otherwise list is empty.
 
     saved_values : list
-        contains values of EVC associated with all samples of `control_allocation <ControlMechanism.control_allocation>`
-        evaluated by by `function <OptimizationControlMechanism.function>` if its `save_values
-        <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
+        contains values of `net_outcome <ControlMechanism.net_outcome>` associated with all samples of
+        `control_allocation <ControlMechanism.control_allocation>` evaluated by by `function
+        <OptimizationControlMechanism.function>` if its `save_values <OptimizationFunction.save_samples>` parameter
+        is `True`;  otherwise list is empty.
 
     name : str
         name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -845,14 +818,13 @@ class OptimizationControlMechanism(ControlMechanism):
             if not 'has no attribute \'adapt\'' in e.args[0]:
                 raise AttributeError(e.args[0])
 
-        # Get control_allocation that optmizes EVC using OptimizationControlMechanism's function
+        # Get control_allocation that optmizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        optimal_control_allocation, optimal_EVC, saved_samples, saved_values = super(ControlMechanism, self)._execute(
-            variable=control_allocation,
-            execution_id=execution_id,
-            runtime_params=runtime_params,
-            context=context
-        )
+        optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
+                                                super(ControlMechanism,self)._execute(variable=control_allocation,
+                                                                                      execution_id=execution_id,
+                                                                                      runtime_params=runtime_params,
+                                                                                      context=context)
 
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.value),1))
 
@@ -879,7 +851,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return sim_execution_id
 
     def evaluation_function(self, control_allocation, execution_id=None):
-        '''Compute `EVC <OptimizationControlMechanism_EVC>` for current set of `feature_values
+        '''Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
 
@@ -888,7 +860,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute` method.
 
-        Returns a scalar that is the predicted `EVC <OptimizationControlMechanism_EVC>` (`net_outcome
+        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>` (`net_outcome
         <ControlMechanism.net_outcome>`) for the current `feature_values <OptimizationControlMechanism.feature_values>`
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
