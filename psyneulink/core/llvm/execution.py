@@ -242,15 +242,28 @@ class CompExecution(CUDAExecution):
 
     def _get_run_input_struct(self, inputs, num_input_sets):
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        run_inputs = []
-        # Extract inputs for each trial
-        for i in range(num_input_sets):
-            run_inputs.append([])
-            for m in origins:
-                run_inputs[i] += [[v] for v in inputs[m][i]]
-
         input_type = self._composition._get_bin_run().byref_arg_types[3]
         c_input = input_type * num_input_sets
+        if len(self._execution_ids) > 1:
+            c_input = c_input * len(self._execution_ids)
+            run_inputs = []
+            for inp in inputs:
+                run_inps = []
+                # Extract inputs for each trial
+                for i in range(num_input_sets):
+                    run_inps.append([])
+                    for m in origins:
+                        run_inps[i] += [[v] for v in inp[m][i]]
+                run_inputs.append(run_inps)
+
+        else:
+            run_inputs = []
+            # Extract inputs for each trial
+            for i in range(num_input_sets):
+                run_inputs.append([])
+                for m in origins:
+                    run_inputs[i] += [[v] for v in inputs[m][i]]
+
         return c_input(*_tupleize(run_inputs))
 
     def freeze_values(self):
@@ -323,15 +336,19 @@ class CompExecution(CUDAExecution):
 
         # Create output buffer
         output_type = (bin_run.byref_arg_types[4] * runs)
+        if len(self._execution_ids) > 1:
+            output_type = output_type * len(self._execution_ids)
         output_size = ctypes.sizeof(output_type)
         data_out  = jit_engine.pycuda.driver.mem_alloc(output_size)
 
-        runs_count = jit_engine.pycuda.driver.In(np.int32(runs))
-        input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
+        runs_count_data = [runs for _ in self._execution_ids]
+        runs_count = jit_engine.pycuda.driver.In(np.array(runs_count_data, dtype=np.int32))
+        input_count_data = [num_input_sets for _ in self._execution_ids]
+        input_count = jit_engine.pycuda.driver.In(np.array(input_count_data, dtype=np.int32))
 
         bin_run.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                           self._cuda_data_struct, data_in, data_out, runs_count,
-                          input_count)
+                          input_count, threads=len(self._execution_ids))
 
         # Copy the data struct from the device
         out_buf = bytearray(output_size)
