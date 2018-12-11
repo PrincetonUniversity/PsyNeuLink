@@ -286,6 +286,47 @@ class KohonenLearningMechanism(LearningMechanism):
     learning_timing = LearningTiming.EXECUTION_PHASE
 
     class Params(LearningMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <KohonenLearningMechanism.function>`
+
+                    :default value: `Hebbian`
+                    :type: `Function`
+
+                learning_rate
+                    see `learning_rate <KohonenLearningMechanism.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                learning_timing
+                    see `learning_timing <KohonenLearningMechanism.learning_timing>`
+
+                    :default value: LearningTiming.EXECUTION_PHASE
+                    :type: `LearningTiming`
+
+                learning_type
+                    see `learning_type <KohonenLearningMechanism.learning_type>`
+
+                    :default value: LearningType.UNSUPERVISED
+                    :type: `LearningType`
+
+                matrix
+                    see `matrix <KohonenLearningMechanism.matrix>`
+
+                    :default value: None
+                    :type:
+
+                modulation
+                    see `modulation <KohonenLearningMechanism.modulation>`
+
+                    :default value: ModulationParam.ADDITIVE
+                    :type: `ModulationParam`
+
+        """
         function = Param(Hebbian, stateful=False, loggable=False)
 
         matrix = Param(None, modulable=True)

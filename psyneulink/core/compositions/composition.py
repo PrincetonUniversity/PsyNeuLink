@@ -418,6 +418,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     componentType = 'Composition'
 
     class Params(Parameters):
+        """
+            Attributes
+            ----------
+
+                results
+                    see `results <Composition.results>`
+
+                    :default value: []
+                    :type: list
+
+                simulation_results
+                    see `simulation_results <Composition.simulation_results>`
+
+                    :default value: []
+                    :type: list
+
+        """
         results = Param([], loggable=False)
         simulation_results = Param([], loggable=False)
 

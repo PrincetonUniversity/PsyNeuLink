@@ -363,6 +363,35 @@ class KohonenMechanism(TransferMechanism):
     componentType = KOHONEN_MECHANISM
 
     class Params(TransferMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                enable_learning
+                    see `enable_learning <KohonenMechanism.enable_learning>`
+
+                    :default value: True
+                    :type: bool
+
+                learning_function
+                    see `learning_function <KohonenMechanism.learning_function>`
+
+                    :default value: `Kohonen`(distance_function=gaussian, learning_rate=0.05)
+                    :type: `Function`
+
+                learning_rate
+                    see `learning_rate <KohonenMechanism.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                matrix
+                    see `matrix <KohonenMechanism.matrix>`
+
+                    :default value: `AUTO_ASSIGN_MATRIX`
+                    :type: str
+
+        """
         learning_function = Param(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
 
         learning_rate = Param(None, modulable=True)

@@ -604,6 +604,18 @@ class Function_Base(Function):
     variableClassDefault_locked = False
 
     class Params(Function.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Function_Base.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = Param(np.array([0]), read_only=True)
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
@@ -1075,6 +1087,18 @@ class EVCAuxiliaryFunction(Function_Base):
     componentType = kwEVCAuxFunctionType
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Function_Base.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = None
 
     classPreferences = {

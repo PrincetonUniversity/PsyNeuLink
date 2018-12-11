@@ -812,6 +812,27 @@ class Component(object, metaclass=ComponentsMeta):
     componentType = None
 
     class Params(Parameters):
+        """
+            The `Parameters` that are associated with all `Components`
+
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Component.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <Component.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)
         context = Param(None, user=False)

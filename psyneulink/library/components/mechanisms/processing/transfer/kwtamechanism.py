@@ -499,6 +499,47 @@ class KWTAMechanism(RecurrentTransferMechanism):
     componentType = KWTA_MECHANISM
 
     class Params(RecurrentTransferMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                average_based
+                    see `average_based <KWTAMechanism.average_based>`
+
+                    :default value: False
+                    :type: bool
+
+                function
+                    see `function <KWTAMechanism.function>`
+
+                    :default value: `Logistic`
+                    :type: `Function`
+
+                inhibition_only
+                    see `inhibition_only <KWTAMechanism.inhibition_only>`
+
+                    :default value: True
+                    :type: bool
+
+                k_value
+                    see `k_value <KWTAMechanism.k_value>`
+
+                    :default value: 0.5
+                    :type: float
+
+                ratio
+                    see `ratio <KWTAMechanism.ratio>`
+
+                    :default value: 0.5
+                    :type: float
+
+                threshold
+                    see `threshold <KWTAMechanism.threshold>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         function = Param(Logistic, stateful=False, loggable=False)
         k_value = Param(0.5, modulable=True)
         threshold = Param(0.0, modulable=True)

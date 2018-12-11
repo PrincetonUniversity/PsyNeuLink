@@ -626,6 +626,59 @@ class OptimizationControlMechanism(ControlMechanism):
 
     # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                agent_rep
+                    see `agent_rep <OptimizationControlMechanism.agent_rep>`
+
+                    :default value: None
+                    :type:
+
+                control_allocation_search_space
+                    see `control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>`
+
+                    :default value: None
+                    :type:
+
+                feature_function
+                    see `feature_function <OptimizationControlMechanism.feature_function>`
+
+                    :default value: None
+                    :type:
+
+                features
+                    see `features <OptimizationControlMechanism.features>`
+
+                    :default value: None
+                    :type:
+
+                function
+                    see `function <OptimizationControlMechanism.function>`
+
+                    :default value: None
+                    :type:
+
+                num_estimates
+                    see `num_estimates <OptimizationControlMechanism.num_estimates>`
+
+                    :default value: 1
+                    :type: int
+
+                search_function
+                    see `search_function <OptimizationControlMechanism.search_function>`
+
+                    :default value: None
+                    :type:
+
+                search_termination_function
+                    see `search_termination_function <OptimizationControlMechanism.search_termination_function>`
+
+                    :default value: None
+                    :type:
+
+        """
         function = Param(None, stateful=False, loggable=False)
         feature_function = Param(None, stateful=False, loggable=False)
         search_function = Param(None, stateful=False, loggable=False)

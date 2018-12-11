@@ -751,6 +751,97 @@ class EVCControlMechanism(ControlMechanism):
     #     kp<pref>: <setting>...}
 
     class Params(ControlMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                EVC_max
+                    see `EVC_max <EVCControlMechanism.EVC_max>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                EVC_max_policy
+                    see `EVC_max_policy <EVCControlMechanism.EVC_max_policy>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                EVC_max_state_values
+                    see `EVC_max_state_values <EVCControlMechanism.EVC_max_state_values>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                EVC_policies
+                    see `EVC_policies <EVCControlMechanism.EVC_policies>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                EVC_values
+                    see `EVC_values <EVCControlMechanism.EVC_values>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                combine_outcome_and_cost_function
+                    see `combine_outcome_and_cost_function <EVCControlMechanism.combine_outcome_and_cost_function>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+                control_signal_costs
+                    see `control_signal_costs <EVCControlMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                control_signal_search_space
+                    see `control_signal_search_space <EVCControlMechanism.control_signal_search_space>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                cost_function
+                    see `cost_function <EVCControlMechanism.cost_function>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+                function
+                    see `function <EVCControlMechanism.function>`
+
+                    :default value: `ControlSignalGridSearch`
+                    :type: `Function`
+
+                predicted_input
+                    see `predicted_input <EVCControlMechanism.predicted_input>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                save_all_values_and_policies
+                    see `save_all_values_and_policies <EVCControlMechanism.save_all_values_and_policies>`
+
+                    :default value: False
+                    :type: bool
+
+                value_function
+                    see `value_function <EVCControlMechanism.value_function>`
+
+                    :default value: `ValueFunction`
+                    :type: `Function`
+
+        """
         function = Param(ControlSignalGridSearch, stateful=False, loggable=False)
         value_function = Param(ValueFunction, stateful=False, loggable=False)
         cost_function = Param(LinearCombination, stateful=False, loggable=False)

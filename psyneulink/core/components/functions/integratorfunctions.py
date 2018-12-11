@@ -195,6 +195,47 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     componentName = INTEGRATOR_FUNCTION
 
     class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         noise = Param(0.0, modulable=True)
         rate = Param(1.0, modulable=True)
         previous_value = np.array([0])
@@ -697,6 +738,47 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
     additive_param = OFFSET
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -970,6 +1052,47 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     additive_param = OFFSET
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         decay = Param(1.0, modulable=True)
         rest = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1229,6 +1352,47 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
     componentName = CONSTANT_INTEGRATOR_FUNCTION
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         rate = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Param(0.0, modulable=True)
@@ -1454,6 +1618,47 @@ class Buffer(Integrator):  # ---------------------------------------------------
     componentName = BUFFER_FUNCTION
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True)
         history = None
@@ -1732,6 +1937,47 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     })
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -2104,6 +2350,47 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
     additive_param = OFFSET
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         threshold = Param(100.0, modulable=True)
@@ -2362,6 +2649,47 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
     additive_param = OFFSET
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(1.0, modulable=True)
@@ -2875,6 +3203,47 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     componentName = FHN_INTEGRATOR_FUNCTION
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         variable = Param(np.array([1.0]), read_only=True)
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -3717,6 +4086,47 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         increment = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -3971,6 +4381,47 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
     componentName = LCAMechanism_INTEGRATOR_FUNCTION
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(0.1, modulable=True)
@@ -4224,6 +4675,47 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
     additive_param = OFFSET
 
     class Params(Integrator.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         short_term_gain = Param(1.0, modulable=True)
@@ -4642,6 +5134,47 @@ class DriftDiffusionAnalytical(IntegratorFunction):  # -------------------------
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         drift_rate = Param(1.0, modulable=True)
         starting_point = Param(0.0, modulable=True)
         threshold = Param(1.0, modulable=True)
@@ -5116,6 +5649,47 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         drift_rate = Param(1.0, modulable=True)
         starting_point = Param(0.0, modulable=True)
         threshold = Param(1.0, modulable=True)

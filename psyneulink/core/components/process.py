@@ -824,6 +824,25 @@ class Process(Process_Base):
     # Use inputValueSystemDefault as default input to process
 
     class Params(Process_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ProcessInputState.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <ProcessInputState.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = None
         input = None
 
@@ -2669,6 +2688,25 @@ class ProcessInputState(OutputState):
 
     """
     class Params(OutputState.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ProcessInputState.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <ProcessInputState.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         # just grabs input from the process
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)

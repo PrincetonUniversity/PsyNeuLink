@@ -418,6 +418,49 @@ class LearningProjection(ModulatoryProjection_Base):
         receiver=[PARAMETER_STATE]
 
     class Params(ModulatoryProjection_Base.Params):
+        """
+            Attributes
+            ----------
+
+                value
+                    see `value <LearningProjection.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                error_function
+                    see `error_function <LearningProjection.error_function>`
+
+                    :default value: `LinearCombination`(offset=1.0, operation=sum, scale=1.0, weights=numpy.array([[-1], [ 1]]))
+                    :type: `Function`
+
+                function
+                    see `function <LearningProjection.function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                learning_function
+                    see `learning_function <LearningProjection.learning_function>`
+
+                    :default value: `BackPropagation`
+                    :type: `Function`
+
+                learning_rate
+                    see `learning_rate <LearningProjection.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                learning_signal
+                    see `learning_signal <LearningProjection.learning_signal>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
         value = Param(np.array([0]), read_only=True, aliases=['weight_change_matrix'])
         function = Param(Linear, stateful=False, loggable=False)
         error_function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
