@@ -1161,7 +1161,8 @@ class DDM(ProcessingMechanism_Base):
         if isinstance(self.function_object, Integrator):
             new_values = self.function_object.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.array(new_values), execution_context, override=True)
-            self._update_output_states(execution_id=parse_execution_context(execution_context), context="REINITIALIZING")
+            self._update_output_states(execution_id=parse_execution_context(execution_context),
+                                       context="REINITIALIZING")
 
     def is_finished(self, execution_context=None):
         # find the single numeric entry in previous_value

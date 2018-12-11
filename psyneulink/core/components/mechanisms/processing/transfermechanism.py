@@ -364,8 +364,8 @@ from psyneulink.core.globals.utilities import append_type_to_name, iscompatible,
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
-    'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 
-    'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 
+    'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS',
+    'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT',
     'TransferError', 'TransferMechanism',
 ]
 
@@ -945,7 +945,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
                                         "specified as the {} param of {} must be the same shape ({}) as its {}".
                                         format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
-        
+
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
             initial_value = np.array(target_set[INITIAL_VALUE])
@@ -972,12 +972,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INTEGRATOR_FUNCTION:
         if INTEGRATOR_FUNCTION in target_set:
             integtr_fct = target_set[INTEGRATOR_FUNCTION]
-            if not (isinstance(integtr_fct, IntegratorFunction) 
+            if not (isinstance(integtr_fct, IntegratorFunction)
                     or (isinstance(integtr_fct, type) and issubclass(integtr_fct, IntegratorFunction))):
                 raise TransferError("The function specified for the {} arg of {} ({}) must be an {}".
                                     format(repr(INTEGRATOR_FUNCTION), self.name, integtr_fct),
                                     IntegratorFunction.__class__.__name__)
-        
+
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
             integration_rate = np.array(target_set[INTEGRATION_RATE])

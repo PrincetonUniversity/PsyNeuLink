@@ -138,6 +138,7 @@ Class Reference
 
 import numbers
 import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import namedtuple
@@ -148,9 +149,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    NAME, PARAMETER_STATE_PARAMS, \
-    kwComponentCategory, kwPreferenceSetName
+from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -161,7 +160,7 @@ __all__ = [
     'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
     'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function', 'is_function_type',
-    'ModulatedParam','ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM','MultiplicativeParam',
+    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam',
     'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
 ]
 
@@ -1063,3 +1062,43 @@ class ArgumentTherapy(Function_Base):
         return self.convert_output_type(value)
 
 
+
+kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
+kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
+kwValueFunction = "EVC VALUE FUNCTION"
+CONTROL_SIGNAL_GRID_SEARCH_FUNCTION = "EVC CONTROL SIGNAL GRID SEARCH FUNCTION"
+CONTROLLER = 'controller'
+
+class EVCAuxiliaryFunction(Function_Base):
+    """Base class for EVC auxiliary functions
+    """
+    componentType = kwEVCAuxFunctionType
+
+    class Params(Function_Base.Params):
+        variable = None
+
+    classPreferences = {
+        kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+       }
+
+    @tc.typecheck
+    def __init__(self,
+                 function,
+                 variable=None,
+                 params=None,
+                 owner=None,
+                 prefs:is_pref_set=None,
+                 context=None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+        self.aux_function = function
+
+        super().__init__(default_variable=variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context,
+                         function=function,
+                         )

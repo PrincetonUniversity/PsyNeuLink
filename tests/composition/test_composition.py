@@ -414,8 +414,7 @@ class TestGraphCycles:
 
 
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
-
-        assert np.allclose(output, [[np.array([2.])], [np.array([8.])], [np.array([22.])]])
+        assert np.allclose(output, [[np.array([22.])]])
 
 
 class TestExecutionOrder:
@@ -1828,7 +1827,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
-        assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
+        assert np.allclose([[[40.0]]], output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
@@ -1849,7 +1848,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
-        assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
+        assert np.allclose([[40.0]], output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
@@ -1888,7 +1887,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=3, bin_execute=mode)
 
-        assert np.allclose([np.array([[125.]]), np.array([[100.]]), np.array([[75.]])], output)
+        assert np.allclose(np.array([[75.]]), output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
@@ -2295,7 +2294,7 @@ class TestRun:
         # Using the hollow matrix: (10 + 15 + 1) * 5 = 130,
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
-        assert np.allclose([130.0, 110.0, 90.0], output2[1])
+        assert np.allclose([130.0, 110.0, 90.0], output2)
         benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=mode)
 
     @pytest.mark.composition
@@ -4070,7 +4069,7 @@ class TestCompositionInterface:
         sched = Scheduler(composition=comp)
         output2 = comp.run(inputs=inputs_dict2, scheduler_processing=sched)
 
-        assert np.allclose([np.array([[250.]]), np.array([[250.]]), np.array([[135.]])], output)
+        assert np.allclose(np.array([[135.]]), output2)
 
     def test_changing_origin_for_second_execution(self):
 
@@ -4115,7 +4114,7 @@ class TestCompositionInterface:
                 connections_to_A.append((p_a.sender, p_a.receiver))
 
         assert connections_to_A == expected_connections_to_A
-        assert np.allclose([np.array([[25.]]), np.array([[30.]])], output2)
+        assert np.allclose(np.array([[30.]]), output2)
 
     def test_two_input_states_new_inputs_second_trial(self):
 
@@ -4146,7 +4145,7 @@ class TestCompositionInterface:
         assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.])
         assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
-        assert np.allclose(output, [np.array([[5.], [5.]]), np.array([[2.], [4.]])])
+        assert np.allclose(output, np.array([[2.], [4.]]))
 
     def test_two_input_states_new_origin_second_trial(self):
 
@@ -4216,7 +4215,7 @@ class TestCompositionInterface:
         assert np.allclose(D.input_states[1].parameters.value.get(comp), [4.])
         assert np.allclose(D.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
 
-        assert np.allclose([np.array([[50.]]), np.array([[40.]])], output2)
+        assert np.allclose(np.array([[40.]]), output2)
 
     def test_output_cim_one_terminal_mechanism_multiple_output_states(self):
 
@@ -4538,7 +4537,7 @@ class TestInputSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs, scheduler_processing=sched)
 
-        assert np.allclose([np.array([[0.]]), np.array([[6.]]), np.array([[12.]])], output)
+        assert np.allclose(np.array([[12.]]), output)
 
     def test_2_mechanisms_input_5(self):
         comp = Composition()
@@ -4637,6 +4636,7 @@ class TestInputSpecifications:
         assert np.allclose(C.get_output_values(comp), [[0.]])
         assert np.allclose(D.get_output_values(comp), [[4.]])
 
+class TestProperties:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', 'Fallback',
                                       pytest.param('LLVM', marks=(pytest.mark.xfail, pytest.mark.llvm))])
@@ -4748,3 +4748,35 @@ class TestAuxComponents:
         assert B in comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
         assert np.allclose(C.parameters.value.get(comp), [[4.0]])
         assert np.allclose(comp.get_output_values(comp), [[2.0], [4.0]])
+
+    def test_stateful_nodes(self):
+        A = TransferMechanism(name='A')
+        B1 = TransferMechanism(name='B1',
+                               integrator_mode=True)
+        B2 = IntegratorMechanism(name='B2')
+        C = TransferMechanism(name='C')
+
+
+        inner_composition1 = Composition(name="inner-composition-1")
+        inner_composition1.add_linear_processing_pathway([A, B1])
+
+        inner_composition2 = Composition(name="inner-composition2")
+        inner_composition2.add_linear_processing_pathway([A, B2])
+
+        outer_composition1 = Composition(name="outer-composition-1")
+        outer_composition1.add_c_node(inner_composition1)
+        outer_composition1.add_c_node(C)
+        outer_composition1.add_projection(sender=inner_composition1, receiver=C)
+
+        outer_composition2 = Composition(name="outer-composition-2")
+        outer_composition2.add_c_node(inner_composition2)
+        outer_composition2.add_c_node(C)
+        outer_composition2.add_projection(sender=inner_composition2, receiver=C)
+
+        expected_stateful_nodes = {inner_composition1: [B1],
+                                   inner_composition2: [B2],
+                                   outer_composition1: [inner_composition1],
+                                   outer_composition2: [inner_composition2]}
+
+        for comp in expected_stateful_nodes:
+            assert comp.stateful_nodes == expected_stateful_nodes[comp]
