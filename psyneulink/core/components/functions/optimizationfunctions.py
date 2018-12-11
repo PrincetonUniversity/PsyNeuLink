@@ -81,13 +81,15 @@ class SampleSpec():
     (1) Generate values in a range by explicitly specifying a finite reqular sequence of values, using an appropriate
         combination of the **start**, **stop**, **step** and/or **num** arguments.
 
-        * if **start**, **stop**, and **step* are specified, the behavior is similar to np.arange {LINK}. Calling
-          next first returns **start**. Each subsequent call to next returns **start** + **step** * current_step.
+        * if **start**, **stop**, and **step** are specified, the behavior is similar to `Numpy's arange
+          <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.arange.html>`_. Calling
+          `next <SampleIterator.__next__>`first returns **start**. Each subsequent call to next returns **start** :math:`+` **step** :math:`*` current_step.
           Iteration stops when the current value exceeds the **stop** value.
 
-        * if **start**, **stop**, and **num* are specified, the behavior is similar to np.linspace {LINK}. Calling
-          next first returns **start**. Each subsequent call to next returns **start** + **step** * current_step, where
-          step is set to **step** set to :math:`\\frac{stop-start)}{num - 1}`. Iteration stops when **num** is reached,
+        * if **start**, **stop**, and **num** are specified, the behavior is similar to `Numpy's linspace
+          <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.linspace.html>`_. Calling
+          `next <SampleIterator.__next__>` first returns **start**. Each subsequent call to next returns **start** :math:`+` step :math:`*` current_step, where
+          step is set to :math:`\\frac{stop-start)}{num - 1}`. Iteration stops when **num** is reached,
           or the current value exceeds the **stop** value.
 
         * if **start**, **stop*, **step**, and **num** are all specified, then **step** and **num** must be compatible.
@@ -127,14 +129,19 @@ class SampleSpec():
     ----------
 
     start : float
+        First sample in the sequence
 
     stop : float
+        Maximum value of last sample in the sequence
 
     step : float
+        Space between samples in sequence
 
     num :  int
+        Number of samples
 
     function : function
+        Function to be called on each iteration. Must return one sample.
 
     '''
     @tc.typecheck
@@ -189,14 +196,14 @@ class SampleIterator(Iterator):
     specification                 \
     )
 
-    Creates an iterator which returns the next sample from a sequence on each call to 'next'.
+    Creates an iterator which returns the next sample from a sequence on each call to `next <SampleIterator.__next__>`.
 
-    The pattern of the sequence depends on the **specification**, which may be a list, nparray, or SampleSpec. Many of
+    The pattern of the sequence depends on the **specification**, which may be a list, nparray, or SampleSpec. Most of
     the patterns depend on the "current_step," which is incremented on each iteration, and set to zero when the
     iterator is reset.
 
     +--------------------------------+-------------------------------------------+------------------------------------+
-    | Specification                  |  what happens on each iteration           | StopIteration condition            |
+    | **Specification**              |  **what happens on each iteration**       | **StopIteration condition**        |
     +--------------------------------+-------------------------------------------+------------------------------------+
     | list, nparray                  | look up the item with index current_step  | list/array ends                    |
     +--------------------------------+-------------------------------------------+------------------------------------+
@@ -307,6 +314,11 @@ class SampleIterator(Iterator):
         self.generate_current_value = generate_current_value
 
     def __next__(self):
+        """
+
+        :return:
+        Sample value for the current iteration.
+        """
         if self.num is None:
             return self.generate_current_value()
         if self.current_step < self.num:
