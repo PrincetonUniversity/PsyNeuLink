@@ -182,8 +182,8 @@ class CompExecution(CUDAExecution):
 
     def extract_node_output(self, node, data = None):
         data = self._data_struct if data == None else data
-        field = self._data_struct._fields_[0][0]
-        res_struct = getattr(self._data_struct, field)
+        field = data._fields_[0][0]
+        res_struct = getattr(data, field)
         index = self._composition._get_node_index(node)
         field = res_struct._fields_[index][0]
         res_struct = getattr(res_struct, field)
