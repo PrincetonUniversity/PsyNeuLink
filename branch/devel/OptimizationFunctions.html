@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.4.8.0+1025.g90cb43c documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.4.8.0+1026.g7b09270 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1025.g90cb43c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1026.g7b09270 documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="LearningFunctions" href="LearningFunctions.html"/>
         <link rel="prev" title="ObjectiveFunctions" href="ObjectiveFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1025
+                0.4.8.0+1026
               </div>
             
           
@@ -91,35 +91,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="Functions.html">Functions</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="UserDefinedFunction.html">UserDefinedFunction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="TransferFunctions.html">TransferFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="CombinationFunctions.html">CombinationFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SelectionFunctions.html">SelectionFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="DistributionFunctions.html">DistributionFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="IntegratorFunctions.html">IntegratorFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ObjectiveFunctions.html">ObjectiveFunctions</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">OptimizationFunctions</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="LearningFunctions.html">LearningFunctions</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -198,32 +174,176 @@
 <li><a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal"><span class="pre">OptimizationFunction</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization"><code class="xref any py py-class docutils literal"><span class="pre">GradientOptimization</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch"><code class="xref any py py-class docutils literal"><span class="pre">GridSearch</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess"><code class="xref any py py-class docutils literal"><span class="pre">GaussianProcess</span></code></a></li>
 </ul>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Functions that return the sample of a variable yielding the optimized value of an objective_function.</p>
 <dl class="class">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleSpec">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">SampleSpec</code><span class="sig-paren">(</span><em>start=None</em>, <em>stop=None</em>, <em>step=None</em>, <em>num=None</em>, <em>function=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the information needed to create a SampleIterator which will either (1) generate values in a range or (2)
+call a function.</p>
+<ol class="arabic simple">
+<li>Generate values in a range by explicitly specifying a finite reqular sequence of values, using an appropriate
+combination of the <strong>start</strong>, <strong>stop</strong>, <strong>step</strong> and/or <strong>num</strong> arguments.<ul>
+<li>if <strong>start</strong>, <strong>stop</strong>, and <strong>step</strong> are specified, the behavior is similar to <a class="reference external" href="https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.arange.html">Numpy’s arange</a>. Calling
+<code class="xref any docutils literal"><span class="pre">next</span> <span class="pre">&lt;SampleIterator.__next__&gt;`first</span> <span class="pre">returns</span> <span class="pre">**start**.</span> <span class="pre">Each</span> <span class="pre">subsequent</span> <span class="pre">call</span> <span class="pre">to</span> <span class="pre">next</span> <span class="pre">returns</span> <span class="pre">**start**</span> <span class="pre">:math:`+</span></code> <strong>step</strong> <span class="math">\(*\)</span> current_step.
+Iteration stops when the current value exceeds the <strong>stop</strong> value.</li>
+<li>if <strong>start</strong>, <strong>stop</strong>, and <strong>num</strong> are specified, the behavior is similar to <a class="reference external" href="https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.linspace.html">Numpy’s linspace</a>. Calling
+<code class="xref any docutils literal"><span class="pre">next</span></code> first returns <strong>start</strong>. Each subsequent call to next returns <strong>start</strong> <span class="math">\(+\)</span> step <span class="math">\(*\)</span> current_step, where
+step is set to <span class="math">\(\frac{stop-start)}{num - 1}\)</span>. Iteration stops when <strong>num</strong> is reached,
+or the current value exceeds the <strong>stop</strong> value.</li>
+<li>if <strong>start</strong>, <strong>stop*, **step</strong>, and <strong>num</strong> are all specified, then <strong>step</strong> and <strong>num</strong> must be compatible.</li>
+</ul>
+</li>
+<li>Specify a function, which is called repeatedly to generate a sequence of values.<ul>
+<li>if <strong>num</strong> is specified, the <strong>function</strong> is called once on each iteration until <strong>num</strong> iterations are
+complete.</li>
+<li>if <strong>num</strong> is not specified, the <strong>function</strong> is called once on each iteration, and iteration may continue
+indefintely.</li>
+</ul>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some OptimizationFunctions may require that their SampleIterators have a “num” attribute.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>start</strong> (<em>int</em><em> or </em><em>float</em>) – First sample in the sequence</li>
+<li><strong>stop</strong> (<em>int</em><em> or </em><em>float</em>) – Maximum value of last sample in the sequence</li>
+<li><strong>step</strong> (<em>int</em><em> or </em><em>float</em>) – Space between samples in sequence</li>
+<li><strong>num</strong> (<em>int</em>) – Number of samples</li>
+<li><strong>function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a>) – Function to be called on each iteration. Must return one sample.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleSpec.start">
+<code class="descname">start</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleSpec.start" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – First sample in the sequence</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleSpec.stop">
+<code class="descname">stop</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleSpec.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Maximum value of last sample in the sequence</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleSpec.step">
+<code class="descname">step</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleSpec.step" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Space between samples in sequence</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleSpec.num">
+<code class="descname">num</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleSpec.num" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Number of samples</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleSpec.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleSpec.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> – Function to be called on each iteration. Must return one sample.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleIterator">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">SampleIterator</code><span class="sig-paren">(</span><em>specification</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator which returns the next sample from a sequence on each call to <code class="xref any docutils literal"><span class="pre">next</span></code>.</p>
+<p>The pattern of the sequence depends on the <strong>specification</strong>, which may be a list, nparray, or SampleSpec. Most of
+the patterns depend on the “current_step,” which is incremented on each iteration, and set to zero when the
+iterator is reset.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="39%" />
+<col width="32%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>Specification</strong></td>
+<td><strong>what happens on each iteration</strong></td>
+<td><strong>StopIteration condition</strong></td>
+</tr>
+<tr class="row-even"><td>list, nparray</td>
+<td>look up the item with index current_step</td>
+<td>list/array ends</td>
+</tr>
+<tr class="row-odd"><td>SampleSpec(start, stop, step)</td>
+<td>start + step*current_step</td>
+<td>current_step = num or value &gt; stop</td>
+</tr>
+<tr class="row-even"><td>SampleSpec(start, stop, num)</td>
+<td>start + step*current_step</td>
+<td>current_step = num or value &gt; stop</td>
+</tr>
+<tr class="row-odd"><td>SampleSpec(function, num)</td>
+<td>call function</td>
+<td>current_step = num</td>
+</tr>
+<tr class="row-even"><td>SampleSpec(function)</td>
+<td>call function</td>
+<td>iteration does not stop</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">We recommend reserving the list/nparray option for cases in which the samples do not have a pattern that can be
+represented by a SampleSpec, or the number of samples is small. The list/nparray option requires all of the
+samples to be stored and looked up, while the SampleSpec options generate samples as needed.</p>
+</div>
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.SampleIterator.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>head=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset iterator to a specified item
+If called with None, resets to first item (if <code class="xref any docutils literal"><span class="pre">generator</span></code> is a list or
+deterministic function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">OptimizationFunction</code><span class="sig-paren">(</span><em>                                default_variable=None,                               objective_function=lambda x:0,                       search_function=lambda x:x,                          search_space=[0],                                    search_termination_function=lambda x,y,z:True,       save_samples=False,                                  save_values=False,                                   max_iterations=None,                                 params=Nonse,                                        owner=Nonse,                                         prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides an interface to subclasses and external optimization functions. The default <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> executes iteratively, evaluating samples from <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> using <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
-until terminated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_termination_function</span></code></a>.
-Subclasses can override this to implement their own optimization function or call an external one.</p>
-<p id="optimizationfunction-process"><strong>Default Optimization Process</strong></p>
+<dd><p>Provides an interface to subclasses and external optimization functions. The default <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> executes iteratively, generating samples from <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> using <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a>,
+evaluating them using <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, and reporting the
+value of each using <code class="xref any docutils literal"><span class="pre">report_value</span></code> until terminated by
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_termination_function</span></code></a>. Subclasses can override
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> to implement their own optimization function or call an external one.</p>
+<p>Samples in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> are assumed a list of one or more <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal"><span class="pre">SampleIterator</span></code></a>
+objects;  if there is more than one SampleIterator in the list, they must either generate lists of equal length
+or ones that do not terminate (i.e., <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal"><span class="pre">num</span></code></a> = None).</p>
+<p id="optimizationfunction-procedure"><strong>Default Optimization Procedure</strong></p>
 <p>When <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is executed, it iterates over the following steps:</p>
 <blockquote>
 <div><ul class="simple">
-<li>get sample from <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> using <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a>.</li>
+<li>get sample from <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> by calling <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a></li>
 </ul>
 <ul class="simple">
-<li>compute value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> using the sample;</li>
+<li>compute value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for the sample
+by calling <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>;</li>
+</ul>
+<ul class="simple">
+<li>report value returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for the sample
+by calling <code class="xref any docutils literal"><span class="pre">report_value</span></code>;</li>
 </ul>
 <ul class="simple">
 <li>evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_termination_function</span></code></a>.</li>
 </ul>
 </div></blockquote>
-<p>The current iteration is contained in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.iteration" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.iteration"><code class="xref any py py-attr docutils literal"><span class="pre">iteration</span></code></a>. Iteration continues until all
-values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> have been evaluated (i.e., <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_termination_function</span></code></a> returns <code class="xref any docutils literal"><span class="pre">True</span></code>).  The <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
-returns:</p>
+<p>The current iteration numberris contained in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.iteration" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.iteration"><code class="xref any py py-attr docutils literal"><span class="pre">iteration</span></code></a>. Iteration continues until
+all values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> have been evaluated and/or
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_termination_function</span></code></a> returns <code class="xref any docutils literal"><span class="pre">True</span></code>.  The <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns:</p>
 <ul class="simple">
 <li>the last sample evaluated (which may or may not be the optimal value, depending on the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>);</li>
 <li>the value of <code class="xref any docutils literal"><span class="pre">objective_function</span></code> associated with the last sample;</li>
@@ -254,28 +374,28 @@ its subclasses;  this can be suppressed by specifying the relevant argument(s) a
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<em>list</em><em> or </em><em>ndarray : default None</em>) – specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</li>
-<li><strong>objective_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><em>function</em></a><em> or </em><em>method : default None</em>) – specifies function used to evaluate sample in each iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>; if it is not specified, a default function is used that simply returns
+<li><strong>objective_function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em> or </em><em>method : default None</em>) – specifies function used to evaluate sample in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>; if it is not specified, a default function is used that simply returns
 the value passed as its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> parameter (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</li>
-<li><strong>search_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><em>function</em></a><em> or </em><em>method : default None</em>) – specifies function used to select a sample for <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
-in each iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.  It <strong>must be specified</strong>
+<li><strong>search_function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em> or </em><em>method : default None</em>) – specifies function used to select a sample for <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
+in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.  It <strong>must be specified</strong>
 if the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> does not generate samples on its own
 (e.g., as does <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization"><code class="xref any py py-class docutils literal"><span class="pre">GradientOptimization</span></code></a>).  If it is required and not specified, the optimization process
 executes exactly once using the value passed as its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> parameter
 (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</li>
-<li><strong>search_space</strong> (<em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
-in each iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>. It <strong>must be specified</strong>
+<li><strong>search_space</strong> (<em>list</em><em> or </em><em>array of SampleIterators : default None</em>) – specifies iterators used by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a> to generate samples
+evaluated <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in each iteration of the
+<a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>. It <strong>must be specified</strong>
 if the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> does not generate samples on its own
-(e.g., as does <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization"><code class="xref any py py-class docutils literal"><span class="pre">GradientOptimization</span></code></a>).  If it is required and not specified, the optimization process
-executes exactly once using the value passed as its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> parameter
-(see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</li>
-<li><strong>search_termination_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><em>function</em></a><em> or </em><em>method : None</em>) – specifies function used to terminate iterations of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.
-It <strong>must be specified</strong> if the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> is not
-overridden.  If it is required and not specified, the optimization process executes exactly once
-(see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</li>
-<li><strong>save_samples</strong> (<em>bool</em>) – specifies whether or not to save and return the values of the samples used to evalute <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> over all iterations of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.</li>
+(e.g., as does <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization"><code class="xref any py py-class docutils literal"><span class="pre">GradientOptimization</span></code></a>), and all of the SampleIterators in the list that are <code class="xref any docutils literal"><span class="pre">finite</span></code> must have equal <code class="xref any docutils literal"><span class="pre">num</span></code>. If it is required and
+not specified, the optimization process executes exactly once using the value passed as its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> parameter (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</li>
+<li><strong>search_termination_function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em> or </em><em>method : None</em>) – specifies function used to terminate iterations of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.
+It must return a boolean value, and it  <strong>must be specified</strong> if the
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> is not overridden.  If it is required and not
+specified, the optimization process executes exactly once (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</li>
+<li><strong>save_samples</strong> (<em>bool</em>) – specifies whether or not to save and return the values of the samples used to evalute <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> over all iterations of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.</li>
 <li><strong>save_values</strong> (<em>bool</em>) – specifies whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for samples evaluated in all iterations of the
-<a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.</li>
-<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of times the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a> is allowed
+<a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.</li>
+<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of times the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a> is allowed
 to iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.</li>
 </ul>
 </td>
@@ -286,61 +406,66 @@ to iterate; if exceeded, a warning is issued and the function returns the last s
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>ndarray</em> – first sample evaluated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> (i.e., one used to
-evaluate it in the first iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>).</p>
+evaluate it in the first iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function">
 <code class="descname">objective_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>function or method</em> – used to evaluate the sample in each iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>function or method</em> – used to evaluate the sample in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function">
 <code class="descname">search_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>function, method or None</em> – used to select a sample evaluated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
-in each iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.  <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code> if
+in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.  <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code> if
 the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> generates its own samples.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space">
 <code class="descname">search_space</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list or np.ndarray</em> – samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
-in each iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>;  <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code> if
-the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> generates its own samples.</p>
+<dd><p>list or array of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal"><span class="pre">SampleIterators</span></code></a> – used by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a> to generate samples evaluated by
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.  The number of SampleIterators in the list determines the dimensionality
+of each sample:  in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>, each
+SampleIterator is called upon to provide the value for one of the dimensions of the sample.m`NotImplemented`
+if the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> generates its own samples.  If it is
+required and not specified, the optimization process executes exactly once using the value passed as its
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> parameter (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function">
 <code class="descname">search_termination_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>function or method</em> – used to terminate iterations of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>function or method that returns a boolean value</em> – used to terminate iterations of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>; if it is required
+and not specified, the optimization process executes exactly once (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.iteration">
 <code class="descname">iteration</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.iteration" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – the current iteration of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>int</em> – the current iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.max_iterations">
 <code class="descname">max_iterations</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.max_iterations" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : default 1000</em> – specifies the maximum number of times the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a> is allowed
+<dd><p><em>int : default 1000</em> – specifies the maximum number of times the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a> is allowed
 to iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples">
 <code class="descname">save_samples</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – determines whether or not to save the values of the samples used to evalute <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> over all iterations of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>bool</em> – determines whether or not to save the values of the samples used to evalute <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> over all iterations of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values">
 <code class="descname">save_values</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool</em> – determines whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for samples evaluated in all iterations of the
-<a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>.</p>
+<a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -364,12 +489,12 @@ parameter.  The following parameters can be reinitialized:</p>
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the sample that yields the optimal value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</p>
-<p>See <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a> for details.</p>
+<p>See <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a> for details.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimal sample, optimal value, saved_samples, saved_values</strong> – first array contains sample that yields the optimal value of the <a class="reference internal" href="#optimizationfunction-process"><span class="std std-ref">optimization process</span></a>, and second array contains the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for that sample.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, first list contains all the values sampled in the order
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimal sample, optimal value, saved_samples, saved_values</strong> – first array contains sample that yields the optimal value of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>, and second array contains the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for that sample.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, first list contains all the values sampled in the order
 they were evaluated; otherwise it is empty.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>,
 second list contains the values returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
 for all the samples in the order they were evaluated; otherwise it is empty.</td>
@@ -384,10 +509,10 @@ for all the samples in the order they were evaluated; otherwise it is empty.</td
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">GradientOptimization</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_function=None</em>, <em>direction=ASCENT</em>, <em>step_size=1.0</em>, <em>annealing_function=None</em>, <em>convergence_criterion=VALUE</em>, <em>convergence_threshold=.001</em>, <em>max_iterations=1000</em>, <em>save_samples=False</em>, <em>save_values=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">GradientOptimization</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_function=None</em>, <em>direction=ASCENT</em>, <em>step=1.0</em>, <em>annealing_function=None</em>, <em>convergence_criterion=VALUE</em>, <em>convergence_threshold=.001</em>, <em>max_iterations=1000</em>, <em>save_samples=False</em>, <em>save_values=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample variable by following gradient with respect to the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> it generates, and return the sample that generates either the
 highest (<a href="#id1"><span class="problematic" id="id2">**</span></a>direction=*ASCENT*) or lowest (<a href="#id3"><span class="problematic" id="id4">**</span></a>direction=*DESCENT*) value.</p>
-<p id="gradientoptimization-process"><strong>Optimization Process</strong></p>
+<p id="gradientoptimization-procedure"><strong>Optimization Procedure</strong></p>
 <p>When <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is executed, it iterates over the folowing steps:</p>
 <blockquote>
 <div><ul class="simple">
@@ -395,14 +520,14 @@ highest (<a href="#id1"><span class="problematic" id="id2">**</span></a>directio
 </ul>
 <ul class="simple">
 <li>adjust <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> based on the gradient, in the specified
-<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a> and by an amount specified by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size"><code class="xref any py py-attr docutils literal"><span class="pre">step_size</span></code></a> and possibly <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a>;</li>
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a> and by an amount specified by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step"><code class="xref any py py-attr docutils literal"><span class="pre">step</span></code></a> and possibly <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a>;</li>
 </ul>
 <ul class="simple">
 <li>compute value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> using the adjusted value of
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;</li>
 </ul>
 <ul class="simple">
-<li>adjust <code class="xref any docutils literal"><span class="pre">step_size</span></code> using <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a>, if specified, for use in the next iteration;</li>
+<li>adjust <code class="xref any docutils literal"><span class="pre">step</span></code> using <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a>, if specified, for use in the next iteration;</li>
 </ul>
 <ul class="simple">
 <li>evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion"><code class="xref any py py-attr docutils literal"><span class="pre">convergence_criterion</span></code></a> and test whether it is below
@@ -428,29 +553,29 @@ generate <a class="reference internal" href="#psyneulink.core.components.functio
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<em>list</em><em> or </em><em>ndarray : default None</em>) – specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</li>
-<li><strong>objective_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><em>function</em></a><em> or </em><em>method</em>) – specifies function used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
-in each iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>;
+<li><strong>objective_function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em> or </em><em>method</em>) – specifies function used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;
 it must be specified and it must return a scalar value.</li>
 <li><strong>direction</strong> (<em>ASCENT</em><em> or </em><em>DESCENT : default ASCENT</em>) – specifies the direction of gradient optimization: if <em>ASCENT</em>, movement is attempted in the positive direction
 (i.e., “up” the gradient);  if <em>DESCENT</em>, movement is attempted in the negative direction (i.e. “down”
 the gradient).</li>
-<li><strong>step_size</strong> (<em>int</em><em> or </em><em>float : default 1.0</em>) – specifies the rate at which the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is updated in each
-iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>;  if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a> is specified, <strong>step_size</strong> specifies the intial value of
-<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size"><code class="xref any py py-attr docutils literal"><span class="pre">step_size</span></code></a>.</li>
-<li><strong>annealing_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><em>function</em></a><em> or </em><em>method : default None</em>) – specifies function used to adapt <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size"><code class="xref any py py-attr docutils literal"><span class="pre">step_size</span></code></a> in each
-iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>;  must take accept two parameters —
-<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size"><code class="xref any py py-attr docutils literal"><span class="pre">step_size</span></code></a> and <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">iteration</span></a>, in that
+<li><strong>step</strong> (<em>int</em><em> or </em><em>float : default 1.0</em>) – specifies the rate at which the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is updated in each
+iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;  if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a> is specified, <strong>step</strong> specifies the intial value of
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step"><code class="xref any py py-attr docutils literal"><span class="pre">step</span></code></a>.</li>
+<li><strong>annealing_function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em> or </em><em>method : default None</em>) – specifies function used to adapt <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step"><code class="xref any py py-attr docutils literal"><span class="pre">step</span></code></a> in each
+iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;  must take accept two parameters —
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step"><code class="xref any py py-attr docutils literal"><span class="pre">step</span></code></a> and <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">iteration</span></a>, in that
 order —&nbsp;and return a scalar value, that is used for the next iteration of optimization.</li>
-<li><strong>convergence_criterion</strong> (<em>VARIABLE</em> or <em>VALUE</em> : default <em>VALUE</em>) – specifies the parameter used to terminate the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>.
+<li><strong>convergence_criterion</strong> (<em>VARIABLE</em> or <em>VALUE</em> : default <em>VALUE</em>) – specifies the parameter used to terminate the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>.
 <em>VARIABLE</em>: process terminates when the most recent sample differs from the previous one by less than
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">convergence_threshold</span></code></a>;  <em>VALUE</em>: process terminates when the
 last value returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> differs from the
 previous one by less than <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">convergence_threshold</span></code></a>.</li>
 <li><strong>convergence_threshold</strong> (<em>int</em><em> or </em><em>float : default 0.001</em>) – specifies the change in value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion"><code class="xref any py py-attr docutils literal"><span class="pre">convergence_criterion</span></code></a> below which the optimization process is terminated.</li>
-<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of times the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a> is allowed to
+<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of times the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a> is allowed to
 iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.</li>
-<li><strong>save_samples</strong> (<em>bool</em>) – specifies whether or not to save and return all of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>.</li>
-<li><strong>save_values</strong> (<em>bool</em>) – specifies whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization
+<li><strong>save_samples</strong> (<em>bool</em>) – specifies whether or not to save and return all of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>.</li>
+<li><strong>save_values</strong> (<em>bool</em>) – specifies whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization
 process</span></a></li>
 </ul>
 </td>
@@ -460,7 +585,7 @@ process</span></a></li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ndarray</em> – sample used as the starting point for the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a> (i.e., one
+<dd><p><em>ndarray</em> – sample used as the starting point for the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a> (i.e., one
 used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the first iteration).</p>
 </dd></dl>
 
@@ -468,14 +593,14 @@ used to evaluate <a class="reference internal" href="#psyneulink.core.components
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function">
 <code class="descname">objective_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>function or method</em> – function used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
-in each iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>;
+in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;
 it must be specified and it must return a scalar value.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function">
 <code class="descname">gradient_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>function</em> – function used to compute the gradient in each iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a> (see <a class="reference internal" href="#gradientoptimization-gradient-calculation"><span class="std std-ref">Gradient Calculation</span></a> for
+<dd><p><em>function</em> – function used to compute the gradient in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a> (see <a class="reference internal" href="#gradientoptimization-gradient-calculation"><span class="std std-ref">Gradient Calculation</span></a> for
 details).</p>
 </dd></dl>
 
@@ -488,30 +613,30 @@ the gradient).</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size">
-<code class="descname">step_size</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step">
+<code class="descname">step</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>int or float</em> – determines the rate at which the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is updated in each
-iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>;  if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a> is specified, <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size"><code class="xref any py py-attr docutils literal"><span class="pre">step_size</span></code></a>
+iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;  if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function"><code class="xref any py py-attr docutils literal"><span class="pre">annealing_function</span></code></a> is specified, <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step"><code class="xref any py py-attr docutils literal"><span class="pre">step</span></code></a>
 determines the initial value.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function">
 <code class="descname">annealing_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.annealing_function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>function or method</em> – function used to adapt <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size"><code class="xref any py py-attr docutils literal"><span class="pre">step_size</span></code></a> in each iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization
-process</span></a>;  if <code class="xref any docutils literal"><span class="pre">None</span></code>, no call is made and the same <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size"><code class="xref any py py-attr docutils literal"><span class="pre">step_size</span></code></a> is used in each iteration.</p>
+<dd><p><em>function or method</em> – function used to adapt <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step"><code class="xref any py py-attr docutils literal"><span class="pre">step</span></code></a> in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization
+process</span></a>;  if <code class="xref any docutils literal"><span class="pre">None</span></code>, no call is made and the same <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step"><code class="xref any py py-attr docutils literal"><span class="pre">step</span></code></a> is used in each iteration.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.iteration">
 <code class="descname">iteration</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.iteration" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – the currention iteration of the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>int</em> – the currention iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion">
 <code class="descname">convergence_criterion</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>VARIABLE or VALUE</em> – determines parameter used to terminate the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>.
+<dd><p><em>VARIABLE or VALUE</em> – determines parameter used to terminate the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>.
 <em>VARIABLE</em>: process terminates when the most recent sample differs from the previous one by less than
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">convergence_threshold</span></code></a>;  <em>VALUE</em>: process terminates when the
 last value returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> differs from the
@@ -521,26 +646,26 @@ previous one by less than <a class="reference internal" href="#psyneulink.core.c
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold">
 <code class="descname">convergence_threshold</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int or float</em> – determines the change in value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion"><code class="xref any py py-attr docutils literal"><span class="pre">convergence_criterion</span></code></a> below which the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a> is terminated.</p>
+<dd><p><em>int or float</em> – determines the change in value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.convergence_criterion"><code class="xref any py py-attr docutils literal"><span class="pre">convergence_criterion</span></code></a> below which the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a> is terminated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.max_iterations">
 <code class="descname">max_iterations</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.max_iterations" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – determines the maximum number of times the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a> is allowed to
+<dd><p><em>int</em> – determines the maximum number of times the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a> is allowed to
 iterate; if exceeded, a warning is issued and the function returns the last sample evaluated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_samples">
 <code class="descname">save_samples</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – determines whether or not to save and return all of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>bool</em> – determines whether or not to save and return all of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_values">
 <code class="descname">save_values</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – determines whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gradientoptimization-process"><span class="std std-ref">optimization
+<dd><p><em>bool</em> – determines whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization
 process</span></a></p>
 </dd></dl>
 
@@ -573,9 +698,9 @@ evaluated; otherwise it is empty.</td>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">GridSearch</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_function=None</em>, <em>direction=MAXIMIZE</em>, <em>max_iterations=1000</em>, <em>save_samples=False</em>, <em>save_values=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Search over all samples in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> for the one that optimizes the value of
-<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</p>
-<p id="gridsearch-process"><strong>Grid Search Process</strong></p>
+<dd><p>Search over all samples generated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> for the one that optimizes the
+value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</p>
+<p id="gridsearch-procedure"><strong>Grid Search Procedure</strong></p>
 <p>When <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is executed, it iterates over the folowing steps:</p>
 <blockquote>
 <div><ul class="simple">
@@ -585,7 +710,7 @@ evaluated; otherwise it is empty.</td>
 <li>compute value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for that sample;</li>
 </ul>
 </div></blockquote>
-<p>The current iteration is contained in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.iteration" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.iteration"><code class="xref any py py-attr docutils literal"><span class="pre">iteration</span></code></a>. Iteration continues until all values of
+<p>The current iteration is contained in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.iteration" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.iteration"><code class="xref any py py-attr docutils literal"><span class="pre">iteration</span></code></a>. Iteration continues until all values in
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> have been evaluated, or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.max_iterations" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.max_iterations"><code class="xref any py py-attr docutils literal"><span class="pre">max_iterations</span></code></a> is
 execeeded.  The function returns the sample that yielded either the highest (if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>
 is <em>MAXIMIZE</em>) or lowest (if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a> is <em>MINIMIZE</em>) value of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, along with the value for that sample, as well as lists containing all of the
@@ -597,16 +722,16 @@ samples evaluated and their values if either <a class="reference internal" href=
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<em>list</em><em> or </em><em>ndarray : default None</em>) – specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</li>
-<li><strong>objective_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><em>function</em></a><em> or </em><em>method</em>) – specifies function used to evaluate sample in each iteration of the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>;
+<li><strong>objective_function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em> or </em><em>method</em>) – specifies function used to evaluate sample in each iteration of the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>;
 it must be specified and must return a scalar value.</li>
-<li><strong>search_space</strong> (<em>list</em><em> or </em><em>array</em>) – specifies samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</li>
+<li><strong>search_space</strong> (<em>list</em><em> or </em><em>array of SampleIterators</em>) – specifies <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal"><span class="pre">SampleIterators</span></code></a> used to generate samples evaluated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</li>
 <li><strong>direction</strong> (<em>MAXIMIZE</em><em> or </em><em>MINIMIZE : default MAXIMIZE</em>) – specifies the direction of optimization:  if <em>MAXIMIZE</em>, the highest value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> is sought;  if <em>MINIMIZE</em>, the lowest value is sought.</li>
-<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of times the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a> is allowed to iterate;
+<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of times the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a> is allowed to iterate;
 if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.</li>
-<li><strong>save_samples</strong> (<em>bool</em>) – specifies whether or not to return all of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>
-(i.e., a copy of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a>.</li>
+<li><strong>save_samples</strong> (<em>bool</em>) – specifies whether or not to return all of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>
+(i.e., a copy of the samples generated from the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a>.</li>
 <li><strong>save_values</strong> (<em>bool</em>) – specifies whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
-for all samples evaluated in the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>.</li>
+for all samples evaluated in the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>.</li>
 </ul>
 </td>
 </tr>
@@ -616,20 +741,25 @@ for all samples evaluated in the <a class="reference internal" href="#gridsearch
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>ndarray</em> – first sample evaluated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> (i.e., one used to evaluate it
-in the first iteration of the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>).</p>
+in the first iteration of the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function">
 <code class="descname">objective_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>function or method</em> – function used to evaluate sample in each iteration of the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>function or method</em> – function used to evaluate sample in each iteration of the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space">
 <code class="descname">search_space</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list or array</em> – contains samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in iterations of the
-<a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>list or array of Sampleiterators</em> – contains <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal"><span class="pre">SampleIterators</span></code></a> for generating samples evaluated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in iterations of the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.grid">
+<code class="descname">grid</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.grid" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>iterator</em> – generates samples from the Cartesian product of <code class="xref any docutils literal"><span class="pre">SampleIterators</span> <span class="pre">in</span> <span class="pre">`search_space</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -641,27 +771,39 @@ in the first iteration of the <a class="reference internal" href="#gridsearch-pr
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.iteration">
 <code class="descname">iteration</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.iteration" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – the currention iteration of the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>int</em> – the currention iteration of the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.max_iterations">
 <code class="descname">max_iterations</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.max_iterations" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – determines the maximum number of times the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a> is allowed to iterate;
+<dd><p><em>int</em> – determines the maximum number of times the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a> is allowed to iterate;
 if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_samples">
 <code class="descname">save_samples</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>True</em> – determines whether or not to save and return all samples evaluated by the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a> (if the process
-completes, this should be identical to <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a>.</p>
+<dd><p><em>True</em> – determines whether or not to save and return all samples generated from <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a>
+and evaluated by the  <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values">
 <code class="descname">save_values</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – determines whether or not to save and return the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gridsearch-process"><span class="std std-ref">optimization process</span></a>.</p>
+<dd><p><em>bool</em> – determines whether or not to save and return the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reinitialize">
+<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reinitialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign size of <a href="#id5"><span class="problematic" id="id6">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset_grid">
+<code class="descname">reset_grid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset iterators in <a href="#id7"><span class="problematic" id="id8">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
 </dd></dl>
 
 <dl class="method">
@@ -681,6 +823,133 @@ second array contains the value of the function for that sample. If <a class="re
 evaluated; otherwise it is empty.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, second list
 contains the values returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all the samples
 in the order they were evaluated; otherwise it is empty.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ndarray, list, list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">GaussianProcess</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_function=None</em>, <em>direction=MAXIMIZE</em>, <em>max_iterations=1000</em>, <em>save_samples=False</em>, <em>save_values=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples with dimensionality and bounds specified by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> and
+return one that optimizes the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</p>
+<p id="gaussianprocess-procedure"><strong>Gaussian Process Procedure</strong></p>
+<p>The number of items (<code class="xref any docutils literal"><span class="pre">SampleIterators</span></code> in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> determines
+the dimensionality of each sample to evaluate by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>,
+with the <code class="xref any docutils literal"><span class="pre">start</span></code> and <code class="xref any docutils literal"><span class="pre">stop</span></code> attributes of each <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal"><span class="pre">SampleIterator</span></code></a>
+specifying the bounds for sampling along the corresponding dimension.</p>
+<p>When <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is executed, it iterates over the folowing steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li>draw sample along each dimension of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a>, within bounds
+specified by <code class="xref any docutils literal"><span class="pre">start</span></code> and <code class="xref any docutils literal"><span class="pre">stop</span></code> attributes of each
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal"><span class="pre">SampleIterator</span></code></a> in the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> list.</li>
+</ul>
+<ul class="simple">
+<li>compute value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for that sample;</li>
+</ul>
+</div></blockquote>
+<p>The current iteration is contained in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.iteration" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.iteration"><code class="xref any py py-attr docutils literal"><span class="pre">iteration</span></code></a>. Iteration continues until [
+FRED: FILL IN THE BLANK], or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.max_iterations" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.max_iterations"><code class="xref any py py-attr docutils literal"><span class="pre">max_iterations</span></code></a> is execeeded.  The function
+returns the sample that yielded either the highest (if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>
+is <em>MAXIMIZE</em>) or lowest (if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a> is <em>MINIMIZE</em>) value of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, along with the value for that sample, as well as lists containing all of the
+samples evaluated and their values if either <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, respectively.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>list</em><em> or </em><em>ndarray : default None</em>) – specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</li>
+<li><strong>objective_function</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em> or </em><em>method</em>) – specifies function used to evaluate sample in each iteration of the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>; it must be specified and must return a scalar value.</li>
+<li><strong>search_space</strong> (<em>list</em><em> or </em><em>array</em>) – specifies bounds of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
+along each dimension of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.variable" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  each item must be a tuple the first element
+of which specifies the lower bound and the second of which specifies the upper bound.</li>
+<li><strong>direction</strong> (<em>MAXIMIZE</em><em> or </em><em>MINIMIZE : default MAXIMIZE</em>) – specifies the direction of optimization:  if <em>MAXIMIZE</em>, the highest value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> is sought;  if <em>MINIMIZE</em>, the lowest value is sought.</li>
+<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of times the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a> is allowed to
+iterate; if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.</li>
+<li><strong>save_samples</strong> (<em>bool</em>) – specifies whether or not to return all of the samples used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>
+(i.e., a copy of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a>.</li>
+<li><strong>save_values</strong> (<em>bool</em>) – specifies whether or not to save and return the values of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
+for all samples evaluated in the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ndarray</em> – template for sample evaluated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function">
+<code class="descname">objective_function</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function or method</em> – function used to evaluate sample in each iteration of the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space">
+<code class="descname">search_space</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list or array</em> – contains tuples specifying bounds within which each dimension of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.variable" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
+sampled, and used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in iterations of the
+<a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction">
+<code class="descname">direction</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>MAXIMIZE or MINIMIZE : default MAXIMIZE</em> – determines the direction of optimization:  if <em>MAXIMIZE</em>, the greatest value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> is sought;  if <em>MINIMIZE</em>, the least value is sought.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.iteration">
+<code class="descname">iteration</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – the currention iteration of the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.max_iterations">
+<code class="descname">max_iterations</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.max_iterations" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – determines the maximum number of times the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a> is allowed to iterate;
+if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples">
+<code class="descname">save_samples</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>True</em> – determines whether or not to save and return all samples evaluated by the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> in the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a> (if the process
+completes, this should be identical to <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values">
+<code class="descname">save_values</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – determines whether or not to save and return the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sample that yields the optimal value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>,
+and possibly all samples evaluated and their corresponding values.</p>
+<p>Optimal value is defined by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>:
+- if <em>MAXIMIZE</em>, returns greatest value
+- if <em>MINIMIZE</em>, returns least value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimal sample, optimal value, saved_samples, saved_values</strong> – first array contains sample that yields the highest or lowest value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, depending on <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>, and the
+second array contains the value of the function for that sample. If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, first list contains all the values sampled in the order they were
+evaluated; otherwise it is empty.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, second list
+contains the values returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all the
+samples in the order they were evaluated; otherwise it is empty.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ndarray, list, list</td>
 </tr>
@@ -737,7 +1006,7 @@ in the order they were evaluated; otherwise it is empty.</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1025.g90cb43c',
+            VERSION:'0.4.8.0+1026.g7b09270',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

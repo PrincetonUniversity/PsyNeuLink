@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.4.8.0+1025.g90cb43c documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.4.8.0+1026.g7b09270 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1025.g90cb43c documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1026.g7b09270 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+1025
+                0.4.8.0+1026
               </div>
             
           
@@ -192,6 +192,7 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li><code class="xref any docutils literal"><span class="pre">is_matrix_spec</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_numeric</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_numeric_or_none</span></code></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_iterable" title="psyneulink.core.globals.utilities.is_iterable"><code class="xref any py py-func docutils literal"><span class="pre">is_iterable</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.iscompatible" title="psyneulink.core.globals.utilities.iscompatible"><code class="xref any py py-func docutils literal"><span class="pre">iscompatible</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">is_value_spec</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_unit_interval</span></code></li>
@@ -317,6 +318,23 @@ Used with typecheck</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="psyneulink.core.globals.utilities.is_iterable">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_iterable</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_iterable" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>True - if **x*</em> can be iterated on*</li>
+<li><em>False - otherwise</em></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="psyneulink.core.globals.utilities.iscompatible">
 <code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">iscompatible</code><span class="sig-paren">(</span><em>candidate</em>, <em>reference=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.iscompatible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if candidate matches reference or, if that is omitted, it matches type, length and/or numeric specification</p>
@@ -415,7 +433,7 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 
 <dl class="function">
 <dt id="psyneulink.core.globals.utilities.tensor_power">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x1041b4390&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x1042bd278&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
 <dd><p>return tensor product for all members of powerset of items</p>
 <p>levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
 if None, all terms will be returned</p>
@@ -917,7 +935,7 @@ Much like</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1025.g90cb43c',
+            VERSION:'0.4.8.0+1026.g7b09270',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
