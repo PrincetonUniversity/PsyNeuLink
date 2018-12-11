@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modulatory Projections &mdash; PsyNeuLink 0.4.8.0+1026.g7b09270 documentation</title>
+  <title>Modulatory Projections &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1026.g7b09270 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
         <link rel="up" title="Projections" href="Projection.html"/>
         <link rel="next" title="LearningProjection" href="LearningProjection.html"/>
         <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1026
+                0.4.8.0+1027
               </div>
             
           
@@ -242,7 +242,7 @@ ModulatoryProjection.</p>
 <span id="modulatoryprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection has the same basic structure as a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, augmented by type-specific
 attributes and methods described under each type of ModulatoryProjection.  The ModulatoryProjections received by a
-<a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in the State’s <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.mod_afferents" title="psyneulink.core.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
+<a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in the State’s <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.mod_afferents" title="psyneulink.core.components.states.parameterstate.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
 </div>
 <div class="section" id="execution">
 <span id="modulatoryprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -250,7 +250,7 @@ attributes and methods described under each type of ModulatoryProjection.  The M
 which it projects —&nbsp;its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> — is updated;  that occurs when the State’s owner
 Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
 the <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> from which it projects, and the ModulatorySignal’s <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, to the State that receives the Projection.  The State assigns the value to
-the parameter of the State’s <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> specified by the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.modulation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, and then calls
+the parameter of the State’s <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> specified by the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.modulation" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, and then calls
 the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -308,7 +308,7 @@ belongs is next executed; see <span class="xref std std-ref">Lazy Evaluation</sp
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1026.g7b09270',
+            VERSION:'0.4.8.0+1027.g5270b5a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
