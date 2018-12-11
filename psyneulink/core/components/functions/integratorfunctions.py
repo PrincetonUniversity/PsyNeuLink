@@ -1347,268 +1347,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         return self.convert_output_type(adjusted_value)
 
 
-class Buffer(Integrator):  # ------------------------------------------------------------------------------
-    """
-    Buffer(                     \
-        default_variable=None,  \
-        rate=None,              \
-        noise=0.0,              \
-        history=None,           \
-        initializer,            \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
-        )
-
-    .. _Buffer:
-
-    Appends `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
-    which is a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
-    applied to each item in the deque (including the newly added one) on each call, as follows:
-
-        :math: item * `rate <Buffer.rate>` + `noise <Buffer.noise>`
-
-    .. note::
-       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
-
-    Arguments
-    ---------
-
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float : default None
-        specifies a value applied to each item in the deque on each call.
-
-    noise : float or Function : default 0.0
-        specifies a random value added to each item in the deque on each call.
-
-    history : int : default None
-        specifies the maxlen of the deque, and hence `value <Buffer.value>`.
-
-    initializer float, list or ndarray : default []
-        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
-        empty list.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        current input value appended to the end of the deque.
-
-    rate : float
-        value added to each item of the deque on each call.
-
-    noise : float or Function
-        random value added to each item of the deque in each call.
-
-        .. note::
-            In order to generate random noise, a probability distribution function should be used (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    history : int
-        determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
-        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds history, the first item of
-        `previous_value <Buffer.previous_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
-        so that `value <Buffer.previous_value>` maintains a constant length.  If history is not specified,
-        the value returned continues to be extended indefinitely.
-
-    initializer : float, list or ndarray
-        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
-        if the **new_previous_value** argument is not specified in the call to `reinitialize
-        <IntegratorFunction.reinitialize>`.
-
-    previous_value : 1d array : default ClassDefaults.variable
-        state of the deque prior to appending `variable <Buffer.variable>` in the current call.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = BUFFER_FUNCTION
-
-    class Params(Integrator.Params):
-        rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        noise = Param(0.0, modulable=True)
-        history = None
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    multiplicative_param = RATE
-    # no additive_param?
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=[],
-                 # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
-                 # was failing.
-                 # For now, updated default_variable, noise, and Alternatively, we can change validation on
-                 # default_variable=None,   # Changed to [] because None conflicts with initializer
-                 # rate: parameter_spec=1.0,
-                 # noise=0.0,
-                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
-                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
-                 rate: tc.optional(tc.any(int, float)) = 1.0,
-                 noise: tc.optional(tc.any(int, float, callable)) = 0.0,
-                 history: tc.optional(int) = None,
-                 initializer=[],
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  history=history,
-                                                  params=params)
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        self.has_initializers = True
-
-    def _initialize_previous_value(self, initializer, execution_context=None):
-        initializer = initializer or []
-        previous_value = deque(initializer, maxlen=self.history)
-
-        self.parameters.previous_value.set(previous_value, execution_context, override=True)
-
-        return previous_value
-
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        self.has_initializers = True
-
-    def reinitialize(self, *args, execution_context=None):
-        """
-
-        Clears the `previous_value <Buffer.previous_value>` deque.
-
-        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
-        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
-        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
-
-        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
-
-        """
-
-        # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", execution_context)
-
-        elif len(args) == 1:
-            reinitialization_value = args[0]
-
-        # arguments were passed in, but there was a mistake in their specification -- raise error!
-        else:
-            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
-                                "without any arguments, in which case the current initializer value, will be used to "
-                                "reinitialize previous_value".format(args,
-                                                                     self.name))
-
-        if reinitialization_value is None or reinitialization_value == []:
-            self.get_previous_value(execution_context).clear()
-            value = deque([], maxlen=self.history)
-
-        else:
-            value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
-
-        self.parameters.value.set(value, execution_context, override=True)
-        return value
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-        Return: `previous_value <Buffer.previous_value>` appended with `variable
-        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
-
-        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
-
-        Arguments
-        ---------
-
-        variable : number, list or array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        updated value of deque : deque
-
-        """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-
-        # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
-
-        # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
-        # Just return current input (for validation).
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            return variable
-
-        previous_value = self.get_previous_value(execution_id)
-        previous_value.append(variable)
-
-        # Apply rate and/or noise if they are specified
-        if rate != 1.0:
-            previous_value *= rate
-        if noise:
-            previous_value += noise
-
-        previous_value = deque(previous_value, maxlen=self.history)
-
-        self.parameters.previous_value.set(previous_value, execution_id)
-        return self.convert_output_type(previous_value)
-
-
 class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
     """
     AdaptiveIntegrator(                 \
@@ -5214,3 +4952,537 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
         results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
         return results
+
+
+# **********************************************************************************************************************
+#                                                STORAGE FUNCTIONS
+# **********************************************************************************************************************
+
+class Buffer(Integrator):  # ------------------------------------------------------------------------------
+    """
+    Buffer(                     \
+        default_variable=None,  \
+        rate=None,              \
+        noise=0.0,              \
+        history=None,           \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _Buffer:
+
+    Appends `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
+    which makes it a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
+    applied to each item in the deque (including the newly added one) on each call, as follows:
+
+        :math: item * `rate <Buffer.rate>` + `noise <Buffer.noise>`
+
+    .. note::
+       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float : default None
+        specifies a value applied to each item in the deque on each call.
+
+    noise : float or Function : default 0.0
+        specifies a random value added to each item in the deque on each call.
+
+    history : int : default None
+        specifies the maxlen of the deque, and hence `value <Buffer.value>`.
+
+    initializer float, list or ndarray : default []
+        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
+        empty list.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value appended to the end of the deque.
+
+    rate : float
+        value added to each item of the deque on each call.
+
+    noise : float or Function
+        random value added to each item of the deque in each call.
+
+        .. note::
+            In order to generate random noise, a probability distribution function should be used (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
+
+    history : int
+        determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
+        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds history, the first item of
+        `previous_value <Buffer.previous_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
+        so that `value <Buffer.previous_value>` maintains a constant length.  If history is not specified,
+        the value returned continues to be extended indefinitely.
+
+    initializer : float, list or ndarray
+        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
+        if the **new_previous_value** argument is not specified in the call to `reinitialize
+        <IntegratorFunction.reinitialize>`.
+
+    previous_value : 1d array : default ClassDefaults.variable
+        state of the deque prior to appending `variable <Buffer.variable>` in the current call.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = BUFFER_FUNCTION
+
+    class Params(Integrator.Params):
+        rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        noise = Param(0.0, modulable=True)
+        history = None
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    multiplicative_param = RATE
+    # no additive_param?
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=[],
+                 # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
+                 # was failing.
+                 # For now, updated default_variable, noise, and Alternatively, we can change validation on
+                 # default_variable=None,   # Changed to [] because None conflicts with initializer
+                 # rate: parameter_spec=1.0,
+                 # noise=0.0,
+                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
+                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
+                 rate: tc.optional(tc.any(int, float)) = 1.0,
+                 noise: tc.optional(tc.any(int, float, callable)) = 0.0,
+                 history: tc.optional(int) = None,
+                 initializer=[],
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  history=history,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def _initialize_previous_value(self, initializer, execution_context=None):
+        initializer = initializer or []
+        previous_value = deque(initializer, maxlen=self.history)
+
+        self.parameters.previous_value.set(previous_value, execution_context, override=True)
+
+        return previous_value
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        self.has_initializers = True
+
+    def reinitialize(self, *args, execution_context=None):
+        """
+
+        Clears the `previous_value <Buffer.previous_value>` deque.
+
+        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
+        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
+        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
+
+        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
+
+        """
+
+        # no arguments were passed in -- use current values of initializer attributes
+        if len(args) == 0 or args is None:
+            reinitialization_value = self.get_current_function_param("initializer", execution_context)
+
+        elif len(args) == 1:
+            reinitialization_value = args[0]
+
+        # arguments were passed in, but there was a mistake in their specification -- raise error!
+        else:
+            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
+                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "without any arguments, in which case the current initializer value, will be used to "
+                                "reinitialize previous_value".format(args,
+                                                                     self.name))
+
+        if reinitialization_value is None or reinitialization_value == []:
+            self.get_previous_value(execution_context).clear()
+            value = deque([], maxlen=self.history)
+
+        else:
+            value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
+
+        self.parameters.value.set(value, execution_context, override=True)
+        return value
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+        Return: `previous_value <Buffer.previous_value>` appended with `variable
+        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
+
+        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
+
+        Arguments
+        ---------
+
+        variable : number, list or array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of deque : deque
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+
+        # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
+        # Just return current input (for validation).
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            return variable
+
+        previous_value = self.get_previous_value(execution_id)
+        previous_value.append(variable)
+
+        # Apply rate and/or noise if they are specified
+        if rate != 1.0:
+            previous_value *= rate
+        if noise:
+            previous_value += noise
+
+        previous_value = deque(previous_value, maxlen=self.history)
+
+        self.parameters.previous_value.set(previous_value, execution_id)
+        return self.convert_output_type(previous_value)
+
+
+class DND(Integrator):  # ------------------------------------------------------------------------------
+    """
+    DND(                        \
+        default_variable=None,  \
+        rate=None,              \
+        noise=0.0,              \
+        history=None,           \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    Implements simple version of `Differential Neural Dictionary <HTML_REF>`_
+
+    Based on implementation in `dlstm <https://github.com/qihongl/dlstm-demo>`_ by
+    `Qihong Lu <https://github.com/qihongl>`_
+
+    .. _DND:
+
+    Adds `variable <DND.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
+    which makes it a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
+    applied to each item in the deque (including the newly added one) on each call, as follows:
+
+        :math: item * `rate <Buffer.rate>` + `noise <Buffer.noise>`
+
+    .. note::
+       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float : default None
+        specifies a value applied to each item in the deque on each call.
+
+    noise : float or Function : default 0.0
+        specifies a random value added to each item in the deque on each call.
+
+    history : int : default None
+        specifies the maxlen of the deque, and hence `value <Buffer.value>`.
+
+    initializer float, list or ndarray : default []
+        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
+        empty list.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value appended to the end of the deque.
+
+    rate : float
+        value added to each item of the deque on each call.
+
+    noise : float or Function
+        random value added to each item of the deque in each call.
+
+        .. note::
+            In order to generate random noise, a probability distribution function should be used (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
+
+    history : int
+        determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
+        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds history, the first item of
+        `previous_value <Buffer.previous_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
+        so that `value <Buffer.previous_value>` maintains a constant length.  If history is not specified,
+        the value returned continues to be extended indefinitely.
+
+    initializer : float, list or ndarray
+        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
+        if the **new_previous_value** argument is not specified in the call to `reinitialize
+        <IntegratorFunction.reinitialize>`.
+
+    previous_value : 1d array : default ClassDefaults.variable
+        state of the deque prior to appending `variable <Buffer.variable>` in the current call.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = DMD_FUNCTION
+
+    class Params(Integrator.Params):
+        rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        noise = Param(0.0, modulable=True)
+        history = None
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    multiplicative_param = RATE
+    # no additive_param?
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=[],
+                 # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
+                 # was failing.
+                 # For now, updated default_variable, noise, and Alternatively, we can change validation on
+                 # default_variable=None,   # Changed to [] because None conflicts with initializer
+                 # rate: parameter_spec=1.0,
+                 # noise=0.0,
+                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
+                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
+                 rate: tc.optional(tc.any(int, float)) = 1.0,
+                 noise: tc.optional(tc.any(int, float, callable)) = 0.0,
+                 history: tc.optional(int) = None,
+                 initializer=[],
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  history=history,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def _initialize_previous_value(self, initializer, execution_context=None):
+        initializer = initializer or []
+        previous_value = deque(initializer, maxlen=self.history)
+
+        self.parameters.previous_value.set(previous_value, execution_context, override=True)
+
+        return previous_value
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        self.has_initializers = True
+
+    def reinitialize(self, *args, execution_context=None):
+        """
+
+        Clears the `previous_value <Buffer.previous_value>` deque.
+
+        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
+        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
+        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
+
+        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
+
+        """
+
+        # no arguments were passed in -- use current values of initializer attributes
+        if len(args) == 0 or args is None:
+            reinitialization_value = self.get_current_function_param("initializer", execution_context)
+
+        elif len(args) == 1:
+            reinitialization_value = args[0]
+
+        # arguments were passed in, but there was a mistake in their specification -- raise error!
+        else:
+            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
+                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "without any arguments, in which case the current initializer value, will be used to "
+                                "reinitialize previous_value".format(args,
+                                                                     self.name))
+
+        if reinitialization_value is None or reinitialization_value == []:
+            self.get_previous_value(execution_context).clear()
+            value = deque([], maxlen=self.history)
+
+        else:
+            value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
+
+        self.parameters.value.set(value, execution_context, override=True)
+        return value
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+        Return: `previous_value <Buffer.previous_value>` appended with `variable
+        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
+
+        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
+
+        Arguments
+        ---------
+
+        variable : number, list or array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of deque : deque
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+
+        # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
+        # Just return current input (for validation).
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            return variable
+
+        previous_value = self.get_previous_value(execution_id)
+        previous_value.append(variable)
+
+        # Apply rate and/or noise if they are specified
+        if rate != 1.0:
+            previous_value *= rate
+        if noise:
+            previous_value += noise
+
+        previous_value = deque(previous_value, maxlen=self.history)
+
+        self.parameters.previous_value.set(previous_value, execution_id)
+        return self.convert_output_type(previous_value)
+
