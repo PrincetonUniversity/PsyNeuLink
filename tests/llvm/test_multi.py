@@ -4,7 +4,12 @@ import psyneulink.core.llvm as pnlvm
 import numpy as np
 import psyneulink.core.components.functions.function as Function
 import psyneulink.core.components.functions.objectivefunctions as Functions
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.scheduling.scheduler import Scheduler
 import psyneulink.core.globals.keywords as kw
 
 SIZE=10
@@ -54,4 +59,44 @@ def test_transfer_mech_multi(benchmark, executions):
         expected = [expected for _ in range(executions)]
 
     assert np.allclose(res, expected)
+    assert len(res) == executions
+
+
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.multi
+@pytest.mark.nested
+@pytest.mark.composition
+@pytest.mark.benchmark(group="TransferMechanism nested composition multi")
+@pytest.mark.parametrize("executions", [1,5,100])
+@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
+def test_nested_transfer_mechanism_composition_multi(benchmark, executions):
+
+    # mechanisms
+    A = ProcessingMechanism(name="A",
+                            function=AdaptiveIntegrator(rate=0.1))
+    B = ProcessingMechanism(name="B",
+                            function=Logistic)
+
+    inner_comp = Composition(name="inner_comp")
+    inner_comp.add_linear_processing_pathway([A, B])
+    inner_comp._analyze_graph()
+    sched = Scheduler(composition=inner_comp)
+
+    outer_comp = Composition(name="outer_comp")
+    outer_comp.add_c_node(inner_comp)
+
+    outer_comp._analyze_graph()
+    sched = Scheduler(composition=outer_comp)
+
+    e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
+    # The input dict should assign inputs origin nodes (inner_comp in this case)
+    var = {inner_comp: [[1.0]]}
+    expected = [[0.52497918747894]]
+    if executions > 1:
+        var = [var for _ in range(executions)]
+    e.cuda_execute(var)
+    res = e.extract_node_output(outer_comp.output_CIM)
+    benchmark(e.cuda_execute, var)
+    assert np.allclose(res, [expected for _ in range(executions)])
     assert len(res) == executions
