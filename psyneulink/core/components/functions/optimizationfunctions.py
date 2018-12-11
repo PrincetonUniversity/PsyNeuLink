@@ -756,7 +756,7 @@ class OptimizationFunction(Function_Base):
 
             # Compute new value based on new sample
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
-            self._report_value(new_value)
+            self.report_value(new_sample, new_value)
 
             iteration += 1
             max_iterations = self.parameters.max_iterations.get(execution_id)
@@ -776,7 +776,7 @@ class OptimizationFunction(Function_Base):
 
         return new_sample, new_value, samples, values
 
-    def _report_value(self, new_value):
+    def report_value(self, sample, value):
         '''Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample.'''
         pass
 
@@ -1459,6 +1459,8 @@ class GridSearch(OptimizationFunction):
             return True
 
 
+warnings.filterwarnings('ignore', 'The objective has been evaluated at this point before.')
+
 class GaussianProcess(OptimizationFunction):
     """
     GaussianProcess(                 \
@@ -1567,6 +1569,16 @@ class GaussianProcess(OptimizationFunction):
     save_values : bool
         determines whether or not to save and return the value of `objective_function
         <GaussianProcess.objective_function>` for all samples evaluated in the `optimization process <GaussianProcess_Procedure>`.
+
+    num_iter : int
+        The number of iterations of optimization (i.e. calls to objective function)
+    atol : float
+        The absolute tolerance for expected improvement to continue optimization. Search terminates when the expected 
+        improvment is less than atol + rtol * abs(best_val_so_far)
+    rtol : float
+        The relative tolerance for expected improvement to continue optimization.
+    opt_kwargs : dict
+        Additional keyword arguments to pass to `skopt.Optimizer`.
     """
 
     componentName = GAUSSIAN_PROCESS_FUNCTION
@@ -1591,6 +1603,10 @@ class GaussianProcess(OptimizationFunction):
                  params=None,
                  owner=None,
                  prefs=None,
+                 num_iter=100,
+                 atol=1e-6,
+                 rtol=1e-4,
+                 opt_kwargs={},
                  **kwargs):
 
         search_function = self._gaussian_process_sample
@@ -1598,6 +1614,10 @@ class GaussianProcess(OptimizationFunction):
         self._return_values = save_values
 
         self.direction = direction
+        self.num_iter=num_iter
+        self.atol = atol
+        self.rtol = rtol
+        self.opt_kwargs = opt_kwargs
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
@@ -1672,6 +1692,7 @@ class GaussianProcess(OptimizationFunction):
 
         return_all_samples = return_all_values = []
 
+
         # Enforce no MPI for now
         MPI_IMPLEMENTATION = False
         if MPI_IMPLEMENTATION:
@@ -1679,13 +1700,27 @@ class GaussianProcess(OptimizationFunction):
             pass
 
         else:
+            try:
+                from skopt import Optimizer
+            except:
+                raise OptimizationFunctionError("scikit-optimize library needed to use GaussianProcess optimizer.")
+
+            bounds = [(b.start, b.stop) for b in self.search_space]
+
+            if all(start == stop for (start, stop) in bounds):
+                # Optimization unnecessary! (Probably a dummy run)
+                sample = [b[0] for b in bounds]
+                value = call_with_pruned_args(self.objective_function, sample, execution_id=execution_id)
+                return sample, value, [sample] if self.save_samples else [], [value] if self.save_values else []
+
+            self._opt = Optimizer(bounds, **self.opt_kwargs)
+
             last_sample, last_value, all_samples, all_values = super().function(
                     variable=variable,
                     execution_id=execution_id,
                     params=params,
                     context=context
             )
-
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:
@@ -1695,27 +1730,29 @@ class GaussianProcess(OptimizationFunction):
 
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
-    # FRED: THESE ARE THE SHELLS FOR THE METHODS I BELIEVE YOU NEED:
+    def report_value(self, sample, value):
+        val = value[0].flat[0]  # TODO: What is going on here?
+        # print('report_value', sample, val)
+        maybe_neg =  (-1 if self.direction == MAXIMIZE else 1)
+        self._opt.tell(sample, maybe_neg * val)
+
+    def _converged(self):
+        '''True if expected improvement from additional search is very low.'''
+        from skopt.acquisition import gaussian_ei
+        y_opt = min(self._opt.yi)
+        expected_improvement = gaussian_ei(self._opt.Xi[-1], self._opt.models[-1], y_opt=y_opt)
+        return expected_improvement < (self.atol + self.rtol * abs(y_opt))
+
     def _gaussian_process_sample(self, variable, sample_num, execution_id=None):
         '''Draw and return sample from search_space.'''
-        # FRED: YOUR CODE HERE;  THIS IS THE search_function METHOD OF OptimizationControlMechanism (i.e., PARENT)
-        # NOTES:
-        #   This method is assigned as the search function of GaussianProcess,
-        #     and should return a sample that will be evaluated in the call to GaussianProcess' `objective_function`
-        #     (in the context of use with an OptimizationControlMechanism, a sample is a control_allocation,
-        #     and the objective_function is the evaluate method of the agent_rep).
-        #   You have accessible:
-        #     variable arg:  the last sample evaluated
-        #     sample_num:  number of current iteration in the search/sampling process
-        #     self.search_space:  self.parameters.search_space.get(execution_id), which you can assume will be a
-        #                         list of tuples, each of which contains the sampling bounds for each dimension;
-        #                         so its length = length of a sample
-        #     (the extra stuff in getting the search space is to support statefulness in parallelization of sims)
-        # return self._opt.ask() # [SAMPLE:  VECTOR SAME SHAPE AS VARIABLE]
-        return variable
+        return self._opt.ask()
 
     def _gaussian_process_satisfied(self, variable, value, iteration, execution_id=None):
         '''Determine whether search should be terminated;  return `True` if so, `False` if not.'''
-        # FRED: YOUR CODE HERE;    THIS IS THE search_termination_function METHOD OF OptimizationControlMechanism (
-        # i.e., PARENT)
-        return iteration==2# [BOOLEAN, SPECIFIYING WHETHER TO END THE SEARCH/SAMPLING PROCESS]
+        if iteration == 50:
+            import IPython; IPython.embed()
+        
+        return iteration == self.num_iter or (iteration > 10 and self._converged())
+
+
+
