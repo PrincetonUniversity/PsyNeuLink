@@ -3,7 +3,7 @@ import numpy as np
 
 from psyneulink import *
 
-# TEST GaussianProcess in context of EVC-Gratton model
+# TEST GaussianProcessOptimization in context of EVC-Gratton model
 
 # Mechanisms
 Input = pnl.TransferMechanism(
@@ -54,8 +54,8 @@ comp.add_linear_processing_pathway(task_execution_pathway)
 ocm = pnl.OptimizationControlMechanism(features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]},
                                        feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                        agent_rep=comp,
-                                       # function=pnl.GaussianProcess,
-                                       function=pnl.GaussianProcess,
+                                       # function=pnl.GaussianProcessOptimization,
+                                       function=pnl.GaussianProcessOptimization,
                                        control_signals=[("drift_rate", Decision), ("threshold", Decision)],
                                        objective_mechanism=pnl.ObjectiveMechanism(
                                                                          monitor_for_control=[

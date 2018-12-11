@@ -13,7 +13,7 @@
 * `OptimizationFunction`
 * `GradientOptimization`
 * `GridSearch`
-* `GaussianProcess`
+* `GaussianProcessOptimization`
 
 Overview
 --------
@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import call_with_pruned_args, is_iter
 
-__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
+__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcessOptimization',
            'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',
            'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE', 'SampleSpec'
            ]
@@ -1461,9 +1461,9 @@ class GridSearch(OptimizationFunction):
 
 warnings.filterwarnings('ignore', 'The objective has been evaluated at this point before.')
 
-class GaussianProcess(OptimizationFunction):
+class GaussianProcessOptimization(OptimizationFunction):
     """
-    GaussianProcess(                 \
+    GaussianProcessOptimization(                 \
         default_variable=None,       \
         objective_function=None,     \
         direction=MAXIMIZE,          \
@@ -1475,100 +1475,100 @@ class GaussianProcess(OptimizationFunction):
         prefs=None                   \
         )
 
-    Draw samples with dimensionality and bounds specified by `search_space <GaussianProcess.search_space>` and
-    return one that optimizes the value of `objective_function <GaussianProcess.objective_function>`.
+    Draw samples with dimensionality and bounds specified by `search_space <GaussianProcessOptimization.search_space>` and
+    return one that optimizes the value of `objective_function <GaussianProcessOptimization.objective_function>`.
 
-    .. _GaussianProcess_Procedure:
+    .. _GaussianProcessOptimization_Procedure:
 
     **Gaussian Process Procedure**
 
-    The number of items (`SampleIterators <SampleIteartor>` in `search_space <GaussianProcess.search_space>` determines
-    the dimensionality of each sample to evaluate by `objective_function <GaussianProcess.objective_function>`,
+    The number of items (`SampleIterators <SampleIteartor>` in `search_space <GaussianProcessOptimization.search_space>` determines
+    the dimensionality of each sample to evaluate by `objective_function <GaussianProcessOptimization.objective_function>`,
     with the `start <SampleIterator.start>` and `stop <SampleIterator.stop>` attributes of each `SampleIterator`
     specifying the bounds for sampling along the corresponding dimension.
 
-    When `function <GaussianProcess.function>` is executed, it iterates over the folowing steps:
+    When `function <GaussianProcessOptimization.function>` is executed, it iterates over the folowing steps:
 
-        - draw sample along each dimension of `search_space <GaussianProcess.search_space>`, within bounds
+        - draw sample along each dimension of `search_space <GaussianProcessOptimization.search_space>`, within bounds
           specified by `start <SampleIterator.start>` and `stop <SampleIterator.stop>` attributes of each
-          `SampleIterator` in the `search_space <GaussianProcess.search_space>` list.
+          `SampleIterator` in the `search_space <GaussianProcessOptimization.search_space>` list.
         ..
-        - compute value of `objective_function <GaussianProcess.objective_function>` for that sample;
+        - compute value of `objective_function <GaussianProcessOptimization.objective_function>` for that sample;
 
-    The current iteration is contained in `iteration <GaussianProcess.iteration>`. Iteration continues until [
-    FRED: FILL IN THE BLANK], or `max_iterations <GaussianProcess.max_iterations>` is execeeded.  The function
-    returns the sample that yielded either the highest (if `direction <GaussianProcess.direction>`
-    is *MAXIMIZE*) or lowest (if `direction <GaussianProcess.direction>` is *MINIMIZE*) value of the `objective_function
-    <GaussianProcess.objective_function>`, along with the value for that sample, as well as lists containing all of the
-    samples evaluated and their values if either `save_samples <GaussianProcess.save_samples>` or `save_values
-    <GaussianProcess.save_values>` is `True`, respectively.
+    The current iteration is contained in `iteration <GaussianProcessOptimization.iteration>`. Iteration continues until [
+    FRED: FILL IN THE BLANK], or `max_iterations <GaussianProcessOptimization.max_iterations>` is execeeded.  The function
+    returns the sample that yielded either the highest (if `direction <GaussianProcessOptimization.direction>`
+    is *MAXIMIZE*) or lowest (if `direction <GaussianProcessOptimization.direction>` is *MINIMIZE*) value of the `objective_function
+    <GaussianProcessOptimization.objective_function>`, along with the value for that sample, as well as lists containing all of the
+    samples evaluated and their values if either `save_samples <GaussianProcessOptimization.save_samples>` or `save_values
+    <GaussianProcessOptimization.save_values>` is `True`, respectively.
 
     Arguments
     ---------
 
     default_variable : list or ndarray : default None
         specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
-        `objective_function <GaussianProcess.objective_function>`.
+        `objective_function <GaussianProcessOptimization.objective_function>`.
 
     objective_function : function or method
         specifies function used to evaluate sample in each iteration of the `optimization process
-        <GaussianProcess_Procedure>`; it must be specified and must return a scalar value.
+        <GaussianProcessOptimization_Procedure>`; it must be specified and must return a scalar value.
 
     search_space : list or array
-        specifies bounds of the samples used to evaluate `objective_function <GaussianProcess.objective_function>`
-        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a tuple the first element
+        specifies bounds of the samples used to evaluate `objective_function <GaussianProcessOptimization.objective_function>`
+        along each dimension of `variable <GaussianProcessOptimization.variable>`;  each item must be a tuple the first element
         of which specifies the lower bound and the second of which specifies the upper bound.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         specifies the direction of optimization:  if *MAXIMIZE*, the highest value of `objective_function
-        <GaussianProcess.objective_function>` is sought;  if *MINIMIZE*, the lowest value is sought.
+        <GaussianProcessOptimization.objective_function>` is sought;  if *MINIMIZE*, the lowest value is sought.
 
     max_iterations : int : default 1000
-        specifies the maximum number of times the `optimization process<GaussianProcess_Procedure>` is allowed to
+        specifies the maximum number of times the `optimization process<GaussianProcessOptimization_Procedure>` is allowed to
         iterate; if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
 
     save_samples : bool
         specifies whether or not to return all of the samples used to evaluate `objective_function
-        <GaussianProcess.objective_function>` in the `optimization process <GaussianProcess_Procedure>`
-        (i.e., a copy of the `search_space <GaussianProcess.search_space>`.
+        <GaussianProcessOptimization.objective_function>` in the `optimization process <GaussianProcessOptimization_Procedure>`
+        (i.e., a copy of the `search_space <GaussianProcessOptimization.search_space>`.
 
     save_values : bool
-        specifies whether or not to save and return the values of `objective_function <GaussianProcess.objective_function>`
-        for all samples evaluated in the `optimization process <GaussianProcess_Procedure>`.
+        specifies whether or not to save and return the values of `objective_function <GaussianProcessOptimization.objective_function>`
+        for all samples evaluated in the `optimization process <GaussianProcessOptimization_Procedure>`.
 
     Attributes
     ----------
 
     variable : ndarray
-        template for sample evaluated by `objective_function <GaussianProcess.objective_function>`.
+        template for sample evaluated by `objective_function <GaussianProcessOptimization.objective_function>`.
 
     objective_function : function or method
-        function used to evaluate sample in each iteration of the `optimization process <GaussianProcess_Procedure>`.
+        function used to evaluate sample in each iteration of the `optimization process <GaussianProcessOptimization_Procedure>`.
 
     search_space : list or array
-        contains tuples specifying bounds within which each dimension of `variable <GaussianProcess.variable>` is
-        sampled, and used to evaluate `objective_function <GaussianProcess.objective_function>` in iterations of the
-        `optimization process <GaussianProcess_Procedure>`.
+        contains tuples specifying bounds within which each dimension of `variable <GaussianProcessOptimization.variable>` is
+        sampled, and used to evaluate `objective_function <GaussianProcessOptimization.objective_function>` in iterations of the
+        `optimization process <GaussianProcessOptimization_Procedure>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         determines the direction of optimization:  if *MAXIMIZE*, the greatest value of `objective_function
-        <GaussianProcess.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+        <GaussianProcessOptimization.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
 
     iteration : int
-        the currention iteration of the `optimization process <GaussianProcess_Procedure>`.
+        the currention iteration of the `optimization process <GaussianProcessOptimization_Procedure>`.
 
     max_iterations : int
-        determines the maximum number of times the `optimization process<GaussianProcess_Procedure>` is allowed to iterate;
+        determines the maximum number of times the `optimization process<GaussianProcessOptimization_Procedure>` is allowed to iterate;
         if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
 
     save_samples : True
         determines whether or not to save and return all samples evaluated by the `objective_function
-        <GaussianProcess.objective_function>` in the `optimization process <GaussianProcess_Procedure>` (if the process
-        completes, this should be identical to `search_space <GaussianProcess.search_space>`.
+        <GaussianProcessOptimization.objective_function>` in the `optimization process <GaussianProcessOptimization_Procedure>` (if the process
+        completes, this should be identical to `search_space <GaussianProcessOptimization.search_space>`.
 
     save_values : bool
         determines whether or not to save and return the value of `objective_function
-        <GaussianProcess.objective_function>` for all samples evaluated in the `optimization process <GaussianProcess_Procedure>`.
+        <GaussianProcessOptimization.objective_function>` for all samples evaluated in the `optimization process <GaussianProcessOptimization_Procedure>`.
 
     num_iter : int
         The number of iterations of optimization (i.e. calls to objective function)
@@ -1670,10 +1670,10 @@ class GaussianProcess(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the sample that yields the optimal value of `objective_function <GaussianProcess.objective_function>`,
+        '''Return the sample that yields the optimal value of `objective_function <GaussianProcessOptimization.objective_function>`,
         and possibly all samples evaluated and their corresponding values.
 
-        Optimal value is defined by `direction <GaussianProcess.direction>`:
+        Optimal value is defined by `direction <GaussianProcessOptimization.direction>`:
         - if *MAXIMIZE*, returns greatest value
         - if *MINIMIZE*, returns least value
 
@@ -1682,11 +1682,11 @@ class GaussianProcess(OptimizationFunction):
 
         optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
             first array contains sample that yields the highest or lowest value of `objective_function
-            <GaussianProcess.objective_function>`, depending on `direction <GaussianProcess.direction>`, and the
+            <GaussianProcessOptimization.objective_function>`, depending on `direction <GaussianProcessOptimization.direction>`, and the
             second array contains the value of the function for that sample. If `save_samples
-            <GaussianProcess.save_samples>` is `True`, first list contains all the values sampled in the order they were
-            evaluated; otherwise it is empty.  If `save_values <GaussianProcess.save_values>` is `True`, second list
-            contains the values returned by `objective_function <GaussianProcess.objective_function>` for all the
+            <GaussianProcessOptimization.save_samples>` is `True`, first list contains all the values sampled in the order they were
+            evaluated; otherwise it is empty.  If `save_values <GaussianProcessOptimization.save_values>` is `True`, second list
+            contains the values returned by `objective_function <GaussianProcessOptimization.objective_function>` for all the
             samples in the order they were evaluated; otherwise it is empty.
         '''
 
@@ -1703,7 +1703,7 @@ class GaussianProcess(OptimizationFunction):
             try:
                 from skopt import Optimizer
             except:
-                raise OptimizationFunctionError("scikit-optimize library needed to use GaussianProcess optimizer.")
+                raise OptimizationFunctionError("scikit-optimize library needed to use GaussianProcessOptimization optimizer.")
 
             bounds = [(b.start, b.stop) for b in self.search_space]
 
