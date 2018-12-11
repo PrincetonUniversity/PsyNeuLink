@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Param
-from psyneulink.core.globals.utilities import call_with_pruned_args, is_iter
+from psyneulink.core.globals.utilities import call_with_pruned_args
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',

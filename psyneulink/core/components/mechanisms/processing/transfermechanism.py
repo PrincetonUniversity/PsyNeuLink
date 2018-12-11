@@ -979,7 +979,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     IntegratorFunction.__class__.__name__)
 
         # Validate INTEGRATION_RATE:
-
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
             integration_rate = np.array(target_set[INTEGRATION_RATE])
             if not all_within_range(integration_rate, 0, 1):

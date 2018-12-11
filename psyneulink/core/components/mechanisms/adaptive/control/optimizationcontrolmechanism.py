@@ -418,7 +418,7 @@ from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNA
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_iterable, is_iter
+from psyneulink.core.globals.utilities import is_iterable
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',

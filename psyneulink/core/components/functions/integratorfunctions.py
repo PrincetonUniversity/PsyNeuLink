@@ -1808,13 +1808,20 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                  target_set=target_set,
                                  context=context)
 
-        # FIX: 12/9/18 REDUNDANT WITH _validate_rate??:  USE CONTEXT TO DISAMBIGUTE ITS USE? (I.E., CALL SUPER IF COMPONENT)
+
+        # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
         if RATE in target_set:
             # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
             rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
                              "must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
-            if not all_within_range(rate, 0, 1):
-                raise FunctionError(rate_value_msg.format(rate, self.name))
+
+            if isinstance(rate, np.ndarray) and rate.ndim > 0:
+                for r in rate:
+                    if r < 0.0 or r > 1.0:
+                        raise FunctionError(rate_value_msg.format(rate, self.name))
+            else:
+                if rate < 0.0 or rate > 1.0:
+                    raise FunctionError(rate_value_msg.format(rate, self.name))
 
         if NOISE in target_set:
             noise = target_set[NOISE]
