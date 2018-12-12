@@ -1,3 +1,226 @@
+"""
+
+.. _Param_Attributes:
+
+PsyNeuLink `parameters <Param>` are objects that represent the user-modifiable parameters of a `Component`. `Param`\\ s have
+names, default values, and other attributes that define how they are used in models. `Param` \\s also maintain and provide
+access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_Statefulness>`, `previous values <Param.history>`,
+and `logged values <Log>`.
+
+
+.. _Parameter_Defaults:
+
+Defaults
+========
+
+Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PNL class, and suggest
+valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class, and are used to validate
+compatibility between this instance and other PNL objects. Given a `TransferMechanism` *t*:
+
+    - instance defaults are accessible by ``t.defaults``
+    - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults``
+
+
+.. note::
+    ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default noise value for *t*
+
+
+.. _Parameter_Statefulness:
+
+Statefulness of Parameters
+==========================
+
+Parameters can have different values in different `execution contexts <Run_Scope_of_Execution>` in order to ensure correctness
+of and allow access to `simulation <OptimizationControlMechanism_Execution>` calculations. As a result, to inspect and use the values
+of a parameter, in general you need to know the execution context in which you are interested. Much of the time, this execution context
+is likely to be a Composition:
+
+::
+
+        >>> import psyneulink as pnl
+        >>> c = pnl.Composition()
+        >>> d = pnl.Composition()
+        >>> t = pnl.TransferMechanism()
+        >>> c.add_c_node(t)
+        >>> d.add_c_node(t)
+
+        >>> c.run({t: 5})
+        [[array([5.])]]
+        >>> d.run({t: 10})
+        [[array([10.])]]
+
+        >>> print(t.parameters.value.get(c))
+        [[5.]]
+        >>> print(t.parameters.value.get(d))
+        [[10.]]
+
+
+The TransferMechanism in the above snippet has a different `value <Component.value>` for each Composition it is run in. This holds
+true for all of its `stateful Params <Component.stateful_parameters>`, so they can behave differently in different execution contexts
+and be modulated during `control <System_Execution_Control>`.
+
+For Developers
+--------------
+
+Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a `run <Run_Overview>`
+must become stateful Params, or they are at risk of computational errors like those encountered in parallel programming.
+
+
+Creating Params
+^^^^^^^^^^^^^^^
+
+To create new Params, reference this example of a new class *B*
+
+::
+
+    class B(A):
+        class Params(A.Params):
+            p = 1.0
+            q = Param(1.0, modulable=True)
+
+
+- create an inner class Params on the Component, inheriting from the parent Component's Params class
+- an instance of *B*.Params will be assigned to the parameters attribute of the class *B* and all instances of *B*
+- each attribute on *B*.Params becomes a parameter (instance of the Param class)
+    - as with *p*, specifying only a value uses default values for the attributes of the Param
+    - as with *q*, specifying an explicit instance of the Param class allows you to modify the `Param attributes <Param_Attributes_Table>`
+- if you want assignments to parameter *p* to be validated, add a method _validate_p(value), that returns None if value is a valid assignment, or an error string if value is not a valid assignment
+- if you want all values set to *p* to be parsed beforehand, add a method _parse_p(value) that returns the parsed value
+    - for example, convert to a numpy array or float
+
+        ::
+
+            def _parse_p(value):
+                return np.asarray(value)
+
+- setters and getters (used for more advanced behavior than parsing) should both return the final value to return (getter) or set (setter)
+
+    For example, `costs <ControlMechanism.costs>` of `ControlMechanism <ControlMechanism>` has a special getter method, which computes the cost on-the-fly:
+
+        ::
+
+            def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
+                try:
+                    return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
+                except TypeError:
+                    return None
+
+    and `matrix <RecurrentTransferMechanism.matrix>` of `RecurrentTransferMechanism` has a special setter method,
+    which updates its `auto <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>` parameter values accordingly
+
+        ::
+
+            def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, execution_id=None):
+                try:
+                    value = get_matrix(value, owning_component.size[0], owning_component.size[0])
+                except AttributeError:
+                    pass
+
+                if value is not None:
+                    temp_matrix = value.copy()
+                    owning_component.parameters.auto.set(np.diag(temp_matrix).copy(), execution_id)
+                    np.fill_diagonal(temp_matrix, 0)
+                    owning_component.parameters.hetero.set(temp_matrix, execution_id)
+
+                return value
+
+.. note::
+    The specification of Params is intended to mirror the PNL class hierarchy. So, it is only necessary for each new class to declare
+    Params that are new, or whose specification has changed from their parent's. Params not present in a given class can be inherited
+    from parents, but will be overridden if necessary, without affecting the parents.
+
+
+Using Params
+^^^^^^^^^^^^
+
+Methods that are called during runtime in general must take *execution_id* as an argument and must pass this *execution_id* along to other
+PNL methods. The most likely place this will come up would be for the *function* method on a PNL `Function` class, or *_execute* method on other
+`Components`. Any getting and setting of stateful parameter values must use this *execution_id*, and using standard attributes to store data
+must be avoided at risk of causing computation errors. You may use standard attributes only when their values will never change during a
+`Run <TimeScale.RUN>`.
+
+
+.. _Param_Attributes_Table:
+
+`Param` **attributes**:
+
+.. table:: **`Param` attributes**
+
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|  Attribute Name  | Default value |                Description                 |                Dev notes                |
+|                  |               |                                            |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|  default_value   |     None      |the default value of the Parameter          |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|       name       |     None      |the name of the Parameter                   |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|     stateful     |     True      |whether the parameter has different values  |                                         |
+|                  |               |based on execution context                  |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|    modulable     |     False     |if True, the parameter can be modulated (has|Currently this does not determine what   |
+|                  |               |a ParameterState                            |gets a ParameterState, but in the future |
+|                  |               |                                            |it should                                |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|    read_only     |     False     |whether the user should be able to set the  |Can be manually set, but will trigger a  |
+|                  |               |value or not (e.g. variable and value are   |warning unless override=True             |
+|                  |               |just for informational purposes).           |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|     aliases      |     None      |other names by which the parameter goes     |specify as a list of strings             |
+|                  |               |(e.g. allocation is the same as variable for|                                         |
+|                  |               |ControlSignal).                             |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|       user       |     True      |whether the parameter is something the user |                                         |
+|                  |               |will care about (e.g. NOT context)          |                                         |
+|                  |               |                                            |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|      values      |     None      |stores the parameter's values under         |                                         |
+|                  |               |different execution contexts                |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
+|                  |               |values based on a supplied method           |execution_id will be passed in if your   |
+|                  |               |(e.g. _output_state_variable_getter)        |method uses them. self - the Param       |
+|                  |               |                                            |calling the setter; owning_component -   |
+|                  |               |                                            |the Component to which the Param belongs;|
+|                  |               |                                            |execution_id - the execution_id the      |
+|                  |               |                                            |setter is called with; should return the |
+|                  |               |                                            |value                                    |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|      setter      |     None      |hook that allows overriding the setting of  |should take a positional argument; kwargs|
+|                  |               |values based on a supplied method (e.g.     |self, owning_component, and execution_id |
+|                  |               |_recurrent_transfer_mechanism_matrix_setter)|will be passed in if your method uses    |
+|                  |               |                                            |them. self - the Param calling the       |
+|                  |               |                                            |setter; owning_component - the Component |
+|                  |               |                                            |to which the Param belongs; execution_id |
+|                  |               |                                            |- the execution_id the setter is called  |
+|                  |               |                                            |with; should return the value to be set  |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|     loggable     |     True      |whether the parameter can be logged         |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|       log        |     None      |stores the log of the parameter if          |                                         |
+|                  |               |applicable                                  |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|  log_condition   |     `OFF`     |the `LogCondition` for which the parameter  |                                         |
+|                  |               |should be logged                            |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|     history      |     None      |stores the history of the parameter         |                                         |
+|                  |               |(previous values)                           |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+|history_max_length|       1       |the maximum length of the stored history    |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+| fallback_default |     False     |if False, the Parameter will return None if |                                         |
+|                  |               |a requested value is not present for a given|                                         |
+|                  |               |execution context; if True, the Parameter's |                                         |
+|                  |               |default_value will be returned instead      |                                         |
++------------------+---------------+--------------------------------------------+-----------------------------------------+
+
+
+
+
+Class Reference
+===============
+
+"""
+
 import collections
 import copy
 import logging
@@ -22,6 +245,10 @@ class ParameterError(Exception):
 
 
 def get_validator_by_type_only(valid_types):
+    """
+        :return: A validation method for use with Params classes that rejects any assignment that is not one of the **valid_types**
+        :rtype: types.FunctionType
+    """
     if not isinstance(valid_types, collections.Iterable):
         valid_types = [valid_types]
 
@@ -36,6 +263,16 @@ def get_validator_by_type_only(valid_types):
 
 
 def get_validator_by_function(function):
+    """
+        Arguments
+        ---------
+            function
+                a function that takes exactly one positional argument and returns `True` if that argument
+                is a valid assignment, or `False` if that argument is not a valid assignment
+
+        :return: A validation method for use with Params classes that rejects any assignment for which **function** returns False
+        :rtype: types.FunctionType
+    """
     def validator(self, value):
         if function(value):
             return None
@@ -46,6 +283,14 @@ def get_validator_by_function(function):
 
 
 def parse_execution_context(execution_context):
+    """
+        Arguments
+        ---------
+            execution_context
+                An execution context (execution_id, Composition)
+
+        :return: the execution_id associated with **execution_context**
+    """
     try:
         return execution_context.default_execution_id
     except AttributeError:
@@ -111,6 +356,14 @@ class ParamsTemplate:
             self._children.remove(rem)
 
     def values(self, show_all=False):
+        """
+            Arguments
+            ---------
+                show_all : False
+                    if `True`, includes non-`user<Param.user` parameters
+
+            :return: a dictionary with {parameter name: parameter value} key-value pairs for each Par
+        """
         result = {}
         for k in self._params:
             val = getattr(self, k)
@@ -139,6 +392,18 @@ class ParamsTemplate:
 
 
 class Defaults(ParamsTemplate):
+    """
+        A class to simplify display and management of default values associated with the `Param`\\ s
+        in a :class:`Parameters` class.
+
+        With an instance of the Defaults class, *defaults*, *defaults.<param_name>* may be used to
+        get or set the default value of the associated :class:`Parameters` object
+
+        Attributes
+        ----------
+            owner
+                the :class:`Parameters` object associated with this object
+    """
     def __init__(self, owner, **kwargs):
         super().__init__(owner)
 
@@ -168,10 +433,122 @@ class Defaults(ParamsTemplate):
             super().__setattr__(attr, value)
 
     def values(self, show_all=False):
+        """
+            Arguments
+            ---------
+                show_all : False
+                    if `True`, includes non-`user<Param.user>` parameters
+
+            :return: a dictionary with {parameter name: parameter value} key-value pairs corresponding to `owner`
+        """
         return {k: v.default_value for (k, v) in self._owner.parameters.values(show_all=show_all).items()}
 
 
 class Param(types.SimpleNamespace):
+    """
+    COMMENT:
+        KDM 11/30/18: using nonstandard formatting below to ensure developer notes is below type in html
+    COMMENT
+
+    Attributes
+    ----------
+        default_value
+            the default value of the Parameter
+
+            :default: None
+
+        name
+            the name of the Parameter
+
+            :default: None
+
+        stateful
+            whether the parameter has different values based on execution context
+
+            :default: True
+
+        modulable
+            if True, the parameter can be modulated (has a ParameterState
+
+            :default: False
+
+            :Developer Notes: Currently this does not determine what gets a ParameterState, but in the future it should
+
+        read_only
+            whether the user should be able to set the value or not (e.g. variable and value are just for informational purposes).
+
+            :default: False
+
+            :Developer Notes: Can be manually set, but will trigger a warning unless override=True
+
+        aliases
+            other names by which the parameter goes (e.g. allocation is the same as variable for ControlSignal).
+
+            :type: list
+            :default: None
+
+            :Developer Notes: specify as a list of strings
+
+        user
+            whether the parameter is something the user will care about (e.g. NOT context)
+
+            :default: True
+
+        values
+            stores the parameter's values under different execution contexts
+
+            :type: dict{execution_id: value}
+            :default: None
+
+        getter
+            hook that allows overriding the retrieval of values based on a supplied method (e.g. _output_state_variable_getter)
+
+            :type: types.FunctionType
+            :default: None
+
+            :Developer Notes: kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Param calling the setter; owning_component - the Component to which the Param belongs; execution_id - the execution_id the setter is called with; should return the value
+
+        setter
+            hook that allows overriding the setting of values based on a supplied method (e.g.  _recurrent_transfer_mechanism_matrix_setter)
+
+            :type: types.FunctionType
+            :default: None
+
+            :Developer Notes: should take a positional argument; kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Param calling the setter; owning_component - the Component to which the Param belongs; execution_id - the execution_id the setter is called with; should return the value to be set
+
+        loggable
+            whether the parameter can be logged
+
+            :default: True
+
+        log
+            stores the log of the parameter if applicable
+
+            :type: dict{execution_id: deque([LogEntry])}
+            :default: None
+
+        log_condition
+            the LogCondition for which the parameter should be logged
+
+            :type: `LogCondition`
+            :default: `OFF <LogCondition.OFF>`
+
+        history
+            stores the history of the parameter (previous values). Also see `get_previous`
+
+            :type: dict{execution_id: deque([LogEntry])}
+            :default: None
+
+        history_max_length
+            the maximum length of the stored history
+
+            :default: 1
+
+        fallback_default
+            if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter's default_value will be returned instead
+
+            :default: False
+    """
     # The values of these attributes will never be inherited from parent Params
     # KDM 7/12/18: consider inheriting ONLY default_value?
     _uninherited_attrs = {'name', 'values', 'history', 'log'}
@@ -298,8 +675,10 @@ class Param(types.SimpleNamespace):
             super().__setattr__(attr, value)
 
     def reset(self):
-        # try to reset this to the value to the value specified explicitly
-        # by its Params class. otherwise, inherit
+        """
+            Resets *default_value* to the value specified in its `Params` class declaration, or
+            inherits from parent `Params` classes if it is not explicitly specified.
+        """
         try:
             self.default_value = self._owner.__class__.__dict__[self.name].default_value
         except (AttributeError, KeyError):
@@ -376,19 +755,18 @@ class Param(types.SimpleNamespace):
         return self._default_getter_kwargs
 
     def get(self, execution_context=None, **kwargs):
-        '''
+        """
             Gets the value of this `Param` in the context of **execution_context**
             If no execution_context is specified, attributes on the associated `Component` will be used
 
             Arguments
             ---------
 
-                execution_context : UUID, Composition
-                    the execution_id for which the value is stored; if a Composition,
-                    uses **execution_context**.default_execution_id
+                execution_context : execution_id, Composition
+                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
                 kwargs
-                    any additional arguments to be passed to this `Param`'s `getter` if it is set
-        '''
+                    any additional arguments to be passed to this `Param`'s `getter` if it exists
+        """
         try:
             owning_component = self._owner._owner
         except AttributeError:
@@ -419,12 +797,30 @@ class Param(types.SimpleNamespace):
                     return None
 
     def get_previous(self, execution_context=None):
+        """
+            Gets the value set before the current value of this `Param` in the context of **execution_context**
+
+            Arguments
+            ---------
+
+                execution_context : execution_id, Composition
+                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+        """
         try:
             return self.history[execution_context][-1]
         except (KeyError, IndexError):
             return None
 
     def get_delta(self, execution_context=None):
+        """
+            Gets the difference between the current value and previous value of `Param` in the context of **execution_context**
+
+            Arguments
+            ---------
+
+                execution_context : execution_id, Composition
+                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+        """
         try:
             return self.get(execution_context) - self.get_previous(execution_context)
         except TypeError as e:
@@ -437,6 +833,24 @@ class Param(types.SimpleNamespace):
             ) from e
 
     def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, **kwargs):
+        """
+            Sets the value of this `Param` in the context of **execution_context**
+            If no execution_context is specified, attributes on the associated `Component` will be used
+
+            Arguments
+            ---------
+
+                execution_context : execution_id, Composition
+                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+                override : False
+                    if True, ignores a warning when attempting to set a *read-only* Param
+                skip_history : False
+                    if True, does not modify the Param's *history*
+                skip_log : False
+                    if True, does not modify the Param's *log*
+                kwargs
+                    any additional arguments to be passed to this `Param`'s `setter` if it exists
+        """
         if not override and self.read_only:
             warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=2)
 
@@ -526,6 +940,9 @@ class Param(types.SimpleNamespace):
             )
 
     def clear_log(self, execution_ids=NotImplemented):
+        """
+            Clears the log of this Param for every execution_id in **execution_ids**
+        """
         if execution_ids is NotImplemented:
             eids = list(self.log.keys())
         elif not isinstance(execution_ids, list):
@@ -607,6 +1024,10 @@ class _ParamAliasMeta(type):
 
 # TODO: may not completely work with history/history_max_length
 class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
+    """
+        A counterpart to `Param` that represents a pseudo-Param alias that
+        refers to another `Param`, but has a different name
+    """
     def __init__(self, source=None, name=None):
         super().__init__(name=name)
         try:
@@ -636,6 +1057,9 @@ class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
 # only current candidate for separation seems to be on stateful
 # for now, leave everything together. separate later if necessary
 class Parameters(ParamsTemplate):
+    """
+        Base class for inner `Params` classes on Components (see `Component.Params` for example)
+    """
     _parsing_method_prefix = '_parse_'
     _validation_method_prefix = '_validate_'
 
