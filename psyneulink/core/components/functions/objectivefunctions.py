@@ -551,7 +551,7 @@ class Distance(ObjectiveFunction):
                 )
 
     def cosine(v1, v2):
-        numer = np.sum(np.product(v1, v2))
+        numer = v1 * v2
         denom = np.sqrt(np.sum(v1 ** 2)) * np.sqrt(np.sum(v2 ** 2)) or EPSILON
         return numer / denom
 

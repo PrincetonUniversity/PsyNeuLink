@@ -39,6 +39,8 @@ import warnings
 from collections.__init__ import deque
 from enum import IntEnum
 
+import torch
+import torch.nn.functional as F
 import numpy as np
 import typecheck as tc
 from llvmlite import ir
@@ -52,10 +54,10 @@ from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, BUFFER_FUNCTION, \
     CONSTANT_INTEGRATOR_FUNCTION, COSINE, \
     DECAY, DND_FUNCTION, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FHN_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
-    INITIALIZER,INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
+    INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, OFFSET, OPERATION, \
-    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, \
-    RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION
+    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, METRIC, \
+    RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION, L0, L1
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec, all_within_range
 from psyneulink.core.globals.context import ContextFlags
@@ -5359,6 +5361,7 @@ class DND(Integrator):  # ------------------------------------------------------
     componentName = DND_FUNCTION
 
     class Params(Integrator.Params):
+        default_variable = Param([[0],[0]])
         retrieval_prob = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
@@ -5384,9 +5387,9 @@ class DND(Integrator):  # ------------------------------------------------------
                  # noise=0.0,
                  retrieval_prob: tc.optional(tc.any(int, float))=1.0,
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
-                 noise: tc.optional(tc.any(int, float, callable))=None,
+                 noise: tc.optional(tc.any(int, float, callable))=0.0,
                  initializer: tc.optional(dict)=None,
-                 metric:tc.any(is_function_type, Function)=Distance(metric=COSINE),
+                 metric:tc.enum(COSINE,L0,L1)=COSINE,
                  max_entries=1000,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -5420,19 +5423,19 @@ class DND(Integrator):  # ------------------------------------------------------
             retrieval_prob = request_set[RETRIEVAL_PROB]
             if not all_within_range(retrieval_prob, 0, 1):
                 raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(RETRIEVAL_PROB), self.__class___.__name__))
+                                    format(repr(RETRIEVAL_PROB), self.__class___.__name__, metric))
 
         if STORAGE_PROB in request_set and request_set[STORAGE_PROB] is not None:
             storage_prob = request_set[STORAGE_PROB]
             if not all_within_range(storage_prob, 0, 1):
                 raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(STORAGE_PROB), self.__class___.__name__))
+                                    format(repr(STORAGE_PROB), self.__class___.__name__, metric))
 
         if METRIC in request_set and request_set[METRIC] is not None:
             metric = request_set[METRIC]
             if not metric in METRICS:
                 raise FunctionError("{} arg of {} ({}) must be one of: {}".
-                                    format(repr(METRIC), self.__class___.__name__), METRICS)
+                                    format(repr(METRIC), self.__class__.__name__, metric, METRICS))
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         initializer = initializer or []
@@ -5589,7 +5592,7 @@ class DND(Integrator):  # ------------------------------------------------------
             best_memory_id = torch.argmax(similarities)
             best_memory_val = self.vals[best_memory_id]
         else:
-            raise 'unrecog retrieval policy'
+            assert False, 'unrecog retrieval policy'
         return best_memory_val
 
     def save_memory(self, memory_key, memory_val):
@@ -5649,25 +5652,24 @@ def compute_similarities(query_key, key_list, metric):
         the similarity between query vs. key_i, for all i
 
     """
-    return
-    # # query_key = query_key.data
-    # # reshape query to 1 x key_dim
-    # q = query_key.data.view(1, -1)
-    # # reshape memory keys to #keys x key_dim
-    # M = torch.stack(key_list, dim=1).view(len(key_list), -1)
-    # # compute similarities
-    # if metric is 'cosine':
-    #     similarities = F.cosine_similarity(q, M)
-    # elif metric is 'l1':
-    #     similarities = - F.pairwise_distance(q, M, p=1)
-    # elif metric is 'l2':
-    #     similarities = - F.pairwise_distance(q, M, p=2)
-    # else:
-    #     raise FunctionError("ERROR IN DND")
-    # return similarities
+    # query_key = query_key.data
+    # reshape query to 1 x key_dim
+    q = query_key.data.view(1, -1)
+    # reshape memory keys to #keys x key_dim
+    M = torch.stack(key_list, dim=1).view(len(key_list), -1)
+    # compute similarities
+    if metric is 'cosine':
+        similarities = F.cosine_similarity(q, M)
+    elif metric is 'l1':
+        similarities = - F.pairwise_distance(q, M, p=1)
+    elif metric is 'l2':
+        similarities = - F.pairwise_distance(q, M, p=2)
+    else:
+        raise FunctionError("ERROR IN DND")
+    return similarities
 
 
-# def empty_memory(memory_dim):
-#     """Get a empty memory, assuming the memory is a row vector
-#     """
-#     return torch.zeros(1, memory_dim)
+def empty_memory(memory_dim):
+    """Get a empty memory, assuming the memory is a row vector
+    """
+    return torch.zeros(1, memory_dim)
