@@ -453,6 +453,23 @@ class MappingProjection(PathwayProjection_Base):
     suffix = " " + className
 
     class Params(PathwayProjection_Base.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <MappingProjection.function>`
+
+                    :default value: `LinearMatrix`
+                    :type: `Function`
+
+                matrix
+                    see `matrix <MappingProjection.matrix>`
+
+                    :default value: `AUTO_ASSIGN_MATRIX`
+                    :type: str
+
+        """
         function = Param(LinearMatrix, stateful=False, loggable=False)
         matrix = Param(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
 

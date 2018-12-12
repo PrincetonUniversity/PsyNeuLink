@@ -625,6 +625,84 @@ class ControlSignal(ModulatorySignal):
     paramsType = OUTPUT_STATE_PARAMS
 
     class Params(ModulatorySignal.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ControlSignal.variable>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                value
+                    see `value <ControlSignal.value>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                adjustment_cost
+                    see `adjustment_cost <ControlSignal.adjustment_cost>`
+
+                    :default value: 0
+                    :type: int
+
+                adjustment_cost_function
+                    see `adjustment_cost_function <ControlSignal.adjustment_cost_function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                allocation_samples
+                    see `allocation_samples <ControlSignal.allocation_samples>`
+
+                    :default value: numpy.array([0.1, 0.4, 0.7, 1. ])
+                    :type: numpy.ndarray
+
+                combine_costs_function
+                    see `combine_costs_function <ControlSignal.combine_costs_function>`
+
+                    :default value: `Reduce`(offset=0.0, operation=sum, scale=1.0)
+                    :type: `Function`
+
+                cost
+                    see `cost <ControlSignal.cost>`
+
+                    :default value: None
+                    :type:
+
+                cost_options
+                    see `cost_options <ControlSignal.cost_options>`
+
+                    :default value: ControlSignalCosts.INTENSITY
+                    :type: `ControlSignalCosts`
+
+                duration_cost
+                    see `duration_cost <ControlSignal.duration_cost>`
+
+                    :default value: 0
+                    :type: int
+
+                duration_cost_function
+                    see `duration_cost_function <ControlSignal.duration_cost_function>`
+
+                    :default value: `SimpleIntegrator`
+                    :type: `Function`
+
+                intensity_cost
+                    see `intensity_cost <ControlSignal.intensity_cost>`
+
+                    :default value: None
+                    :type:
+
+                intensity_cost_function
+                    see `intensity_cost_function <ControlSignal.intensity_cost_function>`
+
+                    :default value: `Exponential`
+                    :type: `Function`
+
+        """
         # NOTE: if the specification of this getter is happening in several other classes, should consider
         # refactoring Param to allow individual attributes to be inherited, othwerise, leaving this is an
         # isolated case

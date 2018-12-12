@@ -201,6 +201,17 @@ class OneHot(SelectionFunction):
     })
 
     class Params(SelectionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mode
+                    see `mode <OneHot.mode>`
+
+                    :default value: `MAX_VAL`
+                    :type: str
+
+        """
         mode = Param(MAX_VAL, stateful=False)
 
         def _validate_mode(self, mode):

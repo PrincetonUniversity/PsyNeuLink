@@ -546,6 +546,36 @@ class OptimizationFunction(Function_Base):
     componentType = OPTIMIZATION_FUNCTION_TYPE
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <GaussianProcess.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                direction
+                    see `direction <GaussianProcess.direction>`
+
+                    :default value: `MAXIMIZE`
+                    :type: str
+
+                save_samples
+                    see `save_samples <GaussianProcess.save_samples>`
+
+                    :default value: True
+                    :type: bool
+
+                save_values
+                    see `save_values <GaussianProcess.save_values>`
+
+                    :default value: True
+                    :type: bool
+
+        """
         variable = Param(np.array([0, 0, 0]), read_only=True)
 
         objective_function = Param(lambda x: 0, stateful=False, loggable=False)
@@ -980,6 +1010,36 @@ class GradientOptimization(OptimizationFunction):
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
 
     class Params(OptimizationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <GaussianProcess.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                direction
+                    see `direction <GaussianProcess.direction>`
+
+                    :default value: `MAXIMIZE`
+                    :type: str
+
+                save_samples
+                    see `save_samples <GaussianProcess.save_samples>`
+
+                    :default value: True
+                    :type: bool
+
+                save_values
+                    see `save_values <GaussianProcess.save_values>`
+
+                    :default value: True
+                    :type: bool
+
+        """
         variable = Param([[0], [0]], read_only=True)
 
         # these should be removed and use switched to .get_previous()
@@ -1245,6 +1305,36 @@ class GridSearch(OptimizationFunction):
     componentName = GRID_SEARCH_FUNCTION
 
     class Params(OptimizationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <GaussianProcess.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                direction
+                    see `direction <GaussianProcess.direction>`
+
+                    :default value: `MAXIMIZE`
+                    :type: str
+
+                save_samples
+                    see `save_samples <GaussianProcess.save_samples>`
+
+                    :default value: True
+                    :type: bool
+
+                save_values
+                    see `save_values <GaussianProcess.save_values>`
+
+                    :default value: True
+                    :type: bool
+
+        """
         grid = Param(None)
         save_samples = True
         save_values = True
@@ -1584,6 +1674,36 @@ class GaussianProcess(OptimizationFunction):
     componentName = GAUSSIAN_PROCESS_FUNCTION
 
     class Params(OptimizationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <GaussianProcess.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                direction
+                    see `direction <GaussianProcess.direction>`
+
+                    :default value: `MAXIMIZE`
+                    :type: str
+
+                save_samples
+                    see `save_samples <GaussianProcess.save_samples>`
+
+                    :default value: True
+                    :type: bool
+
+                save_values
+                    see `save_values <GaussianProcess.save_values>`
+
+                    :default value: True
+                    :type: bool
+
+        """
         variable = Param([[0], [0]], read_only=True)
 
         save_samples = True

@@ -65,6 +65,29 @@ class EVCAuxiliaryFunction(Function_Base):
     componentType = kwEVCAuxFunctionType
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                filter_function
+                    see `filter_function <PredictionMechanism.filter_function>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <PredictionMechanism.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                window_size
+                    see `window_size <PredictionMechanism.window_size>`
+
+                    :default value: 1
+                    :type: int
+
+        """
         variable = Param(None, read_only=True)
 
     classPreferences = {
@@ -820,6 +843,29 @@ class PredictionMechanism(IntegratorMechanism):
     componentType = PREDICTION_MECHANISM
 
     class Params(IntegratorMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                filter_function
+                    see `filter_function <PredictionMechanism.filter_function>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <PredictionMechanism.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                window_size
+                    see `window_size <PredictionMechanism.window_size>`
+
+                    :default value: 1
+                    :type: int
+
+        """
         window_size = Param(1, stateful=False, loggable=False)
         filter_function = Param(None, stateful=False, loggable=False)
 

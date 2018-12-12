@@ -400,6 +400,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections are created from each origin node's corresponding input_CIM OutputState(s) to the key node's
                 InputState(s). (Excludes origin nodes that are already borrowing inputs from another origin node).
 
+        default_execution_id
+            if no *execution_id* is specified in a call to run, this *execution_id* will be used.
+
+            :default value: the Composition's name
 
         COMMENT:
         name : str
@@ -414,6 +418,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     componentType = 'Composition'
 
     class Params(Parameters):
+        """
+            Attributes
+            ----------
+
+                results
+                    see `results <Composition.results>`
+
+                    :default value: []
+                    :type: list
+
+                simulation_results
+                    see `simulation_results <Composition.simulation_results>`
+
+                    :default value: []
+                    :type: list
+
+        """
         results = Param([], loggable=False)
         simulation_results = Param([], loggable=False)
 

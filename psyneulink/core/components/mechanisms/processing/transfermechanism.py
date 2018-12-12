@@ -819,6 +819,79 @@ class TransferMechanism(ProcessingMechanism_Base):
     standard_output_states = standard_output_states.copy()
 
     class Params(ProcessingMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                clip
+                    see `clip <TransferMechanism.clip>`
+
+                    :default value: None
+                    :type:
+
+                convergence_criterion
+                    see `convergence_criterion <TransferMechanism.convergence_criterion>`
+
+                    :default value: 0.01
+                    :type: float
+
+                convergence_function
+                    see `convergence_function <TransferMechanism.convergence_function>`
+
+                    :default value: `Distance`(metric=difference, normalize=False)
+                    :type: `Function`
+
+                initial_value
+                    see `initial_value <TransferMechanism.initial_value>`
+
+                    :default value: None
+                    :type:
+
+                integration_rate
+                    see `integration_rate <TransferMechanism.integration_rate>`
+
+                    :default value: 0.5
+                    :type: float
+
+                integrator_function_value
+                    see `integrator_function_value <TransferMechanism.integrator_function_value>`
+
+                    :default value: [[0]]
+                    :type: list
+                    :read only: True
+
+                integrator_mode
+                    see `integrator_mode <TransferMechanism.integrator_mode>`
+
+                    :default value: False
+                    :type: bool
+
+                max_passes
+                    see `max_passes <TransferMechanism.max_passes>`
+
+                    :default value: 1000
+                    :type: int
+
+                noise
+                    see `noise <TransferMechanism.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                on_resume_integrator_mode
+                    see `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
+
+                    :default value: `INSTANTAENOUS_MODE_VALUE`
+                    :type: str
+
+                previous_value
+                    see `previous_value <TransferMechanism.previous_value>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
         initial_value = None
         previous_value = Param(None, read_only=True)
         clip = None

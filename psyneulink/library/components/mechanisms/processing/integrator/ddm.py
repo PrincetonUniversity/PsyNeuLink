@@ -780,6 +780,29 @@ class DDM(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Params(ProcessingMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <DDM.function>`
+
+                    :default value: `DriftDiffusionAnalytical`(bias=0.5, drift_rate=1.0, noise=0.5, starting_point=0.0, t0=0.2, threshold=1.0)
+                    :type: `Function`
+
+                initializer
+                    see `initializer <DDM.initializer>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+
+                input_format
+                    see `input_format <DDM.input_format>`
+
+                    :default value: `SCALAR`
+                    :type: str
+
+        """
         function = Param(
             DriftDiffusionAnalytical(
                 drift_rate=1.0,

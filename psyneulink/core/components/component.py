@@ -27,7 +27,7 @@ Creating a Component
 A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
-`configurable parameters <Component_User_Params>` that can be specified in the arguments of the constructor, as well
+`configurable parameters <Parameters>` that can be specified in the arguments of the constructor, as well
 as additional parameters and attributes that may be specific to particular Components, many of which can be modified
 by the user, and some of which provide useful information about the Component (see `User_Modifiable_Parameters`
 and `Informational Attributes` below).
@@ -152,12 +152,14 @@ user once the component is constructed, with the one exception of `prefs <Compon
 ..
 
 .. _Component_Prefs:
+
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
-.. _Reinitialize_When:
+.. _Component_Reinitialize_When:
+
 * **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
   this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
   `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
@@ -172,10 +174,17 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 .. _User_Modifiable_Parameters:
 
-*User-modifiable Parameters*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Parameters*
+~~~~~~~~~~~~
 
-.. _Component_User_Params:
+.. _Component_Parameters:
+
+A Component defines its `parameters <Parameters>` in its *parameters* attribute, which contains a collection of
+`Param` objects, each of which stores a Param's values, `default values <Component.defaults>`, and various
+`properties <Param_Attributes_Table>` of the parameter.
+
+* `Params <Component.Params>` - a `Parameters class <Parameters>` defining parameters and their default values that
+    are used for all Components, unless overridden.
 
 * `user_params <Component.user_params>` - a dictionary that provides reference to all of the user-modifiable parameters
   of a Component. The dictionary is a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
@@ -778,13 +787,20 @@ class Component(object, metaclass=ComponentsMeta):
         see `current_execution_time <Component_Current_Execution_Time>`
 
     reinitialize_when : `Condition`
-
+        see `reinitialize_when <Component_Reinitialize_When>`
 
     name : str
         see `name <Component_Name>`
 
     prefs : PreferenceSet
         see `prefs <Component_Prefs>`
+
+    parameters
+        see `parameters <Component_Parameters>`
+
+    defaults
+        an object that provides access to the default values of a `Component's` `parameters`
+
 
     """
 
@@ -796,6 +812,27 @@ class Component(object, metaclass=ComponentsMeta):
     componentType = None
 
     class Params(Parameters):
+        """
+            The `Parameters` that are associated with all `Components`
+
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Component.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <Component.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)
         context = Param(None, user=False)
@@ -3251,10 +3288,17 @@ class Component(object, metaclass=ComponentsMeta):
 
     @property
     def stateful_parameters(self):
+        """
+            A list of all of this object's `parameters <Parameters>` whose values
+            may change during runtime
+        """
         return [param for param in self.parameters if param.stateful]
 
     @property
     def function_parameters(self):
+        """
+            The `parameters <Parameters>` object of this object's `function_object`
+        """
         try:
             return self.function_object.parameters
         except AttributeError:
@@ -3262,6 +3306,9 @@ class Component(object, metaclass=ComponentsMeta):
 
     @property
     def class_defaults(self):
+        """
+            Refers to the defaults of this object's class
+        """
         return self.__class__.defaults
 
     # left in for backwards compatibility

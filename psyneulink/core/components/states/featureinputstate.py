@@ -676,6 +676,35 @@ class FeatureInputState(InputState):
     valueEncodingDim = 1
 
     class Params(State_Base.Params):
+        """
+            Attributes
+            ----------
+
+                exponent
+                    see `exponent <FeatureInputState.exponent>`
+
+                    :default value: None
+                    :type:
+
+                function
+                    see `function <FeatureInputState.function>`
+
+                    :default value: `LinearCombination`(offset=1.0, operation=sum, scale=1.0)
+                    :type: `Function`
+
+                internal_only
+                    see `internal_only <FeatureInputState.internal_only>`
+
+                    :default value: False
+                    :type: bool
+
+                weight
+                    see `weight <FeatureInputState.weight>`
+
+                    :default value: None
+                    :type:
+
+        """
         function = Param(LinearCombination(operation=SUM), stateful=False, loggable=False)
         weight = Param(None, modulable=True)
         exponent = Param(None, modulable=True)

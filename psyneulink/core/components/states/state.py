@@ -999,6 +999,17 @@ class State_Base(State):
     paramsType = None
 
     class Params(State.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <State_Base.function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+        """
         function = Param(Linear, stateful=False, loggable=False)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}

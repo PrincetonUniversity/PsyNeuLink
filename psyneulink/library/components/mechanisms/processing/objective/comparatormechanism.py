@@ -312,6 +312,36 @@ class ComparatorMechanism(ObjectiveMechanism):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Params(ObjectiveMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ComparatorMechanism.variable>`
+
+                    :default value: numpy.array([[0], [0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                function
+                    see `function <ComparatorMechanism.function>`
+
+                    :default value: `LinearCombination`(offset=1.0, operation=sum, scale=1.0, weights=numpy.array([[-1], [ 1]]))
+                    :type: `Function`
+
+                sample
+                    see `sample <ComparatorMechanism.sample>`
+
+                    :default value: None
+                    :type:
+
+                target
+                    see `target <ComparatorMechanism.target>`
+
+                    :default value: None
+                    :type:
+
+        """
         # By default, ComparatorMechanism compares two 1D np.array input_states
         variable = Param(np.array([[0], [0]]), read_only=True)
         function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)

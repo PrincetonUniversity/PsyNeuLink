@@ -501,6 +501,59 @@ class LCAMechanism(RecurrentTransferMechanism):
     })
 
     class Params(RecurrentTransferMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                competition
+                    see `competition <LCAMechanism.competition>`
+
+                    :default value: 1.0
+                    :type: float
+
+                function
+                    see `function <LCAMechanism.function>`
+
+                    :default value: `Logistic`
+                    :type: `Function`
+
+                initial_value
+                    see `initial_value <LCAMechanism.initial_value>`
+
+                    :default value: None
+                    :type:
+
+                integrator_mode
+                    see `integrator_mode <LCAMechanism.integrator_mode>`
+
+                    :default value: True
+                    :type: bool
+
+                leak
+                    see `leak <LCAMechanism.leak>`
+
+                    :default value: 0.5
+                    :type: float
+
+                matrix
+                    see `matrix <LCAMechanism.matrix>`
+
+                    :default value: None
+                    :type:
+
+                self_excitation
+                    see `self_excitation <LCAMechanism.self_excitation>`
+
+                    :default value: 0.0
+                    :type: float
+
+                time_step_size
+                    see `time_step_size <LCAMechanism.time_step_size>`
+
+                    :default value: 0.1
+                    :type: float
+
+        """
         function = Param(Logistic, stateful=False, loggable=False)
 
         matrix = Param(None, modulable=True)

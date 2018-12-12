@@ -133,6 +133,17 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     componentType = ADAPTIVE_MECHANISM
 
     class Params(Mechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                modulation
+                    see `modulation <AdaptiveMechanism_Base.modulation>`
+
+                    :default value: None
+                    :type:
+
+        """
         modulation = None
 
     classPreferenceLevel = PreferenceLevel.TYPE
