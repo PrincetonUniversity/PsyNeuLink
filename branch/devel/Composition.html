@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1027
+                0.4.8.0+1030
               </div>
             
           
@@ -253,6 +253,57 @@ InputState(s). (Excludes origin nodes that are already borrowing inputs from ano
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.default_execution_id">
+<code class="descname">default_execution_id</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.default_execution_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>if no <em>execution_id</em> is specified in a call to run, this <em>execution_id</em> will be used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">the Composition’s name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.compositions.composition.Composition.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.Params.results">
+<code class="descname">results</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.Params.results" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">results</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">[]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.Params.simulation_results">
+<code class="descname">simulation_results</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.Params.simulation_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">simulation_results</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">[]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.compositions.composition.Composition.graph_processing">
 <code class="descname">graph_processing</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.graph_processing" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Composition’s processing graph (contains only <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, excluding those
@@ -345,7 +396,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.Params.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.Params.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – if False, any cycles containing this projection will be</li>
 </ul>
@@ -401,7 +452,7 @@ value(s).</li>
 <p>Displays a graph showing the structure of the System (based on the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.graph" title="psyneulink.core.components.system.System.graph"><code class="xref any py py-attr docutils literal"><span class="pre">System's</span> <span class="pre">graph</span></code></a>).
 By default, only the primary processing Components are shown, and Mechanisms are displayed as simple nodes.
 However, the <strong>show_mechanism_structure</strong> argument can be used to display more detailed information about
-each Mechanism, including its States and, optionally, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States (using the <strong>show_functions</strong> and <strong>show_values</strong>
+each Mechanism, including its States and, optionally, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <code class="xref any docutils literal"><span class="pre">value</span></code> of the Mechanism and each of its States (using the <strong>show_functions</strong> and <strong>show_values</strong>
 arguments, respectively).  The <strong>show_dimension</strong> argument can be used to display the dimensions of each
 Mechanism and Projection.  The <strong>show_processes</strong> argument arranges Mechanisms and Projections into the
 Processes to which they belong. The <strong>show_learning</strong> and <strong>show_control</strong> arguments can be used to
@@ -467,7 +518,7 @@ Processes;  these represent intersections of Processes within the System.</li>
 <li><strong>show_mechanism_structure</strong> (<em>bool</em><em>, </em><em>VALUES</em><em>, </em><em>FUNCTIONS</em><em> or </em><em>ALL : default False</em>) – <p>specifies whether or not to show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the graph, including its
 <code class="xref any docutils literal"><span class="pre">States</span></code>;  can have the following settings:</p>
 <ul>
-<li><code class="xref any docutils literal"><span class="pre">True</span></code> – shows States of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its States.</li>
+<li><code class="xref any docutils literal"><span class="pre">True</span></code> – shows States of Mechanism, but not information about the <code class="xref any docutils literal"><span class="pre">value</span></code> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its States.</li>
 <li><em>VALUES</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States.</li>
 <li><em>LABELS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States, using any labels for the values of InputStates and
 OutputStates specified in the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> and
@@ -475,7 +526,7 @@ OutputStates specified in the Mechanism’s <code class="xref any docutils liter
 <li><em>FUNCTIONS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its InputStates and OutputStates.</li>
 <li><em>ROLES</em> – shows the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> of the Mechanism in the System in square brackets
 (but not any of the other information;  use <em>ALL</em> to show ROLES with other information).</li>
-<li><em>ALL</em> – shows both <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and
+<li><em>ALL</em> – shows both <code class="xref any docutils literal"><span class="pre">value</span></code> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and
 its States (using labels for the values, if specified;  see above).</li>
 </ul>
 <p>Any combination of the settings above can also be specified in a list that is assigned to
@@ -777,7 +828,7 @@ by checking whether the</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1027.g5270b5a',
+            VERSION:'0.4.8.0+1030.g6322ab3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

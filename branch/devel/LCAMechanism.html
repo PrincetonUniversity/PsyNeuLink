@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation" href="index.html"/>
         <link rel="up" title="Transfer Mechanisms" href="TransferMechanisms.html"/>
         <link rel="next" title="KWTAMechanism" href="KWTAMechanism.html"/>
         <link rel="prev" title="RecurrentTransferMechanism" href="RecurrentTransferMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1027
+                0.4.8.0+1030
               </div>
             
           
@@ -283,7 +283,7 @@ For an LCAMechanism with more than two elements, <code class="xref any docutils 
 <dt><em>ENTROPY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>the entropy of the result, which is calculated using the <code class="xref any docutils literal"><span class="pre">Stability</span>
 <span class="pre">Function</span></code> with <code class="docutils literal"><span class="pre">ENTROPY</span></code> metric (Note:
-this is only present if the Mechanism’s <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is bounded between
+this is only present if the Mechanism’s <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is bounded between
 0 and 1)</dd>
 </dl>
 <dl class="docutils">
@@ -329,7 +329,7 @@ As an example, the following mechanisms are equivalent:</p>
 </li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) – specifies the function used to transform the input;  can be <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
 or a custom function.</li>
-<li><strong>initial_value</strong> (<a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
+<li><strong>initial_value</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
 <code class="xref any docutils literal"><span class="pre">beta</span></code> is not 1.0).</li>
 <li><strong>leak</strong> (<em>value : default 0.5</em>) – sets the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> on the <a class="reference internal" href="IntegratorFunctions.html#lcaintegrator"><span class="std std-ref">LCAIntegrator function</span></a>, which scales the
 contribution of the <a class="reference internal" href="IntegratorFunctions.html#lcaintegrator"><span class="std std-ref">LCAIntegrator's</span></a> <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> to the
@@ -533,6 +533,139 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </tr>
 </tbody>
 </table>
+<dl class="class">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.competition">
+<code class="descname">competition</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.competition" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.function" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="Function.html"><span class="doc">Function</span></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.initial_value">
+<code class="descname">initial_value</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.initial_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.initial_value" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.integrator_mode">
+<code class="descname">integrator_mode</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.integrator_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_mode" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">True</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.leak">
+<code class="descname">leak</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.leak" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.leak" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.leak"><code class="xref any py py-attr docutils literal"><span class="pre">leak</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.5</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.self_excitation">
+<code class="descname">self_excitation</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.self_excitation" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.time_step_size">
+<code class="descname">time_step_size</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.Params.time_step_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">time_step_size</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.1</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -582,7 +715,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1027.g5270b5a',
+            VERSION:'0.4.8.0+1030.g6322ab3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

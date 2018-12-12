@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1027
+                0.4.8.0+1030
               </div>
             
           
@@ -91,11 +91,23 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Condition.html">Condition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Time.html">Time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Log</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -168,7 +180,7 @@
 <span id="log"></span><h1>Log<a class="headerlink" href="#module-psyneulink.core.globals.log" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A Log object is used to record the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of PsyNeuLink Components during their “life cycle” (i.e.,
+<p>A Log object is used to record the <code class="xref any docutils literal"><span class="pre">value</span></code> of PsyNeuLink Components during their “life cycle” (i.e.,
 when they are created, validated, and/or executed).  Every Component has a Log object, assigned to its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> attribute when the Component is created, that can be used to record its value and/or that of other
 Components that belong to it.  These are stored in <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
@@ -183,7 +195,7 @@ its <a class="reference internal" href="#psyneulink.core.globals.log.Log.print_e
 <span id="log-creation"></span><h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
 <p>A log object is automatically created for and assigned to a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> attribute when the
 Component is created.  An entry is automatically created and added to the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> attribute
-when its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or that of a Component that belongs to it is recorded in the Log.</p>
+when its <code class="xref any docutils literal"><span class="pre">value</span></code> or that of a Component that belongs to it is recorded in the Log.</p>
 </div>
 <div class="section" id="structure">
 <span id="log-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -212,7 +224,7 @@ in a tuple that specifies the <a class="reference internal" href="#log-condition
 condition to be assigned to multiple items at once.</li>
 </ul>
 <ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">log_values</span></code> – used to the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of one or more Components in the Log
+<li><code class="xref any docutils literal"><span class="pre">log_values</span></code> – used to the <code class="xref any docutils literal"><span class="pre">value</span></code> of one or more Components in the Log
 programmatically (“manually”).  Components can be specified by their names or references to the objects.</li>
 </ul>
 <ul class="simple">
@@ -234,7 +246,7 @@ programmatically (“manually”).  Components can be specified by their names o
 </div></blockquote>
 <div class="section" id="loggable-items">
 <span id="log-loggable-items"></span><h3><em>Loggable Items</em><a class="headerlink" href="#loggable-items" title="Permalink to this headline">¶</a></h3>
-<p>Although every Component is assigned its own Log, that records the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that Component,
+<p>Although every Component is assigned its own Log, that records the <code class="xref any docutils literal"><span class="pre">value</span></code> of that Component,
 the Logs for <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> also  provide access to and control
 the Logs of their <a class="reference internal" href="State.html"><span class="doc">States</span></a>.  Specifically the Logs of these Components contain the following information:</p>
 <ul>
@@ -253,7 +265,7 @@ the Logs of their <a class="reference internal" href="State.html"><span class="d
 </div>
 <ul class="simple">
 <li><em>ParameterStates</em> – the <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.value" title="psyneulink.core.components.states.parameterstate.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> (listed in the Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_states"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_states</span></code></a> attribute);  this includes all of the <a class="reference internal" href="Component.html#component-user-params"><span class="std std-ref">user configurable</span></a> parameters of the Mechanism and its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_states"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_states</span></code></a> attribute);  this includes all of the <code class="xref any docutils literal"><span class="pre">user</span> <span class="pre">configurable</span></code> parameters of the Mechanism and its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -280,7 +292,7 @@ the Logs of their <a class="reference internal" href="State.html"><span class="d
 <div class="section" id="logging-conditions">
 <span id="log-conditions"></span><h3><em>Logging Conditions</em><a class="headerlink" href="#logging-conditions" title="Permalink to this headline">¶</a></h3>
 <p>Configuring a Component to be logged is done using a condition, that specifies a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> under which its
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> should be entered in its Log.  These can be specified in the <a class="reference internal" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal"><span class="pre">set_log_conditions</span></code></a> method of a Log, or directly by specifying a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> for the value a Component’s
+<code class="xref any docutils literal"><span class="pre">value</span></code> should be entered in its Log.  These can be specified in the <a class="reference internal" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal"><span class="pre">set_log_conditions</span></code></a> method of a Log, or directly by specifying a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> for the value a Component’s
 <code class="xref any docutils literal"><span class="pre">logPref</span></code> item of its <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute.  The former is easier, and allows
 multiple Components to be specied at once, while the latter affords more control over the specification (see
 <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>).  <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogConditions</span></code></a> are treated as binary “flags”, and can be combined to permit logging
@@ -300,7 +312,7 @@ that the <a class="reference internal" href="Mechanism.html#psyneulink.core.comp
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Using <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.INITIALIZATION" title="psyneulink.core.globals.log.LogCondition.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.INITIALIZATION</span></code></a> to log the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component during its initialization
+<p>Using <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.INITIALIZATION" title="psyneulink.core.globals.log.LogCondition.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.INITIALIZATION</span></code></a> to log the <code class="xref any docutils literal"><span class="pre">value</span></code> of a Component during its initialization
 requires that it be assigned in the <strong>prefs</strong> argument of the Component’s constructor.  For example:</p>
 <div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span>
 <span class="gp">... </span>       <span class="n">prefs</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">LOG_PREF</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PreferenceEntry</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">LogCondition</span><span class="o">.</span><span class="n">INITIALIZATION</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PreferenceLevel</span><span class="o">.</span><span class="n">INSTANCE</span><span class="p">)})</span>
@@ -309,8 +321,8 @@ requires that it be assigned in the <strong>prefs</strong> argument of the Compo
 </div>
 <div class="admonition hint">
 <p class="first admonition-title">Hint</p>
-<p class="last"><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.TRIAL</span></code></a> logs the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component at the end of a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  To log its
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> at the start of a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log_values" title="psyneulink.core.components.component.Component.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method in the
+<p class="last"><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.TRIAL</span></code></a> logs the <code class="xref any docutils literal"><span class="pre">value</span></code> of a Component at the end of a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  To log its
+<code class="xref any docutils literal"><span class="pre">value</span></code> at the start of a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log_values" title="psyneulink.core.components.component.Component.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method in the
 <strong>call_before_trial</strong> argument of the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 </div>
 </div>
@@ -319,7 +331,7 @@ requires that it be assigned in the <strong>prefs</strong> argument of the Compo
 <span id="log-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The value of a Component is recorded to a Log when the condition assigned to its <code class="xref any docutils literal"><span class="pre">logPref</span></code> is met.
 This is specified as a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> or a boolean combination of them (see <a class="reference internal" href="#log-conditions"><span class="std std-ref">Logging Conditions</span></a>).  The default LogCondition
-is <code class="xref any docutils literal"><span class="pre">OFF</span></code>.</p>
+is <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.OFF" title="psyneulink.core.globals.log.LogCondition.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a>.</p>
 <p class="rubric" id="log-examples">Examples</p>
 <p>The following example creates a Process with two <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>, one that projects to
 another, and logs the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <em>RESULTS</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of the first and the
@@ -421,6 +433,12 @@ reported.</p>
 <p class="last">The values of LogCondition are subset of (and directly reference) the ContextFlags bitwise enum,
 with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.</p>
 </div>
+<dl class="attribute">
+<dt id="psyneulink.core.globals.log.LogCondition.OFF">
+<code class="descname">OFF</code><em class="property"> = 0</em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.OFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>No recording.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="psyneulink.core.globals.log.LogCondition.INITIALIZATION">
 <code class="descname">INITIALIZATION</code><em class="property"> = 4</em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
@@ -741,7 +759,7 @@ if <code class="xref any docutils literal"><span class="pre">False</span></code>
 <code class="descname">loggable_components</code></dt>
 <dd><p>Return a list of owner’s Components that are loggable</p>
 <p>The loggable items of a Component are the Components (typically States) specified in the _logagble_items
-property of its class, and its own <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</p>
+property of its class, and its own <code class="xref any docutils literal"><span class="pre">value</span></code> attribute.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -799,7 +817,7 @@ property of its class, and its own <a class="reference internal" href="Component
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1027.g5270b5a',
+            VERSION:'0.4.8.0+1030.g6322ab3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

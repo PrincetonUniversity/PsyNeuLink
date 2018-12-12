@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation" href="index.html"/>
         <link rel="up" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/>
         <link rel="next" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="prev" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1027
+                0.4.8.0+1030
               </div>
             
           
@@ -566,7 +566,7 @@ out <a class="reference internal" href="#ddm-integration-mode"><span class="std 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<li><strong>default_variable</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods; also serves as a template to specify the length of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of the
 DDM (see <code class="xref any docutils literal"><span class="pre">Input</span></code> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies the <code class="xref any docutils literal"><span class="pre">default_variable</span></code> as array(s) of zeros if <strong>default_variable</strong> is not
@@ -643,6 +643,59 @@ assigned by MechanismRegistry (see <a class="reference internal" href="Naming.ht
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the DDM; if it is not specified in the <strong>prefs</strong> argument of the constructor, a default
 is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><a href="#id2"><span class="problematic" id="id3">`</span></a>DriftDiffusionAnalytical`(bias=0.5, drift_rate=1.0, noise=0.5, starting_point=0.0, t0=0.2, threshold=1.0)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="Function.html"><span class="doc">Function</span></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params.initializer">
+<code class="descname">initializer</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params.initializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">initializer</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([[0]])</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params.input_format">
+<code class="descname">input_format</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params.input_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">input_format</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><code class="xref any docutils literal"><span class="pre">SCALAR</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="method">
@@ -726,7 +779,7 @@ towards a specified threshold</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1027.g5270b5a',
+            VERSION:'0.4.8.0+1030.g6322ab3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
