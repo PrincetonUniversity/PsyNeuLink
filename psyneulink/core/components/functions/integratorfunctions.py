@@ -44,13 +44,17 @@ import typecheck as tc
 from llvmlite import ir
 
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import Function_Base, FunctionError,  MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
+from psyneulink.core.components.functions.function import \
+    Function, Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, BUFFER_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, \
-    DECAY, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FHN_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, INITIALIZER, \
-    INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, \
-    LCAMechanism_INTEGRATOR_FUNCTION, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, BUFFER_FUNCTION, \
+    CONSTANT_INTEGRATOR_FUNCTION, COSINE, \
+    DECAY, DND_FUNCTION, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FHN_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
+    INITIALIZER,INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
+    INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, OFFSET, OPERATION, \
+    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, \
     RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec, all_within_range
@@ -62,10 +66,11 @@ from psyneulink.core.llvm import helpers
 
 __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantIntegrator', 'Buffer',
            'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator',
-           'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY',
-           'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME',
+           'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'InteractiveActivation',
+           'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT',
+           'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME', 'RETRIEVAL_PROB', 'STORAGE_PROB',
            'kwDriftDiffusionAnalytical', 'kwNavarrosAndFuss', 'DriftDiffusionAnalytical', 'NF_Results', 'NavarroAndFuss',
-           'InteractiveActivation']
+           ]
 
 class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
@@ -5066,7 +5071,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     class Params(Integrator.Params):
         rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        noise = Param(0.0, modulable=True)
+        noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -5080,6 +5085,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     @tc.typecheck
     def __init__(self,
+                 # FIX: 12/11/18 JDC - NOT SAFE TO SPECIFY A MUTABLE TYPE AS DEFAULT
                  default_variable=[],
                  # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
                  # was failing.
@@ -5220,17 +5226,23 @@ class Buffer(Integrator):  # ---------------------------------------------------
         return self.convert_output_type(previous_value)
 
 
+RETRIEVAL_PROB = 'retrieval_prob'
+STORAGE_PROB = 'storage_prob'
+METRICS = ['cosine', 'l1', 'l2']
+
+
 class DND(Integrator):  # ------------------------------------------------------------------------------
     """
-    DND(                        \
-        default_variable=None,  \
-        rate=None,              \
-        noise=0.0,              \
-        history=None,           \
-        initializer,            \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
+    DND(                                \
+        default_variable=None,          \
+        rate=None,                      \
+        noise=0.0,                      \
+        initializer=None,               \
+        metric=Distance(metric=COSINE), \
+        max_entries=None,               \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
         )
 
     Implements simple version of `Differential Neural Dictionary <HTML_REF>`_
@@ -5240,34 +5252,43 @@ class DND(Integrator):  # ------------------------------------------------------
 
     .. _DND:
 
-    Adds `variable <DND.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
-    which makes it a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
-    applied to each item in the deque (including the newly added one) on each call, as follows:
+    First, with probability `retrieval_prob <DND.retrieval.prob>`, retrieve vector from `dict <DND.dict>` using
+    first item of `variable <DND.variable>` as key, and the matching algorithm specified in `metric <DND.metric>`.
 
-        :math: item * `rate <Buffer.rate>` + `noise <Buffer.noise>`
+    Then, with probability `storage_prob <DND.storage_prob>` add new entry using the first item of `variable
+    <DND.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
+    **noise** arguments are applied to the key before storing:
 
-    .. note::
-       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
+    .. math::
+        variable[1] * rate + noise
 
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+    default_variable : list or 2d array : default ClassDefaults.variable
+        specifies a template for the key and value entries of the dictionary;  list must have two entries, each
+        of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
-    rate : float : default None
-        specifies a value applied to each item in the deque on each call.
+    retrieval_prob : float in interval [0,1] : default 1.0
+        specifies probability of retrieiving a value from `dict <DND.dict>`.
 
-    noise : float or Function : default 0.0
-        specifies a random value added to each item in the deque on each call.
+    storage_prob : float in interval [0,1] : default 1.0
+        specifies probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
 
-    history : int : default None
-        specifies the maxlen of the deque, and hence `value <Buffer.value>`.
+    noise : float, list, array, or Function : default 0.0
+        specifies a value applied to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`.
 
-    initializer float, list or ndarray : default []
-        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
-        empty list.
+    initializer dict : default {}
+        specifies an initial set of entries for `dict <DND.dict>`;  each key must have the same shape as
+        the first item of `variable <DND.variable>` and each value must have the same shape as its second item.
+
+    metric : Function : default Distance(metric=COSINE)
+        specifies the metric used during retrieval to compare the first item in `variable <DND.variable>` with keys in
+        `dict <DND.dict>`.
+
+    max_entries : int : default None
+        specifies the maximum number of entries allowed in `dict <DND.dict>` (see `max_entries <DND.max_entries for
+        additional details>`).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5286,14 +5307,18 @@ class DND(Integrator):  # ------------------------------------------------------
     Attributes
     ----------
 
-    variable : number or array
-        current input value appended to the end of the deque.
+    variable : 2d array
+        1st item (variable[0] is the key used to retrieve an enrtry from `dict <DND.dict>`, and 2nd item
+        (variable[1]) is the value of the entry, paired with key and added to the `dict <DND.dict>`.
 
-    rate : float
-        value added to each item of the deque on each call.
+    retrieval_prob : float in interval [0,1]
+        probability of retrieiving a value from `dict <DND.dict>`.
 
-    noise : float or Function
-        random value added to each item of the deque in each call.
+    storage_prob : float in interval [0,1]
+        probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
+
+    noise : float, list, array, or Function
+        value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`.
 
         .. note::
             In order to generate random noise, a probability distribution function should be used (see
@@ -5301,20 +5326,22 @@ class DND(Integrator):  # ------------------------------------------------------
             its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
             then the noise will simply be an offset that remains the same across all executions.
 
-    history : int
-        determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
-        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds history, the first item of
-        `previous_value <Buffer.previous_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
-        so that `value <Buffer.previous_value>` maintains a constant length.  If history is not specified,
-        the value returned continues to be extended indefinitely.
+    initializer dict : default {}
+        initial set of entries for `dict <DND.dict>`.
 
-    initializer : float, list or ndarray
-        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
-        if the **new_previous_value** argument is not specified in the call to `reinitialize
-        <IntegratorFunction.reinitialize>`.
+    dict : dict
+        dictionary with current set of entries maintained by DND.
 
-    previous_value : 1d array : default ClassDefaults.variable
-        state of the deque prior to appending `variable <Buffer.variable>` in the current call.
+    metric : Function
+        metric used during retrieval to compare the first item in `variable <DND.variable>` with keys in `dict
+        <DND.dict>`.
+
+    previous_value : 1d array
+        state of the `dict <DND.dict>` prior to storing `variable <DND.variable>` in the current call.
+
+    max_entries : int
+        maximum number of entries allowed in `dict <DND.dict>`;  if an attempt is made to add an additional entry
+        an error is generated.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -5329,46 +5356,51 @@ class DND(Integrator):  # ------------------------------------------------------
         <LINK>` for details).
     """
 
-    componentName = DMD_FUNCTION
+    componentName = DND_FUNCTION
 
     class Params(Integrator.Params):
-        rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        noise = Param(0.0, modulable=True)
+        retrieval_prob = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         NOISE: None,
-        RATE: None
+        RETRIEVAL_PROB: 1.0,
+        STORAGE_PROB: 1.0
     })
 
-    multiplicative_param = RATE
+    multiplicative_param = RETRIEVAL_PROB
     # no additive_param?
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=[],
+                 default_variable=None,
                  # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
                  # was failing.
                  # For now, updated default_variable, noise, and Alternatively, we can change validation on
                  # default_variable=None,   # Changed to [] because None conflicts with initializer
-                 # rate: parameter_spec=1.0,
+                 # retrieval_prob: parameter_spec=1.0,
                  # noise=0.0,
-                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
-                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
-                 rate: tc.optional(tc.any(int, float)) = 1.0,
-                 noise: tc.optional(tc.any(int, float, callable)) = 0.0,
-                 history: tc.optional(int) = None,
-                 initializer=[],
+                 retrieval_prob: tc.optional(tc.any(int, float))=1.0,
+                 storage_prob: tc.optional(tc.any(int, float))=1.0,
+                 noise: tc.optional(tc.any(int, float, callable))=None,
+                 initializer: tc.optional(dict)=None,
+                 metric:tc.any(is_function_type, Function)=Distance(metric=COSINE),
+                 max_entries=1000,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
+        initializer = initializer or []
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
+        params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
+                                                  storage_prob=storage_prob,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  history=history,
+                                                  max_entries=max_entries,
+                                                  metric=metric,
                                                   params=params)
 
         super().__init__(
@@ -5381,9 +5413,30 @@ class DND(Integrator):  # ------------------------------------------------------
 
         self.has_initializers = True
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if RETRIEVAL_PROB in request_set and request_set[RETRIEVAL_PROB] is not None:
+            retrieval_prob = request_set[RETRIEVAL_PROB]
+            if not all_within_range(retrieval_prob, 0, 1):
+                raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
+                                    format(repr(RETRIEVAL_PROB), self.__class___.__name__))
+
+        if STORAGE_PROB in request_set and request_set[STORAGE_PROB] is not None:
+            storage_prob = request_set[STORAGE_PROB]
+            if not all_within_range(storage_prob, 0, 1):
+                raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
+                                    format(repr(STORAGE_PROB), self.__class___.__name__))
+
+        if METRIC in request_set and request_set[METRIC] is not None:
+            metric = request_set[METRIC]
+            if not metric in METRICS:
+                raise FunctionError("{} arg of {} ({}) must be one of: {}".
+                                    format(repr(METRIC), self.__class___.__name__), METRICS)
+
     def _initialize_previous_value(self, initializer, execution_context=None):
         initializer = initializer or []
-        previous_value = deque(initializer, maxlen=self.history)
+        previous_value = dict(initializer)
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
 
@@ -5398,12 +5451,11 @@ class DND(Integrator):  # ------------------------------------------------------
 
         Clears the `previous_value <Buffer.previous_value>` deque.
 
-        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
-        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
-        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
+        If an argument is passed into reinitialize or if the `initializer <DND.initializer>` attribute contains a
+        value besides [], then that value is used to start the new `previous_value <DND.previous_value>` dict.
+        Otherwise, the new `previous_value <DND.previous_value>` dict starts out empty.
 
-        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
-
+        `value <DND.value>` takes on the same value as  `previous_value <DND.previous_value>`.
         """
 
         # no arguments were passed in -- use current values of initializer attributes
@@ -5417,13 +5469,12 @@ class DND(Integrator):  # ------------------------------------------------------
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
                                 "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
-                                "without any arguments, in which case the current initializer value, will be used to "
-                                "reinitialize previous_value".format(args,
-                                                                     self.name))
+                                "without any arguments, in which case the current initializer value will be used to "
+                                "reinitialize previous_value".format(args, self.name))
 
         if reinitialization_value is None or reinitialization_value == []:
             self.get_previous_value(execution_context).clear()
-            value = deque([], maxlen=self.history)
+            value = dict()
 
         else:
             value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
@@ -5437,16 +5488,17 @@ class DND(Integrator):  # ------------------------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `previous_value <Buffer.previous_value>` appended with `variable
-        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
+        Return value of entry in `dict <DND.dict>` best matched by first item of `variable <DND.variable>`, then add
+        `variable <DND.variable>` to `dict <DND.dict>`.
 
-        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
+        If the length of `dict <DND.dict>` exceeds `max_entries <DND.max_entries>`, generate an error.
 
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
+        variable : list or 2d array : default ClassDefaults.variable
+           first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
+           with key, is added to `dict <DND.dict>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5456,33 +5508,166 @@ class DND(Integrator):  # ------------------------------------------------------
         Returns
         -------
 
-        updated value of deque : deque
-
+        value of entry that best matches first item of `variable <DND.variable>`  : 1d array
         """
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        key = variable[0]
+        value = variable[1]
 
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+        retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, execution_id)).astype(float)
+        storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, execution_id)).astype(float)
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
 
-        # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
-        # Just return current input (for validation).
+        # If this is an initialization run, leave dict empty (don't want to count it as an execution step),
+        # and return current value (variable[1]) for validation.
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            return variable
+            return variable[1]
 
-        previous_value = self.get_previous_value(execution_id)
-        previous_value.append(variable)
+        self.dict = self.get_previous_value(execution_id)
 
-        # Apply rate and/or noise if they are specified
-        if rate != 1.0:
-            previous_value *= rate
+        # Retrieve value from current dict with key that best matches key
+        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
+            ret_val = self.get_memory(key)
+
+        # Store variable to dict:
         if noise:
-            previous_value += noise
+            key += noise
+        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
+            self.save_memory(key, value)
 
-        previous_value = deque(previous_value, maxlen=self.history)
+        self.parameters.previous_value.set(self.dict, execution_id)
 
-        self.parameters.previous_value.set(previous_value, execution_id)
-        return self.convert_output_type(previous_value)
+        return self.convert_output_type(ret_val)
 
+    def get_memory(self, query_key):
+        """Perform a 1-NN search over dnd
+
+        Parameters
+        ----------
+        query_key : a row vector
+            a DND key, used to for memory search
+
+        Returns
+        -------
+        a row vector
+            a DND value, representing the memory content
+
+        """
+        # if no memory, return the zero vector
+        n_memories = len(self.keys)
+        if n_memories == 0 or self.retrieval_off:
+            return empty_memory(self.memory_dim)
+        # compute similarity(query, memory_i ), for all i
+        similarities = compute_similarities(query_key, self.keys, self.metric)
+        # get the best-match memory
+        best_memory_val = self._get_memory(similarities)
+        return best_memory_val
+
+    def _get_memory(self, similarities, policy='1NN'):
+        """get the episodic memory according to some policy
+        e.g. if the policy is 1nn, return the best matching memory
+        e.g. the policy can be based on the rational model
+
+        Parameters
+        ----------
+        similarities : a vector of len #memories
+            the similarity between query vs. key_i, for all i
+        policy : str
+            the retrieval policy
+
+        Returns
+        -------
+        a row vector
+            a DND value, representing the memory content
+
+        """
+        best_memory_val = None
+        if policy is '1NN':
+            best_memory_id = torch.argmax(similarities)
+            best_memory_val = self.vals[best_memory_id]
+        else:
+            raise 'unrecog retrieval policy'
+        return best_memory_val
+
+    def save_memory(self, memory_key, memory_val):
+        """Save an episodic memory to the dictionary
+
+        Parameters
+        ----------
+        memory_key : a row vector
+            a DND key, used to for memory search
+        memory_val : a row vector
+            a DND value, representing the memory content
+        """
+        if self.encoding_off:
+            return
+        # add new memory to the the dictionary
+        # get data is necessary for gradient reason
+        self.keys.append(memory_key.data.view(1, -1))
+        self.vals.append(memory_val.data.view(1, -1))
+        # remove the oldest memory, if overflow
+        if len(self.keys) > self.dict_len:
+            self.keys.pop(0)
+            self.vals.pop(0)
+
+    def add_memories(self, input_keys, input_vals):
+        """Inject pre-defined keys and values
+
+        Parameters
+        ----------
+        input_keys : list
+            a list of memory keys
+        input_vals : list
+            a list of memory content
+        """
+        assert len(input_keys) == len(input_vals)
+        for k, v in zip(input_keys, input_vals):
+            self.save_memory(k, v)
+
+
+"""helpers"""
+
+def compute_similarities(query_key, key_list, metric):
+    """Compute the similarity between query vs. key_i for all i
+        i.e. compute q M, w/ q: 1 x key_dim, M: key_dim x #keys
+
+    Parameters
+    ----------
+    query_key : a row vector
+        Description of parameter `query_key`.
+    key_list : list
+        Description of parameter `key_list`.
+    metric : str
+        Description of parameter `metric`.
+
+    Returns
+    -------
+    a row vector w/ len #memories
+        the similarity between query vs. key_i, for all i
+
+    """
+    return
+    # # query_key = query_key.data
+    # # reshape query to 1 x key_dim
+    # q = query_key.data.view(1, -1)
+    # # reshape memory keys to #keys x key_dim
+    # M = torch.stack(key_list, dim=1).view(len(key_list), -1)
+    # # compute similarities
+    # if metric is 'cosine':
+    #     similarities = F.cosine_similarity(q, M)
+    # elif metric is 'l1':
+    #     similarities = - F.pairwise_distance(q, M, p=1)
+    # elif metric is 'l2':
+    #     similarities = - F.pairwise_distance(q, M, p=2)
+    # else:
+    #     raise FunctionError("ERROR IN DND")
+    # return similarities
+
+
+# def empty_memory(memory_dim):
+#     """Get a empty memory, assuming the memory is a row vector
+#     """
+#     return torch.zeros(1, memory_dim)

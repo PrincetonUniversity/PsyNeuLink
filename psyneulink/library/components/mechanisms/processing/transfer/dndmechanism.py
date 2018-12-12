@@ -85,17 +85,14 @@ class DND(ProcessingMechanism):
     def function(self, var):
         super()._execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
 
-    def _execute(self,
-        variable=None,
-        execution_id=None,
-        runtime_params=None,
-        context=None
-    ):
-        pass
-
-
-
-
+    # def _execute(self,
+    #     variable=None,
+    #     execution_id=None,
+    #     runtime_params=None,
+    #     context=None
+    # ):
+    #     pass
+    #
     def reset_memory(self):
         self.keys = []
         self.vals = []
@@ -186,7 +183,7 @@ class DND(ProcessingMechanism):
             best_memory_id = torch.argmax(similarities)
             best_memory_val = self.vals[best_memory_id]
         else:
-            raise 'unrecog retrieval policy'
+            assert False, 'ERROR IN DND'
         return best_memory_val
 
 
@@ -225,7 +222,7 @@ def compute_similarities(query_key, key_list, metric):
     elif metric is 'l2':
         similarities = - F.pairwise_distance(q, M, p=2)
     else:
-        raise f'metric: (╯°□°）╯︵ ┻━┻ {metric}'
+        assert False, 'ERROR IN DND'
     return similarities
 
 

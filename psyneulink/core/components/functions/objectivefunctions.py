@@ -28,8 +28,8 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, EPSILON
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.keywords import \
-    DistanceMetrics, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION, HOLLOW_MATRIX, ENERGY, ENTROPY, MATRIX, \
-    CROSS_ENTROPY, DISTANCE_METRICS, DISTANCE_FUNCTION, DIFFERENCE, EUCLIDEAN, MAX_ABS_DIFF, CORRELATION
+    DistanceMetrics, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION, HOLLOW_MATRIX, ENERGY, ENTROPY, MATRIX, COSINE, \
+    CROSS_ENTROPY, DISTANCE_METRICS, DISTANCE_FUNCTION, DIFFERENCE, EUCLIDEAN, MAX_ABS_DIFF, CORRELATION, METRIC
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import is_distance_metric
@@ -550,6 +550,11 @@ class Distance(ObjectiveFunction):
                     )
                 )
 
+    def cosine(v1, v2):
+        numer = np.sum(np.product(v1, v2))
+        denom = np.sqrt(np.sum(v1 ** 2)) * np.sqrt(np.sum(v2 ** 2)) or EPSILON
+        return numer / denom
+
     def correlation(v1, v2):
         v1_norm = v1 - np.mean(v1)
         v2_norm = v2 - np.mean(v2)
@@ -830,10 +835,11 @@ class Distance(ObjectiveFunction):
         elif self.metric is EUCLIDEAN:
             result = np.linalg.norm(v2 - v1)
 
-        # FIX: NEED SCIPY HERE
-        # # Angle (cosine) of v1 and v2
-        # elif self.metric is ANGLE:
-        #     result = scipy.spatial.distance.cosine(v1,v2)
+        # Cosine similarity of v1 and v2
+        elif self.metric is COSINE:
+            # result = np.correlate(v1, v2)
+            result = 1 - np.abs(Distance.cosine(v1, v2))
+            return self.convert_output_type(result)
 
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
@@ -855,6 +861,9 @@ class Distance(ObjectiveFunction):
         # Energy
         elif self.metric is ENERGY:
             result = -np.sum(v1 * v2) / 2
+
+        else:
+            assert False, '{} not recognized in {}'.format(repr(METRIC), self.__class__.__name__)
 
         if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:
