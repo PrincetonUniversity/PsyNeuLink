@@ -156,6 +156,8 @@ class Defaults(ParamsTemplate):
 
     def __setattr__(self, attr, value):
         if (attr[:1] != '_'):
+            self._owner.parameters._validate(attr, value)
+
             param = getattr(self._owner.parameters, attr)
             param._inherited = False
             param.default_value = value
@@ -185,7 +187,7 @@ class Param(types.SimpleNamespace):
     # will be included as "param attrs" - the attributes of a Param that may be of interest to/settable by users
     # To add an additional property-like param attribute, add its name here, and a _set_<param_name> method
     # (see _set_history_max_length)
-    _additional_param_attr_properties = {'history_max_length', 'log_condition'}
+    _additional_param_attr_properties = {'default_value', 'history_max_length', 'log_condition'}
 
     def __init__(
         self,
@@ -345,6 +347,10 @@ class Param(types.SimpleNamespace):
             return getattr(self._owner._parent, self.name)
         except AttributeError:
             return None
+
+    @property
+    def _validate(self):
+        return self._owner._validate
 
     @property
     def _default_getter_kwargs(self):
@@ -554,6 +560,11 @@ class Param(types.SimpleNamespace):
     # KDM 7/30/18: the below is weird like this in order to use this like a property, but also include it
     # in the interface for user simplicity: that is, inheritable (by this Param's children or from its parent),
     # visible in a Param's repr, and easily settable by the user
+    def _set_default_value(self, value):
+        self._validate(self.name, value)
+
+        super().__setattr__('default_value', value)
+
     def _set_history_max_length(self, value):
         super().__setattr__('history_max_length', value)
         for execution_id in self.history:

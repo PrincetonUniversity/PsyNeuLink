@@ -1,6 +1,8 @@
+import numpy as np
 import psyneulink as pnl
 import pytest
 
+from psyneulink.core.globals.parameters import Param, ParameterError
 from psyneulink.core.globals.utilities import unproxy_weakproxy
 
 # (ancestor, child, should_override)
@@ -138,3 +140,30 @@ def test_delta_fail():
         t.parameters.value.get_delta()
 
     assert "Parameter 'value' value mismatch between current" in str(error)
+
+
+def test_validation():
+    class NewTM(pnl.TransferMechanism):
+        class Params(pnl.TransferMechanism.Params):
+            variable = Param(np.array([[0], [0], [0]]), read_only=True)
+
+            def _validate_variable(self, variable):
+                if not isinstance(variable, np.ndarray) or not variable.shape == np.array([[0], [0], [0]]).shape:
+                    return 'must be 2d numpy array of shape (3, 1)'
+
+    t = NewTM()
+
+    t.defaults.variable = np.array([[1], [2], [3]])
+    t.parameters.variable.default_value = np.array([[1], [2], [3]])
+
+    with pytest.raises(ParameterError):
+        t.defaults.variable = 0
+
+    with pytest.raises(ParameterError):
+        t.defaults.variable = np.array([0])
+
+    with pytest.raises(ParameterError):
+        t.parameters.variable.default_value = 0
+
+    with pytest.raises(ParameterError):
+        t.parameters.variable.default_value = np.array([[0]])
