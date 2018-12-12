@@ -66,11 +66,11 @@ xor_in = pnl.TransferMechanism(name='input_layer',
 
 xor_hid = pnl.TransferMechanism(name='hidden_layer',
                                 default_variable=np.zeros(10),
-                                function=psyneulink.core.components.functions.transferfunctions.Logistic())
+                                function=pnl.core.components.functions.transferfunctions.Logistic())
 
 xor_out = pnl.TransferMechanism(name='output_layer',
                                 default_variable=np.zeros(1),
-                                function=psyneulink.core.components.functions.transferfunctions.Logistic())
+                                function=pnl.core.components.functions.transferfunctions.Logistic())
 
 # projection that takes the signal from the input layer and transforms it to get an input for
 # the hidden layer (the xor_hid mechanism)
@@ -135,11 +135,11 @@ xor_in = pnl.TransferMechanism(name='xor_in',
 
 xor_hid = pnl.TransferMechanism(name='xor_hid',
                                 default_variable=np.zeros(10),
-                                function=psyneulink.core.components.functions.transferfunctions.Logistic())
+                                function=pnl.core.components.functions.transferfunctions.Logistic())
 
 xor_out = pnl.TransferMechanism(name='xor_out',
                                 default_variable=np.zeros(1),
-                                function=psyneulink.core.components.functions.transferfunctions.Logistic())
+                                function=pnl.core.components.functions.transferfunctions.Logistic())
 
 hid_map = pnl.MappingProjection(name='input_to_hidden',
                             matrix=np.random.randn(2,10)*0.1,
@@ -156,7 +156,14 @@ pat = 10
 min_delt = .00001
 print('AutodiffComposition has patience = ', pat)
 print('AutodiffComposition has min_delta = ', min_delt)
-xor_autodiff = AutodiffComposition(param_init_from_pnl=True, patience=pat, min_delta=min_delt)
+xor_autodiff = AutodiffComposition(
+    param_init_from_pnl=True,
+    patience=pat,
+    min_delta=min_delt,
+    learning_rate=learning_rate,
+    optimizer_type='sgd', # the default optimizer in System is sgd, so we use sgd here as well
+    randomize=False
+)
 
 # add the mechanisms (add_c_node) and projections (add_projection) to AutodiffComposition
 xor_autodiff.add_c_node(xor_in)
@@ -167,16 +174,13 @@ xor_autodiff.add_c_node(xor_out)
 xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
 xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-result = xor_autodiff.run(inputs={xor_in: xor_inputs},
-                 targets={xor_out: xor_targets},
-                 epochs=num_epochs,
-                 learning_rate=learning_rate,
-                 optimizer='sgd')  # the default optimizer in System is sgd, so we use sgd here as well
+input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+result = xor_autodiff.run(inputs=input_dict)
 autodiff_total_time = time.time() - autodiff_start_time
 
 print('Output of AutodiffComposition after at most', num_epochs,
       'epochs of training, on inputs [0, 0], [0, 1], [1, 0], [1, 1]:')
-print(result[0])
+print(result)
 print('Initializing and training AutodiffComposition took ', autodiff_total_time, ' seconds.')
 print('\n')
 
@@ -344,5 +348,3 @@ print('Initializing and training PyTorch XOR took ', pytorch_total_time, ' secon
 # In the autodiff_training function of the autodiff composition, processing is done in a code block created
 # by setting the "torch.no_grad" flag - this is precautionary, a way of telling pytorch not to track
 # computations on parameters and their gradients while doing processing (there is no need to).
-
-

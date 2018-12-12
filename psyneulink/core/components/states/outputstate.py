@@ -1,6 +1,3 @@
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
-#     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
@@ -445,7 +442,7 @@ the OutputState is assigned to a Mechanism, by including *INDEX* and *ASSIGN* en
 <OutputState_Specification>` for the OutputState, as in the following example::
 COMMENT
 
-    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
     ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
@@ -476,7 +473,7 @@ the ``DECISION ENTROPY`` OutputState could be created as follows::
 
 and then assigned either as::
 
-    >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
+    >>> my_mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
     ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  decision_entropy_output_state])
@@ -486,7 +483,7 @@ or::
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                variable=(OWNER_VALUE, 2),
     ...                                                function=pnl.Stability(metric=pnl.ENTROPY))
-    >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
+    >>> my_mech2 = pnl.DDM(function=pnl.DriftDiffusionAnalytical(),
     ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 

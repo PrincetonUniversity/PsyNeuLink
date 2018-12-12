@@ -397,7 +397,7 @@ class KohonenLearningMechanism(LearningMechanism):
         This insures that weights are updated within the same trial in which they have been learned
         '''
 
-        super()._update_output_states(runtime_params, context)
+        super()._update_output_states(execution_id, runtime_params, context)
 
         if self.parameters.context.get(execution_id).composition is not None:
             self.learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)

@@ -1052,6 +1052,11 @@ class Component(object, metaclass=ComponentsMeta):
         self._validate()
 
         self.context.initialization_status = ContextFlags.INITIALIZED
+        # MODIFIED 12/4/18 NEW [JDC]:
+        if (hasattr(self, 'function_object')
+                and self.function_object.context.initialization_status != ContextFlags.DEFERRED_INIT):
+            self.function_object.context.initialization_status = ContextFlags.INITIALIZED
+        # MODIFIED 12/4/18 END
 
         self.__llvm_function_name = None
         self.__llvm_bin_function = None

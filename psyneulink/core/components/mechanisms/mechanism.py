@@ -2091,7 +2091,8 @@ class Mechanism_Base(Mechanism):
         if isinstance(self.function_object, Integrator):
             new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context=execution_context, override=True)
-            self._update_output_states(context="REINITIALIZING", execution_id=parse_execution_context(execution_context))
+            self._update_output_states(execution_id=parse_execution_context(execution_context),
+                                       context="REINITIALIZING")
 
         # If the mechanism has an auxiliary integrator function:
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
@@ -2104,7 +2105,8 @@ class Mechanism_Base(Mechanism):
                     execution_context=execution_context,
                     override=True
                 )
-                self._update_output_states(context="REINITIALIZING", execution_id=parse_execution_context(execution_context))
+                self._update_output_states(execution_id=parse_execution_context(execution_context),
+                                           context="REINITIALIZING")
 
             elif self.integrator_function is None or isinstance(self.integrator_function, type):
                 if hasattr(self, "integrator_mode"):
@@ -2338,12 +2340,6 @@ class Mechanism_Base(Mechanism):
                                             ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value.get(execution_id))
 
-        # MODIFIED 10/28/18 OLD:  [JDC: DUPLICATES SAME ON COMPONENT AND THUS DOUBLE-INCREMENTS]
-        # if self.parameters.context.get(execution_id).initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
-        #     self._increment_execution_count()
-        #     self._update_current_execution_time(context=context, execution_id=execution_id)
-        # MODIFIED 10/28/18 END
-
         return value
 
     def run(
@@ -2458,8 +2454,12 @@ class Mechanism_Base(Mechanism):
     def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
 
+        owner_value arg can be used to override existing (or absent) value of owner as variable for OutputStates
+        and assign a specified (set of) value(s).
+
         """
-        for state in self.output_states:
+        for i in range(len(self.output_states)):
+            state = self.output_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
 
     def initialize(self, value, execution_context=None):

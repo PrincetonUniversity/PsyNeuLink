@@ -15,8 +15,9 @@ using a version of the `Learned Value of Control Model
 <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_
 '''
 
-import psyneulink as pnl
 import numpy as np
+import psyneulink as pnl
+import timeit
 
 import psyneulink.core.components.functions.learningfunctions
 import psyneulink.core.components.functions.optimizationfunctions
@@ -24,9 +25,12 @@ import psyneulink.core.components.functions.transferfunctions
 
 np.random.seed(0)
 
+
 def w_fct(stim, color_control):
     '''function for word_task, to modulate strength of word reading based on 1-strength of color_naming ControlSignal'''
-    return stim * (1-color_control)
+    return stim * (1 - color_control)
+
+
 w_fct_UDF = pnl.UserDefinedFunction(custom_function=w_fct, color_control=1)
 
 
@@ -35,7 +39,7 @@ def objective_function(v):
      v[0] = output of DDM: [probability of color naming, probability of word reading]
      v[1] = reward:        [color naming rewarded, word reading rewarded]
      '''
-    return np.sum(v[0]*v[1])
+    return np.sum(v[0] * v[1])
 
 
 color_stim = pnl.TransferMechanism(name='Color Stimulus', size=8)
@@ -46,58 +50,47 @@ word_task = pnl.ProcessingMechanism(name='Word Task', function=w_fct_UDF)
 
 reward = pnl.TransferMechanism(name='Reward', size=2)
 
-task_decision = pnl.DDM(name='Task Decision',
-            # function=pnl.NavarroAndFuss,
-            output_states=[pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-                           pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD])
+task_decision = pnl.DDM(
+    name='Task Decision',
+    # function=pnl.NavarroAndFuss,
+    output_states=[
+        pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+        pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD
+    ]
+)
 
-lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
-                                feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
-                                objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
-                                                                           monitored_output_states=[task_decision,
-                                                                                                    reward],
-                                                                           function=objective_function),
-                                prediction_terms=[pnl.PV.FC, pnl.PV.COST],
-                                terminal_objective_mechanism=True,
+lvoc = pnl.OptimizationControlMechanism(
+    name='LVOC ControlMechanism',
+    features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
+    objective_mechanism=pnl.ObjectiveMechanism(
+        name='LVOC ObjectiveMechanism',
+        monitored_output_states=[task_decision, reward],
+        function=objective_function
+    ),
+    agent_rep=pnl.RegressionCFA(
+        update_weights=pnl.BayesGLM,
+        prediction_terms=[pnl.PV.FC, pnl.PV.COST]
+    ),
+    terminal_objective_mechanism=True,
+    function=pnl.GradientOptimization(
+        convergence_criterion=pnl.VALUE,
+        convergence_threshold=0.001,
+        step_size=1,
+        annealing_function=lambda x, y: x / np.sqrt(y),
+        # direction=pnl.ASCENT
+    ),
+    control_signals=pnl.ControlSignal(
+        projections=[(pnl.SLOPE, color_task), ('color_control', word_task)],
+        # function=pnl.ReLU,
+        function=pnl.Logistic,
+        cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+        intensity_cost_function=pnl.Exponential(rate=0.25, bias=-3),
+        adjustment_cost_function=pnl.Exponential(rate=0.25, bias=-3),
+        allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
+    )
+)
 
-                                # learning_function=pnl.BayesGLM(mu_0=0, sigma_0=0.1),
-                                learning_function=psyneulink.core.components.functions.learningfunctions.BayesGLM,
 
-                                # function=pnl.GradientOptimization(
-                                #         convergence_criterion=pnl.VALUE,
-                                #         convergence_threshold=0.001,
-                                #         step_size=1,
-                                #         annealing_function= lambda x,y : x / np.sqrt(y),
-                                #         # direction=pnl.ASCENT
-                                # ),
-
-                                function=psyneulink.core.components.functions.optimizationfunctions.GridSearch,
-
-                                # function=pnl.OptimizationFunction,
-
-                                # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
-                                #                                    ('color_control', word_task)]}
-                                # control_signals={pnl.NAME:'COLOR CONTROL',
-                                #                  pnl.PROJECTIONS:[(pnl.SLOPE, color_task),
-                                #                                   ('color_control', word_task)],
-                                #                  pnl.COST_OPTIONS:[pnl.ControlSignalCosts.INTENSITY,
-                                #                                    pnl.ControlSignalCosts.ADJUSTMENT],
-                                #                  pnl.INTENSITY_COST_FUNCTION:pnl.Exponential(rate=0.25, bias=-3),
-                                #                  pnl.ADJUSTMENT_COST_FUNCTION:pnl.Exponential(rate=0.25,bias=-3)}
-                                control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
-                                                                               ('color_control', word_task)],
-                                                                  # function=pnl.ReLU,
-                                                                  function=psyneulink.core.components.functions
-                                                                  .transferfunctions.Logistic,
-                                                                  cost_options=[pnl.ControlSignalCosts.INTENSITY,
-                                                                                pnl.ControlSignalCosts.ADJUSTMENT],
-                                                                  intensity_cost_function=psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.25,
-                                                                                                                                                             bias=-3),
-                                                                  adjustment_cost_function=psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.25,
-                                                                                                                                                              bias=-3),
-                                                                  allocation_samples=[i/2 for i in list(range(0,50,1))]
-                                                                  )
-                                )
 lvoc.reportOutputPref=True
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_c_node(color_stim)
@@ -112,22 +105,26 @@ c.add_c_node(lvoc)
 
 # c.show_graph()
 
-input_dict = {color_stim:[[1,0,0,0,0,0,0,0]],
-              word_stim: [[1,0,0,0,0,0,0,0]],
-              color_task:[[1]],
-              word_task: [[-1]],
-              reward:    [[1,0]]}
+input_dict = {
+    color_stim: [[1, 0, 0, 0, 0, 0, 0, 0]],
+    word_stim: [[1, 0, 0, 0, 0, 0, 0, 0]],
+    color_task: [[1]],
+    word_task: [[-1]],
+    reward: [[1, 0]]
+}
+
 
 def run():
     c.run(inputs=input_dict, num_trials=1)
-import timeit
+
+
 duration = timeit.timeit(run, number=2)
 
 print('\n')
 print('--------------------')
 print('ControlSignal variables: ', [sig.parameters.variable.get(c) for sig in lvoc.control_signals])
 print('ControlSignal values: ', [sig.parameters.value.get(c) for sig in lvoc.control_signals])
-print('features: ', lvoc.parameters.feature_values.get(c))
-print('lvoc: ', lvoc.compute_EVC([sig.parameters.variable.get(c) for sig in lvoc.control_signals], execution_id=c))
+# print('features: ', lvoc.get_feature_values(execution_id=c))
+print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(c) for sig in lvoc.control_signals], execution_id=c))
 print('time: ', duration)
 print('--------------------')

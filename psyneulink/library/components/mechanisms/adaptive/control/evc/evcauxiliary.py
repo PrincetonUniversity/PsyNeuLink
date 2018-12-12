@@ -30,7 +30,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 
 __all__ = [
     'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch',
-    'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW_SIZE',
+    'EVCAuxiliaryError', 'WINDOW_SIZE',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
     'INPUT', 'INPUT_SEQUENCE', 'PredictionMechanism', 'PY_MULTIPROCESSING',
     'TIME_AVERAGE_INPUT', 'ValueFunction', 'FILTER_FUNCTION'
@@ -58,7 +58,6 @@ class EVCAuxiliaryError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
 
 class EVCAuxiliaryFunction(Function_Base):
     """Base class for EVC auxiliary functions
@@ -93,7 +92,6 @@ class EVCAuxiliaryFunction(Function_Base):
                          context=context,
                          function=function,
                          )
-
 
 class ValueFunction(EVCAuxiliaryFunction):
     """Calculate the `EVC <EVCControlMechanism_EVC>` for a given performance outcome and set of costs.
@@ -160,7 +158,7 @@ class ValueFunction(EVCAuxiliaryFunction):
             <EVCControlMechanism.combine_outcome_and_cost_function>` functions can be called.
 
         outcome : value : default float
-            should represent the outcome of performance of the `System` for which an `allocation_policy` is being
+            should represent the outcome of performance of the `System` for which an `control_allocation` is being
             evaluated.
 
         costs : list or array of values : default 1d np.array of floats
@@ -206,19 +204,19 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
     <EVCControlMechanism_EVC>`.
 
     This is the default `function <EVCControlMechanism.function>` for an EVCControlMechanism. It identifies the
-    `allocation_policy` with the maximum `EVC <EVCControlMechanism_EVC>` by a conducting a grid search over every
-    possible `allocation_policy` given the `allocation_samples` specified for each of its ControlSignals (i.e.,
+    `control_allocation` with the maximum `EVC <EVCControlMechanism_EVC>` by a conducting a grid search over every
+    possible `control_allocation` given the `allocation_samples` specified for each of its ControlSignals (i.e.,
     the `Cartesian product <https://en.wikipedia.org/wiki/Cartesian_product>`_ of the `allocation
     <ControlSignal.allocation>` values specified by the `allocation_samples` attribute of each ControlSignal).  The
     full set of allocation policies is stored in the EVCControlMechanism's `control_signal_search_space` attribute.
-    The EVCControlMechanism's `run_simulation` method is used to simulate its `system <EVCControlMechanism.system>`
-    under each `allocation_policy` in `control_signal_search_space`, calculate the EVC for each of those policies,
+    The EVCControlMechanism's `evaluate` method is used to simulate its `system <EVCControlMechanism.system>`
+    under each `control_allocation` in `control_signal_search_space`, calculate the EVC for each of those policies,
     and return the policy with the greatest EVC. By default, only the maximum EVC is saved and returned.  However,
     setting the `save_all_values_and_policies` attribute to `True` saves each policy and its EVC for each simulation
     run (in the EVCControlMechanism's `EVC_policies` and `EVC_values` attributes, respectively). The EVC is
     calculated for each policy by iterating over the following steps:
 
-    * Select an allocation_policy:
+    * Select an control_allocation:
 
         draw a successive item from `control_signal_search_space` in each iteration, and assign each of its values as
         the `allocation` value for the corresponding ControlSignal for that simulation of the `system
@@ -226,13 +224,13 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
     * Simulate performance:
 
-        execute the `system <EVCControlMechanism.system>` under the selected `allocation_policy` using the
-        EVCControlMechanism's `run_simulation <EVCControlMechanism.run_simulation>` method, and the `value
+        execute the `system <EVCControlMechanism.system>` under the selected `control_allocation` using the
+        EVCControlMechanism's `evaluate <EVCControlMechanism.evaluate>` method, and the `value
         <PredictionMechanism.value>`\\s of its `prediction_mechanisms <EVCControlMechanism.prediction_mechanisms>` as
         the input to the corresponding `ORIGIN` Mechanisms of the `system <EVCControlMechanism.system>` it controls;
         the values of all :ref:`stateful attributes` of 'Components` in the System are :ref:`re-initialized` to the
-        same value prior to each simulation, so that the results for each `allocation_policy
-        <EVCControlMechanism.allocation_policy>` are based on the same initial conditions.  Each simulation includes
+        same value prior to each simulation, so that the results for each `control_allocation
+        <EVCControlMechanism.control_allocation>` are based on the same initial conditions.  Each simulation includes
         execution of the EVCControlMechanism's `objective_mechanism`, which provides the result to the
         EVCControlMechanism.  If `system <EVCControlMechanism.system>`\\.recordSimulationPref is `True`,
         the results of each simulation are appended to the `simulation_results <System.simulation_results>`
@@ -246,10 +244,10 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         - the EVCControlMechanism's `input <EVC_Mechanism_Input>`, which is the result of its `objective_mechanism
           <EVCControlMechanism.objective_mechanism>`'s `function <ObjectiveMechanism.function>`) and provides an
           evaluation of the outcome of processing in the `system <EVCControlMechanism.system>` under the current
-          `allocation_policy`;
+          `control_allocation`;
         |
         - the result of the `cost <EVCControlMechanism_Cost_Function>` function, called by the `value_function
-          <EVCControlMechanism_Value_Function>`, that returns the cost for the `allocation_policy` based on
+          <EVCControlMechanism_Value_Function>`, that returns the cost for the `control_allocation` based on
           the current `cost <ControlSignal.cost>` associated with each of its ControlSignals;
         |
         - the result of the `combine <EVCControlMechanism_Combine_Function>` function, called by the `value_function
@@ -261,7 +259,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         `EVC_policies` attribute, and its value is saved in the `EVC_values` attribute; otherwise, retain only
         maximum EVC value.
 
-    The ControlSignalGridSearch function returns the `allocation_policy` that yielded the maximum EVC.
+    The ControlSignalGridSearch function returns the `control_allocation` that yielded the maximum EVC.
     Its operation can be modified by customizing or replacing any or all of the functions referred to above
     (also see `EVCControlMechanism_Functions`).
 
@@ -291,14 +289,14 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         """Grid search combinations of control_signals in specified allocation ranges to find one that maximizes EVC
 
         * Called by ControlSignalGridSearch.
-        * Call System.execute for each `allocation_policy` in `control_signal_search_space`.
+        * Call System.execute for each `control_allocation` in `control_signal_search_space`.
         * Store an array of values for output_states in `monitored_output_states`
-          (i.e., the input_states in `input_states`) for each `allocation_policy`.
-        * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
+          (i.e., the input_states in `input_states`) for each `control_allocation`.
+        * Call `_compute_EVC` for each control_allocation to calculate the EVC, identify the  maximum,
           and assign to `EVC_max`.
-        * Set `EVC_max_policy` to the `allocation_policy` (outputState.values) corresponding to EVC_max.
+        * Set `EVC_max_policy` to the `control_allocation` (outputState.values) corresponding to EVC_max.
         * Set value for each control_signal (outputState.value) to the values in `EVC_max_policy`.
-        * Return an allocation_policy.
+        * Return an control_allocation.
 
         .. note::
             * runtime_params is used for self.__execute (that calculates the EVC for each call to System.execute);
@@ -329,8 +327,13 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.parameters.context.get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
                                                                       EVC_SIMULATION,
                                                                       controller.system.name)
+        # Get allocation_samples for all ControlSignals
+        num_control_signals = len(controller.control_signals)
+        control_signal_sample_lists = []
+        for control_signal in controller.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples.generator)
+        control_signal_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
-        control_signal_search_space = controller.parameters.control_signal_search_space.get(execution_id)
         # Print progress bar
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""
@@ -344,6 +347,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # Evaluate all combinations of control_signals (policies)
         sample = 0
         EVC_max_state_values = variable.copy()
+
         EVC_max_policy = control_signal_search_space[0] * 0.0
 
         # Parallelize using multiprocessing.Pool
@@ -401,6 +405,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
 
             for allocation_vector in control_signal_search_space[start:end,:]:
+
             # for iter in range(rank, len(control_signal_search_space), size):
             #     allocation_vector = control_signal_search_space[iter,:]:
 
@@ -443,7 +448,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
 
             # # TEST PRINT EVC:
-            # print("EVC_max: {}\tASSOCIATED allocation_policy: {}\n".format(EVC_max, EVC_max_policy))
+            # print("EVC_max: {}\tASSOCIATED control_allocation: {}\n".format(EVC_max, EVC_max_policy))
 
             #endregion
 
@@ -507,14 +512,14 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                                         EVC_max_policy[i]))
             print()
 
-        #endregionj
+        #endregion
 
         # # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
 
-        #region ASSIGN AND RETURN allocation_policy
+        #region ASSIGN AND RETURN control_allocation
         # Convert EVC_max_policy into 2d array with one control_signal allocation per item,
-        #     assign to controller.allocation_policy, and return (where it will be assigned to controller.value).
+        #     assign to controller.control_allocation, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
         allocation_policy = np.array(EVC_max_policy).reshape(len(EVC_max_policy), -1)
         controller.parameters.value.set(allocation_policy, execution_id, override=True)
@@ -523,7 +528,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
 
 def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=None):
-    """Compute EVC for a specified `allocation_policy <EVCControlMechanism.allocation_policy>`.
+    """Compute EVC for a specified `control_allocation <EVCControlMechanism.control_allocation>`.
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
     IMPLEMENTATION NOTE:  this could be further parallelized if input is for multiple trials
@@ -588,7 +593,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
         inputs = {key:value[i] for key, value in predicted_input.items()}
 
-        outcome = ctlr.run_simulation(
+        outcome = ctlr.evaluate(
             inputs=inputs,
             allocation_vector=allocation_vector,
             execution_id=sim_execution_id,
@@ -616,6 +621,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         mechanism.reinitialize(*reinitialization_values[mechanism], execution_context=execution_id)
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
+
     # TEST PRINT EVC:
     # print("EVC_avg: {}".format(EVC_avg[0]))
 
@@ -724,18 +730,18 @@ class PredictionMechanism(IntegratorMechanism):
     **Execution**
 
     A PredictionMechanism is executed each time its `system <PredictionMechanism>` is run; however, it is **not**
-    executed when that System is simulated (that is, it is run using the EVCControlMechanism's `run_simulation
-    <EVCControlMechanism.run_simulation>` method).  Thus, its inputs are updated only once per *actual* run of the
-    System, and each simulated run (i.e., the simulation for each `allocation_policy
-    <EVCControlMechanism.allocation_policy>`; see `EVCControlMechanism Execution <EVCControlMechanism_Execution>`)
+    executed when that System is simulated (that is, it is run using the EVCControlMechanism's `evaluate
+    <EVCControlMechanism.evaluate>` method).  Thus, its inputs are updated only once per *actual* run of the
+    System, and each simulated run (i.e., the simulation for each `control_allocation
+    <EVCControlMechanism.control_allocation>`; see `EVCControlMechanism Execution <EVCControlMechanism_Execution>`)
     uses the *exact same* set of inputs -- the value of the PredictionMechanisms resulting from the last actual run
     of its `system <PredictionMechanism.system>`) -- so that the results of the simulated run for each
-    `allocation_policy <EVCControlMechanism.allocation_policy>` can properly be compared. If the PredictionMechanisms
+    `control_allocation <EVCControlMechanism.control_allocation>` can properly be compared. If the PredictionMechanisms
     for an EVCControlMechanism generate a list of inputs (e.g., using `INPUT_SEQUENCE
     <PredictionMechanism_Input_Sequence>`), then each simulated run involves several trials, each of which uses one
     item from the list of each PredictionMechanism as the input to its `origin_mechanism
     <PredictionMechanism.origin_mechanism>`;  items in the list are used as inputs in the exact same sequence for the
-    simulated run of every `allocation_policy <EVCControlMechanism.allocation_policy>` so that, once again,
+    simulated run of every `control_allocation <EVCControlMechanism.control_allocation>` so that, once again,
     proper comparisons can be made between policies.
 
     Arguments
@@ -928,3 +934,5 @@ class PredictionMechanism(IntegratorMechanism):
             return self.system.origin_mechanisms[self.system.controller.prediction_mechanisms.index(self)]
         except:
             return None
+
+

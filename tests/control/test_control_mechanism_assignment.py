@@ -93,6 +93,7 @@ def test_prediction_mechanism_assignment():
     T3 = pnl.TransferMechanism(name='T3')
 
     S = pnl.sys([T1, T2, T3],
+                # controller=pnl.EVCControlMechanism(name='EVC',
                 controller=pnl.EVCControlMechanism(name='EVC',
                                                    prediction_mechanisms=(pnl.PredictionMechanism,
                                                                           {pnl.FUNCTION: pnl.INPUT_SEQUENCE,

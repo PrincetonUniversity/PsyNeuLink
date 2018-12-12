@@ -540,7 +540,7 @@ specifies that the InputState of ``my_mech`` should receive a `GatingProjection`
 
 Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
 the following example, a `ControlMechanism` is created that sends `ControlProjections <ControlProjection>` to the
-`drift_rate <BogaczEtAl.drift_rate>` and `threshold <BogaczEtAl.threshold>` ParameterStates of a `DDM` Mechanism::
+`drift_rate <DriftDiffusionAnalytical.drift_rate>` and `threshold <DriftDiffusionAnalytical.threshold>` ParameterStates of a `DDM` Mechanism::
 
     my_mech = pnl.DDM(name='MY DDM')
     my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL',
@@ -1113,7 +1113,7 @@ class State_Base(State):
         self._path_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update()
         self._mod_proj_values = {}
-        for attrib, value in get_class_attributes(ModulationParam):
+        for (attrib, value) in ModulationParam.__members__.items():
             self._mod_proj_values[getattr(ModulationParam,attrib)] = []
 
         self.context.string = context.__class__.__name__
@@ -2031,9 +2031,10 @@ class State_Base(State):
         for mod_param, value_list in self._mod_proj_values.items():
             # check if override or disable ever have a nonempty value_list here..
             if value_list:
-                aggregated_mod_val = mod_param.reduce(value_list)
-                getattr(self.function_object.parameters, mod_param.attrib_name).set(aggregated_mod_val, execution_id)
-                function_param = self.function_object.params[mod_param.attrib_name]
+                # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
+                aggregated_mod_val = mod_param.value.reduce(value_list)
+                getattr(self.function_object.parameters, mod_param.value.attrib_name).set(aggregated_mod_val, execution_id)
+                function_param = self.function_object.params[mod_param.value.attrib_name]
                 if not FUNCTION_PARAMS in self.stateParams:
                     self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}
                 else:

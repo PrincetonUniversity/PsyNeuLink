@@ -49,11 +49,12 @@ class TestACConstructor:
         assert isinstance(comp, AutodiffComposition)
         assert isinstance(comp_2, AutodiffComposition)
 
-    def test_target_CIM(self):
-        comp = AutodiffComposition()
-        assert isinstance(comp.target_CIM, CompositionInterfaceMechanism)
-        assert comp.target_CIM.composition == comp
-        assert comp.target_CIM_states == {}
+    # KAM removed this pytest 10/30 after removing target_CIM
+    # def test_target_CIM(self):
+    #     comp = AutodiffComposition()
+    #     assert isinstance(comp.target_CIM, CompositionInterfaceMechanism)
+    #     assert comp.target_CIM.composition == comp
+    #     assert comp.target_CIM_states == {}
 
     def test_pytorch_representation(self):
         comp = AutodiffComposition()
@@ -63,7 +64,7 @@ class TestACConstructor:
         comp = AutodiffComposition()
         assert comp.input_CIM.reportOutputPref == False
         assert comp.output_CIM.reportOutputPref == False
-        assert comp.target_CIM.reportOutputPref == False
+        # assert comp.target_CIM.reportOutputPref == False
 
     def test_patience(self):
         comp = AutodiffComposition(patience=10)
@@ -107,14 +108,14 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        # create an input and call run to process it, so that PytorchModelCreator gets called and the
-        # pytorch representation of the AC gets created
-        xor_inputs = [0, 0]
-        results = xor.run(inputs={xor_in:xor_inputs})
-
+        # mini version of xor.execute just to build up pytorch representation
+        xor._analyze_graph()
+        xor._build_pytorch_representation(execution_id=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
-        assert np.allclose(hid_map.parameters.matrix.get(xor), xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
-        assert np.allclose(out_map.parameters.matrix.get(xor), xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
+        assert np.allclose(hid_map.parameters.matrix.get(None),
+                           xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
+        assert np.allclose(out_map.parameters.matrix.get(None),
+                           xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
     def test_training_then_processing(self):
@@ -154,24 +155,29 @@ class TestMiscTrainingFunctionality:
         xor_targets[3] = [0]
 
         # train model for a few epochs
-        results_before_proc = xor.run(inputs={xor_in:xor_inputs},
-                                      targets={xor_out:xor_targets},
-                                      epochs=10)
+        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
+        #                               targets={xor_out:xor_targets},
+        #                               epochs=10)
+        results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+                                                "targets": {xor_out:xor_targets},
+                                               "epochs": 10})
 
         # get weight parameters from pytorch
         pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
         pt_weights_out_bp = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
+        #KAM temporarily removed -- will reimplement when pytorch weights can be used in pure PNL execution
         # do processing on a few inputs
-        results_proc = xor.run(inputs={xor_in:xor_inputs})
-
-        # get weight parameters from pytorch
-        pt_weights_hid_ap = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
-        pt_weights_out_ap = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
-
-        # check that weight parameters before and after processing are the same
-        assert np.allclose(pt_weights_hid_bp, pt_weights_hid_ap)
-        assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
+        # results_proc = xor.run(inputs={xor_in:xor_inputs})
+        # results_proc = xor.run(inputs={"inputs": {xor_in:xor_inputs}})
+        #
+        # # get weight parameters from pytorch
+        # pt_weights_hid_ap = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
+        # pt_weights_out_ap = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
+        #
+        # # check that weight parameters before and after processing are the same
+        # assert np.allclose(pt_weights_hid_bp, pt_weights_hid_ap)
+        # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self):
@@ -199,7 +205,9 @@ class TestMiscTrainingFunctionality:
                                     sender=xor_hid,
                                     receiver=xor_out)
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition(param_init_from_pnl=True,
+                                  learning_rate=10.0,
+                                  optimizer_type="sgd")
 
         xor.add_c_node(xor_in)
         xor.add_c_node(xor_hid)
@@ -221,24 +229,22 @@ class TestMiscTrainingFunctionality:
         xor_targets[3] = [0]
 
         # train the model for a few epochs
-        result = xor.run(inputs={xor_in:xor_inputs},
-                         targets={xor_out:xor_targets},
-                         epochs=10,
-                         learning_rate=10,
-                         optimizer='sgd')
+        result = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                                 "targets": {xor_out:xor_targets},
+                                 "epochs": 10})
 
         # get weight parameters from pytorch
         pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
         pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
         # assert that projections are still what they were initialized as
-        assert np.allclose(hid_map.parameters.matrix.get(xor), hid_m)
-        assert np.allclose(out_map.parameters.matrix.get(xor), out_m)
+        assert np.allclose(hid_map.parameters.matrix.get(None), hid_m)
+        assert np.allclose(out_map.parameters.matrix.get(None), out_m)
 
         # assert that projections didn't change during training with the pytorch
         # parameters (they should now be different)
-        assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(xor))
-        assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(xor))
+        assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
+        assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
     # test whether the autodiff composition's get_parameters method works as desired
     def test_get_params(self):
@@ -257,7 +263,8 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection(matrix=np.random.rand(2,10))
         out_map = MappingProjection(matrix=np.random.rand(10,1))
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition(param_init_from_pnl=True,
+                                  learning_rate=1.0)
 
         xor.add_c_node(xor_in)
         xor.add_c_node(xor_hid)
@@ -279,7 +286,16 @@ class TestMiscTrainingFunctionality:
         xor_targets[3] = [0]
 
         # call run to only process the inputs, so that pytorch representation of AC gets created
-        results = xor.run(inputs={xor_in:xor_inputs})
+        # results = xor.run(inputs={xor_in:xor_inputs})
+
+        #KAM Changed 11/1/18
+
+        # mini version of xor.execute just to build up pytorch representation
+        xor._analyze_graph()
+        # CW changed 12/3/18
+        xor._build_pytorch_representation(xor.default_execution_id)
+        # OLD
+        # xor._build_pytorch_representation()
 
         # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
         # and get the parameters straight from pytorch
@@ -289,16 +305,16 @@ class TestMiscTrainingFunctionality:
 
         # check that parameter copies obtained from get_parameters are the same as the
         # projections and parameters from pytorch
-        assert np.allclose(hid_map.parameters.matrix.get(xor), weights_get_params[hid_map])
+        assert np.allclose(hid_map.parameters.matrix.get(None), weights_get_params[hid_map])
         assert np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-        assert np.allclose(out_map.parameters.matrix.get(xor), weights_get_params[out_map])
+        assert np.allclose(out_map.parameters.matrix.get(None), weights_get_params[out_map])
         assert np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
         # call run to train the pytorch parameters
-        results = xor.run(inputs={xor_in:xor_inputs},
-                          targets={xor_out:xor_targets},
-                          epochs=10,
-                          learning_rate=1)
+        results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                                  "targets": {xor_out:xor_targets},
+                                  "epochs": 10})
+
 
         # check that the parameter copies obtained from get_parameters have not changed with the
         # pytorch parameters during training (and are thus at a different memory location)
@@ -338,7 +354,9 @@ class TestTrainingCorrectness:
         hid_map = MappingProjection(matrix=np.random.rand(2,10), sender=xor_in, receiver=xor_hid)
         out_map = MappingProjection(matrix=np.random.rand(10,1))
 
-        xor = AutodiffComposition(param_init_from_pnl=from_pnl_or_no)
+        xor = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
+                                  optimizer_type=opt,
+                                  learning_rate=0.1)
 
         xor.add_c_node(xor_in)
         xor.add_c_node(xor_hid)
@@ -360,25 +378,25 @@ class TestTrainingCorrectness:
         xor_targets[3] = [0]
 
         if calls == 'single':
-            results = xor.run(inputs={xor_in:xor_inputs},
-                              targets={xor_out:xor_targets},
-                              epochs=eps,
-                              optimizer=opt,
-                              learning_rate=0.1)
+            results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                                      "targets": {xor_out:xor_targets},
+                                      "epochs": eps}
+                                      )
 
             for i in range(len(results[0])):
                 assert np.allclose(np.round(results[0][i][0]), xor_targets[i])
 
         else:
-            results = xor.run(inputs={xor_in:xor_inputs},
-                              targets={xor_out:xor_targets},
-                              epochs=1,
-                              optimizer=opt)
+            results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                                      "targets": {xor_out:xor_targets},
+                                      "epochs": 1}
+                                      )
 
             for i in range(eps-1):
-                results = xor.run(inputs={xor_in:xor_inputs},
-                                  targets={xor_out:xor_targets},
-                                  epochs=1)
+                results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                                      "targets": {xor_out:xor_targets},
+                                      "epochs": 1}
+                                      )
 
             for i in range(len(results[eps-1])):
                 assert np.allclose(np.round(results[eps-1][i][0]), xor_targets[i])
@@ -462,7 +480,8 @@ class TestTrainingCorrectness:
                                        receiver=out_sig_can)
 
         # COMPOSITION FOR SEMANTIC NET
-        sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no)
+        sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
+                                      optimizer_type=opt, learning_rate=0.001)
 
         sem_net.add_c_node(nouns_in)
         sem_net.add_c_node(rels_in)
@@ -498,12 +517,12 @@ class TestTrainingCorrectness:
 
         truth_is = np.zeros((len(nouns), len(is_list)))
 
-        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0]
+        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0]
+        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0]
+        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1]
         truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
-        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0]
         truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
         truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
 
@@ -551,11 +570,9 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-
-        result = sem_net.run(inputs=inputs_dict,
-                             targets=targets_dict,
-                             epochs=eps,
-                             optimizer=opt)
+        result = sem_net.run(inputs=[{'inputs': inputs_dict,
+                                      'targets': targets_dict,
+                                      'epochs': eps}])
 
         # CHECK CORRECTNESS
 
@@ -1220,7 +1237,9 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition(param_init_from_pnl=True,
+                                  learning_rate=10,
+                                  optimizer_type=opt)
 
         xor.add_c_node(xor_in)
         xor.add_c_node(xor_hid)
@@ -1244,12 +1263,10 @@ class TestTrainingIdenticalness():
         xor_targets[3] = [0]
 
         # TRAIN COMPOSITION
-
-        result = xor.run(inputs={xor_in:xor_inputs},
-                         targets={xor_out:xor_targets},
-                         epochs=eps,
-                         learning_rate=10,
-                         optimizer=opt)
+        inputs_dict = {"inputs": {xor_in:xor_inputs},
+                       "targets": {xor_out:xor_targets},
+                       "epochs": eps}
+        result = xor.run(inputs=inputs_dict)
 
         comp_weights = xor.get_parameters()[0]
 
@@ -1425,7 +1442,9 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION FOR SEMANTIC NET
 
-        sem_net = AutodiffComposition(param_init_from_pnl=True)
+        sem_net = AutodiffComposition(param_init_from_pnl=True,
+                                      learning_rate=0.5,
+                                      optimizer_type=opt)
 
         sem_net.add_c_node(nouns_in)
         sem_net.add_c_node(rels_in)
@@ -1523,17 +1542,17 @@ class TestTrainingIdenticalness():
         targets_dict_sys[out_sig_has_sys] = targets_dict[out_sig_has]
         targets_dict_sys[out_sig_can_sys] = targets_dict[out_sig_can]
 
+        sem_net.learning_enabled=False
         result = sem_net.run(inputs=inputs_dict)
 
-        comp_weights = sem_net.get_parameters()[0]
+        # comp_weights = sem_net.get_parameters()[0]
 
         # TRAIN COMPOSITION
-
-        result = sem_net.run(inputs=inputs_dict,
-                             targets=targets_dict,
-                             epochs=eps,
-                             learning_rate=0.5,
-                             optimizer=opt)
+        sem_net.learning_enabled=True
+        result = sem_net.run(inputs={"inputs": inputs_dict,
+                                     "targets": targets_dict,
+                                     "epochs": eps}
+                             )
 
         comp_weights = sem_net.get_parameters()[0]
 
@@ -1587,6 +1606,3 @@ class TestTrainingIdenticalness():
         assert np.allclose(comp_weights[map_h2_is], map_h2_is_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
-
-
-

@@ -63,7 +63,7 @@ Automatic_Component = pnl.TransferMechanism(
 
 # Decision Mechanisms
 Decision = pnl.DDM(
-    function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
+    function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(
         drift_rate=(1.0),
         threshold=(0.2645),
         noise=(0.5),
@@ -132,7 +132,7 @@ mySystem = pnl.System(
         FlankerAutomaticProcess,
         RewardProcess
     ],
-    controller=pnl.EVCControlMechanism(name='Task Controller'),
+    controller=pnl.EVCControlMechanism(name='Task Controller', ),
     enable_controller=True,
     monitor_for_control=[
         Reward,

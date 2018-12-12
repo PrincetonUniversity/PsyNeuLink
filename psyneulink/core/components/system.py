@@ -915,7 +915,7 @@ class System(System_Base):
 
         self.projections = []
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # fAssign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
                                                   initial_values=initial_values,
                                                   # controller=controller,

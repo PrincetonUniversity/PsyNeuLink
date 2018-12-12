@@ -17,7 +17,7 @@ myHiddenLayer = pnl.TransferMechanism(
 
 myDDM = pnl.DDM(
     name='My_DDM',
-    function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
+    function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(
         drift_rate=0.5,
         threshold=1,
         starting_point=0.0

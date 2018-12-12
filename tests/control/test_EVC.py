@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.integratorfunctions import DRIFT_RATE, THRESHOLD, BogaczEtAl
+from psyneulink.core.components.functions.integratorfunctions import DRIFT_RATE, THRESHOLD, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
@@ -25,7 +25,7 @@ def test_EVC():
         name='Reward'
     )
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(
                 1.0,
                 ControlProjection(
@@ -250,7 +250,7 @@ def test_EVC_gratton():
 
     # Decision Mechanisms
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(1.0),
             threshold=(0.2645),
             noise=(0.5),
@@ -487,7 +487,7 @@ def test_laming_validation_specify_control_signals():
         output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE]
     )
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=1.0,
             threshold=1.0,
             noise=0.5,
@@ -629,7 +629,7 @@ def test_stateful_mechanism_in_simulation():
         name='Reward'
     )
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(
                 1.0,
                 ControlProjection(

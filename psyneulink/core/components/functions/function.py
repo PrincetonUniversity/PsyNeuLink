@@ -138,6 +138,7 @@ Class Reference
 
 import numbers
 import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import namedtuple
@@ -148,9 +149,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    NAME, PARAMETER_STATE_PARAMS, \
-    kwComponentCategory, kwPreferenceSetName
+from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Param, ParamAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -161,7 +160,7 @@ __all__ = [
     'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
     'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function', 'is_function_type',
-    'ModulatedParam','ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM','MultiplicativeParam',
+    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam',
     'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
 ]
 
@@ -251,7 +250,7 @@ class AdditiveParam():
 # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
 
 
-class ModulationParam():
+class ModulationParam(Enum):
     """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
 
     COMMENT:
@@ -330,24 +329,24 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
 
     # # MODIFIED 6/27/18 OLD
     # # Get the actual parameter of owner.function_object to be modulated
-    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.value.attrib_name]
     # # Get the function parameter's value
     # function_param_value = owner.function_object.params[function_param_name]
     # # MODIFIED 6/27/18 NEW:
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
         # function_param_name = function_mod_meta_param_obj
         from psyneulink.core.globals.utilities import Modulation
-        function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj)
+        function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj.name)
         function_param_name = function_mod_meta_param_obj
         function_param_value = mod_proj.sender.parameters.value.get(execution_context)
     else:
         # Get the actual parameter of owner.function_object to be modulated
-        function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+        function_param_name = owner.function_object.params[function_mod_meta_param_obj.value.attrib_name]
         # Get the function parameter's value
         function_param_value = owner.function_object.params[function_param_name]
     # # MODIFIED 6/27/18 NEWER:
     # from psyneulink.core.globals.utilities import Modulation
-    # mod_spec = function_mod_meta_param_obj.attrib_name
+    # mod_spec = function_mod_meta_param_obj.value.attrib_name
     # if mod_spec == OVERRIDE_PARAM:
     #     function_param_name = mod_spec
     #     function_param_value = mod_proj.sender.value
@@ -1075,3 +1074,43 @@ class ArgumentTherapy(Function_Base):
         return self.convert_output_type(value)
 
 
+
+kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
+kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
+kwValueFunction = "EVC VALUE FUNCTION"
+CONTROL_SIGNAL_GRID_SEARCH_FUNCTION = "EVC CONTROL SIGNAL GRID SEARCH FUNCTION"
+CONTROLLER = 'controller'
+
+class EVCAuxiliaryFunction(Function_Base):
+    """Base class for EVC auxiliary functions
+    """
+    componentType = kwEVCAuxFunctionType
+
+    class Params(Function_Base.Params):
+        variable = None
+
+    classPreferences = {
+        kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+       }
+
+    @tc.typecheck
+    def __init__(self,
+                 function,
+                 variable=None,
+                 params=None,
+                 owner=None,
+                 prefs:is_pref_set=None,
+                 context=None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+        self.aux_function = function
+
+        super().__init__(default_variable=variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context,
+                         function=function,
+                         )
