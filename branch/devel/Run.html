@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Log" href="Log.html"/>
         <link rel="prev" title="Time" href="Time.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1030
+                0.4.8.0+1027
               </div>
             
           
@@ -198,76 +198,16 @@ runs only a single execution of the object;</li>
 </div></blockquote>
 <p>Understanding a few basic concepts about how the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function operates will make it easier to use the
 <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> methods of PsyNeuLink Components.  These are discussed below.</p>
-</div>
-<div class="section" id="execution-contexts">
-<span id="run-scope-of-execution"></span><h2><em>Execution Contexts</em><a class="headerlink" href="#execution-contexts" title="Permalink to this headline">¶</a></h2>
-<p>An <em>execution context</em> is a scope of execution which has its own set of values for Components and their <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a>.
-This is designed to prevent computations from interfering with each other, when Components are reused, which often occurs
-when using multiple or nested Compositions, or running <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a>. Each execution context is
-or is associated with an <em>execution_id</em>, which is often a user-readable string. An <em>execution_id</em> can be specified in a call to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a>,
-or left unspecified, in which case the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.default_execution_id" title="psyneulink.core.compositions.composition.Composition.default_execution_id"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">execution_id</span></code></a> would be used. When
-looking for values after a run, it’s important to know the execution context you are interested in, as shown below</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">add_c_node</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">add_c_node</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="go">array([[1.]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
-<span class="go">[[array([5.])]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
-<span class="go">[[array([10.])]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">20</span><span class="p">},</span> <span class="n">execution_id</span><span class="o">=</span><span class="s1">&#39;custom execution id&#39;</span><span class="p">)</span>
-<span class="go">[[array([20.])]]</span>
-
-<span class="go"># context None</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
-<span class="go">[[1.]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
-<span class="go">[[5.]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
-<span class="go">[[10.]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;custom execution id&#39;</span><span class="p">))</span>
-<span class="go">[[20.]]</span>
-</pre></div>
-</div>
-<p>In general, anything that happens outside of a Composition run and without an explicit setting of execution context
-occurs in the <code class="xref any docutils literal"><span class="pre">None</span></code> execution context.</p>
-<div class="section" id="for-developers">
-<h3>For Developers<a class="headerlink" href="#for-developers" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="initialization-of-execution-contexts">
-<span id="run-execution-contexts-init"></span><h4>Initialization of Execution Contexts<a class="headerlink" href="#initialization-of-execution-contexts" title="Permalink to this headline">¶</a></h4>
-<ul class="simple">
-<li>The parameter values for any execution context can be copied into another execution context by using Component._initialize_from_context, which when called on a Component copies the values for all its parameters and recursively for all of the Component’s <code class="xref any docutils literal"><span class="pre">_dependent_components</span></code></li>
-<li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">_dependent_components</span></code> should be added to for any new Component that requires other Components to function properly (beyond “standard” things like Component.function_object, or Mechanism.input_states, as these are added in the proper classes’ _dependent_components)</dt>
-<dd><ul class="first last">
-<li>the intent is that with <code class="docutils literal"><span class="pre">_dependent_components</span></code> set properly, calling     <code class="docutils literal"><span class="pre">obj._initialize_from_context(new_execution_id,</span> <span class="pre">base_execution_id)</span></code> should be sufficient to run obj     under <strong>new_execution_id</strong></li>
-<li>a good example of a “nonstandard” override is <code class="xref any docutils literal"><span class="pre">OptimizationControlMechanism._dependent_components</span></code></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</div>
-<div class="section" id="debugging-tips">
-<h4>Debugging Tips<a class="headerlink" href="#debugging-tips" title="Permalink to this headline">¶</a></h4>
-<p>If you receive an error like below, while checking for a context value for example,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">execution_id</span><span class="p">)</span><span class="o">.</span><span class="n">execution_phase</span> <span class="o">==</span> <span class="n">ContextStatus</span><span class="o">.</span><span class="n">PROCESSING</span>
-<span class="ne">AttributeError</span><span class="p">:</span> <span class="s1">&#39;NoneType&#39;</span> <span class="nb">object</span> <span class="n">has</span> <span class="n">no</span> <span class="n">attribute</span> <span class="s1">&#39;execution_phase&#39;</span>
-</pre></div>
-</div>
-<p>this means that there was no context value found for execution_id, and can be indicative that execution_id
-was not initialized to the values of another execution context, which normally happens during execution.
-See <a class="reference internal" href="#run-execution-contexts-init"><span class="std std-ref">Execution Contexts initialization</span></a>.</p>
-</div>
-</div>
+<div class="section" id="scope-of-execution">
+<span id="run-scope-of-execution"></span><h3><em>Scope of Execution</em><a class="headerlink" href="#scope-of-execution" title="Permalink to this headline">¶</a></h3>
+<p>When the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of a Component is called, it executes that Component and all others within its scope of
+execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, the scope of execution is simply the Mechanism itself.  For a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>,
+the scope of
+execution is all of the Mechanisms specified in its <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, the scope of execution is
+all of the Mechanisms in the Processes specified in the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.processes" title="psyneulink.core.components.system.System.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> attribute.</p>
 </div>
 <div class="section" id="timing">
-<span id="run-timing"></span><h2><em>Timing</em><a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h2>
+<span id="run-timing"></span><h3><em>Timing</em><a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
 <p>When <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is called by a Component, it calls that Component’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method once for each
 <a class="reference internal" href="#run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
 execution.  For each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
@@ -276,7 +216,7 @@ another <a class="reference internal" href="Scheduler.html#scheduler-termination
 with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute different Components at different time scales.</p>
 </div>
 <div class="section" id="inputs">
-<span id="run-inputs"></span><h2><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
+<span id="run-inputs"></span><h3><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the relevant Mechanisms in
 the <a class="reference internal" href="#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These are specified in the <strong>inputs</strong> argument of a Component’s
 <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
@@ -602,7 +542,7 @@ situations:</p>
 </div>
 </div>
 <div class="section" id="runtime-parameters">
-<span id="run-runtime-parameters"></span><h2><em>Runtime Parameters</em><a class="headerlink" href="#runtime-parameters" title="Permalink to this headline">¶</a></h2>
+<span id="run-runtime-parameters"></span><h3><em>Runtime Parameters</em><a class="headerlink" href="#runtime-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
 specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
 parameters of Mechanisms, which is passed into the <code class="xref any docutils literal"><span class="pre">runtime_params</span></code> argument of <a class="reference internal" href="#"><span class="doc">Run</span></a>.</p>
@@ -712,7 +652,7 @@ value.</p>
 </div>
 </div>
 <div class="section" id="targets">
-<span id="run-targets"></span><h2><em>Targets</em><a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h2>
+<span id="run-targets"></span><h3><em>Targets</em><a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
 <p>If learning is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>, then
 target values for each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism in the Process or System being run.  These
 are specified in the <strong>targets</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
@@ -863,6 +803,7 @@ rather than a dictionary.</p>
 </pre></div>
 </div>
 </div>
+</div>
 <div class="section" id="class-reference">
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -974,7 +915,7 @@ or of the OutputStates of the <code class="xref any docutils literal"><span clas
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1030.g6322ab3',
+            VERSION:'0.4.8.0+1027.g5270b5a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

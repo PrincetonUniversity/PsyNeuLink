@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MaskedMappingProjection &mdash; PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation</title>
+  <title>MaskedMappingProjection &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
         <link rel="up" title="Pathway Projections" href="PathwayProjections.html"/>
         <link rel="next" title="AutoAssociativeProjection" href="AutoAssociativeProjection.html"/>
         <link rel="prev" title="Pathway Projections" href="PathwayProjections.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1030
+                0.4.8.0+1027
               </div>
             
           
@@ -230,7 +230,7 @@ the context in which the Projection is used.</li>
 <li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a><em> or </em><em>Mechanism</em><em>]</em>) – specifies the destination of the Projection’s output.  If a Mechanism is specified, its
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
-<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.function" title="psyneulink.core.components.functions.combinationfunctions.Reduce.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
 the value of the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.sender" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
 <li><strong>mask</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>list</em><em>, </em><em>np.ndarray</em><em> or </em><em>np.matrix : default None</em>) – specifies a mask to be applied to the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> each time the Projection is
 executed, in a manner specified by the <strong>mask_operation</strong> argument.</li>
@@ -301,75 +301,6 @@ naming, including for default and duplicate names).</p>
 <dd><p><em>PreferenceSet or specification dict : Projection_Base.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for AutoAssociativeProjection (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([[0]])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.mask">
-<code class="descname">mask</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal"><span class="pre">mask</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.mask_operation">
-<code class="descname">mask_operation</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.mask_operation" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">mask_operation</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><code class="xref any docutils literal"><span class="pre">MULTIPLY</span></code></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.matrix">
-<code class="descname">matrix</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.Params.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code></a></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -419,7 +350,7 @@ naming, including for default and duplicate names).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1030.g6322ab3',
+            VERSION:'0.4.8.0+1027.g5270b5a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

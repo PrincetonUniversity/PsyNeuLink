@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.8.0+1027.g5270b5a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1030.g6322ab3 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1027.g5270b5a documentation" href="index.html"/>
         <link rel="up" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="next" title="LeabraMechanism" href="LeabraMechanism.html"/>
         <link rel="prev" title="ComparatorMechanism" href="ComparatorMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1030
+                0.4.8.0+1027
               </div>
             
           
@@ -310,7 +310,7 @@ array representing a full time series as an experiment. See
 the function</li>
 <li><strong>target</strong> (<a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the TARGET InputState, which will be used by the function to
 evaluate the sample</li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.function"><em>function</em></a><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the sample and target inputs.</li>
+<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.function" title="psyneulink.core.components.functions.combinationfunctions.Reduce.function"><em>function</em></a><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the sample and target inputs.</li>
 <li><strong>output_states</strong> (<em>str</em><em>, </em><em>Iterable : default OUTCOME</em>) – by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>)
 OutputState of the PredictionErrorMechanism.</li>
 <li><strong>learning_rate</strong> (<em>Number : default 0.3</em>) – controls the weight of later timesteps compared to earlier ones. Higher
@@ -367,67 +367,6 @@ MechanismRegistry (see <a class="reference internal" href="Naming.html"><span cl
 duplicate names).</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Read only:</th><td class="field-body">True</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params.function">
-<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction"><code class="xref any py py-class docutils literal"><span class="pre">PredictionErrorDeltaFunction</span></code></a></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="Function.html"><span class="doc">Function</span></a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params.learning_rate">
-<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.Params.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.3</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">function</code></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">PredictionErrorDeltaFunction</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -477,7 +416,7 @@ duplicate names).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1030.g6322ab3',
+            VERSION:'0.4.8.0+1027.g5270b5a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
