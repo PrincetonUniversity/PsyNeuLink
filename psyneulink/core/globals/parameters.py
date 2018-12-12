@@ -759,9 +759,3 @@ class Parameters(ParamsTemplate):
         except AttributeError:
             # parameter does not have a validation method
             pass
-
-    def _parse_variable(self, variable):
-        return variable
-
-    def _validate_variable(self, variable):
-        return None
