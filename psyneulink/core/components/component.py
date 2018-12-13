@@ -2869,25 +2869,31 @@ class Component(object, metaclass=ComponentsMeta):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context, execution_id=execution_id)
 
-        # If Component has a Function (function), assign Component's execution_phase to its context
-        try:
-            fct_context_attrib = self.function.parameters.context.get(execution_id)
-            # curr_context = self.parameters.context.get(execution_id).execution_phase
-            curr_context = self.parameters.context.get(execution_id).flags
-        except AttributeError:
-            # Otherwise if Component *is* a Function, assign its owner's execution_phase to its context
+        if isinstance(self.function, Function):
+            function = self.function
+        else:
+            function = None
+
+        # assign this Component's context flags to its Function if it exists
+        # otherwise attempt to set its context flags from its owner
+        if function is not None:
+            self.function._assign_context_values(
+                execution_id,
+                flags=self.parameters.context.get(execution_id).flags,
+            )
+        else:
             try:
-                fct_context_attrib = self.parameters.context.get(execution_id)
-                # curr_context = self.owner.parameters.context.get(execution_id).execution_phase
-                curr_context = self.owner.parameters.context.get(execution_id).flags
+                owner = self.owner
             except AttributeError:
-                # Otherwise assign ContextFlags.PROCESSING as its execution_phase context
-                fct_context_attrib = self.parameters.context.get(execution_id)
-                # curr_context = ContextFlags.PROCESSING
-                fct_context_attrib.execution_phase = ContextFlags.PROCESSING
-                curr_context = self.parameters.context.get(execution_id).flags
-        # fct_context_attrib.execution_phase = curr_context
-        fct_context_attrib.flags = curr_context
+                owner = None
+
+            if owner is not None:
+                flags = owner.parameters.context.get(execution_id).flags
+
+                self._assign_context_values(
+                    execution_id,
+                    flags=flags,
+                )
 
         # CALL FUNCTION
 
@@ -2900,7 +2906,14 @@ class Component(object, metaclass=ComponentsMeta):
             self.function.parameters.value.set(value, execution_id, override=True)
         except AttributeError:
             pass
-        fct_context_attrib.execution_phase = ContextFlags.IDLE
+
+        # reset the Function to IDLE
+        if function is not None:
+            function_context = self.function.parameters.context.get(execution_id)
+        else:
+            function_context = self.parameters.context.get(execution_id)
+
+        function_context.execution_phase = ContextFlags.IDLE
 
         return value
 
