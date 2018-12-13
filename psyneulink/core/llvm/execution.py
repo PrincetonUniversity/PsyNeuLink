@@ -16,6 +16,7 @@ import numpy as np
 
 from .builder_context import *
 from . import helpers, jit_engine
+from .debug import debug_env
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
 
@@ -44,15 +45,34 @@ class CUDAExecution:
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
         self.__cuda_out_buf = None
+        self._uploaded_bytes = 0
+        self._downloaded_bytes = 0
+        self._debug_env = debug_env
 
-    def _get_buffer(self, data):
+    def __del__(self):
+        if "cuda_data" in self._debug_env:
+            try:
+                name = self._bin_func.name
+            except:
+                name = self._composition.name
+            print("{} CUDA uploaded: {}".format(name, self._uploaded_bytes))
+            print("{} CUDA downloaded: {}".format(name, self._downloaded_bytes))
+
+    def _get_ctype_bytes(self, data):
         # Return dummy buffer. CUDA does not handle 0 size well.
         if ctypes.sizeof(data) == 0:
             return bytearray(b'aaaa')
         return bytearray(data)
 
-    def _get_device_buffer(self, data):
-        return jit_engine.pycuda.driver.to_device(self._get_buffer(data))
+    def upload_ctype(self, data):
+        self._uploaded_bytes += ctypes.sizeof(data)
+        return jit_engine.pycuda.driver.to_device(self._get_ctype_bytes(data))
+
+    def download_ctype(self, source, ty):
+        self._downloaded_bytes += ctypes.sizeof(ty)
+        out_buf = bytearray(ctypes.sizeof(ty))
+        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
+        return ty.from_buffer(out_buf)
 
     def __getattr__(self, attribute):
         if not attribute.startswith("_cuda"):
@@ -60,7 +80,7 @@ class CUDAExecution:
 
         private_attr = "_buffer" + attribute
         if getattr(self, private_attr) is None:
-            new_buffer = self._get_device_buffer(getattr(self, attribute[5:]))
+            new_buffer = self.upload_ctype(getattr(self, attribute[5:]))
             setattr(self, private_attr, new_buffer)
 
         return getattr(self, private_attr)
@@ -77,6 +97,7 @@ class CUDAExecution:
         # Create input parameter
         new_var = np.asfarray(variable)
         data_in = jit_engine.pycuda.driver.In(new_var)
+        self._uploaded_bytes += new_var.nbytes
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_context_struct,
@@ -86,9 +107,8 @@ class CUDAExecution:
         vo_ty = self._bin_func.byref_arg_types[3]
         if len(self._execution_ids) > 1:
             vo_ty =  vo_ty * len(self._execution_ids)
-        out_buf = bytearray(ctypes.sizeof(vo_ty))
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_out_buf)
-        ct_res = vo_ty.from_buffer(out_buf)
+
+        ct_res =  self.download_ctype(self._cuda_out_buf, vo_ty)
         return _convert_ctype_to_python(ct_res)
 
 
@@ -312,8 +332,7 @@ class CompExecution(CUDAExecution):
         bin_exec = self._composition._get_bin_execution()
         # Create input buffer
         inputs = self._get_input_struct(inputs)
-        input_data = bytearray(inputs)
-        data_in = jit_engine.pycuda.driver.to_device(input_data)
+        data_in = self.upload_ctype(inputs)
 
         bin_exec.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                            data_in, self._cuda_data_struct, self._cuda_conditions,
@@ -323,16 +342,13 @@ class CompExecution(CUDAExecution):
         vo_ty = bin_exec.byref_arg_types[3]
         if len(self._execution_ids) > 1:
             vo_ty = vo_ty * len(self._execution_ids)
-        out_buf = bytearray(ctypes.sizeof(vo_ty))
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_data_struct)
-        self._data_struct = vo_ty.from_buffer(out_buf)
+        self._data_struct = self.download_ctype(self._cuda_data_struct, vo_ty)
 
     def cuda_run(self, inputs, runs, num_input_sets):
         bin_run = self._composition._get_bin_run()
         # Create input buffer
         inputs = self._get_run_input_struct(inputs, num_input_sets)
-        input_data = bytearray(inputs)
-        data_in = jit_engine.pycuda.driver.to_device(input_data)
+        data_in = self.upload_ctype(inputs)
 
         # Create output buffer
         output_type = (bin_run.byref_arg_types[4] * runs)
@@ -343,13 +359,12 @@ class CompExecution(CUDAExecution):
 
         runs_count = jit_engine.pycuda.driver.In(np.int32(runs))
         input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
+        self._uploaded_bytes += 8 # runs_count + input_count
 
         bin_run.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                           self._cuda_data_struct, data_in, data_out, runs_count,
                           input_count, threads=len(self._execution_ids))
 
         # Copy the data struct from the device
-        out_buf = bytearray(output_size)
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, data_out)
-        outputs = output_type.from_buffer(out_buf)
-        return _convert_ctype_to_python(outputs)
+        ct_out = self.download_ctype(data_out, output_type)
+        return _convert_ctype_to_python(ct_out)
