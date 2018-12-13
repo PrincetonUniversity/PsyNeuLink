@@ -14,7 +14,6 @@
 * `SimpleIntegrator`
 * `InteractiveActivation`
 * `ConstantIntegrator`
-* `Buffer`
 * `AdaptiveIntegrator`
 * `DriftDiffusionIntegrator`
 * `OrnsteinUhlenbeckIntegrator`
@@ -24,6 +23,8 @@
 * `AGTUtilityIntegrator`
 * `DriftDiffusionAnalytical`
 * `NavarroAndFuss`
+* `Buffer`
+* `DND`
 
 Overview
 --------
@@ -5906,7 +5907,7 @@ class DND(Integrator):  # ------------------------------------------------------
     Returns
     -------
 
-    value of entry that best matches first item of `variable <DND.variable>`  : 1d array
+    value and key of entry that best matches first item of `variable <DND.variable>`  : 2d array
 
     """
 
@@ -6140,13 +6141,13 @@ class DND(Integrator):  # ------------------------------------------------------
 
         Parameters
         ----------
-        query_key : a row vector
-            a DND key, used to for memory search
+        query_key : 1d array
+            used to retrieve item with key that best matches query_key, based on `distance_function
+            <DND.distance_function>` and `selection_function <DND.selection_function>`.
 
         Returns
         -------
-        a row vector
-            a DND value, representing the memory content
+        value and key for item retrieved : 2d array
 
         """
         # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
