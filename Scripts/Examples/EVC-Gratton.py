@@ -132,7 +132,7 @@ mySystem = pnl.System(
         FlankerAutomaticProcess,
         RewardProcess
     ],
-    controller=pnl.EVCControlMechanism(name='Task Controller'),
+    controller=pnl.EVCControlMechanism(name='Task Controller', ),
     enable_controller=True,
     monitor_for_control=[
         Reward,

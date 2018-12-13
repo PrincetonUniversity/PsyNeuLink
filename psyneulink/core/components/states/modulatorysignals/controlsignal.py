@@ -124,12 +124,12 @@ all of the `ControlProjections <ControlProjection>` that project from that Contr
 *Allocation, Function and Intensity*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
-which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
-which to use (such as the `EVCControlMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
+*Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to which
+it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine which to
+use (e.g., `OptimizationControlMechanism`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
-ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
+ControlSignal's `allocation <ControlSignal>` attribute contains the value assigned to it by the ControlMechanism
 at the end of the previous `TRIAL` (i.e., when the ControlMechanism last executed --  see
 `ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
 `last_intensity` attribute.
@@ -207,7 +207,7 @@ ParameterState is unfamiliar, see `Parameter State documentation <ParameterState
 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
 attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
-evaluate an `allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
+evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
@@ -304,6 +304,7 @@ from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
+from collections import namedtuple
 
 from psyneulink.core.components.component import function_type, method_type
 # import Components
@@ -313,23 +314,26 @@ from psyneulink.core.components.functions.function import _is_modulation_param, 
 from psyneulink.core.components.functions.integratorfunctions import IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
+from psyneulink.core.components.functions.optimizationfunctions import SampleSpec, SampleIterator
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+from psyneulink.core.globals.keywords import \
+    ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, \
+    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from psyneulink.core.globals.utilities import is_numeric, iscompatible, \
+    kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
     'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
-    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'kpAdjustmentCost', 'kpAllocation', 'kpCost',
-    'kpCostRange', 'kpDurationCost', 'kpIntensity', 'kpIntensityCost',
+    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION',
 ]
 
 # class OutputStateLog(IntEnum):
@@ -355,18 +359,9 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
-
-# Attributes / KVO keypaths
-# kpLog = "Control Signal Log"
-kpAllocation = "Control Signal Allocation"
-kpIntensity = "Control Signal Intensity"
-kpCostRange = "Control Signal Cost Range"
-kpIntensityCost = "Control Signal Intensity Cost"
-kpAdjustmentCost = "Control Signal Adjustment Cost"
-kpDurationCost = "Control Signal duration_cost"
-kpCost = "Control Signal Cost"
-
 COST_OPTIONS = 'cost_options'
+
+
 class ControlSignalCosts(IntEnum):
     """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
 
@@ -427,7 +422,7 @@ class ControlSignal(ModulatorySignal):
         intensity_cost_function=Exponential,                      \
         adjustment_cost_function=Linear,                          \
         duration_cost_function=Integrator,                        \
-        combine_costs_function=Reduce(operation=SUM),          \
+        combine_costs_function=Reduce(operation=SUM),             \
         allocation_samples=self.ClassDefaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
         projections=None                                          \
@@ -470,7 +465,7 @@ class ControlSignal(ModulatorySignal):
         specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
 
     index : int : default SEQUENTIAL
-        specifies the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`
+        specifies the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`
         used as the ControlSignal's `value <ControlSignal.value>`.
 
     function : Function or method : default Linear
@@ -495,9 +490,9 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to combine the results of any cost functions that are enabled, the result of
         which is assigned as the ControlSignal's `cost <ControlSignal.cost>` attribute.
 
-    allocation_samples : list : default range(0.1, 1, 0.1)
-        specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
-        `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
+    allocation_samples : list, 1d array, or SampleSpec : default SampleSpec(0.1, 1, 0.1)
+        specifies the values used by the ControlSignal's `owner <ControlSignal.owner>` to determine its
+        `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
@@ -538,9 +533,10 @@ class ControlSignal(ModulatorySignal):
     last_allocation : float
         value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
 
-    allocation_samples : list : DEFAULT_SAMPLE_VALUES
-        set of values to sample by the ControlSignal's `owner <ControlSignal.owner>` to determine its
-        `allocation_policy <ControlMechanism.allocation_policy>`.
+    allocation_samples : SampleIterator
+        `SampleIterator` created from **allocation_samples** specification and used to generate a set of values to
+        sample by the ControlSignal's `owner <ControlSignal.owner>` when determining its `control_allocation
+        <ControlMechanism.control_allocation>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
@@ -558,7 +554,7 @@ class ControlSignal(ModulatorySignal):
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
 
     index : int
-        the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` used as the
+        the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>` used as the
         ControlSignal's `value <ControlSignal.value>`.
 
     control_signal : float
@@ -629,6 +625,84 @@ class ControlSignal(ModulatorySignal):
     paramsType = OUTPUT_STATE_PARAMS
 
     class Params(ModulatorySignal.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ControlSignal.variable>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                value
+                    see `value <ControlSignal.value>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                adjustment_cost
+                    see `adjustment_cost <ControlSignal.adjustment_cost>`
+
+                    :default value: 0
+                    :type: int
+
+                adjustment_cost_function
+                    see `adjustment_cost_function <ControlSignal.adjustment_cost_function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                allocation_samples
+                    see `allocation_samples <ControlSignal.allocation_samples>`
+
+                    :default value: numpy.array([0.1, 0.4, 0.7, 1. ])
+                    :type: numpy.ndarray
+
+                combine_costs_function
+                    see `combine_costs_function <ControlSignal.combine_costs_function>`
+
+                    :default value: `Reduce`(offset=0.0, operation=sum, scale=1.0)
+                    :type: `Function`
+
+                cost
+                    see `cost <ControlSignal.cost>`
+
+                    :default value: None
+                    :type:
+
+                cost_options
+                    see `cost_options <ControlSignal.cost_options>`
+
+                    :default value: ControlSignalCosts.INTENSITY
+                    :type: `ControlSignalCosts`
+
+                duration_cost
+                    see `duration_cost <ControlSignal.duration_cost>`
+
+                    :default value: 0
+                    :type: int
+
+                duration_cost_function
+                    see `duration_cost_function <ControlSignal.duration_cost_function>`
+
+                    :default value: `SimpleIntegrator`
+                    :type: `Function`
+
+                intensity_cost
+                    see `intensity_cost <ControlSignal.intensity_cost>`
+
+                    :default value: None
+                    :type:
+
+                intensity_cost_function
+                    see `intensity_cost_function <ControlSignal.intensity_cost_function>`
+
+                    :default value: `Exponential`
+                    :type: `Function`
+
+        """
         # NOTE: if the specification of this getter is happening in several other classes, should consider
         # refactoring Param to allow individual attributes to be inherited, othwerise, leaving this is an
         # isolated case
@@ -700,7 +774,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples=Params.allocation_samples.default_value,
+                 allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Params.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,
@@ -715,14 +789,13 @@ class ControlSignal(ModulatorySignal):
             context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
-        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
+        # This is included in case ControlSignal was created by another Componente (such as ControlProjection)
+        #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
 
-        # Note: assign is not currently used by ControlSignal;
-        #       it is included here for consistency with OutputState and possible use by subclasses.
-
-        # If index has not been specified, but the owner has, allocation_policy has been determined, so use that
+        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
+        # If index has not been specified, but the owner has, control_allocation has been determined, so use that
         index = index or SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -756,12 +829,12 @@ class ControlSignal(ModulatorySignal):
                          )
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate allocation_samples and control_signal cost functions
+        """Validate cost functions and allocation_samples
 
         Checks if:
         - cost functions are all appropriate
-        - allocation_samples is a list or 1d np.array
-        - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
+           (i.e., are references to valid ControlProjection costFunctions (listed in self.costFunctions)
+        - allocation_samples is a list, array, range or SampleSpec
 
         """
 
@@ -835,10 +908,14 @@ class ControlSignal(ModulatorySignal):
                     request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
             elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
                 pass
+            elif isinstance(allocation_samples, range):
+                pass
+            elif isinstance(allocation_samples, (SampleSpec, SampleIterator)):
+                pass
             else:
                 raise ControlSignalError("allocation_samples argument ({}) in {} must be "
-                                             "a list or 1D np.array of numbers".
-                                         format(allocation_samples, self.name))
+                                         "a list or 1D array of numbers, a range, or a {}".
+                                         format(allocation_samples, self.name, SampleSpec.__name__))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -855,13 +932,18 @@ class ControlSignal(ModulatorySignal):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        self._instantiate_cost_functions()
-        self._initialize_cost_attributes()
+        self._instantiate_allocation_samples(context=context)
+        self._instantiate_cost_functions(context=context)
+        self._initialize_cost_attributes(context=context)
 
-        # Assign instance attributes
-        self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
+    def _instantiate_allocation_samples(self, context=None):
+        '''Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
+        a = self.paramsCurrent[ALLOCATION_SAMPLES]
+        if isinstance(a, (range, np.ndarray)):
+            a = list(a)
+        self.parameters.allocation_samples.set(SampleIterator(specification=a))
 
-    def _instantiate_cost_attributes(self):
+    def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
@@ -873,7 +955,7 @@ class ControlSignal(ModulatorySignal):
             self.duration_cost = 0
             self.cost = self.defaults.cost = self.intensity_cost
 
-    def _instantiate_cost_functions(self):
+    def _instantiate_cost_functions(self, context=None):
         # Instantiate cost functions (if necessary) and assign to attributes
         if self.cost_options:
             self.assign_costs(self.cost_options)
@@ -899,9 +981,12 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
+            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
+            # MODIFIED 11/9/18 OLD:[JDC]
             self.intensity_change = [0]
+            # MODIFIED 11/9/18 END
 
-    def _initialize_cost_attributes(self):
+    def _initialize_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
@@ -1036,33 +1121,33 @@ class ControlSignal(ModulatorySignal):
             ])
         )
 
-    @property
-    def allocation_samples(self):
-        return self._allocation_samples
-
-    @allocation_samples.setter
-    def allocation_samples(self, samples):
-        if isinstance(samples, (list, np.ndarray)):
-            self._allocation_samples = list(samples)
-            return
-        if isinstance(samples, tuple):
-            self._allocation_samples = samples
-            sample_range = samples
-        elif samples == AUTO:
-
-            # (7/21/17 CW) Note that since the time of writing this "stub", the value of AUTO in Keywords.py has changed
-            # from True to "auto" due to the addition of "auto" as a parameter for RecurrentTransferMechanisms! Just FYI
-
-            # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
-            raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
-                                     format(ALLOCATION_SAMPLES))
-        else:
-            sample_range = self.ClassDefaults.allocation_samples
-        self._allocation_samples = []
-        i = sample_range[0]
-        while i < sample_range[1]:
-            self._allocation_samples.append(i)
-            i += sample_range[2]
+    # @property
+    # def allocation_samples(self):
+    #     return self._allocation_samples
+    #
+    # @allocation_samples.setter
+    # def allocation_samples(self, samples):
+    #     if isinstance(samples, (list, np.ndarray)):
+    #         self._allocation_samples = list(samples)
+    #         return
+    #     if isinstance(samples, tuple):
+    #         self._allocation_samples = samples
+    #         sample_range = samples
+    #     elif samples == AUTO:
+    #
+    #         # (7/21/17 CW) Note that since the time of writing this "stub", the value of AUTO in Keywords.py has changed
+    #         # from True to "auto" due to the addition of "auto" as a parameter for RecurrentTransferMechanisms! Just FYI
+    #
+    #         # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
+    #         raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
+    #                                  format(ALLOCATION_SAMPLES))
+    #     else:
+    #         sample_range = self.ClassDefaults.allocation_samples
+    #     self._allocation_samples = []
+    #     i = sample_range[0]
+    #     while i < sample_range[1]:
+    #         self._allocation_samples.append(i)
+    #         i += sample_range[2]
 
     @property
     def intensity(self):

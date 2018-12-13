@@ -111,6 +111,23 @@ class NormalDist(DistributionFunction):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(DistributionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mean
+                    see `mean <WaldDist.mean>`
+
+                    :default value: 1.0
+                    :type: float
+
+                scale
+                    see `scale <WaldDist.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         mean = Param(0.0, modulable=True)
         standard_deviation = Param(1.0, modulable=True)
 
@@ -236,6 +253,23 @@ class UniformToNormalDist(DistributionFunction):
     componentName = NORMAL_DIST_FUNCTION
 
     class Params(DistributionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mean
+                    see `mean <WaldDist.mean>`
+
+                    :default value: 1.0
+                    :type: float
+
+                scale
+                    see `scale <WaldDist.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         variable = Param(np.array([0]), read_only=True)
         mean = Param(0.0, modulable=True)
         standard_deviation = Param(1.0, modulable=True)
@@ -344,6 +378,23 @@ class ExponentialDist(DistributionFunction):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(DistributionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mean
+                    see `mean <WaldDist.mean>`
+
+                    :default value: 1.0
+                    :type: float
+
+                scale
+                    see `scale <WaldDist.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         beta = Param(1.0, modulable=True)
 
     @tc.typecheck
@@ -444,6 +495,23 @@ class UniformDist(DistributionFunction):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(DistributionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mean
+                    see `mean <WaldDist.mean>`
+
+                    :default value: 1.0
+                    :type: float
+
+                scale
+                    see `scale <WaldDist.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         low = Param(0.0, modulable=True)
         high = Param(1.0, modulable=True)
 
@@ -549,6 +617,23 @@ class GammaDist(DistributionFunction):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(DistributionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mean
+                    see `mean <WaldDist.mean>`
+
+                    :default value: 1.0
+                    :type: float
+
+                scale
+                    see `scale <WaldDist.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         scale = Param(1.0, modulable=True)
         dist_shape = Param(1.0, modulable=True)
 
@@ -653,6 +738,23 @@ class WaldDist(DistributionFunction):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(DistributionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mean
+                    see `mean <WaldDist.mean>`
+
+                    :default value: 1.0
+                    :type: float
+
+                scale
+                    see `scale <WaldDist.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         scale = Param(1.0, modulable=True)
         mean = Param(1.0, modulable=True)
 

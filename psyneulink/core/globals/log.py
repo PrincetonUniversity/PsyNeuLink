@@ -409,7 +409,7 @@ class LogCondition(aenum.IntFlag):
       with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.
     """
     OFF = ContextFlags.UNSET
-    # """No recording."""
+    """No recording."""
     # INITIALIZATION = ContextFlags.INITIALIZING
     INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""

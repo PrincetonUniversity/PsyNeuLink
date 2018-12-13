@@ -183,6 +183,35 @@ class MaskedMappingProjection(MappingProjection):
     suffix = " " + className
 
     class Params(MappingProjection.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <MaskedMappingProjection.variable>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+
+                mask
+                    see `mask <MaskedMappingProjection.mask>`
+
+                    :default value: None
+                    :type:
+
+                mask_operation
+                    see `mask_operation <MaskedMappingProjection.mask_operation>`
+
+                    :default value: `MULTIPLY`
+                    :type: str
+
+                matrix
+                    see `matrix <MaskedMappingProjection.matrix>`
+
+                    :default value: `AUTO_ASSIGN_MATRIX`
+                    :type: str
+
+        """
         variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
         matrix = Param(DEFAULT_MATRIX, modulable=True)
         mask = None

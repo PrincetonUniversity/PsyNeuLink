@@ -185,6 +185,17 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Params(ProcessingMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <IntegratorMechanism.function>`
+
+                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), noise=0.0, offset=0.0, previous_value=numpy.array([0]), rate=0.5)
+                    :type: `Function`
+
+        """
         function = Param(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()

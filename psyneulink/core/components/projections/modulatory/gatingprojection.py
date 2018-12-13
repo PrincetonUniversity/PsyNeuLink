@@ -274,6 +274,24 @@ class GatingProjection(ModulatoryProjection_Base):
         receiver=[INPUT_STATE, OUTPUT_STATE]
 
     class Params(ModulatoryProjection_Base.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <GatingProjection.function>`
+
+                    :default value: `Linear`(intercept=0.0, slope=1.0)
+                    :type: `Function`
+
+                gating_signal
+                    see `gating_signal <GatingProjection.gating_signal>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
         function = Param(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
         gating_signal = Param(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter)
 

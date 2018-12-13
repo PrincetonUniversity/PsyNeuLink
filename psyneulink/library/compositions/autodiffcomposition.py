@@ -298,7 +298,47 @@ class AutodiffComposition(Composition):
     """
 
     class Params(Composition.Params):
+        """
+            Attributes
+            ----------
 
+                learning_rate
+                    see `learning_rate <AutodiffComposition.learning_rate>`
+
+                    :default value: 0.001
+                    :type: float
+
+                losses
+                    see `losses <AutodiffComposition.losses>`
+
+                    :default value: None
+                    :type:
+
+                min_delta
+                    see `min_delta <AutodiffComposition.min_delta>`
+
+                    :default value: 0
+                    :type: int
+
+                optimizer
+                    see `optimizer <AutodiffComposition.optimizer>`
+
+                    :default value: None
+                    :type:
+
+                patience
+                    see `patience <AutodiffComposition.patience>`
+
+                    :default value: None
+                    :type:
+
+                pytorch_representation
+                    see `pytorch_representation <AutodiffComposition.pytorch_representation>`
+
+                    :default value: None
+                    :type:
+
+        """
         optimizer = None
         learning_rate = .001
         losses = None

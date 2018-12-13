@@ -33,6 +33,7 @@ CONTENTS
 * `is_matrix_spec`
 * `is_numeric`
 * `is_numeric_or_none`
+* `is_iterable`
 * `iscompatible`
 * `is_value_spec`
 * `is_unit_interval`
@@ -104,7 +105,7 @@ __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'CNodeRole', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
-    'insert_list', 'is_matrix_spec', 'all_within_range',
+    'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
@@ -265,7 +266,6 @@ def all_within_range(x, min, max):
             if not all_within_range(i, min, max):
                 return False
         return True
-
 
 def is_numeric_or_none(x):
     if x is None:

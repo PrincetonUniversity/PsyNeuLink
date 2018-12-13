@@ -855,6 +855,25 @@ class System(System_Base):
 
     # Use inputValueSystemDefault as default input to process
     class Params(System_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <SystemInputState.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <SystemInputState.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
@@ -915,7 +934,7 @@ class System(System_Base):
 
         self.projections = []
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # fAssign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
                                                   initial_values=initial_values,
                                                   # controller=controller,
@@ -5014,6 +5033,25 @@ class SystemInputState(OutputState):
 
     """
     class Params(OutputState.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <SystemInputState.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <SystemInputState.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         # just grabs input from the process
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)

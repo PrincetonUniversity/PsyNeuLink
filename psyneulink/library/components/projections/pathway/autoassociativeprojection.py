@@ -246,6 +246,42 @@ class AutoAssociativeProjection(MappingProjection):
     suffix = " " + className
 
     class Params(MappingProjection.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <AutoAssociativeProjection.variable>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                auto
+                    see `auto <AutoAssociativeProjection.auto>`
+
+                    :default value: 1
+                    :type: int
+
+                function
+                    see `function <AutoAssociativeProjection.function>`
+
+                    :default value: `LinearMatrix`
+                    :type: `Function`
+
+                hetero
+                    see `hetero <AutoAssociativeProjection.hetero>`
+
+                    :default value: 0
+                    :type: int
+
+                matrix
+                    see `matrix <AutoAssociativeProjection.matrix>`
+
+                    :default value: `AUTO_ASSIGN_MATRIX`
+                    :type: str
+
+        """
         variable = Param(np.array([[0]]), read_only=True)
         # function is always LinearMatrix that requires 1D input
         function = LinearMatrix

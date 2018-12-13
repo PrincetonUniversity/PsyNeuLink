@@ -48,6 +48,24 @@ class ObjectiveFunction(Function_Base):
     componentType = OBJECTIVE_FUNCTION_TYPE
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Distance.variable>`
+
+                    :default value: numpy.array([[0], [0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                metric
+                    see `metric <Distance.metric>`
+
+                    :default value: `DIFFERENCE`
+                    :type: str
+
+        """
         normalize = False
         metric = Param(None, stateful=False)
 
@@ -177,6 +195,24 @@ COMMENT
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(ObjectiveFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Distance.variable>`
+
+                    :default value: numpy.array([[0], [0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                metric
+                    see `metric <Distance.metric>`
+
+                    :default value: `DIFFERENCE`
+                    :type: str
+
+        """
         matrix = HOLLOW_MATRIX
         metric = Param(ENERGY, stateful=False)
         transfer_fct = None
@@ -493,6 +529,24 @@ class Distance(ObjectiveFunction):
     componentName = DISTANCE_FUNCTION
 
     class Params(ObjectiveFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Distance.variable>`
+
+                    :default value: numpy.array([[0], [0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                metric
+                    see `metric <Distance.metric>`
+
+                    :default value: `DIFFERENCE`
+                    :type: str
+
+        """
         variable = Param(np.array([[0], [0]]), read_only=True)
         metric = Param(DIFFERENCE, stateful=False)
 

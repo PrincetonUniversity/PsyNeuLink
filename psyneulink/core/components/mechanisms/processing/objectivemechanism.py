@@ -546,6 +546,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
     #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
     class Params(ProcessingMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <ObjectiveMechanism.function>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+        """
         function = Param(LinearCombination, stateful=False, loggable=False)
 
     # ObjectiveMechanism parameter and control signal assignments):

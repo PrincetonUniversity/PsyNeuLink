@@ -364,8 +364,8 @@ from psyneulink.core.globals.utilities import append_type_to_name, iscompatible,
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
-    'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 
-    'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 
+    'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS',
+    'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT',
     'TransferError', 'TransferMechanism',
 ]
 
@@ -819,6 +819,79 @@ class TransferMechanism(ProcessingMechanism_Base):
     standard_output_states = standard_output_states.copy()
 
     class Params(ProcessingMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                clip
+                    see `clip <TransferMechanism.clip>`
+
+                    :default value: None
+                    :type:
+
+                convergence_criterion
+                    see `convergence_criterion <TransferMechanism.convergence_criterion>`
+
+                    :default value: 0.01
+                    :type: float
+
+                convergence_function
+                    see `convergence_function <TransferMechanism.convergence_function>`
+
+                    :default value: `Distance`(metric=difference, normalize=False)
+                    :type: `Function`
+
+                initial_value
+                    see `initial_value <TransferMechanism.initial_value>`
+
+                    :default value: None
+                    :type:
+
+                integration_rate
+                    see `integration_rate <TransferMechanism.integration_rate>`
+
+                    :default value: 0.5
+                    :type: float
+
+                integrator_function_value
+                    see `integrator_function_value <TransferMechanism.integrator_function_value>`
+
+                    :default value: [[0]]
+                    :type: list
+                    :read only: True
+
+                integrator_mode
+                    see `integrator_mode <TransferMechanism.integrator_mode>`
+
+                    :default value: False
+                    :type: bool
+
+                max_passes
+                    see `max_passes <TransferMechanism.max_passes>`
+
+                    :default value: 1000
+                    :type: int
+
+                noise
+                    see `noise <TransferMechanism.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                on_resume_integrator_mode
+                    see `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
+
+                    :default value: `INSTANTAENOUS_MODE_VALUE`
+                    :type: str
+
+                previous_value
+                    see `previous_value <TransferMechanism.previous_value>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
         initial_value = None
         previous_value = Param(None, read_only=True)
         clip = None
@@ -945,7 +1018,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
                                         "specified as the {} param of {} must be the same shape ({}) as its {}".
                                         format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
-        
+
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
             initial_value = np.array(target_set[INITIAL_VALUE])
@@ -972,12 +1045,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INTEGRATOR_FUNCTION:
         if INTEGRATOR_FUNCTION in target_set:
             integtr_fct = target_set[INTEGRATOR_FUNCTION]
-            if not (isinstance(integtr_fct, IntegratorFunction) 
+            if not (isinstance(integtr_fct, IntegratorFunction)
                     or (isinstance(integtr_fct, type) and issubclass(integtr_fct, IntegratorFunction))):
                 raise TransferError("The function specified for the {} arg of {} ({}) must be an {}".
                                     format(repr(INTEGRATOR_FUNCTION), self.name, integtr_fct),
                                     IntegratorFunction.__class__.__name__)
-        
+
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
             integration_rate = np.array(target_set[INTEGRATION_RATE])
