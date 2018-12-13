@@ -208,7 +208,7 @@ Umemoto_comp.model_based_optimizer.control_signals[1].adjustment_cost_function =
 
 
 # generate stimulus environment
-nTrials = 3
+nTrials = 2
 targetFeatures = [w_t]
 flankerFeatures_inc = [w_d]
 reward = [100]#[100]
@@ -266,6 +266,8 @@ stim_list_dict = {
 
 # mySystem.controller.control_signals[0].value = 1.8
 # mySystem.controller.control_signals[1].value = 0.0
+print("Markus:", Target_Rep.afferents[1])
+
 
 Umemoto_comp.run(num_trials=nTrials,
              inputs=stim_list_dict)#,
@@ -283,8 +285,9 @@ Umemoto_comp.run(num_trials=nTrials,
 # Target_Rep.log.print_entries()
 # Distractor_Rep.log.print_entries()
 #
-# Decision.log.print_entries()
+
+
+Decision.log.print_entries()
 # Automatic_Component.log.print_entries()
 Target_Rep.log.print_entries()
 #mySystem.controller.control_signals.values
-
