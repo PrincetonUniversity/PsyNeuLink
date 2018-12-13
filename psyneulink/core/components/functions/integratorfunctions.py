@@ -2091,14 +2091,16 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
         offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
 
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
 
-        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
+        if isinstance(rate_p.type.pointee, pnlvm.ir.ArrayType) and rate_p.type.pointee.count > 1:
+            rate_p = builder.gep(rate_p, [ctx.int32_ty(0), index])
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
+
         if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
             noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
-
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
         # FIXME: Standalone function produces 2d array value
