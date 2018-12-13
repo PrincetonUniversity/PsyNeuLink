@@ -5398,7 +5398,7 @@ class DND(Integrator):  # ------------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, callable))=0.0,
                  initializer: tc.optional(dict)=None,
-                 similarity_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
+                 distance_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
                  selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
                  max_entries=1000,
                  params: tc.optional(dict) = None,
@@ -5406,7 +5406,7 @@ class DND(Integrator):  # ------------------------------------------------------
                  prefs: is_pref_set = None):
 
         initializer = initializer or []
-        self.similarity_function = similarity_function
+        self.distance_function = distance_function
         self.selection_function = selection_function
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -5461,9 +5461,9 @@ class DND(Integrator):  # ------------------------------------------------------
         self.has_initializers = True
 
 
-        if isinstance(self.similarity_function, type):
-            self.similarity_function = self.similarity_function()
-        self.similarity_function = self.similarity_function.function
+        if isinstance(self.distance_function, type):
+            self.distance_function = self.distance_function()
+        self.distance_function = self.distance_function.function
 
         if isinstance(self.selection_function, type):
             self.selection_function = self.selection_function()
@@ -5585,11 +5585,11 @@ class DND(Integrator):  # ------------------------------------------------------
         if len(self.dict) == 0:
             return np.zeros_like(query_key)
         # compute similarity(query_key, memory m ) for all m
-        similarities = [self.similarity_function([query_key, list(m)]) for m in self.dict.keys()]
-        # get the best-match memory
-        best_match_one_hot = self.selection_function(similarities)
-        best_match_index = int(np.flatnonzero(best_match_one_hot))
-        best_match_val = list(self.dict.values())[best_match_index]
+        distances = [self.distance_function([query_key, list(m)]) for m in self.dict.keys()]
+        # get the best-match memory (one with the only non-zero value in the array)
+        selection_array = self.selection_function(distances)
+        index_of_selected_item = int(np.flatnonzero(selection_array))
+        best_match_val = list(self.dict.values())[index_of_selected_item]
 
         return best_match_val
 
