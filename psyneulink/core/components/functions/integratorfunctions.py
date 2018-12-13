@@ -39,8 +39,6 @@ import warnings
 from collections.__init__ import deque, OrderedDict
 from enum import IntEnum
 
-import torch
-import torch.nn.functional as F
 import numpy as np
 import typecheck as tc
 from llvmlite import ir
