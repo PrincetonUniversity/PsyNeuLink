@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.4.8.0+1055.g0001f9b documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.4.8.0+1056.gf8b1e2c documentation</title>
   
 
   
@@ -36,7 +36,7 @@
         <link rel="index" title="Index"
               href="#"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1055.g0001f9b documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1056.gf8b1e2c documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.4.8.0+1055
+                0.4.8.0+1056
               </div>
             
           
@@ -264,6 +264,8 @@
 </li>
       </ul></li>
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_features">add_features() (psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism method)</a>
+</li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.add_memories">add_memories() (psyneulink.core.components.functions.integratorfunctions.DND method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.add_model_based_optimizer">add_model_based_optimizer() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -488,8 +490,6 @@
 </li>
       </ul></li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer">Buffer (class in psyneulink.core.components.functions.integratorfunctions)</a>
-</li>
-      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.Params">Buffer.Params (class in psyneulink.core.components.functions.integratorfunctions)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -787,6 +787,8 @@
 </li>
       <li><a href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.CORRELATION">CORRELATION (psyneulink.core.globals.keywords.DistanceMetrics attribute)</a>
 </li>
+      <li><a href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.COSINE">COSINE (psyneulink.core.globals.keywords.DistanceMetrics attribute)</a>
+</li>
       <li><a href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost">cost (psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal attribute)</a>
 
       <ul>
@@ -858,8 +860,6 @@
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.decay">(psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params attribute)</a>
 </li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.decay">(psyneulink.core.components.functions.integratorfunctions.Buffer.Params attribute)</a>
-</li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.decay">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.decay">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params attribute)</a>
@@ -917,8 +917,6 @@
         <li><a href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.DefaultTrainingMechanism">(in module psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags.DEFERRED_INIT">DEFERRED_INIT (psyneulink.core.globals.context.ContextFlags attribute)</a>
 </li>
       <li><a href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.delta">delta (psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
@@ -929,6 +927,8 @@
         <li><a href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.delta">(psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.derivative">derivative() (psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical method)</a>
 
       <ul>
@@ -947,6 +947,8 @@
         <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Tanh.derivative">(psyneulink.core.components.functions.transferfunctions.Tanh method)</a>
 </li>
       </ul></li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.dict">dict (psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+</li>
       <li><a href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.DIFFERENCE">DIFFERENCE (psyneulink.core.globals.keywords.DistanceMetrics attribute)</a>
 </li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction">direction (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess attribute)</a>
@@ -973,9 +975,15 @@
 </li>
       <li><a href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance.Params">Distance.Params (class in psyneulink.core.components.functions.objectivefunctions)</a>
 </li>
-      <li><a href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.distance_function">distance_function (psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism attribute)</a>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.distance_function">distance_function (psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+
+      <ul>
+        <li><a href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.distance_function">(psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics">DistanceMetrics (class in psyneulink.core.globals.keywords)</a>
+</li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND">DND (class in psyneulink.core.components.functions.integratorfunctions)</a>
 </li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.drift_rate">drift_rate (psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical attribute)</a>
 
@@ -1043,6 +1051,8 @@
 </li>
       <li><a href="Log.html#psyneulink.core.globals.log.Log.entries">entries (psyneulink.core.globals.log.Log attribute)</a>
 </li>
+      <li><a href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism">EpisodicMemoryMechanism (class in psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism)</a>
+</li>
       <li><a href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.Params.error_function">error_function (psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.Params attribute)</a>
 </li>
       <li><a href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.error_matrices">error_matrices (psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism attribute)</a>
@@ -1109,14 +1119,14 @@
         <li><a href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.EVC_max">(psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_max_policy">EVC_max_policy (psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 
       <ul>
         <li><a href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.EVC_max_policy">(psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_max_state_values">EVC_max_state_values (psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism attribute)</a>
 
       <ul>
@@ -1344,6 +1354,8 @@
 </li>
         <li><a href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params.function">(psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.Params attribute)</a>
 </li>
+        <li><a href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function">(psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism attribute)</a>
+</li>
         <li><a href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function">(psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function">(psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
@@ -1389,6 +1401,8 @@
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.function">(psyneulink.core.components.functions.integratorfunctions.Buffer method)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator method)</a>
+</li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.function">(psyneulink.core.components.functions.integratorfunctions.DND method)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.function">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical method)</a>
 </li>
@@ -1570,6 +1584,8 @@
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeScale.get_child">get_child() (psyneulink.core.scheduling.time.TimeScale class method)</a>
 </li>
       <li><a href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.get_costs">get_costs() (psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal method)</a>
+</li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.get_memory">get_memory() (psyneulink.core.components.functions.integratorfunctions.DND method)</a>
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeScale.get_parent">get_parent() (psyneulink.core.scheduling.time.TimeScale class method)</a>
 </li>
@@ -2329,6 +2345,8 @@
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeHistoryTree.max_depth">max_depth (psyneulink.core.scheduling.time.TimeHistoryTree attribute)</a>
 </li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.max_entries">max_entries (psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+</li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.max_iterations">max_iterations (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess attribute)</a>
 
       <ul>
@@ -2355,8 +2373,6 @@
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.max_val">(psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.max_val">(psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params attribute)</a>
-</li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.max_val">(psyneulink.core.components.functions.integratorfunctions.Buffer.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.max_val">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params attribute)</a>
 </li>
@@ -2421,6 +2437,8 @@
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags.METHOD">METHOD (psyneulink.core.globals.context.ContextFlags attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance.metric">metric (psyneulink.core.components.functions.objectivefunctions.Distance attribute)</a>
 
       <ul>
@@ -2431,16 +2449,12 @@
         <li><a href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Stability.Params.metric">(psyneulink.core.components.functions.objectivefunctions.Stability.Params attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.min_val">min_val (psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params attribute)</a>
 
       <ul>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.min_val">(psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.min_val">(psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params attribute)</a>
-</li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.min_val">(psyneulink.core.components.functions.integratorfunctions.Buffer.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.min_val">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params attribute)</a>
 </li>
@@ -2620,6 +2634,8 @@
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.name">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator attribute)</a>
 </li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.name">(psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+</li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.name">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.name">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator attribute)</a>
@@ -2710,6 +2726,8 @@
 </li>
         <li><a href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.name">(psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM attribute)</a>
 </li>
+        <li><a href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.name">(psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism attribute)</a>
+</li>
         <li><a href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.name">(psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
         <li><a href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.name">(psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
@@ -2765,6 +2783,8 @@
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.noise">(psyneulink.core.components.functions.integratorfunctions.Buffer attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator attribute)</a>
+</li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.noise">(psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.noise">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
@@ -2871,8 +2891,6 @@
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.offset">(psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.offset">(psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params attribute)</a>
-</li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.offset">(psyneulink.core.components.functions.integratorfunctions.Buffer.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.offset">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params attribute)</a>
 </li>
@@ -3099,6 +3117,8 @@
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.owner">(psyneulink.core.components.functions.integratorfunctions.Buffer attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.owner">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator attribute)</a>
+</li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.owner">(psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.owner">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
@@ -3344,6 +3364,8 @@
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.prefs">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator attribute)</a>
 </li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.prefs">(psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+</li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.prefs">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.prefs">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator attribute)</a>
@@ -3446,6 +3468,8 @@
 </li>
         <li><a href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.prefs">(psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM attribute)</a>
 </li>
+        <li><a href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.prefs">(psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism attribute)</a>
+</li>
         <li><a href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.prefs">(psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction attribute)</a>
 </li>
         <li><a href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.prefs">(psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
@@ -3493,6 +3517,8 @@
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.previous_value">(psyneulink.core.components.functions.integratorfunctions.Buffer attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.previous_value">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator attribute)</a>
+</li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.previous_value">(psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.previous_value">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator attribute)</a>
 </li>
@@ -3687,6 +3713,8 @@
 </li>
       <li><a href="DDM.html#module-psyneulink.library.components.mechanisms.processing.integrator.ddm">psyneulink.library.components.mechanisms.processing.integrator.ddm (module)</a>
 </li>
+      <li><a href="EpisodicMemoryMechanism.html#module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism">psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism (module)</a>
+</li>
       <li><a href="LeabraMechanism.html#module-psyneulink.library.components.mechanisms.processing.leabramechanism">psyneulink.library.components.mechanisms.processing.leabramechanism (module)</a>
 </li>
       <li><a href="ComparatorMechanism.html#module-psyneulink.library.components.mechanisms.processing.objective.comparatormechanism">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism (module)</a>
@@ -3743,8 +3771,6 @@
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.rate">(psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.rate">(psyneulink.core.components.functions.integratorfunctions.Buffer attribute)</a>
-</li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.rate">(psyneulink.core.components.functions.integratorfunctions.Buffer.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator attribute)</a>
 </li>
@@ -3833,14 +3859,14 @@
 </li>
       <li><a href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Reinforcement.Params">Reinforcement.Params (class in psyneulink.core.components.functions.learningfunctions)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Component.html#psyneulink.core.components.component.Component.reinitialize">reinitialize() (psyneulink.core.components.component.Component method)</a>
 
       <ul>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.reinitialize">(psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator method)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.reinitialize">(psyneulink.core.components.functions.integratorfunctions.Buffer method)</a>
+</li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.reinitialize">(psyneulink.core.components.functions.integratorfunctions.DND method)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Integrator.reinitialize">(psyneulink.core.components.functions.integratorfunctions.Integrator method)</a>
 </li>
@@ -3851,6 +3877,8 @@
         <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize">(psyneulink.core.components.mechanisms.mechanism.Mechanism_Base method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Component.html#psyneulink.core.components.component.Component.reinitialize_when">reinitialize_when (psyneulink.core.components.component.Component attribute)</a>
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags.REINITIALIZED">REINITIALIZED (psyneulink.core.globals.context.ContextFlags attribute)</a>
@@ -3880,8 +3908,6 @@
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.rest">(psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params attribute)</a>
 </li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.rest">(psyneulink.core.components.functions.integratorfunctions.Buffer.Params attribute)</a>
-</li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.rest">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.rest">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params attribute)</a>
@@ -3909,6 +3935,12 @@
 
       <ul>
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.Params.results">(psyneulink.core.compositions.composition.Composition.Params attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.retrieval_prob">retrieval_prob (psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+
+      <ul>
+        <li><a href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.retrieval_prob">(psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism attribute)</a>
 </li>
       </ul></li>
       <li><a href="Component.html#psyneulink.core.components.component.DefaultsFlexibility.RIGID">RIGID (psyneulink.core.components.component.DefaultsFlexibility attribute)</a>
@@ -4077,6 +4109,8 @@
         <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.Params.search_termination_function">(psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.Params attribute)</a>
 </li>
       </ul></li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.selection_function">selection_function (psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+</li>
       <li><a href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.SelectionFunction">SelectionFunction (class in psyneulink.core.components.functions.selectionfunctions)</a>
 </li>
       <li><a href="LCAMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation">self_excitation (psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism attribute)</a>
@@ -4103,14 +4137,14 @@
       </ul></li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders">senders (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>, <a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders">[1]</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.separated">separated (psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism attribute)</a>
 
       <ul>
         <li><a href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.Params.separated">(psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.Params attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Component.html#psyneulink.core.components.component.Component.set_log_conditions">set_log_conditions() (psyneulink.core.components.component.Component method)</a>
 
       <ul>
@@ -4222,6 +4256,14 @@
 </li>
       </ul></li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.SampleSpec.stop">stop (psyneulink.core.components.functions.optimizationfunctions.SampleSpec attribute)</a>
+</li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.storage_prob">storage_prob (psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+
+      <ul>
+        <li><a href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob">(psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.store_memory">store_memory() (psyneulink.core.components.functions.integratorfunctions.DND method)</a>
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.Context.string">string (psyneulink.core.globals.context.Context attribute)</a>
 </li>
@@ -4564,6 +4606,8 @@
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.variable">(psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator attribute)</a>
 </li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.variable">(psyneulink.core.components.functions.integratorfunctions.DND attribute)</a>
+</li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.variable">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
         <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.variable">(psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator attribute)</a>
@@ -4858,7 +4902,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1055.g0001f9b',
+            VERSION:'0.4.8.0+1056.gf8b1e2c',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

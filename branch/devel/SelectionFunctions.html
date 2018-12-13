@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.4.8.0+1055.g0001f9b documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.4.8.0+1056.gf8b1e2c documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1055.g0001f9b documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1056.gf8b1e2c documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="DistributionFunctions" href="DistributionFunctions.html"/>
         <link rel="prev" title="CombinationFunctions" href="CombinationFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1055
+                0.4.8.0+1056
               </div>
             
           
@@ -200,6 +200,18 @@ with all of its values zeroed except one as specified by <a class="reference int
 <li><em>MAX_ABS_INDICATOR</em>: 1 in place of the element with the maximum absolute value;</li>
 </ul>
 <ul class="simple">
+<li><em>MIN_VAL</em>: element with the minimum signed value in first item of <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;</li>
+</ul>
+<ul class="simple">
+<li><em>MIN_ABS_VAL</em>: element with the minimum absolute value;</li>
+</ul>
+<ul class="simple">
+<li><em>MIN_INDICATOR</em>: 1 in place of the element with the minimum signed value;</li>
+</ul>
+<ul class="simple">
+<li><em>MIN_ABS_INDICATOR</em>: 1 in place of the element with the minimum absolute value;</li>
+</ul>
+<ul class="simple">
 <li><em>PROB</em>: probabilistically chosen element based on probabilities passed in second item of variable;</li>
 </ul>
 <ul class="simple">
@@ -213,7 +225,8 @@ with all of its values zeroed except one as specified by <a class="reference int
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>2d np.array : default ClassDefaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> is
 <em>PROB</em> then a 2nd item must be included that is a probability distribution with same length as 1st item.</li>
-<li><strong>mode</strong> (<em>MAX_VAL</em><em>, </em><em>MAX_ABS_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default MAX_VAL</em>) – specifies the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<li><strong>mode</strong> (<em>MAX_VAL</em><em>, </em><em>MAX_ABS_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, </em><em>MAX_ABS_INDICATOR</em><em>, </em><em>MIN_VAL</em><em>, </em><em>MIN_ABS_VAL</em><em>, </em><em>MIN_INDICATOR</em><em>,</em>) – </li>
+<li><strong>PROB</strong><strong> or </strong><strong>PROB_INDICATOR</strong> (<em>MIN_ABS_INDICATOR</em><em>,</em>) – specifies the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -238,7 +251,13 @@ distribution, each element of which specifies the probability for selecting the 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.selectionfunctions.OneHot.mode">
 <code class="descname">mode</code><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL</em> – determines the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<dd><p><em>MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">MIN_ABS_INDICATOR, PROB or PROB_INDICATOR</code></dt>
+<dd><p>determines the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for options).</p>
 </dd></dl>
 
@@ -357,7 +376,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1055.g0001f9b',
+            VERSION:'0.4.8.0+1056.gf8b1e2c',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
