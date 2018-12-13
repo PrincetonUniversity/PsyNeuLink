@@ -107,8 +107,8 @@ class LLVMBinaryFunction:
             self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
         return self.__cuda_kernel
 
-    def cuda_call(self, *args):
-        self._cuda_kernel(*args, block=(1,1,1))
+    def cuda_call(self, *args, threads=1):
+        self._cuda_kernel(*args, block=(1, 1, 1), grid=(threads, 1))
 
     def cuda_wrap_call(self, *args):
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
