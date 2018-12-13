@@ -637,10 +637,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     context : str : default componentType+INITIALIZING
         string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
-    Returns
-    -------
-    instance of TransferMechanism : TransferMechanism
-
     Attributes
     ----------
 
@@ -800,6 +796,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         the `PreferenceSet` for the TransferMechanism; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
+
+    Returns
+    -------
+    instance of TransferMechanism : TransferMechanism
 
     """
 

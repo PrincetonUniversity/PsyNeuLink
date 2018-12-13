@@ -8,6 +8,46 @@
 # ****************************************  DNDMechanism ***************************************************************
 
 """
+
+.. _DNDMechanism_Overview:
+
+Overview
+--------
+
+A DNDMechanism
+independent ones.
+
+The function used to carry out the transformation can be selected from the following PsyNeuLink
+`Functions <Function>`: `Linear`, `Exponential`, `Logistic`, or `SoftMax`.
+
+The **integrator_mode** argument can switch the transformation from an "instantaneous"  to a "time averaged"
+(integrated) manner of execution. When `integrator_mode <TransferMechanism.integrator_mode>` is set to True, the
+mechanism's input is first transformed by its `integrator_function <TransferMechanism.integrator_function>` (the
+`AdaptiveIntegrator`). That result is then transformed by the mechanism's `function <TransferMechanism.function>`.
+
+.. _DNDMechanism_Creation:
+
+Creating a TransferMechanism
+-----------------------------
+
+A DNDMechanism is created by calling its constructor.
+
+.. _DNDMechanism_Structure:
+
+Structure
+---------
+
+.. _DNDMechanism_Execution:
+
+Execution
+---------
+
+.. _DNDMechanism_Class_Reference:
+
+Class Reference
+---------------
+
+
 """
 
 import numpy as np
@@ -23,13 +63,62 @@ __all__ = ['DNDMechanism']
 
 
 class DNDMechanism(ProcessingMechanism_Base):
-    """The differentiable neural dictionary (DND) class. This enables episodic recall in a neural network.
+    """
+    DNDMechanism(          \
+        key_size=1,        \
+        value_size=1,      \
+        function=DND,      \
+        params=None,       \
+        name=None,         \
+        prefs=None         \
+    )
 
-    Parameters
-    ----------
+    Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary (DND)
+    <HTML>`_
+
+    Arguments
+    ---------
+
+    key_size : int : default 1
+        specifies length of the key of entries in `dict <DNDMechanism.dict>`
+
+    value_size : int : default 1
+        specifies length of the value of entries in `dict <DNDMechanism.dict>`
+
+    function : function : default DND
+        specifies the function that implements storage and retrieval from `dict <DNDMechanism.dict>`.  It must take
+        as its `variable <Function.variable>` a 2d array, the first item of which is the key and the second the value
+        to be stored in its `dict` attribute, and must return a 1d array that is the value of the entry retrieved.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        the Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters.  Values
+        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
+
+    name : str : default see `name <DNDMechanism.name>`
+        specifies the name of the DNDMechanism.
+
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the DNDMechanism; see `prefs <TransferMechanism.prefs>` for details.
 
     Attributes
     ----------
+
+    dict : OrderedDict
+        member of `function <DNDMechanism.function>` that stores entries of DNDMechanism.
+
+    function : function : default DND
+        function that implements storage and retrieval from it maintains in its `dict` attribute.
+
+    name : str
+        the name of the DNDMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the DNDMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
 
     """
 

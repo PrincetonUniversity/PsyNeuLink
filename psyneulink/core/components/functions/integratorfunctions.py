@@ -5269,7 +5269,8 @@ class DND(Integrator):  # ------------------------------------------------------
         variable[1] * rate + noise
 
     .. note::
-       Keys in `dict <DND.dict>` are stored as tuples (since lists and arrays are not hashable).
+       Keys in `dict <DND.dict>` are stored as tuples (since lists and arrays are not hashable);
+       they are converted to arrays for evaluation during retrieval.
 
     Arguments
     ---------
