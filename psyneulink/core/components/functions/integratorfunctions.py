@@ -5370,7 +5370,7 @@ class DND(Integrator):  # ------------------------------------------------------
         retrieval_prob = Param(0.0, modulable=True)
         storage_prob = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        max_entries = Param(1000, modulable=False)
+        max_entries = Param(1000)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -5385,12 +5385,6 @@ class DND(Integrator):  # ------------------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
-                 # was failing.
-                 # For now, updated default_variable, noise, and Alternatively, we can change validation on
-                 # default_variable=None,   # Changed to [] because None conflicts with initializer
-                 # retrieval_prob: parameter_spec=1.0,
-                 # noise=0.0,
                  retrieval_prob: tc.optional(tc.any(int, float))=1.0,
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, callable))=0.0,
@@ -5545,7 +5539,7 @@ class DND(Integrator):  # ------------------------------------------------------
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable[1]
 
-        self.dict = self.get_previous_value(execution_id)
+        previous_value = self.get_previous_value(execution_id)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
@@ -5557,7 +5551,7 @@ class DND(Integrator):  # ------------------------------------------------------
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
             self.store_memory(key, value)
 
-        self.parameters.previous_value.set(self.dict, execution_id)
+        self.parameters.previous_value.set(previous_value, execution_id)
 
         return self.convert_output_type(ret_val)
 
@@ -5649,6 +5643,10 @@ class DND(Integrator):  # ------------------------------------------------------
         """
         for k, v in zip(input_keys, input_vals):
             self.store_memory(k, v)
+
+    @property
+    def dict(self):
+        return self.get_previous_value()
 
 
 """helpers"""
