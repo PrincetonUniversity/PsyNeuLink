@@ -5237,16 +5237,17 @@ METRICS = ['cosine', 'l1', 'l2']
 
 class DND(Integrator):  # ------------------------------------------------------------------------------
     """
-    DND(                                \
-        default_variable=None,          \
-        rate=None,                      \
-        noise=0.0,                      \
-        initializer=None,               \
-        metric=Distance(metric=COSINE), \
-        max_entries=None,               \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
+    DND(                                             \
+        default_variable=None,                       \
+        rate=None,                                   \
+        noise=0.0,                                   \
+        initializer=None,                            \
+        distance_function=Distance(metric=COSINE),   \
+        selection_function=OneHot(mode=MIN_VAL),     \
+        max_entries=None,                            \
+        params=None,                                 \
+        owner=None,                                  \
+        prefs=None,                                  \
         )
 
     Implements simple version of `Differential Neural Dictionary <HTML_REF>`_
@@ -5289,9 +5290,13 @@ class DND(Integrator):  # ------------------------------------------------------
         specifies an initial set of entries for `dict <DND.dict>`;  each key must have the same shape as
         the first item of `variable <DND.variable>` and each value must have the same shape as its second item.
 
-    metric : Function : default Distance(metric=COSINE)
-        specifies the metric used during retrieval to compare the first item in `variable <DND.variable>` with keys in
-        `dict <DND.dict>`.
+    distance_function : Distance or function : default Distance(metric=COSINE)
+        specifies the function used during retrieval to compare the first item in `variable <DND.variable>`
+        with keys in `dict <DND.dict>`.
+
+    selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
+        specifies the function used during retrieval to evaluate the distances returned by `distance_function
+        <DND.distance_function>` and select the item to return.
 
     max_entries : int : default None
         specifies the maximum number of entries allowed in `dict <DND.dict>` (see `max_entries <DND.max_entries for
@@ -5339,9 +5344,13 @@ class DND(Integrator):  # ------------------------------------------------------
     dict : dict
         dictionary with current set of entries maintained by DND.
 
-    metric : Function
-        metric used during retrieval to compare the first item in `variable <DND.variable>` with keys in `dict
-        <DND.dict>`.
+    distance_function : Distance or function : default Distance(metric=COSINE)
+        function used during retrieval to compare the first item in `variable <DND.variable>`
+        with keys in `dict <DND.dict>`.
+
+    selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
+        function used during retrieval to evaluate the distances returned by `distance_function
+        <DND.distance_function>` and select the item to return.
 
     previous_value : 1d array
         state of the `dict <DND.dict>` prior to storing `variable <DND.variable>` in the current call.
@@ -5450,6 +5459,7 @@ class DND(Integrator):  # ------------------------------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         self.has_initializers = True
+
 
         if isinstance(self.similarity_function, type):
             self.similarity_function = self.similarity_function()
