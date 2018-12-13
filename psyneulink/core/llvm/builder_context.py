@@ -14,6 +14,7 @@ import numpy as np
 import os, re
 
 from llvmlite import ir
+from .debug import debug_env
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_llvm_ir_to_ctype']
 
@@ -22,7 +23,7 @@ _all_modules = set()
 
 @atexit.register
 def module_count():
-    if str(os.environ.get("PNL_LLVM_DEBUG")).find("mod_count") != -1:
+    if "mod_count" in debug_env:
         print("Total LLVM modules: ", len(_all_modules))
 
 # TODO: Should this be selectable?
