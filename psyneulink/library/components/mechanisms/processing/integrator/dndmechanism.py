@@ -19,10 +19,10 @@ from psyneulink.core.globals.keywords import NAME, SIZE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags
 
-__all__ = ['DND']
+__all__ = ['DNDMechanism']
 
 
-class DND(ProcessingMechanism_Base):
+class DNDMechanism(ProcessingMechanism_Base):
     """The differentiable neural dictionary (DND) class. This enables episodic recall in a neural network.
 
     Parameters
