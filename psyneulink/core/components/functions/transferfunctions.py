@@ -1681,9 +1681,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def get_param_ids(self):
-        return STANDARD_DEVIATION, BIAS, SCALE, OFFSET
-
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -1948,9 +1945,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 #                          owner=owner,
 #                          prefs=prefs,
 #                          context=ContextFlags.CONSTRUCTOR)
-
-    def get_param_ids(self):
-        return VARIANCE, BIAS, SCALE, OFFSET
 
     # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
     #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])

@@ -103,7 +103,11 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_context_struct_type'):
             return component._get_context_struct_type(self)
 
-        return ir.LiteralStructType([])
+        try:
+            stateful = tuple((getattr(component, sa) for sa in component.stateful_attributes))
+            return self.convert_python_struct_to_llvm_ir(stateful)
+        except AttributeError:
+            return ir.LiteralStructType([])
 
     def get_data_struct_type(self, component):
         if hasattr(component, '_get_data_struct_type'):
@@ -161,14 +165,32 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
     global_id = builder.add(global_id, builder.call(tid_x_f, []))
 
+    # Runs need special handling. data_in and data_out are one dimensional,
+    # but hold entries for all parallel invocations.
+    is_comp_run = len(kernel_func.args) == 7
+    if is_comp_run:
+        runs_count = kernel_func.args[5]
+        input_count = kernel_func.args[6]
+
     # Index all pointer arguments
-    # TODO: This might need some more flexibility
     indexed_args = []
-    for arg in kernel_func.args:
+    for i, arg in enumerate(kernel_func.args):
+        # Don't adjust #inputs and #trials
         if isinstance(arg.type, ir.PointerType):
-            arg = builder.gep(arg, [global_id])
+            offset = global_id
+            # #runs and #trials needs to be the same
+            if is_comp_run and i >= 5:
+                offset = ir.IntType(32)(0)
+            # data arrays need spcial hadling
+            elif is_comp_run and i == 4: # data_out
+                offset = builder.mul(global_id, builder.load(runs_count))
+            elif is_comp_run and i == 3: # data_in
+                offset = builder.mul(global_id, builder.load(input_count))
+
+            arg = builder.gep(arg, [offset])
+
         indexed_args.append(arg)
-    builder.call(decl_f, kernel_func.args)
+    builder.call(decl_f, indexed_args)
     builder.ret_void()
 
     # Add kernel mark metadata

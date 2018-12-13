@@ -2090,15 +2090,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         if not all_within_range(rate, 0, 1):
             raise FunctionError(rate_value_msg.format(rate, self.name))
 
-    def _get_context_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self)
-
-    def _get_context_initializer(self, execution_id):
-        data = np.asfarray(self.parameters.previous_value.get(execution_id)).flatten().tolist()
-        if self.instance_defaults.value.ndim > 1:
-            return (tuple(data),)
-        return tuple(data)
-
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
         offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
@@ -2113,8 +2104,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
         # FIXME: Standalone function produces 2d array value
-        if isinstance(state.type.pointee.element, ir.ArrayType):
-            assert state.type.pointee.count == 1
+        if isinstance(state.type.pointee.elements[0], ir.ArrayType):
+            assert len(state.type.pointee) == 1
             prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
         else:
             prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
@@ -2133,7 +2124,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         # FIXME: Standalone function produces 2d array value
         if isinstance(vo.type.pointee.element, ir.ArrayType):
-            assert state.type.pointee.count == 1
+            assert vo.type.pointee.count == 1
             vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
         else:
             vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -3718,39 +3709,30 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         return previous_v, previous_w, previous_time
 
-    def _get_context_struct_type(self, ctx):
-        context = (self.previous_v, self.previous_w, self.previous_time)
-        context_type = ctx.convert_python_struct_to_llvm_ir(context)
-        return context_type
-
-    def _get_context_initializer(self, execution_id):
-        previous_v = self.parameters.previous_v.get(execution_id)
-        previous_w = self.parameters.previous_w.get(execution_id)
-        previous_time = self.parameters.previous_time.get(execution_id)
-
-        v = previous_v if np.isscalar(previous_v) else tuple(previous_v)
-        w = previous_w if np.isscalar(previous_w) else tuple(previous_w)
-        time = previous_time if np.isscalar(previous_time) else tuple(previous_time)
-        return (v, w, time)
-
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         zero_i32 = ctx.int32_ty(0)
 
-        # Get rid of 2d array
-        assert isinstance(arg_in.type.pointee, ir.ArrayType)
-        if isinstance(arg_in.type.pointee.element, ir.ArrayType):
-            assert(arg_in.type.pointee.count == 1)
-            arg_in = builder.gep(arg_in, [zero_i32, zero_i32])
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        def _get_rid_of_2d(element):
+            assert isinstance(element.type.pointee, ir.ArrayType)
+            if isinstance(element.type.pointee.element, ir.ArrayType):
+                assert(element.type.pointee.count == 1)
+                return builder.gep(element, [zero_i32, zero_i32])
+            return element
 
+        arg_in = _get_rid_of_2d(arg_in)
         # Load context values
-        previous_v_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(0)])
-        previous_w_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(1)])
-        previous_time_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(2)])
+        prev = {}
+        for idx, ctx_el in enumerate(self.stateful_attributes):
+            val = builder.gep(context, [zero_i32, ctx.int32_ty(idx)])
+            prev[ctx_el] = _get_rid_of_2d(val)
 
         # Output locations
-        out_v_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(0)])
-        out_w_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(1)])
-        out_time_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(2)])
+        out = {}
+        for idx, out_el in enumerate(('v', 'w', 'time')):
+            val = builder.gep(arg_out, [zero_i32, ctx.int32_ty(idx)])
+            out[out_el] = _get_rid_of_2d(val)
 
         # Load parameters
         param_vals = {}
@@ -3760,11 +3742,11 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                             builder, param_ptr)
 
         inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
-                      "out_v": out_v_ptr, "out_w": out_w_ptr,
-                      "out_time": out_time_ptr,
-                      "previous_v_ptr": previous_v_ptr,
-                      "previous_w_ptr": previous_w_ptr,
-                      "previous_time_ptr": previous_time_ptr}
+                      "out_v": out['v'], "out_w": out['w'],
+                      "out_time": out['time'],
+                      "previous_v_ptr": prev['previous_v'],
+                      "previous_w_ptr": prev['previous_w'],
+                      "previous_time_ptr": prev['previous_time']}
 
         # KDM 11/7/18: since we're compiling with this set, I'm assuming it should be
         # stateless and considered an inherent feature of the function. Changing parameter
