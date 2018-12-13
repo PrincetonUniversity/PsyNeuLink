@@ -104,7 +104,6 @@ def test_nested_transfer_mechanism_composition_parallel(benchmark, executions):
 @pytest.mark.llvm
 @pytest.mark.cuda
 @pytest.mark.parallel
-@pytest.mark.this
 @pytest.mark.composition
 @pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
 @pytest.mark.parametrize("executions", [1,5,100])
@@ -136,5 +135,42 @@ def test_nested_transfer_mechanism_composition_run_parallel(benchmark, execution
         var = [var for _ in range(executions)]
     res = e.cuda_run(var, 1, 1)
     benchmark(e.cuda_run, var, 1, 1)
+    assert np.allclose(res, [expected for _ in range(executions)])
+    assert len(res) == executions or executions == 1
+
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.parallel
+@pytest.mark.composition
+@pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
+@pytest.mark.parametrize("executions", [1,5,100])
+@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
+def test_nested_transfer_mechanism_composition_run_multi_parallel(benchmark, executions):
+
+    # mechanisms
+    A = ProcessingMechanism(name="A",
+                            function=AdaptiveIntegrator(rate=0.1))
+    B = ProcessingMechanism(name="B",
+                            function=Logistic)
+
+    inner_comp = Composition(name="inner_comp")
+    inner_comp.add_linear_processing_pathway([A, B])
+    inner_comp._analyze_graph()
+    sched = Scheduler(composition=inner_comp)
+
+    outer_comp = Composition(name="outer_comp")
+    outer_comp.add_c_node(inner_comp)
+
+    outer_comp._analyze_graph()
+    sched = Scheduler(composition=outer_comp)
+
+    e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
+    # The input dict should assign inputs origin nodes (inner_comp in this case)
+    var = {inner_comp: [[[2.0]], [[3.0]]]}
+    expected = [[[0.549833997312478]], [[0.617747874769249]], [[0.6529428177055896]], [[0.7044959416252289]]]
+    if executions > 1:
+        var = [var for _ in range(executions)]
+    res = e.cuda_run(var, 4, 2)
+    benchmark(e.cuda_run, var, 4, 2)
     assert np.allclose(res, [expected for _ in range(executions)])
     assert len(res) == executions or executions == 1

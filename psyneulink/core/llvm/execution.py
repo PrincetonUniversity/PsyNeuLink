@@ -341,10 +341,8 @@ class CompExecution(CUDAExecution):
         output_size = ctypes.sizeof(output_type)
         data_out  = jit_engine.pycuda.driver.mem_alloc(output_size)
 
-        runs_count_data = [runs for _ in self._execution_ids]
-        runs_count = jit_engine.pycuda.driver.In(np.array(runs_count_data, dtype=np.int32))
-        input_count_data = [num_input_sets for _ in self._execution_ids]
-        input_count = jit_engine.pycuda.driver.In(np.array(input_count_data, dtype=np.int32))
+        runs_count = jit_engine.pycuda.driver.In(np.int32(runs))
+        input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
 
         bin_run.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                           self._cuda_data_struct, data_in, data_out, runs_count,
