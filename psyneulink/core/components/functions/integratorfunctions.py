@@ -5372,6 +5372,12 @@ class DND(Integrator):  # ------------------------------------------------------
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
+
+    Returns
+    -------
+
+    value of entry that best matches first item of `variable <DND.variable>`  : 1d array
+
     """
 
     componentName = DND_FUNCTION

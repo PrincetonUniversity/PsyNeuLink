@@ -14,33 +14,36 @@
 Overview
 --------
 
-A DNDMechanism
-independent ones.
-
-The function used to carry out the transformation can be selected from the following PsyNeuLink
-`Functions <Function>`: `Linear`, `Exponential`, `Logistic`, or `SoftMax`.
-
-The **integrator_mode** argument can switch the transformation from an "instantaneous"  to a "time averaged"
-(integrated) manner of execution. When `integrator_mode <TransferMechanism.integrator_mode>` is set to True, the
-mechanism's input is first transformed by its `integrator_function <TransferMechanism.integrator_function>` (the
-`AdaptiveIntegrator`). That result is then transformed by the mechanism's `function <TransferMechanism.function>`.
+A DNDMechanism is an `IntegratorFunction` that implements a `differential neural dictionary <HTML_REF>`_.
 
 .. _DNDMechanism_Creation:
 
 Creating a TransferMechanism
 -----------------------------
 
-A DNDMechanism is created by calling its constructor.
+A DNDMechanism is created by calling its constructor with **key_size** and **value_size** for the entries of its
+`dict <DNDMechanism.dict>`, and a function used to implement the `dict` including methods for storing and retrieving
+from it.
 
 .. _DNDMechanism_Structure:
 
 Structure
 ---------
 
+A DNDMechanism has two `InputState`, *KEY_INPUT* and *VALUE_INPUT*.  Its `function <DNDMechanism.function>` takes the
+`value <InputState.value>` of these as a 2d array ([key, value]) and stores it as an entry in its `dict
+<DNDMechanism.dict>`, and uses the `value <InputState.value>` of its *KEY_INPUT* to retrieve an item from the
+`dict <DNDMechanism.dict>` that is assigned as the `value <OutputState>` of its `primary OutputState
+<OutputState_Primary>`.
+
 .. _DNDMechanism_Execution:
 
 Execution
 ---------
+
+Function stores KEY_INPUT and VALUE_INPUT as entry in `dict <DNDMechanism.dict>`, retrieves an item that
+matches KEY_INPUT
+THe oreder of storage  and rretieval is determined by the function
 
 .. _DNDMechanism_Class_Reference:
 
