@@ -1,8 +1,8 @@
 from . import ddm
-from . import dndmechanism
+from . import episodicmemorymechanism
 
 from .ddm import *
-from .dndmechanism import *
+from .episodicmemorymechanism import *
 
 __all__ = list(ddm.__all__)
-__all__.extend(dndmechanism.__all__)
+__all__.extend(episodicmemorymechanism.__all__)

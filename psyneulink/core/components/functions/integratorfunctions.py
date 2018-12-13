@@ -6117,7 +6117,7 @@ class DND(Integrator):  # ------------------------------------------------------
         # If this is an initialization run, leave dict empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            return variable[1]
+            return variable
 
         previous_value = self.get_previous_value(execution_id)
 
@@ -6153,15 +6153,16 @@ class DND(Integrator):  # ------------------------------------------------------
         # if no memory, return the zero vector
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
         if len(self.dict) == 0:
-            return np.zeros_like(query_key)
+            return np.zeros_like(self.instance_defaults.variable)
         # compute similarity(query_key, memory m ) for all m
         distances = [self.distance_function([query_key, list(m)]) for m in self.dict.keys()]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
         index_of_selected_item = int(np.flatnonzero(selection_array))
+        best_match_key = list(self.dict.keys())[index_of_selected_item]
         best_match_val = list(self.dict.values())[index_of_selected_item]
 
-        return best_match_val
+        return [best_match_val, best_match_key]
 
     def store_memory(self, memory_key, memory_val):
         """Save an episodic memory to the dictionary
