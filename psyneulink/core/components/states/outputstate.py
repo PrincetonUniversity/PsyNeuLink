@@ -942,6 +942,18 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     class Params(State_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <OutputState.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = Param(np.array([0]), read_only=True, getter=_output_state_variable_getter)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()

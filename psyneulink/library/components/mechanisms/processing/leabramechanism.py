@@ -200,6 +200,53 @@ class LeabraFunction(Function_Base):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                hidden_layers
+                    see `hidden_layers <LeabraMechanism.hidden_layers>`
+
+                    :default value: 0
+                    :type: int
+
+                hidden_sizes
+                    see `hidden_sizes <LeabraMechanism.hidden_sizes>`
+
+                    :default value: None
+                    :type:
+
+                input_size
+                    see `input_size <LeabraMechanism.input_size>`
+
+                    :default value: 1
+                    :type: int
+
+                network
+                    see `network <LeabraMechanism.network>`
+
+                    :default value: None
+                    :type:
+
+                output_size
+                    see `output_size <LeabraMechanism.output_size>`
+
+                    :default value: 1
+                    :type: int
+
+                quarter_size
+                    see `quarter_size <LeabraMechanism.quarter_size>`
+
+                    :default value: 50
+                    :type: int
+
+                training_flag
+                    see `training_flag <LeabraMechanism.training_flag>`
+
+                    :default value: None
+                    :type:
+
+        """
         variable = Param(np.array([[0], [0]]), read_only=True)
         network = None
 
@@ -473,6 +520,53 @@ class LeabraMechanism(ProcessingMechanism_Base):
     standard_output_states = standard_output_states.copy()
 
     class Params(ProcessingMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                hidden_layers
+                    see `hidden_layers <LeabraMechanism.hidden_layers>`
+
+                    :default value: 0
+                    :type: int
+
+                hidden_sizes
+                    see `hidden_sizes <LeabraMechanism.hidden_sizes>`
+
+                    :default value: None
+                    :type:
+
+                input_size
+                    see `input_size <LeabraMechanism.input_size>`
+
+                    :default value: 1
+                    :type: int
+
+                network
+                    see `network <LeabraMechanism.network>`
+
+                    :default value: None
+                    :type:
+
+                output_size
+                    see `output_size <LeabraMechanism.output_size>`
+
+                    :default value: 1
+                    :type: int
+
+                quarter_size
+                    see `quarter_size <LeabraMechanism.quarter_size>`
+
+                    :default value: 50
+                    :type: int
+
+                training_flag
+                    see `training_flag <LeabraMechanism.training_flag>`
+
+                    :default value: None
+                    :type:
+
+        """
         input_size = 1
         output_size = 1
         hidden_layers = 0

@@ -144,6 +144,35 @@ class RegressionCFA(CompositionFunctionApproximator):
     '''
 
     class Params(CompositionFunctionApproximator.Params):
+        """
+            Attributes
+            ----------
+
+                prediction_vector
+                    see `prediction_vector <RegressionCFA.prediction_vector>`
+
+                    :default value: None
+                    :type:
+
+                previous_state
+                    see `previous_state <RegressionCFA.previous_state>`
+
+                    :default value: None
+                    :type:
+
+                regression_weights
+                    see `regression_weights <RegressionCFA.regression_weights>`
+
+                    :default value: None
+                    :type:
+
+                update_weights
+                    see `update_weights <RegressionCFA.update_weights>`
+
+                    :default value: `BayesGLM`
+                    :type: `Function`
+
+        """
         update_weights = Param(BayesGLM, stateful=False, loggable=False)
         prediction_vector = None
         previous_state = None

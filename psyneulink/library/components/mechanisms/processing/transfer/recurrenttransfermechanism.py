@@ -767,6 +767,83 @@ class RecurrentTransferMechanism(TransferMechanism):
     componentType = RECURRENT_TRANSFER_MECHANISM
 
     class Params(TransferMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                auto
+                    see `auto <RecurrentTransferMechanism.auto>`
+
+                    :default value: 1
+                    :type: int
+
+                combination_function
+                    see `combination_function <RecurrentTransferMechanism.combination_function>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+                convergence_function
+                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
+
+                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
+                    :type: `Function`
+
+                enable_learning
+                    see `enable_learning <RecurrentTransferMechanism.enable_learning>`
+
+                    :default value: False
+                    :type: bool
+
+                hetero
+                    see `hetero <RecurrentTransferMechanism.hetero>`
+
+                    :default value: 0
+                    :type: int
+
+                integration_rate
+                    see `integration_rate <RecurrentTransferMechanism.integration_rate>`
+
+                    :default value: 0.5
+                    :type: float
+
+                learning_condition
+                    see `learning_condition <RecurrentTransferMechanism.learning_condition>`
+
+                    :default value: None
+                    :type:
+
+                learning_function
+                    see `learning_function <RecurrentTransferMechanism.learning_function>`
+
+                    :default value: `Hebbian`
+                    :type: `Function`
+
+                learning_rate
+                    see `learning_rate <RecurrentTransferMechanism.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                matrix
+                    see `matrix <RecurrentTransferMechanism.matrix>`
+
+                    :default value: `HOLLOW_MATRIX`
+                    :type: str
+
+                noise
+                    see `noise <RecurrentTransferMechanism.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                smoothing_factor
+                    see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
+
+                    :default value: 0.5
+                    :type: float
+
+        """
         matrix = Param(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
 
         noise = Param(0.0, modulable=True)

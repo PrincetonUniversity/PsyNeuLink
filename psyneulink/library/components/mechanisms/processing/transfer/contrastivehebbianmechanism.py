@@ -880,6 +880,179 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     componentType = CONTRASTIVE_HEBBIAN_MECHANISM
 
     class Params(RecurrentTransferMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ContrastiveHebbianMechanism.variable>`
+
+                    :default value: numpy.array([[0, 0]])
+                    :type: numpy.ndarray
+
+                clamp
+                    see `clamp <ContrastiveHebbianMechanism.clamp>`
+
+                    :default value: `HARD_CLAMP`
+                    :type: str
+
+                combination_function
+                    see `combination_function <ContrastiveHebbianMechanism.combination_function>`
+
+                    :default value: None
+                    :type:
+
+                continuous
+                    see `continuous <ContrastiveHebbianMechanism.continuous>`
+
+                    :default value: True
+                    :type: bool
+
+                current_activity
+                    see `current_activity <ContrastiveHebbianMechanism.current_activity>`
+
+                    :default value: None
+                    :type:
+
+                current_termination_condition
+                    see `current_termination_condition <ContrastiveHebbianMechanism.current_termination_condition>`
+
+                    :default value: None
+                    :type:
+
+                current_termination_criterion
+                    see `current_termination_criterion <ContrastiveHebbianMechanism.current_termination_criterion>`
+
+                    :default value: None
+                    :type:
+
+                execution_phase
+                    see `execution_phase <ContrastiveHebbianMechanism.execution_phase>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                hidden_activity
+                    see `hidden_activity <ContrastiveHebbianMechanism.hidden_activity>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                hidden_size
+                    see `hidden_size <ContrastiveHebbianMechanism.hidden_size>`
+
+                    :default value: None
+                    :type:
+
+                input_activity
+                    see `input_activity <ContrastiveHebbianMechanism.input_activity>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                input_size
+                    see `input_size <ContrastiveHebbianMechanism.input_size>`
+
+                    :default value: None
+                    :type:
+
+                is_finished_
+                    see `is_finished_ <ContrastiveHebbianMechanism.is_finished_>`
+
+                    :default value: False
+                    :type: bool
+                    :read only: True
+
+                learning_function
+                    see `learning_function <ContrastiveHebbianMechanism.learning_function>`
+
+                    :default value: `ContrastiveHebbian`
+                    :type: `Function`
+
+                minus_phase_activity
+                    see `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`
+
+                    :default value: None
+                    :type:
+
+                minus_phase_termination_condition
+                    see `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>`
+
+                    :default value: `CONVERGENCE`
+                    :type: str
+
+                minus_phase_termination_criterion
+                    see `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`
+
+                    :default value: 0.01
+                    :type: float
+
+                mode
+                    see `mode <ContrastiveHebbianMechanism.mode>`
+
+                    :default value: None
+                    :type:
+
+                output_activity
+                    see `output_activity <ContrastiveHebbianMechanism.output_activity>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                phase_execution_count
+                    see `phase_execution_count <ContrastiveHebbianMechanism.phase_execution_count>`
+
+                    :default value: 0
+                    :type: int
+
+                phase_terminated
+                    see `phase_terminated <ContrastiveHebbianMechanism.phase_terminated>`
+
+                    :default value: False
+                    :type: bool
+
+                plus_phase_activity
+                    see `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`
+
+                    :default value: None
+                    :type:
+
+                plus_phase_termination_condition
+                    see `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
+
+                    :default value: `CONVERGENCE`
+                    :type: str
+
+                plus_phase_termination_criterion
+                    see `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`
+
+                    :default value: 0.01
+                    :type: float
+
+                separated
+                    see `separated <ContrastiveHebbianMechanism.separated>`
+
+                    :default value: True
+                    :type: bool
+
+                target_activity
+                    see `target_activity <ContrastiveHebbianMechanism.target_activity>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                target_size
+                    see `target_size <ContrastiveHebbianMechanism.target_size>`
+
+                    :default value: None
+                    :type:
+
+        """
         variable = np.array([[0, 0]])
         current_activity = Param(None, aliases=['recurrent_activity'])
         plus_phase_activity = None

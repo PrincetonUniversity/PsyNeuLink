@@ -923,6 +923,43 @@ class LearningMechanism(AdaptiveMechanism_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     class Params(AdaptiveMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                error_matrix
+                    see `error_matrix <LearningMechanism.error_matrix>`
+
+                    :default value: None
+                    :type:
+
+                error_signal
+                    see `error_signal <LearningMechanism.error_signal>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                function
+                    see `function <LearningMechanism.function>`
+
+                    :default value: `BackPropagation`
+                    :type: `Function`
+
+                learning_enabled
+                    see `learning_enabled <LearningMechanism.learning_enabled>`
+
+                    :default value: True
+                    :type: bool
+
+                learning_signal
+                    see `learning_signal <LearningMechanism.learning_signal>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
         function = Param(BackPropagation, stateful=False, loggable=False)
         error_matrix = Param(None, modulable=True)
 

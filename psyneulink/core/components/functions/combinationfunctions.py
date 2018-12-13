@@ -61,6 +61,23 @@ class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <PredictionErrorDeltaFunction.variable>`
+
+                    :default value: numpy.array([[1], [1]])
+                    :type: numpy.ndarray
+
+                gamma
+                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         # variable = np.array([0, 0])
         variable = Param(np.array([0]), read_only=True)
 
@@ -213,6 +230,23 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     additive_param = OFFSET
 
     class Params(CombinationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <PredictionErrorDeltaFunction.variable>`
+
+                    :default value: numpy.array([[1], [1]])
+                    :type: numpy.ndarray
+
+                gamma
+                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         weights = None
         exponents = None
         operation = SUM
@@ -562,6 +596,23 @@ class LinearCombination(
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(CombinationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <PredictionErrorDeltaFunction.variable>`
+
+                    :default value: numpy.array([[1], [1]])
+                    :type: numpy.ndarray
+
+                gamma
+                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         operation = SUM
 
         weights = Param(None, modulable=True)
@@ -1111,6 +1162,23 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     additive_param = OFFSET
 
     class Params(CombinationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <PredictionErrorDeltaFunction.variable>`
+
+                    :default value: numpy.array([[1], [1]])
+                    :type: numpy.ndarray
+
+                gamma
+                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         weights = None
         exponents = None
         operation = SUM
@@ -1365,6 +1433,23 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     }
 
     class Params(CombinationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <PredictionErrorDeltaFunction.variable>`
+
+                    :default value: numpy.array([[1], [1]])
+                    :type: numpy.ndarray
+
+                gamma
+                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         variable = np.array([[1], [1]])
         gamma = Param(1.0, modulable=True)
 

@@ -252,6 +252,18 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     componentType = PROCESSING_MECHANISM
 
     class Params(ProcessingMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                execution_count
+                    see `execution_count <ProcessingMechanism.execution_count>`
+
+                    :default value: 0
+                    :type: int
+                    :read only: True
+
+        """
         # not stateful because this really is just a global counter, for accurate counts
         # should use schedulers which store this info
         execution_count = Param(0, read_only=True, loggable=False, stateful=False, fallback_default=True)

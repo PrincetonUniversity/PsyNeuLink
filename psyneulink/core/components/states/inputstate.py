@@ -713,6 +713,41 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     class Params(State_Base.Params):
+        """
+            Attributes
+            ----------
+
+                combine
+                    see `combine <InputState.combine>`
+
+                    :default value: None
+                    :type:
+
+                exponent
+                    see `exponent <InputState.exponent>`
+
+                    :default value: None
+                    :type:
+
+                function
+                    see `function <InputState.function>`
+
+                    :default value: `LinearCombination`(offset=1.0, operation=sum, scale=1.0)
+                    :type: `Function`
+
+                internal_only
+                    see `internal_only <InputState.internal_only>`
+
+                    :default value: False
+                    :type: bool
+
+                weight
+                    see `weight <InputState.weight>`
+
+                    :default value: None
+                    :type:
+
+        """
         function = Param(LinearCombination(operation=SUM), stateful=False, loggable=False)
         weight = Param(None, modulable=True)
         exponent = Param(None, modulable=True)

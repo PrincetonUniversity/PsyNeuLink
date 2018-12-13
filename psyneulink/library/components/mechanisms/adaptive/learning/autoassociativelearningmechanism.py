@@ -286,6 +286,29 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     suffix = " " + className
 
     class Params(LearningMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                learning_rate
+                    see `learning_rate <AutoAssociativeLearningMechanism.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                learning_signals
+                    see `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`
+
+                    :default value: None
+                    :type:
+
+                modulation
+                    see `modulation <AutoAssociativeLearningMechanism.modulation>`
+
+                    :default value: ModulationParam.ADDITIVE
+                    :type: `ModulationParam`
+
+        """
         learning_rate = Param(None, modulable=True)
         learning_signals = None
         modulation = ModulationParam.ADDITIVE

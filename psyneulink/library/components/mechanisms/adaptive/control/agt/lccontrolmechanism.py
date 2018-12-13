@@ -608,6 +608,29 @@ class LCControlMechanism(ControlMechanism):
     #     kp<pref>: <setting>...}
 
     class Params(ControlMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                base_level_gain
+                    see `base_level_gain <LCControlMechanism.base_level_gain>`
+
+                    :default value: 0.5
+                    :type: float
+
+                function
+                    see `function <LCControlMechanism.function>`
+
+                    :default value: `FHNIntegrator`
+                    :type: `Function`
+
+                scaling_factor_gain
+                    see `scaling_factor_gain <LCControlMechanism.scaling_factor_gain>`
+
+                    :default value: 3.0
+                    :type: float
+
+        """
         function = Param(FHNIntegrator, stateful=False, loggable=False)
 
         base_level_gain = Param(0.5, modulable=True)

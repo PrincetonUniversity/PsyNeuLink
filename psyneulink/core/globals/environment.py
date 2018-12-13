@@ -12,7 +12,7 @@
 """
 
 Overview
---------
+========
 
 .. _Run_Overview:
 
@@ -34,19 +34,86 @@ Understanding a few basic concepts about how the :keyword:`run` function operate
 
 .. _Run_Scope_of_Execution:
 
-*Scope of Execution*
-~~~~~~~~~~~~~~~~~~~~
+*Execution Contexts*
+====================
 
-When the :keyword:`run` method of a Component is called, it executes that Component and all others within its scope of
-execution.  For a `Mechanism <Mechanism>`, the scope of execution is simply the Mechanism itself.  For a `Process`,
-the scope of
-execution is all of the Mechanisms specified in its `pathway` attribute.  For a `System`, the scope of execution is
-all of the Mechanisms in the Processes specified in the System's `processes <System.processes>` attribute.
+An *execution context* is a scope of execution which has its own set of values for Components and their `parameters <Parameters>`.
+This is designed to prevent computations from interfering with each other, when Components are reused, which often occurs
+when using multiple or nested Compositions, or running `simulations <OptimizationControlMechanism_Execution>`. Each execution context is
+or is associated with an *execution_id*, which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`,
+or left unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used. When
+looking for values after a run, it's important to know the execution context you are interested in, as shown below
+
+::
+
+        >>> import psyneulink as pnl
+        >>> c = pnl.Composition()
+        >>> d = pnl.Composition()
+        >>> t = pnl.TransferMechanism()
+        >>> c.add_c_node(t)
+        >>> d.add_c_node(t)
+
+        >>> t.execute(1)
+        array([[1.]])
+        >>> c.run({t: 5})
+        [[array([5.])]]
+        >>> d.run({t: 10})
+        [[array([10.])]]
+        >>> c.run({t: 20}, execution_id='custom execution id')
+        [[array([20.])]]
+
+        # context None
+        >>> print(t.parameters.value.get())
+        [[1.]]
+        >>> print(t.parameters.value.get(c))
+        [[5.]]
+        >>> print(t.parameters.value.get(d))
+        [[10.]]
+        >>> print(t.parameters.value.get('custom execution id'))
+        [[20.]]
+
+In general, anything that happens outside of a Composition run and without an explicit setting of execution context
+occurs in the `None` execution context.
+
+
+For Developers
+--------------
+
+.. _Run_Execution_Contexts_Init:
+
+Initialization of Execution Contexts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The parameter values for any execution context can be copied into another execution context by using \
+Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
+and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+
+- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
+other Components to function properly (beyond "standard" things like Component.function_object, \
+or Mechanism.input_states, as these are added in the proper classes' _dependent_components)
+    - the intent is that with ``_dependent_components`` set properly, calling \
+    ``obj._initialize_from_context(new_execution_id, base_execution_id)`` should be sufficient to run obj \
+    under **new_execution_id**
+    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+
+Debugging Tips
+^^^^^^^^^^^^^^
+If you receive an error like below, while checking for a context value for example,
+
+::
+
+    self.parameters.context.get(execution_id).execution_phase == ContextStatus.PROCESSING
+    AttributeError: 'NoneType' object has no attribute 'execution_phase'
+
+this means that there was no context value found for execution_id, and can be indicative that execution_id
+was not initialized to the values of another execution context, which normally happens during execution.
+See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
+
 
 .. _Run_Timing:
 
 *Timing*
-~~~~~~~~
+========
 
 When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
 `input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
@@ -58,7 +125,7 @@ with `Condition` specifications for individual Components to execute different C
 .. _Run_Inputs:
 
 *Inputs*
-~~~~~~~~
+========
 
 The :keyword:`run` function presents the inputs for each `TRIAL` to the input_states of the relevant Mechanisms in
 the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a Component's
@@ -326,7 +393,7 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only or
 .. _Run_Runtime_Parameters:
 
 *Runtime Parameters*
-~~~~~~~~~~~~~~~~~~~~
+====================
 
 Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
 specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
@@ -398,7 +465,7 @@ COMMENT:
 .. _Run_Initial_Values:
 
 *Initial Values*
-~~~~~~~~~~~~~~~~
+================
 
 Any Mechanism that is the `sender <Projection.Projection.sender>` of a Projection that closes a loop in a Process or
 System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
@@ -413,7 +480,7 @@ COMMENT
 .. _Run_Targets:
 
 *Targets*
-~~~~~~~~~
+=========
 
 If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
 target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
@@ -552,7 +619,7 @@ Shorthand - specify the targets in a list because there is only one learning seq
 .. _Run_Class_Reference:
 
 Class Reference
----------------
+===============
 
 """
 

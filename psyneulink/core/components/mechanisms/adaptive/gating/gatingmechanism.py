@@ -366,6 +366,17 @@ class GatingMechanism(AdaptiveMechanism_Base):
     #     kp<pref>: <setting>...}
 
     class Params(AdaptiveMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <GatingMechanism.variable>`
+
+                    :default value: numpy.array([0.5])
+                    :type: numpy.ndarray
+
+        """
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = np.array(defaultGatingPolicy)
 

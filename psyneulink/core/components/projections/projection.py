@@ -584,6 +584,29 @@ class Projection_Base(Projection):
     suffix = " " + className
 
     class Params(Projection.Params):
+        """
+            Attributes
+            ----------
+
+                exponent
+                    see `exponent <Projection_Base.exponent>`
+
+                    :default value: None
+                    :type:
+
+                function
+                    see `function <Projection_Base.function>`
+
+                    :default value: `LinearMatrix`
+                    :type: `Function`
+
+                weight
+                    see `weight <Projection_Base.weight>`
+
+                    :default value: None
+                    :type:
+
+        """
         weight = Param(None, modulable=True)
         exponent = Param(None, modulable=True)
         function = Param(LinearMatrix, stateful=False, loggable=False)

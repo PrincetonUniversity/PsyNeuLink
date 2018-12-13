@@ -1303,6 +1303,44 @@ class Mechanism_Base(Mechanism):
     suffix = " " + className
 
     class Params(Mechanism.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Mechanism_Base.variable>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <Mechanism_Base.value>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                function
+                    see `function <Mechanism_Base.function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                has_initializers
+                    see `has_initializers <Mechanism_Base.has_initializers>`
+
+                    :default value: False
+                    :type: bool
+
+                previous_value
+                    see `previous_value <Mechanism_Base.previous_value>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
         variable = Param(np.array([[0]]), read_only=True)
         value = Param(np.array([[0]]), read_only=True)
         previous_value = Param(None, read_only=True)
