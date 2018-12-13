@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.4.8.0+1029.g8c9619b documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.4.8.0+1033.gc438956 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1029.g8c9619b documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1033.gc438956 documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="ObjectiveFunctions" href="ObjectiveFunctions.html"/>
         <link rel="prev" title="DistributionFunctions" href="DistributionFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1029
+                0.4.8.0+1033
               </div>
             
           
@@ -229,7 +229,7 @@ integrated.</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.noise" title="psyneulink.core.components.functions.integratorfunctions.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -326,6 +326,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Integrator.reinitialize">
 <code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Integrator.reinitialize" title="Permalink to this definition">¶</a></dt>
@@ -361,7 +462,7 @@ integrated.</li>
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <code class="xref any docutils literal"><span class="pre">initializer</span></code>
 for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -426,6 +527,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <dd>the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</dd>
 </dl>
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator.function" title="Permalink to this definition">¶</a></dt>
@@ -494,7 +696,7 @@ its value(s) must be in the interval [0,1].</li>
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.noise" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -603,6 +805,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.function" title="Permalink to this definition">¶</a></dt>
@@ -648,7 +951,7 @@ integrated.</li>
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>
 for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -735,6 +1038,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator.function" title="Permalink to this definition">¶</a></dt>
@@ -788,7 +1192,7 @@ integrated.</li>
 <li><strong>rate</strong> (<em>float : default None</em>) – specifies a value applied to each item in the deque on each call.</li>
 <li><strong>noise</strong> (<em>float</em><em> or </em><em>Function : default 0.0</em>) – specifies a random value added to each item in the deque on each call.</li>
 <li><strong>history</strong> (<em>int : default None</em>) – specifies the maxlen of the deque, and hence <code class="xref any docutils literal"><span class="pre">value</span></code>.</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>ndarray</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies a starting value for the deque;  if none is specified, the deque is initialized with an
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>ndarray</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies a starting value for the deque;  if none is specified, the deque is initialized with an
 empty list.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -869,6 +1273,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.Buffer.reinitialize">
 <code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.reinitialize" title="Permalink to this definition">¶</a></dt>
@@ -924,7 +1429,7 @@ integrated.</li>
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added in each call to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>
 for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -1007,6 +1512,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="method">
@@ -1170,6 +1776,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function" title="Permalink to this definition">¶</a></dt>
@@ -1218,7 +1925,7 @@ rate</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
 <li><strong>t0</strong> (<em>float : default 0.0</em>) – represents the starting time of the model and is used to compute
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_time" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.previous_time"><code class="xref any py py-attr docutils literal"><span class="pre">previous_time</span></code></a></li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1302,6 +2009,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.OrnsteinUhlenbeckIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="method">
@@ -1797,6 +2605,107 @@ activity) decreases</p>
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.FHNIntegrator.function" title="Permalink to this definition">¶</a></dt>
@@ -1851,7 +2760,7 @@ If it is a list or array, it must be the same length as <code class="xref any do
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>PsyNeuLink Function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value to be added to <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">prevous_value</span></code></a> in each call to
 <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.Buffer.initializer" title="psyneulink.core.components.functions.integratorfunctions.Buffer.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>1d array</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.initializer"><em>initializer</em></a>) – specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.initializer" title="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1942,6 +2851,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AccumulatorIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="method">
@@ -2062,6 +3072,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.LCAIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="method">
@@ -2229,6 +3340,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator.function" title="Permalink to this definition">¶</a></dt>
@@ -2371,6 +3583,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="attribute">
@@ -2576,6 +3889,107 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.decay">
+<code class="descname">decay</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.max_val">
+<code class="descname">max_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.max_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.max_val"><code class="xref any py py-attr docutils literal"><span class="pre">max_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.min_val">
+<code class="descname">min_val</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.min_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.min_val"><code class="xref any py py-attr docutils literal"><span class="pre">min_val</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">offset</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.rate">
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.rest">
+<code class="descname">rest</code><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.Params.rest" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest" title="psyneulink.core.components.functions.integratorfunctions.InteractiveActivation.rest"><code class="xref any py py-attr docutils literal"><span class="pre">rest</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.integratorfunctions.NavarroAndFuss.function" title="Permalink to this definition">¶</a></dt>
@@ -2652,7 +4066,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1029.g8c9619b',
+            VERSION:'0.4.8.0+1033.gc438956',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

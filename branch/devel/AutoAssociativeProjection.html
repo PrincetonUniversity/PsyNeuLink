@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.4.8.0+1029.g8c9619b documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.4.8.0+1033.gc438956 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1029.g8c9619b documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1033.gc438956 documentation" href="index.html"/>
         <link rel="up" title="Pathway Projections" href="PathwayProjections.html"/>
         <link rel="next" title="Modulatory Projections" href="ModulatoryProjections.html"/>
         <link rel="prev" title="MaskedMappingProjection" href="MaskedMappingProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1029
+                0.4.8.0+1033
               </div>
             
           
@@ -212,8 +212,8 @@ execution an AutoAssociativeProjection references parameters owned by its Recurr
 are <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.auto" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a>.</p>
 <div class="section" id="configurable-attributes">
 <span id="auto-associative-configurable-attributes"></span><h3><em>Configurable Attributes</em><a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.function" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
+<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Kohonen.Params.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.Params.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
+determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
 on. The only configurable parameter is the matrix, configured through the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong>
 arguments for a RecurrentTransferMechanism:</p>
 <ul class="simple" id="auto-associative-matrix">
@@ -259,7 +259,7 @@ the context in which the Projection is used.</li>
 <li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a><em> or </em><em>Mechanism</em><em>]</em>) – specifies the destination of the Projection’s output.  If a Mechanism is specified, its
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
-<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.function" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function" title="psyneulink.core.components.functions.integratorfunctions.DriftDiffusionIntegrator.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
 the value of the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
@@ -345,6 +345,99 @@ naming, including for default and duplicate names).</p>
 <dd><p><em>PreferenceSet or specification dict : Projection_Base.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for AutoAssociativeProjection (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([[0]])</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Read only:</th><td class="field-body">True</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.auto">
+<code class="descname">auto</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.auto" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.auto" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">function</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix"><code class="xref any py py-class docutils literal"><span class="pre">LinearMatrix</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="Function.html"><span class="doc">Function</span></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.hetero">
+<code class="descname">hetero</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.hetero" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.Params.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">function</code></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">LinearMatrix</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -394,7 +487,7 @@ naming, including for default and duplicate names).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1029.g8c9619b',
+            VERSION:'0.4.8.0+1033.gc438956',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

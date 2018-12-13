@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputState &mdash; PsyNeuLink 0.4.8.0+1029.g8c9619b documentation</title>
+  <title>InputState &mdash; PsyNeuLink 0.4.8.0+1033.gc438956 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1029.g8c9619b documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1033.gc438956 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="ParameterState" href="ParameterState.html"/>
         <link rel="prev" title="States" href="State.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1029
+                0.4.8.0+1033
               </div>
             
           
@@ -354,7 +354,7 @@ this takes precedence over any specification in the <strong>exponent</strong> ar
 to it, as described below.  Specifying an InputState in this way creates both the InputState and any of the
 specified or implied Projection(s) to it (if they don’t already exist). <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
 are assigned to the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.path_afferents" title="psyneulink.core.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute, and <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.mod_afferents" title="psyneulink.core.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. Any of the following can be used
-to specify an InputState by the Components that projection to it (see <a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">below</span></a> for an explanation of the relationship between the <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.value" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of these
+to specify an InputState by the Components that projection to it (see <a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">below</span></a> for an explanation of the relationship between the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of these
 Components and the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>):</p>
 <ul class="simple">
 <li><strong>OutputState, GatingSignal, Mechanism, or list with any of these</strong> – creates an InputState with Projection(s)
@@ -522,7 +522,7 @@ of the cases above), then a <a class="reference internal" href="Keywords.html#ps
 </div>
 <ul class="simple">
 <li><strong>GatingProjection, GatingSignal or GatingMechanism</strong> – any of these can be used to specify an InputState;
-their <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.value" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> does not need to be compatible with the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, however
+their <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> does not need to be compatible with the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, however
 it does have to be compatible with the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">modulatory parameter</span></a> of the InputState’s
 <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 </ul>
@@ -746,6 +746,91 @@ creation.</p>
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.states.inputstate.InputState.Params">
+<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.inputstate.InputState.Params" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.components.states.inputstate.InputState.Params.combine">
+<code class="descname">combine</code><a class="headerlink" href="#psyneulink.core.components.states.inputstate.InputState.Params.combine" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <code class="xref any docutils literal"><span class="pre">combine</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.states.inputstate.InputState.Params.exponent">
+<code class="descname">exponent</code><a class="headerlink" href="#psyneulink.core.components.states.inputstate.InputState.Params.exponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.exponent" title="psyneulink.core.components.states.inputstate.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.states.inputstate.InputState.Params.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.states.inputstate.InputState.Params.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body"><a href="#id2"><span class="problematic" id="id3">`</span></a>LinearCombination`(offset=1.0, operation=sum, scale=1.0)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="Function.html"><span class="doc">Function</span></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.states.inputstate.InputState.Params.internal_only">
+<code class="descname">internal_only</code><a class="headerlink" href="#psyneulink.core.components.states.inputstate.InputState.Params.internal_only" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.internal_only" title="psyneulink.core.components.states.inputstate.InputState.internal_only"><code class="xref any py py-attr docutils literal"><span class="pre">internal_only</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">False</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.states.inputstate.InputState.Params.weight">
+<code class="descname">weight</code><a class="headerlink" href="#psyneulink.core.components.states.inputstate.InputState.Params.weight" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.weight" title="psyneulink.core.components.states.inputstate.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -795,7 +880,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1029.g8c9619b',
+            VERSION:'0.4.8.0+1033.gc438956',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
