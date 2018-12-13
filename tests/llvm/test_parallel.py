@@ -21,13 +21,13 @@ expected = np.linalg.norm(v1 - v2)
 
 @pytest.mark.cuda
 @pytest.mark.llvm
-@pytest.mark.multi
+@pytest.mark.parallel
 @pytest.mark.function
 @pytest.mark.distance_function
-@pytest.mark.benchmark(group="DistanceFunction multi")
+@pytest.mark.benchmark(group="DistanceFunction parallel")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
-def test_ptx_cuda_multi(benchmark, executions):
+def test_ptx_cuda_parallel(benchmark, executions):
     f = Functions.Distance(default_variable=test_var, metric=kw.EUCLIDEAN)
     e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)])
     res = benchmark(e.cuda_execute, [test_var for _ in range(executions)])
@@ -37,12 +37,12 @@ def test_ptx_cuda_multi(benchmark, executions):
 @pytest.mark.llvm
 @pytest.mark.cuda
 @pytest.mark.mechanism
-@pytest.mark.multi
+@pytest.mark.parallel
 @pytest.mark.transfer_mechanism
-@pytest.mark.benchmark(group="TransferMechanism multi")
+@pytest.mark.benchmark(group="TransferMechanism parallel")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
-def test_transfer_mech_multi(benchmark, executions):
+def test_transfer_mech_parallel(benchmark, executions):
     variable = [0 for _ in range(SIZE)]
     T = TransferMechanism(
         name='T',
@@ -64,13 +64,13 @@ def test_transfer_mech_multi(benchmark, executions):
 
 @pytest.mark.llvm
 @pytest.mark.cuda
-@pytest.mark.multi
+@pytest.mark.parallel
 @pytest.mark.nested
 @pytest.mark.composition
-@pytest.mark.benchmark(group="TransferMechanism nested composition multi")
+@pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
-def test_nested_transfer_mechanism_composition_multi(benchmark, executions):
+def test_nested_transfer_mechanism_composition_parallel(benchmark, executions):
 
     # mechanisms
     A = ProcessingMechanism(name="A",
@@ -103,13 +103,13 @@ def test_nested_transfer_mechanism_composition_multi(benchmark, executions):
 
 @pytest.mark.llvm
 @pytest.mark.cuda
-@pytest.mark.multi
+@pytest.mark.parallel
 @pytest.mark.this
 @pytest.mark.composition
-@pytest.mark.benchmark(group="TransferMechanism nested composition multi")
+@pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
-def test_nested_transfer_mechanism_composition_run_multi(benchmark, executions):
+def test_nested_transfer_mechanism_composition_run_parallel(benchmark, executions):
 
     # mechanisms
     A = ProcessingMechanism(name="A",
