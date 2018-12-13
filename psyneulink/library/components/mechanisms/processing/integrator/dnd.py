@@ -22,7 +22,7 @@ from psyneulink.core.globals.context import ContextFlags
 __all__ = ['DND']
 
 
-class DNDM(ProcessingMechanism_Base):
+class DND(ProcessingMechanism_Base):
     """The differentiable neural dictionary (DND) class. This enables episodic recall in a neural network.
 
     Parameters
