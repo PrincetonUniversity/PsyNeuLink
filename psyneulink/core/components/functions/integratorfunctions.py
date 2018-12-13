@@ -66,7 +66,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.llvm import helpers
 
 
-__all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantIntegrator', 'Buffer',
+__all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantIntegrator', 'Buffer', 'DND',
            'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator',
            'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'InteractiveActivation',
            'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT',
@@ -5782,15 +5782,18 @@ class DND(Integrator):  # ------------------------------------------------------
         prefs=None,                                  \
         )
 
-    Implements simple version of `Differential Neural Dictionary <HTML_REF>`_
+    Implements simple form of `Differential Neural Dictionary described in `Ritter et al.
+    <http://arxiv.org/abs/1805.09692>`_
 
     Based on implementation in `dlstm <https://github.com/qihongl/dlstm-demo>`_ by
-    `Qihong Lu <https://github.com/qihongl>`_
+    `Qihong Lu <https://github.com/qihongl>`_.  See also  `Kaiser et al. <http://arxiv.org/abs/1703.03129>`_
+    and `Pritzel et al. <http://arxiv.org/abs/1703.01988>`_.
 
     .. _DND:
 
     First, with probability `retrieval_prob <DND.retrieval.prob>`, retrieve vector from `dict <DND.dict>` using
-    first item of `variable <DND.variable>` as key, and the matching algorithm specified in `metric <DND.metric>`.
+    first item of `variable <DND.variable>` as key, and the matching algorithm specified in `metric <DND.metric>`;
+    if not retrieval occures, an appropriately shaped zero-valued array is returned.
 
     Then, with probability `storage_prob <DND.storage_prob>` add new entry using the first item of `variable
     <DND.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
@@ -5908,6 +5911,7 @@ class DND(Integrator):  # ------------------------------------------------------
     -------
 
     value and key of entry that best matches first item of `variable <DND.variable>`  : 2d array
+        if no retrieval occures, an appropriately shaped zero-valued array is returned.
 
     """
 
@@ -6125,6 +6129,8 @@ class DND(Integrator):  # ------------------------------------------------------
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
             ret_val = self.get_memory(key)
+        else:
+            ret_val = np.zeros_like(self.instance_defaults.variable)
 
         # Store variable to dict:
         if noise:
@@ -6148,6 +6154,7 @@ class DND(Integrator):  # ------------------------------------------------------
         Returns
         -------
         value and key for item retrieved : 2d array
+            if no retrieval occurs, returns appropriately shaped zero-valued array.
 
         """
         # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
