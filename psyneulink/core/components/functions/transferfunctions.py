@@ -43,7 +43,6 @@ import numbers
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -172,13 +171,13 @@ class TransferFunction(Function_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
-        assert isinstance(arg_in.type.pointee, ir.ArrayType)
-        if isinstance(arg_in.type.pointee.element, ir.ArrayType):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        if isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType):
             assert arg_in.type == arg_out.type
             # Array elements need all to be of the same size
             length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
-            arg_in = builder.bitcast(arg_in, ir.ArrayType(ctx.float_ty, length).as_pointer())
-            arg_out = builder.bitcast(arg_out, ir.ArrayType(ctx.float_ty, length).as_pointer())
+            arg_in = builder.bitcast(arg_in, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
+            arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
@@ -1472,7 +1471,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty],
-            ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
         var = builder.load(ptri)
         val = builder.fsub(var, bias)
         val1 = builder.fmul(val, gain)
@@ -2320,8 +2319,8 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         if self.get_current_function_param(PER_ITEM):
-            assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
-            assert isinstance(arg_out.type.pointee.element, ir.ArrayType)
+            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])

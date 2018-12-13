@@ -174,9 +174,9 @@ import typecheck as tc
 import warnings
 
 from collections import Iterable
-from llvmlite import ir
 from types import MethodType
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.functions.function import Function, is_function_type
@@ -1511,11 +1511,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         assert len(self.input_states) == 1
         for state in self.input_states:
             s_type = ctx.get_input_struct_type(state)
-            if isinstance(s_type, ir.ArrayType):
+            if isinstance(s_type, pnlvm.ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
                 new_count = max(s_type.count - 1, 1)
-                new_type = ir.ArrayType(s_type.element, new_count)
+                new_type = pnlvm.ir.ArrayType(s_type.element, new_count)
             # FIXME consider struct types
             else:
                 assert False
@@ -1524,19 +1524,19 @@ class RecurrentTransferMechanism(TransferMechanism):
             state_input_type_list = []
             for proj in state.mod_afferents:
                 state_input_type_list.append(ctx.get_output_struct_type(proj))
-            input_type_list.append(ir.LiteralStructType(state_input_type_list))
-        return ir.LiteralStructType(input_type_list)
+            input_type_list.append(pnlvm.ir.LiteralStructType(state_input_type_list))
+        return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
-        return ir.LiteralStructType([transfer_t, projection_t])
+        return pnlvm.ir.LiteralStructType([transfer_t, projection_t])
 
     def _get_context_struct_type(self, ctx):
         transfer_t = ctx.get_context_struct_type(super())
         projection_t = ctx.get_context_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
-        return ir.LiteralStructType([transfer_t, projection_t, return_t])
+        return pnlvm.ir.LiteralStructType([transfer_t, projection_t, return_t])
 
     def _get_param_initializer(self, execution_id):
         transfer_params = super()._get_param_initializer(execution_id)

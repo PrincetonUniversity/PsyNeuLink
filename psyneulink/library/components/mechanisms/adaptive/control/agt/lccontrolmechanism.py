@@ -270,8 +270,6 @@ Class Reference
 """
 import typecheck as tc
 
-from llvmlite import ir
-
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.integratorfunctions import FHNIntegrator
@@ -841,7 +839,7 @@ class LCControlMechanism(ControlMechanism):
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
         elements = gain_ty, *mf_out.type.pointee.elements
-        elements_ty = ir.LiteralStructType(elements)
+        elements_ty = pnlvm.ir.LiteralStructType(elements)
 
         # allocate new output type
         new_out = builder.alloca(elements_ty, 1)

@@ -418,7 +418,6 @@ from enum import Enum, IntEnum
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
@@ -1114,14 +1113,14 @@ class Component(object, metaclass=ComponentsMeta):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(),
+            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
                 (ctx.get_param_struct_type(self).as_pointer(),
                  ctx.get_context_struct_type(self).as_pointer(),
                  ctx.get_input_struct_type(self).as_pointer(),
                  ctx.get_output_struct_type(self).as_pointer()))
 
             func_name = ctx.get_unique_name(self.name)
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             params, context, arg_in, arg_out = llvm_func.args
             for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
@@ -1129,7 +1128,7 @@ class Component(object, metaclass=ComponentsMeta):
 
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = pnlvm.ir.IRBuilder(block)
 
             builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
 

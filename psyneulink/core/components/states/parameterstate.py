@@ -352,10 +352,10 @@ Class Reference
 
 import inspect
 
-from llvmlite import ir
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.core.components.functions.function import ModulationParam, get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
@@ -853,7 +853,7 @@ class ParameterState(State_Base):
         input_types = [func_input_type]
         for mod in self.mod_afferents:
             input_types.append(ctx.get_output_struct_type(mod))
-        return ir.LiteralStructType(input_types)
+        return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         state_f = ctx.get_llvm_function(self.function_object)

@@ -33,7 +33,6 @@ import numbers
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import \
@@ -882,7 +881,7 @@ class LinearCombination(
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
         scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
         scale_type = scale_ptr.type.pointee
-        if isinstance(scale_type, ir.ArrayType):
+        if isinstance(scale_type, pnlvm.ir.ArrayType):
             if len(scale_type) == 1:
                 scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             else:
@@ -890,7 +889,7 @@ class LinearCombination(
 
         offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
         offset_type = offset_ptr.type.pointee
-        if isinstance(offset_type, ir.ArrayType):
+        if isinstance(offset_type, pnlvm.ir.ArrayType):
             if len(offset_type) == 1:
                 offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             else:
@@ -899,9 +898,9 @@ class LinearCombination(
         exponent_param_ptr, builder = ctx.get_param_ptr(self, builder, params, EXPONENTS)
         exponent_type = exponent_param_ptr.type.pointee
 
-        scale = ctx.float_ty(1.0) if isinstance(scale_type, ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
+        scale = ctx.float_ty(1.0) if isinstance(scale_type, pnlvm.ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
 
-        offset = ctx.float_ty(-0.0) if isinstance(offset_type, ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
+        offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
         operation = self.get_current_function_param(OPERATION)
@@ -914,10 +913,10 @@ class LinearCombination(
 
         for i in range(vi.type.pointee.count):
             # No exponent
-            if isinstance(exponent_type, ir.LiteralStructType):
+            if isinstance(exponent_type, pnlvm.ir.LiteralStructType):
                 exponent = ctx.float_ty(1.0)
             # Vector exponent
-            elif isinstance(exponent_type, ir.ArrayType):
+            elif isinstance(exponent_type, pnlvm.ir.ArrayType):
                 assert len(exponent_type) > 1
                 assert exponent_type.pointee.count == vo.type.pointee.count * vi.type.pointee.count
                 exponent_index = ctx.int32_ty(vo.type.pointee.count * (i - 1))
@@ -946,7 +945,7 @@ class LinearCombination(
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Sometimes we arg_out to 2d array
         out_t = arg_out.type.pointee
-        if isinstance(out_t, ir.ArrayType) and isinstance(out_t.element, ir.ArrayType):
+        if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}

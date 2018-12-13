@@ -41,7 +41,6 @@ from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -2097,13 +2096,13 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
 
         noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
-        if isinstance(noise_p.type.pointee, ir.ArrayType) and noise_p.type.pointee.count > 1:
+        if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
             noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
 
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
         # FIXME: Standalone function produces 2d array value
-        if isinstance(state.type.pointee.elements[0], ir.ArrayType):
+        if isinstance(state.type.pointee.elements[0], pnlvm.ir.ArrayType):
             assert len(state.type.pointee) == 1
             prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
         else:
@@ -2122,7 +2121,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         res = builder.fadd(ret, offset)
 
         # FIXME: Standalone function produces 2d array value
-        if isinstance(vo.type.pointee.element, ir.ArrayType):
+        if isinstance(vo.type.pointee.element, pnlvm.ir.ArrayType):
             assert vo.type.pointee.count == 1
             vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
         else:
@@ -3714,8 +3713,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         def _get_rid_of_2d(element):
-            assert isinstance(element.type.pointee, ir.ArrayType)
-            if isinstance(element.type.pointee.element, ir.ArrayType):
+            assert isinstance(element.type.pointee, pnlvm.ir.ArrayType)
+            if isinstance(element.type.pointee.element, pnlvm.ir.ArrayType):
                 assert(element.type.pointee.count == 1)
                 return builder.gep(element, [zero_i32, zero_i32])
             return element
