@@ -5593,32 +5593,6 @@ class DND(Integrator):  # ------------------------------------------------------
 
         return best_match_val
 
-    def _get_memory(self, similarities, policy='1NN'):
-        """get the episodic memory according to some policy
-        e.g. if the policy is 1nn, return the best matching memory
-        e.g. the policy can be based on the rational model
-
-        Parameters
-        ----------
-        similarities : a vector of len #memories
-            the similarity between query vs. key_i, for all i
-        policy : str
-            the retrieval policy
-
-        Returns
-        -------
-        a row vector
-            a DND value, representing the memory content
-
-        """
-        best_memory_val = None
-        if policy is '1NN':
-            best_memory_id = torch.argmax(similarities)
-            best_memory_val = self.vals[best_memory_id]
-        else:
-            assert False, 'unrecog retrieval policy'
-        return best_memory_val
-
     def store_memory(self, memory_key, memory_val):
         """Save an episodic memory to the dictionary
 
@@ -5657,47 +5631,3 @@ class DND(Integrator):  # ------------------------------------------------------
     @property
     def dict(self):
         return self.get_previous_value()
-
-
-"""helpers"""
-
-def compute_similarities(query_key, key_list, metric):
-    """Compute the similarity between query vs. key_i for all i
-        i.e. compute q M, w/ q: 1 x key_dim, M: key_dim x #keys
-
-    Parameters
-    ----------
-    query_key : a row vector
-        Description of parameter `query_key`.
-    key_list : list
-        Description of parameter `key_list`.
-    metric : str
-        Description of parameter `metric`.
-
-    Returns
-    -------
-    a row vector w/ len #memories
-        the similarity between query vs. key_i, for all i
-
-    """
-    # query_key = query_key.data
-    # reshape query to 1 x key_dim
-    q = query_key.data.view(1, -1)
-    # reshape memory keys to #keys x key_dim
-    M = torch.stack(key_list, dim=1).view(len(key_list), -1)
-    # compute similarities
-    if metric is 'cosine':
-        similarities = F.cosine_similarity(q, M)
-    elif metric is 'l1':
-        similarities = - F.pairwise_distance(q, M, p=1)
-    elif metric is 'l2':
-        similarities = - F.pairwise_distance(q, M, p=2)
-    else:
-        raise FunctionError("ERROR IN DND")
-    return similarities
-
-
-def empty_memory(memory_dim):
-    """Get a empty memory, assuming the memory is a row vector
-    """
-    return torch.zeros(1, memory_dim)
