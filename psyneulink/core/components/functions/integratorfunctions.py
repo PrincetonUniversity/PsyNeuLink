@@ -5232,7 +5232,8 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
 RETRIEVAL_PROB = 'retrieval_prob'
 STORAGE_PROB = 'storage_prob'
-METRICS = ['cosine', 'l1', 'l2']
+DISTANCE_FUNCTION = 'distance_function'
+SELECTION_FUNCTION = 'selection_function'
 
 
 class DND(Integrator):  # ------------------------------------------------------------------------------
@@ -5434,19 +5435,51 @@ class DND(Integrator):  # ------------------------------------------------------
             retrieval_prob = request_set[RETRIEVAL_PROB]
             if not all_within_range(retrieval_prob, 0, 1):
                 raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(RETRIEVAL_PROB), self.__class___.__name__, metric))
+                                    format(repr(RETRIEVAL_PROB), self.__class___.__name__, retrieval_prob))
 
         if STORAGE_PROB in request_set and request_set[STORAGE_PROB] is not None:
             storage_prob = request_set[STORAGE_PROB]
             if not all_within_range(storage_prob, 0, 1):
                 raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(STORAGE_PROB), self.__class___.__name__, metric))
-
-        # FIX: VALIDATE SIMILARITY AND SELECTIONS FUNCTIONS HERE USING INSTANCE_DEFAULTS.VARIABLE
-
+                                    format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
 
     def _validate(self):
-        return
+        distance_function = self.distance_function
+        if isinstance(distance_function, type):
+            distance_function = distance_function()
+            fct_msg = 'Function type'
+        else:
+            fct_msg = 'Function'
+        try:
+            test = [[0,0],[0,0]]
+            result = distance_function(test)
+            if not np.isscalar(result):
+                raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
+                                    format(repr(DISTANCE_FUNCTION), self.__name__.__class__, result))
+        except:
+            raise FunctionError("{} specified for {} arg of {} ({}) "
+                                "must accept a list with two 1d arrays or a 2d array as its argument".
+                                format(fct_msg, repr(DISTANCE_FUNCTION), self.__name__.__class__,
+                                       distance_function))
+
+        selection_function = self.selection_function
+        if isinstance(selection_function, type):
+            selection_function = selection_function()
+            fct_msg = 'Function type'
+        else:
+            fct_msg = 'Function'
+        try:
+            test = np.array([0,1,2,3])
+            result = np.array(selection_function(test))
+            if result.shape != test.shape or len(np.flatnonzero(result))>1:
+                raise FunctionError("Value returned by {} specified for {} ({}) "
+                                    "must return an array of the same length it receives with one nonzero value".
+                                    format(repr(SELECTION_FUNCTION), self.__name__.__class__, result))
+        except:
+            raise FunctionError("{} specified for {} arg of {} ({}) must accept a 1d array "
+                                "must accept a list with two 1d arrays or a 2d array as its argument".
+                                format(fct_msg, repr(SELECTION_FUNCTION), self.__name__.__class__,
+                                       selection_function))
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         initializer = initializer or []
