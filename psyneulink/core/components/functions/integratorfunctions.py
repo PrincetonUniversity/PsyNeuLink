@@ -36,7 +36,7 @@ import functools
 import itertools
 import numbers
 import warnings
-from collections.__init__ import deque
+from collections.__init__ import deque, OrderedDict
 from enum import IntEnum
 
 import torch
@@ -50,6 +50,7 @@ from psyneulink.core.components.functions.function import \
     Function, Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, BUFFER_FUNCTION, \
     CONSTANT_INTEGRATOR_FUNCTION, COSINE, \
@@ -57,7 +58,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, OFFSET, OPERATION, \
     ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, METRIC, \
-    RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION, L0, L1
+    RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION, L0, L1, MIN_VAL
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec, all_within_range
 from psyneulink.core.globals.context import ContextFlags
@@ -324,6 +325,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             self._validate_noise(target_set[NOISE])
 
     def _validate_rate(self, rate):
+        # FIX: CAN WE JUST GET RID OF THIS?
         # kmantel: this duplicates much code in _validate_params above, but that calls _instantiate_defaults
         # which I don't think is the right thing to do here, but if you don't call it in _validate_params
         # then a lot of things don't get instantiated properly
@@ -5264,6 +5266,9 @@ class DND(Integrator):  # ------------------------------------------------------
     .. math::
         variable[1] * rate + noise
 
+    .. note::
+       Keys in `dict <DND.dict>` are stored as tuples (since lists and arrays are not hashable).
+
     Arguments
     ---------
 
@@ -5361,10 +5366,11 @@ class DND(Integrator):  # ------------------------------------------------------
     componentName = DND_FUNCTION
 
     class Params(Integrator.Params):
-        default_variable = Param([[0],[0]])
-        retrieval_prob = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        variable = Param([[0],[0]])
+        retrieval_prob = Param(0.0, modulable=True)
+        storage_prob = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        history = None
+        max_entries = Param(1000, modulable=False)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -5389,13 +5395,16 @@ class DND(Integrator):  # ------------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, callable))=0.0,
                  initializer: tc.optional(dict)=None,
-                 metric:tc.enum(COSINE,L0,L1)=COSINE,
+                 similarity_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
+                 selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
                  max_entries=1000,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         initializer = initializer or []
+        self.similarity_function = similarity_function
+        self.selection_function = selection_function
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
@@ -5403,7 +5412,6 @@ class DND(Integrator):  # ------------------------------------------------------
                                                   initializer=initializer,
                                                   noise=noise,
                                                   max_entries=max_entries,
-                                                  metric=metric,
                                                   params=params)
 
         super().__init__(
@@ -5431,15 +5439,15 @@ class DND(Integrator):  # ------------------------------------------------------
                 raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
                                     format(repr(STORAGE_PROB), self.__class___.__name__, metric))
 
-        if METRIC in request_set and request_set[METRIC] is not None:
-            metric = request_set[METRIC]
-            if not metric in METRICS:
-                raise FunctionError("{} arg of {} ({}) must be one of: {}".
-                                    format(repr(METRIC), self.__class__.__name__, metric, METRICS))
+        # FIX: VALIDATE SIMILARITY AND SELECTIONS FUNCTIONS HERE USING INSTANCE_DEFAULTS.VARIABLE
+
+
+    def _validate(self):
+        return
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         initializer = initializer or []
-        previous_value = dict(initializer)
+        previous_value = OrderedDict(initializer)
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
 
@@ -5448,6 +5456,14 @@ class DND(Integrator):  # ------------------------------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         self.has_initializers = True
+
+        if isinstance(self.similarity_function, type):
+            self.similarity_function = self.similarity_function()
+        self.similarity_function = self.similarity_function.function
+
+        if isinstance(self.selection_function, type):
+            self.selection_function = self.selection_function()
+        self.selection_function = self.selection_function.function
 
     def reinitialize(self, *args, execution_context=None):
         """
@@ -5539,7 +5555,7 @@ class DND(Integrator):  # ------------------------------------------------------
         if noise:
             key += noise
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
-            self.save_memory(key, value)
+            self.store_memory(key, value)
 
         self.parameters.previous_value.set(self.dict, execution_id)
 
@@ -5559,15 +5575,19 @@ class DND(Integrator):  # ------------------------------------------------------
             a DND value, representing the memory content
 
         """
+        # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
         # if no memory, return the zero vector
-        n_memories = len(self.keys)
-        if n_memories == 0 or self.retrieval_off:
-            return empty_memory(self.memory_dim)
-        # compute similarity(query, memory_i ), for all i
-        similarities = compute_similarities(query_key, self.keys, self.metric)
+        # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
+        if len(self.dict) == 0:
+            return np.zeros_like(query_key)
+        # compute similarity(query_key, memory m ) for all m
+        similarities = [self.similarity_function([query_key, list(m)]) for m in self.dict.keys()]
         # get the best-match memory
-        best_memory_val = self._get_memory(similarities)
-        return best_memory_val
+        best_match_one_hot = self.selection_function(similarities)
+        best_match_index = int(np.flatnonzero(best_match_one_hot))
+        best_match_val = list(self.dict.values())[best_match_index]
+
+        return best_match_val
 
     def _get_memory(self, similarities, policy='1NN'):
         """get the episodic memory according to some policy
@@ -5595,7 +5615,7 @@ class DND(Integrator):  # ------------------------------------------------------
             assert False, 'unrecog retrieval policy'
         return best_memory_val
 
-    def save_memory(self, memory_key, memory_val):
+    def store_memory(self, memory_key, memory_val):
         """Save an episodic memory to the dictionary
 
         Parameters
@@ -5605,16 +5625,17 @@ class DND(Integrator):  # ------------------------------------------------------
         memory_val : a row vector
             a DND value, representing the memory content
         """
-        if self.encoding_off:
-            return
         # add new memory to the the dictionary
         # get data is necessary for gradient reason
-        self.keys.append(memory_key.data.view(1, -1))
-        self.vals.append(memory_val.data.view(1, -1))
+        # QUESTION: WHY DO IT THIS WAY RATHER THAN JUST UPDATE DICT?
+        #           WHAT IS data.view?  Using Pandas?
+        # self.keys.append(memory_key.data.view(1, -1))
+        # self.vals.append(memory_val.data.view(1, -1))
         # remove the oldest memory, if overflow
-        if len(self.keys) > self.dict_len:
-            self.keys.pop(0)
-            self.vals.pop(0)
+        d = self.dict
+        if len(self.dict) > self.max_entries:
+            d.pop(list(d.keys())[len(d)-1])
+        d[tuple(memory_key)]=memory_val
 
     def add_memories(self, input_keys, input_vals):
         """Inject pre-defined keys and values
@@ -5626,9 +5647,8 @@ class DND(Integrator):  # ------------------------------------------------------
         input_vals : list
             a list of memory content
         """
-        assert len(input_keys) == len(input_vals)
         for k, v in zip(input_keys, input_vals):
-            self.save_memory(k, v)
+            self.store_memory(k, v)
 
 
 """helpers"""
