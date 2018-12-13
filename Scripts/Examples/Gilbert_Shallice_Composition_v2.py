@@ -15,10 +15,10 @@ COLOR_INPUT_LAYER = pnl.TransferMechanism(size = 3,
 
 
 WORD_OUTPUT_LAYER = pnl.RecurrentTransferMechanism(size = 3,
-                                                   # auto=0.0,
-                                                   # hetero=-2.0,
+                                                   auto=0.0,
+                                                   hetero=0.0,#-2.0,
                                                    function=pnl.Linear(),
-                                                   integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6),
+                                                   integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6), # also tried these values: rate = 0.5,decay=0.5
                                                    name='WORD OUTPUT LAYER')
 WORD_OUTPUT_LAYER.set_log_conditions('value')
 WORD_OUTPUT_LAYER.set_log_conditions('InputState-0')
@@ -26,8 +26,8 @@ WORD_OUTPUT_LAYER.set_log_conditions('InputState-0')
 
 
 COLOR_OUTPUT_LAYER = pnl.RecurrentTransferMechanism(size = 3,
-                                                   # auto=0.0,
-                                                   # hetero=-2.0,
+                                                   auto=0.0,
+                                                   hetero=0.0,#-2.0,
                                                    function=pnl.Linear(),
                                                    integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6),
                                                    name='COLOR OUTPUT LAYER')
@@ -36,8 +36,8 @@ COLOR_OUTPUT_LAYER.set_log_conditions('value')
 
 
 TASK_DEMAND_LAYER = pnl.RecurrentTransferMechanism(size = 2,
-                                                   # auto=0.0,
-                                                   # hetero=-2.0,
+                                                   auto=0.0,
+                                                   hetero=0.0,#-2.0,
                                                    function=pnl.Linear(),
                                                    integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6),
                                                    name='TASK DEMAND LAYER')
@@ -71,15 +71,15 @@ color_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[1.0, 1.0],
                                                   name='COLOR_TASK_DEMAND_WEIGHTS')
 
 
-#   TASK DEMAND TO WORD OUTPUT
-task_demand_word_output_weights = pnl.MappingProjection(matrix=np.matrix([[2.5, 2.5, 2.5],
-                                                                          [-2.5, -2.5, -2.5]]),
-                                                        name='TASK_DEMAND_WORD_OUTPUT_WEIGHTS')
-
-#   TASK DEMAND TO COLOR OUTPUT
-task_demand_color_output_weights = pnl.MappingProjection(matrix=np.matrix([[-2.5, -2.5, -2.5],
-                                                                           [2.5, 2.5, 2.5]]),
-                                                         name='TASK_DEMAND_COLOR_OUTPUT_WEIGHTS')
+# #   TASK DEMAND TO WORD OUTPUT
+# task_demand_word_output_weights = pnl.MappingProjection(matrix=np.matrix([[2.5, 2.5, 2.5],
+#                                                                           [-2.5, -2.5, -2.5]]),
+#                                                         name='TASK_DEMAND_WORD_OUTPUT_WEIGHTS')
+#
+# #   TASK DEMAND TO COLOR OUTPUT
+# task_demand_color_output_weights = pnl.MappingProjection(matrix=np.matrix([[-2.5, -2.5, -2.5],
+#                                                                            [2.5, 2.5, 2.5]]),
+#                                                          name='TASK_DEMAND_COLOR_OUTPUT_WEIGHTS')
 
 # #   WORD OUTPUT TO TASK DEMAND
 # word_output_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[1.0, -1.0],
@@ -135,18 +135,18 @@ color_input_output_pathway = [COLOR_INPUT_LAYER,
                               COLOR_OUTPUT_LAYER]
 Gilbert_Shallice_System.add_linear_processing_pathway(pathway=color_input_output_pathway)
 
-# PATHWAY: TASK WORD OUTPUT
-task_word_output_pathway = [TASK_DEMAND_LAYER,
-                              task_demand_word_output_weights,
-                              WORD_OUTPUT_LAYER]
-Gilbert_Shallice_System.add_linear_processing_pathway(pathway=task_word_output_pathway)
-
-# Pathway: Task demand color output pathway
-task_color_output_pathway = [TASK_DEMAND_LAYER,
-                             task_demand_color_output_weights,
-                             COLOR_OUTPUT_LAYER]
-Gilbert_Shallice_System.add_linear_processing_pathway(pathway=task_color_output_pathway)
-
+# # PATHWAY: TASK WORD OUTPUT
+# task_word_output_pathway = [TASK_DEMAND_LAYER,
+#                               task_demand_word_output_weights,
+#                               WORD_OUTPUT_LAYER]
+# Gilbert_Shallice_System.add_linear_processing_pathway(pathway=task_word_output_pathway)
+#
+# # Pathway: Task demand color output pathway
+# task_color_output_pathway = [TASK_DEMAND_LAYER,
+#                              task_demand_color_output_weights,
+#                              COLOR_OUTPUT_LAYER]
+# Gilbert_Shallice_System.add_linear_processing_pathway(pathway=task_color_output_pathway)
+# #
 ### Pathway: word input task demand
 word_input_task_pathway = [WORD_INPUT_LAYER,
                            word_task_demand_weights,
@@ -192,7 +192,7 @@ Gilbert_Shallice_System._analyze_graph()
 Gilbert_Shallice_System.show_graph()
 
 input_dict = {COLOR_INPUT_LAYER: [1, 0, 0],
-              WORD_INPUT_LAYER: [0, 0, 0]
+              WORD_INPUT_LAYER: [1, 0, 0]
               # TASK_DEMAND_LAYER: [1, 0]
               }
 
