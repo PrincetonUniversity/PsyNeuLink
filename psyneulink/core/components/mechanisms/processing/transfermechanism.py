@@ -1366,7 +1366,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 index = None
-                with helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
+                with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
                     ptri = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
                     ptro = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
 

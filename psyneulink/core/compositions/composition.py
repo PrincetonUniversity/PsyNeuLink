@@ -57,8 +57,8 @@ import uuid
 
 from PIL import Image
 from llvmlite import ir
-from psyneulink.core import llvm as pnlvm
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.integratorfunctions import Integrator
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap

@@ -24,6 +24,7 @@ import numpy as np
 import typecheck as tc
 from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, EPSILON
 from psyneulink.core.components.functions.transferfunctions import get_matrix
@@ -35,7 +36,6 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_iterable
-from psyneulink.core.llvm import helpers
 
 
 __all__ = ['ObjectiveFunction', 'Stability', 'Distance']
@@ -775,7 +775,7 @@ class Distance(ObjectiveFunction):
 
         input_length = arg_in.type.pointee.element.count
         vector_length = ctx.int32_ty(input_length)
-        with helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
+        with pnlvm.helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
             inner(*args)
 
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])

@@ -43,6 +43,7 @@ import numpy as np
 import typecheck as tc
 from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError,  MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
@@ -56,8 +57,6 @@ from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec, all_within_range
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.core import llvm as pnlvm
-from psyneulink.core.llvm import helpers
 
 
 __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantIntegrator', 'Buffer',
@@ -2141,7 +2140,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-        with helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
             inner(*args)
 
         return builder
@@ -3760,7 +3759,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(method, self.name))
 
-        with helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
             func(*args)
 
         # Save context

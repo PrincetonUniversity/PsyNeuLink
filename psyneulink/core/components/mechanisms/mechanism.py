@@ -939,7 +939,9 @@ from inspect import isclass
 
 import numpy as np
 import typecheck as tc
+from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -955,10 +957,6 @@ from psyneulink.core.globals.parameters import Param, Parameters, parse_executio
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
-
-from psyneulink.core import llvm as pnlvm
-
-from llvmlite import ir
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'

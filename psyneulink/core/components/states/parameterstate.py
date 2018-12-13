@@ -352,7 +352,7 @@ Class Reference
 
 import inspect
 
-import llvmlite.ir as ir
+from llvmlite import ir
 import numpy as np
 import typecheck as tc
 

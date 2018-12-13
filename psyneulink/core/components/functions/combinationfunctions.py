@@ -35,6 +35,7 @@ import numpy as np
 import typecheck as tc
 from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
 from psyneulink.core.globals.keywords import PREDICTION_ERROR_DELTA_FUNCTION, COMBINATION_FUNCTION_TYPE, \
@@ -45,7 +46,6 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
-from psyneulink.core.llvm import helpers
 
 __all__ = ['CombinationFunction', 'Reduce', 'LinearCombination', 'CombineMeans', 'PredictionErrorDeltaFunction']
 
@@ -952,7 +952,7 @@ class LinearCombination(
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
         inner = functools.partial(self.__gen_llvm_combine, **kwargs)
 
-        with helpers.array_ptr_loop(builder, arg_out, "linear") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_out, "linear") as args:
             inner(*args)
         return builder
 

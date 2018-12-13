@@ -45,10 +45,10 @@ import numpy as np
 import typecheck as tc
 from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
     PER_ITEM, TRANSFER_FUNCTION_TYPE, \
@@ -65,7 +65,6 @@ from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
-from psyneulink.core.llvm import helpers
 
 __all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
            'Gaussian', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
@@ -185,7 +184,7 @@ class TransferFunction(Function_Base):
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
-        with helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
             inner(*args)
 
         return builder
@@ -2293,7 +2292,7 @@ class SoftMax(TransferFunction):
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
         inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-        with helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
             inner(*args)
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
@@ -2304,7 +2303,7 @@ class SoftMax(TransferFunction):
         if output_type == ALL:
             kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
             inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
-            with helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 inner(*args)
         elif output_type == MAX_VAL:
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])

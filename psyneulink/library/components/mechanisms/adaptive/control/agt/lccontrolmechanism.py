@@ -272,6 +272,7 @@ import typecheck as tc
 
 from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.integratorfunctions import FHNIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
@@ -285,8 +286,6 @@ from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
-
-from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
