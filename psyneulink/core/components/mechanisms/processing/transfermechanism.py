@@ -1529,16 +1529,18 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not hasattr(self, PREVIOUS_VALUE):
                 self.previous_value = None
             self.has_initializers = True
-            # MODIFIED 12/14/18 NEW: [JDC]
-            self._integrator_mode = True
-            if self.integrator_function is not None:
-                if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                    self.reinitialize(self.value)
-                    if self.parameters.previous_value.get() is None:
-                        self.parameters.previous_value.set(self.parameters.initial_value.get())
-                elif self.on_resume_integrator_mode == REINITIALIZE:
-                    self.reinitialize()
+
+            # # MODIFIED 12/14/18 NEW: [JDC]
+            # self._integrator_mode = True
+            # if self.integrator_function is not None:
+            #     if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
+            #         self.reinitialize(self.value)
+            #         if self.parameters.previous_value.get() is None:
+            #             self.parameters.previous_value.set(self.parameters.initial_value.get())
+            #     elif self.on_resume_integrator_mode == REINITIALIZE:
+            #         self.reinitialize()
             # MODIFIED 12/14/18 END
+
         elif val is False:
             self._integrator_mode = False
             self.has_initializers = False
