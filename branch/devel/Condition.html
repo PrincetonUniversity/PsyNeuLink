@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.4.8.0+1056.gf8b1e2c documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.4.8.0+1057.gab68966 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1056.gf8b1e2c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1057.gab68966 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Time" href="Time.html"/>
         <link rel="prev" title="Scheduler" href="Scheduler.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1056
+                0.4.8.0+1057
               </div>
             
           
@@ -214,7 +214,7 @@ context and assigned automatically, as in the following example:</p>
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.owner" title="psyneulink.core.components.functions.transferfunctions.Exponential.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>.</p>
+<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>.</p>
 </div>
 <div class="section" id="custom-conditions">
 <span id="condition-custom"></span><h3><em>Custom Conditions</em><a class="headerlink" href="#custom-conditions" title="Permalink to this headline">¶</a></h3>
@@ -350,7 +350,7 @@ satisfied when or any time after the specified Components have executed the spec
 of times among themselves, in total.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.EveryNCalls" title="psyneulink.core.scheduling.condition.EveryNCalls"><code class="xref any py py-class docutils literal"><span class="pre">EveryNCalls</span></code></a> (Component, int[, TimeScale])
 satisfied when the specified Component has executed the specified number of times since the
-last time <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.owner" title="psyneulink.core.components.functions.transferfunctions.Exponential.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</li>
+last time <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.JustRan" title="psyneulink.core.scheduling.condition.JustRan"><code class="xref any py py-class docutils literal"><span class="pre">JustRan</span></code></a> (Component)
 satisfied if the specified Component was assigned to run in the previous <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AllHaveRun" title="psyneulink.core.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a> (<a href="#id15"><span class="problematic" id="id16">*</span></a>Components)
@@ -1357,7 +1357,7 @@ this Condition) can vary arbitrarily in time.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1056.gf8b1e2c',
+            VERSION:'0.4.8.0+1057.gab68966',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
