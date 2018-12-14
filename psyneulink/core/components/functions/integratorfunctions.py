@@ -1493,7 +1493,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
