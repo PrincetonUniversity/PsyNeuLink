@@ -1931,8 +1931,8 @@ class Process(Process_Base):
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanism
                     #    for which a mechanism-specific learning_rate has NOT been assigned
                     if (self.learning_rate is not None and
-                                mech.function_object.learning_rate is None):
-                        mech.function_object.learning_rate = self.learning_rate
+                                mech.function.learning_rate is None):
+                        mech.function.learning_rate = self.learning_rate
 
                     # Assign its label
                     object_item._add_process(self, LEARNING)

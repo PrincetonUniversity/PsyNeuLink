@@ -347,15 +347,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.llvm import helpers
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.function import Function, \
-    is_function_type
-from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
-from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
+from psyneulink.core.components.functions.function import Function, is_function_type
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction, IntegratorFunction
+from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, TransferFunction
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
@@ -368,7 +367,7 @@ from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, 
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, iscompatible, all_within_range
+from psyneulink.core.globals.utilities import all_within_range, append_type_to_name, iscompatible
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -1152,9 +1151,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.initial_value is None:
             self.initial_value = self.instance_defaults.variable
 
-        if isinstance(self.convergence_function, Function):
-            self._convergence_function = self.convergence_function.function
-
     def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
                                          execution_id, context=None):
 
@@ -1311,14 +1307,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         return current_input
 
     def _get_function_param_struct_type(self, ctx):
-        param_type_list = [ctx.get_param_struct_type(self.function_object)]
+        param_type_list = [ctx.get_param_struct_type(self.function)]
         if self.integrator_mode:
             assert self.integrator_function is not None
             param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
         return pnlvm.ir.LiteralStructType(param_type_list)
 
     def _get_function_context_struct_type(self, ctx):
-        context_type_list = [ctx.get_context_struct_type(self.function_object)]
+        context_type_list = [ctx.get_context_struct_type(self.function)]
         if self.integrator_mode:
            assert self.integrator_function is not None
            context_type_list.append(ctx.get_context_struct_type(self.integrator_function))
@@ -1326,14 +1322,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         return pnlvm.ir.LiteralStructType(context_type_list)
 
     def _get_function_param_initializer(self, execution_id):
-        function_param_list = [self.function_object._get_param_initializer(execution_id)]
+        function_param_list = [self.function._get_param_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
             function_param_list.append(self.integrator_function._get_param_initializer(execution_id))
         return tuple(function_param_list)
 
     def _get_function_context_initializer(self, execution_id):
-        context_list = [self.function_object._get_context_initializer(execution_id)]
+        context_list = [self.function._get_context_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
             context_list.append(self.integrator_function._get_context_initializer(execution_id))
@@ -1359,10 +1355,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Main function is the first in the function param aggregate
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_param_ptr, ctx, builder, params, context, arg_in)
+        mf_params, builder = self._gen_llvm_param_states(self.function, mf_param_ptr, ctx, builder, params, context, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function_object, mf_params, mf_context, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
 
+        # KDM 12/13/18: for some reason on devel f8b1e2cbf this was returning None on several tests, but when
+        # refactoring function_object -> function using __call__ on Function_Base, it now returned a tuple in those cases.
+        # Seems not to cause any test failures however..
         clip = self.get_current_mechanism_param("clip")
         if clip is not None:
             for i in range(mf_out.type.pointee.count):

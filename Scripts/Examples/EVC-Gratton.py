@@ -163,18 +163,18 @@ for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
         # when you find a key mechanism (transfer mechanism) with the correct name, print its name
         print(mech.name)
-        mech.function_object.rate = 1.0
+        mech.function.rate = 1.0
 
     if 'Reward' in mech.name:
         print(mech.name)
-        mech.function_object.rate = 0.8
+        mech.function.rate = 0.8
         # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
 print('new rate of integration mechanisms before System execution:')
 # for mech in mySystem.controller.prediction_mechanisms.keys():
 for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     print(mech.name)
-    print(mech.function_object.rate)
+    print(mech.function.rate)
     print('----')
 
 # generate stimulus environment

@@ -44,9 +44,9 @@ GROUP_PREFIX="IntegratorFunction "
 def test_basic(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName;
-    f.function(variable)
-    f.function(variable)
-    res = benchmark(f.function, variable)
+    f(variable)
+    f(variable)
+    res = benchmark(f, variable)
     # This is rather hacky. it might break with pytest benchmark update
     iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
     assert np.allclose(res, expected(f.initializer, variable, iterations, **params))

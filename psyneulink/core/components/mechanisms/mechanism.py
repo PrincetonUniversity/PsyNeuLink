@@ -233,11 +233,11 @@ itself (see `DDM <DDM_Creation>` for an example).
 
 .. _Mechanism_Function_Object:
 
-`function_object <Mechanism_Base.function_object>` Attribute
+`function <Mechanism_Base.function>` Attribute
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `Function <Function>` Component assigned as the primary function of a Mechanism is assigned to the Mechanism's
-`function_object <Component.function_object>` attribute, and its `function <Function_Base.function>` is assigned
+`function <Component.function>` attribute, and its `function <Function_Base.function>` is assigned
 to the Mechanism's `function <Mechanism_Base.function>` attribute.
 
 .. note::
@@ -248,10 +248,10 @@ to the Mechanism's `function <Mechanism_Base.function>` attribute.
    Functions are used to assign, store, and apply parameter values associated with their function (see `Function
    <Function_Overview> for a more detailed explanation).
 
-The parameters of a Mechanism's `function <Mechanism_Base.function>` are attributes of its `function_object
-<Component.function_object>`, and can be accessed using standard "dot" notation for that object.  For
+The parameters of a Mechanism's `function <Mechanism_Base.function>` are attributes of its `function
+<Component.function>`, and can be accessed using standard "dot" notation for that object.  For
 example, the `gain <Logistic.gain>` and `bias <Logistic.bias>` parameters of the `Logistic` function in the example
-above can be access as ``my_mechanism.function_object.gain`` and ``my_mechanism.function_object.bias``.  They are
+above can be access as ``my_mechanism.function.gain`` and ``my_mechanism.function.bias``.  They are
 also assigned to a dictionary in the Mechanism's `function_params <Mechanism_Base.function_params>` attribute,
 and can be  accessed using the parameter's name as the key for its entry in the dictionary.  For example,
 the parameters in the  example above could also be accessed as ``my_mechanism.function_params[GAIN]`` and
@@ -572,8 +572,8 @@ and/or its `function <Mechanism_Base.function>` are first created,  using the co
 constructors (see `Mechanism_Function` above).  Parameter values can also be specified later, by direct assignment of a
 value to the attribute for the parameter, or by using the Mechanism's `assign_param` method (the recommended means;
 see `ParameterState_Specification`).  Note that the attributes for the parameters of a Mechanism's `function
-<Mechanism_Base.function>` usually belong to the `Function <Function_Overview>` referenced in its `function_object
-<Component.function_object>` attribute, not the Mechanism itself, and therefore must be assigned to the Function
+<Mechanism_Base.function>` usually belong to the `Function <Function_Overview>` referenced in its `function
+<Component.function>` attribute, not the Mechanism itself, and therefore must be assigned to the Function
 Component (see `Mechanism_Function_Object` above).
 
 All of the Mechanism's parameters are listed in a dictionary in its `user_params` attribute; that dictionary contains
@@ -1981,9 +1981,9 @@ class Mechanism_Base(Mechanism):
         if self.input_states and any(input_state.weight is not None for input_state in self.input_states):
 
             # Construct defaults:
-            #    from function_object.weights if specified else 1's
+            #    from function.weights if specified else 1's
             try:
-                default_weights = self.function_object.weights
+                default_weights = self.function.weights
             except AttributeError:
                 default_weights = None
             if default_weights is None:
@@ -1992,14 +1992,14 @@ class Mechanism_Base(Mechanism):
             # Assign any weights specified in input_state spec
             weights = [[input_state.weight if input_state.weight is not None else default_weight]
                        for input_state, default_weight in zip(self.input_states, default_weights)]
-            self.function_object._weights = weights
+            self.function._weights = weights
 
         if self.input_states and any(input_state.exponent is not None for input_state in self.input_states):
 
             # Construct defaults:
-            #    from function_object.weights if specified else 1's
+            #    from function.weights if specified else 1's
             try:
-                default_exponents = self.function_object.exponents
+                default_exponents = self.function.exponents
             except AttributeError:
                 default_exponents = None
             if default_exponents is None:
@@ -2008,15 +2008,15 @@ class Mechanism_Base(Mechanism):
             # Assign any exponents specified in input_state spec
             exponents = [[input_state.exponent if input_state.exponent is not None else default_exponent]
                        for input_state, default_exponent in zip(self.input_states, default_exponents)]
-            self.function_object._exponents = exponents
+            self.function._exponents = exponents
 
         # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
         # ignore warnings of certain Functions that disable conversion
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=UserWarning)
-            self.function_object.output_type = FunctionOutputType.NP_2D_ARRAY
-            self.function_object.enable_output_type_conversion = True
-        self.function_object._instantiate_value(context)
+            self.function.output_type = FunctionOutputType.NP_2D_ARRAY
+            self.function.enable_output_type_conversion = True
+        self.function._instantiate_value(context)
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
@@ -2024,10 +2024,10 @@ class Mechanism_Base(Mechanism):
         self._instantiate_output_states(context=context)
         # instantiate parameter states from UDF custom parameters if necessary
         try:
-            cfp = self.function_object.cust_fct_params
+            cfp = self.function.cust_fct_params
             udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
 
-            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function_object)
+            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
         except AttributeError:
             pass
 
@@ -2129,8 +2129,8 @@ class Mechanism_Base(Mechanism):
 
         # If the primary function of the mechanism is stateful:
         # (1) reinitialize it, (2) update value, (3) update output states
-        if isinstance(self.function_object, StatefulFunction):
-            new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
+        if isinstance(self.function, StatefulFunction):
+            new_value = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context=execution_context, override=True)
             self._update_output_states(execution_id=parse_execution_context(execution_context),
                                        context="REINITIALIZING")
@@ -2142,7 +2142,7 @@ class Mechanism_Base(Mechanism):
             if isinstance(self.integrator_function, IntegratorFunction):
                 new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context)[0]
                 self.parameters.value.set(
-                    self.function_object.execute(variable=new_input, context="REINITIALIZING"),
+                    self.function.execute(variable=new_input, context="REINITIALIZING"),
                     execution_context=execution_context,
                     override=True
                 )
@@ -2534,7 +2534,7 @@ class Mechanism_Base(Mechanism):
         return pnlvm.ir.LiteralStructType(gen)
 
     def _get_function_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function_object)
+        return ctx.get_param_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
         input_param_struct = self._get_input_param_struct_type(ctx)
@@ -2567,7 +2567,7 @@ class Mechanism_Base(Mechanism):
         return pnlvm.ir.LiteralStructType(gen)
 
     def _get_function_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function_object)
+        return ctx.get_context_struct_type(self.function)
 
     def _get_context_struct_type(self, ctx):
         input_context_struct = self._get_input_context_struct_type(ctx)
@@ -2617,7 +2617,7 @@ class Mechanism_Base(Mechanism):
         return tuple(gen)
 
     def _get_function_param_initializer(self, execution_id):
-        return self.function_object._get_param_initializer(execution_id)
+        return self.function._get_param_initializer(execution_id)
 
     def _get_param_initializer(self, execution_id):
         input_param_init = self._get_input_param_initializer(execution_id)
@@ -2650,7 +2650,7 @@ class Mechanism_Base(Mechanism):
         return tuple(gen)
 
     def _get_function_context_initializer(self, execution_id):
-        return self.function_object._get_context_initializer(execution_id)
+        return self.function._get_context_initializer(execution_id)
 
     def _get_context_initializer(self, execution_id):
         input_context_init = self._get_input_context_initializer(execution_id)
@@ -2711,7 +2711,7 @@ class Mechanism_Base(Mechanism):
             ps_function = ctx.get_llvm_function(state)
 
             # Param states are in the 4th block (idx 3).
-            # After input, function_object,  and output
+            # After input, function,  and output
             ps_idx = ctx.int32_ty(3)
             ps_params = builder.gep(params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
@@ -2774,10 +2774,10 @@ class Mechanism_Base(Mechanism):
         is_output, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
 
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_params_ptr, ctx, builder, params, context, arg_in)
+        mf_params, builder = self._gen_llvm_param_states(self.function, mf_params_ptr, ctx, builder, params, context, arg_in)
 
         mf_state = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function_object, mf_params, mf_state, is_output)
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
@@ -2842,11 +2842,11 @@ class Mechanism_Base(Mechanism):
                 print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
                 if param_is_function:
                     # Sort for consistency of output
-                    func_params_keys_sorted = sorted(self.function_object.user_params.keys())
+                    func_params_keys_sorted = sorted(self.function.user_params.keys())
                     for fct_param_name in func_params_keys_sorted:
                         print ("\t\t{}: {}".
                                format(fct_param_name,
-                                      str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
+                                      str(self.function.user_params[fct_param_name]).__str__().strip("[]")))
 
         # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
@@ -2951,7 +2951,7 @@ class Mechanism_Base(Mechanism):
 
             mech_function = ''
             if show_functions:
-                mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
+                mech_function = r'\n({})'.format(mech.function.__class__.__name__)
             mech_value = ''
             if show_values:
                 mech_value = r'\n={}'.format(mech.value)
@@ -2969,7 +2969,7 @@ class Mechanism_Base(Mechanism):
                     states += pipe
                 function = ''
                 if include_function:
-                    function = r'\n({})'.format(state.function_object.__class__.__name__)
+                    function = r'\n({})'.format(state.function.__class__.__name__)
                 value = ''
                 if include_value:
                     if use_label:
@@ -3179,7 +3179,7 @@ class Mechanism_Base(Mechanism):
             for state in instantiated_input_states:
                 if state.name is state.componentName or state.componentName + '-' in state.name:
                         state._assign_default_state_name(context=context)
-            # self._instantiate_function(function=self.function_object)
+            # self._instantiate_function(function=self.function)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 
@@ -3503,7 +3503,7 @@ class Mechanism_Base(Mechanism):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function_object],
+            [self.function],
             self.input_states,
             self.output_states,
             self.parameter_states,

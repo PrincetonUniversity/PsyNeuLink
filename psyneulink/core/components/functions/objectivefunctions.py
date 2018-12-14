@@ -438,7 +438,7 @@ COMMENT
         # if self.metric is ENERGY:
         #     result = -np.sum(current * transformed)/2
         # else:
-        #     result = self._metric_fct.function(variable=[current,transformed], context=context)
+        #     result = self._metric_fct(variable=[current,transformed], context=context)
         #
         # if self.normalize:
         #     if self.metric is ENERGY:
@@ -446,7 +446,7 @@ COMMENT
         #     else:
         #         result /= len(variable)
         # MODIFIED 11/12/15 NEW:
-        result = self._metric_fct.function(variable=[current, transformed], context=context)
+        result = self._metric_fct(variable=[current, transformed], context=context)
         # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)

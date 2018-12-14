@@ -48,8 +48,8 @@ The PsyNeuLink "repo" is organized into two major sections:
 ~~~~~~
 
 This contains the basic PsyNeuLink objects (described in the next section) that are used to build models and run
-simulations, and is divided into three subsections:  `Components <Quick_Reference_Components>` (the basic building 
-blocks of PsyNeuLink models), `Compositions <Quick_Reference_Compositions>` (objects used to combine Components into 
+simulations, and is divided into three subsections:  `Components <Quick_Reference_Components>` (the basic building
+blocks of PsyNeuLink models), `Compositions <Quick_Reference_Compositions>` (objects used to combine Components into
 models), and `Scheduling <Quick_Reference_Scheduling>` (used to control execution of the Components within a
 Composition).
 
@@ -112,7 +112,7 @@ PsyNeuLink.
 Components are objects that perform a specific function. Every Component has the following core attributes:
 
 * `function <Component.function>` - performs the core computation of the Component (belongs to a PsyNeuLink Function
-  assigned to the Component's `function_object <Component.function_object>` attribute);
+  assigned to the Component's `function <Component.function>` attribute);
 
 * `variable <Component.variable>` - the input used for the Component's `function <Component.function>`;
 

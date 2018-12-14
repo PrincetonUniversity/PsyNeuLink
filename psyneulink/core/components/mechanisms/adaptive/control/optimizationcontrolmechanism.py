@@ -393,9 +393,9 @@ Class Reference
 """
 import copy
 import itertools
+import numbers
 import numpy as np
 import typecheck as tc
-import numbers
 
 from collections import Iterable, namedtuple
 from typing import NamedTuple
@@ -814,7 +814,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function_object.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
+        self.function.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
                                            OBJECTIVE_FUNCTION: self.evaluation_function,
                                            # SEARCH_FUNCTION: self.search_function,
                                            # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
@@ -823,9 +823,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # test_local_search_space = self._get_control_allocation_grid_space
 
-        # self.search_function = self.function_object.search_function
-        # self.search_termination_function = self.function_object.search_termination_function
-        # self.search_space = self.function_object.search_space
+        # self.search_function = self.function.search_function
+        # self.search_termination_function = self.function.search_termination_function
+        # self.search_space = self.function.search_space
 
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()
@@ -928,14 +928,14 @@ class OptimizationControlMechanism(ControlMechanism):
                                              self.parameters.num_estimates.get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=sim_execution_id,
-                                             context=self.function_object.parameters.context.get(execution_id)
+                                             context=self.function.parameters.context.get(execution_id)
             )
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              execution_id=execution_id,
-                                             context=self.function_object.parameters.context.get(execution_id)
+                                             context=self.function.parameters.context.get(execution_id)
             )
 
         return result

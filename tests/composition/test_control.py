@@ -72,7 +72,7 @@ class TestControlMechanisms:
         assert len(lvoc.input_states) == 5
 
         for i in range(1,5):
-            assert lvoc.input_states[i].function_object.offset == 10.0
+            assert lvoc.input_states[i].function.offset == 10.0
 
     def test_default_lc_control_mechanism(self):
         G = 1.0
@@ -117,8 +117,8 @@ class TestControlMechanisms:
             gain_created_by_LC_output_state_1.append(LC.output_state.parameters.value.get(system)[0])
             mod_gain_assigned_to_A.append(A.get_mod_gain(system))
             mod_gain_assigned_to_B.append(B.get_mod_gain(system))
-            base_gain_assigned_to_A.append(A.function_object.parameters.gain.get())
-            base_gain_assigned_to_B.append(B.function_object.parameters.gain.get())
+            base_gain_assigned_to_A.append(A.function.parameters.gain.get())
+            base_gain_assigned_to_B.append(B.function.parameters.gain.get())
             A_value.append(A.parameters.value.get(system))
             B_value.append(B.parameters.value.get(system))
             LC_value.append(LC.parameters.value.get(system))
@@ -349,7 +349,7 @@ class TestModelBasedOptimizationControlMechanisms:
             name='Reward'
         )
         Decision = pnl.DDM(
-            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+            function=pnl.DriftDiffusionAnalytical(
                 drift_rate=(
                     1.0,
                     pnl.ControlProjection(
@@ -507,7 +507,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # Decision Mechanisms
         Decision = pnl.DDM(
-            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+            function=pnl.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(0.2645),
                 noise=(0.5),

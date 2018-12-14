@@ -14,19 +14,19 @@ class TestRuntimeParams:
         C = Composition()
         C.add_c_node(T)
 
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
 
         # Runtime param used for slope
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
         C.run(inputs={T: 2.0}, runtime_params={T: {"slope": 10.0}})
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].parameters.value.get(C) == 1.0
         assert T.parameters.value.get(C.default_execution_id) == 20.0
 
         # Runtime param NOT used for slope
         C.run(inputs={T: 2.0})
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].parameters.value.get(C) == 1.0
         assert T.parameters.value.get(C.default_execution_id) == 2.0
 

@@ -52,11 +52,11 @@ names = [
 @pytest.mark.benchmark(group="FHNIntegratorFunction")
 def test_basic(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
-    res = f.function(variable)
-    res = f.function(variable)
-    res = f.function(variable)
+    res = f(variable)
+    res = f(variable)
+    res = f(variable)
 
-    benchmark(f.function, variable)
+    benchmark(f, variable)
 
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])

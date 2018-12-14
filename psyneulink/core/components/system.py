@@ -1971,8 +1971,8 @@ class System(System_Base):
             #    for which a mechanism-specific learning_rate has NOT been assigned
             if (isinstance(item, LearningMechanism) and
                         self.learning_rate is not None and
-                        item.function_object.learning_rate is None):
-                item.function_object.learning_rate = self.learning_rate
+                        item.function.learning_rate is None):
+                item.function.learning_rate = self.learning_rate
 
             if not item in self._learning_mechs:
                 self._learning_mechs.append(item)
@@ -2929,10 +2929,10 @@ class System(System_Base):
                         mechanism._set_parameter_value(key, mechanism._runtime_params_reset[execution_id][key], execution_id)
                 mechanism._runtime_params_reset[execution_id] = {}
 
-                if execution_id in mechanism.function_object._runtime_params_reset:
-                    for key in mechanism.function_object._runtime_params_reset[execution_id]:
-                        mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[execution_id][key], execution_id)
-                mechanism.function_object._runtime_params_reset[execution_id] = {}
+                if execution_id in mechanism.function._runtime_params_reset:
+                    for key in mechanism.function._runtime_params_reset[execution_id]:
+                        mechanism.function._set_parameter_value(key, mechanism.function._runtime_params_reset[execution_id][key], execution_id)
+                mechanism.function._runtime_params_reset[execution_id] = {}
 
                 mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 

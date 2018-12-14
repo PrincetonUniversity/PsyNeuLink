@@ -218,7 +218,7 @@ class UserDefinedFunction(Function_Base):
         >>> import psyneulink as pnl
         >>> L = pnl.Logistic(gain = 2)
         >>> def my_fct(variable):
-        ...     return L.function(variable) + 2
+        ...     return L(variable) + 2
         >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
         >>> my_mech.execute(input = [1, 2, 3])  #doctest: +SKIP
         array([[2.88079708, 2.98201379, 2.99752738]])

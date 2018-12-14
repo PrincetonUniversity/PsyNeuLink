@@ -26,7 +26,7 @@ A ParameterState can receive one or more `ControlProjections  <ControlProjection
 
 When the Mechanism or Projection to which a ParameterState belongs executes, that component and its function use the
 ParameterState's value -- not the parameter attribute's value -- for any computation. A ParameterState's corresponding
-attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function_object.gain),
+attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function.gain),
 stores the "base value" of that parameter. The base value of a parameter is the variable of the ParameterState's
 function. The base value can be viewed or changed at any time through this attribute.
 
@@ -36,7 +36,7 @@ of the MyTransferMech mechanism.)
 
 .. note::
     Either of these options for looking up the value of the ParameterState will return the parameter state value that
-    was used during the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the
+    was used during the most recent execution. This means that if the value of MyTransferMech.function.gain (the
     base value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
     MyTransferMech.mod_gain) will not be computed again until execution #2.
 
@@ -245,7 +245,7 @@ The example below shows how to access ParameterState values vs base values, and 
     ...                      function=pnl.Linear(slope=2.0))        #doctest: +SKIP
     >>> assert my_transfer_mechanism.noise == 5.0                   #doctest: +SKIP
     >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function_object.slope == 2.0   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.function.slope == 2.0   #doctest: +SKIP
     >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
 
 Notice that the noise attribute, which stores the base value for the noise ParameterState of my_transfer_mechanism, is
@@ -254,10 +254,10 @@ my_transfer_mechanism, is on my_transfer_mechanism's function. However, mod_nois
 my_transfer_mechanism.
 
     >>> my_transfer_mechanism.noise = 4.0                           #doctest: +SKIP
-    >>> my_transfer_mechanism.function_object.slope = 1.0           #doctest: +SKIP
+    >>> my_transfer_mechanism.function.slope = 1.0           #doctest: +SKIP
     >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
     >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function_object.slope == 1.0   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.function.slope == 1.0   #doctest: +SKIP
     >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
 
 When the base values of noise and slope are updated, we can inspect these attributes immediately and observe that they
@@ -267,7 +267,7 @@ until the mechanism executes.
     >>> my_transfer_mechanism.execute([10.0])                       #doctest: +SKIP
     >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
     >>> assert my_transfer_mechanism.mod_noise == [4.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function_object.slope == 1.0   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.function.slope == 1.0   #doctest: +SKIP
     >>> assert my_transfer_mechanism.mod_slope == 1.0               #doctest: +SKIP
 
 Now that the mechanism has executed, we can see that each ParameterState evaluated its function with the base value,
@@ -320,7 +320,7 @@ An initial value can be assigned to a parameter in the corresponding argument of
 (see `above <ParameterState_Value_Specification>`.  Parameter values can also be modified by a assigning a value to
 the corresponding attribute, or in groups using the Component's `assign_params <Component.assign_params>` method.
 The parameters of a Component's function can be modified by assigning a value to the corresponding attribute of the
-Component's `function_object <Component.function_object>` attribute (e.g., ``myMechanism.function_object.my_parameter``)
+Component's `function <Component.function>` attribute (e.g., ``myMechanism.function.my_parameter``)
 or in *FUNCTION_PARAMS* dict in a call to the Component's `assign_params <Component.assign_params>` method.
 See `Mechanism_ParameterStates` for additional information.
 
@@ -580,7 +580,7 @@ class ParameterState(State_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that ParameterState (as identified by its name) is for a valid parameter of the owner
 
-        Parameter can be either owner's, or owner's function_object
+        Parameter can be either owner's, or owner's function
         """
 
         # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
@@ -588,7 +588,7 @@ class ParameterState(State_Base):
             raise ParameterStateError("Name of requested ParameterState ({}) does not refer to a valid parameter "
                                       "of the component ({}) or its function ({})".
                                       format(self.name,
-                                             # self.owner.function_object.__class__.__name__,
+                                             # self.owner.function.__class__.__name__,
                                              self.owner.name,
                                              self.owner.function.componentName))
 
@@ -849,14 +849,14 @@ class ParameterState(State_Base):
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
 
     def _get_input_struct_type(self, ctx):
-        func_input_type = ctx.get_input_struct_type(self.function_object)
+        func_input_type = ctx.get_input_struct_type(self.function)
         input_types = [func_input_type]
         for mod in self.mod_afferents:
             input_types.append(ctx.get_output_struct_type(mod))
         return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        state_f = ctx.get_llvm_function(self.function_object)
+        state_f = ctx.get_llvm_function(self.function)
 
         # Extract the original mechanism function's param value
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -879,9 +879,9 @@ class ParameterState(State_Base):
             f_mod = builder.load(f_mod_ptr)
 
             if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
-                name = self.function_object.multiplicative_param
+                name = self.function.multiplicative_param
             elif afferent.sender.modulation is ModulationParam.ADDITIVE:
-                name = self.function_object.additive_param
+                name = self.function.additive_param
             elif afferent.sender.modulation is ModulationParam.DISABLE:
                 name = None
             elif afferent.sender.modulation is ModulationParam.OVERRIDE:
@@ -894,7 +894,7 @@ class ParameterState(State_Base):
                 assert False
 
             if name is not None:
-                f_mod_param_ptr, builder = ctx.get_param_ptr(self.function_object, builder, f_params, name)
+                f_mod_param_ptr, builder = ctx.get_param_ptr(self.function, builder, f_params, name)
                 builder.store(f_mod, f_mod_param_ptr)
 
 
@@ -1123,7 +1123,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
             if state:
                 owner._parameter_states[function_param_name] = state
                 # will be parsed on assignment of function
-                # FIX: if the function_object is manually changed after assignment,
+                # FIX: if the function is manually changed after assignment,
                 # the source will remain pointing to the original Function
                 state.source = FUNCTION
 
@@ -1187,7 +1187,7 @@ def _get_parameter_state(sender_owner, sender_type, param_name, component):
         return component._parameter_states[param_name]
     except KeyError:
         # Check that param (named by str) is an attribute of the Mechanism
-        if not (hasattr(component, param_name) or hasattr(component.function_object, param_name)):
+        if not (hasattr(component, param_name) or hasattr(component.function, param_name)):
             raise ParameterStateError("{} (in specification of {}  {}) is not an attribute "
                                         "of {} or its function"
                                         .format(param_name, sender_type, sender_owner.name, component))

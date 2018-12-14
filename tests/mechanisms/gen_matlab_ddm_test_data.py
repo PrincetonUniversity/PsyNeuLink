@@ -50,11 +50,11 @@ def gen_matlab_ddm_test_data(non_degenerate_only=False):
             r_t0 = rng.uniform(0, 3)
             r_noise = rng.uniform(0, 1)
 
-        NF.function_object.drift_rate=r_stim*r_drift_rate
-        NF.function_object.threshold=r_threshold
-        NF.function_object.starting_point=r_bias
-        NF.function_object.t0=r_t0
-        NF.function_object.noise=r_noise
+        NF.function.drift_rate=r_stim*r_drift_rate
+        NF.function.threshold=r_threshold
+        NF.function.starting_point=r_bias
+        NF.function.t0=r_t0
+        NF.function.noise=r_noise
 
         results_nf = NF.execute(r_stim)
         res[i, :] = np.concatenate(
