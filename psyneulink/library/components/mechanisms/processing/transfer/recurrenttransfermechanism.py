@@ -145,6 +145,10 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
+Also like a `TransferMechanism`, the function used to integrate its input before passing it to `function
+RecurrentTransferMechanism.function` (when `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is `True`)
+can be specified in the **integrator_function** argument of its constructor.
+
 If a `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>` is specified, then on each execution
 the `convergence_function <RecurrentTransferMechanism.convergence_function>` is evaluated, and execution in the current
 `trial` continues until the result returned is less than or equal to the `convergence_criterion
@@ -315,29 +319,30 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
     """
-    RecurrentTransferMechanism(                      \
-    default_variable=None,                           \
-    size=None,                                       \
-    function=Linear,                                 \
-    matrix=HOLLOW_MATRIX,                            \
-    auto=None,                                       \
-    hetero=None,                                     \
-    initial_value=None,                              \
-    noise=0.0,                                       \
-    integrator_mode=False,                           \
-    integration_rate=0.5,                            \
-    clip=[float:min, float:max],                     \
-    has_recurrent_input_state=False                  \
-    combination_function=LinearCombination,          \
-    convergence_function=Distance(metric=MAX_ABS_DIFF),  \
-    convergence_criterion=None,                      \
-    max_passes=None,                                 \
-    enable_learning=False,                           \
-    learning_rate=None,                              \
-    learning_function=Hebbian,                       \
-    learning_condition=UPDATE,                       \
-    params=None,                                     \
-    name=None,                                       \
+    RecurrentTransferMechanism(                         \
+    default_variable=None,                              \
+    size=None,                                          \
+    function=Linear,                                    \
+    matrix=HOLLOW_MATRIX,                               \
+    auto=None,                                          \
+    hetero=None,                                        \
+    has_recurrent_input_state=False                     \
+    combination_function=LinearCombination,             \
+    integrator_mode=False,                              \
+    integrator_function=AdaptiveIntegrator,             \
+    initial_value=None,                                 \
+    integration_rate=0.5,                               \
+    noise=0.0,                                          \
+    clip=[float:min, float:max],                        \
+    convergence_function=Distance(metric=MAX_ABS_DIFF), \
+    convergence_criterion=None,                         \
+    max_passes=None,                                    \
+    enable_learning=False,                              \
+    learning_rate=None,                                 \
+    learning_function=Hebbian,                          \
+    learning_condition=UPDATE,                          \
+    params=None,                                        \
+    name=None,                                          \
     prefs=None)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
@@ -445,6 +450,24 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         Can be modified by control.
 
+    has_recurrent_input_state : boolean : default False
+        specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
+        points to a separate input state. By default, if False, the recurrent_projection points to its `primary
+        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
+        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+
+    combination_function : function : default LinearCombination
+        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
+        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
+        as each of these;  default simply adds the two items.
+
+    integrator_mode : bool : False
+        specifies whether or not the RecurrentTransferMechanism should be executed using its `integrator_function
+        <RecurrentTransferMechanism>` to integrate its `variable <RecurrentTransferMechanism.variable>` (
+        when set to `True`), or simply report the asymptotic value of the output of its `function
+        <RecurrentTransferMechanism.function>` (when set to `False`).
+
     integrator_function : IntegratorFunction : default AdaptiveIntegrator
         specifies `IntegratorFunction` to use in `integration_mode <RecurrentTransferMechanism.integration_mode>`.
 
@@ -455,18 +478,18 @@ class RecurrentTransferMechanism(TransferMechanism):
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
-    noise : float or function : default 0.0
-        a value added to the result of the `function <RecurrentTransferMechanism.function>` or to the result of
-        `integrator_function <RecurrentTransferMechanism.integrator_function>`, depending on whether `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is `True` or `False`. See
-        `noise <RecurrentTransferMechanism.noise>` for additional details.
-
     integration_rate : float : default 0.5
         the rate used for integrating `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
 
              result = (integration_rate * variable) +
              (1-integration_rate * input to mechanism's function on the previous time step)
+
+    noise : float or function : default 0.0
+        a value added to the result of the `function <RecurrentTransferMechanism.function>` or to the result of
+        `integrator_function <RecurrentTransferMechanism.integrator_function>`, depending on whether `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is `True` or `False`. See
+        `noise <RecurrentTransferMechanism.noise>` for additional details.
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>` the item in
@@ -517,18 +540,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
        See `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
 
-    has_recurrent_input_state : boolean : default False
-        specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
-        points to a separate input state. By default, if False, the recurrent_projection points to its `primary
-        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
-        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
-        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
-
-    combination_function : function : default LinearCombination
-        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
-        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
-        as each of these;  default simply adds the two items.
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
@@ -550,11 +561,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     variable : 2d np.array with one item in axis 0.
         the input to Mechanism's `function <RecurrentTransferMechanism.function>`.
 
-    combination_function : function
-        the Function used to combine the *RECURRENT* and *EXTERNAL* InputStates if `has_recurrent_input_state
-        <RecurrentTransferMechanism.has_recurrent_input_state>` is `True`.  By default this is a `LinearCombination`
-        Function that simply adds them.
-
     function : Function
         the Function used to transform the input.
 
@@ -564,6 +570,18 @@ class RecurrentTransferMechanism(TransferMechanism):
     recurrent_projection : AutoAssociativeProjection
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
          to its `primary InputState <Mechanism_InputStates>`.
+
+    has_recurrent_input_state : boolean
+        specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
+        points to a separate input state. If False, the recurrent_projection points to its `primary
+        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
+        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+
+    combination_function : function
+        the Function used to combine the *RECURRENT* and *EXTERNAL* InputStates if `has_recurrent_input_state
+        <RecurrentTransferMechanism.has_recurrent_input_state>` is `True`.  By default this is a `LinearCombination`
+        Function that simply adds them.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -575,15 +593,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
-    integrator_function :  IntegratorFunction
-        the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
-        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
-        .. note::
-            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, `noise
-            <TransferMechanism.noise>`, and `initial_value <TransferMechanism.initial_value>` parameters
-            specify the respective parameters of its `integrator_function` (with **initial_value** corresponding
-            to `initializer <IntegratorFunction.initializer>` of integrator_function.
+
+
+
 
     integrator_mode :
         **When integrator_mode is set to True:**
@@ -605,6 +618,52 @@ class RecurrentTransferMechanism(TransferMechanism):
         <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments
         (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
 
+    integrator_mode : bool
+        determines whether the RecurrentTransferMechanism uses its `integrator_function
+        <RecurrentTransferMechanism.integrator_function>` to integrate its `variable
+        <RecurrentTransferMechanism.variable>` when it executes.
+
+        **If integrator_mode is set to** `True`:
+
+            the RecurrentTransferMechanism's `variable <RecurrentTransferMechanism.variable>` is first passed to its
+            `integrator_function <RecurrentTransferMechanism.integrator_function>`, and then the result is passed to
+            its `function <RecurrentTransferMechanism.function>` which computes the RecurrentTransferMechanism's `value
+            <RecurrentTransferMechanism.value>`.
+
+            .. note::
+                The RecurrentTransferMechanism's `integration_rate <RecurrentTransferMechanism.integration_rate>`,
+                `noise <RecurrentTransferMechanism.noise>`, and `initial_value
+                <RecurrentTransferMechanism.initial_value>` parameters specify the respective parameters of its
+                `integrator_function <RecurrentTransferMechanism.integrator_function>` (with `initial_value
+                <RecurrentTransferMechanism.initial_value>` corresponding to `initializer
+                <IntegratorFunction.initializer>` and `integration_rate <RecurrentTransferMechanism.integration_rate>`
+                corresponding to `rate <IntegratorFunction.rate>` of `integrator_function
+                <RecurrentTransferMechanism.integrator_function>`). However, if there are any disagreements between
+                these (e.g., any of these parameters is specified in the constructor for an `IntegratorFunction`
+                assigned as the **integration_function** arg of the RecurrentTransferMechanism), the values specified
+                for the `integrator_function <RecurrentTransferMechanism.integrator_function>` take precedence,
+                and their value(s) are assigned as those of the corresponding parameters on the
+                RecurrentTransferMechanism.
+
+        **If integrator_mode is set to** `False`:
+
+            if `noise <RecurrentTransferMechanism.noise>` is non-zero, it is applied to the RecurrentTransferMechanism's
+            `variable <RecurrentTransferMechanism>` which is htne passed directly to its `function
+            <RecurrentTransferMechanism.function>`  -- that is, its `integrator_function
+            <RecurrentTransferMechanism.integrator_function>` is bypassed, and its related attributes (`initial_value
+            <RecurrentTransferMechanism.initial_value>` and `integration_rate
+            <RecurrentTransferMechanism.integration_rate>`) are ignored.
+
+    integrator_function :  IntegratorFunction
+        the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
+        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
+
+    integration_rate : float : default 0.5
+        the rate used for integrating of `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
+
+          result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
+
     noise : float or function : default 0.0
         When `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is set to `True`, noise is passed into the
         `integrator_function <RecurrentTransferMechanism.integrator_function>`. Otherwise, noise is added to the result
@@ -623,12 +682,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             from its distribution on each execution. If noise is specified as a float or as a function with a fixed
             output, then the noise will simply be an offset that remains the same across all executions.
 
-    integration_rate : float : default 0.5
-        the rate used for integrating of `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
-
-          result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
-
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
 
@@ -637,8 +690,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     previous_value : 2d np.array [array(float64)] : default None
-        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism.  It is assigned `None`
-        on the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
+        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism; it is assigned `None`
+        until the 2nd execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
         .. note::
            The RecurrentTransferMechanism's `previous_value` attribute is distinct from the `previous_value
@@ -709,10 +762,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
         `output_values <RecurrentTransferMechanism.output_values>`.
 
-    previous_value : 2d np.array [array(float64)] : default None
-        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism; it is assigned `None`
-        until the 2nd execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
-
     COMMENT:
         CORRECTED:
         value : 1d np.array
@@ -742,13 +791,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **energy** of the result (``value`` of ENERGY OutputState);
         * **entropy** of the result (if the ENTROPY OutputState is present).
 
-    has_recurrent_input_state : boolean
-        specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
-        points to a separate input state. If False, the recurrent_projection points to its `primary
-        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
-        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
-        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
-
     name : str
         the name of the RecurrentTransferMechanism; if it is not specified in the **name** argument of the constructor,
         a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
@@ -771,10 +813,22 @@ class RecurrentTransferMechanism(TransferMechanism):
             Attributes
             ----------
 
+                matrix
+                    see `matrix <RecurrentTransferMechanism.matrix>`
+
+                    :default value: `HOLLOW_MATRIX`
+                    :type: str
+
                 auto
                     see `auto <RecurrentTransferMechanism.auto>`
 
                     :default value: 1
+                    :type: int
+
+                hetero
+                    see `hetero <RecurrentTransferMechanism.hetero>`
+
+                    :default value: 0
                     :type: int
 
                 combination_function
@@ -783,11 +837,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                convergence_function
-                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
+                integration_rate
+                    see `integration_rate <RecurrentTransferMechanism.integration_rate>`
 
-                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
-                    :type: `Function`
+                    :default value: 0.5
+                    :type: float
 
                 enable_learning
                     see `enable_learning <RecurrentTransferMechanism.enable_learning>`
@@ -795,17 +849,23 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: False
                     :type: bool
 
-                hetero
-                    see `hetero <RecurrentTransferMechanism.hetero>`
+                noise
+                    see `noise <RecurrentTransferMechanism.noise>`
 
-                    :default value: 0
-                    :type: int
+                    :default value: 0.0
+                    :type: float
 
-                integration_rate
-                    see `integration_rate <RecurrentTransferMechanism.integration_rate>`
+                smoothing_factor
+                    see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
 
                     :default value: 0.5
                     :type: float
+
+                convergence_function
+                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
+
+                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
+                    :type: `Function`
 
                 learning_condition
                     see `learning_condition <RecurrentTransferMechanism.learning_condition>`
@@ -825,40 +885,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: None
                     :type:
 
-                matrix
-                    see `matrix <RecurrentTransferMechanism.matrix>`
-
-                    :default value: `HOLLOW_MATRIX`
-                    :type: str
-
-                noise
-                    see `noise <RecurrentTransferMechanism.noise>`
-
-                    :default value: 0.0
-                    :type: float
-
-                smoothing_factor
-                    see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
-
-                    :default value: 0.5
-                    :type: float
-
         """
         matrix = Param(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
-
-        noise = Param(0.0, modulable=True)
-        smoothing_factor = Param(0.5, modulable=True)
-        learning_rate = Param(None, modulable=True)
         auto = Param(1, modulable=True)
         hetero = Param(0, modulable=True)
-        integration_rate = Param(0.5, modulable=True)
-
-        enable_learning = False
-
         combination_function = LinearCombination
+        integration_rate = Param(0.5, modulable=True)
         convergence_function = Distance(metric=MAX_ABS_DIFF)
-
+        noise = Param(0.0, modulable=True)
+        smoothing_factor = Param(0.5, modulable=True)
+        enable_learning = False
         learning_function = Param(Hebbian, stateful=False, loggable=False)
+        learning_rate = Param(None, modulable=True)
         learning_condition = Param(None, stateful=False, loggable=False)
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
@@ -871,18 +909,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                  default_variable=None,
                  size=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
+                 has_recurrent_input_state=False,
+                 combination_function:is_function_type=LinearCombination,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
                  auto=None,
                  hetero=None,
+                 integrator_mode=False,
                  integrator_function=AdaptiveIntegrator,
                  initial_value=None,
-                 noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,
-                 integrator_mode=False,
+                 noise=0.0,
                  clip=None,
-                 has_recurrent_input_state=False,
-                 combination_function:is_function_type=LinearCombination,
                  convergence_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,

@@ -876,6 +876,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     """
     InteractiveActivation(      \
         default_variable=None,  \
+        rate=1.0,               \
         decay=1.0,              \
         rest=0.0,               \
         max_val=1.0,            \
@@ -900,7 +901,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     `function <InteractiveActivation.function>` returns:
 
     .. math::
-        previous\_value + (variable * distance\_from\_asymptote) - (decay * distance\_from\_rest) + noise
+        previous\_value + (rate * variable * distance\_from\_asymptote) - (decay * distance\_from\_rest) + noise
 
     where:
 
@@ -1057,7 +1058,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     })
 
     multiplicative_param = RATE
-    additive_param = OFFSET
+    # additive_param = OFFSET
 
     class Params(Integrator.Params):
         """
@@ -1106,7 +1107,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         rest = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_val = Param(1.0)
         min_val = Param(1.0)
-        offset = Param(0.0)
+        # offset = Param(0.0)
 
     @tc.typecheck
     def __init__(self,
@@ -1117,7 +1118,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
                  max_val: parameter_spec = 1.0,
                  min_val: parameter_spec = -1.0,
                  noise=0.0,
-                 offset=None,
+                 # offset=None,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -1136,7 +1137,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
                                                   min_val=min_val,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  offset=offset,
+                                                  # offset=offset,
                                                   params=params)
 
         super().__init__(
@@ -5901,8 +5902,8 @@ class DND(Integrator):  # ------------------------------------------------------
 
     class Params(Integrator.Params):
         variable = Param([[0],[0]])
-        retrieval_prob = Param(0.0, modulable=True)
-        storage_prob = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        retrieval_prob = Param(1.0, modulable=True)
+        storage_prob = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Param(1000)
 
@@ -6112,7 +6113,14 @@ class DND(Integrator):  # ------------------------------------------------------
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
             ret_val = self.get_memory(key)
         else:
+            # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
+            #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
+            #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
             ret_val = np.zeros_like(self.instance_defaults.variable)
+            # if self.context.initialization_status == ContextFlags.INITIALIZING:
+            #     ret_val = np.zeros_like(self.instance_defaults.variable)
+            # else:
+            #     ret_val = None
 
         # Store variable to dict:
         if noise:
@@ -6140,6 +6148,7 @@ class DND(Integrator):  # ------------------------------------------------------
 
         """
         # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
+        #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
         # if no memory, return the zero vector
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
         if len(self.dict) == 0:
