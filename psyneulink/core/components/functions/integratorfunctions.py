@@ -901,7 +901,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
     `function <InteractiveActivation.function>` returns:
 
     .. math::
-        previous\_value + (rate * variable * distance\_from\_asymptote) - (decay * distance\_from\_rest) + noise
+        previous\_value + (rate * (variable + noise) * distance\_from\_asymptote) - (decay * distance\_from\_rest)
 
     where:
 
@@ -954,8 +954,8 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         `max_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.min_val>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <InteractiveActivation.function>`
-        (see `noise <InteractiveActivation.noise>` for details).
+        specifies random value to be added to `variable <InteractiveActivation.noise>` in each call to `function
+        <InteractiveActivation.function>` (see `noise <InteractiveActivation.noise>` for details).
 
     initializer float, list or 1d array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -1011,7 +1011,8 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         applies to the corresponding element of `variable <InteractiveActivation.variable>`.
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <InteractiveActivation.function>`.
+        specifies random value to be added to `variable <InteractiveActivation.noise>` in each call to `function
+        <InteractiveActivation.function>`.
 
         If noise is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
 
@@ -1239,7 +1240,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
 
         dist_from_rest = prev_val - rest
 
-        new_value = previous_value + (rate * current_input * dist_from_asymptote) - (decay * dist_from_rest) + noise
+        new_value = previous_value + (rate * (current_input + noise) * dist_from_asymptote) - (decay * dist_from_rest)
 
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(new_value, execution_id)
