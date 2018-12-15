@@ -346,7 +346,8 @@ from psyneulink.core.components.functions.function import Function, \
     is_function_type
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, IntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.statefulfunction import IntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction

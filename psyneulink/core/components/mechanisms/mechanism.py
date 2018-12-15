@@ -2120,7 +2120,7 @@ class Mechanism_Base(Mechanism):
                 See individual functions for details on their `stateful_attributes <Integrator.stateful_attributes>`,
                 as well as other reinitialization steps that the reinitialize method may carry out.
         """
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator
+        from psyneulink.core.components.functions.statefulfunctions.statefulfunction import Integrator
 
         # If the primary function of the mechanism is an integrator:
         # (1) reinitialize it, (2) update value, (3) update output states

@@ -253,7 +253,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
                 STARTING_POINT:-0.5
             },
         )
-    The parameters for the DDM when `function <DDM.function>` is set to `DriftDiffusionAnalytical` or `NavarroAndFuss` are:
+    The parameters for the DDM when `function <DDM.function>` is set to `DriftDiffusionAnalytical` are:
 
     .. _DDM_Drift_Rate:
 
@@ -352,8 +352,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import method_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator, DriftDiffusionIntegrator, THRESHOLD, \
-    STARTING_POINT, DriftDiffusionAnalytical, NF_Results, NavarroAndFuss
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+    DriftDiffusionIntegrator, THRESHOLD, STARTING_POINT, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.statefulfunction import Integrator
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -409,12 +410,12 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or l
                               {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
-                              {NAME: RT_CORRECT_MEAN},              # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_CORRECT_VARIANCE},          # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_CORRECT_SKEW},              # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_MEAN},            # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_VARIANCE},        # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_SKEW},            # (DriftDiffusionAnalytical and NavarroAndFuss only)
+                              {NAME: RT_CORRECT_MEAN},              # (DriftDiffusionAnalytical only)
+                              {NAME: RT_CORRECT_VARIANCE},          # (DriftDiffusionAnalytical only)
+                              {NAME: RT_CORRECT_SKEW},              # (DriftDiffusionAnalytical only)
+                              {NAME: RT_INCORRECT_MEAN},            # (DriftDiffusionAnalytical only)
+                              {NAME: RT_INCORRECT_VARIANCE},        # (DriftDiffusionAnalytical only)
+                              {NAME: RT_INCORRECT_SKEW},            # (DriftDiffusionAnalytical only)
                               ]
 
 # This is a convenience class that provides list of standard_output_state names in IDE
@@ -515,8 +516,8 @@ class DDM_OUTPUT():
 
     .. _DDM_RT_CORRECT_MEAN:
 
-    *RT_CORRECT_MEAN* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+    *RT_CORRECT_MEAN* : floa
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the mean reaction time (in seconds) for responses in which the decision
         variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -526,7 +527,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_CORRECT_VARIANCE:
 
     *RT_CORRECT_VARIANCE* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the decision
         variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -536,7 +537,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_CORRECT_SKEW:
 
     *RT_CORRECT_SKEW* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the skew of decision time (in seconds) for responses in which the decision
         variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -546,7 +547,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_INCORRECT_MEAN:
 
     *RT_INCORRECT_MEAN* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the mean reaction time (in seconds) for responses in which the decision
         variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -556,7 +557,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_INCORRECT_VARIANCE:
 
     *RT_INCORRECT_VARIANCE* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the decision
         variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -566,7 +567,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_INCORRECT_SKEW:
 
     *RT_INCORRECT_SKEW* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the skew of decision time (in seconds) for responses in which the decision
         variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -704,7 +705,7 @@ class DDM(ProcessingMechanism_Base):
 
     function :  IntegratorFunction : default DriftDiffusionAnalytical
         the function used to `execute <DDM_Execution>` the decision process; determines the mode of execution.
-        If it is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>` or `NavarroAndFuss <NavarroAndFuss>`, an `analytic solution
+        If it is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>`, an `analytic solution
         <DDM_Analytic_Mode>` is calculated (note:  the latter requires that the MatLab engine is installed); if it is
         an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION*,
         then `numerical step-wise integration <DDM_Integration_Mode>` is carried out.  See `DDM_Modes` and
@@ -826,7 +827,7 @@ class DDM(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 # function:tc.enum(type(DriftDiffusionAnalytical), type(NavarroAndFuss))=DriftDiffusionAnalytical(drift_rate=1.0,
+                 # function:tc.enum(type(DriftDiffusionAnalytical))=DriftDiffusionAnalytical(drift_rate=1.0,
                  # input_states:tc.optional(tc.any(list, dict))=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=SCALAR,
                  function=DriftDiffusionAnalytical(drift_rate=1.0,
@@ -1018,7 +1019,9 @@ class DDM(ProcessingMechanism_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        functions = {DriftDiffusionAnalytical, NavarroAndFuss, DriftDiffusionIntegrator}
+        functions = {DriftDiffusionAnalytical,
+                     # NavarroAndFuss,
+                     DriftDiffusionIntegrator}
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
@@ -1151,18 +1154,18 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[6]
                 return_value[self.RT_INCORRECT_SKEW_INDEX] = result[7]
 
-            elif isinstance(self.function.__self__, NavarroAndFuss):
-                return_value = np.zeros(shape=(10, 1))
-                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
-                return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
-                return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
-                # index 0 holds upper/correct/plus (1 holds lower/error/minus)
-                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][0]
-                return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][0]
-                return_value[self.RT_CORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][0]
-                return_value[self.RT_INCORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
-                return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
-                return_value[self.RT_INCORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][1]
+            # elif isinstance(self.function.__self__, NavarroAndFuss):
+            #     return_value = np.zeros(shape=(10, 1))
+            #     return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
+            #     return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
+            #     return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
+            #     # index 0 holds upper/correct/plus (1 holds lower/error/minus)
+            #     return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][0]
+            #     return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][0]
+            #     return_value[self.RT_CORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][0]
+            #     return_value[self.RT_INCORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
+            #     return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
+            #     return_value[self.RT_INCORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][1]
 
             else:
                 raise DDMError("The function specified ({}) for {} is not a valid function selection for the DDM".
