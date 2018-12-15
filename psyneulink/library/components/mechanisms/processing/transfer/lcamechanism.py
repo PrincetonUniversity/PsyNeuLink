@@ -140,7 +140,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
-from psyneulink.core.components.functions.integratorfunctions import LCAIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LCAIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates

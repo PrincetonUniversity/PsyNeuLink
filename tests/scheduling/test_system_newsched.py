@@ -1,6 +1,6 @@
 import numpy
 
-from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism

@@ -60,7 +60,6 @@ from llvmlite import ir
 from psyneulink.core import llvm as pnlvm
 
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
-from psyneulink.core.components.functions.integratorfunctions import Integrator
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism

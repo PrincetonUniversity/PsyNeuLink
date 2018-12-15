@@ -3,7 +3,6 @@ import psyneulink as pnl
 
 
 # Preferences:
-import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 mechanism_prefs = pnl.ComponentPreferenceSet(
@@ -63,7 +62,7 @@ Automatic_Component = pnl.TransferMechanism(
 
 # Decision Mechanisms
 Decision = pnl.DDM(
-    function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(
+    function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionAnalytical(
         drift_rate=(1.0),
         threshold=(0.2645),
         noise=(0.5),

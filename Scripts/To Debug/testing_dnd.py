@@ -1,7 +1,5 @@
 import psyneulink as pnl
 from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.components.functions.integratorfunctions import DND
-from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 import numpy as np
 
 print(pnl.__version__)

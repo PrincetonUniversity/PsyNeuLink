@@ -352,7 +352,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import method_type
-from psyneulink.core.components.functions.integratorfunctions import Integrator, DriftDiffusionIntegrator, THRESHOLD, \
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator, DriftDiffusionIntegrator, THRESHOLD, \
     STARTING_POINT, DriftDiffusionAnalytical, NF_Results, NavarroAndFuss
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
@@ -361,7 +361,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Param, parse_execution_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -1178,7 +1178,7 @@ class DDM(ProcessingMechanism_Base):
             return return_value
 
     def reinitialize(self, *args, execution_context=None):
-        from psyneulink.core.components.functions.integratorfunctions import Integrator
+        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function_object, Integrator):

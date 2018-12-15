@@ -2,8 +2,7 @@
 import numpy as np
 import pytest
 
-import psyneulink.core.components.functions.integratorfunctions as Functions
-import psyneulink.core.globals.keywords as kw
+import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 import psyneulink.core.llvm as pnlvm
 
 SIZE=1000

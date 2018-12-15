@@ -1,7 +1,7 @@
 import numpy as np
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 

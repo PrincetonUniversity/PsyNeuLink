@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.integratorfunctions import DRIFT_RATE, THRESHOLD, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DRIFT_RATE, THRESHOLD, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.system import System
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL, IDENTITY_MATRIX, OUTPUT_MEAN, RESULT, SLOPE, OUTPUT_VARIANCE
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, OUTPUT_MEAN, RESULT, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.condition import Never
