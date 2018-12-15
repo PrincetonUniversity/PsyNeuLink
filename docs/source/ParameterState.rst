@@ -3,4 +3,4 @@ ParameterState
 
 .. automodule:: psyneulink.core.components.states.parameterstate
    :members:
-   :exclude-members: random, update
+   :exclude-members: random, update, Params

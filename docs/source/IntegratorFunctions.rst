@@ -6,4 +6,4 @@ IntegratorFunctions
 
 .. automodule:: psyneulink.core.components.functions.integratorfunctions
    :members:
-
+   :exclude-members: Params

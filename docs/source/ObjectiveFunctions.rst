@@ -5,5 +5,5 @@ ObjectiveFunctions
    :maxdepth: 3
 
 .. automodule:: psyneulink.core.components.functions.objectivefunctions
-   :members: 
-
+   :members:
+   :exclude-members: Params
