@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.8.0+1058.g66bce2c documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.8.0+1059.gab56d64 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1058.g66bce2c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1059.gab56d64 documentation" href="index.html"/>
         <link rel="up" title="Composition" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Composition" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1058
+                0.4.8.0+1059
               </div>
             
           
@@ -274,7 +274,7 @@ belonging to more than one Process (as shown for control in this figure).</span>
 <p><code class="xref any docutils literal"><span class="pre">SINGLETON</span></code>: both an <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> and a <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanism.</p>
 <p><code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>: sends a Projection that closes a recurrent loop; can be assigned an initial value.</p>
 <p><code class="xref any docutils literal"><span class="pre">CYCLE</span></code>: receives a Projection that closes a recurrent loop.</p>
-<p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.CONTROL" title="psyneulink.core.globals.log.LogCondition.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
+<p><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.CONTROL" title="psyneulink.core.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
 <p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.LEARNING" title="psyneulink.core.globals.log.LogCondition.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
 <p><code class="xref any docutils literal"><span class="pre">TARGET</span></code>: ComparatorMechanism that monitors a <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanism of a Process and compares it to a corresponding
 value provided in the <a class="reference internal" href="#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
@@ -645,47 +645,6 @@ assigned by SystemRegistry (see <a class="reference internal" href="Naming.html"
 <dd>the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the System; if it is not specified in the <strong>prefs</strong> argument of the
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</dd>
 </dl>
-<dl class="class">
-<dt id="psyneulink.core.components.system.System.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.components.system.System.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.system.System.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([0])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Read only:</th><td class="field-body">True</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.system.System.Params.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.system.System.Params.value" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">value</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([0])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Read only:</th><td class="field-body">True</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="method">
 <dt id="psyneulink.core.components.system.System.initialize">
 <code class="descname">initialize</code><span class="sig-paren">(</span><em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.initialize" title="Permalink to this definition">¶</a></dt>
@@ -1084,47 +1043,6 @@ of these InputStates from the corresponding SystemInputState.  When the System�
 <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method is called, each item of its <strong>inputs</strong> and <strong>targets</strong> arguments is assigned as
 the <code class="xref any docutils literal"><span class="pre">value</span></code> of a SystemInputState, which is then conveyed to the
 corresponding InputState of the <a class="reference internal" href="#psyneulink.core.components.system.System.origin_mechanisms" title="psyneulink.core.components.system.System.origin_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanisms</span></code></a> and <code class="xref any docutils literal"><span class="pre">terminal_mechanisms</span></code>.  See <a class="reference internal" href="#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> and <a class="reference internal" href="#system-execution"><span class="std std-ref">Execution</span></a> for additional details.</p>
-<dl class="class">
-<dt id="psyneulink.core.components.system.SystemInputState.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.SystemInputState.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.components.system.SystemInputState.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.system.SystemInputState.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([0])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Read only:</th><td class="field-body">True</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.system.SystemInputState.Params.value">
-<code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.system.SystemInputState.Params.value" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">value</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([0])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Read only:</th><td class="field-body">True</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -1174,7 +1092,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1058.g66bce2c',
+            VERSION:'0.4.8.0+1059.gab56d64',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

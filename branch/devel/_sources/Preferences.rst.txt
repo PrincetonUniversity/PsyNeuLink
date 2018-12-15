@@ -4,4 +4,5 @@ Preferences
 [DOCUMENTATION COMING...]
 
 .. automodule:: psyneulink.core.globals.preferences
-	:members:
+   :members:
+   :exclude-members: Params

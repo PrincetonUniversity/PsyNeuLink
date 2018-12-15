@@ -6,3 +6,4 @@ TransferFunctions
 
 .. automodule:: psyneulink.core.components.functions.transferfunctions
    :members: Linear, Exponential, Logistic, Tanh, ReLU, Gaussian, Normal, SoftMax, LinearMatrix
+   :exclude-members: Params

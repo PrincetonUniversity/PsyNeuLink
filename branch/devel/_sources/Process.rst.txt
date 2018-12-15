@@ -3,4 +3,4 @@ Process
 
 .. automodule:: psyneulink.core.components.process
    :members:
-   :exclude-members: ProcessTuple, ProcessList, random
+   :exclude-members: ProcessTuple, ProcessList, random, Params

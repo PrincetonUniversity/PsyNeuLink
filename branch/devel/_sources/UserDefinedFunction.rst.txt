@@ -6,3 +6,4 @@ UserDefinedFunction
 
 .. automodule:: psyneulink.core.components.functions.userdefinedfunction
    :members: UserDefinedFunction
+   :exclude-members: Params

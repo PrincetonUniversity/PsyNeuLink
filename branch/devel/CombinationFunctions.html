@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.4.8.0+1058.g66bce2c documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.4.8.0+1059.gab56d64 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1058.g66bce2c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1059.gab56d64 documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="SelectionFunctions" href="SelectionFunctions.html"/>
         <link rel="prev" title="TransferFunctions" href="TransferFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1058
+                0.4.8.0+1059
               </div>
             
           
@@ -294,43 +294,6 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.core.components.functions.combinationfunctions.Reduce.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.Reduce.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([[1], [1]])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.Reduce.Params.gamma">
-<code class="descname">gamma</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce.Params.gamma" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">gamma</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="method">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Reduce.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce.function" title="Permalink to this definition">¶</a></dt>
@@ -464,43 +427,6 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([[1], [1]])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination.Params.gamma">
-<code class="descname">gamma</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.Params.gamma" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">gamma</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="method">
@@ -641,43 +567,6 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([[1], [1]])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans.Params.gamma">
-<code class="descname">gamma</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.Params.gamma" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">gamma</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="method">
 <dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.function" title="Permalink to this definition">¶</a></dt>
@@ -707,48 +596,11 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x104bd9f60&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10525fa60&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x104b24f98&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x105272a60&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate temporal difference prediction error.</p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns the prediction error using arrays in <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
 <div class="math">
 \[\delta(t) = r(t) + \gamma sample(t) - sample(t - 1)\]</div>
-<dl class="class">
-<dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.Params.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.Params.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">numpy.array([[1], [1]])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy.ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.Params.gamma">
-<code class="descname">gamma</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.Params.gamma" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">gamma</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="method">
 <dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function" title="Permalink to this definition">¶</a></dt>
@@ -826,7 +678,7 @@ parameters in arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1058.g66bce2c',
+            VERSION:'0.4.8.0+1059.gab56d64',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

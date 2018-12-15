@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCAuxiliary &mdash; PsyNeuLink 0.4.8.0+1058.g66bce2c documentation</title>
+  <title>EVCAuxiliary &mdash; PsyNeuLink 0.4.8.0+1059.gab56d64 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1058.g66bce2c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1059.gab56d64 documentation" href="index.html"/>
         <link rel="up" title="EVC" href="EVC.html"/>
         <link rel="next" title="Models" href="Models.html"/>
         <link rel="prev" title="EVCControlMechanism" href="EVCControlMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1058
+                0.4.8.0+1059
               </div>
             
           
@@ -249,19 +249,19 @@ evaluated.</li>
 <dd><p>Conduct an exhaustive search of allocation polices and return the one with the maximum <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a>.</p>
 <p>This is the default <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for an EVCControlMechanism. It identifies the
 <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> with the maximum <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> by a conducting a grid search over every
-possible <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> given the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.Params.allocation_samples" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.Params.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> specified for each of its ControlSignals (i.e.,
-the <a class="reference external" href="https://en.wikipedia.org/wiki/Cartesian_product">Cartesian product</a> of the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values specified by the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.Params.allocation_samples" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.Params.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> attribute of each ControlSignal).  The
-full set of allocation policies is stored in the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a> attribute.
-The EVCControlMechanism’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method is used to simulate its <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>
-under each <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>, calculate the EVC for each of those policies,
+possible <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> given the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation_samples" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> specified for each of its ControlSignals (i.e.,
+the <a class="reference external" href="https://en.wikipedia.org/wiki/Cartesian_product">Cartesian product</a> of the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values specified by the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation_samples" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> attribute of each ControlSignal).  The
+full set of allocation policies is stored in the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a> attribute.
+The EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.evaluate" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method is used to simulate its <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>
+under each <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>, calculate the EVC for each of those policies,
 and return the policy with the greatest EVC. By default, only the maximum EVC is saved and returned.  However,
-setting the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.save_all_values_and_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.save_all_values_and_policies"><code class="xref any py py-attr docutils literal"><span class="pre">save_all_values_and_policies</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code> saves each policy and its EVC for each simulation
-run (in the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_policies</span></code></a> and <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.EVC_values" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.EVC_values"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_values</span></code></a> attributes, respectively). The EVC is
+setting the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.save_all_values_and_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.save_all_values_and_policies"><code class="xref any py py-attr docutils literal"><span class="pre">save_all_values_and_policies</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code> saves each policy and its EVC for each simulation
+run (in the EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_policies</span></code></a> and <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_values" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_values"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_values</span></code></a> attributes, respectively). The EVC is
 calculated for each policy by iterating over the following steps:</p>
 <ul>
 <li><p class="first">Select an control_allocation:</p>
 <blockquote>
-<div><p>draw a successive item from <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a> in each iteration, and assign each of its values as
+<div><p>draw a successive item from <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a> in each iteration, and assign each of its values as
 the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value for the corresponding ControlSignal for that simulation of the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.</p>
 </div></blockquote>
 </li>
@@ -304,8 +304,8 @@ the current <a class="reference internal" href="ControlSignal.html#psyneulink.co
 </li>
 <li><p class="first">Save the values:</p>
 <blockquote>
-<div><p>if the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.save_all_values_and_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.save_all_values_and_policies"><code class="xref any py py-attr docutils literal"><span class="pre">save_all_values_and_policies</span></code></a> attribute is <code class="xref any docutils literal"><span class="pre">True</span></code>, save allocation policy in the EVCControlMechanism’s
-<a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_policies</span></code></a> attribute, and its value is saved in the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.EVC_values" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.EVC_values"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_values</span></code></a> attribute; otherwise, retain only
+<div><p>if the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.save_all_values_and_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.save_all_values_and_policies"><code class="xref any py py-attr docutils literal"><span class="pre">save_all_values_and_policies</span></code></a> attribute is <code class="xref any docutils literal"><span class="pre">True</span></code>, save allocation policy in the EVCControlMechanism’s
+<a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_policies"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_policies</span></code></a> attribute, and its value is saved in the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_values" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_values"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_values</span></code></a> attribute; otherwise, retain only
 maximum EVC value.</p>
 </div></blockquote>
 </li>
@@ -319,8 +319,8 @@ Its operation can be modified by customizing or replacing any or all of the func
 <dd><p>Grid search combinations of control_signals in specified allocation ranges to find one that maximizes EVC</p>
 <ul class="simple">
 <li>Called by ControlSignalGridSearch.</li>
-<li>Call System.execute for each <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.Params.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>.</li>
-<li>Store an array of values for output_states in <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_states" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
+<li>Call System.execute for each <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>.</li>
+<li>Store an array of values for output_states in <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
 (i.e., the input_states in <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>) for each <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.</li>
 <li>Call <code class="xref any docutils literal"><span class="pre">_compute_EVC</span></code> for each control_allocation to calculate the EVC, identify the  maximum,
 and assign to <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_max" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.EVC_max"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_max</span></code></a>.</li>
@@ -419,7 +419,7 @@ proper comparisons can be made between policies.</p>
 format as the <code class="xref any docutils literal"><span class="pre">variable</span></code> of its <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.origin_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.origin_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanism</span></code></a>,
 and must return a similarly formatted value or a list of them (see <a class="reference internal" href="#predictionmechanism-function"><span class="std std-ref">above</span></a>
 for additional details).</li>
-<li><strong>initial_value</strong> (<a class="reference internal" href="System.html#psyneulink.core.components.system.SystemInputState.Params.value" title="psyneulink.core.components.system.SystemInputState.Params.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies value used to initialize the PredictionMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute;
+<li><strong>initial_value</strong> (<a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies value used to initialize the PredictionMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute;
 if <code class="xref any docutils literal"><span class="pre">None</span></code> is specified, 0 is used if the <code class="xref any docutils literal"><span class="pre">value</span></code> of the PredictionMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is numeric, and an empty list is used if <em>INPUT_SEQUENCE</em> is specified.</li>
 <li><strong>window_size</strong> (<em>int : default None</em>) – specifies number of input values to maintain when <em>INPUT_SEQUENCE</em> option is used for
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></li>
@@ -472,59 +472,6 @@ each trial of a simulation, each of which is a 2d np.array containing the input 
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params.filter_function">
-<code class="descname">filter_function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params.filter_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">filter_function</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params.rate">
-<code class="descname">rate</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">rate</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1.0</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params.window_size">
-<code class="descname">window_size</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.Params.window_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">window_size</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">1</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -573,7 +520,7 @@ each trial of a simulation, each of which is a 2d np.array containing the input 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1058.g66bce2c',
+            VERSION:'0.4.8.0+1059.gab56d64',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

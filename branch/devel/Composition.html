@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.4.8.0+1058.g66bce2c documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.4.8.0+1059.gab56d64 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1058.g66bce2c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1059.gab56d64 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1058
+                0.4.8.0+1059
               </div>
             
           
@@ -266,43 +266,6 @@ InputState(s). (Excludes origin nodes that are already borrowing inputs from ano
 </table>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.core.compositions.composition.Composition.Params">
-<em class="property">class </em><code class="descname">Params</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.Params" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.compositions.composition.Composition.Params.results">
-<code class="descname">results</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.Params.results" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">results</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">[]</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">list</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.compositions.composition.Composition.Params.simulation_results">
-<code class="descname">simulation_results</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.Params.simulation_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">simulation_results</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">[]</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">list</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="attribute">
 <dt id="psyneulink.core.compositions.composition.Composition.graph_processing">
 <code class="descname">graph_processing</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.graph_processing" title="Permalink to this definition">¶</a></dt>
@@ -369,9 +332,9 @@ used in learning).</p>
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_model_based_optimizer">
 <code class="descname">add_model_based_optimizer</code><span class="sig-paren">(</span><em>optimizer</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_model_based_optimizer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a <a class="reference internal" href="ModelBasedOptimizationControlMechanism.html"><span class="doc">ModelBasedOptimizationControlMechanism</span></a> as the <code class="xref any docutils literal"><span class="pre">model_based_optimizer</span></code> of the Composition, which gives the Mechanism access to the
+<dd><p>Adds a <code class="xref any docutils literal"><span class="pre">ModelBasedOptimizationControlMechanism</span></code> as the <code class="xref any docutils literal"><span class="pre">model_based_optimizer</span></code> of the Composition, which gives the Mechanism access to the
 <a class="reference internal" href="#"><span class="doc">Composition</span></a>’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method. This allows the
-<a class="reference internal" href="ModelBasedOptimizationControlMechanism.html"><span class="doc">ModelBasedOptimizationControlMechanism</span></a> to use simulations to determine an optimal Control policy.</p>
+<code class="xref any docutils literal"><span class="pre">ModelBasedOptimizationControlMechanism</span></code> to use simulations to determine an optimal Control policy.</p>
 </dd></dl>
 
 <dl class="method">
@@ -396,7 +359,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – if False, any cycles containing this projection will be</li>
 </ul>
@@ -828,7 +791,7 @@ by checking whether the</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1058.g66bce2c',
+            VERSION:'0.4.8.0+1059.gab56d64',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
