@@ -247,7 +247,7 @@ from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_o
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Param', 'ParamAlias', 'ParameterError',
-    'Parameters', 'parse_execution_context',
+    'ParametersBase', 'parse_execution_context',
 ]
 
 logger = logging.getLogger(__name__)
@@ -1061,7 +1061,7 @@ class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
 #
 # only current candidate for separation seems to be on stateful
 # for now, leave everything together. separate later if necessary
-class Parameters(ParamsTemplate):
+class ParametersBase(ParamsTemplate):
     """
         Base class for inner `Params` classes on Components (see `Component.Params` for example)
     """

@@ -417,7 +417,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
 from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import Defaults, Param, ParamAlias, Parameters
+from psyneulink.core.globals.parameters import Defaults, Param, ParamAlias, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
@@ -853,7 +853,7 @@ class Component(object, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    class Params(Parameters):
+    class Params(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
 
@@ -922,7 +922,7 @@ class Component(object, metaclass=ComponentsMeta):
         'init_args'
     ])
 
-    class _CompilationData(Parameters):
+    class _CompilationData(ParametersBase):
         parameter_struct = None
         context_struct = None
 

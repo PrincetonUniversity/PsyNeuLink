@@ -72,7 +72,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
-from psyneulink.core.globals.parameters import Defaults, Param, Parameters
+from psyneulink.core.globals.parameters import Defaults, Param, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, CNodeRole, call_with_pruned_args
 from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
@@ -415,7 +415,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
 
-    class Params(Parameters):
+    class Params(ParametersBase):
         """
             Attributes
             ----------
@@ -436,7 +436,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         results = Param([], loggable=False)
         simulation_results = Param([], loggable=False)
 
-    class _CompilationData(Parameters):
+    class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         context_struct = None
