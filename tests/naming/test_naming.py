@@ -172,8 +172,7 @@ class TestNaming:
 
         # ControlSignal with two ControlProjection to two parameters of same Mechanism
         C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[
-                                                                         psyneulink.core.components.functions
-                                  .integratorfunctions.DRIFT_RATE],
+                                                                         psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DRIFT_RATE],
                                                                      D1.parameter_states[
                                                                          psyneulink.core.components.functions.statefulfunctions.integratorfunctions.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
