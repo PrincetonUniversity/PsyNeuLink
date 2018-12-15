@@ -6,3 +6,4 @@ DistributionFunctions
 
 .. automodule:: psyneulink.core.components.functions.distributionfunctions
    :members:
+   :exclude-members: Params
