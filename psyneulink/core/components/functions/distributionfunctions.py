@@ -150,13 +150,13 @@ class NormalDist(DistributionFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    # def _validate_params(self, request_set, target_set=None, context=None):
-    #     super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-    #
-    #     if STANDARD_DEVIATION in target_set:
-    #         if target_set[STANDARD_DEVIATION] <= 0.0:
-    #             raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
-    #                                 format(target_set[STANDARD_DEVIATION], self.name))
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if STANDARD_DEVIATION in target_set:
+            if target_set[STANDARD_DEVIATION] < 0.0:
+                raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
+                                    format(target_set[STANDARD_DEVIATION], self.name))
 
     def function(self,
                  variable=None,
