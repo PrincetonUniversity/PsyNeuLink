@@ -1171,11 +1171,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
                 raise FunctionError("Value(s) specified for {} argument of {} ({}) must be in interval [0,1]".
                                     format(repr(DECAY), self.__class__.__name__, decay))
 
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
+    def function(self, variable=None, execution_id=None, params=None, context=None):
         """
 
         Arguments
