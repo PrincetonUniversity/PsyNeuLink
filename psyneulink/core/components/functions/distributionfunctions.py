@@ -28,18 +28,18 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink import Function_Base, Param, parameter_spec, is_pref_set, ContextFlags, NOISE
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
     DIST_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, STANDARD_DEVIATION, DIST_MEAN, EXPONENTIAL_DIST_FUNCTION, \
-    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION
+    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Param
 
 __all__ = ['DistributionFunction', 'NormalDist', 'UniformDist', 'UniformToNormalDist', 'ExponentialDist',
-           'GammaDist', 'WaldDist']
+           'GammaDist', 'WaldDist', 'DriftDiffusionAnalytical']
 
 
 class DistributionFunction(Function_Base):
@@ -795,8 +795,6 @@ class WaldDist(DistributionFunction):
         return self.convert_output_type(result)
 
 
-# DDM solution options:
-
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
@@ -805,6 +803,8 @@ THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 NON_DECISION_TIME = 't0'
+
+# DDM solution options:
 kwDriftDiffusionAnalytical = "DriftDiffusionAnalytical"
 kwNavarrosAndFuss = "NavarroAndFuss"
 

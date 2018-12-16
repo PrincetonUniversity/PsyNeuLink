@@ -901,7 +901,6 @@ STATEFUL_FUNCTION = 'stateful_function'
 INTEGRATOR_FUNCTION = 'integrator_function'
 MEMORY_FUNCTION = 'memory_function'
 HAS_INITIALIZERS='has_initializers'
-DRIFT_RATE = 'drift_rate'
 INCREMENT = 'increment'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
