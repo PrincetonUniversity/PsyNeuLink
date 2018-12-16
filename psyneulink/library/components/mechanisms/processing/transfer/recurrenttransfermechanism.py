@@ -187,7 +187,7 @@ from psyneulink.core.components.functions.function import Function, is_function_
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -329,7 +329,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     has_recurrent_input_state=False                     \
     combination_function=LinearCombination,             \
     integrator_mode=False,                              \
-    integrator_function=AdaptiveIntegrator,             \
+    integrator_function=AdaptiveIntegratorFunction,             \
     initial_value=None,                                 \
     integration_rate=0.5,                               \
     noise=0.0,                                          \
@@ -468,7 +468,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         when set to `True`), or simply report the asymptotic value of the output of its `function
         <RecurrentTransferMechanism.function>` (when set to `False`).
 
-    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+    integrator_function : IntegratorFunction : default AdaptiveIntegratorFunction
         specifies `IntegratorFunction` to use in `integration_mode <RecurrentTransferMechanism.integration_mode>`.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
@@ -609,7 +609,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         The result of the integrator function above is then passed into the mechanism's `function
         <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* determines the
         `integrator_function's <RecurrentTransferMechanism.integrator_function>` `previous_value
-        <AdaptiveIntegrator.previous_value>`.
+        <AdaptiveIntegratorFunction.previous_value>`.
 
         **When integrator_mode is set to False:**
 
@@ -695,7 +695,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         .. note::
            The RecurrentTransferMechanism's `previous_value` attribute is distinct from the `previous_value
-           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           <AdaptiveIntegratorFunction.previous_value>` attribute of its `integrator_function
            <RecurrentTransferMechanism.integrator_function>`.
 
     delta : scalar
@@ -916,7 +916,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  auto=None,
                  hetero=None,
                  integrator_mode=False,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=AdaptiveIntegratorFunction,
                  initial_value=None,
                  integration_rate: is_numeric_or_none=0.5,
                  noise=0.0,

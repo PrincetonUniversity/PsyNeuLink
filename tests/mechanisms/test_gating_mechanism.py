@@ -2,7 +2,7 @@ import numpy as np
 import psyneulink as pnl
 import psyneulink.core.components.functions.transferfunctions
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import ConstantIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import ConstantIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -73,7 +73,7 @@ def test_gating():
         receiver=Hidden_Layer_2,
         matrix={
             VALUE: Middle_Weights_matrix,
-            FUNCTION: ConstantIntegrator,
+            FUNCTION: ConstantIntegratorFunction,
             FUNCTION_PARAMS: {
                 DEFAULT_VARIABLE: Middle_Weights_matrix,
                 INITIALIZER: Middle_Weights_matrix,

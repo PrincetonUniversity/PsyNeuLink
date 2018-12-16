@@ -9,8 +9,8 @@ ancestor_child_data = [
     (pnl.Component, pnl.TransferMechanism, False),
     (pnl.Component, pnl.OutputState, False),
     (pnl.Component, pnl.InputState, True),
-    (pnl.Component, pnl.SimpleIntegrator, False),
-    (pnl.Function_Base, pnl.SimpleIntegrator, True),
+    (pnl.Component, pnl.SimpleIntegratorFunction, False),
+    (pnl.Function_Base, pnl.SimpleIntegratorFunction, True),
     (pnl.TransferMechanism, pnl.RecurrentTransferMechanism, True)
 ]
 

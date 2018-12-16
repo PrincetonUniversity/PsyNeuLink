@@ -21,7 +21,7 @@
 Overview
 --------
 The DDM Mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
-Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
+Linear IntegratorFunction, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
 forced choice (TAFC) decision making ([REF]).
 
@@ -113,7 +113,7 @@ table below:
 |                                    |                     **Function**                        |
 |                                    |                      *(type)*                           |
 +                                    +----------------------------+----------------------------+
-|                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegrator` |
+|                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegratorFunction` |
 |                                    |   (`analytic               |   (`path integration)      |
 | **OutputStates:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
 +------------------------------------+----------------------------+----------------------------+
@@ -202,15 +202,15 @@ An example that illustrate all of the parameters is shown below:
 Path Integration
 ^^^^^^^^^^^^^^^^
 
-The Drift Diffusion Model `Function <Function>` that calculates a path integration is `DriftDiffusionIntegrator
-<DriftDiffusionIntegrator>`. The DDM Mechanism uses the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ to
+The Drift Diffusion Model `Function <Function>` that calculates a path integration is `DriftDiffusionIntegratorFunction
+<DriftDiffusionIntegratorFunction>`. The DDM Mechanism uses the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ to
 carry out numerical step-wise integration of the decision process (see `Execution <DDM_Execution>` below).  In this
 mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` are available.
 
-`Integrator <Integrator>` Function::
+`IntegratorFunction <IntegratorFunction>` Function::
 
     >>> my_DDM_path_integrator = pnl.DDM(
-    ...     function=pnl.DriftDiffusionIntegrator(
+    ...     function=pnl.DriftDiffusionIntegratorFunction(
     ...         noise=0.5,
     ...         initializer=1.0,
     ...         t0=2.0,
@@ -353,7 +353,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import method_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
-    DriftDiffusionIntegrator, THRESHOLD, STARTING_POINT, DriftDiffusionAnalytical, Integrator
+    DriftDiffusionIntegratorFunction, THRESHOLD, STARTING_POINT, DriftDiffusionAnalytical, IntegratorFunction
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -706,12 +706,12 @@ class DDM(ProcessingMechanism_Base):
         the function used to `execute <DDM_Execution>` the decision process; determines the mode of execution.
         If it is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>`, an `analytic solution
         <DDM_Analytic_Mode>` is calculated (note:  the latter requires that the MatLab engine is installed); if it is
-        an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION*,
+        an `IntegratorFunction` Function with an `integration_type <IntegratorFunction.integration_type>` of *DIFFUSION*,
         then `numerical step-wise integration <DDM_Integration_Mode>` is carried out.  See `DDM_Modes` and
         `DDM_Execution` for additional information.
         COMMENT:
            IS THIS MORE CORRECT FOR ABOVE:
-               if it is `DriftDiffusionIntegrator`, then `numerical step-wise integration <DDM_Integration_Mode>`
+               if it is `DriftDiffusionIntegratorFunction`, then `numerical step-wise integration <DDM_Integration_Mode>`
                is carried out.
         COMMENT
 
@@ -937,15 +937,15 @@ class DDM(ProcessingMechanism_Base):
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
 
         .. note::
-            The plot method is only available when the DriftDiffusionIntegrator function is in use. The plot method does
+            The plot method is only available when the DriftDiffusionIntegratorFunction function is in use. The plot method does
             not represent the results of this DDM mechanism in particular, and does not affect the current state of this
-            mechanism's DriftDiffusionIntegrator. The plot method is only meant to visualize a possible path of a DDM
+            mechanism's DriftDiffusionIntegratorFunction. The plot method is only meant to visualize a possible path of a DDM
             mechanism with these function parameters.
 
         Arguments
         ---------
         stimulus: float: default 1.0
-            specify a stimulus value for the AdaptiveIntegrator function
+            specify a stimulus value for the AdaptiveIntegratorFunction function
 
         threshold: float: default 10.0
             specify the threshold at which the DDM will stop integrating
@@ -1020,7 +1020,7 @@ class DDM(ProcessingMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {DriftDiffusionAnalytical,
                      # NavarroAndFuss,
-                     DriftDiffusionIntegrator}
+                     DriftDiffusionIntegratorFunction}
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
@@ -1067,11 +1067,11 @@ class DDM(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _instantiate_plotting_functions(self, context=None):
-        if "DriftDiffusionIntegrator" in str(self.function):
-            self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                              noise=self.function_params['noise']).function
-            self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                          noise=self.function_params['noise']).function
+        if "DriftDiffusionIntegratorFunction" in str(self.function):
+            self.get_axes_function = DriftDiffusionIntegratorFunction(rate=self.function_params['rate'],
+                                                                      noise=self.function_params['noise']).function
+            self.plot_function = DriftDiffusionIntegratorFunction(rate=self.function_params['rate'],
+                                                                  noise=self.function_params['noise']).function
 
     def _execute(
         self,
@@ -1121,7 +1121,7 @@ class DDM(ProcessingMechanism_Base):
         variable = self._validate_variable(variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
-        if isinstance(self.function.__self__, Integrator):
+        if isinstance(self.function.__self__, IntegratorFunction):
 
             result = super()._execute(variable, execution_id=execution_id, context=context)
 
@@ -1180,10 +1180,10 @@ class DDM(ProcessingMechanism_Base):
             return return_value
 
     def reinitialize(self, *args, execution_context=None):
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator
+        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
-        if isinstance(self.function_object, Integrator):
+        if isinstance(self.function_object, IntegratorFunction):
             new_values = self.function_object.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.array(new_values), execution_context, override=True)
             self._update_output_states(execution_id=parse_execution_context(execution_context),
@@ -1202,7 +1202,7 @@ class DDM(ProcessingMechanism_Base):
 
         if (
             abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD, execution_context)
-            and isinstance(self.function.__self__, Integrator)
+            and isinstance(self.function.__self__, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(

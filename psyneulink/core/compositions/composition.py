@@ -3501,11 +3501,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #             # TBI: Store state for a Composition, Reinitialize Composition
     #             pass
     #         elif isinstance(node, Mechanism):
-    #             if isinstance(node.function_object, Integrator):
+    #             if isinstance(node.function_object, IntegratorFunction):
     #                 for attr in node.function_object.stateful_attributes:
     #                     reinitialization_value.append(getattr(node.function_object, attr))
     #             elif hasattr(node, "integrator_function"):
-    #                 if isinstance(node.integrator_function, Integrator):
+    #                 if isinstance(node.integrator_function, IntegratorFunction):
     #                     for attr in node.integrator_function.stateful_attributes:
     #                         reinitialization_value.append(getattr(node.integrator_function, attr))
     #

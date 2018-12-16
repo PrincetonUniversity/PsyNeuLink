@@ -11,6 +11,7 @@
 '''
 
 * `StatefulFunction`
+
 '''
 
 import numpy as np
@@ -19,17 +20,16 @@ import itertools
 
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.globals.keywords import INTEGRATOR_FUNCTION_TYPE, INTEGRATOR_FUNCTION, INITIALIZER
+from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
-__all__ = ['IntegratorFunction']
+__all__ = ['StatefulFunction']
 
 
 # FIX: √ RENAME AS StatefulFunction
-#      THEN RENAME Integrator AS IntegratorFunction
-#           BUT EXCLUDE COMMENTS (so that docstring refs can be left as IntegratorFunction)
-#      THEN CHECK COMMENTS FOR APPROPRIATENESS OF IntegratorFunction REFERENCES
+#      √ RENAME IntegratorFunction AS IntegratorFunction
+#      GO THROUGH AND SORT OUT IntegratorFunction VS. StatefulFunction IN DOCSTRINGS
 #      THEN EDIT StatefulFunction AND IntegratorFunction TO BE COMPLEMENTARY
 #      THEN MOVE Buffer AND DND TO THEIR OWN MemoryFunctions MODULE (WITH MemoryFunctions SUBCLASS OF StatefulFunctions)
 
@@ -45,31 +45,21 @@ class StatefulFunction(Function_Base):
         prefs=None,             \
         )
 
-    .. _Integrator:
+    .. _StatefulFunction:
 
-    Integrate current value of `variable <Integrator.variable>` with its prior value.
+    Function that maintains the state of it previous result (in `previous_value <StatefulFunction.previous_value>`)
+    and may use it in processing the current input provided in `variable <StatefulFunction.variable>`.
 
     Arguments
     ---------
 
     default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.default_variable>` (see `rate <Integrator.rate>` for details).
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <Integrator.function>`. (see
-        `noise <Integrator.noise>` for details).
-
-    time_step_size : float : default 0.0
-        determines the timing precision of the integration process
+        specifies a template for `variable <StatefulFunction.variable>`.
 
     initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <Integrator.default_variable>` (see `initializer <Integrator.initializer>` for details).
+        specifies initial value for `prvevious_value <StatefulFunction.previous_value>`.  If it is a list or array,
+        it must be the same length as `default_variable <StatefulFunction.default_variable>` (see `initializer
+        <StatefulFunction.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -89,22 +79,15 @@ class StatefulFunction(Function_Base):
     ----------
 
     variable : number or array
-        current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
-        added to the prior value;  if it is an array, each element is independently integrated.
-
-    rate : float or 1d array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <Integrator.variable>`.
+        current input value.
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <Integrator.function>`.
+        specifies random value to be added in each call to `function <StatefulFunction.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If noise is
-        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is a list or array, it must be the same length as `variable <StatefulFunction.default_variable>`.
+        If noise is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
 
         Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
         value will be used to construct the standard DDM probability distribution. For all other types of integration,
@@ -114,27 +97,25 @@ class StatefulFunction(Function_Base):
         list or array of these), then the noise will simply be an offset that remains the same across all executions.
 
     initializer : 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <Integrator.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If
-        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
+        determines initial value assigned to `previous_value <StatefulFunction.previous_value>`.  If initializer is a
+        list or array, it must be the same length as `variable <StatefulFunction.default_variable>`. If initializer
+        is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list or array,
+        initializer will be applied to each variable element. In the case of an initializer function, this means
         that the function will be executed separately for each variable element.
 
     previous_value : 1d array
-        stores previous value with which `variable <Integrator.variable>` is integrated.
+        last value returned (i.e., for which state is being maintained).
 
     initializers : list
         stores the names of the initialization attributes for each of the stateful attributes of the function. The
         index i item in initializers provides the initialization value for the index i item in `stateful_attributes
-        <Integrator.stateful_attributes>`.
+        <StatefulFunction.stateful_attributes>`.
 
     stateful_attributes : list
         stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes is
         initialized by the value of the initialization attribute whose name is stored in index i of `initializers
-        <Integrator.initializers>`. In most cases, the stateful_attributes, in that order, are the return values of the
-        function.
+        <StatefulFunction.initializers>`. In most cases, the stateful_attributes, in that order, are the return values
+        of the function.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -149,8 +130,8 @@ class StatefulFunction(Function_Base):
         <LINK>` for details).
     """
 
-    componentType = INTEGRATOR_FUNCTION_TYPE
-    componentName = INTEGRATOR_FUNCTION
+    componentType = STATEFUL_FUNCTION_TYPE
+    componentName = STATEFUL_FUNCTION
 
     class Params(Function_Base.Params):
         """
@@ -211,7 +192,6 @@ class StatefulFunction(Function_Base):
         self.has_initializers = True
 
     def _validate(self):
-        self._validate_rate(self.instance_defaults.rate)
         self._validate_initializers(self.instance_defaults.variable)
         super()._validate()
 
@@ -232,35 +212,6 @@ class StatefulFunction(Function_Base):
         self.has_initializers = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
-
-    # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
-    # need to be executed
-    def _validate_noise(self, noise):
-        # Noise is a list or array
-        if isinstance(noise, (np.ndarray, list)):
-            if len(noise) == 1:
-                pass
-            # Variable is a list/array
-            elif (not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable)
-                  and not iscompatible(np.atleast_1d(noise), self.instance_defaults.variable) and len(noise) > 1):
-                raise FunctionError(
-                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
-                    "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                        .format(noise, self.instance_defaults.variable, self.name,
-                                np.shape(np.array(self.instance_defaults.variable))))
-            else:
-                for i in range(len(noise)):
-                    if isinstance(noise[i], DistributionFunction):
-                        noise[i] = noise[i]._execute
-                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
-                        raise FunctionError("The elements of a noise list or array must be floats or functions. "
-                                            "{} is not a valid noise element for {}".format(noise[i], self.name))
-
-        # Otherwise, must be a float, int or function
-        elif not isinstance(noise, (float, int)) and not callable(noise):
-            raise FunctionError(
-                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
-                    .format(noise, self.name))
 
     def _validate_initializers(self, default_variable):
         for initial_value_name in self.initializers:
@@ -285,80 +236,27 @@ class StatefulFunction(Function_Base):
         else:
             self.parameters.previous_value.set(np.atleast_1d(initializer), execution_context)
 
-    def _try_execute_param(self, param, var):
-
-        # param is a list; if any element is callable, execute it
-        if isinstance(param, (np.ndarray, list)):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            param = np.atleast_2d(param)
-            for i in range(len(param)):
-                for j in range(len(param[i])):
-                    if callable(param[i][j]):
-                        param[i][j] = param[i][j]()
-        # param is one function
-        elif callable(param):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            new_param = []
-            for row in np.atleast_2d(var):
-                new_row = []
-                for item in row:
-                    new_row.append(param())
-                new_param.append(new_row)
-            param = new_param
-
-        return param
-
-    def _euler(self, previous_value, previous_time, slope, time_step_size):
-
-        if callable(slope):
-            slope = slope(previous_time, previous_value)
-
-        return previous_value + slope * time_step_size
-
-    def _runge_kutta_4(self, previous_value, previous_time, slope, time_step_size):
-
-        if callable(slope):
-            slope_approx_1 = slope(previous_time,
-                                   previous_value)
-
-            slope_approx_2 = slope(previous_time + time_step_size / 2,
-                                   previous_value + (0.5 * time_step_size * slope_approx_1))
-
-            slope_approx_3 = slope(previous_time + time_step_size / 2,
-                                   previous_value + (0.5 * time_step_size * slope_approx_2))
-
-            slope_approx_4 = slope(previous_time + time_step_size,
-                                   previous_value + (time_step_size * slope_approx_3))
-
-            value = previous_value \
-                    + (time_step_size / 6) * (slope_approx_1 + 2 * (slope_approx_2 + slope_approx_3) + slope_approx_4)
-
-        else:
-            value = previous_value + time_step_size * slope
-
-        return value
-
     def reinitialize(self, *args, execution_context=None):
         """
             Effectively begins accumulation over again at the specified value(s).
 
             If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
-            `stateful_attributes <Integrator.stateful_attributes>` to the value of the corresponding argument. Next, it
-            sets the `value <Integrator.value>` to a list containing each of the argument values.
+            `stateful_attributes <StatefulFunction.stateful_attributes>` to the value of the corresponding argument. Next, it
+            sets the `value <StatefulFunction.value>` to a list containing each of the argument values.
 
             If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
-            <Integrator.stateful_attributes>` to the value of the corresponding attribute in `initializers
-            <Integrator.initializers>`. Next, it sets the `value <Integrator.value>` to a list containing the values of
-            each of the attributes in `initializers <Integrator.initializers>`.
+            <StatefulFunction.stateful_attributes>` to the value of the corresponding attribute in `initializers
+            <StatefulFunction.initializers>`. Next, it sets the `value <StatefulFunction.value>` to a list containing the values of
+            each of the attributes in `initializers <StatefulFunction.initializers>`.
 
-            Often, the only attribute in `stateful_attributes <Integrator.stateful_attributes>` is
-            `previous_value <Integrator.previous_value>` and the only attribute in `initializers
-            <Integrator.initializers>` is `initializer <Integrator.initializer>`, in which case the reinitialize method
-            sets `previous_value <Integrator.previous_value>` and `value <Integrator.value>` to either the value of the
+            Often, the only attribute in `stateful_attributes <StatefulFunction.stateful_attributes>` is
+            `previous_value <StatefulFunction.previous_value>` and the only attribute in `initializers
+            <StatefulFunction.initializers>` is `initializer <StatefulFunction.initializer>`, in which case the reinitialize method
+            sets `previous_value <StatefulFunction.previous_value>` and `value <StatefulFunction.value>` to either the value of the
             argument (if an argument was passed into reinitialize) or the current value of `initializer
-            <Integrator.initializer>`.
+            <StatefulFunction.initializer>`.
 
-            For specific types of Integrator functions, the reinitialize method may carry out other reinitialization
+            For specific types of StatefulFunction functions, the reinitialize method may carry out other reinitialization
             steps.
 
         """
@@ -422,7 +320,7 @@ class StatefulFunction(Function_Base):
         return value
 
     def function(self, *args, **kwargs):
-        raise FunctionError("Integrator is not meant to be called explicitly")
+        raise FunctionError("StatefulFunction is not meant to be called explicitly")
 
     @property
     def _dependent_components(self):
@@ -430,5 +328,3 @@ class StatefulFunction(Function_Base):
             super()._dependent_components,
             [self.noise] if isinstance(self.noise, DistributionFunction) else []
         ))
-
-

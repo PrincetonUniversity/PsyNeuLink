@@ -10,7 +10,7 @@ from itertools import product
 
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.function import ModulationParam
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegratorFunction, AdaptiveIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -1114,11 +1114,11 @@ class TestExecutionOrder:
 
         # mechanisms
         A = ProcessingMechanism(name="A",
-                                function=AdaptiveIntegrator(rate=0.1))
+                                function=AdaptiveIntegratorFunction(rate=0.1))
         B = ProcessingMechanism(name="B",
                                 function=Logistic)
 
-        # comp1 separates Integrator fn and Logistic fn into mech A and mech B
+        # comp1 separates IntegratorFunction fn and Logistic fn into mech A and mech B
         comp1 = Composition(name="comp1")
         comp1.add_linear_processing_pathway([A, B])
 
@@ -1763,11 +1763,11 @@ class TestRun:
         assert np.allclose([250], output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python']) # LLVM needs SimpleIntegrator
+    @pytest.mark.parametrize("mode", ['Python']) # LLVM needs SimpleIntegratorFunction
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self, mode):
         comp = Composition()
 
-        A = IntegratorMechanism(name="A [integrator]", default_variable=2.0, function=SimpleIntegrator(rate=1.0))
+        A = IntegratorMechanism(name="A [integrator]", default_variable=2.0, function=SimpleIntegratorFunction(rate=1.0))
         # (1) value = 0 + (5.0 * 1.0) + 0  --> return 5.0
         # (2) value = 5.0 + (5.0 * 1.0) + 0  --> return 10.0
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
@@ -2566,8 +2566,8 @@ class TestCallBeforeAfterTimescale:
     def test_call_beforeafter_values_twopass(self):
         comp = Composition()
 
-        A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
-        B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
+        A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegratorFunction(rate=1))
+        B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegratorFunction(rate=2))
         comp.add_c_node(A)
         comp.add_c_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
@@ -3077,8 +3077,8 @@ class TestSystemComposition:
     def test_call_beforeafter_values_twopass(self):
         comp = Composition()
 
-        A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
-        B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
+        A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegratorFunction(rate=1))
+        B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegratorFunction(rate=2))
         comp.add_c_node(A)
         comp.add_c_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
@@ -3445,7 +3445,7 @@ class TestNestedCompositions:
 
         # mechanisms
         A = ProcessingMechanism(name="A",
-                                function=AdaptiveIntegrator(rate=0.1))
+                                function=AdaptiveIntegratorFunction(rate=0.1))
         B = ProcessingMechanism(name="B",
                                 function=Logistic)
         C = TransferMechanism(name="C",
@@ -3453,7 +3453,7 @@ class TestNestedCompositions:
                               integration_rate=0.1,
                               integrator_mode=True)
 
-        # comp1 separates Integrator fn and Logistic fn into mech A and mech B
+        # comp1 separates IntegratorFunction fn and Logistic fn into mech A and mech B
         comp1 = Composition(name="comp1")
         comp1.add_linear_processing_pathway([A, B])
 
@@ -3481,7 +3481,7 @@ class TestNestedCompositions:
 
         # mechanisms
         A = ProcessingMechanism(name="A",
-                                function=AdaptiveIntegrator(rate=0.1))
+                                function=AdaptiveIntegratorFunction(rate=0.1))
         B = ProcessingMechanism(name="B",
                                 function=Logistic)
 
@@ -3512,7 +3512,7 @@ class TestNestedCompositions:
 
         # mechanisms
         A = ProcessingMechanism(name="A",
-                                function=AdaptiveIntegrator(rate=0.1))
+                                function=AdaptiveIntegratorFunction(rate=0.1))
         B = ProcessingMechanism(name="B",
                                 function=Logistic)
 
@@ -3542,12 +3542,12 @@ class TestNestedCompositions:
 
 
     # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
-    # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version 
+    # to TranfserMechanism version vs Logistic fn + AdaptiveIntegratorFunction fn version
     # def test_recurrent_transfer_mechanism_composition(self):
     #
     #     # mechanisms
     #     A = ProcessingMechanism(name="A",
-    #                             function=AdaptiveIntegrator(rate=0.1))
+    #                             function=AdaptiveIntegratorFunction(rate=0.1))
     #     B = ProcessingMechanism(name="B",
     #                             function=Logistic)
     #     C = RecurrentTransferMechanism(name="C",
@@ -3555,7 +3555,7 @@ class TestNestedCompositions:
     #                                    integration_rate=0.1,
     #                                    integrator_mode=True)
     #
-    #     # comp1 separates Integrator fn and Logistic fn into mech A and mech B and uses a "feedback" proj for recurrence
+    #     # comp1 separates IntegratorFunction fn and Logistic fn into mech A and mech B and uses a "feedback" proj for recurrence
     #     comp1 = Composition(name="comp1")
     #     comp1.add_linear_processing_pathway([A, B])
     #     comp1.add_linear_processing_pathway([B, A], feedback=True)

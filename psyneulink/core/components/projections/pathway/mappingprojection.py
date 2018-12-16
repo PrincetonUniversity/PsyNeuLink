@@ -181,7 +181,7 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   MappingProjection (see `MappingProjection_Learning_Specification` above), and updates the current value of the
   MappingProjection's `matrix <MappingProjection.matrix>` parameter in response to `learning
   <LearningMechanism>`.  The `function <ParameterState.function>` of a *MATRIX* ParameterState is an
-  `AccumulatorIntegrator`, which accumulates the weight changes received from the LearningProjections
+  `AccumulatorIntegratorFunction`, which accumulates the weight changes received from the LearningProjections
   that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that can take
   as its input an array or matrix, and return one of the same size.
 
@@ -230,13 +230,13 @@ This conforms to the general procedures for modulation used by `ModulatoryProjec
 A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
 *MATRIX* ParameterState, which is responsible for keeping a record of the value of the MappingProjection's matrix,
 and providing it to the MappingProjection's `function <MappingProjection.function>` (usually `LinearMatrix`).  By
-default, the function for the *MATRIX* ParameterState is an `AccumulatorIntegrator`.  A LearningProjection
-modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
-<AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
+default, the function for the *MATRIX* ParameterState is an `AccumulatorIntegratorFunction`.  A LearningProjection
+modulates it by assigning the value of its `additive_param <AccumulatorIntegratorFunction.additive_param>` (`increment
+<AccumulatorIntegratorFunction.increment>`), which is added to its `previous_value <AccumulatorIntegratorFunction.previous_value>`
 attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
 executes its *MATRIX* ParameterState, the `weight changes <LearningProjection_Structure>` conveyed to the
 MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the *MATRIX*
-ParameterState's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
+ParameterState's `AccumulatorIntegratorFunction` function in its `previous_value <AccumulatorIntegratorFunction.previous_value>`
 attribute. This is then the value of the matrix used  by the MappingProjection's `LinearMatrix` function when it is
 executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
 LearningProjection(s) are stored by the *MATRIX* ParameterState's function, and not the MappingProjection's `matrix
@@ -261,7 +261,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
@@ -545,11 +545,11 @@ class MappingProjection(PathwayProjection_Base):
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
-        self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
-                                                                               default_variable=matrix,
-                                                                               initializer=matrix,
-                                                                            # rate=initial_rate
-                                                                               )
+        self._parameter_states[MATRIX].function_object = AccumulatorIntegratorFunction(owner=self._parameter_states[MATRIX],
+                                                                                       default_variable=matrix,
+                                                                                       initializer=matrix,
+                                                                                       # rate=initial_rate
+                                                                                       )
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
 
         # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms

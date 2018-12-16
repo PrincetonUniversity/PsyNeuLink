@@ -64,14 +64,14 @@ class TestStroop:
         #   sigma = noise = 0.1
         #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
         accumulator_noise = 0.1
-        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                             standard_deviation=accumulator_noise).function,
-                                                                                        rate=0.1),
+        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegratorFunction(noise=pnl.NormalDist(mean=0,
+                                                                                                                     standard_deviation=accumulator_noise).function,
+                                                                                                rate=0.1),
                                                           name='respond_red_accumulator')
         #   Respond green accumulator
-        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                               standard_deviation=accumulator_noise).function,
-                                                                                          rate=0.1),
+        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegratorFunction(noise=pnl.NormalDist(mean=0,
+                                                                                                                       standard_deviation=accumulator_noise).function,
+                                                                                                  rate=0.1),
                                                             name='respond_green_accumulator')
 
         #   LOGGING

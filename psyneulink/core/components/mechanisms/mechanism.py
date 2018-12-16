@@ -260,8 +260,8 @@ the parameters in the  example above could also be accessed as ``my_mechanism.fu
 Some Mechanisms have auxiliary functions that are inherent (i.e., not made available as arguments in the Mechanism's
 constructor;  e.g., the `integrator_function <TransferMechanism.integrator_function>` of a `TransferMechanism`);
 however, the Mechanism may include parameters for those functions in its constructor (e.g., the **noise** argument in
-the constructor for a `TransferMechanism` is used as the `noise <AdaptiveIntegrator.noise>` parameter of the
-`AdaptiveIntegrator` assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`).
+the constructor for a `TransferMechanism` is used as the `noise <AdaptiveIntegratorFunction.noise>` parameter of the
+`AdaptiveIntegratorFunction` assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`).
 
 COMMENT:
 NOT CURRENTLY IMPLEMENTED
@@ -2078,15 +2078,15 @@ class Mechanism_Base(Mechanism):
 
     def reinitialize(self, *args, execution_context=None):
         """
-            If the mechanism's `function <Mechanism.function>` is an `Integrator`, or if the mechanism has and
+            If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
             `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
             effectively begins the function's accumulation over again at the specified value, and updates related
             attributes on the mechanism.  It also reassigns `previous_value <Mechanism.previous_value>` to None.
 
-            If the mechanism's `function <Mechanism_Base.function>` is an `Integrator`, its `reinitialize
+            If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reinitialize
             <Mechanism_Base.reinitialize>` method:
 
-                (1) Calls the function's own `reinitialize <Integrator.reinitialize>` method (see Note below for
+                (1) Calls the function's own `reinitialize <IntegratorFunction.reinitialize>` method (see Note below for
                     details)
 
                 (2) Sets the mechanism's `value <Mechanism_Base.value>` to the output of the function's
@@ -2099,10 +2099,10 @@ class Mechanism_Base(Mechanism):
             <Mechanism_Base.reinitialize>` method::
 
                 (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reinitialize
-                    <Integrator.reinitialize>` method (see Note below for details)
+                    <IntegratorFunction.reinitialize>` method (see Note below for details)
 
                 (2) Executes its `function <Mechanism_Base.function>` using the output of the `integrator_function's
-                    <TransferMechanism.integrator_function>` `reinitialize <Integrator.reinitialize>` method as the
+                    <TransferMechanism.integrator_function>` `reinitialize <IntegratorFunction.reinitialize>` method as the
                     function's variable
 
                 (3) Sets the mechanism's `value <Mechanism_Base.value>` to the output of its function
@@ -2111,20 +2111,20 @@ class Mechanism_Base(Mechanism):
                     <Mechanism_Base.value>`
 
         .. note::
-                The reinitialize method of an Integrator Function typically resets the function's `previous_value
-                <Integrator.previous_value>` (and any other `stateful_attributes <Integrator.stateful_attributes>`) and
-                `value <Integrator.value>` to the quantity (or quantities) specified. If `reinitialize
-                <Mechanism_Base.reinitialize>` is called without arguments, the `initializer <Integrator.initializer>`
-                value (or the values of each of the attributes in `initializers <Integrator.initializers>`) is used
-                instead. The `reinitialize <Integrator.reinitialize>` method may vary across different Integrators.
-                See individual functions for details on their `stateful_attributes <Integrator.stateful_attributes>`,
+                The reinitialize method of an IntegratorFunction Function typically resets the function's `previous_value
+                <IntegratorFunction.previous_value>` (and any other `stateful_attributes <IntegratorFunction.stateful_attributes>`) and
+                `value <IntegratorFunction.value>` to the quantity (or quantities) specified. If `reinitialize
+                <Mechanism_Base.reinitialize>` is called without arguments, the `initializer <IntegratorFunction.initializer>`
+                value (or the values of each of the attributes in `initializers <IntegratorFunction.initializers>`) is used
+                instead. The `reinitialize <IntegratorFunction.reinitialize>` method may vary across different Integrators.
+                See individual functions for details on their `stateful_attributes <IntegratorFunction.stateful_attributes>`,
                 as well as other reinitialization steps that the reinitialize method may carry out.
         """
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator
+        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         # If the primary function of the mechanism is an integrator:
         # (1) reinitialize it, (2) update value, (3) update output states
-        if isinstance(self.function_object, Integrator):
+        if isinstance(self.function_object, IntegratorFunction):
             new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context=execution_context, override=True)
             self._update_output_states(execution_id=parse_execution_context(execution_context),
@@ -2134,7 +2134,7 @@ class Mechanism_Base(Mechanism):
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output states
         elif hasattr(self, "integrator_function"):
-            if isinstance(self.integrator_function, Integrator):
+            if isinstance(self.integrator_function, IntegratorFunction):
                 new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context)[0]
                 self.parameters.value.set(
                     self.function_object.execute(variable=new_input, context="REINITIALIZING"),
@@ -2156,7 +2156,7 @@ class Mechanism_Base(Mechanism):
 
             else:
                 raise MechanismError("Reinitializing {} is not allowed because its integrator_function is not an "
-                                     "Integrator type function, therefore the Mechanism does not have an integrator to"
+                                     "IntegratorFunction type function, therefore the Mechanism does not have an integrator to"
                                      " reinitialize.".format(self.name))
         else:
             raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "

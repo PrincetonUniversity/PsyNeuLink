@@ -310,7 +310,7 @@ from psyneulink.core.components.component import function_type, method_type
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator, SimpleIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction, SimpleIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
 from psyneulink.core.components.functions.optimizationfunctions import SampleSpec, SampleIterator
@@ -420,7 +420,7 @@ class ControlSignal(ModulatorySignal):
         costs_options=None,                                       \
         intensity_cost_function=Exponential,                      \
         adjustment_cost_function=Linear,                          \
-        duration_cost_function=Integrator,                        \
+        duration_cost_function=IntegratorFunction,                        \
         combine_costs_function=Reduce(operation=SUM),             \
         allocation_samples=self.ClassDefaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
@@ -481,7 +481,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to calculate the contribution of the change in the ControlSignal's `intensity`
         (from its `last_intensity` value) to its `cost <ControlSignal.cost>`.
 
-    duration_cost_function : IntegratorFunction : default Integrator
+    duration_cost_function : IntegratorFunction : default IntegratorFunction
         specifies the function used to calculate the contribution of the ControlSignal's duration to its
         `cost <ControlSignal.cost>`.
 
@@ -686,7 +686,7 @@ class ControlSignal(ModulatorySignal):
                 duration_cost_function
                     see `duration_cost_function <ControlSignal.duration_cost_function>`
 
-                    :default value: `SimpleIntegrator`
+                    :default value: `SimpleIntegratorFunction`
                     :type: `Function`
 
                 intensity_cost
@@ -717,7 +717,7 @@ class ControlSignal(ModulatorySignal):
 
         intensity_cost_function = Exponential
         adjustment_cost_function = Linear
-        duration_cost_function = SimpleIntegrator
+        duration_cost_function = SimpleIntegratorFunction
         combine_costs_function = Reduce(operation=SUM)
         modulation = None
 
@@ -771,7 +771,7 @@ class ControlSignal(ModulatorySignal):
                  cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
+                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegratorFunction,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Params.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
@@ -862,7 +862,7 @@ class ControlSignal(ModulatorySignal):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
                                                  format(COMBINE_COSTS_FUNCTION, cost_function))
                 elif cost_function_name == DURATION_COST_FUNCTION:
-                    if not isinstance(cost_function, Integrator):
+                    if not isinstance(cost_function, IntegratorFunction):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be an IntegratorFunction".
                                                  format(DURATION_COST_FUNCTION, cost_function))
                 elif not isinstance(cost_function, TransferFunction):

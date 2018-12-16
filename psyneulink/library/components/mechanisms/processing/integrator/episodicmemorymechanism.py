@@ -14,7 +14,7 @@
 Overview
 --------
 
-A EpisodicMemoryMechanism is an `Integrator` Function that can store and retrieve cue-associate pairs.
+A EpisodicMemoryMechanism is an `IntegratorFunction` Function that can store and retrieve cue-associate pairs.
 
 .. _EpisodicMemoryMechanism_Creation:
 

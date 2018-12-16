@@ -18,7 +18,7 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core.components.functions.function import Function_Base
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Buffer, Integrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Buffer, IntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.globals.context import ContextFlags
@@ -594,11 +594,11 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         # the reinitialize method on each stateful mechanism.
         reinitialization_value = []
 
-        if isinstance(mechanism.function_object, Integrator):
+        if isinstance(mechanism.function_object, IntegratorFunction):
             for attr in mechanism.function_object.stateful_attributes:
                 reinitialization_value.append(mechanism.function_object.get_current_function_param(attr, execution_id))
         elif hasattr(mechanism, "integrator_function"):
-            if isinstance(mechanism.integrator_function, Integrator):
+            if isinstance(mechanism.integrator_function, IntegratorFunction):
                 for attr in mechanism.integrator_function.stateful_attributes:
                     reinitialization_value.append(mechanism.integrator_function.get_current_function_param(attr, execution_id))
 
@@ -727,9 +727,9 @@ class PredictionMechanism(IntegratorMechanism):
       are assigned as the `Linear` function's `slope <Linear.slope>` and `intercept <Linear.intercept>` parameters,
       respectively.
 
-    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegrator` Function to compute an exponentially weighted time-average
+    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegratorFunction` Function to compute an exponentially weighted time-average
       of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise** arguments can be used
-      to specify the corresponding `rate <AdaptiveIntegrator.rate>` and `noise <AdaptiveIntegrator.noise>` parameters
+      to specify the corresponding `rate <AdaptiveIntegratorFunction.rate>` and `noise <AdaptiveIntegratorFunction.noise>` parameters
       of the function.  The function returns the time-averaged input as a single item.
 
     * *AVERAGE_INPUTS:* uses a `Buffer` Function to compute the average of the number of preceding inputs specified in
@@ -830,7 +830,7 @@ class PredictionMechanism(IntegratorMechanism):
 
     function : Function
         used to track the inputs to the PredictionMechanism's `origin_mechanism <PredictionMechanism.origin_mechanism>`;
-        the default is an `AdaptiveIntegrator` (see `above <PredictionMechanism_Function>` for additional details).
+        the default is an `AdaptiveIntegratorFunction` (see `above <PredictionMechanism_Function>` for additional details).
 
     value : 3d np.array
         result returned by the PredictionMechanism's `function <PredictionMechanism.function>`, and provided as
@@ -914,7 +914,7 @@ class PredictionMechanism(IntegratorMechanism):
                 function = Linear(slope=rate, intercept=noise)
 
             elif function is TIME_AVERAGE_INPUT:
-                # Use default for IntegratorMechanism: AdaptiveIntegrator
+                # Use default for IntegratorMechanism: AdaptiveIntegratorFunction
                 function = self.ClassDefaults.function
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:

@@ -342,14 +342,15 @@ class TestModels:
         #   sigma = noise = 0.1
         #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
         accumulator_noise = 0.1
-        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
-                                                                                                                                                                    standard_deviation=accumulator_noise).function,
-                                                                                                                                             rate=0.1),
+        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegratorFunction(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
+                                                                                                                                                                            standard_deviation=accumulator_noise).function,
+                                                                                                rate=0.1),
                                                           name='respond_red_accumulator')
         #   Respond green accumulator
-        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
-                                                                                                                                                                                                                           standard_deviation=accumulator_noise).function,
-                                                                                                                                               rate=0.1),
+        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegratorFunction(noise=psyneulink
+                                                                                                  .core.components.functions.distributionfunctions.NormalDist(mean=0,
+                                                                                                                                                                              standard_deviation=accumulator_noise).function,
+                                                                                                  rate=0.1),
                                                             name='respond_green_accumulator')
 
         #   LOGGING
@@ -601,7 +602,7 @@ class TestModels:
         color_feature_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
             function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
-            integrator_mode=True,  # Set Integrator mode to True
+            integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
             output_states=[{  # Create new output state by applying
@@ -615,7 +616,7 @@ class TestModels:
         word_feature_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
             function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
-            integrator_mode=True,  # Set Integrator mode to True
+            integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
             output_states=[{  # Create new output state by applying
@@ -629,7 +630,7 @@ class TestModels:
         response_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
             function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
-            integrator_mode=True,  # Set Integrator mode to True
+            integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
             output_states=[{  # Create new output state by applying
@@ -645,7 +646,7 @@ class TestModels:
         task_demand_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
             function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
-            integrator_mode=True,  # Set Integrator mode to True
+            integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition_task,  # Inhibition among units within a layer
             output_states=[  # Create new output state by applying
