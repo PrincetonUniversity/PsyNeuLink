@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DRIFT_RATE, THRESHOLD, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import DRIFT_RATE, THRESHOLD, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process

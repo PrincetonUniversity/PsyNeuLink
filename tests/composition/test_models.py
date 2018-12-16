@@ -236,7 +236,7 @@ class TestModels:
 
     def test_DDM(self):
         myMechanism = pnl.DDM(
-            function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(10.0),
                 starting_point=0.0,
@@ -245,14 +245,14 @@ class TestModels:
         )
 
         myMechanism_2 = pnl.DDM(
-            function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=2.0,
                 threshold=20.0),
             name='My_DDM_2'
         )
 
         myMechanism_3 = pnl.DDM(
-            function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=3.0,
                 threshold=30.0
             ),

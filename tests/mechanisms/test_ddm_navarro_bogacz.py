@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionAnalytical, NavarroAndFuss
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical, NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 @pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")

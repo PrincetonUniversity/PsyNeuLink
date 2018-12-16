@@ -1,5 +1,6 @@
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 myInputLayer = pnl.TransferMechanism(
@@ -16,7 +17,7 @@ myHiddenLayer = pnl.TransferMechanism(
 
 myDDM = pnl.DDM(
     name='My_DDM',
-    function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionAnalytical(
+    function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
         drift_rate=0.5,
         threshold=1,
         starting_point=0.0

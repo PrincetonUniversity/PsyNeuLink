@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
 from psyneulink.core.components.process import Process
 from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, IDENTITY_MATRIX
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM

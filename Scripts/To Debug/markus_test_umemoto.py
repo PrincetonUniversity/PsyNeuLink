@@ -6,6 +6,7 @@ import psyneulink as pnl
 #in v2 we add control signals and a EVC mechanism to the model
 
 # EVC params for Umemoto et al
+import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 w_t = 0.065
@@ -71,7 +72,7 @@ Automatic_Component_Flanker.set_log_conditions('value')
 
 
 # Decision Mechanisms
-Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
        # drift_rate=(0.3),
         threshold=(thresh),
         noise=(c),

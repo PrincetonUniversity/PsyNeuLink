@@ -4,8 +4,8 @@ import typecheck
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegratorFunction, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegratorFunction
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import Never, WhenFinished

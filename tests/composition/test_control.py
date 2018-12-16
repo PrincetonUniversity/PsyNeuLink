@@ -2,6 +2,7 @@ import functools
 import numpy as np
 import pytest
 import psyneulink as pnl
+import psyneulink.core.components.functions.distributionfunctions
 from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec, OptimizationFunctionError
 class TestControlMechanisms:
 
@@ -348,7 +349,7 @@ class TestModelBasedOptimizationControlMechanisms:
             name='Reward'
         )
         Decision = pnl.DDM(
-            function=pnl.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(
                     1.0,
                     pnl.ControlProjection(
@@ -506,7 +507,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # Decision Mechanisms
         Decision = pnl.DDM(
-            function=pnl.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(0.2645),
                 noise=(0.5),

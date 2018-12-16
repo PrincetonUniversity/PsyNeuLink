@@ -5,10 +5,10 @@ from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
 from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist, \
-    UniformDist, GammaDist, WaldDist
+    UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegratorFunction, ConstantIntegratorFunction, \
     AdaptiveIntegratorFunction, DriftDiffusionIntegratorFunction, OrnsteinUhlenbeckIntegratorFunction, FHNIntegratorFunction, AccumulatorIntegratorFunction, \
-    AGTUtilityIntegratorFunction, DriftDiffusionAnalytical
+    AGTUtilityIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism

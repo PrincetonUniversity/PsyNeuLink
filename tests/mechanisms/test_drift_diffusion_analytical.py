@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 # Get location of this script so we can load the txt files present in it regardless of the working

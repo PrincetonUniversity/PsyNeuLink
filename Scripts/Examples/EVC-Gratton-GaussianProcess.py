@@ -1,6 +1,7 @@
 import psyneulink as pnl
 import numpy as np
 
+import psyneulink.core.components.functions.distributionfunctions
 from psyneulink import *
 
 # TEST GaussianProcess in context of EVC-Gratton model
@@ -14,7 +15,7 @@ Reward = pnl.TransferMechanism(
     name='Reward'
 )
 Decision = pnl.DDM(
-    function=pnl.DriftDiffusionAnalytical(
+    function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
         drift_rate=(
             1.0,
             pnl.ControlProjection(

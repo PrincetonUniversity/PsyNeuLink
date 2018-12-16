@@ -2,6 +2,7 @@ import numpy as np
 import psyneulink as pnl
 
 # Control Parameters
+import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 signalSearchRange = np.arange(0.8, 2.0, 0.2) # why 0.8 to 2.0 in increments of 0.2
@@ -36,7 +37,7 @@ Automatic_Component.loggable_items
 Automatic_Component.set_log_conditions('value')
 
 # Decision Mechanisms
-Decision = pnl.DDM(function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionAnalytical(
+Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
         drift_rate=(0.5),
         threshold=(1.0),
         # noise=(0.8),
