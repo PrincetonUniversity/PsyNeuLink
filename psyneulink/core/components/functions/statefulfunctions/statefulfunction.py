@@ -26,7 +26,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 __all__ = ['IntegratorFunction']
 
 
-# FIX: RENAME AS StatefulFunction
+# FIX: √ RENAME AS StatefulFunction
 #      THEN RENAME Integrator AS IntegratorFunction
 #           BUT EXCLUDE COMMENTS (so that docstring refs can be left as IntegratorFunction)
 #      THEN CHECK COMMENTS FOR APPROPRIATENESS OF IntegratorFunction REFERENCES
@@ -34,7 +34,7 @@ __all__ = ['IntegratorFunction']
 #      THEN MOVE Buffer AND DND TO THEIR OWN MemoryFunctions MODULE (WITH MemoryFunctions SUBCLASS OF StatefulFunctions)
 
 
-class IntegratorFunction(Function_Base):
+class StatefulFunction(Function_Base):
     # -------------------------------------------------------------------------------
     """
     StatefulFunction(           \

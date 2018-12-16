@@ -50,7 +50,7 @@ from psyneulink.core.components.functions.function import \
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.selectionfunctions import OneHot
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import IntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, BUFFER_FUNCTION, \
     CONSTANT_INTEGRATOR_FUNCTION, COSINE, \
@@ -79,7 +79,7 @@ __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'Buffer', 'DND',
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-class Integrator(IntegratorFunction):  # -------------------------------------------------------------------------------
+class Integrator(StatefulFunction):  # -------------------------------------------------------------------------------
     """
     Integrator(                 \
         default_variable=None,  \
@@ -198,7 +198,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     componentName = INTEGRATOR_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Params(StatefulFunction.Params):
         """
             Attributes
             ----------
@@ -4814,7 +4814,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(IntegratorFunction.Params):
+    class Params(StatefulFunction.Params):
         """
             Attributes
             ----------
@@ -5329,7 +5329,7 @@ class NavarroAndFuss(DistributionFunction):  # ---------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(IntegratorFunction.Params):
+    class Params(StatefulFunction.Params):
         """
             Attributes
             ----------
