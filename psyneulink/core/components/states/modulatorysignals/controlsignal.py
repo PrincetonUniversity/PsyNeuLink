@@ -310,8 +310,7 @@ from psyneulink.core.components.component import function_type, method_type
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import IntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
 from psyneulink.core.components.functions.optimizationfunctions import SampleSpec, SampleIterator
@@ -863,7 +862,7 @@ class ControlSignal(ModulatorySignal):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
                                                  format(COMBINE_COSTS_FUNCTION, cost_function))
                 elif cost_function_name == DURATION_COST_FUNCTION:
-                    if not isinstance(cost_function, IntegratorFunction):
+                    if not isinstance(cost_function, Integrator):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be an IntegratorFunction".
                                                  format(DURATION_COST_FUNCTION, cost_function))
                 elif not isinstance(cost_function, TransferFunction):

@@ -347,7 +347,7 @@ from psyneulink.core.components.functions.function import Function, \
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import IntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Integrator
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
@@ -1046,11 +1046,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INTEGRATOR_FUNCTION:
         if INTEGRATOR_FUNCTION in target_set:
             integtr_fct = target_set[INTEGRATOR_FUNCTION]
-            if not (isinstance(integtr_fct, IntegratorFunction)
-                    or (isinstance(integtr_fct, type) and issubclass(integtr_fct, IntegratorFunction))):
+            if not (isinstance(integtr_fct, Integrator)
+                    or (isinstance(integtr_fct, type) and issubclass(integtr_fct, Integrator))):
                 raise TransferError("The function specified for the {} arg of {} ({}) must be an {}".
                                     format(repr(INTEGRATOR_FUNCTION), self.name, integtr_fct),
-                                    IntegratorFunction.__class__.__name__)
+                                    Integrator.__class__.__name__)
 
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
@@ -1575,5 +1575,5 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.integrator_function] if isinstance(self.integrator_function, IntegratorFunction) else [],
+            [self.integrator_function] if isinstance(self.integrator_function, Integrator) else [],
         ))

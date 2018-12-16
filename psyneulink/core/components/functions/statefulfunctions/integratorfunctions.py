@@ -79,7 +79,6 @@ __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'Buffer', 'DND',
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-
 class Integrator(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
     Integrator(                 \
