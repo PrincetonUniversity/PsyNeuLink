@@ -800,8 +800,6 @@ class WaldDist(DistributionFunction):
 # DDM solution options:
 
 
-# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
-
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
@@ -819,6 +817,7 @@ def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=No
     return (starting_point + threshold) / (2 * threshold)
 
 
+# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
 class DriftDiffusionAnalytical(DistributionFunction):  # -------------------------------------------------------------------------------
     """
     DriftDiffusionAnalytical(   \
