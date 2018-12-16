@@ -1,7 +1,7 @@
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import Integrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator, \
+    Integrator
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process

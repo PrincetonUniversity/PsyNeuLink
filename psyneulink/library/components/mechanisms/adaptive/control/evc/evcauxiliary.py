@@ -18,8 +18,7 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core.components.functions.function import Function_Base
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Buffer
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import Integrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import Buffer, Integrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.globals.context import ContextFlags

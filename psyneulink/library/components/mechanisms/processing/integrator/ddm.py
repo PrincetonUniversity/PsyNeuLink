@@ -353,8 +353,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import method_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
-    DriftDiffusionIntegrator, THRESHOLD, STARTING_POINT, DriftDiffusionAnalytical
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import Integrator
+    DriftDiffusionIntegrator, THRESHOLD, STARTING_POINT, DriftDiffusionAnalytical, Integrator
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
