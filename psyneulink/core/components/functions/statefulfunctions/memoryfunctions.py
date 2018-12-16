@@ -26,13 +26,21 @@ from collections.__init__ import deque, OrderedDict
 import numpy as np
 import typecheck as tc
 
-from psyneulink import BUFFER_FUNCTION, Param, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, Function_Base, NOISE, RATE, \
-    is_pref_set, ContextFlags, FunctionError, DND_FUNCTION, Distance, is_function_type, COSINE, OneHot, MIN_VAL, \
-    all_within_range
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+from psyneulink.core.components.functions.function import \
+    Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
+from psyneulink.core.components.functions.selectionfunctions import OneHot
+from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.globals.keywords import BUFFER_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
+from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+
+__all__ = ['Buffer', 'DND']
 
 
-class Buffer(IntegratorFunction):  # ------------------------------------------------------------------------------
+class Buffer(StatefulFunction):  # ------------------------------------------------------------------------------
     """
     Buffer(                     \
         default_variable=None,  \
@@ -138,7 +146,7 @@ class Buffer(IntegratorFunction):  # -------------------------------------------
 
     componentName = BUFFER_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Params(StatefulFunction.Params):
         rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
@@ -155,7 +163,7 @@ class Buffer(IntegratorFunction):  # -------------------------------------------
     @tc.typecheck
     def __init__(self,
                  # FIX: 12/11/18 JDC - NOT SAFE TO SPECIFY A MUTABLE TYPE AS DEFAULT
-                 default_variable=[],
+                 default_variable=None,
                  # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
                  # was failing.
                  # For now, updated default_variable, noise, and Alternatively, we can change validation on
@@ -171,6 +179,9 @@ class Buffer(IntegratorFunction):  # -------------------------------------------
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        if default_variable is None:
+            default_variable = []
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -301,7 +312,7 @@ DISTANCE_FUNCTION = 'distance_function'
 SELECTION_FUNCTION = 'selection_function'
 
 
-class DND(IntegratorFunction):  # ------------------------------------------------------------------------------
+class DND(StatefulFunction):  # ------------------------------------------------------------------------------
     """
     DND(                                             \
         default_variable=None,                       \
@@ -451,7 +462,7 @@ class DND(IntegratorFunction):  # ----------------------------------------------
 
     componentName = DND_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Params(StatefulFunction.Params):
         variable = Param([[0],[0]])
         retrieval_prob = Param(1.0, modulable=True)
         storage_prob = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])

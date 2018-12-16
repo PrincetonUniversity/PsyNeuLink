@@ -17,10 +17,14 @@
 import numpy as np
 import typecheck as tc
 import itertools
+import warnings
+import numbers
 
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION
+from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -28,18 +32,16 @@ __all__ = ['StatefulFunction']
 
 
 # FIX: √ RENAME AS StatefulFunction
-#      √ RENAME IntegratorFunction AS IntegratorFunction
-#      GO THROUGH AND SORT OUT IntegratorFunction VS. StatefulFunction IN DOCSTRINGS
-#      THEN EDIT StatefulFunction AND IntegratorFunction TO BE COMPLEMENTARY
-#      THEN MOVE Buffer AND DND TO THEIR OWN MemoryFunctions MODULE (WITH MemoryFunctions SUBCLASS OF StatefulFunctions)
+#      GO THROUGH AND SORT OUT IntegratorFunction VS. StatefulFunction IN DOCSTRINGS OF IntegratorFunctions and Mechanism
 
 
-class StatefulFunction(Function_Base):
-    # -------------------------------------------------------------------------------
+class StatefulFunction(Function_Base): # -------------------------------------------------------------------------------
     """
     StatefulFunction(           \
         default_variable=None,  \
         initializer,            \
+        rate=1.0,               \
+        noise=0.0,              \
         params=None,            \
         owner=None,             \
         prefs=None,             \
@@ -47,8 +49,9 @@ class StatefulFunction(Function_Base):
 
     .. _StatefulFunction:
 
-    Function that maintains the state of it previous result (in `previous_value <StatefulFunction.previous_value>`)
-    and may use it in processing the current input provided in `variable <StatefulFunction.variable>`.
+    Base class for Functions that maintain the state of previous result (in `previous_value
+    <StatefulFunction.previous_value>`) and may use it in processing the current input provided in `variable
+    <StatefulFunction.variable>`.
 
     Arguments
     ---------
@@ -60,6 +63,14 @@ class StatefulFunction(Function_Base):
         specifies initial value for `prvevious_value <StatefulFunction.previous_value>`.  If it is a list or array,
         it must be the same length as `default_variable <StatefulFunction.default_variable>` (see `initializer
         <StatefulFunction.initializer>` for details).
+
+    rate : float, list or 1d array : default 1.0
+        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        `variable <StatefulFunction.default_variable>` (see `rate <StatefulFunction.rate>` for details).
+
+    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
+        specifies random value to be added in each call to `function <StatefulFunction.function>`. (see
+        `noise <StatefulFunction.noise>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -80,21 +91,6 @@ class StatefulFunction(Function_Base):
 
     variable : number or array
         current input value.
-
-    noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <StatefulFunction.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <StatefulFunction.default_variable>`.
-        If noise is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list
-        or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
-
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
 
     initializer : 1d array or list
         determines initial value assigned to `previous_value <StatefulFunction.previous_value>`.  If initializer is a
@@ -117,6 +113,27 @@ class StatefulFunction(Function_Base):
         <StatefulFunction.initializers>`. In most cases, the stateful_attributes, in that order, are the return values
         of the function.
 
+    rate : float or 1d array
+        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
+        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
+        applies to all elements of `variable <StatefulFunction.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <StatefulFunction.variable>`.
+
+    noise : float, function, list, or 1d array
+        specifies random value to be added in each call to `function <StatefulFunction.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <StatefulFunction.default_variable>`.
+        If noise is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
+
+        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
+        value will be used to construct the standard DDM probability distribution. For all other types of integration,
+        in order to generate random noise, we recommend that you instead select a probability distribution function
+        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
+        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -138,11 +155,36 @@ class StatefulFunction(Function_Base):
             Attributes
             ----------
 
+                initializer
+                    see `initializer <StatefulFunction.initializer>`
+
+                    :default value: np.array([0])
+                    :type: array
+
+
+                rate
+                    see `rate <StatefulFunction.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                noise
+                    see `noise <StateFulFunction.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
         """
+        noise = Param(0.0, modulable=True)
+        rate = Param(1.0, modulable=True)
         previous_value = np.array([0])
         initializer = np.array([0])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
 
     @tc.typecheck
     def __init__(self,
@@ -192,8 +234,183 @@ class StatefulFunction(Function_Base):
         self.has_initializers = True
 
     def _validate(self):
+        self._validate_rate(self.instance_defaults.rate)
         self._validate_initializers(self.instance_defaults.variable)
         super()._validate()
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+
+            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign ClassDefaults.variable accordingly
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
+                    #       StatefulFunction's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
+                    #       case, the StatefulFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable,
+                            )
+                    else:
+                        raise FunctionError(
+                            "The length of the array specified for the rate parameter of {} ({}) "
+                            "must match the length of the default input ({}).".format(
+                                self.name,
+                                # rate,
+                                len(rate),
+                                np.array(self.instance_defaults.variable).size,
+                                # self.instance_defaults.variable,
+                            )
+                        )
+                        # OLD:
+                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                        # to have a rate parameter of type ndarray/list
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
+            self._validate_noise(target_set[NOISE])
+
+    def _validate_initializers(self, default_variable):
+        for initial_value_name in self.initializers:
+
+            initial_value = self.get_current_function_param(initial_value_name)
+
+            if isinstance(initial_value, (list, np.ndarray)):
+                if len(initial_value) != 1:
+                    # np.atleast_2d may not be necessary here?
+                    if np.shape(np.atleast_2d(initial_value)) != np.shape(np.atleast_2d(default_variable)):
+                        raise FunctionError("{}'s {} ({}) is incompatible with its default_variable ({}) ."
+                                            .format(self.name, initial_value_name, initial_value, default_variable))
+            elif not isinstance(initial_value, (float, int)):
+                raise FunctionError("{}'s {} ({}) must be a number or a list/array of numbers."
+                                    .format(self.name, initial_value_name, initial_value))
+
+    def _validate_rate(self, rate):
+        # FIX: CAN WE JUST GET RID OF THIS?
+        # kmantel: this duplicates much code in _validate_params above, but that calls _instantiate_defaults
+        # which I don't think is the right thing to do here, but if you don't call it in _validate_params
+        # then a lot of things don't get instantiated properly
+        if rate is not None:
+            if isinstance(rate, list):
+                rate = np.asarray(rate)
+
+            rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
+            if isinstance(rate, np.ndarray):
+                # kmantel: current test_gating test depends on 2d rate
+                #   this should be looked at but for now this restriction is removed
+                # if rate.ndim > 1:
+                #     raise FunctionError(rate_type_msg.format(self.name, rate))
+                pass
+            elif not isinstance(rate, numbers.Number):
+                raise FunctionError(rate_type_msg.format(self.name, rate))
+
+            if isinstance(rate, np.ndarray) and not iscompatible(rate, self.instance_defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                        self.instance_defaults.variable = np.zeros_like(np.array(rate))
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable,
+                            )
+                        self._instantiate_value()
+                        self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+                    else:
+                        raise FunctionError(
+                            "The length of the array specified for the rate parameter of {} ({})"
+                            "must match the length of the default input ({}).".format(
+                                len(rate),
+                                # rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                # self.instance_defaults.variable,
+                            )
+                        )
+
+    # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
+    # need to be executed
+    def _validate_noise(self, noise):
+        # Noise is a list or array
+        if isinstance(noise, (np.ndarray, list)):
+            if len(noise) == 1:
+                pass
+            # Variable is a list/array
+            elif (not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable)
+                  and not iscompatible(np.atleast_1d(noise), self.instance_defaults.variable) and len(noise) > 1):
+                raise FunctionError(
+                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
+                    "must be specified as a float, a function, or an array of the appropriate shape ({})."
+                        .format(noise, self.instance_defaults.variable, self.name,
+                                np.shape(np.array(self.instance_defaults.variable))))
+            else:
+                for i in range(len(noise)):
+                    if isinstance(noise[i], DistributionFunction):
+                        noise[i] = noise[i]._execute
+                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                        raise FunctionError("The elements of a noise list or array must be floats or functions. "
+                                            "{} is not a valid noise element for {}".format(noise[i], self.name))
+
+        # Otherwise, must be a float, int or function
+        elif not isinstance(noise, (float, int)) and not callable(noise):
+            raise FunctionError(
+                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
+                    .format(noise, self.name))
+
+    def _try_execute_param(self, param, var):
+
+        # param is a list; if any element is callable, execute it
+        if isinstance(param, (np.ndarray, list)):
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            param = np.atleast_2d(param)
+            for i in range(len(param)):
+                for j in range(len(param[i])):
+                    if callable(param[i][j]):
+                        param[i][j] = param[i][j]()
+        # param is one function
+        elif callable(param):
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            new_param = []
+            for row in np.atleast_2d(var):
+                new_row = []
+                for item in row:
+                    new_row.append(param())
+                new_param.append(new_row)
+            param = new_param
+
+        return param
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
@@ -212,21 +429,6 @@ class StatefulFunction(Function_Base):
         self.has_initializers = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
-
-    def _validate_initializers(self, default_variable):
-        for initial_value_name in self.initializers:
-
-            initial_value = self.get_current_function_param(initial_value_name)
-
-            if isinstance(initial_value, (list, np.ndarray)):
-                if len(initial_value) != 1:
-                    # np.atleast_2d may not be necessary here?
-                    if np.shape(np.atleast_2d(initial_value)) != np.shape(np.atleast_2d(default_variable)):
-                        raise FunctionError("{}'s {} ({}) is incompatible with its default_variable ({}) ."
-                                            .format(self.name, initial_value_name, initial_value, default_variable))
-            elif not isinstance(initial_value, (float, int)):
-                raise FunctionError("{}'s {} ({}) must be a number or a list/array of numbers."
-                                    .format(self.name, initial_value_name, initial_value))
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         if execution_context is None:

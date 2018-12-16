@@ -10,5 +10,5 @@ StatefulFunctions
 .. toctree::
    :maxdepth: 1
 
-   IntegratorMechanisms
-   MemoryMechanisms
+   IntegratorFunctions
+   MemoryFunctions
