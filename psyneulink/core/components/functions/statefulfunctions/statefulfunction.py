@@ -27,6 +27,7 @@ from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.context import ContextFlags
 
 __all__ = ['StatefulFunction']
 
