@@ -4667,7 +4667,7 @@ def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=No
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
 class DriftDiffusionAnalytical(DistributionFunction):  # -------------------------------------------------------------------------------
     """
-    DriftDiffusionAnalytical(                 \
+    DriftDiffusionAnalytical(   \
         default_variable=None,  \
         drift_rate=1.0,         \
         threshold=1.0,          \
@@ -4778,7 +4778,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(StatefulFunction.Params):
+    class Params(DistributionFunction.Params):
         """
             Attributes
             ----------
@@ -5293,7 +5293,7 @@ class NavarroAndFuss(DistributionFunction):  # ---------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(StatefulFunction.Params):
+    class Params(DistributionFunction.Params):
         """
             Attributes
             ----------
