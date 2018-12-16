@@ -795,12 +795,10 @@ class WaldDist(DistributionFunction):
         return self.convert_output_type(result)
 
 
-# Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
-# NOISE = 'noise' -- Defined in Keywords
 # DDM solution options:
 
 
-# Results from Navarro and Fuss DDM solution (indices for return value tuple)
+# Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
 THRESHOLD = 'threshold'
@@ -1324,6 +1322,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         return [dRR_dZ, dRR_dA]
 
 
+# Results from Navarro and Fuss DDM solution (indices for return value tuple)
 class NF_Results(IntEnum):
     MEAN_ER = 0
     MEAN_RT = 1
