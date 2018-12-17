@@ -954,7 +954,7 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
     ----------
 
     variable : number or array
-        **Ignored** by the ConstantIntegrator function. Refer to LCAIntegrator or AdaptiveIntegrator for integrator
+        **Ignored** by the ConstantIntegrator function. Use `LCAIntegrator` or `AdaptiveIntegrator` for integrator
          functions that depend on both a prior value and a new value (variable).
 
     rate : float or 1d array
@@ -3294,9 +3294,12 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     .. _AccumulatorIntegrator:
 
-    Integrates prior value by multiplying `previous_value <AccumulatorIntegrator.previous_value>` by `rate
-    <IntegratorFunction.rate>` and adding `increment <AccumulatorIntegrator.increment>` and  `noise
-    <AccumulatorIntegrator.noise>`. Ignores `variable <IntegratorFunction.variable>`).
+    `function <AccumulatorIntegrator.function>` returns:
+
+    .. math::
+        previous_value * rate + increment  + noise
+
+    (ignores `variable <IntegratorFunction.variable>`).
 
     Arguments
     ---------
@@ -3344,8 +3347,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     ----------
 
     variable : number or array
-        **Ignored** by the AccumulatorIntegrator function. Refer to LCAIntegrator or AdaptiveIntegrator for
-        integrator functions that depend on both a prior value and a new value (variable).
+        **Ignored** by the AccumulatorIntegrator function. Use `LCAIntegrator` or `AdaptiveIntegrator` for integrator
+         functions that depend on both a prior value and a new value (variable).
 
     rate : float or 1d array
         determines the multiplicative decrement of `previous_value <AccumulatorIntegrator.previous_value>` (i.e., the
@@ -3541,8 +3544,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  params=None,
                  context=None):
         """
-        Return: `previous_value <ConstantIntegrator.previous_value>` combined with `rate <ConstantIntegrator.rate>` and
-        `noise <ConstantIntegrator.noise>`.
 
         Arguments
         ---------
@@ -3600,17 +3601,12 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
 
     .. _LCAIntegrator:
 
-    Integrate current value of `variable <LCAIntegrator.variable>` with its prior value:
+    Implements Leaky Competitive Accumulator (LCA) described in `Usher & McClelland (2001)
+    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.  `function <LCAIntegrator.function>` returns:
 
     .. math::
 
         rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
-
-    COMMENT:
-    `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
-    `variable <variable.LCAIntegrator.variable>` + \
-    `noise <LCAIntegrator.noise>`;
-    COMMENT
 
     Arguments
     ---------
@@ -3788,11 +3784,6 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
                  params=None,
                  context=None):
         """
-        Return:
-
-        .. math::
-
-            rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
         Arguments
         ---------
