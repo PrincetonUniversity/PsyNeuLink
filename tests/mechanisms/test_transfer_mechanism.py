@@ -900,6 +900,7 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
                                       pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skip, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+    # FIXME: Incorrect T.integrator_function.instance_defaults.variable reported
     def test_transfer_mech_array_assignments_fct_noise(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -929,6 +930,7 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
                                       pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skip, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+    # FIXME: Incorrect T.integrator_function.instance_defaults.variable reported
     def test_transfer_mech_array_assignments_fct_over_mech_noise(self, benchmark, mode):
 
         T = TransferMechanism(
