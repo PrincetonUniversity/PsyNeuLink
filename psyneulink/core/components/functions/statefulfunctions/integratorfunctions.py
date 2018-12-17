@@ -400,40 +400,16 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
-
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <SimpleIntegratorFunction.offset>`
 
                     :default value: 0.0
                     :type: float
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <SimpleIntegratorFunction.rate>`
 
                     :default value: 1.0
-                    :type: float
-
-                rest
-                    see `rest <InteractiveActivation.rest>`
-
-                    :default value: 0.0
                     :type: float
 
         """
@@ -734,12 +710,6 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
                     :default value: 1.0
                     :type: float
 
-                offset
-                    see `offset <InteractiveActivation.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
                 rate
                     see `rate <InteractiveActivation.rate>`
 
@@ -1012,40 +982,28 @@ class ConstantIntegratorFunction(IntegratorFunction):  # -----------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
+                noise
+                    see `noise <ConstantIntegratorFunction.noise>`
 
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
+                    :default value: 0.0
                     :type: float
 
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <ConstantIntegratorFunction.offset>`
 
                     :default value: 0.0
                     :type: float
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
-
-                    :default value: 1.0
-                    :type: float
-
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                    see `rate <ConstantIntegratorFunction.rate>`
 
                     :default value: 0.0
+                    :type: float
+
+                scale
+                    see `scale <ConstantIntegratorFunction.scale>`
+
+                    :default value: 1.0
                     :type: float
 
         """
@@ -1293,40 +1251,16 @@ class AdaptiveIntegratorFunction(IntegratorFunction):  # -----------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
-
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <AdaptiveIntegratorFunction.offset>`
 
                     :default value: 0.0
                     :type: float
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <AdaptiveIntegratorFunction.rate>`
 
                     :default value: 1.0
-                    :type: float
-
-                rest
-                    see `rest <InteractiveActivation.rest>`
-
-                    :default value: 0.0
                     :type: float
 
         """
@@ -1694,40 +1628,40 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
-
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <DriftDiffusionIntegratorFunction.offset>`
 
                     :default value: 0.0
                     :type: float
+
+                previous_time
+                    see `previous_time <DriftDiffusionIntegratorFunction.previous_time>`
+
+                    :default value: None
+                    :type:
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <DriftDiffusionIntegratorFunction.rate>`
 
                     :default value: 1.0
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                t0
+                    see `t0 <DriftDiffusionIntegratorFunction.t0>`
 
                     :default value: 0.0
+                    :type: float
+
+                threshold
+                    see `threshold <DriftDiffusionIntegratorFunction.threshold>`
+
+                    :default value: 100.0
+                    :type: float
+
+                time_step_size
+                    see `time_step_size <DriftDiffusionIntegratorFunction.time_step_size>`
+
+                    :default value: 1.0
                     :type: float
 
         """
@@ -1994,39 +1928,39 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
             ----------
 
                 decay
-                    see `decay <InteractiveActivation.decay>`
-
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
+                    see `decay <OrnsteinUhlenbeckIntegratorFunction.decay>`
 
                     :default value: 1.0
                     :type: float
 
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <OrnsteinUhlenbeckIntegratorFunction.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                previous_time
+                    see `previous_time <OrnsteinUhlenbeckIntegratorFunction.previous_time>`
 
                     :default value: 0.0
                     :type: float
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <OrnsteinUhlenbeckIntegratorFunction.rate>`
 
                     :default value: 1.0
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                t0
+                    see `t0 <OrnsteinUhlenbeckIntegratorFunction.t0>`
 
                     :default value: 0.0
+                    :type: float
+
+                time_step_size
+                    see `time_step_size <OrnsteinUhlenbeckIntegratorFunction.time_step_size>`
+
+                    :default value: 1.0
                     :type: float
 
         """
@@ -2547,38 +2481,153 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
+                variable
+                    see `variable <FHNIntegratorFunction.variable>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                a_v
+                    see `a_v <FHNIntegratorFunction.a_v>`
+
+                    :default value: 0.3333333333333333
+                    :type: float
+
+                a_w
+                    see `a_w <FHNIntegratorFunction.a_w>`
 
                     :default value: 1.0
                     :type: float
 
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
+                b_v
+                    see `b_v <FHNIntegratorFunction.b_v>`
+
+                    :default value: 0.0
+                    :type: float
+
+                b_w
+                    see `b_w <FHNIntegratorFunction.b_w>`
+
+                    :default value: -0.8
+                    :type: float
+
+                c_v
+                    see `c_v <FHNIntegratorFunction.c_v>`
 
                     :default value: 1.0
                     :type: float
 
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
+                c_w
+                    see `c_w <FHNIntegratorFunction.c_w>`
+
+                    :default value: 0.7
+                    :type: float
+
+                d_v
+                    see `d_v <FHNIntegratorFunction.d_v>`
+
+                    :default value: 0.0
+                    :type: float
+
+                e_v
+                    see `e_v <FHNIntegratorFunction.e_v>`
+
+                    :default value: -1.0
+                    :type: float
+
+                f_v
+                    see `f_v <FHNIntegratorFunction.f_v>`
+
+                    :default value: 1.0
+                    :type: float
+
+                initial_v
+                    see `initial_v <FHNIntegratorFunction.initial_v>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                initial_w
+                    see `initial_w <FHNIntegratorFunction.initial_w>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                integration_method
+                    see `integration_method <FHNIntegratorFunction.integration_method>`
+
+                    :default value: `RK4`
+                    :type: str
+
+                mode
+                    see `mode <FHNIntegratorFunction.mode>`
 
                     :default value: 1.0
                     :type: float
 
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <FHNIntegratorFunction.offset>`
 
                     :default value: 0.0
                     :type: float
 
-                rate
-                    see `rate <InteractiveActivation.rate>`
+                previous_time
+                    see `previous_time <FHNIntegratorFunction.previous_time>`
+
+                    :default value: 0.0
+                    :type: float
+
+                previous_v
+                    see `previous_v <FHNIntegratorFunction.previous_v>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                previous_w
+                    see `previous_w <FHNIntegratorFunction.previous_w>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                scale
+                    see `scale <FHNIntegratorFunction.scale>`
 
                     :default value: 1.0
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                t_0
+                    see `t_0 <FHNIntegratorFunction.t_0>`
+
+                    :default value: 0.0
+                    :type: float
+
+                threshold
+                    see `threshold <FHNIntegratorFunction.threshold>`
+
+                    :default value: -1.0
+                    :type: float
+
+                time_constant_v
+                    see `time_constant_v <FHNIntegratorFunction.time_constant_v>`
+
+                    :default value: 1.0
+                    :type: float
+
+                time_constant_w
+                    see `time_constant_w <FHNIntegratorFunction.time_constant_w>`
+
+                    :default value: 12.5
+                    :type: float
+
+                time_step_size
+                    see `time_step_size <FHNIntegratorFunction.time_step_size>`
+
+                    :default value: 0.05
+                    :type: float
+
+                uncorrelated_activity
+                    see `uncorrelated_activity <FHNIntegratorFunction.uncorrelated_activity>`
 
                     :default value: 0.0
                     :type: float
@@ -3414,41 +3463,17 @@ class AccumulatorIntegratorFunction(IntegratorFunction):  # --------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
+                increment
+                    see `increment <AccumulatorIntegratorFunction.increment>`
 
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                offset
-                    see `offset <InteractiveActivation.offset>`
-
-                    :default value: 0.0
-                    :type: float
+                    :default value: None
+                    :type:
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <AccumulatorIntegratorFunction.rate>`
 
-                    :default value: 1.0
-                    :type: float
-
-                rest
-                    see `rest <InteractiveActivation.rest>`
-
-                    :default value: 0.0
-                    :type: float
+                    :default value: None
+                    :type:
 
         """
         rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -3709,40 +3734,22 @@ class LCAIntegratorFunction(IntegratorFunction):  # ----------------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
-
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <LCAIntegratorFunction.offset>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: None
+                    :type:
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <LCAIntegratorFunction.rate>`
 
                     :default value: 1.0
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                time_step_size
+                    see `time_step_size <LCAIntegratorFunction.time_step_size>`
 
-                    :default value: 0.0
+                    :default value: 0.1
                     :type: float
 
         """
@@ -4003,41 +4010,95 @@ class AGTUtilityIntegratorFunction(IntegratorFunction):  # ---------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
+                initial_long_term_utility
+                    see `initial_long_term_utility <AGTUtilityIntegratorFunction.initial_long_term_utility>`
+
+                    :default value: 0.0
+                    :type: float
+
+                initial_short_term_utility
+                    see `initial_short_term_utility <AGTUtilityIntegratorFunction.initial_short_term_utility>`
+
+                    :default value: 0.0
+                    :type: float
+
+                long_term_bias
+                    see `long_term_bias <AGTUtilityIntegratorFunction.long_term_bias>`
+
+                    :default value: 0.0
+                    :type: float
+
+                long_term_gain
+                    see `long_term_gain <AGTUtilityIntegratorFunction.long_term_gain>`
 
                     :default value: 1.0
                     :type: float
 
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
+                long_term_rate
+                    see `long_term_rate <AGTUtilityIntegratorFunction.long_term_rate>`
 
-                    :default value: 1.0
+                    :default value: 0.1
                     :type: float
 
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
+                long_term_utility_logistic
+                    see `long_term_utility_logistic <AGTUtilityIntegratorFunction.long_term_utility_logistic>`
 
-                    :default value: 1.0
-                    :type: float
+                    :default value: None
+                    :type:
 
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <AGTUtilityIntegratorFunction.offset>`
 
                     :default value: 0.0
                     :type: float
 
+                operation
+                    see `operation <AGTUtilityIntegratorFunction.operation>`
+
+                    :default value: `S*L`
+                    :type: str
+
+                previous_long_term_utility
+                    see `previous_long_term_utility <AGTUtilityIntegratorFunction.previous_long_term_utility>`
+
+                    :default value: None
+                    :type:
+
+                previous_short_term_utility
+                    see `previous_short_term_utility <AGTUtilityIntegratorFunction.previous_short_term_utility>`
+
+                    :default value: None
+                    :type:
+
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <AGTUtilityIntegratorFunction.rate>`
 
                     :default value: 1.0
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                short_term_bias
+                    see `short_term_bias <AGTUtilityIntegratorFunction.short_term_bias>`
 
                     :default value: 0.0
                     :type: float
+
+                short_term_gain
+                    see `short_term_gain <AGTUtilityIntegratorFunction.short_term_gain>`
+
+                    :default value: 1.0
+                    :type: float
+
+                short_term_rate
+                    see `short_term_rate <AGTUtilityIntegratorFunction.short_term_rate>`
+
+                    :default value: 0.9
+                    :type: float
+
+                short_term_utility_logistic
+                    see `short_term_utility_logistic <AGTUtilityIntegratorFunction.short_term_utility_logistic>`
+
+                    :default value: None
+                    :type:
 
         """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])

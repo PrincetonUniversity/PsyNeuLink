@@ -813,22 +813,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             Attributes
             ----------
 
-                matrix
-                    see `matrix <RecurrentTransferMechanism.matrix>`
-
-                    :default value: `HOLLOW_MATRIX`
-                    :type: str
-
                 auto
                     see `auto <RecurrentTransferMechanism.auto>`
 
                     :default value: 1
-                    :type: int
-
-                hetero
-                    see `hetero <RecurrentTransferMechanism.hetero>`
-
-                    :default value: 0
                     :type: int
 
                 combination_function
@@ -837,11 +825,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                integration_rate
-                    see `integration_rate <RecurrentTransferMechanism.integration_rate>`
+                convergence_function
+                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
 
-                    :default value: 0.5
-                    :type: float
+                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
+                    :type: `Function`
 
                 enable_learning
                     see `enable_learning <RecurrentTransferMechanism.enable_learning>`
@@ -849,23 +837,17 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: False
                     :type: bool
 
-                noise
-                    see `noise <RecurrentTransferMechanism.noise>`
+                hetero
+                    see `hetero <RecurrentTransferMechanism.hetero>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 0
+                    :type: int
 
-                smoothing_factor
-                    see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
+                integration_rate
+                    see `integration_rate <RecurrentTransferMechanism.integration_rate>`
 
                     :default value: 0.5
                     :type: float
-
-                convergence_function
-                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
-
-                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
-                    :type: `Function`
 
                 learning_condition
                     see `learning_condition <RecurrentTransferMechanism.learning_condition>`
@@ -884,6 +866,24 @@ class RecurrentTransferMechanism(TransferMechanism):
 
                     :default value: None
                     :type:
+
+                matrix
+                    see `matrix <RecurrentTransferMechanism.matrix>`
+
+                    :default value: `HOLLOW_MATRIX`
+                    :type: str
+
+                noise
+                    see `noise <RecurrentTransferMechanism.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                smoothing_factor
+                    see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
+
+                    :default value: 0.5
+                    :type: float
 
         """
         matrix = Param(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)

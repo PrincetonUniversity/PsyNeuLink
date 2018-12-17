@@ -204,44 +204,15 @@ class LeabraFunction(Function_Base):
             Attributes
             ----------
 
-                hidden_layers
-                    see `hidden_layers <LeabraMechanism.hidden_layers>`
+                variable
+                    see `variable <LeabraFunction.variable>`
 
-                    :default value: 0
-                    :type: int
-
-                hidden_sizes
-                    see `hidden_sizes <LeabraMechanism.hidden_sizes>`
-
-                    :default value: None
-                    :type:
-
-                input_size
-                    see `input_size <LeabraMechanism.input_size>`
-
-                    :default value: 1
-                    :type: int
+                    :default value: numpy.array([[0], [0]])
+                    :type: numpy.ndarray
+                    :read only: True
 
                 network
-                    see `network <LeabraMechanism.network>`
-
-                    :default value: None
-                    :type:
-
-                output_size
-                    see `output_size <LeabraMechanism.output_size>`
-
-                    :default value: 1
-                    :type: int
-
-                quarter_size
-                    see `quarter_size <LeabraMechanism.quarter_size>`
-
-                    :default value: 50
-                    :type: int
-
-                training_flag
-                    see `training_flag <LeabraMechanism.training_flag>`
+                    see `network <LeabraFunction.network>`
 
                     :default value: None
                     :type:

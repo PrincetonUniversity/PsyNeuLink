@@ -829,18 +829,16 @@ class Process(Process_Base):
             ----------
 
                 variable
-                    see `variable <ProcessInputState.variable>`
+                    see `variable <Process.variable>`
 
-                    :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: None
+                    :type:
 
-                value
-                    see `value <ProcessInputState.value>`
+                input
+                    see `input <Process.input>`
 
-                    :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: None
+                    :type:
 
         """
         variable = None

@@ -159,20 +159,25 @@ class StatefulFunction(Function_Base): # ---------------------------------------
                 initializer
                     see `initializer <StatefulFunction.initializer>`
 
-                    :default value: np.array([0])
-                    :type: array
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
 
+                noise
+                    see `noise <StatefulFunction.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                previous_value
+                    see `previous_value <StatefulFunction.previous_value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
 
                 rate
                     see `rate <StatefulFunction.rate>`
 
                     :default value: 1.0
-                    :type: float
-
-                noise
-                    see `noise <StateFulFunction.noise>`
-
-                    :default value: 0.0
                     :type: float
 
         """

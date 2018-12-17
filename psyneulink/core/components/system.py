@@ -860,18 +860,10 @@ class System(System_Base):
             ----------
 
                 variable
-                    see `variable <SystemInputState.variable>`
+                    see `variable <System.variable>`
 
-                    :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                value
-                    see `value <SystemInputState.value>`
-
-                    :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: None
+                    :type:
 
         """
         variable = None

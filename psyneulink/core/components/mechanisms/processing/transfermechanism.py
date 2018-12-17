@@ -825,43 +825,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             Attributes
             ----------
 
-                integrator_mode
-                    see `integrator_mode <TransferMechanism.integrator_mode>`
-
-                    :default value: False
-                    :type: bool
-
-                integrator_function_value
-                    see `integrator_function_value <TransferMechanism.integrator_function_value>`
-
-                    :default value: [[0]]
-                    :type: list
-                    :read only: True
-
-                initial_value
-                    see `initial_value <TransferMechanism.initial_value>`
+                clip
+                    see `clip <TransferMechanism.clip>`
 
                     :default value: None
                     :type:
-
-                previous_value
-                    see `previous_value <TransferMechanism.previous_value>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                integration_rate
-                    see `integration_rate <TransferMechanism.integration_rate>`
-
-                    :default value: 0.5
-                    :type: float
-
-                on_resume_integrator_mode
-                    see `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
-
-                    :default value: `INSTANTAENOUS_MODE_VALUE`
-                    :type: str
 
                 convergence_criterion
                     see `convergence_criterion <TransferMechanism.convergence_criterion>`
@@ -875,6 +843,31 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: `Distance`(metric=difference, normalize=False)
                     :type: `Function`
 
+                initial_value
+                    see `initial_value <TransferMechanism.initial_value>`
+
+                    :default value: None
+                    :type:
+
+                integration_rate
+                    see `integration_rate <TransferMechanism.integration_rate>`
+
+                    :default value: 0.5
+                    :type: float
+
+                integrator_function_value
+                    see `integrator_function_value <TransferMechanism.integrator_function_value>`
+
+                    :default value: [[0]]
+                    :type: list
+                    :read only: True
+
+                integrator_mode
+                    see `integrator_mode <TransferMechanism.integrator_mode>`
+
+                    :default value: False
+                    :type: bool
+
                 max_passes
                     see `max_passes <TransferMechanism.max_passes>`
 
@@ -887,12 +880,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: 0.0
                     :type: float
 
-                clip
-                    see `clip <TransferMechanism.clip>`
+                on_resume_integrator_mode
+                    see `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
+
+                    :default value: `INSTANTAENOUS_MODE_VALUE`
+                    :type: str
+
+                previous_value
+                    see `previous_value <TransferMechanism.previous_value>`
 
                     :default value: None
                     :type:
-
+                    :read only: True
 
         """
         integrator_mode = Param(False, setter=_integrator_mode_setter)

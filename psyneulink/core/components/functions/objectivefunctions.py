@@ -51,18 +51,17 @@ class ObjectiveFunction(Function_Base):
             Attributes
             ----------
 
-                variable
-                    see `variable <Distance.variable>`
-
-                    :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
-                    :read only: True
-
                 metric
-                    see `metric <Distance.metric>`
+                    see `metric <ObjectiveFunction.metric>`
 
-                    :default value: `DIFFERENCE`
-                    :type: str
+                    :default value: None
+                    :type:
+
+                normalize
+                    see `normalize <ObjectiveFunction.normalize>`
+
+                    :default value: False
+                    :type: bool
 
         """
         normalize = False
@@ -198,18 +197,23 @@ COMMENT
             Attributes
             ----------
 
-                variable
-                    see `variable <Distance.variable>`
+                matrix
+                    see `matrix <Stability.matrix>`
 
-                    :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: `HOLLOW_MATRIX`
+                    :type: str
 
                 metric
-                    see `metric <Distance.metric>`
+                    see `metric <Stability.metric>`
 
-                    :default value: `DIFFERENCE`
+                    :default value: `ENERGY`
                     :type: str
+
+                transfer_fct
+                    see `transfer_fct <Stability.transfer_fct>`
+
+                    :default value: None
+                    :type:
 
         """
         matrix = HOLLOW_MATRIX
