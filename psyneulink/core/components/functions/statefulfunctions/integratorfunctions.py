@@ -282,244 +282,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
 
 
-class SimpleIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------
-    """
-    SimpleIntegrator(           \
-        default_variable=None,  \
-        rate=1.0,               \
-        noise=0.0,              \
-        initializer,            \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
-        )
-
-    .. _SimpleIntegrator:
-
-    `function <SimpleIntegrator.function>` returns:
-
-    .. math::
-
-        previous_value + rate * variable + noise
-
-
-    Arguments
-    ---------
-
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <SimpleIntegrator.default_variable>` (see `rate <SimpleIntegrator.rate>` for details).
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <SimpleIntegrator.function>`. (see
-        `noise <SimpleIntegrator.noise>` for details).
-
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>`
-        for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        current input value some portion of which (determined by `rate <SimpleIntegrator.rate>`) will be
-        added to the prior value;  if it is an array, each element is independently integrated.
-
-    rate : float or 1d array
-        determines the rate of integration based on current and prior values. If it has a single element, it applies
-        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
-
-    noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <SimpleIntegrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <SimpleIntegrator.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
-
-    previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = SIMPLE_INTEGRATOR_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    multiplicative_param = RATE
-    additive_param = OFFSET
-
-    class Params(IntegratorFunction.Params):
-        """
-            Attributes
-            ----------
-
-                decay
-                    see `decay <InteractiveActivation.decay>`
-
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                offset
-                    see `offset <InteractiveActivation.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
-                rate
-                    see `rate <InteractiveActivation.rate>`
-
-                    :default value: 1.0
-                    :type: float
-
-                rest
-                    see `rest <InteractiveActivation.rest>`
-
-                    :default value: 0.0
-                    :type: float
-
-        """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 noise=0.0,
-                 offset=None,
-                 initializer=None,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  params=params)
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        self.has_initializers = True
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-        Arguments
-        ---------
-
-        variable : number, list or array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        updated value of integral : 2d array
-
-        """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        if offset is None:
-            offset = 0.0
-
-        # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
-        previous_value = self.get_previous_value(execution_id)
-        new_value = variable
-
-        value = previous_value + (new_value * rate) + noise
-
-        adjusted_value = value + offset
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(adjusted_value, execution_id)
-
-        return self.convert_output_type(adjusted_value)
-
-
 class ConstantIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
@@ -1100,6 +862,244 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         return self.convert_output_type(value)
 
 
+class SimpleIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------
+    """
+    SimpleIntegrator(           \
+        default_variable=None,  \
+        rate=1.0,               \
+        noise=0.0,              \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _SimpleIntegrator:
+
+    `function <SimpleIntegrator.function>` returns:
+
+    .. math::
+
+        previous_value + rate * variable + noise
+
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d array : default 1.0
+        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        `variable <SimpleIntegrator.default_variable>` (see `rate <SimpleIntegrator.rate>` for details).
+
+    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
+        specifies random value to be added in each call to `function <SimpleIntegrator.function>`. (see
+        `noise <SimpleIntegrator.noise>` for details).
+
+    initializer float, list or 1d array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>`
+        for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value some portion of which (determined by `rate <SimpleIntegrator.rate>`) will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    rate : float or 1d array
+        determines the rate of integration based on current and prior values. If it has a single element, it applies
+        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
+
+    noise : float, function, list, or 1d array
+        specifies random value to be added in each call to `function <SimpleIntegrator.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
+
+        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
+
+
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
+
+    initializer : float, 1d array or list
+        determines the starting value for integration (i.e., the value to which
+        `previous_value <SimpleIntegrator.previous_value>` is set.
+
+        If initializer is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
+
+    previous_value : 1d array : default ClassDefaults.variable
+        stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = SIMPLE_INTEGRATOR_FUNCTION
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                decay
+                    see `decay <InteractiveActivation.decay>`
+
+                    :default value: 1.0
+                    :type: float
+
+                max_val
+                    see `max_val <InteractiveActivation.max_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                min_val
+                    see `min_val <InteractiveActivation.min_val>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <InteractiveActivation.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <InteractiveActivation.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                rest
+                    see `rest <InteractiveActivation.rest>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: parameter_spec = 1.0,
+                 noise=0.0,
+                 offset=None,
+                 initializer=None,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  offset=offset,
+                                                  params=params)
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+        Arguments
+        ---------
+
+        variable : number, list or array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+
+        offset = self.get_current_function_param(OFFSET, execution_id)
+        if offset is None:
+            offset = 0.0
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+        previous_value = self.get_previous_value(execution_id)
+        new_value = variable
+
+        value = previous_value + (new_value * rate) + noise
+
+        adjusted_value = value + offset
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(adjusted_value, execution_id)
+
+        return self.convert_output_type(adjusted_value)
+
+
 class AdaptiveIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
     """
     AdaptiveIntegrator(                 \
@@ -1119,7 +1119,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     `function <AdapativeIntegrator.function>` returns exponentially weighted time-average of input:
 
     .. math::
-        (rate * variable) + ((1-rate) * previous_value)  + noise
+        ((1-rate) * previous_value) + (rate * variable)  + noise
 
     Arguments
     ---------
