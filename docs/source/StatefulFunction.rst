@@ -1,5 +1,5 @@
-StatefulFunctions
-=================
+StatefulFunction
+================
 
 .. toctree::
    :maxdepth: 3

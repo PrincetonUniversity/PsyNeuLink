@@ -729,10 +729,11 @@ class PredictionMechanism(IntegratorMechanism):
       are assigned as the `Linear` function's `slope <Linear.slope>` and `intercept <Linear.intercept>` parameters,
       respectively.
 
-    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegratorFunction` Function to compute an exponentially weighted time-average
-      of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise** arguments can be used
-      to specify the corresponding `rate <AdaptiveIntegratorFunction.rate>` and `noise <AdaptiveIntegratorFunction.noise>` parameters
-      of the function.  The function returns the time-averaged input as a single item.
+    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegratorFunction` Function to compute an exponentially weighted
+      time-average of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise**
+      arguments can be used to specify the corresponding `rate <AdaptiveIntegratorFunction.rate>` and `noise
+      <AdaptiveIntegratorFunction.noise>` parameters of the function.  The function returns the time-averaged input
+      as a single item.
 
     * *AVERAGE_INPUTS:* uses a `Buffer` Function to compute the average of the number of preceding inputs specified in
       the PredictionMechanism's **window_size** argument.  If the **rate** and/or **noise** arguments are specified,

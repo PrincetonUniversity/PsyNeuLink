@@ -9,7 +9,7 @@ Functions
    CombinationFunctions
    SelectionFunctions
    DistributionFunctions
-   IntegratorFunctions
+   StatefulFunctions
    ObjectiveFunctions
    OptimizationFunctions
    LearningFunctions

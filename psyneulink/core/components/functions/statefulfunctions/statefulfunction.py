@@ -10,7 +10,11 @@
 # *****************************************  STATEFUL FUNCTION *********************************************************
 '''
 
+Functions that stores its current value that can be retrieved and/or combined with its previous value.
+
 * `StatefulFunction`
+* `IntegratorFunctions`
+* `MemoryFunctions`
 
 '''
 
@@ -30,10 +34,6 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 from psyneulink.core.globals.context import ContextFlags
 
 __all__ = ['StatefulFunction']
-
-
-# FIX: √ RENAME AS StatefulFunction
-#      GO THROUGH AND SORT OUT IntegratorFunction VS. StatefulFunction IN DOCSTRINGS OF IntegratorFunctions and Mechanism
 
 
 class StatefulFunction(Function_Base): # -------------------------------------------------------------------------------

@@ -10,6 +10,8 @@
 # *****************************************  INTEGRATOR FUNCTIONS ******************************************************
 '''
 
+Functions that integrate current value of input with previous value.
+
 * `IntegratorFunction`
 * `SimpleIntegratorFunction`
 * `InteractiveActivation`
@@ -21,11 +23,6 @@
 * `LCAIntegratorFunction`
 * `FHNIntegratorFunction`
 * `AGTUtilityIntegratorFunction`
-
-Overview
---------
-
-Functions that integrate their input.
 
 '''
 
@@ -85,7 +82,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     .. _Integrator:
 
-    Integrate current value of `variable <IntegratorFunction.variable>` with its prior value.
+    Base class for Functions that integrate current value of `variable <IntegratorFunction.variable>` with its prior
+    value.
 
     Arguments
     ---------
@@ -96,7 +94,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     initializer float, list or 1d array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <IntegratorFunction.default_variable>` (see `initializer <IntegratorFunction.initializer>` for details).
+        `default_variable <IntegratorFunction.default_variable>` (see `initializer <IntegratorFunction.initializer>`
+        for details).
 
     rate : float, list or 1d array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
@@ -460,7 +459,6 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
                                                   noise=noise,
                                                   offset=offset,
                                                   params=params)
-
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -478,7 +476,8 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
                  context=None):
         """
         Return: `variable <Linear.slope>` combined with `previous_value <SimpleIntegratorFunction.previous_value>`
-        according to `previous_value <SimpleIntegratorFunction.previous_value>` + `rate <SimpleIntegratorFunction.rate>` *`variable
+        according to:
+        `previous_value <SimpleIntegratorFunction.previous_value>` + `rate <SimpleIntegratorFunction.rate>` *`variable
         <variable.SimpleIntegratorFunction.variable>` + `noise <SimpleIntegratorFunction.noise>`;
 
         Arguments

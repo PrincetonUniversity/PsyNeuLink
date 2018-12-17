@@ -10,7 +10,8 @@
 # *******************************************  MEMORY FUNCTIONS ********************************************************
 '''
 
-* `MemoryFunction`
+Functions that store and can retrieve a record of their current input.
+
 * `Buffer`
 * `DND`
 
@@ -31,16 +32,21 @@ from psyneulink.core.components.functions.function import \
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.globals.keywords import BUFFER_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
+from psyneulink.core.globals.keywords import \
+    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
 from psyneulink.core.globals.utilities import all_within_range
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
-__all__ = ['Buffer', 'DND']
+__all__ = ['MemoryFunction', 'Buffer', 'DND']
 
 
-class Buffer(StatefulFunction):  # ------------------------------------------------------------------------------
+class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
+    componentType = MEMORY_FUNCTION
+
+
+class Buffer(MemoryFunction):  # ------------------------------------------------------------------------------
     """
     Buffer(                     \
         default_variable=None,  \
@@ -59,7 +65,8 @@ class Buffer(StatefulFunction):  # ---------------------------------------------
     which makes it a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
     applied to each item in the deque (including the newly added one) on each call, as follows:
 
-        :math: item * `rate <Buffer.rate>` + `noise <Buffer.noise>`
+    .. math::
+        item * rate + noise
 
     .. note::
        Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
@@ -112,7 +119,7 @@ class Buffer(StatefulFunction):  # ---------------------------------------------
 
         .. note::
             In order to generate random noise, a probability distribution function should be used (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            `DistributionFunction <distributionfunctions>` for details), which will generate a new noise value from
             its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
             then the noise will simply be an offset that remains the same across all executions.
 
@@ -312,7 +319,7 @@ DISTANCE_FUNCTION = 'distance_function'
 SELECTION_FUNCTION = 'selection_function'
 
 
-class DND(StatefulFunction):  # ------------------------------------------------------------------------------
+class DND(MemoryFunction):  # ------------------------------------------------------------------------------
     """
     DND(                                             \
         default_variable=None,                       \
@@ -415,7 +422,7 @@ class DND(StatefulFunction):  # ------------------------------------------------
 
         .. note::
             In order to generate random noise, a probability distribution function should be used (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            `DistributionFunction <distributionfunctions>` for details), which will generate a new noise value from
             its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
             then the noise will simply be an offset that remains the same across all executions.
 
