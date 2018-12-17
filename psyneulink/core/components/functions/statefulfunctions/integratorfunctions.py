@@ -3856,25 +3856,28 @@ class AGTUtilityIntegrator(IntegratorFunction):  # -----------------------------
 
     .. _AGTUtilityIntegrator:
 
-    Computes an exponentially weighted moving average on the variable using two sets of parameters:
+    Combines integration over two time constants, as implemented in `Aston-Jones & Cohen (2005)
+    <https://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ to integrate
+    utility in Adaptive Gain Theory of locus coeruleus.   `function <AGTUtilityIntegrator.function>`
+    computes the exponentially weighted time-averages of `variable <AGTUtilityIntegrator.variable>` over two
+    time scales, takes their logistics, and then combines them, as follows:
 
-    short_term_utility =
+    **short time scale integration**:
 
-       (1 - `short_term_rate <AGTUtilityIntegrator.short_term_rate>`) :math:`*` `previous_short_term_utility
-       <AGTUtilityIntegrator.previous_short_term_utility>` + `short_term_rate <AGTUtilityIntegrator.short_term_rate>`
-       :math:`*` `variable <AGTUtilityIntegrator.variable>`
+    .. math::
+       short_term = short_term_rate * variable + (1 - short_term_rate) * previous_short_term_utility
 
-    long_term_utility =
+    **long time scale integration**:
 
-       (1 - `long_term_rate <AGTUtilityIntegrator.long_term_rate>`) :math:`*` `previous_long_term_utility
-       <AGTUtilityIntegrator.previous_long_term_utility>` + `long_term_rate <AGTUtilityIntegrator.long_term_rate>`
-       :math:`*` `variable <AGTUtilityIntegrator.variable>`
+    .. math::
+       long_term = long_term_rate * variable + (1 - long_term_rate) * previous_long_term_utility
 
-    then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.
+    **combined integration**:
 
-    Finally, computes a single value which combines the two values according to:
+    .. math::
+       value = (1-\\frac{1}{1+e^{short_term_gain * short_term + short_term_bias}}) * \\frac{1}{1+e^{
+       long_term_gain * long_term + long_term_bias}}
 
-    value = [1-short_term_utility_logistic]*long_term_utility_logistic
 
     Arguments
     ---------
@@ -4195,8 +4198,6 @@ class AGTUtilityIntegrator(IntegratorFunction):  # -----------------------------
                  params=None,
                  context=None):
         """
-        Return: some fraction of `variable <AGTUtilityIntegrator.variable>` combined with some fraction of `previous_value
-        <AGTUtilityIntegrator.previous_value>`.
 
         Arguments
         ---------
