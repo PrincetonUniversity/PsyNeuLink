@@ -2103,17 +2103,11 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
+        # Get the only context member -- previous value
         prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        def _get_rid_of_2d(element):
-            zero_i32 = ctx.int32_ty(0)
-            assert isinstance(element.type.pointee, pnlvm.ir.ArrayType)
-            if isinstance(element.type.pointee.element, pnlvm.ir.ArrayType):
-                assert(element.type.pointee.count == 1)
-                return builder.gep(element, [zero_i32, zero_i32])
-            return element
-        prev_ptr = _get_rid_of_2d(prev_ptr)
+        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
         assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
 
         prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
@@ -2130,28 +2124,15 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         ret = builder.fadd(ret, noise)
         res = builder.fadd(ret, offset)
 
-        # FIXME: Standalone function produces 2d array value
-        if isinstance(vo.type.pointee.element, pnlvm.ir.ArrayType):
-            assert vo.type.pointee.count == 1
-            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
-        else:
-            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        # Get rid of 2d array. When part of a Mechanism the input,
-        # (and output, and context) are 2d arrays.
-        def _get_rid_of_2d(element):
-            zero_i32 = ctx.int32_ty(0)
-            assert isinstance(element.type.pointee, pnlvm.ir.ArrayType)
-            if isinstance(element.type.pointee.element, pnlvm.ir.ArrayType):
-                assert(element.type.pointee.count == 1)
-                return builder.gep(element, [zero_i32, zero_i32])
-            return element
-
-        arg_in = _get_rid_of_2d(arg_in)
-        arg_out = _get_rid_of_2d(arg_out)
+        # Get rid of 2d array.
+        # When part of a Mechanism the input, and output are 2d arrays.
+        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+        arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
@@ -3728,25 +3709,18 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        def _get_rid_of_2d(element):
-            assert isinstance(element.type.pointee, pnlvm.ir.ArrayType)
-            if isinstance(element.type.pointee.element, pnlvm.ir.ArrayType):
-                assert(element.type.pointee.count == 1)
-                return builder.gep(element, [zero_i32, zero_i32])
-            return element
-
-        arg_in = _get_rid_of_2d(arg_in)
+        arg_in = ctx.unwrap_2d_array(builder, arg_in)
         # Load context values
         prev = {}
         for idx, ctx_el in enumerate(self.stateful_attributes):
             val = builder.gep(context, [zero_i32, ctx.int32_ty(idx)])
-            prev[ctx_el] = _get_rid_of_2d(val)
+            prev[ctx_el] = ctx.unwrap_2d_array(builder, val)
 
         # Output locations
         out = {}
         for idx, out_el in enumerate(('v', 'w', 'time')):
             val = builder.gep(arg_out, [zero_i32, ctx.int32_ty(idx)])
-            out[out_el] = _get_rid_of_2d(val)
+            out[out_el] = ctx.unwrap_2d_array(builder, val)
 
         # Load parameters
         param_vals = {}
