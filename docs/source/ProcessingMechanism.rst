@@ -12,4 +12,4 @@ Processing Mechanisms
 
 .. automodule:: psyneulink.core.components.mechanisms.processing.processingmechanism
    :members:
-   :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random
+   :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random, Params

@@ -304,14 +304,13 @@ from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
-from collections import namedtuple
 
 from psyneulink.core.components.component import function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.integratorfunctions import IntegratorFunction, SimpleIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction, SimpleIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
 from psyneulink.core.components.functions.optimizationfunctions import SampleSpec, SampleIterator
@@ -322,7 +321,7 @@ from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, \
+    ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, \
     PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -421,7 +420,7 @@ class ControlSignal(ModulatorySignal):
         costs_options=None,                                       \
         intensity_cost_function=Exponential,                      \
         adjustment_cost_function=Linear,                          \
-        duration_cost_function=Integrator,                        \
+        duration_cost_function=IntegratorFunction,                        \
         combine_costs_function=Reduce(operation=SUM),             \
         allocation_samples=self.ClassDefaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
@@ -482,7 +481,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to calculate the contribution of the change in the ControlSignal's `intensity`
         (from its `last_intensity` value) to its `cost <ControlSignal.cost>`.
 
-    duration_cost_function : IntegratorFunction : default Integrator
+    duration_cost_function : IntegratorFunction : default IntegratorFunction
         specifies the function used to calculate the contribution of the ControlSignal's duration to its
         `cost <ControlSignal.cost>`.
 
@@ -687,7 +686,7 @@ class ControlSignal(ModulatorySignal):
                 duration_cost_function
                     see `duration_cost_function <ControlSignal.duration_cost_function>`
 
-                    :default value: `SimpleIntegrator`
+                    :default value: `SimpleIntegratorFunction`
                     :type: `Function`
 
                 intensity_cost
@@ -718,7 +717,7 @@ class ControlSignal(ModulatorySignal):
 
         intensity_cost_function = Exponential
         adjustment_cost_function = Linear
-        duration_cost_function = SimpleIntegrator
+        duration_cost_function = SimpleIntegratorFunction
         combine_costs_function = Reduce(operation=SUM)
         modulation = None
 
@@ -772,7 +771,7 @@ class ControlSignal(ModulatorySignal):
                  cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
+                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegratorFunction,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Params.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,

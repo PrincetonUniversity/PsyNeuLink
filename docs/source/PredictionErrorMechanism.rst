@@ -2,4 +2,5 @@ PredictionErrorMechanism
 ========================
 
 .. automodule:: psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism
-    :members:
+   :members:
+   :exclude-members: Params

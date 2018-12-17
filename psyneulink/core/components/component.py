@@ -163,7 +163,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 * **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
   this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
   `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
-  `initializer<Integrator.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
+  `initializer<IntegratorFunction.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
   used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and `reinitialize_when
   <Component.reinitialize_when>` attribute only exist on stateful Mechanisms.
 
@@ -2277,7 +2277,14 @@ class Component(object, metaclass=ComponentsMeta):
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
         """
-        return variable
+        # # MODIFIED 12/15/18 OLD:
+        # return variable
+        # MODIFIED 12/15/18 NEW: [JDC]
+        if variable is not None:
+            return variable
+        else:
+            return self.instance_defaults.variable
+        # MODIFIED 12/15/18 END
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
@@ -2837,13 +2844,13 @@ class Component(object, metaclass=ComponentsMeta):
 
     def reinitialize(self, *args, execution_context=None):
         """
-            If the component's execute method involves execution of an `Integrator` Function, this method
+            If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
             values on the component, depending on the component type.
         """
-        from psyneulink.core.components.functions.integratorfunctions import Integrator
+        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if hasattr(self, "function_object"):
-            if isinstance(self.function_object, Integrator):
+            if isinstance(self.function_object, IntegratorFunction):
                 new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
                 self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
             else:

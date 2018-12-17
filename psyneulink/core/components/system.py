@@ -3164,7 +3164,7 @@ class System(System_Base):
             a dictionary containing Mechanism: value pairs. Each Mechanism in the dictionary calls its `reinitialize
             <Mechanism_Base.reinitialize>` method at the start of the Run. The Mechanism's value in the
             reinitialize_values dictionary is passed into its `reinitialize <Mechanism_Base.reinitialize>` method. See
-            the `reinitialize method <Integrator.reinitialize>` of the `function <Mechanism_Base.function>`
+            the `reinitialize method <IntegratorFunction.reinitialize>` of the `function <Mechanism_Base.function>`
             or `integrator_function <TransferMechanism.integrator_function>` of the Mechanism for details on which
             values must be passed in as arguments. Keep in mind that only stateful Mechanisms may be reinitialized, and
             that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when

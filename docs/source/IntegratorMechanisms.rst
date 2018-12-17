@@ -11,3 +11,4 @@ IntegratorMechanisms
    :maxdepth: 1
 
    DDM
+   EpisodicMemoryMechanism

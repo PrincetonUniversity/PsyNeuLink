@@ -2,6 +2,7 @@ import functools
 import numpy as np
 import pytest
 import psyneulink as pnl
+import psyneulink.core.components.functions.distributionfunctions
 from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec, OptimizationFunctionError
 class TestControlMechanisms:
 
@@ -348,7 +349,7 @@ class TestModelBasedOptimizationControlMechanisms:
             name='Reward'
         )
         Decision = pnl.DDM(
-            function=pnl.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(
                     1.0,
                     pnl.ControlProjection(
@@ -386,7 +387,7 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp, features={
-            pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]}, feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+            pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]}, feature_function=pnl.AdaptiveIntegratorFunction(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(
                                                                                       monitor_for_control=[Reward,
                                                                                                            Decision.PROBABILITY_UPPER_THRESHOLD,
@@ -506,7 +507,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # Decision Mechanisms
         Decision = pnl.DDM(
-            function=pnl.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(0.2645),
                 noise=(0.5),
@@ -543,7 +544,7 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.add_c_node(Reward, required_roles=pnl.CNodeRole.TERMINAL)
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp, features={
-            pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Flanker_Stim, Reward]}, feature_function=pnl.AdaptiveIntegrator(
+            pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Flanker_Stim, Reward]}, feature_function=pnl.AdaptiveIntegratorFunction(
             rate=1.0), objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
                                                                                        (
                                                                                        Decision.PROBABILITY_UPPER_THRESHOLD,

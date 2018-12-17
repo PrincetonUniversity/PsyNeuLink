@@ -3,4 +3,4 @@ LearningProjection
 
 .. automodule:: psyneulink.core.components.projections.modulatory.learningprojection
    :members:
-   :exclude-members: random, execute
+   :exclude-members: random, execute, Params

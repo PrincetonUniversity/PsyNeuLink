@@ -3,4 +3,4 @@ MappingProjection
 
 .. automodule:: psyneulink.core.components.projections.pathway.mappingprojection
    :members:
-   :exclude-members: random, execute
+   :exclude-members: random, execute, Params

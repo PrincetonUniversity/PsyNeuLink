@@ -59,7 +59,6 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
-from psyneulink.core.components.functions.integratorfunctions import Integrator
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -3501,11 +3500,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #             # TBI: Store state for a Composition, Reinitialize Composition
     #             pass
     #         elif isinstance(node, Mechanism):
-    #             if isinstance(node.function_object, Integrator):
+    #             if isinstance(node.function_object, IntegratorFunction):
     #                 for attr in node.function_object.stateful_attributes:
     #                     reinitialization_value.append(getattr(node.function_object, attr))
     #             elif hasattr(node, "integrator_function"):
-    #                 if isinstance(node.integrator_function, Integrator):
+    #                 if isinstance(node.integrator_function, IntegratorFunction):
     #                     for attr in node.integrator_function.stateful_attributes:
     #                         reinitialization_value.append(getattr(node.integrator_function, attr))
     #

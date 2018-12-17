@@ -3,4 +3,4 @@ LCMechanism
 
 .. automodule:: psyneulink.library.components.mechanisms.adaptive.control.lcmechanism
    :members:
-   :exclude-members: random, LinearCombination, Linear
+   :exclude-members: random, LinearCombination, Linear, Params
