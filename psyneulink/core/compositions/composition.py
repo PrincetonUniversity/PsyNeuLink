@@ -56,9 +56,8 @@ import typecheck as tc
 import uuid
 
 from PIL import Image
-from llvmlite import ir
-from psyneulink.core import llvm as pnlvm
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
@@ -3542,16 +3541,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_param_struct_type(self, ctx):
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
-        return ir.LiteralStructType((
-            ir.LiteralStructType(mech_param_type_list),
-            ir.LiteralStructType(proj_param_type_list)))
+        return pnlvm.ir.LiteralStructType((
+            pnlvm.ir.LiteralStructType(mech_param_type_list),
+            pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
     def _get_context_struct_type(self, ctx):
         mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
         proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
-        return ir.LiteralStructType((
-            ir.LiteralStructType(mech_ctx_type_list),
-            ir.LiteralStructType(proj_ctx_type_list)))
+        return pnlvm.ir.LiteralStructType((
+            pnlvm.ir.LiteralStructType(mech_ctx_type_list),
+            pnlvm.ir.LiteralStructType(proj_ctx_type_list)))
 
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.input_CIM)
@@ -3562,11 +3561,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_data_struct_type(self, ctx):
         output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
 
-        data = [ir.LiteralStructType(output_type_list)]
+        data = [pnlvm.ir.LiteralStructType(output_type_list)]
         for node in self.c_nodes:
             nested_data = ctx.get_data_struct_type(node)
             data.append(nested_data)
-        return ir.LiteralStructType(data)
+        return pnlvm.ir.LiteralStructType(data)
 
     def _get_context_initializer(self, execution_id=None):
         mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id)) for m in self._all_nodes)
@@ -3657,8 +3656,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 cond_ty = cond_gen.get_condition_struct_type().as_pointer()
                 args.append(cond_ty)
 
-            func_ty = ir.FunctionType(ir.VoidType(), tuple(args))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), tuple(args))
+            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             context, params, comp_in, data_in, data_out = llvm_func.args[:5]
             cond_ptr = llvm_func.args[-1]
@@ -3670,7 +3669,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = pnlvm.ir.IRBuilder(block)
 
             if is_mech:
                 m_function = ctx.get_llvm_function(node)
@@ -3799,13 +3798,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
 
             func_name = ctx.get_unique_name('exec_wrap_' + self.name)
-            func_ty = ir.FunctionType(ir.VoidType(), (
+            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), (
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_data_struct_type(self).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             context, params, comp_in, data, cond = llvm_func.args
             for a in llvm_func.args:
@@ -3814,7 +3813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Create entry block
             entry_block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(entry_block)
+            builder = pnlvm.ir.IRBuilder(entry_block)
 
             # Call input CIM
             input_cim_name = self._get_node_wrapper(self.input_CIM);
@@ -3822,7 +3821,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             builder.call(input_cim_f, [context, params, comp_in, data, data])
 
             # Allocate run set structure
-            run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
+            run_set_type = pnlvm.ir.ArrayType(pnlvm.ir.IntType(1), len(self.c_nodes))
             run_set_ptr = builder.alloca(run_set_type, name="run_set")
 
             # Allocate temporary output storage
@@ -3850,7 +3849,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             builder.position_at_end(loop_body)
 
             zero = ctx.int32_ty(0)
-            any_cond = ir.IntType(1)(0)
+            any_cond = pnlvm.ir.IntType(1)(0)
 
             # Calculate execution set before running the mechanisms
             for idx, mech in enumerate(self.c_nodes):
@@ -3926,7 +3925,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name('run_wrap_' + self.name)
-            func_ty = ir.FunctionType(ir.VoidType(), (
+            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), (
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_data_struct_type(self).as_pointer(),
@@ -3934,7 +3933,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctx.get_output_struct_type(self).as_pointer(),
                 ctx.int32_ty.as_pointer(),
                 ctx.int32_ty.as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
             for a in llvm_func.args:
@@ -3943,7 +3942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Create entry block
             entry_block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(entry_block)
+            builder = pnlvm.ir.IRBuilder(entry_block)
 
             # Allocate and initialize condition structure
             cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)

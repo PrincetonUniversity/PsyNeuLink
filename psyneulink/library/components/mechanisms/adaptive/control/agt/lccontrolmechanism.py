@@ -270,8 +270,7 @@ Class Reference
 """
 import typecheck as tc
 
-from llvmlite import ir
-
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FHNIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
@@ -285,8 +284,6 @@ from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
-
-from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -890,7 +887,7 @@ class LCControlMechanism(ControlMechanism):
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
         elements = gain_ty, *mf_out.type.pointee.elements
-        elements_ty = ir.LiteralStructType(elements)
+        elements_ty = pnlvm.ir.LiteralStructType(elements)
 
         # allocate new output type
         new_out = builder.alloca(elements_ty, 1)

@@ -940,6 +940,7 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -960,8 +961,6 @@ from psyneulink.core.globals.parameters import Param, parse_execution_context
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
-
-from llvmlite import ir
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2524,15 +2523,15 @@ class Mechanism_Base(Mechanism):
 
     def _get_input_param_struct_type(self, ctx):
         gen = (ctx.get_param_struct_type(state) for state in self.input_states)
-        return ir.LiteralStructType(gen)
+        return pnlvm.ir.LiteralStructType(gen)
 
     def _get_param_param_struct_type(self, ctx):
         gen = (ctx.get_param_struct_type(state) for state in self.parameter_states)
-        return ir.LiteralStructType(gen)
+        return pnlvm.ir.LiteralStructType(gen)
 
     def _get_output_param_struct_type(self, ctx):
         gen = (ctx.get_param_struct_type(state) for state in self.output_states)
-        return ir.LiteralStructType(gen)
+        return pnlvm.ir.LiteralStructType(gen)
 
     def _get_function_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function_object)
@@ -2550,22 +2549,22 @@ class Mechanism_Base(Mechanism):
         if mech_params is not None:
             param_list.append(mech_params)
 
-        return ir.LiteralStructType(param_list)
+        return pnlvm.ir.LiteralStructType(param_list)
 
     def _get_mech_params_type(self, ctx):
         pass
 
     def _get_input_context_struct_type(self, ctx):
         gen = (ctx.get_context_struct_type(state) for state in self.input_states)
-        return ir.LiteralStructType(gen)
+        return pnlvm.ir.LiteralStructType(gen)
 
     def _get_param_context_struct_type(self, ctx):
         gen = (ctx.get_context_struct_type(state) for state in self.parameter_states)
-        return ir.LiteralStructType(gen)
+        return pnlvm.ir.LiteralStructType(gen)
 
     def _get_output_context_struct_type(self, ctx):
         gen = (ctx.get_context_struct_type(state) for state in self.output_states)
-        return ir.LiteralStructType(gen)
+        return pnlvm.ir.LiteralStructType(gen)
 
     def _get_function_context_struct_type(self, ctx):
         return ctx.get_context_struct_type(self.function_object)
@@ -2583,7 +2582,7 @@ class Mechanism_Base(Mechanism):
         if mech_context is not None:
             context_list.append(mech_context)
 
-        return ir.LiteralStructType(context_list)
+        return pnlvm.ir.LiteralStructType(context_list)
 
     def _get_mech_context_type(self, ctx):
         pass
@@ -2592,7 +2591,7 @@ class Mechanism_Base(Mechanism):
         output_type_list = []
         for state in self.output_states:
             output_type_list.append(ctx.get_output_struct_type(state))
-        return ir.LiteralStructType(output_type_list)
+        return pnlvm.ir.LiteralStructType(output_type_list)
 
     def _get_input_struct_type(self, ctx):
         input_type_list = []
@@ -2602,8 +2601,8 @@ class Mechanism_Base(Mechanism):
             state_input_type_list = []
             for proj in state.mod_afferents:
                 state_input_type_list.append(ctx.get_output_struct_type(proj))
-            input_type_list.append(ir.LiteralStructType(state_input_type_list))
-        return ir.LiteralStructType(input_type_list)
+            input_type_list.append(pnlvm.ir.LiteralStructType(state_input_type_list))
+        return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_input_param_initializer(self, execution_id):
         gen = (state._get_param_initializer(execution_id) for state in self.input_states)
@@ -2674,9 +2673,9 @@ class Mechanism_Base(Mechanism):
 
         # Check if all elements are the same
         if len(set(is_output_list)) == 1:
-            is_output_type = ir.ArrayType(is_output_list[0], len(is_output_list))
+            is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
         else:
-            is_output_type = ir.LiteralStructType(is_output_list)
+            is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
         is_output = builder.alloca(is_output_type, 1)
 
         for i, state in enumerate(self.input_states):

@@ -43,12 +43,11 @@ import numbers
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
     PER_ITEM, TRANSFER_FUNCTION_TYPE, \
@@ -65,7 +64,6 @@ from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
-from psyneulink.core.llvm import helpers
 
 __all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
            'Gaussian', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
@@ -173,19 +171,19 @@ class TransferFunction(Function_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
-        assert isinstance(arg_in.type.pointee, ir.ArrayType)
-        if isinstance(arg_in.type.pointee.element, ir.ArrayType):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        if isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType):
             assert arg_in.type == arg_out.type
             # Array elements need all to be of the same size
             length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
-            arg_in = builder.bitcast(arg_in, ir.ArrayType(ctx.float_ty, length).as_pointer())
-            arg_out = builder.bitcast(arg_out, ir.ArrayType(ctx.float_ty, length).as_pointer())
+            arg_in = builder.bitcast(arg_in, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
+            arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
-        with helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
             inner(*args)
 
         return builder
@@ -1473,7 +1471,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty],
-            ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
         var = builder.load(ptri)
         val = builder.fsub(var, bias)
         val1 = builder.fmul(val, gain)
@@ -2293,7 +2291,7 @@ class SoftMax(TransferFunction):
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
         inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-        with helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
             inner(*args)
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
@@ -2304,7 +2302,7 @@ class SoftMax(TransferFunction):
         if output_type == ALL:
             kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
             inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
-            with helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 inner(*args)
         elif output_type == MAX_VAL:
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
@@ -2321,8 +2319,8 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         if self.get_current_function_param(PER_ITEM):
-            assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
-            assert isinstance(arg_out.type.pointee.element, ir.ArrayType)
+            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])

@@ -15,13 +15,13 @@ from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
+from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
 
 __all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
 
-__dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 _compiled_modules = set()
 _binary_generation = 0
 
@@ -32,7 +32,7 @@ def _llvm_build():
     _modules.clear()
 
     global _binary_generation
-    if __dumpenv.find("compile") != -1:
+    if "compile" in debug_env:
         global _binary_generation
         print("COMPILING GENERATION: {} -> {}".format(_binary_generation, LLVMBuilderContext._llvm_generation))
 

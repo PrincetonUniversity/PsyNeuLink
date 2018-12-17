@@ -22,8 +22,8 @@ import itertools
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, EPSILON
 from psyneulink.core.components.functions.transferfunctions import get_matrix
@@ -35,7 +35,6 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_iterable
-from psyneulink.core.llvm import helpers
 
 
 __all__ = ['ObjectiveFunction', 'Stability', 'Distance']
@@ -356,8 +355,8 @@ COMMENT
     def _get_param_struct_type(self, ctx):
         my_params = ctx.get_param_struct_type(super())
         metric_params = ctx.get_param_struct_type(self._metric_fct)
-        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
-        return ir.LiteralStructType([my_params, metric_params, transfer_params])
+        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
+        return pnlvm.ir.LiteralStructType([my_params, metric_params, transfer_params])
 
     def _get_param_initializer(self, execution_id):
         my_params = super()._get_param_initializer(execution_id)
@@ -695,7 +694,7 @@ class Distance(ObjectiveFunction):
         old_max = builder.load(max_diff_ptr)
         # Maxnum for some reason needs full function prototype
         fmax = ctx.get_builtin("maxnum", [ctx.float_ty],
-            ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
 
         max_diff = builder.call(fmax, [diff, old_max])
         builder.store(max_diff, max_diff_ptr)
@@ -774,13 +773,13 @@ class Distance(ObjectiveFunction):
         else:
             raise RuntimeError('Unsupported metric')
 
-        assert isinstance(arg_in.type.pointee, ir.ArrayType)
-        assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
         assert arg_in.type.pointee.count == 2
 
         input_length = arg_in.type.pointee.element.count
         vector_length = ctx.int32_ty(input_length)
-        with helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
+        with pnlvm.helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
             inner(*args)
 
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])

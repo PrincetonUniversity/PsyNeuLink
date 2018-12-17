@@ -353,6 +353,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import Function, \
     is_function_type
@@ -382,10 +383,6 @@ __all__ = [
     'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT',
     'TransferError', 'TransferMechanism',
 ]
-
-from psyneulink.core import llvm as pnlvm
-
-from llvmlite import ir
 
 # TransferMechanism parameter keywords:
 CLIP = "clip"
@@ -1326,7 +1323,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.integrator_mode:
             assert self.integrator_function is not None
             param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
-        return ir.LiteralStructType(param_type_list)
+        return pnlvm.ir.LiteralStructType(param_type_list)
 
     def _get_function_context_struct_type(self, ctx):
         context_type_list = [ctx.get_context_struct_type(self.function_object)]
@@ -1334,7 +1331,7 @@ class TransferMechanism(ProcessingMechanism_Base):
            assert self.integrator_function is not None
            context_type_list.append(ctx.get_context_struct_type(self.integrator_function))
 
-        return ir.LiteralStructType(context_type_list)
+        return pnlvm.ir.LiteralStructType(context_type_list)
 
     def _get_function_param_initializer(self, execution_id):
         function_param_list = [self.function_object._get_param_initializer(execution_id)]
@@ -1379,7 +1376,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 index = None
-                with helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
+                with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
                     ptri = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
                     ptro = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
 
