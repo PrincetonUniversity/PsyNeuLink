@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.4.8.0+1061.g61176a2 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.4.8.0+1074.g6fdf1c4 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1061.g61176a2 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1074.g6fdf1c4 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="next" title="IntegratorMechanism" href="IntegratorMechanism.html"/>
         <link rel="prev" title="Processing Mechanisms" href="ProcessingMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1061
+                0.4.8.0+1074
               </div>
             
           
@@ -496,7 +496,7 @@ or a custom function.</li>
 <li><strong>integrator_mode</strong> (<em>bool : False</em>) – specifies whether or not the TransferMechanism should be executed using its <a class="reference internal" href="#"><span class="doc">integrator_function</span></a> to integrate its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.variable" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (
 when set to <code class="xref any docutils literal"><span class="pre">True</span></code>), or simply report the asymptotic value of the output of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (when set to <code class="xref any docutils literal"><span class="pre">False</span></code>).</li>
 <li><strong>integrator_function</strong> (<em>IntegratorFunction : default AdaptiveIntegratorFunction</em>) – specifies <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> to use in <code class="xref any docutils literal"><span class="pre">integration_mode</span></code>.</li>
-<li><strong>initial_value</strong> (<a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is True).</li>
+<li><strong>initial_value</strong> (<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is True).</li>
 <li><strong>integration_rate</strong> (<em>float : default 0.5</em>) – specifies the rate of integration of <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.variable" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> when the TransferMechanism is
 executed with <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> set to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 <li><strong>on_resume_integrator_mode</strong> (<em>keyword : default INSTANTANEOUS_MODE_VALUE</em>) – <p>specifies how the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> should resume its accumulation
@@ -787,7 +787,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1061.g61176a2',
+            VERSION:'0.4.8.0+1074.g6fdf1c4',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
