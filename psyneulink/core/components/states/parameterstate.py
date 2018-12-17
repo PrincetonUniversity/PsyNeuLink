@@ -962,7 +962,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
             (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
     # FIX: UPDATE WITH MODULATION_MODS
-    # FIX:    CHANGE TO Integrator FUnction ONCE LearningProjection MODULATES ParameterState Function:
+    # FIX:    CHANGE TO IntegratorFunction FUnction ONCE LearningProjection MODULATES ParameterState Function:
     If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection)
         modify ParameterState's function to be LinearCombination (rather Linear which is the default)
     """

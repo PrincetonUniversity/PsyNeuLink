@@ -514,8 +514,8 @@ parameter of its `function <ParameterState.function>`, in a manner specified by 
 `Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the
 `modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ModulationParam.ADDITIVE`,
 the `function <ParameterState.function>` of a *MATRIX* ParameterState for a MappingProjection is
-`AccumulatorIntegrator`, and the parameter it uses for additive modulation is its `increment
-<AccumulatorIntegrator.increment>` parameter.  These assignments cause the value of the LearningProjection to be added
+`AccumulatorIntegratorFunction`, and the parameter it uses for additive modulation is its `increment
+<AccumulatorIntegratorFunction.increment>` parameter.  These assignments cause the value of the LearningProjection to be added
 to the previous value of the *MATRIX* ParameterState, thus incrementing the weights by an amount specified by the
 LearningMechanism's `learning_signal <LearningMechanism.learning_signal>`. Note, that the changes to the `matrix
 <MappingProjection.MappingProjection.matrix>` parameter itself do not take effect

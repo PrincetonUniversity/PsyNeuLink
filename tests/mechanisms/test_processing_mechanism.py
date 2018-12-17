@@ -2,14 +2,13 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
-from psyneulink.core.components.functions.distributionfunctions import NormalDist, UniformToNormalDist, \
-    ExponentialDist, \
-    UniformDist, GammaDist, WaldDist
-from psyneulink.core.components.functions.integratorfunctions import Integrator, SimpleIntegrator, ConstantIntegrator, \
-    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    AGTUtilityIntegrator, DriftDiffusionAnalytical, NavarroAndFuss
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist, \
+    UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegratorFunction, ConstantIntegratorFunction, \
+    AdaptiveIntegratorFunction, DriftDiffusionIntegratorFunction, OrnsteinUhlenbeckIntegratorFunction, FHNIntegratorFunction, AccumulatorIntegratorFunction, \
+    AGTUtilityIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -59,41 +58,41 @@ class TestProcessingMechanismFunctions:
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_SimpleIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=SimpleIntegrator)
+        PM1 = ProcessingMechanism(function=SimpleIntegratorFunction)
         PM1.execute(1.0)
 
     def test_processing_mechanism_ConstantIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=ConstantIntegrator)
+        PM1 = ProcessingMechanism(function=ConstantIntegratorFunction)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_AdaptiveIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AdaptiveIntegrator)
+        PM1 = ProcessingMechanism(function=AdaptiveIntegratorFunction)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_DriftDiffusionIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=DriftDiffusionIntegrator)
+        PM1 = ProcessingMechanism(function=DriftDiffusionIntegratorFunction)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_OrnsteinUhlenbeckIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=OrnsteinUhlenbeckIntegrator)
+        PM1 = ProcessingMechanism(function=OrnsteinUhlenbeckIntegratorFunction)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_AccumulatorIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AccumulatorIntegrator)
+        PM1 = ProcessingMechanism(function=AccumulatorIntegratorFunction)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_FHNIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=FHNIntegrator)
+        PM1 = ProcessingMechanism(function=FHNIntegratorFunction)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_AGTUtilityIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AGTUtilityIntegrator)
+        PM1 = ProcessingMechanism(function=AGTUtilityIntegratorFunction)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 

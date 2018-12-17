@@ -148,7 +148,7 @@ class TestLCAReinitialize:
               initialize=True,
               initial_values={L: 0.0})
 
-        # Integrator fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
+        # IntegratorFunction fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
 
         # Trial 1    |   variable = 1.0 + 0.0
         # integration: 0.5 + (0.1*0.5 + 1.0)*1.0 + 0.0 = 1.55

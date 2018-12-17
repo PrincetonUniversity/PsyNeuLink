@@ -14,7 +14,7 @@
 Overview
 --------
 
-A EpisodicMemoryMechanism is an `Integrator` Function that can store and retrieve cue-associate pairs.
+A EpisodicMemoryMechanism is an `IntegratorFunction` Function that can store and retrieve cue-associate pairs.
 
 .. _EpisodicMemoryMechanism_Creation:
 
@@ -82,7 +82,7 @@ Class Reference
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.integratorfunctions import DND, STORAGE_PROB, RETRIEVAL_PROB
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import RETRIEVAL_PROB, STORAGE_PROB, DND
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.keywords import NAME, SIZE, VARIABLE, OWNER_VALUE

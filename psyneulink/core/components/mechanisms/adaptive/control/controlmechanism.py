@@ -1061,7 +1061,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"
         # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
-        # if (isinstance(self.function_object, Integrator)):
+        # if (isinstance(self.function_object, IntegratorFunction)):
         #     control_signal._intensity = function_object.initializer
 
         # Add ControlSignal to output_states list

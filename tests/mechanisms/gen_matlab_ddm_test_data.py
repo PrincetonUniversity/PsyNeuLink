@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from psyneulink.core.components.functions.integratorfunctions import NavarroAndFuss
+from psyneulink.core.components.functions.distributionfunctions import NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 # Get location of this script so we can write txt files to this directory
