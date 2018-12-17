@@ -677,10 +677,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
-        previous_value = self.get_previous_value(execution_id)
-
-        # Set key_size for dict if this is the first entry
-        if not previous_value:
+        # Set key_size if this is the first entry
+        if not self.get_previous_value(execution_id):
             self.parameters.key_size.set(len(key), execution_id)
 
         # Retrieve value from current dict with key that best matches key
@@ -700,9 +698,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if noise:
             key += noise
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
-            self.store_memory(key, value, execution_id)
-
-        self.parameters.previous_value.set(previous_value, execution_id)
+            self.store_memory(variable, execution_id)
 
         return self.convert_output_type(ret_val)
 
@@ -737,28 +733,30 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         return [best_match_val, best_match_key]
 
-    def store_memory(self, memory_key, memory_val, execution_id):
+    @tc.typecheck
+    def store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
         """Save an episodic memory to the dictionary
 
         Arguments
         ---------
-        memory_key : a row vector
-            a DND key, used for memory search
-        memory_val : a row vector
-            a DND value, representing the memory content
+        memory : list or 2d array
         """
-        if len(memory_key) != self.parameters.key_size.get(execution_id):
+        key = memory[0]
+        val = memory[1]
+
+        if len(key) != self.parameters.key_size.get(execution_id):
             raise FunctionError("Length of {} to store in {} must be same as others in the dict ({})".
                                 format(repr('key'), self.__class__.__name__, self._key_size))
 
-        d = self.get_previous_value(execution_id)
+        d = self.get_previous_value(execution_id) or {}
         if len(d) > self.max_entries:
             d.pop(list(d.keys())[len(d)-1])
-        # d[tuple(memory_key)]=memory_val
-        self.parameters.previous_value.set(d.update({tuple(memory_key):memory_val}),execution_id)
+        d.update({tuple(key):val})
+        self.parameters.previous_value.set(d,execution_id)
+        assert True
 
     @tc.typecheck
-    def add_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
+    def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
         """add key-value pairs to `dict <DND.dict>`.
 
         Each item must be a 2d array, the first item of which is a key and the second a value.
@@ -771,7 +769,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         memories = np.array(memories)
         if not 2 <= memories.ndim <= 3:
             raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
-                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
+                                format(repr('memories'), repr('insert_memories'), self.__class__.__name ))
         for memory in memories:
             self.store_memory(memory[0], memory[1], execution_id)
 
