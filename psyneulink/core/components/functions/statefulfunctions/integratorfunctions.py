@@ -282,9 +282,10 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
 
+
 class SimpleIntegratorFunction(IntegratorFunction):  # -----------------------------------------------------------------
     """
-    SimpleIntegratorFunction(                 \
+    SimpleIntegratorFunction(   \
         default_variable=None,  \
         rate=1.0,               \
         noise=0.0,              \
@@ -296,11 +297,12 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
 
     .. _SimpleIntegrator:
 
-    Integrate current value of `variable <SimpleIntegratorFunction.variable>` with its prior value:
+    `function <SimpleIntegratorFunction.function>` returns:
 
-    `previous_value <SimpleIntegratorFunction.previous_value>` + \
-    `rate <SimpleIntegratorFunction.rate>` *`variable <variable.SimpleIntegratorFunction.variable>` + \
-    `noise <SimpleIntegratorFunction.noise>`;
+    .. math::
+
+        previous_value + rate * variable + noise
+
 
     Arguments
     ---------
@@ -475,11 +477,6 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
                  params=None,
                  context=None):
         """
-        Return: `variable <Linear.slope>` combined with `previous_value <SimpleIntegratorFunction.previous_value>`
-        according to:
-        `previous_value <SimpleIntegratorFunction.previous_value>` + `rate <SimpleIntegratorFunction.rate>` *`variable
-        <variable.SimpleIntegratorFunction.variable>` + `noise <SimpleIntegratorFunction.noise>`;
-
         Arguments
         ---------
 
@@ -542,13 +539,12 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
 
     .. _InteractiveActivation:
 
-    Integrate current value of `variable <InteractiveActivation.variable>` toward an asymptotic maximum
-    value for positive inputs and toward an asymptotic mininum value for negative inputs.
-
-    Implements a generalized version of the interactive activation function used to update unit activites in
-    `McClelland and Rumelhart (1981)
-    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.298.4480&rep=rep1&type=pdf>`_.
-
+    Implements a generalized version of the interactive activation from `McClelland and Rumelhart (1981)
+    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.298.4480&rep=rep1&type=pdf>`_ that integrates
+    current value of `variable <InteractiveActivation.variable>` toward an asymptotic maximum
+    value `max_val <InteractiveActivation.max_val>` for positive inputs and toward an asymptotic mininum value
+    (`min_val <InteractiveActivation.min_val>`) for negative inputs, and decays asymptotically towards an intermediate
+    resting value (`rest <InteractiveActivation.rest>`).
 
     `function <InteractiveActivation.function>` returns:
 
@@ -898,7 +894,7 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
 
 class ConstantIntegratorFunction(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
-    ConstantIntegratorFunction(                 \
+    ConstantIntegratorFunction(         \
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
@@ -912,11 +908,14 @@ class ConstantIntegratorFunction(IntegratorFunction):  # -----------------------
 
     .. _ConstantIntegrator:
 
-    Integrates prior value by adding `rate <IntegratorFunction.rate>` and `noise <IntegratorFunction.noise>`. (Ignores
-    `variable <IntegratorFunction.variable>`).
+    `function <ConstantIntegrator.function>` returns:
 
-    `previous_value <ConstantIntegratorFunction.previous_value>` + `rate <ConstantIntegratorFunction.rate>` +
-    `noise <ConstantIntegratorFunction.noise>`
+    .. math::
+        previous_value  + rate  + noise
+
+    (ignores `variable <IntegratorFunction.variable>`).
+
+
 
     Arguments
     ---------
@@ -1130,8 +1129,6 @@ class ConstantIntegratorFunction(IntegratorFunction):  # -----------------------
                  params=None,
                  context=None):
         """
-        Return: the sum of `previous_value <ConstantIntegratorFunction.previous_value>`, `rate <ConstantIntegratorFunction.rate>`, and
-        `noise <ConstantIntegratorFunction.noise>`.
 
         Arguments
         ---------
@@ -1170,7 +1167,7 @@ class ConstantIntegratorFunction(IntegratorFunction):  # -----------------------
 
 class AdaptiveIntegratorFunction(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
-    AdaptiveIntegratorFunction(                 \
+    AdaptiveIntegratorFunction(         \
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
@@ -1184,11 +1181,10 @@ class AdaptiveIntegratorFunction(IntegratorFunction):  # -----------------------
 
     .. _AdaptiveIntegrator:
 
-    Computes an exponentially weighted moving average.
+    `function <AdapativeIntegrator.function>` returns exponentially weighted time-average of input:
 
-    (1 - `rate <AdaptiveIntegratorFunction.rate>`) * `previous_value <AdaptiveIntegratorFunction.previous_value>` + `rate
-    <AdaptiveIntegratorFunction.rate>` * `variable <AdaptiveIntegratorFunction.variable>` + `noise <AdaptiveIntegratorFunction.noise>`
-
+    .. math::
+        (rate * variable) + ((1-rate) * previous_value)  + noise
 
     Arguments
     ---------
@@ -1506,8 +1502,6 @@ class AdaptiveIntegratorFunction(IntegratorFunction):  # -----------------------
                  params=None,
                  context=None):
         """
-        Return: some fraction of `variable <AdaptiveIntegratorFunction.variable>` combined with some fraction of `previous_value
-        <AdaptiveIntegratorFunction.previous_value>`.
 
         Arguments
         ---------
@@ -1550,7 +1544,7 @@ class AdaptiveIntegratorFunction(IntegratorFunction):  # -----------------------
 
 class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -------------------------------------------------------------------------
     """
-    DriftDiffusionIntegratorFunction(           \
+    DriftDiffusionIntegratorFunction(   \
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
@@ -1568,8 +1562,13 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulates evidence over time based on a stimulus, rate, previous position, and noise. Stops accumulating at a
-    threshold.
+    Accumulate "evidence" to a bound.  `function <DriftDiffusionIntegratorFunction.function>` returns one
+    time step of integration:
+
+    ..  math::
+
+        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\sqrt{time\\_step\\_size \\cdot noise}
+        \\cdot Sample\\,from\\,Normal\\,Distribution
 
     Arguments
     ---------
@@ -1812,12 +1811,6 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
                  params=None,
                  context=None):
         """
-        Return: One time step of evidence accumulation according to the Drift Diffusion Model
-
-        ..  math::
-
-            previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\sqrt{time\\_step\\_size \\cdot noise}
-            \\cdot Sample\\,from\\,Normal\\,Distribution
 
         Arguments
         ---------
@@ -1877,23 +1870,28 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
 
 class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # ----------------------------------------------------------------------
     """
-    OrnsteinUhlenbeckIntegratorFunction(        \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        offset= 0.0,                    \
-        time_step_size=1.0,             \
-        t0=0.0,                         \
-        decay=1.0,                      \
-        initializer=0.0,                \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
+    OrnsteinUhlenbeckIntegratorFunction( \
+        default_variable=None,           \
+        rate=1.0,                        \
+        noise=0.0,                       \
+        offset= 0.0,                     \
+        time_step_size=1.0,              \
+        t0=0.0,                          \
+        decay=1.0,                       \
+        initializer=0.0,                 \
+        params=None,                     \
+        owner=None,                      \
+        prefs=None,                      \
         )
 
     .. _OrnsteinUhlenbeckIntegrator:
 
-    Accumulate evidence overtime based on a stimulus, noise, decay, and previous position.
+    `function <_OrnsteinUhlenbeckIntegrator.function>` returns one time step of integration according to an
+    `Ornstein Uhlenbeck process <https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process>`_:
+
+    .. math::
+
+        previous_value + decay * (previous\\_value - rate * variable) + \\sqrt{time\\_step\\_size * noise} * noise
 
     Arguments
     ---------
@@ -2115,11 +2113,6 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
                  params=None,
                  context=None):
         """
-        Return: One time step of evidence accumulation according to the Ornstein Uhlenbeck Model
-
-        previous_value + decay * (previous_value -  rate * variable) + :math:`\\sqrt{time_step_size * noise}` * random
-        sample from Normal distribution
-
 
         Arguments
         ---------
@@ -2206,54 +2199,63 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
 
     .. _FHNIntegrator:
 
-    The FHN IntegratorFunction function in PsyNeuLink implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order
-    Runge-Kutta numerical integration.
+    `function <FHNIntegratorFunction.function>` returns one time step of integration of the `Fitzhugh-Nagumo model
+    https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ of an excitable oscillator:
 
-    In order to support several common representations of the model, the FHNIntegratorFunction includes many parameters, some of
-    which would not be sensible to use in combination. The equations of the Fitzhugh-Nagumo model are expressed below in
-    terms of all of the parameters exposed in PsyNeuLink:
+    .. math::
+            time\\_constant_v \\frac{dv}{dt} = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 +
+            d_v + e_v * w + f_v * I_{ext}
+
+    where
+    .. math::
+            time\\_constant_w * \\frac{dw}{dt} =` mode * a_w * v + b_w * w +c_w + (1 - mode) * uncorrelated\\_activity
+
+    Either `Euler <https://en.wikipedia.org/wiki/Euler_method>`_ or `Dormand–Prince (4th Order Runge-Kutta)
+    <https://en.wikipedia.org/wiki/Dormand–Prince_method>`_ methods of numerical integration can be used.
+
+    The FHNIntegratorFunction implements all of the parameters of the FHN model; however, not all combinations of
+    these are sensible. Typically, they are combined into two sets.  These are described below, followed by
+    a describption of how they are used to implement three common variants of the model with the FHNIntegratorFunction.
+
+    Parameter Sets
+    ^^^^^^^^^^^^^^
 
     **Fast, Excitatory Variable:**
 
-
     .. math::
-
-        \\frac{dv}{dt} = \\frac{a_v v^{3} + b_v v^{2} (1+threshold) - c_v v\\, threshold + d_v + e_v\\, previous_w + f_v\\, variable)}{time\\, constant_v}
+       \\frac{dv}{dt} = \\frac{a_v v^{3} + b_v v^{2} (1+threshold) - c_v v\\, threshold + d_v + e_v\\, previous_w +
+       f_v\\, variable)}{time\\, constant_v}
 
 
     **Slow, Inactivating Variable:**
 
-
     .. math::
+       \\frac{dw}{dt} = \\frac{a_w\\, mode\\, previous_v + b_w w + c_w + uncorrelated\\,activity\\,(1-mode)}{time\\,
+       constant_w}
 
-        \\frac{dw}{dt} = \\frac{a_w\\, mode\\, previous_v + b_w w + c_w +
-                    uncorrelated\\,activity\\,(1-mode)}{time\\, constant_w}
-
-    *The three formulations that the FHNIntegratorFunction was designed to allow are:*
+    Three Common Variants
+    ^^^^^^^^^^^^^^^^^^^^^
 
     (1) **Fitzhugh-Nagumo Model**
 
         **Fast, Excitatory Variable:**
 
         .. math::
-
             \\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}
 
         **Slow, Inactivating Variable:**
 
         .. math::
-
             \\frac{dw}{dt} = \\frac{v + a - bw}{T}
 
         :math:`\\frac{dw}{dt}` often has the following parameter values:
 
         .. math::
-
             \\frac{dw}{dt} = 0.08\\,(v + 0.7 - 0.8 w)
 
-        *How to implement this model in PsyNeuLink:*
+        *Implementation in FHNIntegratorFunction*
 
-            In PsyNeuLink, the default parameter values of the FHNIntegratorFunction function implement the above equations.
+        The default values implement the above equations.
 
 
     (2) **Modified FHN Model**
@@ -2261,21 +2263,19 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
         **Fast, Excitatory Variable:**
 
         .. math::
-
             \\frac{dv}{dt} = v(a-v)(v-1) - w + I_{ext}
 
         **Slow, Inactivating Variable:**
 
         .. math::
-
             \\frac{dw}{dt} = bv - cw
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
 
-        *How to implement this model in PsyNeuLink:*
+        *Implementation in FHNIntegratorFunction*
 
-            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
+            In order to implement the modified FHN model, the following parameter values must be specified in the
             equation for :math:`\\frac{dv}{dt}`:
 
             +-----------------+-----+-----+-----+-----+-----+-----+---------------+
@@ -2944,20 +2944,6 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
                  params=None,
                  context=None):
         """
-        Return: current v, current w
-
-        The model is defined by the following system of differential equations:
-
-            *time_constant_v* :math:`* \\frac{dv}{dt} =`
-
-                *a_v* :math:`* v^3 + (1 + threshold) *` *b_v* :math:`* v^2 + (- threshold) *` *c_v*
-                :math:`* v^2 +` *d_v* :math:`+` *e_v* :math:`* w +` *f_v* :math:`* I_{ext}`
-
-            *time_constant_w* :math:`* dw/dt =`
-
-                :math:`mode *` *a_w* :math:`* v +` *b_w* :math:`* w +` *c_w*
-                :math:`+ (1 - self.mode) *` *self.uncorrelated_activity*
-
 
         Arguments
         ---------
