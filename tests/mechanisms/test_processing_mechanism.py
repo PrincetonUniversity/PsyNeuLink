@@ -8,7 +8,7 @@ from psyneulink.core.components.functions.distributionfunctions import NormalDis
     UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    AGTUtilityIntegrator
+    DualAdapativeIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -91,8 +91,8 @@ class TestProcessingMechanismFunctions:
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
-    def test_processing_mechanism_AGTUtilityIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AGTUtilityIntegrator)
+    def test_processing_mechanism_DualAdaptiveIntegrator_function(self):
+        PM1 = ProcessingMechanism(function=DualAdapativeIntegrator)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 

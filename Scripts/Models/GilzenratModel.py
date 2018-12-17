@@ -211,11 +211,13 @@ sys.stdout.write("\r0% complete")
 sys.stdout.flush()
 
 # Run the model
+print('\nRunning model...')
 task.run(
     inputs=stimulus_dictionary,
     num_trials=trials,
     call_after_trial=record_trial
 )
+print('\nModel run, generating plots...')
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
 
@@ -268,3 +270,4 @@ plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 plt.show()
 
 task.show()
+print('\nPlots generated')

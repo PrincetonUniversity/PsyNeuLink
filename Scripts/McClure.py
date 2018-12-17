@@ -77,10 +77,10 @@ action_selection = pnl.TransferMechanism(size=2,
 #                           name='K')
 
 conflicts = pnl.IntegratorMechanism(input_states=[action_selection.output_states[2]],
-                                    function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AGTUtilityIntegrator(short_term_gain=6.0,
-                                                                                                                                             long_term_gain=6.0,
-                                                                                                                                             short_term_rate=0.05,
-                                                                                                                                             long_term_rate=0.2),
+                                    function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdapativeIntegrator(short_term_gain=6.0,
+                                                                                                                                                long_term_gain=6.0,
+                                                                                                                                                short_term_rate=0.05,
+                                                                                                                                                long_term_rate=0.2),
                                     name='Short- and Long-term conflict')
 
 decision_process = pnl.Process(default_variable=[0, 0],

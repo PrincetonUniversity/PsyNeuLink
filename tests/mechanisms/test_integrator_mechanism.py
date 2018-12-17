@@ -8,7 +8,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    LCAIntegrator, AGTUtilityIntegrator
+    LCAIntegrator, DualAdapativeIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -63,33 +63,33 @@ class TestReinitialize:
 
     def test_AGTUtility_valid(self):
         I = IntegratorMechanism(name="I",
-                                function=AGTUtilityIntegrator())
+                                function=DualAdapativeIntegrator())
         I.reinitialize_when = Never()
-        assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.0]], I.function_object.previous_short_term_avg)
+        assert np.allclose([[0.0]], I.function_object.previous_long_term_avg)
 
         I.function_object.reinitialize(0.2, 0.8)
 
-        assert np.allclose([[0.2]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.8]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.2]], I.function_object.previous_short_term_avg)
+        assert np.allclose([[0.8]], I.function_object.previous_long_term_avg)
 
         I.function_object.reinitialize()
 
-        assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.0]], I.function_object.previous_short_term_avg)
+        assert np.allclose([[0.0]], I.function_object.previous_long_term_avg)
 
         I.reinitialize(0.3, 0.7)
 
-        assert np.allclose([[0.3]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.7]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.3]], I.function_object.previous_short_term_avg)
+        assert np.allclose([[0.7]], I.function_object.previous_long_term_avg)
         print(I.value)
         print(I.function_object.combine_utilities(0.3, 0.7))
         assert np.allclose(I.function_object.combine_utilities(0.3, 0.7), I.value)
 
         I.reinitialize()
 
-        assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.0]], I.function_object.previous_short_term_avg)
+        assert np.allclose([[0.0]], I.function_object.previous_long_term_avg)
         assert np.allclose(I.function_object.combine_utilities(0.0, 0.0), I.value)
 
     def test_Simple_valid(self):
@@ -1203,20 +1203,20 @@ class TestStatefulness:
 
 
 
-class TestAGTUtilityIntegrator:
+class TestDualAdaptiveIntegrator:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_utility_integrator_default(self):
         # default params:
-        # initial_short_term_utility = 0.0
-        # initial_long_term_utility = 0.0
+        # initial_short_term_avg = 0.0
+        # initial_long_term_avg = 0.0
         # short_term_rate = 1.0
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "AGTUtilityIntegrator",
-            function=AGTUtilityIntegrator(
+            name = "DualAdapativeIntegrator",
+            function=DualAdapativeIntegrator(
             )
 
         )
@@ -1226,8 +1226,8 @@ class TestAGTUtilityIntegrator:
         long_term_util = []
         for i in range(50):
             engagement.append(U.execute([1])[0][0])
-            short_term_util.append(U.function_object.short_term_utility_logistic[0])
-            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+            short_term_util.append(U.function_object.short_term_logistic[0])
+            long_term_util.append(U.function_object.long_term_logistic[0])
         print("engagement = ", engagement)
         print("short_term_util = ", short_term_util)
         print("long_term_util = ", long_term_util)
@@ -1236,14 +1236,14 @@ class TestAGTUtilityIntegrator:
     @pytest.mark.integrator_mechanism
     def test_utility_integrator_short_minus_long(self):
         # default params:
-        # initial_short_term_utility = 0.0
-        # initial_long_term_utility = 0.0
+        # initial_short_term_avg = 0.0
+        # initial_long_term_avg = 0.0
         # short_term_rate = 1.0
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "AGTUtilityIntegrator",
-            function=AGTUtilityIntegrator(
+            name = "DualAdapativeIntegrator",
+            function=DualAdapativeIntegrator(
                 operation="s-l"
             )
 
@@ -1254,8 +1254,8 @@ class TestAGTUtilityIntegrator:
         long_term_util = []
         for i in range(50):
             engagement.append(U.execute([1])[0][0])
-            short_term_util.append(U.function_object.short_term_utility_logistic[0])
-            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+            short_term_util.append(U.function_object.short_term_logistic[0])
+            long_term_util.append(U.function_object.long_term_logistic[0])
         print("engagement = ", engagement)
         print("short_term_util = ", short_term_util)
         print("long_term_util = ", long_term_util)
@@ -1264,14 +1264,14 @@ class TestAGTUtilityIntegrator:
     @pytest.mark.integrator_mechanism
     def test_utility_integrator_short_plus_long(self):
         # default params:
-        # initial_short_term_utility = 0.0
-        # initial_long_term_utility = 0.0
+        # initial_short_term_avg = 0.0
+        # initial_long_term_avg = 0.0
         # short_term_rate = 1.0
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "AGTUtilityIntegrator",
-            function=AGTUtilityIntegrator(
+            name = "DualAdapativeIntegrator",
+            function=DualAdapativeIntegrator(
                 operation="s+l"
             )
 
@@ -1282,8 +1282,8 @@ class TestAGTUtilityIntegrator:
         long_term_util = []
         for i in range(50):
             engagement.append(U.execute([1])[0][0])
-            short_term_util.append(U.function_object.short_term_utility_logistic[0])
-            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+            short_term_util.append(U.function_object.short_term_logistic[0])
+            long_term_util.append(U.function_object.long_term_logistic[0])
         print("engagement = ", engagement)
         print("short_term_util = ", short_term_util)
         print("long_term_util = ", long_term_util)
