@@ -18,6 +18,7 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core.components.functions.function import Function_Base
+from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -595,7 +596,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         # the reinitialize method on each stateful mechanism.
         reinitialization_value = []
 
-        if isinstance(mechanism.function_object, IntegratorFunction):
+        if isinstance(mechanism.function_object, StatefulFunction):
             for attr in mechanism.function_object.stateful_attributes:
                 reinitialization_value.append(mechanism.function_object.get_current_function_param(attr, execution_id))
         elif hasattr(mechanism, "integrator_function"):
