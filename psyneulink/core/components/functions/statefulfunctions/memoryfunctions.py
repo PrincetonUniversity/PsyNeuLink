@@ -133,7 +133,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     initializer : float, list or ndarray
         the value assigned as the first item of the deque when the Function is initialized, or reinitialized
         if the **new_previous_value** argument is not specified in the call to `reinitialize
-        <IntegratorFunction.reinitialize>`.
+        <StatefulFUnction.reinitialize>`.
 
     previous_value : 1d array : default ClassDefaults.variable
         state of the deque prior to appending `variable <Buffer.variable>` in the current call.
@@ -343,9 +343,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     .. _DND:
 
-    First, with probability `retrieval_prob <DND.retrieval.prob>`, retrieve vector from `dict <DND.dict>` using
-    first item of `variable <DND.variable>` as key, and the matching algorithm specified in `metric <DND.metric>`;
-    if not retrieval occures, an appropriately shaped zero-valued array is returned.
+    First, with probability `retrieval_prob <DND.retrieval_prob>`, retrieve vector from `dict <DND.dict>` using
+    first item of `variable <DND.variable>` as key, and the matching algorithm specified by `distance_function
+    <DND.distance_function>` and `selection_function <DND.selection_function>`; if no retrieval occures,
+    an appropriately shaped zero-valued array is returned.
 
     Then, with probability `storage_prob <DND.storage_prob>` add new entry using the first item of `variable
     <DND.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
@@ -473,6 +474,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         variable = Param([[0],[0]])
         retrieval_prob = Param(1.0, modulable=True)
         storage_prob = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        key_size = Param(1, stateful=True)
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Param(1000)
 
@@ -587,7 +589,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         self.has_initializers = True
 
-
         if isinstance(self.distance_function, type):
             self.distance_function = self.distance_function()
         self.distance_function = self.distance_function.function
@@ -599,10 +600,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
     def reinitialize(self, *args, execution_context=None):
         """
 
-        Clears the `previous_value <Buffer.previous_value>` deque.
+        Clears the dict in `previous_value <DND.previous_value>`.
 
         If an argument is passed into reinitialize or if the `initializer <DND.initializer>` attribute contains a
-        value besides [], then that value is used to start the new `previous_value <DND.previous_value>` dict.
+        value besides [], then that value is used to start the new dict in `previous_value <DND.previous_value>`.
         Otherwise, the new `previous_value <DND.previous_value>` dict starts out empty.
 
         `value <DND.value>` takes on the same value as  `previous_value <DND.previous_value>`.
@@ -678,6 +679,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         previous_value = self.get_previous_value(execution_id)
 
+        # Set key_size for dict if this is the first entry
+        if not previous_value:
+            self.parameters.key_size.set(len(key), execution_id)
+
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
             ret_val = self.get_memory(key)
@@ -695,7 +700,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if noise:
             key += noise
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
-            self.store_memory(key, value)
+            self.store_memory(key, value, execution_id)
 
         self.parameters.previous_value.set(previous_value, execution_id)
 
@@ -732,41 +737,44 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         return [best_match_val, best_match_key]
 
-    def store_memory(self, memory_key, memory_val):
+    def store_memory(self, memory_key, memory_val, execution_id):
         """Save an episodic memory to the dictionary
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         memory_key : a row vector
-            a DND key, used to for memory search
+            a DND key, used for memory search
         memory_val : a row vector
             a DND value, representing the memory content
         """
-        # add new memory to the the dictionary
-        # get data is necessary for gradient reason
-        # QUESTION: WHY DO IT THIS WAY RATHER THAN JUST UPDATE DICT?
-        #           WHAT IS data.view?  Using Pandas?
-        # self.keys.append(memory_key.data.view(1, -1))
-        # self.vals.append(memory_val.data.view(1, -1))
-        # remove the oldest memory, if overflow
-        d = self.dict
-        if len(self.dict) > self.max_entries:
-            d.pop(list(d.keys())[len(d)-1])
-        d[tuple(memory_key)]=memory_val
+        if len(memory_key) != self.parameters.key_size.get(execution_id):
+            raise FunctionError("Length of {} to store in {} must be same as others in the dict ({})".
+                                format(repr('key'), self.__class__.__name__, self._key_size))
 
-    def add_memories(self, input_keys, input_vals):
-        """Inject pre-defined keys and values
+        d = self.get_previous_value(execution_id)
+        if len(d) > self.max_entries:
+            d.pop(list(d.keys())[len(d)-1])
+        # d[tuple(memory_key)]=memory_val
+        self.parameters.previous_value.set(d.update({tuple(memory_key):memory_val}),execution_id)
+
+    @tc.typecheck
+    def add_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
+        """add key-value pairs to `dict <DND.dict>`.
+
+        Each item must be a 2d array, the first item of which is a key and the second a value.
 
         Parameters
         ----------
-        input_keys : list
-            a list of memory keys
-        input_vals : list
-            a list of memory content
+        memories : list or 2d or 3d array
+            a list of 2d arrays, the first item of which is a key vector and the second a value vector.
         """
-        for k, v in zip(input_keys, input_vals):
-            self.store_memory(k, v)
+        memories = np.array(memories)
+        if not 2 <= memories.ndim <= 3:
+            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
+                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
+        for memory in memories:
+            self.store_memory(memory[0], memory[1], execution_id)
 
     @property
     def dict(self):
-        return self.get_previous_value()
+        return self.previous_value
