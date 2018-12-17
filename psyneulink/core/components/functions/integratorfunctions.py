@@ -2103,12 +2103,20 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
-        # FIXME: Standalone function produces 2d array value
-        if isinstance(state.type.pointee.elements[0], pnlvm.ir.ArrayType):
-            assert len(state.type.pointee) == 1
-            prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
-        else:
-            prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
+        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        def _get_rid_of_2d(element):
+            zero_i32 = ctx.int32_ty(0)
+            assert isinstance(element.type.pointee, pnlvm.ir.ArrayType)
+            if isinstance(element.type.pointee.element, pnlvm.ir.ArrayType):
+                assert(element.type.pointee.count == 1)
+                return builder.gep(element, [zero_i32, zero_i32])
+            return element
+        prev_ptr = _get_rid_of_2d(prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
         prev_val = builder.load(prev_ptr)
 
         vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2132,12 +2140,18 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         builder.store(res, prev_ptr)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        # Eliminate one dimension for 2d variable
-        if self.instance_defaults.variable.ndim > 1:
-            assert self.instance_defaults.variable.shape[0] == 1
-            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        def _get_rid_of_2d(element):
+            zero_i32 = ctx.int32_ty(0)
+            assert isinstance(element.type.pointee, pnlvm.ir.ArrayType)
+            if isinstance(element.type.pointee.element, pnlvm.ir.ArrayType):
+                assert(element.type.pointee.count == 1)
+                return builder.gep(element, [zero_i32, zero_i32])
+            return element
+
+        arg_in = _get_rid_of_2d(arg_in)
+        arg_out = _get_rid_of_2d(arg_out)
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
