@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.4.8.0+1060.g1a15669 documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.4.8.0+1061.g61176a2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1060.g1a15669 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1061.g61176a2 documentation" href="index.html"/>
         <link rel="up" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/>
         <link rel="next" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="prev" title="DDM" href="DDM.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1060
+                0.4.8.0+1061
               </div>
             
           
@@ -194,7 +194,7 @@
 <span id="episodicmemorymechanism"></span><h1>EpisodicMemoryMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="episodicmemorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A EpisodicMemoryMechanism is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Integrator" title="psyneulink.core.components.functions.integratorfunctions.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> Function that can store and retrieve cue-associate pairs.</p>
+<p>A EpisodicMemoryMechanism is an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> Function that can store and retrieve cue-associate pairs.</p>
 </div>
 <div class="section" id="creating-a-transfermechanism">
 <span id="episodicmemorymechanism-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
@@ -206,7 +206,7 @@ the shapes of the items stored in its memory.</p>
 <p>A EpisodicMemoryMechanism has two <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a>, <em>CUE_INPUT</em> and <em>ASSOC_INPUT</em>, that represent
 an item to store;  a <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that stores and retrieves cue-assoc pairs from its
 memory; and two <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, <em>ASSOC_OUTPUT</em> and <em>CUE_OUTPUT</em> that represent a retrieved item.
-The default function is a <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND" title="psyneulink.core.components.functions.integratorfunctions.DND"><code class="xref any py py-class docutils literal"><span class="pre">DND</span></code></a> that implements a simple form of differentiable neural dictionary, but a custom
+The default function is a <a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND"><code class="xref any py py-class docutils literal"><span class="pre">DND</span></code></a> that implements a simple form of differentiable neural dictionary, but a custom
 function can be specified, so long as it meets the following requirements:</p>
 <blockquote>
 <div><ul class="simple">
@@ -217,7 +217,7 @@ function can be specified, so long as it meets the following requirements:</p>
 associated in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s memory.</li>
 </ul>
 <ul class="simple">
-<li>It may also implement <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob"><code class="xref any py py-attr docutils literal"><span class="pre">storage_prob</span></code></a> and <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.retrieval_prob" title="psyneulink.core.components.functions.integratorfunctions.DND.retrieval_prob"><code class="xref any py py-attr docutils literal"><span class="pre">retrieval_prob</span></code></a> attributes;  if it does, they are assigned the values
+<li>It may also implement <a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.storage_prob"><code class="xref any py py-attr docutils literal"><span class="pre">storage_prob</span></code></a> and <a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.retrieval_prob"><code class="xref any py py-attr docutils literal"><span class="pre">retrieval_prob</span></code></a> attributes;  if it does, they are assigned the values
 specified in the corresponding arguments of the EpisodicMemoryMechanism’s constructor, otherwise those are
 ignored.</li>
 </ul>
@@ -363,7 +363,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1060.g1a15669',
+            VERSION:'0.4.8.0+1061.g61176a2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

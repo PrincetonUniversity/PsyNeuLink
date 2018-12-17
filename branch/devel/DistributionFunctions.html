@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DistributionFunctions &mdash; PsyNeuLink 0.4.8.0+1060.g1a15669 documentation</title>
+  <title>DistributionFunctions &mdash; PsyNeuLink 0.4.8.0+1061.g61176a2 documentation</title>
   
 
   
@@ -35,9 +35,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1060.g1a15669 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1061.g61176a2 documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
-        <link rel="next" title="IntegratorFunctions" href="IntegratorFunctions.html"/>
+        <link rel="next" title="StatefulFunctions" href="StatefulFunctions.html"/>
         <link rel="prev" title="SelectionFunctions" href="SelectionFunctions.html"/> 
 
   
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1060
+                0.4.8.0+1061
               </div>
             
           
@@ -550,6 +550,199 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">DriftDiffusionAnalytical</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="Permalink to this definition">¶</a></dt>
+<dd><p id="driftdiffusionanalytical">Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
+drift diffusion process as described in <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+independently for each element.</li>
+<li><strong>drift_rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the drift_rate of the drift diffusion process.  If it is a list or array,
+it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
+<li><strong>threshold</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
+it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
+<li><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
+array, it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
+If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">default_variable</span></code> and all elements must be floats from 0 to 1.</li>
+<li><strong>t0</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
+list or array, it must be the same length as  <code class="xref any docutils literal"><span class="pre">default_variable</span></code> and all
+elements must be floats from 0 to 1.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+<li><strong>shenhav_et_al_compat_mode</strong> (<em>bool : default False</em>) – whether Shenhav et al. compatibility mode is set. See shenhav_et_al_compat_mode property.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or 1d array</em> – holds initial value assigned to <code class="xref std std-keyword docutils literal"><span class="pre">default_variable</span></code> argument;
+ignored by <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate">
+<code class="descname">drift_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array</em> – determines the drift component of the drift diffusion process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold">
+<code class="descname">threshold</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array</em> – determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+process is assumed to terminate).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point">
+<code class="descname">starting_point</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array</em> – determines the initial value of the decision variable for the drift diffusion process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise">
+<code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array</em> – determines the diffusion component of the drift diffusion process (used to specify the variance of a
+Gaussian random process).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.t0">
+<code class="descname">t0</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.t0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array</em> – determines the assumed non-decision time to determine the response time returned by the solution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias">
+<code class="descname">bias</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array</em> – normalized starting point:
+(<a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a> + <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>) /
+(2 * <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
+default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.shenhav_et_al_compat_mode">
+<code class="descname">shenhav_et_al_compat_mode</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.shenhav_et_al_compat_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+the analytic computations of mean error rate and reaction time to match exactly the
+computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
+should only effect edges cases that involve the following cases:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Floating point overflows and underflows are ignored when computing mean RT and mean ER</li>
+<li>Exponential expressions used in cacluating mean RT and mean ER are bounded by 1e-12 to 1e12.</li>
+<li>Decision time is not permitted to be negative and will be set to 0 in these cases. Thus RT
+will be RT = non-decision-time in these cases.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Shenhav et al. compatible mode setting</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(bool)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
+response time (RT)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>2d array</em>) – ignored.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Decision variable, mean ER, mean RT</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(float, float, float)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the derivative of <span class="math">\(\frac{1}{reward rate}\)</span> with respect to the threshold (<strong>output</strong> arg)
+and drift_rate (<strong>input</strong> arg).  Reward rate (<span class="math">\(RR\)</span>) is assumed to be:</p>
+<blockquote>
+<div><span class="math">\(RR = delay_{ITI} + \frac{Z}{A} + ED\)</span>;</div></blockquote>
+<p>the derivative of <span class="math">\(\frac{1}{RR}\)</span> with respect to the <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> is:</p>
+<blockquote>
+<div><span class="math">\(\frac{1}{A} - \frac{E}{A} - 2\frac{A}{c^2}ED\)</span>;</div></blockquote>
+<p>and the derivative of 1/RR with respect to the <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a> is:</p>
+<blockquote>
+<div><span class="math">\(-\frac{Z}{A^2} + \frac{Z}{A^2}E - \frac{2Z}{c^2}ED\)</span></div></blockquote>
+<p>where:</p>
+<blockquote>
+<div><p><em>A</em> = <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>,</p>
+<p><em>Z</em> = <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>,</p>
+<p><em>c</em> = <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>,</p>
+<p><em>E</em> = <span class="math">\(e^{-2\frac{ZA}{c^2}}\)</span>,</p>
+<p><em>D</em> = <span class="math">\(delay_{ITI} + delay_{penalty} - \frac{Z}{A}\)</span>,</p>
+<p><span class="math">\(delay_{ITI}\)</span> is the intertrial interval and <span class="math">\(delay_{penalty}\)</span> is a penalty delay.</p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivatives</strong> – of <span class="math">\(\frac{1}{RR}\)</span> with respect to <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">List[float, float)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 
@@ -563,7 +756,7 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="IntegratorFunctions.html" class="btn btn-neutral float-right" title="IntegratorFunctions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="StatefulFunctions.html" class="btn btn-neutral float-right" title="StatefulFunctions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="SelectionFunctions.html" class="btn btn-neutral" title="SelectionFunctions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -597,7 +790,7 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1060.g1a15669',
+            VERSION:'0.4.8.0+1061.g61176a2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

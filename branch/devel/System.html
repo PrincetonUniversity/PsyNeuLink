@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.8.0+1060.g1a15669 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.8.0+1061.g61176a2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1060.g1a15669 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1061.g61176a2 documentation" href="index.html"/>
         <link rel="up" title="Composition" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Composition" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1060
+                0.4.8.0+1061
               </div>
             
           
@@ -274,8 +274,8 @@ belonging to more than one Process (as shown for control in this figure).</span>
 <p><code class="xref any docutils literal"><span class="pre">SINGLETON</span></code>: both an <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> and a <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanism.</p>
 <p><code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>: sends a Projection that closes a recurrent loop; can be assigned an initial value.</p>
 <p><code class="xref any docutils literal"><span class="pre">CYCLE</span></code>: receives a Projection that closes a recurrent loop.</p>
-<p><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.CONTROL" title="psyneulink.core.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
-<p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.LEARNING" title="psyneulink.core.globals.log.LogCondition.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
+<p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.CONTROL" title="psyneulink.core.globals.log.LogCondition.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
+<p><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.LEARNING" title="psyneulink.core.globals.context.ContextFlags.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
 <p><code class="xref any docutils literal"><span class="pre">TARGET</span></code>: ComparatorMechanism that monitors a <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanism of a Process and compares it to a corresponding
 value provided in the <a class="reference internal" href="#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 <p><code class="xref any docutils literal"><span class="pre">INTERNAL</span></code>: ProcessingMechanism that does not fall into any of the categories above.</p>
@@ -721,11 +721,11 @@ phase of execution</span></a></li>
 phase of execution</span></a></li>
 <li><strong>reinitialize_values</strong> (<em>Dict</em><em>[</em><em>Mechanism: List</em><em>[</em><em>reinitialization values</em><em>] or </em><em>np.ndarray</em><em>(</em><em>reinitialization values</em><em>)</em>) – a dictionary containing Mechanism: value pairs. Each Mechanism in the dictionary calls its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method at the start of the Run. The Mechanism’s value in the
 reinitialize_values dictionary is passed into its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method. See
-the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.Integrator.reinitialize" title="psyneulink.core.components.functions.integratorfunctions.Integrator.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span> <span class="pre">method</span></code></a> of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+the <code class="xref any docutils literal"><span class="pre">reinitialize</span> <span class="pre">method</span></code> of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 or <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> of the Mechanism for details on which
 values must be passed in as arguments. Keep in mind that only stateful Mechanisms may be reinitialized, and
 that Mechanisms in reinitialize_values will reinitialize regardless of whether their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> Condition is satisfied.</li>
-<li><strong>animate</strong> (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.dict" title="psyneulink.core.components.functions.integratorfunctions.DND.dict"><em>dict</em></a><em> or </em><em>bool : False</em>) – <p>specifies use of the <a class="reference internal" href="#psyneulink.core.components.system.System.show_graph" title="psyneulink.core.components.system.System.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method to generate a gif movie showing the sequence
+<li><strong>animate</strong> (<a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.dict" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.dict"><em>dict</em></a><em> or </em><em>bool : False</em>) – <p>specifies use of the <a class="reference internal" href="#psyneulink.core.components.system.System.show_graph" title="psyneulink.core.components.system.System.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method to generate a gif movie showing the sequence
 of Components executed in a trial.  A dict can be specified containing options to pass to the <a class="reference internal" href="#psyneulink.core.components.system.System.show_graph" title="psyneulink.core.components.system.System.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method;  each key must be an argument of the <a class="reference internal" href="#psyneulink.core.components.system.System.show_graph" title="psyneulink.core.components.system.System.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>
 method, and its value a specification for that argument.  The entries listed below can also be included
 in the dict to specify parameters of the animation.  If the <strong>animate</strong> argument is specified simply as
@@ -819,7 +819,7 @@ projections;</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Dictionary of System attributes and values</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.DND.dict" title="psyneulink.core.components.functions.integratorfunctions.DND.dict">dict</a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.dict" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.dict">dict</a></td>
 </tr>
 </tbody>
 </table>
@@ -1092,7 +1092,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1060.g1a15669',
+            VERSION:'0.4.8.0+1061.g61176a2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
