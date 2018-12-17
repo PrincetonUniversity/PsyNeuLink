@@ -592,7 +592,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         ctlr.system._initialize_from_context(sim_execution_id, execution_id)
 
         inputs = {key:value[i] for key, value in predicted_input.items()}
-
+        print("trying ", allocation_vector)
         outcome = ctlr.evaluate(
             inputs=inputs,
             allocation_vector=allocation_vector,
@@ -615,7 +615,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         # print ("Trial: {}\tInput: {}\tAllocation: {}\tOutcome: {}\tCost: {}\tEVC: {}".
         #        format(i, list(inputs.values())[0], allocation_vector,
         #               EVC_list[i][1], EVC_list[i][2], EVC_list[i][0]))
-
+    print("EVC list = ", EVC_list)
     # Re-assign values of reinitialization attributes to their value at entry
     for mechanism in reinitialization_values:
         mechanism.reinitialize(*reinitialization_values[mechanism], execution_context=execution_id)

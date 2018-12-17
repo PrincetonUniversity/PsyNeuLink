@@ -3164,7 +3164,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ):
             if self.model_based_optimizer:
                 self.model_based_optimizer.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                print("EXECUTE OCM")
                 control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
+                print("DONE EXECTING OCM")
                 self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -3173,7 +3175,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
-
+        print("DONE WITH TRIAL | output = ", output_values)
         return output_values
 
     def reinitialize(self, values, execution_context=NotImplemented):
@@ -4217,6 +4219,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+            # need to update input states in order to get correct value for "outcome" (from objective mech) 
+            self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
+
             outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
             all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
             combined_costs = self.model_based_optimizer.combine_costs(all_costs)

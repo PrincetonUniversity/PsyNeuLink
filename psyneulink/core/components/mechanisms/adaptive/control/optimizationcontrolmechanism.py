@@ -838,6 +838,8 @@ class OptimizationControlMechanism(ControlMechanism):
             if not 'has no attribute \'_after_agent_rep_execution\'' in e.args[0]:
                 raise AttributeError(e.args[0])
         # Return optimal control_allocation
+        print("optimal_control_allocation = ", optimal_control_allocation)
+        print("optimal_net_outcome = ", optimal_net_outcome)
         return optimal_control_allocation
 
     def _set_up_simulation(self, base_execution_id=None):

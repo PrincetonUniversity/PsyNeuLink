@@ -933,6 +933,7 @@ class DDM(ProcessingMechanism_Base):
             Matplotlib window of the Mechanism's function plotting dynamically over time with specified parameters
             towards a specified threshold
 
+
         """
         import matplotlib.pyplot as plt
         import time
@@ -1094,7 +1095,7 @@ class DDM(ProcessingMechanism_Base):
             variable = self.instance_defaults.variable
 
         variable = self._validate_variable(variable)
-
+        print("DDM variable = ", variable)
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function.__self__, Integrator):
 
@@ -1151,7 +1152,7 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
-
+            print("DDM value = ", return_value)
             return return_value
 
     def reinitialize(self, *args, execution_context=None):
@@ -1187,5 +1188,4 @@ class DDM(ProcessingMechanism_Base):
                 )
             )
             return True
-
         return False

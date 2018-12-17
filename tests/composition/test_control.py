@@ -449,25 +449,12 @@ class TestModelBasedOptimizationControlMechanisms:
         Target_Rep = pnl.TransferMechanism(
             name='Target Representation',
             function=pnl.Linear(
-                # slope=(
-                #     1.0,
-                #     pnl.ControlProjection(
-                #         function=pnl.Linear,
-                #         control_signal_params={pnl.ALLOCATION_SAMPLES: signalSearchRange}
-                #     )
                 )
             )
 
         Flanker_Rep = pnl.TransferMechanism(
             name='Flanker Representation',
             function=pnl.Linear(
-                # slope=(
-                #     1.0,
-                #     pnl.ControlProjection(
-                #         function=pnl.Linear,
-                #         control_signal_params={pnl.ALLOCATION_SAMPLES: signalSearchRange}
-                #     )
-                # )
             )
         )
 
@@ -517,13 +504,11 @@ class TestModelBasedOptimizationControlMechanisms:
 
         target_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],
                                                       function=pnl.Linear,
-                                                      cost_options=[pnl.ControlSignalCosts.INTENSITY],
                                                       intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                       allocation_samples=signalSearchRange)
 
         flanker_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Flanker_Rep)],
                                                       function=pnl.Linear,
-                                                      cost_options=[pnl.ControlSignalCosts.INTENSITY],
                                                       intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                       allocation_samples=signalSearchRange)
 
@@ -552,9 +537,9 @@ class TestModelBasedOptimizationControlMechanisms:
                           flanker_stim: flankerInputList,
                           reward: rewardList}
 
-        expected_results_array = [[0.2645, 0.32257752863413636, 0.9481940753514433, 100.],
-                                  [0.2645, 0.42963678062444666, 0.47661180945923376, 100.],
-                                  [0.2645, 0.300291026852769, 0.97089165101931, 100.]]
+        expected_results_array = [[[0.32257752863413636], [0.9481940753514433], [100.]],
+                                  [[0.42963678062444666], [0.47661180945923376], [100.]],
+                                  [[0.300291026852769], [0.97089165101931], [100.]]]
 
         expected_sim_results_array = [
             [[0.32257753], [0.94819408], [100.]],
@@ -636,6 +621,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for control_signal in evc_gratton.model_based_optimizer.control_signals:
             control_signal.allocation_samples = signalSearchRange
+        print("RUN")
         evc_gratton.run(
             num_trials=nTrials,
             inputs=stim_list_dict,
@@ -643,8 +629,10 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for i in range(len(evc_gratton.results)):
             print("\nResult", i, " = ", evc_gratton.results[i], "[Expected ", expected_results_array[i], "]")
-        # for trial in range(len(evc_gratton.results)):
-        #     assert np.allclose(expected_results_array[trial], evc_gratton.results[trial])
+        for trial in range(len(evc_gratton.results)):
+            assert np.allclose(expected_results_array[trial],
+                               # Note: Skip decision variable OutputState
+                               evc_gratton.results[trial][1:])
         for simulation in range(len(evc_gratton.simulation_results)):
             assert np.allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputState

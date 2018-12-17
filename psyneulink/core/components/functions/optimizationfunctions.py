@@ -1435,7 +1435,6 @@ class GridSearch(OptimizationFunction):
                 params=params,
                 context=context
             )
-
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:
@@ -1458,6 +1457,7 @@ class GridSearch(OptimizationFunction):
                                             "(current_execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
                        self.owner.current_execution_count, self.num_iterations))
+        print("trying ", sample)
         return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
