@@ -334,30 +334,32 @@ class DND(MemoryFunction):  # --------------------------------------------------
         prefs=None,                                  \
         )
 
-    Implements simple form of `Differential Neural Dictionary described in `Ritter et al.
+    Implements simple form of Differential Neural Dictionary described in `Ritter et al.
     <http://arxiv.org/abs/1805.09692>`_
 
     Based on implementation in `dlstm <https://github.com/qihongl/dlstm-demo>`_ by
-    `Qihong Lu <https://github.com/qihongl>`_.  See also  `Kaiser et al. <http://arxiv.org/abs/1703.03129>`_
-    and `Pritzel et al. <http://arxiv.org/abs/1703.01988>`_.
+    `Qihong Lu <https://github.com/qihongl>`_ (see also  `Kaiser et al. <http://arxiv.org/abs/1703.03129>`_
+    and `Pritzel et al. <http://arxiv.org/abs/1703.01988>`_).
 
     .. _DND:
 
-    First, with probability `retrieval_prob <DND.retrieval_prob>`, retrieve vector from `dict <DND.dict>` using
-    first item of `variable <DND.variable>` as key, and the matching algorithm specified by `distance_function
-    <DND.distance_function>` and `selection_function <DND.selection_function>`; if no retrieval occures,
-    an appropriately shaped zero-valued array is returned.
-
-    Then, with probability `storage_prob <DND.storage_prob>` add new entry using the first item of `variable
-    <DND.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
-    **noise** arguments are applied to the key before storing:
+    * First, with probability `retrieval_prob <DND.retrieval_prob>`, retrieve vector from `dict <DND.dict>` using
+      first item of `variable <DND.variable>` as key, and the matching algorithm specified by `distance_function
+      <DND.distance_function>` and `selection_function <DND.selection_function>`; if no retrieval occures,
+      an appropriately shaped zero-valued array is returned.
+    ..
+    * Then, with probability `storage_prob <DND.storage_prob>` add new entry using the first item of `variable
+      <DND.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
+      **noise** arguments are applied to the key before storing:
 
     .. math::
         variable[1] * rate + noise
 
     .. note::
-       Keys in `dict <DND.dict>` are stored as tuples (since lists and arrays are not hashable);
-       they are converted to arrays for evaluation during retrieval.
+       * Keys in `dict <DND.dict>` are stored as tuples (since lists and arrays are not hashable);
+         they are converted to arrays for evaluation during retrieval.
+       ..
+       * All keys must be the same length (for comparision during retrieval).
 
     Arguments
     ---------
@@ -411,6 +413,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
     variable : 2d array
         1st item (variable[0] is the key used to retrieve an enrtry from `dict <DND.dict>`, and 2nd item
         (variable[1]) is the value of the entry, paired with key and added to the `dict <DND.dict>`.
+
+    key_size : int
+        length of keys in `dict <DND.dict>`.
 
     retrieval_prob : float in interval [0,1]
         probability of retrieiving a value from `dict <DND.dict>`.
@@ -599,6 +604,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     def reinitialize(self, *args, execution_context=None):
         """
+        reinitialize(<new_dictionary> default={})
 
         Clears the dict in `previous_value <DND.previous_value>`.
 
@@ -683,7 +689,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
-            ret_val = self.get_memory(key)
+            ret_val = self.get_memory(key, execution_id)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
@@ -698,18 +704,38 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if noise:
             key += noise
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
-            self.store_memory(variable, execution_id)
+            self._store_memory(variable, execution_id)
 
         return self.convert_output_type(ret_val)
 
-    def get_memory(self, query_key):
-        """Perform a 1-NN search over dnd
+    @tc.typecheck
+    def _validate_memory(self, memory:tc.any(list, np.ndarray), execution_id):
 
-        Parameters
-        ----------
-        query_key : 1d array
-            used to retrieve item with key that best matches query_key, based on `distance_function
-            <DND.distance_function>` and `selection_function <DND.selection_function>`.
+        # memory must be list or 2d array with 2 items
+        if len(memory) != 2 and not all(np.array(i).ndim == 1 for i in memory):
+            raise FunctionError("Attempt to store memory in {} ({}) that does not have 2 1d arrays".
+                                format(self.__class__.__name__, memory))
+
+        self._validate_key(memory[0], execution_id)
+
+    @tc.typecheck
+    def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
+        # Length of key must be same as that of existing entries (so it can be matched on retrieval)
+        if len(key) != self.parameters.key_size.get(execution_id):
+            raise FunctionError("Length of {} to store in {} must be same as others in the dict ({})".
+                                format(repr('key'), self.__class__.__name__, self._key_size))
+
+    @tc.typecheck
+    def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id):
+        """get_memory(query_key, execution_id=None)
+
+        Retrieve memory from `dict <DND.dict>` based on `distance_function <DND.distance_function>` and
+        `selection_function <DND.selection_function>`.
+
+        Arguments
+        ---------
+        query_key : list or 1d array
+            must be same length as key(s) of any existing entries in `dict <DND.dict>`.
 
         Returns
         -------
@@ -719,52 +745,59 @@ class DND(MemoryFunction):  # --------------------------------------------------
         """
         # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
+
+        self._validate_key(query_key, execution_id)
         # if no memory, return the zero vector
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
         if len(self.dict) == 0:
             return np.zeros_like(self.instance_defaults.variable)
         # compute similarity(query_key, memory m ) for all m
-        distances = [self.distance_function([query_key, list(m)]) for m in self.dict.keys()]
+        memory_dict = self.get_previous_value(execution_id)
+        distances = [self.distance_function([query_key, list(m)]) for m in memory_dict.keys()]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
         index_of_selected_item = int(np.flatnonzero(selection_array))
-        best_match_key = list(self.dict.keys())[index_of_selected_item]
-        best_match_val = list(self.dict.values())[index_of_selected_item]
+        best_match_key = list(memory_dict.keys())[index_of_selected_item]
+        best_match_val = list(memory_dict.values())[index_of_selected_item]
 
         return [best_match_val, best_match_key]
 
     @tc.typecheck
-    def store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
-        """Save an episodic memory to the dictionary
+    def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
+        """Save an key-value pair to `dict <DND.dict>`
 
         Arguments
         ---------
         memory : list or 2d array
+            must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
+            the key must be the same length as key(s) of any existing entries in `dict <DND.dict>`.
         """
+
+        self._validate_memory(memory, execution_id)
+
         key = memory[0]
         val = memory[1]
 
-        if len(key) != self.parameters.key_size.get(execution_id):
-            raise FunctionError("Length of {} to store in {} must be same as others in the dict ({})".
-                                format(repr('key'), self.__class__.__name__, self._key_size))
-
         d = self.get_previous_value(execution_id) or {}
+
         if len(d) > self.max_entries:
             d.pop(list(d.keys())[len(d)-1])
+
         d.update({tuple(key):val})
         self.parameters.previous_value.set(d,execution_id)
-        assert True
 
     @tc.typecheck
     def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
-        """add key-value pairs to `dict <DND.dict>`.
+        """insert_memories(memories, execution_id=None)
 
-        Each item must be a 2d array, the first item of which is a key and the second a value.
+        add key-value pairs to `dict <DND.dict>`.
 
-        Parameters
-        ----------
-        memories : list or 2d or 3d array
-            a list of 2d arrays, the first item of which is a key vector and the second a value vector.
+        Arguments
+        ---------
+        memories : list or array
+            a list or array of 2d arrays, each of which must be a valid "memory" consisting of two items,
+            a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
+            length and equal to the length as key(s) of any existing entries in `dict <DND.dict>`.
         """
         memories = np.array(memories)
         if not 2 <= memories.ndim <= 3:
