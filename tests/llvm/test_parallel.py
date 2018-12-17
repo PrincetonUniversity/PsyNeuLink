@@ -4,7 +4,7 @@ import psyneulink.core.llvm as pnlvm
 import numpy as np
 import psyneulink.core.components.functions.function as Function
 import psyneulink.core.components.functions.objectivefunctions as Functions
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -74,7 +74,7 @@ def test_nested_transfer_mechanism_composition_parallel(benchmark, executions):
 
     # mechanisms
     A = ProcessingMechanism(name="A",
-                            function=AdaptiveIntegratorFunction(rate=0.1))
+                            function=AdaptiveIntegrator(rate=0.1))
     B = ProcessingMechanism(name="B",
                             function=Logistic)
 
@@ -112,7 +112,7 @@ def test_nested_transfer_mechanism_composition_run_parallel(benchmark, execution
 
     # mechanisms
     A = ProcessingMechanism(name="A",
-                            function=AdaptiveIntegratorFunction(rate=0.1))
+                            function=AdaptiveIntegrator(rate=0.1))
     B = ProcessingMechanism(name="B",
                             function=Logistic)
 
@@ -149,7 +149,7 @@ def test_nested_transfer_mechanism_composition_run_multi_parallel(benchmark, exe
 
     # mechanisms
     A = ProcessingMechanism(name="A",
-                            function=AdaptiveIntegratorFunction(rate=0.1))
+                            function=AdaptiveIntegrator(rate=0.1))
     B = ProcessingMechanism(name="B",
                             function=Logistic)
 

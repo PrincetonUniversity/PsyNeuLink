@@ -36,7 +36,8 @@ The function used to carry out the transformation can be selected from the follo
 The **integrator_mode** argument can switch the transformation from an "instantaneous"  to a "time averaged"
 (integrated) manner of execution. When `integrator_mode <TransferMechanism.integrator_mode>` is set to True, the
 mechanism's input is first transformed by its `integrator_function <TransferMechanism.integrator_function>` (the
-`AdaptiveIntegratorFunction`). That result is then transformed by the mechanism's `function <TransferMechanism.function>`.
+`AdaptiveIntegrator`). That result is then transformed by the mechanism's `function
+<TransferMechanism.function>`.
 
 .. _Transfer_Creation:
 
@@ -70,7 +71,8 @@ When `integrator_mode <TransferMechanism.integrator_mode>` is True, the Transfer
 <TransferMechanism.function>`.
 
 By default, the `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is
-`AdaptiveIntegratorFunction`.  However, any `IntegratorFunction` can be assigned. A TransferMechanism has three parameters that
+`AdaptiveIntegrator`.  However, any `IntegratorFunction` can be assigned. A TransferMechanism has three
+parameters that
 are used by most IntegratorFunctions:  `initial_value <TransferMechanism.initial_value>`, `integration_rate
 <TransferMechanism.integration_rate>`, and `noise <TransferMechanism.noise>`.  If any of these are specified in the
 TransferMechanism's constructor, their value is used to specify the corresponding parameter of its `integrator_function
@@ -81,17 +83,20 @@ TransferMechanism's constructor, their value is used to specify the correspondin
     ...                                                        initial_value=np.array([[0.2]]),
     ...                                                        integration_rate=0.1)
 
-``my_logistic_transfer_mechanism`` will be assigned an `AdaptiveIntegratorFunction` (the default) as its `integrator_function
-<TrasnferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegratorFunction.initializer>` parameter,
-and ``0.`` as its `rate <AdaptiveIntegratorFunction.rate>` parameter.  However, in this example::
+``my_logistic_transfer_mechanism`` will be assigned an `AdaptiveIntegrator` (the default) as its
+`integrator_function
+<TrasnferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegrator.initializer>`
+parameter,
+and ``0.`` as its `rate <AdaptiveIntegrator.rate>` parameter.  However, in this example::
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
-    ...                                                        integrator_function=AdaptiveIntegratorFunction(rate=0.3),
+    ...                                                        integrator_function=AdaptiveIntegrator(rate=0.3),
     ...                                                        initial_value=np.array([[0.2]]),
     ...                                                        integration_rate=0.1)
 
-the AdaptiveIntegratorFunction's `rate <AdaptiveIntegratorFunction.rate>` parameter will be assigned ``0.3``, and this will also
+the AdaptiveIntegrator's `rate <AdaptiveIntegrator.rate>` parameter will be assigned ``0.3``,
+and this will also
 be assigned to the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter, overriding
 the specified value of ``0.1``.
 
@@ -117,7 +122,7 @@ When switching between `integrator_mode <TransferMechanism.integrator_mode>` = T
 
         (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize
         method
-                <AdaptiveIntegratorFunction.reinitialize>` so that accumulation Mechanism begins at `initial_value
+                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
                 <TransferMechanism.initial_value>`
 
 Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
@@ -240,22 +245,23 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 ~~~~~~~~~~~~~~~~~~
 
 In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
-starting point. This is done using the `reinitialize <AdaptiveIntegratorFunction.reinitialize>` method on the mechanism's
+starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the
+mechanism's
 `integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reinitialize
 <TransferMechanism.reinitialize>` method.
 
-The `reinitialize <AdaptiveIntegratorFunction.reinitialize>` method of the `integrator_function
+The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
 <TransferMechanism.integrator_function>` sets:
 
-    - the integrator_function's `previous_value <AdaptiveIntegratorFunction.previous_value>` attribute
-    - the integrator_function's `value <AdaptiveIntegratorFunction.value>` attribute
+    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
+    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
     to the specified value.
 
 The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMechanism` first sets:
 
-    - the integrator_function's `previous_value <AdaptiveIntegratorFunction.previous_value>` attribute
-    - the integrator_function's `value <AdaptiveIntegratorFunction.value>` attribute
+    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
+    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
     to the specified value. Then:
 
@@ -264,7 +270,7 @@ The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMecha
     - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
     - the TransferMechanism updates its `output_states <TransferMechanism.output_states>`
 
-A use case for `reinitialize <AdaptiveIntegratorFunction.reinitialize>` is demonstrated in the following example:
+A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
 
 Create a `System` with a TransferMechanism in integrator_mode:
 
@@ -293,11 +299,11 @@ where it left off:
     ...               num_trials=5)                                                 #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)  #doctest: +SKIP
 
-The integrator_function's `reinitialize <AdaptiveIntegratorFunction.reinitialize>` method and the TransferMechanism's
+The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` method and the TransferMechanism's
 `reinitialize <TransferMechanism.reinitialize>` method are useful in cases when the integration should instead start
 over at the original initial value, or a new one.
 
-Use `reinitialize <AdaptiveIntegratorFunction.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
+Use `reinitialize <AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
 
     >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize(np.array([[0.2]]))  #doctest: +SKIP
 
@@ -309,12 +315,13 @@ at 0.2, following the exact same trajectory as in RUN 1:
     ...               num_trials=5)                                               #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
 
-Because `reinitialize <AdaptiveIntegratorFunction.reinitialize>` was set to 0.2 (its original initial_value),
+Because `reinitialize <AdaptiveIntegrator.reinitialize>` was set to 0.2 (its original initial_value),
 my_time_averaged_transfer_mechanism's integrator_function effectively started RUN 3 in the same state as it began RUN 1.
 As a result, it arrived at the exact same value after 5 trials (with identical inputs).
 
-In the examples above, `reinitialize <AdaptiveIntegratorFunction.reinitialize>` was applied directly to the integrator function.
-The key difference between the `integrator_function's reinitialize <AdaptiveIntegratorFunction.reinitialize>` and the
+In the examples above, `reinitialize <AdaptiveIntegrator.reinitialize>` was applied directly to the
+integrator function.
+The key difference between the `integrator_function's reinitialize <AdaptiveIntegrator.reinitialize>` and the
 `TransferMechanism's reinitialize <TransferMechanism.reinitialize>` is that the latter will also execute the mechanism's
 function and update its output states. This is useful if the mechanism's value or any of its output state values will
 be used or checked *before* the mechanism's next execution. (This may be true if, for example, the mechanism is
@@ -351,7 +358,7 @@ from psyneulink.core.components.functions.function import Function, \
     is_function_type
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
@@ -495,7 +502,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     input_states=None,                                                            \
     function=Linear,                                                              \
     integrator_mode=False,                                                        \
-    integrator_function=AdaptiveIntegratorFunction,                                       \
+    integrator_function=AdaptiveIntegrator,                                       \
     on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,                           \
     initial_value=None,                                                           \
     integration_rate=0.5,                                                         \
@@ -569,7 +576,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         when set to `True`), or simply report the asymptotic value of the output of its `function
         <TransferMechanism.function>` (when set to `False`).
 
-    integrator_function : IntegratorFunction : default AdaptiveIntegratorFunction
+    integrator_function : IntegratorFunction : default AdaptiveIntegrator
         specifies `IntegratorFunction` to use in `integration_mode <TransferMechanism.integration_mode>`.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
@@ -597,7 +604,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 <TransferMechanism.integrator_mode>` was True.
 
         (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
-                <AdaptiveIntegratorFunction.reinitialize>` so that accumulation Mechanism begins at `initial_value
+                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
                 <TransferMechanism.initial_value>`
 
     noise : float or function : default 0.0
@@ -720,7 +727,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 <TransferMechanism.integrator_mode>` was True.
 
         (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
-                <AdaptiveIntegratorFunction.reinitialize>` so that accumulation Mechanism begins at `initial_value
+                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
                 <TransferMechanism.initial_value>`
 
     noise : float or function
@@ -757,7 +764,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         .. note::
            The TransferMechanism's `previous_value` attribute is distinct from the `previous_value
-           <AdaptiveIntegratorFunction.previous_value>` attribute of its `integrator_function
+           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
            <TransferMechanism.integrator_function>`.
 
     delta : scalar
@@ -922,7 +929,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  function=Linear,
                  integrator_mode=False,
-                 integrator_function=AdaptiveIntegratorFunction,
+                 integrator_function=AdaptiveIntegrator,
                  initial_value=None,
                  integration_rate=0.5,
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
@@ -945,7 +952,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_states = [RESULTS]
 
         initial_value = self._parse_arg_initial_value(initial_value)
-        self.integrator_function = integrator_function or AdaptiveIntegratorFunction # In case any subclass set it to None
+        self.integrator_function = integrator_function or AdaptiveIntegrator # In case any subclass set it to None
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,

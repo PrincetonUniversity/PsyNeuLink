@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegratorFunction, \
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator, \
     IntegratorFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -75,7 +75,7 @@ class TestReinitializeValues:
         )
 
     def test_reset_state_integrator_mechanism(self):
-        A = IntegratorMechanism(name='A', function=DriftDiffusionIntegratorFunction())
+        A = IntegratorMechanism(name='A', function=DriftDiffusionIntegrator())
 
         # Execute A twice
         #  [0] saves decision variable only (not time)
@@ -134,7 +134,7 @@ class TestReinitializeValues:
             integration_rate=0.2
         )
 
-        B = IntegratorMechanism(name='B', function=DriftDiffusionIntegratorFunction(rate=0.1))
+        B = IntegratorMechanism(name='B', function=DriftDiffusionIntegrator(rate=0.1))
         C = TransferMechanism(name='C')
 
         P = Process(pathway=[A, B, C])

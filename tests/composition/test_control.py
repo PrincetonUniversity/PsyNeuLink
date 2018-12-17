@@ -387,7 +387,7 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp, features={
-            pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]}, feature_function=pnl.AdaptiveIntegratorFunction(rate=0.5),
+            pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]}, feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(
                                                                                       monitor_for_control=[Reward,
                                                                                                            Decision.PROBABILITY_UPPER_THRESHOLD,
@@ -544,7 +544,7 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.add_c_node(Reward, required_roles=pnl.CNodeRole.TERMINAL)
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp, features={
-            pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Flanker_Stim, Reward]}, feature_function=pnl.AdaptiveIntegratorFunction(
+            pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Flanker_Stim, Reward]}, feature_function=pnl.AdaptiveIntegrator(
             rate=1.0), objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
                                                                                        (
                                                                                        Decision.PROBABILITY_UPPER_THRESHOLD,

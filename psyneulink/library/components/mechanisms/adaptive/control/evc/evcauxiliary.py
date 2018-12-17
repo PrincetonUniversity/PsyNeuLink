@@ -729,10 +729,10 @@ class PredictionMechanism(IntegratorMechanism):
       are assigned as the `Linear` function's `slope <Linear.slope>` and `intercept <Linear.intercept>` parameters,
       respectively.
 
-    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegratorFunction` Function to compute an exponentially weighted
+    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegrator` Function to compute an exponentially weighted
       time-average of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise**
-      arguments can be used to specify the corresponding `rate <AdaptiveIntegratorFunction.rate>` and `noise
-      <AdaptiveIntegratorFunction.noise>` parameters of the function.  The function returns the time-averaged input
+      arguments can be used to specify the corresponding `rate <AdaptiveIntegrator.rate>` and `noise
+      <AdaptiveIntegrator.noise>` parameters of the function.  The function returns the time-averaged input
       as a single item.
 
     * *AVERAGE_INPUTS:* uses a `Buffer` Function to compute the average of the number of preceding inputs specified in
@@ -833,7 +833,7 @@ class PredictionMechanism(IntegratorMechanism):
 
     function : Function
         used to track the inputs to the PredictionMechanism's `origin_mechanism <PredictionMechanism.origin_mechanism>`;
-        the default is an `AdaptiveIntegratorFunction` (see `above <PredictionMechanism_Function>` for additional details).
+        the default is an `AdaptiveIntegrator` (see `above <PredictionMechanism_Function>` for additional details).
 
     value : 3d np.array
         result returned by the PredictionMechanism's `function <PredictionMechanism.function>`, and provided as
@@ -917,7 +917,7 @@ class PredictionMechanism(IntegratorMechanism):
                 function = Linear(slope=rate, intercept=noise)
 
             elif function is TIME_AVERAGE_INPUT:
-                # Use default for IntegratorMechanism: AdaptiveIntegratorFunction
+                # Use default for IntegratorMechanism: AdaptiveIntegrator
                 function = self.ClassDefaults.function
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:

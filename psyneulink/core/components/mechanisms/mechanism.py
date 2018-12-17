@@ -260,8 +260,8 @@ the parameters in the  example above could also be accessed as ``my_mechanism.fu
 Some Mechanisms have auxiliary functions that are inherent (i.e., not made available as arguments in the Mechanism's
 constructor;  e.g., the `integrator_function <TransferMechanism.integrator_function>` of a `TransferMechanism`);
 however, the Mechanism may include parameters for those functions in its constructor (e.g., the **noise** argument in
-the constructor for a `TransferMechanism` is used as the `noise <AdaptiveIntegratorFunction.noise>` parameter of the
-`AdaptiveIntegratorFunction` assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`).
+the constructor for a `TransferMechanism` is used as the `noise <AdaptiveIntegrator.noise>` parameter of the
+`AdaptiveIntegrator` assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`).
 
 COMMENT:
 NOT CURRENTLY IMPLEMENTED

@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 import uuid
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
@@ -146,7 +146,7 @@ class TestScheduler:
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_change_termination_condition(self):
-        D = DDM(function=DriftDiffusionIntegratorFunction(threshold=10))
+        D = DDM(function=DriftDiffusionIntegrator(threshold=10))
         P = Process(pathway=[D])
         S = System(processes=[P])
 

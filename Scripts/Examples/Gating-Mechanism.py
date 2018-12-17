@@ -62,7 +62,7 @@ Middle_Weights = pnl.MappingProjection(
     receiver=Hidden_Layer_2,
     matrix={
         pnl.VALUE: Middle_Weights_matrix,
-        pnl.FUNCTION: psyneulink.core.components.functions.statefulfunctions.integratorfunctions.ConstantIntegratorFunction,
+        pnl.FUNCTION: psyneulink.core.components.functions.statefulfunctions.integratorfunctions.ConstantIntegrator,
         pnl.FUNCTION_PARAMS: {
             pnl.INITIALIZER: Middle_Weights_matrix,
             pnl.RATE: Middle_Weights_matrix
