@@ -105,7 +105,7 @@ def test_nested_transfer_mechanism_composition_parallel(benchmark, executions):
 @pytest.mark.cuda
 @pytest.mark.parallel
 @pytest.mark.composition
-@pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
+@pytest.mark.benchmark(group="TransferMechanism nested composition parallel run")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_nested_transfer_mechanism_composition_run_parallel(benchmark, executions):
@@ -142,7 +142,7 @@ def test_nested_transfer_mechanism_composition_run_parallel(benchmark, execution
 @pytest.mark.cuda
 @pytest.mark.parallel
 @pytest.mark.composition
-@pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
+@pytest.mark.benchmark(group="TransferMechanism nested composition parallel run multi")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_nested_transfer_mechanism_composition_run_multi_parallel(benchmark, executions):

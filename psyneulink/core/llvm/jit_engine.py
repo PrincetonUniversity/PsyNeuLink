@@ -14,11 +14,10 @@ import os, re
 
 from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module, _float_ty
 from .builtins import _generate_cpu_builtins_module
-
-_dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
+from .debug import debug_env
 
 try:
-    if _dumpenv.find("cuda") != -1:
+    if "cuda" in debug_env:
         import pycuda
         # Do not continue if the version is too old
         if pycuda.VERSION[0] >= 2018:
@@ -119,7 +118,7 @@ def _ptx_jit_constructor():
 
 
 def _try_parse_module(module):
-    if _dumpenv.find("llvm") != -1:
+    if "llvm" in debug_env:
         print(module)
 
     # IR module is not the same as binding module.
@@ -145,19 +144,19 @@ class jit_engine:
         self.__opt_modules = 0
         # Add an extra reference to make sure it's not destroyed before
         # instances of jit_engine
-        self.__dumpenv = _dumpenv
+        self.__debug_env = debug_env
 
     def __del__(self):
-        if self.__dumpenv.find("mod_count") != -1:
-            print("Total JIT modules: ", self.__opt_modules)
+        if "mod_count" in self.__debug_env:
+            print("Total JIT modules in '{}': {}".format(type(self).__name__, self.__opt_modules))
 
     def opt_and_add_bin_module(self, module):
         self._pass_manager.run(module)
-        if self.__dumpenv.find("opt") != -1:
+        if "opt" in self.__debug_env:
             print(module)
 
         # This prints generated x86 assembly
-        if self.__dumpenv.find("isa") != -1:
+        if "isa" in self.__debug_env:
             print("ISA assembly:")
             print(self._target_machine.emit_assembly(module))
 

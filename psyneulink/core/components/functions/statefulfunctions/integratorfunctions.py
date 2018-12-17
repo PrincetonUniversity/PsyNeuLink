@@ -33,8 +33,8 @@ import warnings
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
@@ -52,8 +52,6 @@ from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.core import llvm as pnlvm
-from psyneulink.core.llvm import helpers
 
 
 __all__ = ['SimpleIntegratorFunction', 'ConstantIntegratorFunction', 'AdaptiveIntegratorFunction', 'DriftDiffusionIntegratorFunction', 'OrnsteinUhlenbeckIntegratorFunction',
@@ -1447,22 +1445,26 @@ class AdaptiveIntegratorFunction(IntegratorFunction):  # -----------------------
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
         offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
 
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
 
-        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
-        if isinstance(noise_p.type.pointee, ir.ArrayType) and noise_p.type.pointee.count > 1:
-            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
+        if isinstance(rate_p.type.pointee, pnlvm.ir.ArrayType) and rate_p.type.pointee.count > 1:
+            rate_p = builder.gep(rate_p, [ctx.int32_ty(0), index])
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
 
+        if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
+            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
-        # FIXME: Standalone function produces 2d array value
-        if isinstance(state.type.pointee.elements[0], ir.ArrayType):
-            assert len(state.type.pointee) == 1
-            prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
-        else:
-            prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
+        # Get the only context member -- previous value
+        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
         prev_val = builder.load(prev_ptr)
 
         vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1476,26 +1478,19 @@ class AdaptiveIntegratorFunction(IntegratorFunction):  # -----------------------
         ret = builder.fadd(ret, noise)
         res = builder.fadd(ret, offset)
 
-        # FIXME: Standalone function produces 2d array value
-        if isinstance(vo.type.pointee.element, ir.ArrayType):
-            assert vo.type.pointee.count == 1
-            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
-        else:
-            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        # Eliminate one dimension for 2d variable
-        if self.instance_defaults.variable.ndim > 1:
-            assert self.instance_defaults.variable.shape[0] == 1
-            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Get rid of 2d array.
+        # When part of a Mechanism the input, and output are 2d arrays.
+        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+        arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-        with helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
             inner(*args)
 
         return builder
@@ -3068,25 +3063,18 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
 
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        def _get_rid_of_2d(element):
-            assert isinstance(element.type.pointee, ir.ArrayType)
-            if isinstance(element.type.pointee.element, ir.ArrayType):
-                assert(element.type.pointee.count == 1)
-                return builder.gep(element, [zero_i32, zero_i32])
-            return element
-
-        arg_in = _get_rid_of_2d(arg_in)
+        arg_in = ctx.unwrap_2d_array(builder, arg_in)
         # Load context values
         prev = {}
         for idx, ctx_el in enumerate(self.stateful_attributes):
             val = builder.gep(context, [zero_i32, ctx.int32_ty(idx)])
-            prev[ctx_el] = _get_rid_of_2d(val)
+            prev[ctx_el] = ctx.unwrap_2d_array(builder, val)
 
         # Output locations
         out = {}
         for idx, out_el in enumerate(('v', 'w', 'time')):
             val = builder.gep(arg_out, [zero_i32, ctx.int32_ty(idx)])
-            out[out_el] = _get_rid_of_2d(val)
+            out[out_el] = ctx.unwrap_2d_array(builder, val)
 
         # Load parameters
         param_vals = {}
@@ -3114,7 +3102,7 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(method, self.name))
 
-        with helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
             func(*args)
 
         # Save context
