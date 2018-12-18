@@ -132,20 +132,22 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         applies to all elements of `variable <IntegratorFunction.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <IntegratorFunction.variable>`.
 
+    .. _Integrator_Noise:
+
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <IntegratorFunction.function>`.
+        specifies random value to be added in each call to `function <Integrator.function>`. If `variable
+        <Integrator.variable>` is a list or array, and noise is a float or function, it is applied
+        to each elemement of `variable <Integrator.variable>`. If noise is a function, it is executed
+        and applied separately to each elemement of `variable <Integrator.variable>`.  If noise is a list or array,
+        it must be the same length as `variable <Integrator.variable>`, and each element is applied to the
+        corresponding element of `variable <Integrator.variable>`.
 
-        If noise is a list or array, it must be the same length as `variable <IntegratorFunction.default_variable>`. If noise is
-        specified as a single float or function, while `variable <IntegratorFunction.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
-
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+        .. hint::
+            To generate random noise that varies for every execution, a probability distribution function should be
+            used (see `Distribution Functions <DistributionFunction>` for details), that generates a new noise value
+            from its distribution on each execution. If noise is specified as a float, a function with a fixed
+            output, or a list or array of either of these, then noise is simply an offset that remains the same
+            across all executions.
 
     initializer : 1d array or list
         determines the starting value for integration (i.e., the value to which
@@ -198,7 +200,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: float
 
                 noise
-                    see `noise <IntegratorFunction.rest>`
+                    see `noise <IntegratorFunction.noise>`
 
                     :default value: 0.0
                     :type: float
@@ -223,11 +225,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  context=None):
 
       # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(# rate=rate,
-                                                  # initializer=initializer,
-                                                  # previous_value=previous_value,
-                                                  # noise=noise,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(params=params)
 
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         # params[INITIALIZER] = initializer
@@ -244,7 +242,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         self.has_initializers = True
 
     def _EWMA_filter(self, previous_value, rate, variable):
-        '''Return exponentially weighted moving average (EWMA) of a variable'''
+        '''Return `exponentially weighted moving average (EWMA)
+        <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of a variable'''
         return (1 - rate) * previous_value + rate * variable
 
     def _logistic(self, variable, gain, bias):
@@ -325,8 +324,8 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         `variable <ConstantIntegrator.default_variable>` (see `rate <ConstantIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <ConstantIntegrator.function>`. (see
-        `noise <ConstantIntegrator.noise>` for details).
+        specifies random value to be added in each call to `function <ConstantIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
     initializer float, list or 1d array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -364,19 +363,8 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         `previous_value <ConstantIntegrator.previous_value>`.
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <ConstantIntegrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list
-        or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+        specifies random value to be added in each call to `function <ConstantIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
     initializer : float, 1d array or list
         determines the starting value for integration (i.e., the value to which
@@ -604,8 +592,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
         specifies random value to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
-        `function <AccumulatorIntegrator.function>`. If it is a list or array, it must be the same length as
-        `variable <AccumulatorIntegrator.default_variable>` (see `noise <AccumulatorIntegrator.noise>` for details).
+        `function <AccumulatorIntegrator.function>` (see `noise <Integrator_Noise>` for details).
 
     initializer float, list or 1d array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -650,19 +637,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         <AccumulatorIntegrator.previous_value>`.
 
     noise : float, function, list, or 1d array
-        determines a random value to be added in each call to `function <AccumulatorIntegrator.function>`.
-        If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>` and
-        each element is added to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`
-        (i.e., it is used for Hadamard addition).  If it is a scalar or has a single element, its value is added to all
-        the elements of `previous_value <AccumulatorIntegrator.previous_value>`.  If it is a function, it will be
-        executed separately and added to each element.
-
-        .. note::
-
-            In order to generate random noise, a probability distribution function should be selected (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+        determines a random value to be added in each call to `function <AccumulatorIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
     initializer : float, 1d array or list
         determines the starting value for integration (i.e., the value to which `previous_value
@@ -901,8 +877,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         `variable <SimpleIntegrator.default_variable>` (see `rate <SimpleIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <SimpleIntegrator.function>`. (see
-        `noise <SimpleIntegrator.noise>` for details).
+        specifies random value to be added in each call to `function <SimpleIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
     initializer float, list or 1d array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -936,20 +912,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <SimpleIntegrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+        specifies random value to be added in each call to `function <SimpleIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
     initializer : float, 1d array or list
         determines the starting value for integration (i.e., the value to which
@@ -1122,7 +1086,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     .. _AdaptiveIntegrator:
 
-    `function <AdapativeIntegrator.function>` returns exponentially weighted time-average of input:
+    `function <AdapativeIntegrator.function>` returns `exponentially weighted moving average (EWMA)
+    <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of input:
 
     .. math::
         ((1-rate) * previous_value) + (rate * variable)  + noise
@@ -1135,12 +1100,13 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         integrated.
 
     rate : float, list or 1d array : default 1.0
-        specifies the smoothing factor of the EWMA.  If it is a list or array, it must be the same length as
-        `variable <AdaptiveIntegrator.default_variable>` (see `rate <AdaptiveIntegrator.rate>` for details).
+        specifies the smoothing factor of the `EWMA <AdaptiveIntegrator>`.  If it is a list or array, it must be the
+        same length as `variable <AdaptiveIntegrator.default_variable>` (see `rate <AdaptiveIntegrator.rate>` for
+        details).
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`. (see
-        `noise <AdaptiveIntegrator.noise>` for details).
+        specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
     initializer float, list or 1d array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -1169,29 +1135,17 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d array
-        determines the smoothing factor of the EWMA. All rate elements must be between 0 and 1 (rate = 0 --> no change,
-        `variable <AdaptiveAdaptiveIntegrator.variable>` is ignored; rate = 1 -->
-        `previous_value <AdaptiveIntegrator.previous_value>` is ignored).
-
-        If rate is a float, it is applied to all elements of `variable <AdaptiveAdaptiveIntegrator.variable>` (and
-        `previous_value <AdaptiveIntegrator.previous_value>`); if it has more than one element, each element is applied
-        to the corresponding element of `variable <AdaptiveAdaptiveIntegrator.variable>` (and
-        `previous_value <AdaptiveIntegrator.previous_value>`).
+        determines the smoothing factor of the `EWMA <AdaptiveIntegrator>`. All rate elements must be between 0 and 1
+        (rate = 0 --> no change, `variable <AdaptiveAdaptiveIntegrator.variable>` is ignored; rate = 1 -->
+        `previous_value <AdaptiveIntegrator.previous_value>` is ignored).  If rate is a float, it is applied to all
+        elements of `variable <AdaptiveAdaptiveIntegrator.variable>` and `previous_value
+        <AdaptiveIntegrator.previous_value>`; if it is an array, it must have the same length as `variable
+        <AdaptiveIntegrator.variable>`, and each element is applied to the corresponding element of `variable
+        <AdaptiveIntegrator.variable>` and `previous_value <AdaptiveIntegrator.previous_value>`).
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list
-        or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+        specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
     initializer : float, 1d array or list
         determines the starting value for time-averaging (i.e., the value to which
@@ -1504,12 +1458,15 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
     .. _DualAdaptiveIntegrator:
 
-    Combines two rates of integration, as implemented in `Aston-Jones & Cohen (2005)
+    Combines two `exponentially weighted moving averages (EWMA)
+    <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of its input, each with a different
+    rate, as implemented in `Aston-Jones & Cohen (2005)
     <https://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ to integrate utility over two
     time scales.
 
-    `function <DualAdapativeIntegrator.function>` computes the exponentially weighted time-averages of `variable
-    <DualAdapativeIntegrator.variable>` using two integration rates, takes their logistics, and then combines them,
+    `function <DualAdapativeIntegrator.function>` computes the EWMA of `variable <DualAdapativeIntegrator.variable>`
+    using two integration rates (`short_term_rate <DualAdapativeIntegrator.short_term_rate>` and `long_term_rate
+    <DualAdapativeIntegrator.long_term_rate>), transforms each using a logistic function, and then combines them,
     as follows:
 
     * **short time scale integration**:
@@ -1533,7 +1490,8 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     ---------
 
     rate : float, list or 1d array : default 1.0
-        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
+        specifies the overall smoothing factor of the `EWMA <DualAdaptiveIntegrator>` used to combine the long term and
+        short term averages.
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
         TBI?
@@ -1557,10 +1515,10 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         specifies bias for logistic function applied to long_term_avg
 
     short_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to short_term_avg
+        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to short_term_avg
 
     long_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to long_term_avg
+        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1580,7 +1538,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     ----------
 
     variable : number or array
-        current input value used in both the short term and long term EWMA computations
+        current input value used to compute both the short term and long term `EWMA <DualAdaptiveIntegrator>` averages.
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
         TBI?
@@ -1604,18 +1562,18 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         specifies bias for logistic function applied to long_term_avg
 
     short_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to short_term_avg
+        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to short_term_avg
 
     long_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to long_term_avg
+        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
 
     previous_short_term_avg : 1d array
-        stores previous value with which `variable <DualAdapativeIntegrator.variable>` is integrated using the EWMA filter and
-        short term parameters
+        stores previous value with which `variable <DualAdapativeIntegrator.variable>` is integrated using the
+        `EWMA <DualAdaptiveIntegrator>` filter and short term parameters
 
     previous_long_term_avg : 1d array
-        stores previous value with which `variable <DualAdapativeIntegrator.variable>` is integrated using the EWMA filter and
-        long term parameters
+        stores previous value with which `variable <DualAdapativeIntegrator.variable>` is integrated using the
+        `EWMA <DualAdaptiveIntegrator>` filter and long term parameters
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -2032,7 +1990,7 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
         specifies random value to be added to `variable <InteractiveActivation.noise>` in each call to `function
-        <InteractiveActivation.function>` (see `noise <InteractiveActivation.noise>` for details).
+        <InteractiveActivation.function>` (see `noise <Integrator_Noise>` for details).
 
     initializer float, list or 1d array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -2089,19 +2047,7 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
 
     noise : float, function, list, or 1d array
         specifies random value to be added to `variable <InteractiveActivation.noise>` in each call to `function
-        <InteractiveActivation.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <InteractiveActivation.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+        <InteractiveActivation.function>` (see `noise <Integrator_Noise>` for details).
 
     initializer : float, 1d array or list
         determines the starting value for integration (i.e., the value to which
@@ -2346,8 +2292,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     ..  math::
 
-        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\sqrt{time\\_step\\_size \\cdot noise}
-        \\cdot Sample\\,from\\,Normal\\,Distribution
+        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2=\\sqrt{time\\_step\\_size
+        \\cdot noise})
 
     Arguments
     ---------
@@ -2359,8 +2305,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
-        `noise <DriftDiffusionIntegrator.noise>` for details).
+        specifies a value by which to scale the normally distributed random value added to integral in each call to
+        `function <DriftDiffusionIntegrator.function>` (see `noise <DriftDiffusionIntegrator.noise>` for details)l
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
@@ -2410,13 +2356,13 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, function, list, or 1d array
-        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function> according to
-        the standard DDM probability distribution.
-
-        On each call to `function <DriftDiffusionIntegrator.function>, :math:`\\sqrt{time\\_step\\_size \\cdot noise}
-        \\cdot Sample\\,From\\,Normal\\,distribution` is added to the accumulated evidence.
-
-        Noise must be specified as a float (or list or array of floats).
+        scales the normally distributed random value added to integral in each call to `function
+        <DriftDiffusionIntegrator.function>` (see `noise <DriftDiffusionIntegrator.noise>` for details).
+        If `variable <DriftDiffusionIntegrator.variable>` is a list or array,
+        and noise is a float, a single random term is generated and applied for each elemement of `variable
+        <DriftDiffusionIntegrator.variable>`.  If noise is a list or array, it must be the same length as `variable
+        <DriftDiffusionIntegrator.variable>`, and a separate random term scaled by noise is applied for each of the
+        corresponding elements of `variable <DriftDiffusionIntegrator.variable>`.
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
@@ -2670,7 +2616,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     .. math::
 
-        previous_value + decay * (previous\\_value - rate * variable) + \\sqrt{time\\_step\\_size * noise} * noise
+       previous\\_value + decay \\cdot  (previous\\_value - rate \\cdot variable) + \\sqrt{time\\_step\\_size \\cdot
+       noise} \\cdot Sample\\,from\\,Normal\\,Distribution
 
     Arguments
     ---------
@@ -2683,8 +2630,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         specifies  the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        scales random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`. (see
-        `noise <OrnsteinUhlenbeckIntegrator.noise>` for details).
+        scales random value added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
@@ -2730,7 +2676,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     noise : float, function, list, or 1d array
         scales the random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`
-
         Noise must be specified as a float (or list or array of floats) because this
         value will be used to construct the standard DDM probability distribution.
 

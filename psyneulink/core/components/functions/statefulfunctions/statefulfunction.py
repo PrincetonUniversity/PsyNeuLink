@@ -24,6 +24,8 @@ import itertools
 import warnings
 import numbers
 
+import abc
+
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
@@ -36,7 +38,7 @@ from psyneulink.core.globals.context import ContextFlags
 __all__ = ['StatefulFunction']
 
 
-class StatefulFunction(Function_Base): # -------------------------------------------------------------------------------
+class StatefulFunction(Function_Base, abc.ABC): #  ---------------------------------------------------------------------
     """
     StatefulFunction(           \
         default_variable=None,  \

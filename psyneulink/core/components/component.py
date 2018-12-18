@@ -413,6 +413,7 @@ import numbers
 import types
 import warnings
 
+from abc import ABCMeta
 from collections import Iterable, OrderedDict, UserDict
 from enum import Enum, IntEnum
 
@@ -600,7 +601,7 @@ class ComponentError(Exception):
 
 # *****************************************   COMPONENT CLASS  ********************************************************
 
-class ComponentsMeta(type):
+class ComponentsMeta(ABCMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -2277,14 +2278,7 @@ class Component(object, metaclass=ComponentsMeta):
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
         """
-        # # MODIFIED 12/15/18 OLD:
-        # return variable
-        # MODIFIED 12/15/18 NEW: [JDC]
-        if variable is not None:
-            return variable
-        else:
-            return self.instance_defaults.variable
-        # MODIFIED 12/15/18 END
+        return variable
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
