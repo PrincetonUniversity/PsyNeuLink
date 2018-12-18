@@ -421,7 +421,7 @@ from psyneulink.core.globals.parameters import Defaults, Param, ParamAlias, Para
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -592,6 +592,56 @@ class ComponentError(Exception):
         return repr(self.error_value)
 
 
+def _parameters_belongs_to_obj(obj):
+    if obj is obj.parameters._owner:
+        return True
+
+    try:
+        return obj is unproxy_weakproxy(obj.parameters._owner)
+    except AttributeError:
+        return False
+
+
+def _get_backing_field(attr_name):
+    return '_{0}'.format(attr_name)
+
+
+def make_parameter_property(name):
+    backing_field = _get_backing_field(name)
+
+    def getter(self):
+        if not _parameters_belongs_to_obj(self):
+            # would refer to class parameters before an instance of Params is created for self
+            return getattr(self, backing_field)
+        else:
+            return getattr(self.parameters, name).get(self.most_recent_execution_context)
+
+    def setter(self, value):
+        if not _parameters_belongs_to_obj(self):
+            # set to backing field, which is what gets looked for and discarded when creating an object's parameters
+            setattr(self, backing_field, value)
+
+        # stack level 3 instead of normal 2 to properly show source when setting using dot notation
+        getattr(self.parameters, name).set(value, self.most_recent_execution_context, _ro_warning_stacklevel=3)
+
+    return property(getter).setter(setter)
+
+
+def _has_initializers_setter(value, owning_component=None, execution_id=None):
+    """
+    Assign has_initializers status to Component and any of its owners up the hierarchy.
+    """
+    if value:
+        # only update owner's attribute if setting to True, because there may be
+        # other children that have initializers
+        try:
+            owning_component.owner.parameters.has_initializers.set(value, execution_id)
+        except AttributeError:
+            # no owner
+            pass
+
+    return value
+
 # *****************************************   COMPONENT CLASS  ********************************************************
 
 class ComponentsMeta(ABCMeta):
@@ -604,6 +654,10 @@ class ComponentsMeta(ABCMeta):
         except AttributeError:
             parent = None
         self.parameters = self.Params(owner=self, parent=parent)
+
+        for param in self.parameters:
+            if not hasattr(self, param.name):
+                setattr(self, param.name, make_parameter_property(param.name))
 
     # left in for backwards compatibility
     # DEPRECATED
@@ -688,7 +742,6 @@ class Component(object, metaclass=ComponentsMeta):
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
                     if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
-        - self.value is determined for self.execute which calls self.function in Component._instantiate_function
 
         NOTES:
             * In the current implementation, validation is:
@@ -825,6 +878,7 @@ class Component(object, metaclass=ComponentsMeta):
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)
         context = Param(None, user=False)
+        has_initializers = Param(False, setter=_has_initializers_setter)
 
         def _parse_variable(self, variable):
             return variable
@@ -902,17 +956,9 @@ class Component(object, metaclass=ComponentsMeta):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-        context = ContextFlags.COMPONENT
-        self.context.initialization_status = ContextFlags.INITIALIZING
-        self.context.execution_phase = None
-
-        if not self.context.source:
-            self.context.source = ContextFlags.COMPONENT
-        self.context.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
-
-        self.context.initialization_status = ContextFlags.INITIALIZING
-
         self.parameters = self.Params(owner=self, parent=self.class_parameters)
+
+        context = ContextFlags.COMPONENT
 
         # assign defaults based on pass in params and class defaults
         defaults = self.ClassDefaults.values(show_all=True).copy()
@@ -946,11 +992,26 @@ class Component(object, metaclass=ComponentsMeta):
             defaults[VARIABLE] = default_variable
 
         self.defaults = Defaults(owner=self, **defaults)
+        self._initialize_parameters()
+
+        self._assign_context_values(
+            None,
+            propagate=False,
+            initialization_status=ContextFlags.INITIALIZING,
+            execution_phase=None,
+        )
+
+        context_param_value = self.parameters.context.get()
+        if not context_param_value.source:
+            context_param_value.source = ContextFlags.COMPONENT
+        context_param_value.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
 
-        self._has_initializers = False
+        self.has_initializers = False
+        self.reinitialize_when = Never()
+
         self._role = None
 
         # self.componentName = self.componentType
@@ -1066,7 +1127,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         # INSTANTIATE FUNCTION
         #    - assign initial function parameter values from ParameterStates,
-        #    - assign function's output to self.value (based on call of self.execute)
+        #    - assign function's output to self.defaults.value (based on call of self.execute)
         self._instantiate_function(function=function, function_params=function_params, context=context)
 
         # SET CURRENT VALUES OF VARIABLE AND PARAMS
@@ -1312,7 +1373,6 @@ class Component(object, metaclass=ComponentsMeta):
         if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Flag that object is now being initialized
-            # Note: self.value will be resolved to the object's value as part of initialization
             #       (usually in _instantiate_function)
             self.context.initialization_status = ContextFlags.INITIALIZING
 
@@ -2057,6 +2117,18 @@ class Component(object, metaclass=ComponentsMeta):
                                       target_set=target_set,
                                       context=context)
 
+    def _initialize_parameters(self):
+        for p in self.parameters:
+            # set default to None context to ensure it exists
+            if p.getter is None and p.get() is None:
+                try:
+                    attr_name = '_{0}'.format(p.name)
+                    attr_value = getattr(self, attr_name)
+                    p.set(attr_value, override=True, skip_history=True)
+                    delattr(self, attr_name)
+                except AttributeError:
+                    p.set(p.default_value, override=True, skip_history=True)
+
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
 
@@ -2692,7 +2764,7 @@ class Component(object, metaclass=ComponentsMeta):
             - self._function === self.paramsCurrent[FUNCTION]
             - self.execute should always return the output of self.function in the first item of its output array;
                  this is done by Function.execute;  any subclass override should do the same, so that...
-            - self.value == value[0] returned by self.execute
+            - value is value[0] returned by self.execute
 
         """
         from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
@@ -2821,7 +2893,7 @@ class Component(object, metaclass=ComponentsMeta):
         if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
 
-        self.parameters.value.set(value, override=True)
+        self.parameters.value.set(value, override=True, skip_history=True)
         try:
             # Could be mutable, so assign copy
             self.instance_defaults.value = value.copy()
@@ -2908,13 +2980,14 @@ class Component(object, metaclass=ComponentsMeta):
             pass
 
         # reset the Function to IDLE
-        if function is not None:
+        if function is not None and isinstance(self.function, Function):
             function_context = self.function.parameters.context.get(execution_id)
         else:
             function_context = self.parameters.context.get(execution_id)
 
         function_context.execution_phase = ContextFlags.IDLE
 
+        self.most_recent_execution_context = execution_id
         return value
 
     def _parse_param_state_sources(self):
@@ -3070,15 +3143,6 @@ class Component(object, metaclass=ComponentsMeta):
             #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
 
     @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.log._log_value(assignment)
-
-    @property
     def verbosePref(self):
         return self.prefs.verbosePref
 
@@ -3118,23 +3182,32 @@ class Component(object, metaclass=ComponentsMeta):
     def runtimeParamModulationPref(self, setting):
         self.prefs.runtimeParamModulationPref = setting
 
+    # KDM 12/18/18: context is left as a special property, because it is used very frequently
+    # during __init__ before Component.__init__ (i.e self.parameters has not been created yet)
+    # so to maintain current behavior, use the attribute during this period, and remove it when
+    # self.parameters is available
     @property
     def context(self):
         try:
-            return self._context
-        except:
-            self._context = Context(owner=self)
-            return self._context
+            if not _parameters_belongs_to_obj(self):
+                # ensure parameters is not class_parameters
+                raise ValueError
 
-    # from psyneulink.core.globals.context import Context
-    # @tc.typecheck
+            return self.parameters.context.get(self.most_recent_execution_context)
+        except (AttributeError, ValueError):
+            try:
+                return self._context
+            except AttributeError:
+                self._context = Context(owner=self)
+                return self._context
+
     @context.setter
-    # def context(self, context:type(Context)):
     def context(self, context):
-        # self._context = context
-        from psyneulink.core.globals.context import Context
         if isinstance(context, Context):
-            self._context = context
+            try:
+                self.parameters.context.set(context, self.most_recent_execution_context)
+            except AttributeError:
+                self._context = context
         else:
             raise ComponentError("{} attribute of {} must be of type {}".format(CONTEXT, self.name, Context.__name__))
 
@@ -3200,24 +3273,6 @@ class Component(object, metaclass=ComponentsMeta):
         return [param.name for param in self.parameters if param.loggable and param.user]
 
     @property
-    def has_initializers(self):
-        return self._has_initializers
-
-    @has_initializers.setter
-    def has_initializers(self, value):
-        """
-        Assign has_initializers status to Component and any of its owners up the hierarchy.
-
-        Adding reinitialize_when attribute to Components that are now has_initializers, and setting the default
-        reinitialize condition to Never().
-        """
-        self._has_initializers = value
-        self.reinitialize_when = Never()
-        if hasattr(self, "owner"):
-            if self.owner is not None:
-                self.owner.has_initializers = True
-
-    @property
     def _default_variable_flexibility(self):
         try:
             return self.__default_variable_flexibility
@@ -3264,12 +3319,12 @@ class Component(object, metaclass=ComponentsMeta):
 
     @property
     def function(self):
-        return self._function
+        return self.parameters.function.get()
 
     @function.setter
     def function(self, value):
         # TODO: currently no validation, should replicate from _instantiate_function
-        self._function = value
+        self.parameters.function.set(value)
         self._parse_param_state_sources()
 
     @property
@@ -3335,6 +3390,21 @@ class Component(object, metaclass=ComponentsMeta):
             Returns a set of Components that will be executed if this Component is executed
         """
         return []
+
+    @property
+    def most_recent_execution_context(self):
+        """
+            used to set a default behavior for attributes that correspond to parameters
+        """
+        try:
+            return self._most_recent_execution_context
+        except AttributeError:
+            self._most_recent_execution_context = None
+            return self._most_recent_execution_context
+
+    @most_recent_execution_context.setter
+    def most_recent_execution_context(self, value):
+        self._most_recent_execution_context = value
 
 
 COMPONENT_BASE_CLASS = Component

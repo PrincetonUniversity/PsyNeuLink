@@ -11,15 +11,11 @@ class TestParameterStates:
         B = TransferMechanism()
         assert A.function.slope == 1.0
         assert B.function.slope == 1.0
-        assert A.function._slope == 1.0
-        assert B.function._slope == 1.0
         assert A.mod_slope == [1.0]
         assert B.mod_slope == [1.0]
 
         assert A.noise == 0.0
         assert B.noise == 0.0
-        assert A._noise == 0.0
-        assert B._noise == 0.0
         assert A.mod_noise == 0.0
         assert B.mod_noise == 0.0
 
@@ -27,8 +23,6 @@ class TestParameterStates:
 
         assert A.function.slope == 0.2
         assert B.function.slope == 1.0
-        assert A.function._slope == 0.2
-        assert B.function._slope == 1.0
         assert A.mod_slope == [1.0]
         assert B.mod_slope == [1.0]
 
@@ -36,8 +30,6 @@ class TestParameterStates:
 
         assert A.noise == 0.5
         assert B.noise == 0.0
-        assert A._noise == 0.5
-        assert B._noise == 0.0
         assert A.mod_noise == 0.0
         assert B.mod_noise == 0.0
 
@@ -45,8 +37,6 @@ class TestParameterStates:
 
         assert A.function.slope == 0.2
         assert B.function.slope == 0.7
-        assert A.function._slope == 0.2
-        assert B.function._slope == 0.7
         assert A.mod_slope == [1.0]
         assert B.mod_slope == [1.0]
 
@@ -54,8 +44,6 @@ class TestParameterStates:
 
         assert A.noise == 0.5
         assert B.noise == 0.6
-        assert A._noise == 0.5
-        assert B._noise == 0.6
         assert A.mod_noise == 0.0
         assert B.mod_noise == 0.0
 
@@ -66,15 +54,11 @@ class TestParameterStates:
 
         assert A.function.slope == 0.2
         assert B.function.slope == 0.7
-        assert A.function._slope == 0.2
-        assert B.function._slope == 0.7
         assert A.mod_slope == [0.2]
         assert B.mod_slope == [0.7]
 
         assert A.noise == 0.5
         assert B.noise == 0.6
-        assert A._noise == 0.5
-        assert B._noise == 0.6
         assert A.mod_noise == 0.5
         assert B.mod_noise == 0.6
 
@@ -91,7 +75,6 @@ class TestConfigurableParameters:
 
         assert np.allclose(T.user_params["function_params"]["slope"], old_value)
         assert np.allclose(T.function.slope, old_value)
-        assert np.allclose(T.function._slope, old_value)
         assert np.allclose(T.mod_slope, old_value)
 
         T.function.slope = new_value
@@ -100,14 +83,12 @@ class TestConfigurableParameters:
         # function_params looks at parameter state value, so this will not update until next execution
         assert np.allclose(T.user_params["function_params"]["slope"], old_value)
         assert np.allclose(T.function.slope, new_value)
-        assert np.allclose(T.function._slope, new_value)
         assert np.allclose(T.mod_slope, old_value)
 
         # INTERCEPT - - - - - - - -
 
         assert np.allclose(T.user_params["function_params"]["intercept"], old_value)
         assert np.allclose(T.function.intercept, old_value)
-        assert np.allclose(T.function._intercept, old_value)
         assert np.allclose(T.mod_intercept, old_value)
 
         T.function.intercept = new_value
@@ -116,14 +97,12 @@ class TestConfigurableParameters:
         # function_params looks at parameter state value, so this will not update until next execution
         assert np.allclose(T.user_params["function_params"]["intercept"], old_value)
         assert np.allclose(T.function.intercept, new_value)
-        assert np.allclose(T.function._intercept, new_value)
         assert np.allclose(T.mod_intercept, old_value)
 
         # SMOOTHING FACTOR - - - - - - - -
 
         assert np.allclose(T.user_params["integration_rate"], old_value)
         assert np.allclose(T.integration_rate, old_value)
-        assert np.allclose(T._integration_rate, old_value)
         assert np.allclose(T.mod_integration_rate, old_value)
 
         T.integration_rate = new_value
@@ -132,14 +111,12 @@ class TestConfigurableParameters:
         # function_params looks at parameter state value, so this will not update until next execution
         assert np.allclose(T.user_params["integration_rate"], old_value)
         assert np.allclose(T.integration_rate, new_value)
-        assert np.allclose(T._integration_rate, new_value)
         assert np.allclose(T.mod_integration_rate, old_value)
 
         # NOISE - - - - - - - -
 
         assert np.allclose(T.user_params["noise"], old_value)
         assert np.allclose(T.noise, old_value)
-        assert np.allclose(T._noise, old_value)
         assert np.allclose(T.mod_noise, old_value)
 
         T.noise = new_value
@@ -148,29 +125,24 @@ class TestConfigurableParameters:
         # function_params looks at parameter state value, so this will not update until next execution
         assert np.allclose(T.user_params["noise"], old_value)
         assert np.allclose(T.noise, new_value)
-        assert np.allclose(T._noise, new_value)
         assert np.allclose(T.mod_noise, old_value)
 
         T.execute(1.0)
 
         assert np.allclose(T.user_params["function_params"]["slope"], new_value)
         assert np.allclose(T.function.slope, new_value)
-        assert np.allclose(T.function._slope, new_value)
         assert np.allclose(T.mod_slope, new_value)
 
         assert np.allclose(T.user_params["function_params"]["intercept"], new_value)
         assert np.allclose(T.function.intercept, new_value)
-        assert np.allclose(T.function._intercept, new_value)
         assert np.allclose(T.mod_intercept, new_value)
 
         assert np.allclose(T.user_params["integration_rate"], new_value)
         assert np.allclose(T.integration_rate, new_value)
-        assert np.allclose(T._integration_rate, new_value)
         assert np.allclose(T.mod_integration_rate, new_value)
 
         assert np.allclose(T.user_params["noise"], new_value)
         assert np.allclose(T.noise, new_value)
-        assert np.allclose(T._noise, new_value)
         assert np.allclose(T.mod_noise, new_value)
 
 class TestModParams:

@@ -166,3 +166,26 @@ def test_validation():
 
     with pytest.raises(pnl.ParameterError):
         t.parameters.variable.default_value = np.array([[0]])
+
+
+def test_dot_notation():
+    c = pnl.Composition()
+    d = pnl.Composition()
+    t = pnl.TransferMechanism()
+    c.add_c_node(t)
+    d.add_c_node(t)
+
+    t.execute(1)
+    assert t.value == 1
+    c.run({t: 5})
+    assert t.value == 5
+    d.run({t: 10})
+    assert t.value == 10
+    c.run({t: 20}, execution_id='custom execution id')
+    assert t.value == 20
+
+    # context None
+    assert t.parameters.value.get() == 1
+    assert t.parameters.value.get(c) == 5
+    assert t.parameters.value.get(d) == 10
+    assert t.parameters.value.get('custom execution id') == 20

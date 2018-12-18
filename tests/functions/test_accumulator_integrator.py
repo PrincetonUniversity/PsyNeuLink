@@ -1,11 +1,11 @@
 import numpy as np
 
-from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import MATRIX
 
 
@@ -188,7 +188,7 @@ class TestAccumulator():
         C.add_linear_processing_pathway([T1, M, T2])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
         assert np.allclose(M.matrix, [[ 1.,  0.,  0.], [ 0.,  1.,  0.],[ 0.,  0.,  1.]])
-        M.parameter_states[MATRIX].function._increment=2
+        M.parameter_states[MATRIX].function.parameters.increment.set(2, C)
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
         assert np.allclose(M.matrix, [[ 3.,  2.,  2.], [ 2.,  3.,  2.], [ 2.,  2.,  3.]])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})

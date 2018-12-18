@@ -201,7 +201,7 @@ class DefaultControlMechanism(ControlMechanism):
             self.instance_defaults.variable = np.atleast_2d(input_state_value)
 
         # If there is a single item in self.instance_defaults.variable, it could be the one assigned on initialization
-        #     (in order to validate ``function`` and get its return value as a template for self.value);
+        #     (in order to validate ``function`` and get its return value as a template for value);
         #     in that case, there should be no input_states yet, so pass
         #     (i.e., don't bother to extend self.instance_defaults.variable): it will be used for the new inputState
         elif len(self.instance_defaults.variable) == 1:

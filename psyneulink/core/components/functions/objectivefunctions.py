@@ -25,15 +25,13 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.function import Function_Base, FunctionError, EPSILON
+from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
-from psyneulink.core.globals.keywords import \
-    DistanceMetrics, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION, HOLLOW_MATRIX, ENERGY, ENTROPY, MATRIX, COSINE, \
-    CROSS_ENTROPY, DISTANCE_METRICS, DISTANCE_FUNCTION, DIFFERENCE, EUCLIDEAN, MAX_ABS_DIFF, CORRELATION, METRIC
-from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import is_distance_metric
+from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -339,12 +337,17 @@ COMMENT
 
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
-        if isinstance(self.matrix, MappingProjection):
-            self._matrix = self.matrix._parameter_states[MATRIX]
-        elif isinstance(self.matrix, ParameterState):
+
+        matrix = self.parameters.matrix.get()
+
+        if isinstance(matrix, MappingProjection):
+            matrix = matrix._parameter_states[MATRIX]
+        elif isinstance(matrix, ParameterState):
             pass
         else:
-            self._matrix = get_matrix(self.matrix, size, size)
+            matrix = get_matrix(matrix, size, size)
+
+        self.parameters.matrix.set(matrix)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 

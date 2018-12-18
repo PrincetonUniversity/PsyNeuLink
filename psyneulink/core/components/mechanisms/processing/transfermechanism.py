@@ -966,7 +966,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # self.integrator_function = None
         self.has_integrated = False
         self._current_variable_index = 0
-        self.integrator_function_value = None
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -1152,7 +1151,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         # if self.integrator_mode:
-        # self.previous_value = None
+        # self.parameters.previous_value.set(None, override=True)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1209,6 +1208,13 @@ class TransferMechanism(ProcessingMechanism_Base):
                         # Assign funciton's noise to Mechanism
                         self.parameters.noise.set(self.integrator_function.noise, execution_id)
 
+                        # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
+                        self._validate_params(
+                            request_set={'noise': self.integrator_function.noise},
+                            target_set={'noise': self.integrator_function.noise},
+                            context=context
+                        )
+
             if hasattr(self.integrator_function, INITIALIZER):
                 fct_intlzr = np.array(self.integrator_function.initializer)
                 # Check against variable, as class.default is None, but initial_value assigned to variable before here
@@ -1254,6 +1260,13 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  self.integrator_function.__class__.__name__))
                         # Assign function's rate to Mechanism
                         self.parameters.integration_rate.set(self.integrator_function.rate, execution_id)
+
+                        # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
+                        self._validate_params(
+                            request_set={'integration_rate': self.integrator_function.rate},
+                            target_set={'integration_rate': self.integrator_function.rate},
+                            context=context
+                        )
 
         self.has_integrated = True
 
@@ -1509,55 +1522,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params)
 
-    @property
-    def clip(self):
-        return self._clip
-
-    @clip.setter
-    def clip(self, value):
-        self._clip = value
-
     def delta(self, value=NotImplemented, execution_id=None):
         if value is NotImplemented:
             value = self.parameters.value.get(execution_id)
         return self.convergence_function([value[0], self.parameters.previous_value.get(execution_id)[0]])
-
-    @property
-    def integrator_mode(self):
-        return self._integrator_mode
-
-    @integrator_mode.setter
-    def integrator_mode(self, val):
-        if val is True:
-            if not self.integrator_mode and self.has_integrated:
-                self._integrator_mode = True
-                if self.integrator_function is not None:
-                    if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                        self.reinitialize(self.value)
-                    elif self.on_resume_integrator_mode == REINITIALIZE:
-                        self.reinitialize()
-            if not hasattr(self, PREVIOUS_VALUE):
-                self.previous_value = None
-            self.has_initializers = True
-
-            # # MODIFIED 12/14/18 NEW: [JDC]
-            # self._integrator_mode = True
-            # if self.integrator_function is not None:
-            #     if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-            #         self.reinitialize(self.value)
-            #         if self.parameters.previous_value.get() is None:
-            #             self.parameters.previous_value.set(self.parameters.initial_value.get())
-            #     elif self.on_resume_integrator_mode == REINITIALIZE:
-            #         self.reinitialize()
-            # MODIFIED 12/14/18 END
-
-        elif val is False:
-            self._integrator_mode = False
-            self.has_initializers = False
-            if not hasattr(self, "reinitialize_when"):
-                self.reinitialize_when = Never()
-        else:
-            raise MechanismError("{}'s integrator_mode attribute may only be True or False.".format(self.name))
 
     def is_converged(self, value=NotImplemented, execution_id=None):
         # Check for convergence

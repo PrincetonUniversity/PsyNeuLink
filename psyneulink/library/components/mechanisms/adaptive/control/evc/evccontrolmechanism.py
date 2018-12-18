@@ -855,7 +855,6 @@ class EVCControlMechanism(ControlMechanism):
         EVC_policies = Param([], read_only=True)
         EVC_max_state_values = Param(None, read_only=True)
         EVC_max_policy = Param(None, read_only=True)
-        control_signal_costs = Param(None, read_only=True)
         control_signal_search_space = Param(None, read_only=True)
         predicted_input = Param(None, read_only=True)
 
@@ -1064,9 +1063,10 @@ class EVCControlMechanism(ControlMechanism):
 
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN Mechanism for each Process in the system
-        self.predicted_input = {}
+        predicted_input = {}
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
-            self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
+            predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
+        self.parameters.predicted_input.set(predicted_input, override=True)
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Validate cost function'''

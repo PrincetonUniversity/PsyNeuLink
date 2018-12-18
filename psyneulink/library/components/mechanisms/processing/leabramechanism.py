@@ -314,7 +314,10 @@ class LeabraFunction(Function_Base):
 
 
 def _network_getter(owning_component=None, execution_id=None):
-    return owning_component.function.parameters.network.get(execution_id)
+    try:
+        return owning_component.function.parameters.network.get(execution_id)
+    except AttributeError:
+        return None
 
 
 def _network_setter(value, owning_component=None, execution_id=None):
@@ -324,7 +327,10 @@ def _network_setter(value, owning_component=None, execution_id=None):
 
 def _training_flag_setter(value, self=None, owning_component=None, execution_id=None):
     if value is not self.get(execution_id):
-        set_training(owning_component.parameters.network.get(execution_id), value)
+        try:
+            set_training(owning_component.parameters.network.get(execution_id), value)
+        except AttributeError:
+            return None
 
     return value
 
@@ -620,25 +626,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
             runtime_params=runtime_params,
             context=context
         )
-
-    @property
-    def training_flag(self):
-        return self._training_flag
-
-    @training_flag.setter
-    def training_flag(self, value):
-        if self._training_flag is value:
-            return
-        set_training(self.function.network, value)
-        self._training_flag = value
-
-    @property
-    def network(self):
-        return self.function.network
-
-    @network.setter
-    def network(self, value):
-        self.function.network = value
 
 
 def convert_to_2d_input(array_like):

@@ -808,10 +808,14 @@ NON_DECISION_TIME = 't0'
 # DDM solution options:
 kwDriftDiffusionAnalytical = "DriftDiffusionAnalytical"
 
+
 def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=None):
     starting_point = owning_component.parameters.starting_point.get(execution_id)
     threshold = owning_component.parameters.threshold.get(execution_id)
-    return (starting_point + threshold) / (2 * threshold)
+    try:
+        return (starting_point + threshold) / (2 * threshold)
+    except TypeError:
+        return None
 
 
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)

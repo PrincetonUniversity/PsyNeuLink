@@ -1159,10 +1159,6 @@ class ControlSignal(ModulatorySignal):
     def intensity(self, new_value):
         self._intensity = new_value
 
-    @property
-    def control_signal(self):
-        return self.value
-
     @tc.typecheck
     def assign_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
         """assign_costs(costs)
@@ -1278,23 +1274,6 @@ class ControlSignal(ModulatorySignal):
             self.parameters.adjustment_cost.get(execution_context),
             self.parameters.duration_cost.get(execution_context)
         ]
-
-    @property
-    def value(self):
-        # In case the ControlSignal has not yet been assigned (and its value is INITIALIZING or DEFERRED_INITIALIZATION
-        if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
-            return None
-        else:
-            return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.log._log_value(assignment)
-
-    @property
-    def intensity(self):
-        return self.value
 
     @property
     def cost(self):

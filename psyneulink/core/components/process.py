@@ -2681,7 +2681,7 @@ class ProcessInputState(OutputState):
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection_Base._instantiate_sender()
 
-       self.value is used to represent the corresponding item of the input arg to process.execute or process.run
+       value is used to represent the corresponding item of the input arg to process.execute or process.run
     COMMENT
 
     """
@@ -2727,21 +2727,9 @@ class ProcessInputState(OutputState):
 
         self.parameters.value.set(variable, override=True)
 
-        # MODIFIED 2/17/17 NEW:
-        # self.owner.input = self.value
-        # MODIFIED 2/17/17 END
         # self.path_afferents = []
         # self.index = PRIMARY
         # self.assign = None
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.owner._update_input()
 
     @property
     def _dependent_components(self):

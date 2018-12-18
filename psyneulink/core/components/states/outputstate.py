@@ -768,7 +768,7 @@ class OutputState(State_Base):
             The OutputState class is a type in the State category of Component,
             It is used primarily as the sender for MappingProjections
             Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
+                note:  currently, this is the identity function, that simply maps variable to value
 
         Class attributes:
             + componentType (str) = OUTPUT_STATES
@@ -1370,7 +1370,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     (See State._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) are assigned here
+        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.defaults.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
 
     Returns list of instantiated OutputStates

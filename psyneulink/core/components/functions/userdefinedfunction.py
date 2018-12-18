@@ -11,14 +11,12 @@
 
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
-from psyneulink.core.globals.parameters import Param
-from psyneulink.core.globals.keywords import CONTEXT, CUSTOM_FUNCTION, PARAMS, PARAMETER_STATE_PARAMS, \
-    USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, VARIABLE
+from psyneulink.core.components.functions.function import ADDITIVE_PARAM, FunctionError, Function_Base, MULTIPLICATIVE_PARAM
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import iscompatible, call_with_pruned_args
+from psyneulink.core.globals.keywords import CONTEXT, CUSTOM_FUNCTION, PARAMETER_STATE_PARAMS, PARAMS, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences import is_pref_set
+from psyneulink.core.globals.utilities import call_with_pruned_args, iscompatible
 
 __all__ = ['UserDefinedFunction']
 
@@ -459,6 +457,8 @@ class UserDefinedFunction(Function_Base):
         # done here because they need to be present before _instantiate_value which calls self.function
         for param_name in self.cust_fct_params:
             setattr(self.parameters, param_name, Param(self.cust_fct_params[param_name], modulable=True))
+
+        self._initialize_parameters()
 
     def function(self, execution_id=None, **kwargs):
 

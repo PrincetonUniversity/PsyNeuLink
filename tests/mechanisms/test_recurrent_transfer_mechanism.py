@@ -3,12 +3,12 @@ import pytest
 
 import psyneulink.core.llvm as pnlvm
 
+from psyneulink.core.components.functions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, get_matrix
-from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.components.process import Process
@@ -75,7 +75,7 @@ class TestRecurrentTransferMechanismInputs:
 
     def test_recurrent_mech_empty_spec(self):
         R = RecurrentTransferMechanism(auto=1.0)
-        assert R.value is None
+        np.testing.assert_allclose(R.value, R.defaults.value)
         np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
         np.testing.assert_allclose(R.matrix, [[1]])
 
@@ -85,7 +85,7 @@ class TestRecurrentTransferMechanismInputs:
             size=3,
             auto=1.0
         )
-        assert R.value is None
+        np.testing.assert_allclose(R.value, R.defaults.value)
         np.testing.assert_allclose(R.instance_defaults.variable, [[0., 0., 0.]])
         np.testing.assert_allclose(R.matrix, [[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]])
 

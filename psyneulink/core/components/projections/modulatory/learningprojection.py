@@ -621,8 +621,8 @@ class LearningProjection(ModulatoryProjection_Base):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,
-                                                 self.value,
-                                                 self.receiver.value,
+                                                 self.defaults.value,
+                                                 self.receiver.defaults.value,
                                                  self.receiver.owner.name))
 
         # Insure that learning_signal has the same shape as the receiver's weight matrix
@@ -722,15 +722,3 @@ class LearningProjection(ModulatoryProjection_Base):
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
         return value
-
-    @property
-    def learning_signal(self):
-        return self.sender.value
-
-    @property
-    def weight_change_matrix(self):
-        return self.value
-
-    @weight_change_matrix.setter
-    def weight_change_matrix(self,assignment):
-        self.value = assignment

@@ -1168,13 +1168,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     #     if it has more, that they are all equivalent
                     self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
 
-    def _instantiate_attributes_after_function(self, context=None):
-
-        if self._learning_rate is not None:
-            self.learning_rate = self._learning_rate
-
-        super()._instantiate_attributes_after_function(context=context)
-
     def _instantiate_output_states(self, context=None):
 
         from psyneulink.core.globals.registry import register_category

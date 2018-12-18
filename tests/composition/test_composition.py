@@ -9,8 +9,9 @@ import pytest
 from itertools import product
 
 import psyneulink.core.llvm as pnlvm
+
 from psyneulink.core.components.functions.function import ModulationParam
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -28,8 +29,8 @@ from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferMechanism
 from psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def record_values(d, time_scale, *mechs, comp=None):
         if mech_value is None:
             d[time_scale][mech].append(np.nan)
         else:
-            d[time_scale][mech].append(mech_value[0])
+            d[time_scale][mech].append(mech_value[0][0])
 
 # Unit tests for each function of the Composition class #######################
 # Unit tests for Composition.Composition(
@@ -664,7 +665,7 @@ class TestExecutionOrder:
 
         cycle_nodes = [B, C, D, C2]
         for cycle_node in cycle_nodes:
-            cycle_node.output_states[0].value = [1.0]
+            cycle_node.output_states[0].parameters.value.set([1.0])
 
         comp.add_linear_processing_pathway([A, B, MappingProjection(matrix=2.0), C, D, MappingProjection(matrix=5.0), E])
         comp.add_linear_processing_pathway([D, MappingProjection(matrix=3.0), C2, MappingProjection(matrix=4.0), B])
@@ -2328,7 +2329,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", ['Python', 
+    @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
@@ -2510,12 +2511,12 @@ class TestCallBeforeAfterTimescale:
 
         before_expected = {
             TimeScale.TIME_STEP: {
-                A: [np.nan, 2, 2, 4, 4, 6, 6, 8],
-                B: [np.nan, np.nan, 10, 10, 20, 20, 30, 30]
+                A: [0, 2, 2, 4, 4, 6, 6, 8],
+                B: [0, 0, 10, 10, 20, 20, 30, 30]
             },
             TimeScale.PASS: {
-                A: [np.nan, 2, 4, 6],
-                B: [np.nan, 10, 20, 30]
+                A: [0, 2, 4, 6],
+                B: [0, 10, 20, 30]
             },
             TimeScale.TRIAL: {
                 A: [np.nan, 2, 4, 6],
@@ -2526,7 +2527,7 @@ class TestCallBeforeAfterTimescale:
         after_expected = {
             TimeScale.TIME_STEP: {
                 A: [2, 2, 4, 4, 6, 6, 8, 8],
-                B: [np.nan, 10, 10, 20, 20, 30, 30, 40]
+                B: [0, 10, 10, 20, 20, 30, 30, 40]
             },
             TimeScale.PASS: {
                 A: [2, 4, 6, 8],
@@ -2559,7 +2560,7 @@ class TestCallBeforeAfterTimescale:
                 for x in after[ts][mech]:
                     try:
                         comp.append(x[0])
-                    except TypeError:
+                    except (TypeError, IndexError):
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
 
@@ -2582,21 +2583,21 @@ class TestCallBeforeAfterTimescale:
         before_expected = {
             TimeScale.TIME_STEP: {
                 A: [
-                    np.nan, 1, 2,
+                    0, 1, 2,
                     2, 4, 6,
                 ],
                 B: [
-                    np.nan, np.nan, np.nan,
+                    0, 0, 0,
                     4, 4, 4,
                 ]
             },
             TimeScale.PASS: {
                 A: [
-                    np.nan, 1,
+                    0, 1,
                     2, 4,
                 ],
                 B: [
-                    np.nan, np.nan,
+                    0, 0,
                     4, 4,
                 ]
             },
@@ -2613,7 +2614,7 @@ class TestCallBeforeAfterTimescale:
                     4, 6, 6,
                 ],
                 B: [
-                    np.nan, np.nan, 4,
+                    0, 0, 4,
                     4, 4, 16,
                 ]
             },
@@ -2623,7 +2624,7 @@ class TestCallBeforeAfterTimescale:
                     4, 6,
                 ],
                 B: [
-                    np.nan, 4,
+                    0, 4,
                     4, 16,
                 ]
             },
@@ -2654,7 +2655,7 @@ class TestCallBeforeAfterTimescale:
                 for x in after[ts][mech]:
                     try:
                         comp.append(x[0])
-                    except TypeError:
+                    except (TypeError, IndexError):
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
 
@@ -3020,12 +3021,12 @@ class TestSystemComposition:
 
         before_expected = {
             TimeScale.TIME_STEP: {
-                A: [np.nan, 2, 2, 4, 4, 6, 6, 8],
-                B: [np.nan, np.nan, 10, 10, 20, 20, 30, 30]
+                A: [0, 2, 2, 4, 4, 6, 6, 8],
+                B: [0, 0, 10, 10, 20, 20, 30, 30]
             },
             TimeScale.PASS: {
-                A: [np.nan, 2, 4, 6],
-                B: [np.nan, 10, 20, 30]
+                A: [0, 2, 4, 6],
+                B: [0, 10, 20, 30]
             },
             TimeScale.TRIAL: {
                 A: [np.nan, 2, 4, 6],
@@ -3036,7 +3037,7 @@ class TestSystemComposition:
         after_expected = {
             TimeScale.TIME_STEP: {
                 A: [2, 2, 4, 4, 6, 6, 8, 8],
-                B: [np.nan, 10, 10, 20, 20, 30, 30, 40]
+                B: [0, 10, 10, 20, 20, 30, 30, 40]
             },
             TimeScale.PASS: {
                 A: [2, 4, 6, 8],
@@ -3070,7 +3071,7 @@ class TestSystemComposition:
                 for x in after[ts][mech]:
                     try:
                         comp.append(x[0])
-                    except TypeError:
+                    except (TypeError, IndexError):
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
 
@@ -3093,21 +3094,21 @@ class TestSystemComposition:
         before_expected = {
             TimeScale.TIME_STEP: {
                 A: [
-                    np.nan, 1, 2,
+                    0, 1, 2,
                     2, 4, 6,
                 ],
                 B: [
-                    np.nan, np.nan, np.nan,
+                    0, 0, 0,
                     4, 4, 4,
                 ]
             },
             TimeScale.PASS: {
                 A: [
-                    np.nan, 1,
+                    0, 1,
                     2, 4,
                 ],
                 B: [
-                    np.nan, np.nan,
+                    0, 0,
                     4, 4,
                 ]
             },
@@ -3124,7 +3125,7 @@ class TestSystemComposition:
                     4, 6, 6,
                 ],
                 B: [
-                    np.nan, np.nan, 4,
+                    0, 0, 4,
                     4, 4, 16,
                 ]
             },
@@ -3134,7 +3135,7 @@ class TestSystemComposition:
                     4, 6,
                 ],
                 B: [
-                    np.nan, 4,
+                    0, 4,
                     4, 16,
                 ]
             },
@@ -3165,7 +3166,7 @@ class TestSystemComposition:
                 for x in after[ts][mech]:
                     try:
                         comp.append(x[0])
-                    except TypeError:
+                    except (TypeError, IndexError):
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
 

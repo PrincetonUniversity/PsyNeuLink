@@ -918,10 +918,10 @@ class InputState(State_Base):
 
         reference_value is the item of the owner Mechanism's variable to which the InputState is assigned
         """
-        if reference_value is not None and not iscompatible(reference_value, self.value):
+        if reference_value is not None and not iscompatible(reference_value, self.defaults.value):
             name = self.name or ""
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
-                                  .format(name, self.componentName, self.owner.name, self.value, reference_value))
+                                  .format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
 
     def _validate_function(self, function):
         # Insure that function is Function.LinearCombination
@@ -982,7 +982,7 @@ class InputState(State_Base):
                 return combined_values
             # There were no Projections
             else:
-                # mark combined_values as none, so that (after being assigned to self.value)
+                # mark combined_values as none, so that (after being assigned to value)
                 #    it is ignored in execute method (i.e., not combined with base_value)
                 return None
 
