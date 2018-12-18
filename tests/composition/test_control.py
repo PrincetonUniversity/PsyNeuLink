@@ -2,6 +2,7 @@ import functools
 import numpy as np
 import pytest
 import psyneulink as pnl
+import psyneulink.core.components.functions.distributionfunctions
 from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec, OptimizationFunctionError
 class TestControlMechanisms:
 
@@ -71,7 +72,7 @@ class TestControlMechanisms:
         assert len(lvoc.input_states) == 5
 
         for i in range(1,5):
-            assert lvoc.input_states[i].function_object.offset == 10.0
+            assert lvoc.input_states[i].function.offset == 10.0
 
     def test_default_lc_control_mechanism(self):
         G = 1.0
@@ -116,8 +117,8 @@ class TestControlMechanisms:
             gain_created_by_LC_output_state_1.append(LC.output_state.parameters.value.get(system)[0])
             mod_gain_assigned_to_A.append(A.get_mod_gain(system))
             mod_gain_assigned_to_B.append(B.get_mod_gain(system))
-            base_gain_assigned_to_A.append(A.function_object.parameters.gain.get())
-            base_gain_assigned_to_B.append(B.function_object.parameters.gain.get())
+            base_gain_assigned_to_A.append(A.function.parameters.gain.get())
+            base_gain_assigned_to_B.append(B.function.parameters.gain.get())
             A_value.append(A.parameters.value.get(system))
             B_value.append(B.parameters.value.get(system))
             LC_value.append(LC.parameters.value.get(system))
@@ -365,7 +366,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
                                                                                   features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, reward]},
-                                                                                  feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                                                                                  feature_function=pnl.AdaptiveIntegratorFunction(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
                                                                                                                              monitored_output_states=[reward,
                                                                                                                                                       Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -516,7 +517,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         evc_gratton.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
                                                                                          features={pnl.SHADOW_EXTERNAL_INPUTS: [target_stim, flanker_stim, reward]},
-                                                                                         feature_function=pnl.AdaptiveIntegrator(rate=1.0),
+                                                                                         feature_function=pnl.AdaptiveIntegratorFunction(rate=1.0),
                                                                                          objective_mechanism=pnl.ObjectiveMechanism(
                                                                                          function=pnl.LinearCombination(operation=pnl.PRODUCT),
                                                                                                                         monitored_output_states=[reward,

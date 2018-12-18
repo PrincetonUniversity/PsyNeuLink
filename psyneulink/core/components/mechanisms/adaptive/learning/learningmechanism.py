@@ -514,8 +514,8 @@ parameter of its `function <ParameterState.function>`, in a manner specified by 
 `Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the
 `modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ModulationParam.ADDITIVE`,
 the `function <ParameterState.function>` of a *MATRIX* ParameterState for a MappingProjection is
-`AccumulatorIntegrator`, and the parameter it uses for additive modulation is its `increment
-<AccumulatorIntegrator.increment>` parameter.  These assignments cause the value of the LearningProjection to be added
+`AccumulatorIntegratorFunction`, and the parameter it uses for additive modulation is its `increment
+<AccumulatorIntegratorFunction.increment>` parameter.  These assignments cause the value of the LearningProjection to be added
 to the previous value of the *MATRIX* ParameterState, thus incrementing the weights by an amount specified by the
 LearningMechanism's `learning_signal <LearningMechanism.learning_signal>`. Note, that the changes to the `matrix
 <MappingProjection.MappingProjection.matrix>` parameter itself do not take effect
@@ -923,6 +923,43 @@ class LearningMechanism(AdaptiveMechanism_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     class Params(AdaptiveMechanism_Base.Params):
+        """
+            Attributes
+            ----------
+
+                error_matrix
+                    see `error_matrix <LearningMechanism.error_matrix>`
+
+                    :default value: None
+                    :type:
+
+                error_signal
+                    see `error_signal <LearningMechanism.error_signal>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                function
+                    see `function <LearningMechanism.function>`
+
+                    :default value: `BackPropagation`
+                    :type: `Function`
+
+                learning_enabled
+                    see `learning_enabled <LearningMechanism.learning_enabled>`
+
+                    :default value: True
+                    :type: bool
+
+                learning_signal
+                    see `learning_signal <LearningMechanism.learning_signal>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+        """
         function = Param(BackPropagation, stateful=False, loggable=False)
         error_matrix = Param(None, modulable=True)
 
@@ -1287,11 +1324,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def learning_rate(self):
-        return self.function_object.learning_rate
+        return self.function.learning_rate
 
     @learning_rate.setter
     def learning_rate(self, assignment):
-        self.function_object.learning_rate = assignment
+        self.function.learning_rate = assignment
 
     @property
     def input_source(self):

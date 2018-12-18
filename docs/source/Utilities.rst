@@ -11,5 +11,5 @@ Utilities
 
 .. automodule:: psyneulink.core.globals.utilities
    :members:
-   :exclude-members: random
+   :exclude-members: random, Params
 

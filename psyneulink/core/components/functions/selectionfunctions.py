@@ -33,7 +33,8 @@ from psyneulink.core.components.functions.function import \
 from psyneulink.core.components.functions.transferfunctions import MODE
 from psyneulink.core.globals.keywords import \
     SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR, kwPreferenceSetName
+    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR, kwPreferenceSetName, MIN_VAL, \
+    MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
@@ -127,6 +128,14 @@ class OneHot(SelectionFunction):
         ..
         * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
         ..
+        * *MIN_VAL*: element with the minimum signed value in first item of `variable <OneHot.variable>`;
+        ..
+        * *MIN_ABS_VAL*: element with the minimum absolute value;
+        ..
+        * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value;
+        ..
+        * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value;
+        ..
         * *PROB*: probabilistically chosen element based on probabilities passed in second item of variable;
         ..
         * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
@@ -139,7 +148,8 @@ class OneHot(SelectionFunction):
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,
+    MIN_ABS_INDICATOR, PROB or PROB_INDICATOR : default MAX_VAL
         specifies the nature of the single non-zero value in the array returned by `function <OneHot.function>`
         (see `mode <OneHot.mode>` for details).
 
@@ -167,7 +177,8 @@ class OneHot(SelectionFunction):
         distribution, each element of which specifies the probability for selecting the corresponding element of the
         1st item.
 
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,
+    MIN_ABS_INDICATOR, PROB or PROB_INDICATOR
         determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`
         (see `above <OneHot>` for options).
 
@@ -201,10 +212,23 @@ class OneHot(SelectionFunction):
     })
 
     class Params(SelectionFunction.Params):
+        """
+            Attributes
+            ----------
+
+                mode
+                    see `mode <OneHot.mode>`
+
+                    :default value: `MAX_VAL`
+                    :type: str
+
+        """
         mode = Param(MAX_VAL, stateful=False)
 
         def _validate_mode(self, mode):
-            options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR}
+            options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                       MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
+                       PROB, PROB_INDICATOR}
             if mode in options:
                 # returns None indicating no error message (this is a valid assignment)
                 return None
@@ -215,7 +239,9 @@ class OneHot(SelectionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR)=MAX_VAL,
+                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                               MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
+                               PROB, PROB_INDICATOR)=MAX_VAL,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -308,6 +334,22 @@ class OneHot(SelectionFunction):
         elif self.mode is MAX_ABS_INDICATOR:
             max_value = np.max(np.absolute(variable))
             result = np.where(variable == max_value, 1, 0)
+
+        if self.mode is MIN_VAL:
+            min_value = np.min(variable)
+            result = np.where(variable == min_value, min_value, 0)
+
+        elif self.mode is MIN_ABS_VAL:
+            min_value = np.min(np.absolute(variable))
+            result = np.where(variable == min_value, min_value, 0)
+
+        elif self.mode is MIN_INDICATOR:
+            min_value = np.min(variable)
+            result = np.where(variable == min_value, 1, 0)
+
+        elif self.mode is MIN_ABS_INDICATOR:
+            min_value = np.min(np.absolute(variable))
+            result = np.where(variable == min_value, 1, 0)
 
         elif self.mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing

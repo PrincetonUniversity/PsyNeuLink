@@ -63,7 +63,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Kohonen
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -104,7 +104,7 @@ class KohonenMechanism(TransferMechanism):
     size=None,                                             \
     function=Linear,                                       \
     matrix=None,                                           \
-    integrator_function=AdaptiveIntegrator,                \
+    integrator_function=AdaptiveIntegratorFunction,                \
     initial_value=None,                                    \
     noise=0.0,                                             \
     integration_rate=1.0,                                  \
@@ -145,7 +145,7 @@ class KohonenMechanism(TransferMechanism):
         <MappingProjection.matrix>` of afferent `MappingProjection` to the Mechanism.
     COMMENT
 
-    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+    integrator_function : IntegratorFunction : default AdaptiveIntegratorFunction
         specifies `IntegratorFunction` to use in `integration_mode <KohonenMechanism.integration_mode>`.
     
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
@@ -287,8 +287,8 @@ class KohonenMechanism(TransferMechanism):
 
     integrator_function:
         When *integrator_mode* is set to True, the KohonenMechanism executes its `integrator_function
-        <KohonenMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
-        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
+        <KohonenMechanism.integrator_function>`, which is the `AdaptiveIntegratorFunction`. See `AdaptiveIntegratorFunction
+        <AdaptiveIntegratorFunction>` for more details on what it computes. Keep in mind that the `integration_rate
         <KohonenMechanism.integration_rate>` parameter of the KohonenMechanism corresponds to the `rate
         <IntegratorFunction.rate>` of the `integrator_function <KohonenMechanism.integrator_function>`.
 
@@ -363,6 +363,35 @@ class KohonenMechanism(TransferMechanism):
     componentType = KOHONEN_MECHANISM
 
     class Params(TransferMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                enable_learning
+                    see `enable_learning <KohonenMechanism.enable_learning>`
+
+                    :default value: True
+                    :type: bool
+
+                learning_function
+                    see `learning_function <KohonenMechanism.learning_function>`
+
+                    :default value: `Kohonen`(distance_function=gaussian, learning_rate=0.05)
+                    :type: `Function`
+
+                learning_rate
+                    see `learning_rate <KohonenMechanism.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                matrix
+                    see `matrix <KohonenMechanism.matrix>`
+
+                    :default value: `AUTO_ASSIGN_MATRIX`
+                    :type: str
+
+        """
         learning_function = Param(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
 
         learning_rate = Param(None, modulable=True)
@@ -386,7 +415,7 @@ class KohonenMechanism(TransferMechanism):
                  size=None,
                  function=Linear,
                  # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=AdaptiveIntegratorFunction,
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
                  integration_rate: is_numeric_or_none = 0.5,

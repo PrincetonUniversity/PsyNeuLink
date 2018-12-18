@@ -22,20 +22,19 @@ import itertools
 
 import numpy as np
 import typecheck as tc
-from llvmlite import ir
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, EPSILON
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.keywords import \
-    DistanceMetrics, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION, HOLLOW_MATRIX, ENERGY, ENTROPY, MATRIX, \
-    CROSS_ENTROPY, DISTANCE_METRICS, DISTANCE_FUNCTION, DIFFERENCE, EUCLIDEAN, MAX_ABS_DIFF, CORRELATION
+    DistanceMetrics, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION, HOLLOW_MATRIX, ENERGY, ENTROPY, MATRIX, COSINE, \
+    CROSS_ENTROPY, DISTANCE_METRICS, DISTANCE_FUNCTION, DIFFERENCE, EUCLIDEAN, MAX_ABS_DIFF, CORRELATION, METRIC
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_iterable
-from psyneulink.core.llvm import helpers
 
 
 __all__ = ['ObjectiveFunction', 'Stability', 'Distance']
@@ -48,6 +47,23 @@ class ObjectiveFunction(Function_Base):
     componentType = OBJECTIVE_FUNCTION_TYPE
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                metric
+                    see `metric <ObjectiveFunction.metric>`
+
+                    :default value: None
+                    :type:
+
+                normalize
+                    see `normalize <ObjectiveFunction.normalize>`
+
+                    :default value: False
+                    :type: bool
+
+        """
         normalize = False
         metric = Param(None, stateful=False)
 
@@ -177,6 +193,29 @@ COMMENT
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(ObjectiveFunction.Params):
+        """
+            Attributes
+            ----------
+
+                matrix
+                    see `matrix <Stability.matrix>`
+
+                    :default value: `HOLLOW_MATRIX`
+                    :type: str
+
+                metric
+                    see `metric <Stability.metric>`
+
+                    :default value: `ENERGY`
+                    :type: str
+
+                transfer_fct
+                    see `transfer_fct <Stability.transfer_fct>`
+
+                    :default value: None
+                    :type:
+
+        """
         matrix = HOLLOW_MATRIX
         metric = Param(ENERGY, stateful=False)
         transfer_fct = None
@@ -320,8 +359,8 @@ COMMENT
     def _get_param_struct_type(self, ctx):
         my_params = ctx.get_param_struct_type(super())
         metric_params = ctx.get_param_struct_type(self._metric_fct)
-        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
-        return ir.LiteralStructType([my_params, metric_params, transfer_params])
+        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
+        return pnlvm.ir.LiteralStructType([my_params, metric_params, transfer_params])
 
     def _get_param_initializer(self, execution_id):
         my_params = super()._get_param_initializer(execution_id)
@@ -399,7 +438,7 @@ COMMENT
         # if self.metric is ENERGY:
         #     result = -np.sum(current * transformed)/2
         # else:
-        #     result = self._metric_fct.function(variable=[current,transformed], context=context)
+        #     result = self._metric_fct(variable=[current,transformed], context=context)
         #
         # if self.normalize:
         #     if self.metric is ENERGY:
@@ -407,7 +446,7 @@ COMMENT
         #     else:
         #         result /= len(variable)
         # MODIFIED 11/12/15 NEW:
-        result = self._metric_fct.function(variable=[current, transformed], context=context)
+        result = self._metric_fct(variable=[current, transformed], context=context)
         # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)
@@ -493,6 +532,24 @@ class Distance(ObjectiveFunction):
     componentName = DISTANCE_FUNCTION
 
     class Params(ObjectiveFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Distance.variable>`
+
+                    :default value: numpy.array([[0], [0]])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                metric
+                    see `metric <Distance.metric>`
+
+                    :default value: `DIFFERENCE`
+                    :type: str
+
+        """
         variable = Param(np.array([[0], [0]]), read_only=True)
         metric = Param(DIFFERENCE, stateful=False)
 
@@ -549,6 +606,11 @@ class Distance(ObjectiveFunction):
                         variable[1]
                     )
                 )
+
+    def cosine(v1, v2):
+        numer = np.sum(v1 * v2)
+        denom = np.sqrt(np.sum(v1 ** 2)) * np.sqrt(np.sum(v2 ** 2)) or EPSILON
+        return numer / denom
 
     def correlation(v1, v2):
         v1_norm = v1 - np.mean(v1)
@@ -636,7 +698,7 @@ class Distance(ObjectiveFunction):
         old_max = builder.load(max_diff_ptr)
         # Maxnum for some reason needs full function prototype
         fmax = ctx.get_builtin("maxnum", [ctx.float_ty],
-            ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
 
         max_diff = builder.call(fmax, [diff, old_max])
         builder.store(max_diff, max_diff_ptr)
@@ -715,13 +777,13 @@ class Distance(ObjectiveFunction):
         else:
             raise RuntimeError('Unsupported metric')
 
-        assert isinstance(arg_in.type.pointee, ir.ArrayType)
-        assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
         assert arg_in.type.pointee.count == 2
 
         input_length = arg_in.type.pointee.element.count
         vector_length = ctx.int32_ty(input_length)
-        with helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
+        with pnlvm.helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
             inner(*args)
 
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
@@ -830,10 +892,11 @@ class Distance(ObjectiveFunction):
         elif self.metric is EUCLIDEAN:
             result = np.linalg.norm(v2 - v1)
 
-        # FIX: NEED SCIPY HERE
-        # # Angle (cosine) of v1 and v2
-        # elif self.metric is ANGLE:
-        #     result = scipy.spatial.distance.cosine(v1,v2)
+        # Cosine similarity of v1 and v2
+        elif self.metric is COSINE:
+            # result = np.correlate(v1, v2)
+            result = 1 - np.abs(Distance.cosine(v1, v2))
+            return self.convert_output_type(result)
 
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
@@ -855,6 +918,9 @@ class Distance(ObjectiveFunction):
         # Energy
         elif self.metric is ENERGY:
             result = -np.sum(v1 * v2) / 2
+
+        else:
+            assert False, '{} not recognized in {}'.format(repr(METRIC), self.__class__.__name__)
 
         if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:

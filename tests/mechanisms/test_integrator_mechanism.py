@@ -1,4 +1,3 @@
-import itertools as it
 import numpy as np
 import pytest
 
@@ -7,24 +6,22 @@ import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
-    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    LCAIntegrator, AGTUtilityIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegratorFunction, ConstantIntegratorFunction, \
+    AdaptiveIntegratorFunction, DriftDiffusionIntegratorFunction, OrnsteinUhlenbeckIntegratorFunction, FHNIntegratorFunction, AccumulatorIntegratorFunction, \
+    LCAIntegratorFunction, AGTUtilityIntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import AtTrial
 from psyneulink.core.scheduling.condition import Never
-from psyneulink.core.scheduling.time import TimeScale
 
 
 class TestReinitialize:
     def test_FHN_valid(self):
         I = IntegratorMechanism(name="I",
-                function=FHNIntegrator())
+                                function=FHNIntegratorFunction())
         I.reinitialize_when = Never()
         I.execute(1.0)
 
@@ -32,11 +29,11 @@ class TestReinitialize:
         assert np.allclose([[0.00279552]], I.value[1])
         assert np.allclose([[0.05]], I.value[2])
 
-        I.function_object.reinitialize(0.01, 0.02, 0.03)
+        I.function.reinitialize(0.01, 0.02, 0.03)
 
-        assert np.allclose(0.01, I.function_object.value[0])
-        assert np.allclose(0.02, I.function_object.value[1])
-        assert np.allclose(0.03, I.function_object.value[2])
+        assert np.allclose(0.01, I.function.value[0])
+        assert np.allclose(0.02, I.function.value[1])
+        assert np.allclose(0.03, I.function.value[2])
 
         assert np.allclose([[0.05127053]], I.value[0])
         assert np.allclose([[0.00279552]], I.value[1])
@@ -66,39 +63,39 @@ class TestReinitialize:
 
     def test_AGTUtility_valid(self):
         I = IntegratorMechanism(name="I",
-                function=AGTUtilityIntegrator())
+                                function=AGTUtilityIntegratorFunction())
         I.reinitialize_when = Never()
-        assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.0]], I.function.previous_short_term_utility)
+        assert np.allclose([[0.0]], I.function.previous_long_term_utility)
 
-        I.function_object.reinitialize(0.2, 0.8)
+        I.function.reinitialize(0.2, 0.8)
 
-        assert np.allclose([[0.2]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.8]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.2]], I.function.previous_short_term_utility)
+        assert np.allclose([[0.8]], I.function.previous_long_term_utility)
 
-        I.function_object.reinitialize()
+        I.function.reinitialize()
 
-        assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.0]], I.function.previous_short_term_utility)
+        assert np.allclose([[0.0]], I.function.previous_long_term_utility)
 
         I.reinitialize(0.3, 0.7)
 
-        assert np.allclose([[0.3]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.7]], I.function_object.previous_long_term_utility)
+        assert np.allclose([[0.3]], I.function.previous_short_term_utility)
+        assert np.allclose([[0.7]], I.function.previous_long_term_utility)
         print(I.value)
-        print(I.function_object.combine_utilities(0.3, 0.7))
-        assert np.allclose(I.function_object.combine_utilities(0.3, 0.7), I.value)
+        print(I.function.combine_utilities(0.3, 0.7))
+        assert np.allclose(I.function.combine_utilities(0.3, 0.7), I.value)
 
         I.reinitialize()
 
-        assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
-        assert np.allclose(I.function_object.combine_utilities(0.0, 0.0), I.value)
+        assert np.allclose([[0.0]], I.function.previous_short_term_utility)
+        assert np.allclose([[0.0]], I.function.previous_long_term_utility)
+        assert np.allclose(I.function.combine_utilities(0.0, 0.0), I.value)
 
     def test_Simple_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
             ),
         )
         I.reinitialize_when = Never()
@@ -110,20 +107,20 @@ class TestReinitialize:
         assert np.allclose(I.output_state.value, 10.0)
 
         # reinitialize function
-        I.function_object.reinitialize(5.0)
-        assert np.allclose(I.function_object.value, 5.0)
+        I.function.reinitialize(5.0)
+        assert np.allclose(I.function.value, 5.0)
         assert np.allclose(I.value, 10.0)
         assert np.allclose(I.output_states[0].value, 10.0)
 
         # reinitialize function without value spec
-        I.function_object.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        I.function.reinitialize()
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 10.0)
         assert np.allclose(I.output_states[0].value, 10.0)
 
         # reinitialize mechanism
         I.reinitialize(4.0)
-        assert np.allclose(I.function_object.value, 4.0)
+        assert np.allclose(I.function.value, 4.0)
         assert np.allclose(I.value, 4.0)
         assert np.allclose(I.output_states[0].value, 4.0)
 
@@ -133,14 +130,14 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         I.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
     def test_Adaptive_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=AdaptiveIntegrator(
+            function=AdaptiveIntegratorFunction(
                 rate=0.5
             ),
         )
@@ -152,20 +149,20 @@ class TestReinitialize:
         assert np.allclose(I.output_state.value, 5.0)
 
         # reinitialize function
-        I.function_object.reinitialize(1.0)
-        assert np.allclose(I.function_object.value, 1.0)
+        I.function.reinitialize(1.0)
+        assert np.allclose(I.function.value, 1.0)
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_states[0].value, 5.0)
 
         # reinitialize function without value spec
-        I.function_object.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        I.function.reinitialize()
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_states[0].value, 5.0)
 
         # reinitialize mechanism
         I.reinitialize(2.0)
-        assert np.allclose(I.function_object.value, 2.0)
+        assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 2.0)
         assert np.allclose(I.output_states[0].value, 2.0)
 
@@ -176,14 +173,14 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         I.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
     def test_Constant_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
+            function=ConstantIntegratorFunction(
                 rate=1.0
             ),
         )
@@ -195,20 +192,20 @@ class TestReinitialize:
         assert np.allclose(I.output_state.value, 1.0)
 
         # reinitialize function
-        I.function_object.reinitialize(2.0)
-        assert np.allclose(I.function_object.value, 2.0)
+        I.function.reinitialize(2.0)
+        assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 1.0)
         assert np.allclose(I.output_states[0].value, 1.0)
 
         # reinitialize function without value spec
-        I.function_object.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        I.function.reinitialize()
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 1.0)
         assert np.allclose(I.output_states[0].value, 1.0)
 
         # reinitialize mechanism
         I.reinitialize(2.0)
-        assert np.allclose(I.function_object.value, 2.0)
+        assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 2.0)
         assert np.allclose(I.output_states[0].value, 2.0)
 
@@ -219,14 +216,14 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         I.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
     def test_OU_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=OrnsteinUhlenbeckIntegrator(),
+            function=OrnsteinUhlenbeckIntegratorFunction(),
         )
 
         # previous_value + (decay * previous_value - rate * variable) * time_step_size + noise
@@ -237,20 +234,20 @@ class TestReinitialize:
         assert np.allclose(I.output_state.value, -2.0)
 
         # reinitialize function
-        I.function_object.reinitialize(5.0, 0.0)
-        assert np.allclose(I.function_object.value[0], 5.0)
+        I.function.reinitialize(5.0, 0.0)
+        assert np.allclose(I.function.value[0], 5.0)
         assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_states[0].value, -2.0)
 
         # reinitialize function without value spec
-        I.function_object.reinitialize()
-        assert np.allclose(I.function_object.value[0], 0.0)
+        I.function.reinitialize()
+        assert np.allclose(I.function.value[0], 0.0)
         assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_states[0].value, -2.0)
 
         # reinitialize mechanism
         I.reinitialize(4.0, 0.0)
-        assert np.allclose(I.function_object.value[0], 4.0)
+        assert np.allclose(I.function.value[0], 4.0)
         assert np.allclose(I.value[0], 4.0)
         assert np.allclose(I.output_states[0].value, 4.0)
 
@@ -261,14 +258,14 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         I.reinitialize()
-        assert np.allclose(I.function_object.value[0], 0.0)
+        assert np.allclose(I.function.value[0], 0.0)
         assert np.allclose(I.value[0], 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
     def test_Accumulator_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=AccumulatorIntegrator(increment=0.1),
+            function=AccumulatorIntegratorFunction(increment=0.1),
         )
 
         #  returns previous_value * rate + noise + increment
@@ -279,20 +276,20 @@ class TestReinitialize:
         assert np.allclose(I.output_state.value, 0.1)
 
         # reinitialize function
-        I.function_object.reinitialize(2.0)
-        assert np.allclose(I.function_object.value, 2.0)
+        I.function.reinitialize(2.0)
+        assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 0.1)
         assert np.allclose(I.output_states[0].value, 0.1)
 
         # reinitialize function without value spec
-        I.function_object.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        I.function.reinitialize()
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.1)
         assert np.allclose(I.output_states[0].value, 0.1)
 
         # reinitialize mechanism
         I.reinitialize(5.0)
-        assert np.allclose(I.function_object.value, 5.0)
+        assert np.allclose(I.function.value, 5.0)
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_states[0].value, 5.0)
 
@@ -303,14 +300,14 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         I.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
     def test_LCAMechanism_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=LCAIntegrator(),
+            function=LCAIntegratorFunction(),
         )
 
         # previous_value + (rate*previous_value + new_value)*time_step_size + noise
@@ -321,20 +318,20 @@ class TestReinitialize:
         assert np.allclose(I.output_state.value, 0.2)
 
         # reinitialize function
-        I.function_object.reinitialize(5.0)
-        assert np.allclose(I.function_object.value, 5.0)
+        I.function.reinitialize(5.0)
+        assert np.allclose(I.function.value, 5.0)
         assert np.allclose(I.value, 0.2)
         assert np.allclose(I.output_states[0].value, 0.2)
 
         # reinitialize function without value spec
-        I.function_object.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        I.function.reinitialize()
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.2)
         assert np.allclose(I.output_states[0].value, 0.2)
 
         # reinitialize mechanism
         I.reinitialize(4.0)
-        assert np.allclose(I.function_object.value, 4.0)
+        assert np.allclose(I.function.value, 4.0)
         assert np.allclose(I.value, 4.0)
         assert np.allclose(I.output_states[0].value, 4.0)
 
@@ -345,7 +342,7 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         I.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
@@ -367,7 +364,7 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     def test_simple_integrator(self):
         I = IntegratorMechanism(
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
                 initializer=10.0,
                 rate=5.0,
                 offset=10,
@@ -473,8 +470,8 @@ class TestIntegratorFunctions:
     def test_FHN_simple_scalar(self, benchmark, mode):
         var = [1.0]
         I = IntegratorMechanism(name="I",
-                default_variable=[var],
-                function=FHNIntegrator())
+                                default_variable=[var],
+                                function=FHNIntegratorFunction())
 
         if mode == 'Python':
             val = I.execute(var)
@@ -495,22 +492,22 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"), pytest.mark.skip])])
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
     def test_FHN_simple_vector(self, benchmark, mode):
         var = [1.0, 3.0]
         I = IntegratorMechanism(name="I",
-                default_variable=[var],
-                function=FHNIntegrator())
+                                default_variable=var,
+                                function=FHNIntegratorFunction)
 
         if mode == 'Python':
-            val = I.execute([var])
+            val = I.execute(var)
             # LLVM versions report values of output states. Collect it here
             val = [x.value for x in I.output_states]
             benchmark(I.execute, var)
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(I)
-            val = e.execute([var])
+            val = e.execute(var)
             benchmark(e.execute, var)
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(I)
@@ -544,7 +541,7 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     def test_constant_integrator(self):
         I = IntegratorMechanism(
-            function=ConstantIntegrator(
+            function=ConstantIntegratorFunction(
                 initializer=10.0,
                 rate=5.0,
                 offset=10
@@ -572,7 +569,7 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     def test_adaptive_integrator(self):
         I = IntegratorMechanism(
-            function=AdaptiveIntegrator(
+            function=AdaptiveIntegratorFunction(
                 initializer=10.0,
                 rate=0.5,
                 offset=10,
@@ -587,7 +584,7 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     def test_drift_diffusion_integrator(self):
         I = IntegratorMechanism(
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
                 initializer=10.0,
                 rate=10,
                 time_step_size=0.5,
@@ -603,7 +600,7 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     def test_ornstein_uhlenbeck_integrator(self):
         I = IntegratorMechanism(
-            function=OrnsteinUhlenbeckIntegrator(
+            function=OrnsteinUhlenbeckIntegratorFunction(
                 decay=0.5,
                 initializer=10.0,
                 rate=0.25,
@@ -641,7 +638,7 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     def test_ornstein_uhlenbeck_integrator_time(self):
         OU = IntegratorMechanism(
-            function=OrnsteinUhlenbeckIntegrator(
+            function=OrnsteinUhlenbeckIntegratorFunction(
                 initializer=10.0,
                 rate=10,
                 time_step_size=0.2,
@@ -650,16 +647,16 @@ class TestIntegratorFunctions:
                 offset=10,
             )
         )
-        time_0 = OU.function_object.previous_time  # t_0  = 0.5
+        time_0 = OU.function.previous_time  # t_0  = 0.5
         # np.testing.assert_allclose(time_0, [0.5], atol=1e-08)
 
         OU.execute(10)
-        time_1 = OU.function_object.previous_time  # t_1  = 0.5 + 0.2 = 0.7
+        time_1 = OU.function.previous_time  # t_1  = 0.5 + 0.2 = 0.7
         # np.testing.assert_allclose(time_1, [0.7], atol=1e-08)
 
         for i in range(11):  # t_11 = 0.7 + 10*0.2 = 2.7
             OU.execute(10)
-        time_12 = OU.function_object.previous_time # t_12 = 2.7 + 0.2 = 2.9
+        time_12 = OU.function.previous_time # t_12 = 2.7 + 0.2 = 2.9
         # np.testing.assert_allclose(time_12, [2.9], atol=1e-08)
 
     @pytest.mark.mechanism
@@ -694,7 +691,7 @@ class TestIntegratorInputs:
     def test_integrator_input_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
             )
         )
         # P = Process(pathway=[I])
@@ -708,7 +705,7 @@ class TestIntegratorInputs:
     def test_integrator_input_list(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
             )
         )
         # P = Process(pathway=[I])
@@ -724,7 +721,7 @@ class TestIntegratorInputs:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0, 0],
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
             )
         )
         # P = Process(pathway=[I])
@@ -745,7 +742,7 @@ class TestIntegratorInputs:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0, 0],
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
             )
         )
         # P = Process(pathway=[I])
@@ -802,7 +799,7 @@ class TestIntegratorRate:
     def test_integrator_type_simple_rate_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
                 rate=5.0
             )
         )
@@ -817,7 +814,7 @@ class TestIntegratorRate:
     def test_integrator_type_constant_rate_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
+            function=ConstantIntegratorFunction(
                 rate=5.0
             )
         )
@@ -832,7 +829,7 @@ class TestIntegratorRate:
     def test_integrator_type_diffusion_rate_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
                 rate=5.0
             )
         )
@@ -848,7 +845,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0],
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
                 rate=[5.0, 5.0, 5.0]
             )
         )
@@ -864,7 +861,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
+            function=ConstantIntegratorFunction(
                 rate=[5.0, 5.0, 5.0]
             )
         )
@@ -878,7 +875,7 @@ class TestIntegratorRate:
     #     I = IntegratorMechanism(
     #         default_variable=[0, 0, 0],
     #         name='IntegratorMechanism',
-    #         function=DriftDiffusionIntegrator(
+    #         function=DriftDiffusionIntegratorFunction(
     #             rate=[5.0, 5.0, 5.0],
     #             threshold=[100.0, 100.0, 100.0]
     #         )
@@ -895,7 +892,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
-            function=AdaptiveIntegrator(
+            function=AdaptiveIntegratorFunction(
                 rate=[0.5, 0.5, 0.5]
             )
         )
@@ -911,7 +908,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
-            function=AdaptiveIntegrator(
+            function=AdaptiveIntegratorFunction(
                 rate=0.5
             )
         )
@@ -926,7 +923,7 @@ class TestIntegratorRate:
     def test_integrator_type_adaptive_rate_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=AdaptiveIntegrator(
+            function=AdaptiveIntegratorFunction(
                 rate=0.5
             )
         )
@@ -942,7 +939,7 @@ class TestIntegratorRate:
         with pytest.raises(ComponentError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
-                function=SimpleIntegrator(
+                function=SimpleIntegratorFunction(
 
                     rate=[5.0, 5.0, 5.0]
                 )
@@ -960,7 +957,7 @@ class TestIntegratorRate:
         with pytest.raises(ComponentError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
-                function=ConstantIntegrator(
+                function=ConstantIntegratorFunction(
                     rate=[5.0, 5.0, 5.0]
                 )
             )
@@ -977,7 +974,7 @@ class TestIntegratorRate:
     #     with pytest.raises(FunctionError) as error_text:
     #         I = IntegratorMechanism(
     #             name='IntegratorMechanism',
-    #             function=DriftDiffusionIntegrator(
+    #             function=DriftDiffusionIntegratorFunction(
     #                 rate=[5.0, 5.0, 5.0]
     #             )
     #         )
@@ -993,7 +990,7 @@ class TestIntegratorRate:
     # @pytest.mark.integrator_mechanism
     # def test_accumulator_integrator(self):
     #     I = IntegratorMechanism(
-    #             function = AccumulatorIntegrator(
+    #             function = AccumulatorIntegratorFunction(
     #                 initializer = 10.0,
     #                 rate = 5.0,
     #                 increment= 1.0
@@ -1021,14 +1018,14 @@ class TestIntegratorNoise:
     def test_integrator_simple_noise_fn(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
                 noise=NormalDist()
             ),
         )
 
         val = float(I.execute(10))
 
-        I.function_object.reinitialize(5.0)
+        I.function.reinitialize(5.0)
 
         val2 = float(I.execute(0))
 
@@ -1041,7 +1038,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
-            function=SimpleIntegrator(
+            function=SimpleIntegratorFunction(
                 noise=NormalDist(),
             ),
         )
@@ -1055,7 +1052,7 @@ class TestIntegratorNoise:
     def test_integrator_accumulator_noise_fn(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=AccumulatorIntegrator(
+            function=AccumulatorIntegratorFunction(
                 noise=NormalDist()
             ),
         )
@@ -1070,7 +1067,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
-            function=AccumulatorIntegrator(
+            function=AccumulatorIntegratorFunction(
                 noise=NormalDist(),
             ),
         )
@@ -1083,7 +1080,7 @@ class TestIntegratorNoise:
     def test_integrator_constant_noise_fn(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
+            function=ConstantIntegratorFunction(
                 noise=NormalDist()
             ),
         )
@@ -1098,7 +1095,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
-            function=ConstantIntegrator(
+            function=ConstantIntegratorFunction(
                 noise=NormalDist(),
             ),
         )
@@ -1112,7 +1109,7 @@ class TestIntegratorNoise:
     def test_integrator_adaptive_noise_fn(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=AdaptiveIntegrator(
+            function=AdaptiveIntegratorFunction(
                 noise=NormalDist()
             ),
         )
@@ -1127,7 +1124,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
-            function=AdaptiveIntegrator(
+            function=AdaptiveIntegratorFunction(
                 noise=NormalDist(),
             ),
         )
@@ -1141,7 +1138,7 @@ class TestIntegratorNoise:
     def test_integrator_drift_diffusion_noise_val(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
                 noise=5.0,
             ),
         )
@@ -1155,7 +1152,7 @@ class TestIntegratorNoise:
     def test_integrator_ornstein_uhlenbeck_noise_val(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=OrnsteinUhlenbeckIntegrator(
+            function=OrnsteinUhlenbeckIntegratorFunction(
                 noise=2.0,
                 decay=0.5,
                 initializer=1.0,
@@ -1218,8 +1215,8 @@ class TestAGTUtilityIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "AGTUtilityIntegrator",
-            function=AGTUtilityIntegrator(
+            name = "AGTUtilityIntegratorFunction",
+            function=AGTUtilityIntegratorFunction(
             )
 
         )
@@ -1229,8 +1226,8 @@ class TestAGTUtilityIntegrator:
         long_term_util = []
         for i in range(50):
             engagement.append(U.execute([1])[0][0])
-            short_term_util.append(U.function_object.short_term_utility_logistic[0])
-            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+            short_term_util.append(U.function.short_term_utility_logistic[0])
+            long_term_util.append(U.function.long_term_utility_logistic[0])
         print("engagement = ", engagement)
         print("short_term_util = ", short_term_util)
         print("long_term_util = ", long_term_util)
@@ -1245,8 +1242,8 @@ class TestAGTUtilityIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "AGTUtilityIntegrator",
-            function=AGTUtilityIntegrator(
+            name = "AGTUtilityIntegratorFunction",
+            function=AGTUtilityIntegratorFunction(
                 operation="s-l"
             )
 
@@ -1257,8 +1254,8 @@ class TestAGTUtilityIntegrator:
         long_term_util = []
         for i in range(50):
             engagement.append(U.execute([1])[0][0])
-            short_term_util.append(U.function_object.short_term_utility_logistic[0])
-            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+            short_term_util.append(U.function.short_term_utility_logistic[0])
+            long_term_util.append(U.function.long_term_utility_logistic[0])
         print("engagement = ", engagement)
         print("short_term_util = ", short_term_util)
         print("long_term_util = ", long_term_util)
@@ -1273,8 +1270,8 @@ class TestAGTUtilityIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "AGTUtilityIntegrator",
-            function=AGTUtilityIntegrator(
+            name = "AGTUtilityIntegratorFunction",
+            function=AGTUtilityIntegratorFunction(
                 operation="s+l"
             )
 
@@ -1285,8 +1282,8 @@ class TestAGTUtilityIntegrator:
         long_term_util = []
         for i in range(50):
             engagement.append(U.execute([1])[0][0])
-            short_term_util.append(U.function_object.short_term_utility_logistic[0])
-            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+            short_term_util.append(U.function.short_term_utility_logistic[0])
+            long_term_util.append(U.function.long_term_utility_logistic[0])
         print("engagement = ", engagement)
         print("short_term_util = ", short_term_util)
         print("long_term_util = ", long_term_util)
@@ -1372,7 +1369,7 @@ class TestAGTUtilityIntegrator:
     #
     #     F = IntegratorMechanism(
     #         name='IntegratorMech-FHNFunction',
-    #         function=FHNIntegrator(
+    #         function=FHNIntegratorFunction(
     #             time_step_size=0.1,
     #             initial_v=0.2,
     #             initial_w=0.0,
@@ -1428,7 +1425,7 @@ class TestAGTUtilityIntegrator:
     #
     #     F = IntegratorMechanism(
     #         name='IntegratorMech-FHNFunction',
-    #         function=FHNIntegrator(
+    #         function=FHNIntegratorFunction(
     #             time_step_size=0.1,
     #             initial_v=0.2,
     #             initial_w=0.0,

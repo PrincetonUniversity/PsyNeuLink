@@ -2,7 +2,7 @@ import numpy as np
 import psyneulink as pnl
 
 # Control Parameters
-import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 signalSearchRange = np.arange(1.0,3.1,0.5) # why 0.8 to 2.0 in increments of 0.2 np.array([1.0])#
@@ -49,7 +49,7 @@ Automatic_Component.loggable_items
 Automatic_Component.set_log_conditions('value')
 
 # Decision Mechanisms
-Decision = pnl.DDM(function=psyneulink.core.components.functions.integratorfunctions.DriftDiffusionAnalytical(
+Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
         drift_rate=1.0,
         threshold=0.2645,
         # noise=(0.5),
@@ -159,11 +159,11 @@ mySystem.controller.objective_mechanism.set_log_conditions('OFFSET_RT')
 mySystem.controller.control_signals[0].intensity_cost_function = psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.8046).function
 mySystem.controller.control_signals[1].intensity_cost_function = psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.8046).function
 #
-# #change prediction mechanism function_object.rate for all 3 prediction mechanisms
+# #change prediction mechanism function.rate for all 3 prediction mechanisms
 #
-mySystem.controller.prediction_mechanisms.mechanisms[0].function_object.rate = 1.0
-mySystem.controller.prediction_mechanisms.mechanisms[1].function_object.rate = 0.0  # reward rate
-mySystem.controller.prediction_mechanisms.mechanisms[2].function_object.rate = 1.0
+mySystem.controller.prediction_mechanisms.mechanisms[0].function.rate = 1.0
+mySystem.controller.prediction_mechanisms.mechanisms[1].function.rate = 0.0  # reward rate
+mySystem.controller.prediction_mechanisms.mechanisms[2].function.rate = 1.0
 
 
 
@@ -185,11 +185,11 @@ mySystem.controller.prediction_mechanisms.mechanisms[2].function_object.rate = 1
 #     if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
 #         # when you find a key mechanism (transfer mechanism) with the correct name, print its name
 #         # print(mech.name)
-#         mech.function_object.rate = 1.0
+#         mech.function.rate = 1.0
 #
 #     if 'Reward' in mech.name:
 #         # print(mech.name)
-#         mech.function_object.rate = 1.0
+#         mech.function.rate = 1.0
 #         # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 #
 

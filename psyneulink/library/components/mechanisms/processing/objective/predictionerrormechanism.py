@@ -259,6 +259,30 @@ class PredictionErrorMechanism(ComparatorMechanism):
     }
 
     class Params(ComparatorMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <PredictionErrorMechanism.variable>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                function
+                    see `function <PredictionErrorMechanism.function>`
+
+                    :default value: `PredictionErrorDeltaFunction`
+                    :type: `Function`
+
+                learning_rate
+                    see `learning_rate <PredictionErrorMechanism.learning_rate>`
+
+                    :default value: 0.3
+                    :type: float
+
+        """
         variable = Param(None, read_only=True)
         learning_rate = Param(0.3, modulable=True)
         function = PredictionErrorDeltaFunction

@@ -144,6 +144,35 @@ class RegressionCFA(CompositionFunctionApproximator):
     '''
 
     class Params(CompositionFunctionApproximator.Params):
+        """
+            Attributes
+            ----------
+
+                prediction_vector
+                    see `prediction_vector <RegressionCFA.prediction_vector>`
+
+                    :default value: None
+                    :type:
+
+                previous_state
+                    see `previous_state <RegressionCFA.previous_state>`
+
+                    :default value: None
+                    :type:
+
+                regression_weights
+                    see `regression_weights <RegressionCFA.regression_weights>`
+
+                    :default value: None
+                    :type:
+
+                update_weights
+                    see `update_weights <RegressionCFA.update_weights>`
+
+                    :default value: `BayesGLM`
+                    :type: `Function`
+
+        """
         update_weights = Param(BayesGLM, stateful=False, loggable=False)
         prediction_vector = None
         previous_state = None
@@ -260,7 +289,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         if previous_state is not None:
             # Update regression_weights
-            regression_weights = self.update_weights.function([previous_state, net_outcome], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, net_outcome], execution_id=execution_id)
             # Update vector with current feature_values and control_allocation and store for next trial
             prediction_vector.update_vector(control_allocation, feature_values, execution_id)
             previous_state = prediction_vector.vector
@@ -270,7 +299,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # prediction_vector.reference_variable = control_allocation
             previous_state = np.full_like(prediction_vector.vector, 0)
-            regression_weights = self.update_weights.function([previous_state, 0], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, 0], execution_id=execution_id)
 
         self._set_multiple_parameter_values(
             execution_id,

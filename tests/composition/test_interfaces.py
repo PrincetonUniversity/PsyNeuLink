@@ -1,31 +1,16 @@
-import functools
-import logging
-
-from timeit import timeit
-
 import numpy as np
 import pytest
 
 import psyneulink.core.llvm as pnlvm
-from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.interfacefunctions import Identity
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TRANSFER_OUTPUT, TransferMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.compositions.composition import Composition, CompositionError
-from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
-from psyneulink.core.compositions.systemcomposition import SystemComposition
-from psyneulink.core.globals.keywords import HARD_CLAMP, INPUT_STATE, NAME, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
-from psyneulink.core.globals.utilities import CNodeRole
-from psyneulink.core.scheduling.condition import AfterNCalls, EveryNPasses
-from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
-from psyneulink.core.scheduling.time import TimeScale
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+
 
 class TestExecuteCIM:
 

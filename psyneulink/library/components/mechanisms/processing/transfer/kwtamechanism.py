@@ -176,7 +176,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction
 from psyneulink.core.globals.keywords import INITIALIZING, KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -262,7 +262,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
         equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
 
-    integrator_function : IntegratorFunction : default AdaptiveIntegrator
+    integrator_function : IntegratorFunction : default AdaptiveIntegratorFunction
         specifies `IntegratorFunction` to use in `integration_mode <KWTAMechanism.integration_mode>`.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
@@ -427,8 +427,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
     integrator_function:
         When *integrator_mode* is set to True, the KWTAMechanism executes its `integrator_function
-        <KWTAMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
-        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
+        <KWTAMechanism.integrator_function>`, which is the `AdaptiveIntegratorFunction`. See `AdaptiveIntegratorFunction
+        <AdaptiveIntegratorFunction>` for more details on what it computes. Keep in mind that the `integration_rate
         <KWTAMechanism.integration_rate>` parameter of the `KWTAMechanism` corresponds to the
         `rate <KWTAIntegrator.rate>` of the `KWTAIntegrator`.
 
@@ -499,6 +499,47 @@ class KWTAMechanism(RecurrentTransferMechanism):
     componentType = KWTA_MECHANISM
 
     class Params(RecurrentTransferMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                average_based
+                    see `average_based <KWTAMechanism.average_based>`
+
+                    :default value: False
+                    :type: bool
+
+                function
+                    see `function <KWTAMechanism.function>`
+
+                    :default value: `Logistic`
+                    :type: `Function`
+
+                inhibition_only
+                    see `inhibition_only <KWTAMechanism.inhibition_only>`
+
+                    :default value: True
+                    :type: bool
+
+                k_value
+                    see `k_value <KWTAMechanism.k_value>`
+
+                    :default value: 0.5
+                    :type: float
+
+                ratio
+                    see `ratio <KWTAMechanism.ratio>`
+
+                    :default value: 0.5
+                    :type: float
+
+                threshold
+                    see `threshold <KWTAMechanism.threshold>`
+
+                    :default value: 0.0
+                    :type: float
+
+        """
         function = Param(Logistic, stateful=False, loggable=False)
         k_value = Param(0.5, modulable=True)
         threshold = Param(0.0, modulable=True)
@@ -520,7 +561,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  matrix=None,
                  auto: is_numeric_or_none=None,
                  hetero: is_numeric_or_none=None,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=AdaptiveIntegratorFunction,
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
                  integration_rate: is_numeric_or_none = 0.5,
@@ -769,7 +810,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #
         #     if not self.integrator_function:
         #
-        #         self.integrator_function = AdaptiveIntegrator(
+        #         self.integrator_function = AdaptiveIntegratorFunction(
         #                                     self.instance_defaults.variable,
         #                                     initializer = self.initial_value,
         #                                     noise = self.noise,
@@ -783,7 +824,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #                                                      #         NOISE: self.noise,
         #                                                      #         RATE: self.integration_rate}
         #                                                      # context=context
-        #                                                      # name=Integrator.componentName + '_for_' + self.name
+        #                                                      # name=IntegratorFunction.componentName + '_for_' + self.name
         #                                                      )
         #
         # elif time_scale is TimeScale.TRIAL:

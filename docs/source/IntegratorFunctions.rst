@@ -4,6 +4,6 @@ IntegratorFunctions
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: psyneulink.core.components.functions.integratorfunctions
+.. automodule:: psyneulink.core.components.functions.statefulfunctions.integratorfunctions
    :members:
-
+   :exclude-members: Params

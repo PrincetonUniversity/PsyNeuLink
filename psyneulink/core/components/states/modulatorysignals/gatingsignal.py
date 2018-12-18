@@ -406,6 +406,18 @@ class GatingSignal(ModulatorySignal):
     #     kp<pref>: <setting>...}
 
     class Params(ModulatorySignal.Params):
+        """
+            Attributes
+            ----------
+
+                value
+                    see `value <GatingSignal.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         value = Param(np.array([0]), read_only=True, aliases=['gating_signal'])
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()

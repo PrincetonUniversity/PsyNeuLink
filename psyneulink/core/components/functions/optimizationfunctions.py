@@ -546,6 +546,74 @@ class OptimizationFunction(Function_Base):
     componentType = OPTIMIZATION_FUNCTION_TYPE
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <OptimizationFunction.variable>`
+
+                    :default value: numpy.array([0, 0, 0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                max_iterations
+                    see `max_iterations <OptimizationFunction.max_iterations>`
+
+                    :default value: None
+                    :type:
+
+                objective_function
+                    see `objective_function <OptimizationFunction.objective_function>`
+
+                    :default value: lambda x: 0
+                    :type: <class 'function'>
+
+                save_samples
+                    see `save_samples <OptimizationFunction.save_samples>`
+
+                    :default value: False
+                    :type: bool
+
+                save_values
+                    see `save_values <OptimizationFunction.save_values>`
+
+                    :default value: False
+                    :type: bool
+
+                saved_samples
+                    see `saved_samples <OptimizationFunction.saved_samples>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                saved_values
+                    see `saved_values <OptimizationFunction.saved_values>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                search_function
+                    see `search_function <OptimizationFunction.search_function>`
+
+                    :default value: lambda x: x
+                    :type: <class 'function'>
+
+                search_space
+                    see `search_space <OptimizationFunction.search_space>`
+
+                    :default value: [`SampleIterator`]
+                    :type: list
+
+                search_termination_function
+                    see `search_termination_function <OptimizationFunction.search_termination_function>`
+
+                    :default value: lambda x, y, z: True
+                    :type: <class 'function'>
+
+        """
         variable = Param(np.array([0, 0, 0]), read_only=True)
 
         objective_function = Param(lambda x: 0, stateful=False, loggable=False)
@@ -980,6 +1048,68 @@ class GradientOptimization(OptimizationFunction):
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
 
     class Params(OptimizationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <GradientOptimization.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                annealing_function
+                    see `annealing_function <GradientOptimization.annealing_function>`
+
+                    :default value: None
+                    :type:
+
+                convergence_criterion
+                    see `convergence_criterion <GradientOptimization.convergence_criterion>`
+
+                    :default value: `VALUE`
+                    :type: str
+
+                convergence_threshold
+                    see `convergence_threshold <GradientOptimization.convergence_threshold>`
+
+                    :default value: 0.001
+                    :type: float
+
+                direction
+                    see `direction <GradientOptimization.direction>`
+
+                    :default value: `ASCENT`
+                    :type: str
+
+                max_iterations
+                    see `max_iterations <GradientOptimization.max_iterations>`
+
+                    :default value: 1000
+                    :type: int
+
+                previous_value
+                    see `previous_value <GradientOptimization.previous_value>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                previous_variable
+                    see `previous_variable <GradientOptimization.previous_variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                step
+                    see `step <GradientOptimization.step>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         variable = Param([[0], [0]], read_only=True)
 
         # these should be removed and use switched to .get_previous()
@@ -1245,6 +1375,35 @@ class GridSearch(OptimizationFunction):
     componentName = GRID_SEARCH_FUNCTION
 
     class Params(OptimizationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                direction
+                    see `direction <GridSearch.direction>`
+
+                    :default value: `MAXIMIZE`
+                    :type: str
+
+                grid
+                    see `grid <GridSearch.grid>`
+
+                    :default value: None
+                    :type:
+
+                save_samples
+                    see `save_samples <GridSearch.save_samples>`
+
+                    :default value: True
+                    :type: bool
+
+                save_values
+                    see `save_values <GridSearch.save_values>`
+
+                    :default value: True
+                    :type: bool
+
+        """
         grid = Param(None)
         save_samples = True
         save_values = True
@@ -1584,6 +1743,36 @@ class GaussianProcess(OptimizationFunction):
     componentName = GAUSSIAN_PROCESS_FUNCTION
 
     class Params(OptimizationFunction.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <GaussianProcess.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                direction
+                    see `direction <GaussianProcess.direction>`
+
+                    :default value: `MAXIMIZE`
+                    :type: str
+
+                save_samples
+                    see `save_samples <GaussianProcess.save_samples>`
+
+                    :default value: True
+                    :type: bool
+
+                save_values
+                    see `save_values <GaussianProcess.save_values>`
+
+                    :default value: True
+                    :type: bool
+
+        """
         variable = Param([[0], [0]], read_only=True)
 
         save_samples = True

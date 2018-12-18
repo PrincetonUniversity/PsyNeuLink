@@ -27,7 +27,7 @@ Creating a Component
 A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
-`configurable parameters <Component_User_Params>` that can be specified in the arguments of the constructor, as well
+`configurable parameters <Parameters>` that can be specified in the arguments of the constructor, as well
 as additional parameters and attributes that may be specific to particular Components, many of which can be modified
 by the user, and some of which provide useful information about the Component (see `User_Modifiable_Parameters`
 and `Informational Attributes` below).
@@ -83,8 +83,8 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 .. _Component_Function:
 
-* **function** - determines the computation that a Component carries out. It is always the `function
-  <Function_Base.function>` method of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink Component).
+* **function** - determines the computation that a Component carries out. It is always a PsyNeuLink `Function <Function>`
+  object (itself a PsyNeuLink Component).
 
   .. note::
      The `function <Component.function>` of a Component can be assigned either a `Function` object or any other
@@ -111,15 +111,15 @@ user once the component is constructed, with the one exception of `prefs <Compon
         my_component = SomeComponent(some_function)
 
       The specified Function will be used as a template to create a new Function object that is assigned to the
-      `function_object` attribute of the Component, the `function <Function_Base.function>` of which will be assigned as
-      the `function <Component.function>` attribute of the Component.
+      `function` attribute of the Component.
 
       .. note::
 
         In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is
         used to specify the `function <Component.function>` attribute of a Component, the Function object specified (or
-        created) is used to determine attributes of the Function object created for and assigned to the Component, but
-        is not *itself* assigned to the Component.  This is so that `Functions <Function>` can be used as templates for
+        created) will only *itself* be assigned to the Component if it does not already belong to another Component.
+        Otherwise, it is copied, and the copy is assigned to the Component.
+        This is so that `Functions <Function>` can be used as templates for
         more than one Component, without being assigned simultaneously to multiple Components.
 
   A `function <Component.function>` can also be specified in an entry of a
@@ -152,16 +152,18 @@ user once the component is constructed, with the one exception of `prefs <Compon
 ..
 
 .. _Component_Prefs:
+
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
-.. _Reinitialize_When:
+.. _Component_Reinitialize_When:
+
 * **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
   this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
   `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
-  `initializer<Integrator.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
+  `initializer<IntegratorFunction.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
   used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and `reinitialize_when
   <Component.reinitialize_when>` attribute only exist on stateful Mechanisms.
 
@@ -172,10 +174,17 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 .. _User_Modifiable_Parameters:
 
-*User-modifiable Parameters*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Parameters*
+~~~~~~~~~~~~
 
-.. _Component_User_Params:
+.. _Component_Parameters:
+
+A Component defines its `parameters <Parameters>` in its *parameters* attribute, which contains a collection of
+`Param` objects, each of which stores a Param's values, `default values <Component.defaults>`, and various
+`properties <Param_Attributes_Table>` of the parameter.
+
+* `Params <Component.Params>` - a `Parameters class <Parameters>` defining parameters and their default values that
+    are used for all Components, unless overridden.
 
 * `user_params <Component.user_params>` - a dictionary that provides reference to all of the user-modifiable parameters
   of a Component. The dictionary is a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
@@ -200,13 +209,6 @@ user once the component is constructed, with the one exception of `prefs <Compon
   Parameters that are subject to modulation are associated with a `ParameterState` to which the ControlSignals
   can project (by way of a `ControlProjection`).
 
-.. _Component_Function_Object:
-
-* **function_object** - the `function_object` attribute refers to the PsyNeuLink `Function <Function>` assigned to the
-  Component; The Function's `function <Function_Base.function>` -- its callable method -- is assigned to the `function
-  <Component>` attribute of the Component. The parameters of the Function can be modified by assigning values to the
-  attributes corresponding to those parameters (see `function_params <Component_Function_Params>` below).
-
 .. _Component_Function_Params:
 
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
@@ -216,8 +218,8 @@ user once the component is constructed, with the one exception of `prefs <Compon
   value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
   as can its  full list of its entries (e.g., ``my_component.function_params``).  However, because it is read-only,
   it cannot be used to make assignments. Rather, changes to the value of a function's parameters must be made by
-  assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
-  attribute (e.g., ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its
+  assigning a value to the corresponding attribute of the Component's `function <Component.function>`
+  attribute (e.g., ``my_component.function.my_parameter``), or in a FUNCTION_PARAMS dict using its
   `assign_params` method.  The parameters for a function can be specified when the Component is created in one of
   the following ways:
 
@@ -410,6 +412,7 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
 from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
@@ -419,9 +422,6 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args
 from psyneulink.core.scheduling.condition import Never
-
-from llvmlite import ir
-from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -632,7 +632,7 @@ class Component(object, metaclass=ComponentsMeta):
          - execute (method): called to execute it;  it in turn calls self.function
          - function (method): carries out object's core computation
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
-         - function_object (Function): the object to which function belongs (and that defines it's parameters)
+         - function (Function): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
          - output_values (return from self.execute: concatenated set of values of output_states)
          - class and instance variable defaults
@@ -730,7 +730,7 @@ class Component(object, metaclass=ComponentsMeta):
         + variable (value)
         + variable_np_info (ndArrayInfo)
         + function (method)
-        + function_object (Function)
+        + function (Function)
         + paramClassDefaults:
             + FUNCTION
             + FUNCTION_PARAMS
@@ -759,9 +759,6 @@ class Component(object, metaclass=ComponentsMeta):
     function_params : Dict[param_name: param_value]
         see `function_params <Component_Function_Params>`
 
-    function_object : Function
-        see `function_object <Component_Function_Object>`
-
     user_params : Dict[param_name: param_value]
         see `user_params <Component_User_Params>`
 
@@ -778,13 +775,20 @@ class Component(object, metaclass=ComponentsMeta):
         see `current_execution_time <Component_Current_Execution_Time>`
 
     reinitialize_when : `Condition`
-
+        see `reinitialize_when <Component_Reinitialize_When>`
 
     name : str
         see `name <Component_Name>`
 
     prefs : PreferenceSet
         see `prefs <Component_Prefs>`
+
+    parameters
+        see `parameters <Component_Parameters>`
+
+    defaults
+        an object that provides access to the default values of a `Component's` `parameters`
+
 
     """
 
@@ -796,6 +800,27 @@ class Component(object, metaclass=ComponentsMeta):
     componentType = None
 
     class Params(Parameters):
+        """
+            The `Parameters` that are associated with all `Components`
+
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Component.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <Component.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)
         context = Param(None, user=False)
@@ -894,7 +919,7 @@ class Component(object, metaclass=ComponentsMeta):
         if param_defaults is not None:
             # Exclude any function_params from the items to set on this Component
             # because these should just be pointers to the parameters of the same
-            # name on this Component's function_object
+            # name on this Component's function
             # Exclude any pass parameters whose value is None (assume this means "use the normal default")
             d = {
                 k: v for (k, v) in param_defaults.items()
@@ -1053,9 +1078,12 @@ class Component(object, metaclass=ComponentsMeta):
 
         self.context.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 NEW [JDC]:
-        if (hasattr(self, 'function_object')
-                and self.function_object.context.initialization_status != ContextFlags.DEFERRED_INIT):
-            self.function_object.context.initialization_status = ContextFlags.INITIALIZED
+        from psyneulink.core.components.functions.function import Function_Base
+        if (
+            isinstance(self.function, Function_Base)
+            and self.function.context.initialization_status != ContextFlags.DEFERRED_INIT
+        ):
+            self.function.context.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 END
 
         self.__llvm_function_name = None
@@ -1078,14 +1106,14 @@ class Component(object, metaclass=ComponentsMeta):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(),
+            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
                 (ctx.get_param_struct_type(self).as_pointer(),
                  ctx.get_context_struct_type(self).as_pointer(),
                  ctx.get_input_struct_type(self).as_pointer(),
                  ctx.get_output_struct_type(self).as_pointer()))
 
             func_name = ctx.get_unique_name(self.name)
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             params, context, arg_in, arg_out = llvm_func.args
             for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
@@ -1093,7 +1121,7 @@ class Component(object, metaclass=ComponentsMeta):
 
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = pnlvm.ir.IRBuilder(block)
 
             builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
 
@@ -2109,12 +2137,6 @@ class Component(object, metaclass=ComponentsMeta):
         if INPUT_STATES in validated_set_param_names and context & ContextFlags.COMMAND_LINE:
             self.context.source = ContextFlags.COMMAND_LINE
             self._instantiate_attributes_before_function(context=ContextFlags.COMMAND_LINE)
-        # Give owner a chance to instantiate function and/or function params
-        # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
-        elif any(isinstance(param_value, (function_type, Function)) or
-                      (inspect.isclass(param_value) and issubclass(param_value, Function))
-                 for param_value in validated_set.values()):
-            self._instantiate_attributes_before_function()
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
@@ -2242,7 +2264,14 @@ class Component(object, metaclass=ComponentsMeta):
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
         """
-        return variable
+        # # MODIFIED 12/15/18 OLD:
+        # return variable
+        # MODIFIED 12/15/18 NEW: [JDC]
+        if variable is not None:
+            return variable
+        else:
+            return self.instance_defaults.variable
+        # MODIFIED 12/15/18 END
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
@@ -2684,13 +2713,13 @@ class Component(object, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-        if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
-            self.function_object = UserDefinedFunction(
+        if isinstance(function, types.FunctionType):
+            self.function = UserDefinedFunction(
                 default_variable=function_variable,
                 custom_function=function,
                 context=context
             )
-            self.function_params = dict(self.function_object.cust_fct_params)
+            self.function_params = dict(self.function.cust_fct_params)
         elif isinstance(function, Function):
             if not iscompatible(function_variable, function.instance_defaults.variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
@@ -2720,20 +2749,20 @@ class Component(object, metaclass=ComponentsMeta):
             # does with its function will propagate to anything else that wants to use
             # the default
             if function.owner is None and function is not self.ClassDefaults.function:
-                self.function_object = function
+                self.function = function
             else:
-                self.function_object = copy.deepcopy(function)
+                self.function = copy.deepcopy(function)
                 # ensure copy does not have identical name
-                register_category(self.function_object, Function_Base, self.function_object.name, FunctionRegistry)
+                register_category(self.function, Function_Base, self.function.name, FunctionRegistry)
 
             # setting init status because many mechanisms change execution or validation behavior
             # during initialization
-            self.function_object.context.initialization_status = ContextFlags.INITIALIZING
+            self.function.context.initialization_status = ContextFlags.INITIALIZING
 
-            self.function_object.instance_defaults.variable = function_variable
-            self.function_object._instantiate_value(context)
+            self.function.instance_defaults.variable = function_variable
+            self.function._instantiate_value(context)
 
-            self.function_object.context.initialization_status = ContextFlags.INITIALIZED
+            self.function.context.initialization_status = ContextFlags.INITIALIZED
         elif inspect.isclass(function) and issubclass(function, Function):
             kwargs_to_instantiate = function.ClassDefaults.values().copy()
             if function_params is not None:
@@ -2756,16 +2785,16 @@ class Component(object, metaclass=ComponentsMeta):
                         pass
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
-            self.function_object = function(default_variable=function_variable, **kwargs)
+            self.function = function(default_variable=function_variable, **kwargs)
         else:
             raise ComponentError('Unsupported function type: {0}, function={1}'.format(type(function), function))
 
-        self.function_object.owner = self
+        self.function.owner = self
 
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
         # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's
         # has_initializers status
-        if self.function_object.has_initializers:
+        if self.function.has_initializers:
             self.has_initializers = True
 
         self._parse_param_state_sources()
@@ -2802,22 +2831,19 @@ class Component(object, metaclass=ComponentsMeta):
 
     def reinitialize(self, *args, execution_context=None):
         """
-            If the component's execute method involves execution of an `Integrator` Function, this method
+            If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
             values on the component, depending on the component type.
         """
-        from psyneulink.core.components.functions.integratorfunctions import Integrator
-        if hasattr(self, "function_object"):
-            if isinstance(self.function_object, Integrator):
-                new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
-                self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
-            else:
-                raise ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
-                               "(It does not have an accumulator to reinitialize).".format(self.name))
+        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        if isinstance(self.function, IntegratorFunction):
+            new_value = self.function.reinitialize(*args, execution_context=execution_context)
+            self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
         else:
-            raise ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
-                           "(It does not have an accumulator to reinitialize).".format(self.name))
-        assert True
+            raise ComponentError(
+                "Reinitializing {} is not allowed because this Component is not stateful. "
+                "(It does not have an accumulator to reinitialize).".format(self.name)
+            )
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         # initialize context for this execution_id if not done already
@@ -2840,9 +2866,9 @@ class Component(object, metaclass=ComponentsMeta):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context, execution_id=execution_id)
 
-        # If Component has a Function (function_object), assign Component's execution_phase to its context
+        # If Component has a Function (function), assign Component's execution_phase to its context
         try:
-            fct_context_attrib = self.function_object.parameters.context.get(execution_id)
+            fct_context_attrib = self.function.parameters.context.get(execution_id)
             # curr_context = self.parameters.context.get(execution_id).execution_phase
             curr_context = self.parameters.context.get(execution_id).flags
         except AttributeError:
@@ -2868,7 +2894,7 @@ class Component(object, metaclass=ComponentsMeta):
         function_variable = self._parse_function_variable(variable, execution_id=execution_id, context=context)
         value = self.function(variable=function_variable, execution_id=execution_id, params=runtime_params, context=context, **kwargs)
         try:
-            self.function_object.parameters.value.set(value, execution_id, override=True)
+            self.function.parameters.value.set(value, execution_id, override=True)
         except AttributeError:
             pass
         fct_context_attrib.execution_phase = ContextFlags.IDLE
@@ -2879,7 +2905,7 @@ class Component(object, metaclass=ComponentsMeta):
         try:
             for param_state in self._parameter_states:
                 if param_state.source is FUNCTION:
-                    param_state.source = self.function_object
+                    param_state.source = self.function
         except AttributeError:
             pass
 
@@ -3222,19 +3248,12 @@ class Component(object, metaclass=ComponentsMeta):
 
     @property
     def function(self):
-        try:
-            return self.function_object.function
-        except AttributeError:
-            return None
+        return self._function
 
-    @property
-    def function_object(self):
-        return self._function_object
-
-    @function_object.setter
-    def function_object(self, value):
+    @function.setter
+    def function(self, value):
         # TODO: currently no validation, should replicate from _instantiate_function
-        self._function_object = value
+        self._function = value
         self._parse_param_state_sources()
 
     @property
@@ -3251,17 +3270,27 @@ class Component(object, metaclass=ComponentsMeta):
 
     @property
     def stateful_parameters(self):
+        """
+            A list of all of this object's `parameters <Parameters>` whose values
+            may change during runtime
+        """
         return [param for param in self.parameters if param.stateful]
 
     @property
     def function_parameters(self):
+        """
+            The `parameters <Parameters>` object of this object's `function`
+        """
         try:
-            return self.function_object.parameters
+            return self.function.parameters
         except AttributeError:
             return None
 
     @property
     def class_defaults(self):
+        """
+            Refers to the defaults of this object's class
+        """
         return self.__class__.defaults
 
     # left in for backwards compatibility
@@ -3340,8 +3369,8 @@ def make_property(name):
         #     # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
         #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
         #     # 'reinitialize'
-        #     if hasattr(param_state.function_object, 'initializer'):
-        #         param_state.function_object.reinitialize = val
+        #     if hasattr(param_state.function, 'initializer'):
+        #         param_state.function.reinitialize = val
 
     # Create the property
     prop = property(getter).setter(setter)

@@ -298,7 +298,47 @@ class AutodiffComposition(Composition):
     """
 
     class Params(Composition.Params):
+        """
+            Attributes
+            ----------
 
+                learning_rate
+                    see `learning_rate <AutodiffComposition.learning_rate>`
+
+                    :default value: 0.001
+                    :type: float
+
+                losses
+                    see `losses <AutodiffComposition.losses>`
+
+                    :default value: None
+                    :type:
+
+                min_delta
+                    see `min_delta <AutodiffComposition.min_delta>`
+
+                    :default value: 0
+                    :type: int
+
+                optimizer
+                    see `optimizer <AutodiffComposition.optimizer>`
+
+                    :default value: None
+                    :type:
+
+                patience
+                    see `patience <AutodiffComposition.patience>`
+
+                    :default value: None
+                    :type:
+
+                pytorch_representation
+                    see `pytorch_representation <AutodiffComposition.pytorch_representation>`
+
+                    :default value: None
+                    :type:
+
+        """
         optimizer = None
         learning_rate = .001
         losses = None
@@ -687,7 +727,7 @@ class AutodiffComposition(Composition):
                                                .format(node.component, self.name))
 
             # raise error if a node's mechanism doesn't have a Linear, Logistic, or ReLU function
-            if not isinstance(node.component.function_object, (Linear, Logistic, ReLU)):
+            if not isinstance(node.component.function, (Linear, Logistic, ReLU)):
                 raise AutodiffCompositionError("Function {0} of mechanism {1} in {2} is not a valid function "
                                                "for a Autodiff Composition. Functions of mechanisms in "
                                                "Autodiff Compositions can only be Linear, Logistic, or ReLU."

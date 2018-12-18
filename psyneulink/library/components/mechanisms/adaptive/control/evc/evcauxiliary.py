@@ -18,12 +18,15 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core.components.functions.function import Function_Base
-from psyneulink.core.components.functions.integratorfunctions import Integrator, Buffer
+from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
-from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
+from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
+    kwPreferenceSetName, kwProgressBarChar
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -65,6 +68,29 @@ class EVCAuxiliaryFunction(Function_Base):
     componentType = kwEVCAuxFunctionType
 
     class Params(Function_Base.Params):
+        """
+            Attributes
+            ----------
+
+                filter_function
+                    see `filter_function <PredictionMechanism.filter_function>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <PredictionMechanism.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                window_size
+                    see `window_size <PredictionMechanism.window_size>`
+
+                    :default value: 1
+                    :type: int
+
+        """
         variable = Param(None, read_only=True)
 
     classPreferences = {
@@ -570,11 +596,11 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         # the reinitialize method on each stateful mechanism.
         reinitialization_value = []
 
-        if isinstance(mechanism.function_object, Integrator):
-            for attr in mechanism.function_object.stateful_attributes:
-                reinitialization_value.append(mechanism.function_object.get_current_function_param(attr, execution_id))
+        if isinstance(mechanism.function, StatefulFunction):
+            for attr in mechanism.function.stateful_attributes:
+                reinitialization_value.append(mechanism.function.get_current_function_param(attr, execution_id))
         elif hasattr(mechanism, "integrator_function"):
-            if isinstance(mechanism.integrator_function, Integrator):
+            if isinstance(mechanism.integrator_function, IntegratorFunction):
                 for attr in mechanism.integrator_function.stateful_attributes:
                     reinitialization_value.append(mechanism.integrator_function.get_current_function_param(attr, execution_id))
 
@@ -602,7 +628,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
             context=context
         )
         EVC_list.append(
-            ctlr.value_function.function(
+            ctlr.value_function(
                 controller=ctlr,
                 outcome=outcome,
                 costs=ctlr.parameters.control_signal_costs.get(sim_execution_id),
@@ -703,10 +729,11 @@ class PredictionMechanism(IntegratorMechanism):
       are assigned as the `Linear` function's `slope <Linear.slope>` and `intercept <Linear.intercept>` parameters,
       respectively.
 
-    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegrator` Function to compute an exponentially weighted time-average
-      of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise** arguments can be used
-      to specify the corresponding `rate <AdaptiveIntegrator.rate>` and `noise <AdaptiveIntegrator.noise>` parameters
-      of the function.  The function returns the time-averaged input as a single item.
+    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegratorFunction` Function to compute an exponentially weighted
+      time-average of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise**
+      arguments can be used to specify the corresponding `rate <AdaptiveIntegratorFunction.rate>` and `noise
+      <AdaptiveIntegratorFunction.noise>` parameters of the function.  The function returns the time-averaged input
+      as a single item.
 
     * *AVERAGE_INPUTS:* uses a `Buffer` Function to compute the average of the number of preceding inputs specified in
       the PredictionMechanism's **window_size** argument.  If the **rate** and/or **noise** arguments are specified,
@@ -806,7 +833,7 @@ class PredictionMechanism(IntegratorMechanism):
 
     function : Function
         used to track the inputs to the PredictionMechanism's `origin_mechanism <PredictionMechanism.origin_mechanism>`;
-        the default is an `AdaptiveIntegrator` (see `above <PredictionMechanism_Function>` for additional details).
+        the default is an `AdaptiveIntegratorFunction` (see `above <PredictionMechanism_Function>` for additional details).
 
     value : 3d np.array
         result returned by the PredictionMechanism's `function <PredictionMechanism.function>`, and provided as
@@ -820,6 +847,29 @@ class PredictionMechanism(IntegratorMechanism):
     componentType = PREDICTION_MECHANISM
 
     class Params(IntegratorMechanism.Params):
+        """
+            Attributes
+            ----------
+
+                filter_function
+                    see `filter_function <PredictionMechanism.filter_function>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <PredictionMechanism.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                window_size
+                    see `window_size <PredictionMechanism.window_size>`
+
+                    :default value: 1
+                    :type: int
+
+        """
         window_size = Param(1, stateful=False, loggable=False)
         filter_function = Param(None, stateful=False, loggable=False)
 
@@ -867,7 +917,7 @@ class PredictionMechanism(IntegratorMechanism):
                 function = Linear(slope=rate, intercept=noise)
 
             elif function is TIME_AVERAGE_INPUT:
-                # Use default for IntegratorMechanism: AdaptiveIntegrator
+                # Use default for IntegratorMechanism: AdaptiveIntegratorFunction
                 function = self.ClassDefaults.function
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:

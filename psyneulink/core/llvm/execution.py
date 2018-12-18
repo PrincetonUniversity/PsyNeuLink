@@ -16,6 +16,7 @@ import numpy as np
 
 from .builder_context import *
 from . import helpers, jit_engine
+from .debug import debug_env
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
 
@@ -44,15 +45,34 @@ class CUDAExecution:
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
         self.__cuda_out_buf = None
+        self._uploaded_bytes = 0
+        self._downloaded_bytes = 0
+        self._debug_env = debug_env
 
-    def _get_buffer(self, data):
+    def __del__(self):
+        if "cuda_data" in self._debug_env:
+            try:
+                name = self._bin_func.name
+            except:
+                name = self._composition.name
+            print("{} CUDA uploaded: {}".format(name, self._uploaded_bytes))
+            print("{} CUDA downloaded: {}".format(name, self._downloaded_bytes))
+
+    def _get_ctype_bytes(self, data):
         # Return dummy buffer. CUDA does not handle 0 size well.
         if ctypes.sizeof(data) == 0:
             return bytearray(b'aaaa')
         return bytearray(data)
 
-    def _get_device_buffer(self, data):
-        return jit_engine.pycuda.driver.to_device(self._get_buffer(data))
+    def upload_ctype(self, data):
+        self._uploaded_bytes += ctypes.sizeof(data)
+        return jit_engine.pycuda.driver.to_device(self._get_ctype_bytes(data))
+
+    def download_ctype(self, source, ty):
+        self._downloaded_bytes += ctypes.sizeof(ty)
+        out_buf = bytearray(ctypes.sizeof(ty))
+        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
+        return ty.from_buffer(out_buf)
 
     def __getattr__(self, attribute):
         if not attribute.startswith("_cuda"):
@@ -60,7 +80,7 @@ class CUDAExecution:
 
         private_attr = "_buffer" + attribute
         if getattr(self, private_attr) is None:
-            new_buffer = self._get_device_buffer(getattr(self, attribute[5:]))
+            new_buffer = self.upload_ctype(getattr(self, attribute[5:]))
             setattr(self, private_attr, new_buffer)
 
         return getattr(self, private_attr)
@@ -68,7 +88,7 @@ class CUDAExecution:
     @property
     def _cuda_out_buf(self):
         if self.__cuda_out_buf is None:
-            vo_ty = self._bin_func.byref_arg_types[3]
+            vo_ty = self._bin_func.byref_arg_types[3] * len(self._execution_ids)
             size = ctypes.sizeof(vo_ty)
             self.__cuda_out_buf = jit_engine.pycuda.driver.mem_alloc(size)
         return self.__cuda_out_buf
@@ -77,16 +97,18 @@ class CUDAExecution:
         # Create input parameter
         new_var = np.asfarray(variable)
         data_in = jit_engine.pycuda.driver.In(new_var)
+        self._uploaded_bytes += new_var.nbytes
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_context_struct,
-                                 data_in, self._cuda_out_buf)
+                                 data_in, self._cuda_out_buf, threads=len(self._execution_ids))
 
         # Copy the result from the device
         vo_ty = self._bin_func.byref_arg_types[3]
-        out_buf = bytearray(ctypes.sizeof(vo_ty))
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_out_buf)
-        ct_res = vo_ty.from_buffer(out_buf)
+        if len(self._execution_ids) > 1:
+            vo_ty =  vo_ty * len(self._execution_ids)
+
+        ct_res =  self.download_ctype(self._cuda_out_buf, vo_ty)
         return _convert_ctype_to_python(ct_res)
 
 
@@ -95,13 +117,23 @@ class FuncExecution(CUDAExecution):
     def __init__(self, component, execution_ids=[None]):
         super().__init__()
         self._bin_func = component._llvmBinFunction
-        execution_id = execution_ids[0]
+        self._execution_ids = execution_ids
 
-        par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
+        par_struct_ty, ctx_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        self._param_struct = par_struct_ty(*component._get_param_initializer(execution_id))
+        # TODO: Consolidate these
+        if len(execution_ids) > 1:
+            par_struct_ty = par_struct_ty * len(execution_ids)
+            ctx_struct_ty = ctx_struct_ty * len(execution_ids)
 
-        self._context_struct = context_struct_ty(*component._get_context_initializer(execution_id))
+            par_initializer = (component._get_param_initializer(ex_id) for ex_id in execution_ids)
+            ctx_initializer = (component._get_context_initializer(ex_id) for ex_id in execution_ids)
+        else:
+            par_initializer = component._get_param_initializer(execution_ids[0])
+            ctx_initializer = component._get_context_initializer(execution_ids[0])
+
+        self._param_struct = par_struct_ty(*par_initializer)
+        self._context_struct = ctx_struct_ty(*ctx_initializer)
 
     def execute(self, variable):
         new_var = np.asfarray(variable)
@@ -122,22 +154,13 @@ class MechExecution(FuncExecution):
         self._mechanism = mechanism
         super().__init__(mechanism, execution_ids)
 
-        if mechanism._nv_state is not None:
-            # TODO: This should consider execution_id
-            self._context_struct = mechanism._nv_state
-
     def execute(self, variable):
         # convert to 3d. we always assume that:
         # a) the input is vector of input states
         # b) input states take vector of projection outputs
         # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
-        res = super().execute(new_var)
-
-        # store updated context
-        # TODO: This should consider execution_id
-        self._mechanism._nv_state = self._context_struct
-        return res
+        return super().execute(new_var)
 
 
 class CompExecution(CUDAExecution):
@@ -147,44 +170,69 @@ class CompExecution(CUDAExecution):
         self._composition = composition
         self.__frozen_vals = None
         self.__conds = None
-        execution_id = execution_ids[0]
+        self._execution_ids = execution_ids
 
         # At least the input_CIM wrapper should be generated
         with LLVMBuilderContext() as ctx:
             input_cim_fn_name = composition._get_node_wrapper(composition.input_CIM)
             input_cim_fn = ctx.get_llvm_function(input_cim_fn_name)
 
-        # Context
+        # Input structures
+        # TODO: Use the compiled version to get these
         c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
-        self._context_struct = c_context(*composition._get_context_initializer(execution_id))
-
-        # Params
         c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
-        self._param_struct = c_param(*self._composition._get_param_initializer(execution_id))
-        # Data
         c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
-        self._data_struct = c_data(*self._composition._get_data_initializer(execution_id))
 
+        # TODO: Consolidate these
+        if len(execution_ids) > 1:
+            c_context = c_context * len(execution_ids)
+            c_param = c_param * len(execution_ids)
+            c_data = c_data * len(execution_ids)
+
+            ctx_initializer = (composition._get_context_initializer(ex_id) for ex_id in execution_ids)
+            par_initializer = (composition._get_param_initializer(ex_id) for ex_id in execution_ids)
+            data_initializer = (composition._get_data_initializer(ex_id) for ex_id in execution_ids)
+        else:
+            ctx_initializer = composition._get_context_initializer(execution_ids[0])
+            par_initializer = composition._get_param_initializer(execution_ids[0])
+            data_initializer = composition._get_data_initializer(execution_ids[0])
+
+        # Instantiate structures
+        self._context_struct = c_context(*ctx_initializer)
+        self._param_struct = c_param(*par_initializer)
+        self._data_struct = c_data(*data_initializer)
 
     @property
     def _conditions(self):
         if self.__conds is None:
             bin_exec = self._composition._get_bin_execution()
             gen = helpers.ConditionGenerator(None, self._composition)
-            self.__conds = bin_exec.byref_arg_types[4](*gen.get_condition_initializer())
+            if len(self._execution_ids) > 1:
+                cond_type = bin_exec.byref_arg_types[4] * len(self._execution_ids)
+                cond_initializer = (gen.get_condition_initializer() for _ in self._execution_ids)
+            else:
+                cond_type = bin_exec.byref_arg_types[4]
+                cond_initializer = gen.get_condition_initializer()
+            self.__conds = cond_type(*cond_initializer)
         return self.__conds
 
     def extract_frozen_node_output(self, node):
-        return self.extract_node_output(node, self.__frozen_vals)
+        return self._extract_node_output(node, self.__frozen_vals)
 
-    def extract_node_output(self, node, data = None):
+    def _extract_node_output(self, node, data = None):
         data = self._data_struct if data == None else data
-        field = self._data_struct._fields_[0][0]
-        res_struct = getattr(self._data_struct, field)
+        field = data._fields_[0][0]
+        res_struct = getattr(data, field)
         index = self._composition._get_node_index(node)
         field = res_struct._fields_[index][0]
         res_struct = getattr(res_struct, field)
         return _convert_ctype_to_python(res_struct)
+
+    def extract_node_output(self, node):
+        if len(self._execution_ids) > 1:
+            return [self._extract_node_output(node, self._data_struct[i]) for i, _ in enumerate(self._execution_ids)]
+        else:
+            return self._extract_node_output(node)
 
     def insert_node_output(self, node, data):
         my_field_name = self._data_struct._fields_[0][0]
@@ -195,26 +243,47 @@ class CompExecution(CUDAExecution):
 
     def _get_input_struct(self, inputs):
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        # Read provided input data and separate each input state
-        input_data = ([x] for m in origins for x in inputs[m])
-
         # Either node execute or composition execute, either way the
         # input_CIM should be ready
         bin_input_node = self._composition._get_bin_mechanism(self._composition.input_CIM)
         c_input = bin_input_node.byref_arg_types[2]
+        if len(self._execution_ids) > 1:
+            c_input = c_input * len(self._execution_ids)
+
+        # Read provided input data and separate each input state
+        if len(self._execution_ids) > 1:
+            input_data = []
+            for inp in inputs:
+                input_data.append(([x] for m in origins for x in inp[m]))
+        else:
+            input_data = ([x] for m in origins for x in inputs[m])
+
         return c_input(*_tupleize(input_data))
 
     def _get_run_input_struct(self, inputs, num_input_sets):
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        run_inputs = []
-        # Extract inputs for each trial
-        for i in range(num_input_sets):
-            run_inputs.append([])
-            for m in origins:
-                run_inputs[i] += [[v] for v in inputs[m][i]]
-
         input_type = self._composition._get_bin_run().byref_arg_types[3]
         c_input = input_type * num_input_sets
+        if len(self._execution_ids) > 1:
+            c_input = c_input * len(self._execution_ids)
+            run_inputs = []
+            for inp in inputs:
+                run_inps = []
+                # Extract inputs for each trial
+                for i in range(num_input_sets):
+                    run_inps.append([])
+                    for m in origins:
+                        run_inps[i] += [[v] for v in inp[m][i]]
+                run_inputs.append(run_inps)
+
+        else:
+            run_inputs = []
+            # Extract inputs for each trial
+            for i in range(num_input_sets):
+                run_inputs.append([])
+                for m in origins:
+                    run_inputs[i] += [[v] for v in inputs[m][i]]
+
         return c_input(*_tupleize(run_inputs))
 
     def freeze_values(self):
@@ -263,39 +332,39 @@ class CompExecution(CUDAExecution):
         bin_exec = self._composition._get_bin_execution()
         # Create input buffer
         inputs = self._get_input_struct(inputs)
-        input_data = bytearray(inputs)
-        data_in = jit_engine.pycuda.driver.to_device(input_data)
+        data_in = self.upload_ctype(inputs)
 
         bin_exec.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
-                           data_in, self._cuda_data_struct, self._cuda_conditions)
+                           data_in, self._cuda_data_struct, self._cuda_conditions,
+                           threads=len(self._execution_ids))
 
         # Copy the data struct from the device
         vo_ty = bin_exec.byref_arg_types[3]
-        out_buf = bytearray(ctypes.sizeof(vo_ty))
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_data_struct)
-        self._data_struct = vo_ty.from_buffer(out_buf)
+        if len(self._execution_ids) > 1:
+            vo_ty = vo_ty * len(self._execution_ids)
+        self._data_struct = self.download_ctype(self._cuda_data_struct, vo_ty)
 
     def cuda_run(self, inputs, runs, num_input_sets):
         bin_run = self._composition._get_bin_run()
         # Create input buffer
         inputs = self._get_run_input_struct(inputs, num_input_sets)
-        input_data = bytearray(inputs)
-        data_in = jit_engine.pycuda.driver.to_device(input_data)
+        data_in = self.upload_ctype(inputs)
 
         # Create output buffer
         output_type = (bin_run.byref_arg_types[4] * runs)
+        if len(self._execution_ids) > 1:
+            output_type = output_type * len(self._execution_ids)
         output_size = ctypes.sizeof(output_type)
         data_out  = jit_engine.pycuda.driver.mem_alloc(output_size)
 
         runs_count = jit_engine.pycuda.driver.In(np.int32(runs))
         input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
+        self._uploaded_bytes += 8 # runs_count + input_count
 
         bin_run.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                           self._cuda_data_struct, data_in, data_out, runs_count,
-                          input_count)
+                          input_count, threads=len(self._execution_ids))
 
         # Copy the data struct from the device
-        out_buf = bytearray(output_size)
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, data_out)
-        outputs = output_type.from_buffer(out_buf)
-        return _convert_ctype_to_python(outputs)
+        ct_out = self.download_ctype(data_out, output_type)
+        return _convert_ctype_to_python(ct_out)

@@ -3,4 +3,4 @@ Keywords
 
 .. automodule:: psyneulink.core.globals.keywords
    :members: MechanismRoles, MatrixKeywords, DistanceMetrics
-   :exclude-members: random, LinearCombination
+   :exclude-members: random, LinearCombination, Params

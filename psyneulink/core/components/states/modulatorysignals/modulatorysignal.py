@@ -155,7 +155,7 @@ which it belongs.
       +--------------------+-----------------------+--------------------------------------+----------------------------+
       | **Gating** (brown) |   *MULTIPLICATIVE*    | Mechanism `InputState`/`OutputState` | `Linear` (`slope`)         |
       +--------------------+-----------------------+--------------------------------------+----------------------------+
-      |**Learning** (green)|     *ADDITIVE*        | MappingProjection `ParameterState`   | `AccumulatorIntegrator`    |
+      |**Learning** (green)|     *ADDITIVE*        | MappingProjection `ParameterState`   | `AccumulatorIntegratorFunction`    |
       |                    |                       |                                      | (`increment`)              |
       +--------------------+-----------------------+--------------------------------------+----------------------------+
 
@@ -375,6 +375,17 @@ class ModulatorySignal(OutputState):
     # paramsType = OUTPUT_STATE_PARAMS
 
     class Params(OutputState.Params):
+        """
+            Attributes
+            ----------
+
+                modulation
+                    see `modulation <ModulatorySignal.modulation>`
+
+                    :default value: None
+                    :type:
+
+        """
         modulation = None
 
     stateAttributes =  OutputState.stateAttributes | {MODULATION}

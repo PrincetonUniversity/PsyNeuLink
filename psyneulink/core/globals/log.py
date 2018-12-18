@@ -409,7 +409,7 @@ class LogCondition(aenum.IntFlag):
       with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.
     """
     OFF = ContextFlags.UNSET
-    # """No recording."""
+    """No recording."""
     # INITIALIZATION = ContextFlags.INITIALIZING
     INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
@@ -726,7 +726,7 @@ class Log:
     @property
     def function_items(self):
         try:
-            return [FUNCTION_PARAMETER_PREFIX + name for name in self.owner.function_object._loggable_parameters]
+            return [FUNCTION_PARAMETER_PREFIX + name for name in self.owner.function._loggable_parameters]
         except AttributeError:
             return []
 
@@ -760,7 +760,7 @@ class Log:
 
         if string.startswith(FUNCTION_PARAMETER_PREFIX):
             try:
-                return getattr(self.owner.function_object.parameters, string[len(FUNCTION_PARAMETER_PREFIX):])
+                return getattr(self.owner.function.parameters, string[len(FUNCTION_PARAMETER_PREFIX):])
             except AttributeError:
                 pass
 

@@ -287,6 +287,24 @@ class ControlProjection(ModulatoryProjection_Base):
         receiver=[PARAMETER_STATE]
 
     class Params(ModulatoryProjection_Base.Params):
+        """
+            Attributes
+            ----------
+
+                control_signal
+                    see `control_signal <ControlProjection.control_signal>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                function
+                    see `function <ControlProjection.function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+        """
         function = Param(Linear, stateful=False, loggable=False)
         control_signal = Param(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter)
 

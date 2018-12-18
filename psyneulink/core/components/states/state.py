@@ -740,9 +740,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import Function, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_STATES, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
@@ -999,6 +999,17 @@ class State_Base(State):
     paramsType = None
 
     class Params(State.Params):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <State_Base.function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+        """
         function = Param(Linear, stateful=False, loggable=False)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
@@ -1525,20 +1536,20 @@ class State_Base(State):
                         variable = np.atleast_2d(variable)
                     self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.instance_defaults.value), axis=0)
 
-                # assign identical default variable to function_object if it can be modified
-                if self.function_object._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-                    self.function_object.instance_defaults.variable = self.instance_defaults.variable.copy()
+                # assign identical default variable to function if it can be modified
+                if self.function._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    self.function.instance_defaults.variable = self.instance_defaults.variable.copy()
                 elif (
-                    self.function_object._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
-                    and np.array([self.function_object.instance_defaults.variable]).shape == self.instance_defaults.variable.shape
+                    self.function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
+                    and np.array([self.function.instance_defaults.variable]).shape == self.instance_defaults.variable.shape
                 ):
-                    self.function_object.instance_defaults.variable = np.array([self.instance_defaults.variable])
+                    self.function.instance_defaults.variable = np.array([self.instance_defaults.variable])
                 else:
                     warnings.warn(
-                        'Adding a projection to {0}, but its function_object {1} instance_defaults.variable '
+                        'Adding a projection to {0}, but its function {1} instance_defaults.variable '
                         'cannot be modified to accomodate the new projection'.format(
                             self,
-                            self.function_object
+                            self.function
                         )
                     )
 
@@ -2033,8 +2044,8 @@ class State_Base(State):
             if value_list:
                 # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
                 aggregated_mod_val = mod_param.value.reduce(value_list)
-                getattr(self.function_object.parameters, mod_param.value.attrib_name).set(aggregated_mod_val, execution_id)
-                function_param = self.function_object.params[mod_param.value.attrib_name]
+                getattr(self.function.parameters, mod_param.value.attrib_name).set(aggregated_mod_val, execution_id)
+                function_param = self.function.params[mod_param.value.attrib_name]
                 if not FUNCTION_PARAMS in self.stateParams:
                     self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}
                 else:
@@ -2117,26 +2128,26 @@ class State_Base(State):
         return False
 
     def _get_input_struct_type(self, ctx):
-        return ctx.get_input_struct_type(self.function_object)
+        return ctx.get_input_struct_type(self.function)
 
     def _get_output_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self.function_object)
+        return ctx.get_output_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function_object)
+        return ctx.get_param_struct_type(self.function)
 
     def _get_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function_object)
+        return ctx.get_context_struct_type(self.function)
 
     def _get_param_initializer(self, execution_id):
-        return self.function_object._get_param_initializer(execution_id)
+        return self.function._get_param_initializer(execution_id)
 
     def _get_context_initializer(self, execution_id):
-        return self.function_object._get_context_initializer(execution_id)
+        return self.function._get_context_initializer(execution_id)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        main_function = ctx.get_llvm_function(self.function_object)
+        main_function = ctx.get_llvm_function(self.function)
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder
@@ -2156,7 +2167,7 @@ class State_Base(State):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function_object],
+            [self.function],
             self.efferents,
         ))
 

@@ -4,8 +4,8 @@ import typecheck
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionIntegrator, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegratorFunction
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import Never, WhenFinished
@@ -17,7 +17,7 @@ class TestReinitialize:
     def test_valid(self):
         D = DDM(
             name='DDM',
-            function=DriftDiffusionIntegrator(),
+            function=DriftDiffusionIntegratorFunction(),
         )
 
         #  returns previous_value + rate * variable * time_step_size  + noise
@@ -28,28 +28,28 @@ class TestReinitialize:
         assert np.allclose(D.output_states[1].value, 1.0)
 
         # reinitialize function
-        D.function_object.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value[0], 2.0)
-        assert np.allclose(D.function_object.previous_value, 2.0)
-        assert np.allclose(D.function_object.previous_time, 0.1)
+        D.function.reinitialize(2.0, 0.1)
+        assert np.allclose(D.function.value[0], 2.0)
+        assert np.allclose(D.function.previous_value, 2.0)
+        assert np.allclose(D.function.previous_time, 0.1)
         assert np.allclose(D.value,  [[1.0], [1.0]])
         assert np.allclose(D.output_states[0].value, 1.0)
         assert np.allclose(D.output_states[1].value, 1.0)
 
         # reinitialize function without value spec
-        D.function_object.reinitialize()
-        assert np.allclose(D.function_object.value[0], 0.0)
-        assert np.allclose(D.function_object.previous_value, 0.0)
-        assert np.allclose(D.function_object.previous_time, 0.0)
+        D.function.reinitialize()
+        assert np.allclose(D.function.value[0], 0.0)
+        assert np.allclose(D.function.previous_value, 0.0)
+        assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.value, [[1.0], [1.0]])
         assert np.allclose(D.output_states[0].value, 1.0)
         assert np.allclose(D.output_states[1].value, 1.0)
 
         # reinitialize mechanism
         D.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value[0], 2.0)
-        assert np.allclose(D.function_object.previous_value, 2.0)
-        assert np.allclose(D.function_object.previous_time, 0.1)
+        assert np.allclose(D.function.value[0], 2.0)
+        assert np.allclose(D.function.previous_value, 2.0)
+        assert np.allclose(D.function.previous_time, 0.1)
         assert np.allclose(D.value, [[2.0], [0.1]])
         assert np.allclose(D.output_states[0].value, 2.0)
         assert np.allclose(D.output_states[1].value, 0.1)
@@ -62,19 +62,19 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         D.reinitialize()
-        assert np.allclose(D.function_object.value[0], 0.0)
-        assert np.allclose(D.function_object.previous_value, 0.0)
-        assert np.allclose(D.function_object.previous_time, 0.0)
+        assert np.allclose(D.function.value[0], 0.0)
+        assert np.allclose(D.function.previous_value, 0.0)
+        assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 0.0)
         assert np.allclose(D.output_states[1].value[0], 0.0)
 
         # reinitialize only decision variable
-        D.function_object.initializer = 1.0
-        D.function_object.t0 = 0.0
+        D.function.initializer = 1.0
+        D.function.t0 = 0.0
         D.reinitialize()
-        assert np.allclose(D.function_object.value[0], 1.0)
-        assert np.allclose(D.function_object.previous_value, 1.0)
-        assert np.allclose(D.function_object.previous_time, 0.0)
+        assert np.allclose(D.function.value[0], 1.0)
+        assert np.allclose(D.function.previous_value, 1.0)
+        assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 1.0)
         assert np.allclose(D.output_states[1].value[0], 0.0)
 
@@ -82,16 +82,16 @@ class TestReinitialize:
 class TestThreshold:
     def test_threshold_param(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=10.0))
+                function=DriftDiffusionIntegratorFunction(threshold=10.0))
 
-        assert D.function_object.threshold == 10.0
+        assert D.function.threshold == 10.0
 
-        D.function_object.threshold = 5.0
-        assert D.function_object._threshold == 5.0
+        D.function.threshold = 5.0
+        assert D.function._threshold == 5.0
 
     def test_threshold_sets_is_finished(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=5.0))
+                function=DriftDiffusionIntegratorFunction(threshold=5.0))
         D.execute(2.0)  # 2.0 < 5.0
         assert not D.is_finished()
 
@@ -103,7 +103,7 @@ class TestThreshold:
 
     def test_threshold_stops_accumulation(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=5.0))
+                function=DriftDiffusionIntegratorFunction(threshold=5.0))
         decision_variables = []
         time_points = []
         for i in range(5):
@@ -119,7 +119,7 @@ class TestThreshold:
 
     def test_threshold_stops_accumulation_negative(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=5.0))
+                function=DriftDiffusionIntegratorFunction(threshold=5.0))
         decision_variables = []
         time_points = []
         for i in range(5):
@@ -136,7 +136,7 @@ class TestThreshold:
     # def test_threshold_stops_accumulation_multiple_variables(self):
     #     D = IntegratorMechanism(name='DDM',
     #                             default_variable=[[0,0,0]],
-    #                             function=DriftDiffusionIntegrator(threshold=[5.0, 5.0, 10.0],
+    #                             function=DriftDiffusionIntegratorFunction(threshold=[5.0, 5.0, 10.0],
     #                                                               initializer=[[0.0, 0.0, 0.0]],
     #                                                               rate=[2.0, -2.0, -2.0 ]))
     #     decision_variables_a = []
@@ -155,7 +155,7 @@ class TestThreshold:
 
     def test_is_finished_stops_system(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=10.0))
+                function=DriftDiffusionIntegratorFunction(threshold=10.0))
         P = Process(pathway=[D])
         S = System(processes=[P],
                    reinitialize_mechanisms_when=Never())
@@ -170,7 +170,7 @@ class TestThreshold:
 
     # def test_is_finished_stops_mechanism(self):
     #     D = DDM(name='DDM',
-    #             function=DriftDiffusionIntegrator(threshold=10.0))
+    #             function=DriftDiffusionIntegratorFunction(threshold=10.0))
     #     T = TransferMechanism(function=Linear(slope=2.0))
     #     P = Process(pathway=[D, T])
     #     S = System(processes=[P])
@@ -235,7 +235,7 @@ def test_DDM_zero_noise():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -253,7 +253,7 @@ def test_DDM_noise_0_5():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.5,
             rate=1.0,
             time_step_size=1.0
@@ -273,7 +273,7 @@ def test_DDM_noise_2_0():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=2.0,
             rate=1.0,
             time_step_size=1.0
@@ -296,7 +296,7 @@ def test_DDM_noise_int():
         stim = 10
         T = DDM(
             name='DDM',
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
 
                 noise=2,
                 rate=1.0,
@@ -304,7 +304,7 @@ def test_DDM_noise_int():
             ),
         )
         float(T.execute(stim)[0])
-    assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
+    assert "DriftDiffusionIntegratorFunction requires noise parameter to be a float" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -316,7 +316,7 @@ def test_DDM_noise_fn():
         stim = 10
         T = DDM(
             name='DDM',
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
 
                 noise=NormalDist(),
                 rate=1.0,
@@ -324,7 +324,7 @@ def test_DDM_noise_fn():
             ),
         )
         float(T.execute(stim)[0])
-    assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
+    assert "DriftDiffusionIntegratorFunction requires noise parameter to be a float" in str(error_text.value)
 
 # ======================================= INPUT TESTS ============================================
 
@@ -339,7 +339,7 @@ def test_DDM_input_int():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -357,7 +357,7 @@ def test_DDM_input_list_len_1():
     stim = [10]
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -375,7 +375,7 @@ def test_DDM_input_float():
     stim = 10.0
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -399,7 +399,7 @@ def test_DDM_input_list_len_2():
         T = DDM(
             name='DDM',
             default_variable=[0, 0],
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
 
                 noise=0.0,
                 rate=1.0,
@@ -424,7 +424,7 @@ def test_DDM_input_fn():
         stim = NormalDist()
         T = DDM(
             name='DDM',
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
 
                 noise=0.0,
                 rate=1.0,
@@ -447,7 +447,7 @@ def test_DDM_rate_int():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=5,
             time_step_size=1.0
@@ -467,7 +467,7 @@ def test_DDM_rate_list_len_1():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=[5],
             time_step_size=1.0
@@ -485,7 +485,7 @@ def test_DDM_rate_float():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=5,
             time_step_size=1.0
@@ -508,7 +508,7 @@ def test_DDM_input_rate_negative():
     T = DDM(
         name='DDM',
         default_variable=[0],
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=-5.0,
             time_step_size=1.0
@@ -537,7 +537,7 @@ def test_DDM_rate_fn():
         T = DDM(
             name='DDM',
             default_variable=[0],
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
 
                 noise=0.0,
                 rate=NormalDist().function,
@@ -563,7 +563,7 @@ def test_DDM_size_int_check_var():
     T = DDM(
         name='DDM',
         size=1,
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=-5.0,
             time_step_size=1.0
@@ -580,7 +580,7 @@ def test_DDM_size_int_inputs():
     T = DDM(
         name='DDM',
         size=1,
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=-5.0,
             time_step_size=1.0
@@ -606,7 +606,7 @@ def test_DDM_mech_size_zero():
         T = DDM(
             name='DDM',
             size=0,
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -624,7 +624,7 @@ def test_DDM_mech_size_negative_one():
         T = DDM(
             name='DDM',
             size=-1.0,
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -642,7 +642,7 @@ def test_DDM_size_too_large():
         T = DDM(
             name='DDM',
             size=3.0,
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -660,7 +660,7 @@ def test_DDM_size_too_long():
         T = DDM(
             name='DDM',
             size=[1, 1],
-            function=DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegratorFunction(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -673,7 +673,7 @@ def test_DDM_time():
 
     D = DDM(
         name='DDM',
-        function=DriftDiffusionIntegrator(
+        function=DriftDiffusionIntegratorFunction(
             noise=0.0,
             rate=-5.0,
             time_step_size=0.2,
@@ -681,7 +681,7 @@ def test_DDM_time():
         )
     )
 
-    time_0 = D.function_object.previous_time   # t_0  = 0.5
+    time_0 = D.function.previous_time   # t_0  = 0.5
     np.testing.assert_allclose(time_0, 0.5, atol=1e-08)
 
     time_1 = D.execute(10)[1][0]   # t_1  = 0.5 + 0.2 = 0.7

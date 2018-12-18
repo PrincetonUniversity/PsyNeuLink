@@ -532,7 +532,7 @@ class Projection_Base(Projection):
         arguments in their constructors).  The value of the parameters of the Projection are also accessible as
         attributes of the Projection (using the name of the parameter); the function parameters are listed in the
         Projection's `function_params <Projection_Base.function_params>` attribute, and as attributes of the `Function`
-        assigned to its `function_object <Component.function_object>` attribute.
+        assigned to its `function <Component.function>` attribute.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a read-only list of the Projection's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
@@ -584,6 +584,29 @@ class Projection_Base(Projection):
     suffix = " " + className
 
     class Params(Projection.Params):
+        """
+            Attributes
+            ----------
+
+                exponent
+                    see `exponent <Projection_Base.exponent>`
+
+                    :default value: None
+                    :type:
+
+                function
+                    see `function <Projection_Base.function>`
+
+                    :default value: `LinearMatrix`
+                    :type: `Function`
+
+                weight
+                    see `weight <Projection_Base.weight>`
+
+                    :default value: None
+                    :type:
+
+        """
         weight = Param(None, modulable=True)
         exponent = Param(None, modulable=True)
         function = Param(LinearMatrix, stateful=False, loggable=False)
@@ -821,10 +844,10 @@ class Projection_Base(Projection):
         self._instantiate_receiver(context=context)
         # instantiate parameter states from UDF custom parameters if necessary
         try:
-            cfp = self.function_object.cust_fct_params
+            cfp = self.function.cust_fct_params
             udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
 
-            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function_object)
+            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
         except AttributeError:
             pass
 
@@ -901,7 +924,7 @@ class Projection_Base(Projection):
             param[state_name] = type_match(value, param_type)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function_object.parameters.previous_value.set(value, execution_id, override=True)
+                state.function.parameters.previous_value.set(value, execution_id, override=True)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
@@ -975,26 +998,26 @@ class Projection_Base(Projection):
         pass
 
     def _get_output_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self.function_object)
+        return ctx.get_output_struct_type(self.function)
 
     def _get_input_struct_type(self, ctx):
-        return ctx.get_input_struct_type(self.function_object)
+        return ctx.get_input_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function_object)
+        return ctx.get_param_struct_type(self.function)
 
     def _get_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function_object)
+        return ctx.get_context_struct_type(self.function)
 
     def _get_param_initializer(self, execution_id):
-        return self.function_object._get_param_initializer(execution_id)
+        return self.function._get_param_initializer(execution_id)
 
     def _get_context_initializer(self, execution_id):
-        return self.function_object._get_context_initializer(execution_id)
+        return self.function._get_context_initializer(execution_id)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        main_function = ctx.get_llvm_function(self.function_object)
+        main_function = ctx.get_llvm_function(self.function)
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder
@@ -1003,7 +1026,7 @@ class Projection_Base(Projection):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function_object],
+            [self.function],
             self.parameter_states,
         ))
 

@@ -355,6 +355,24 @@ class LearningSignal(ModulatorySignal):
     #endregion
 
     class Params(ModulatorySignal.Params):
+        """
+            Attributes
+            ----------
+
+                value
+                    see `value <LearningSignal.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                learning_rate
+                    see `learning_rate <LearningSignal.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+        """
         value = Param(np.array([0]), read_only=True, aliases=['learning_signal'])
         learning_rate = None
 

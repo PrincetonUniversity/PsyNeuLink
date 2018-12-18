@@ -11,4 +11,4 @@ Component
 
 .. automodule:: psyneulink.core.components.component
    :members:
-   :exclude-members: ParamsDict, ComponentLog, COMPONENT_BASE_CLASS, LogLevel
+   :exclude-members: Params, ParamsDict, ComponentLog, COMPONENT_BASE_CLASS, LogLevel

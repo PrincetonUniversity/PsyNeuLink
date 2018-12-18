@@ -824,6 +824,23 @@ class Process(Process_Base):
     # Use inputValueSystemDefault as default input to process
 
     class Params(Process_Base.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Process.variable>`
+
+                    :default value: None
+                    :type:
+
+                input
+                    see `input <Process.input>`
+
+                    :default value: None
+                    :type:
+
+        """
         variable = None
         input = None
 
@@ -1914,8 +1931,8 @@ class Process(Process_Base):
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanism
                     #    for which a mechanism-specific learning_rate has NOT been assigned
                     if (self.learning_rate is not None and
-                                mech.function_object.learning_rate is None):
-                        mech.function_object.learning_rate = self.learning_rate
+                                mech.function.learning_rate is None):
+                        mech.function.learning_rate = self.learning_rate
 
                     # Assign its label
                     object_item._add_process(self, LEARNING)
@@ -2669,6 +2686,25 @@ class ProcessInputState(OutputState):
 
     """
     class Params(OutputState.Params):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ProcessInputState.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                value
+                    see `value <ProcessInputState.value>`
+
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+        """
         # just grabs input from the process
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)

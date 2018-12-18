@@ -3,4 +3,4 @@ Run
 
 .. automodule:: psyneulink.core.globals.environment
    :members:
-   :exclude-members: random
+   :exclude-members: random, Params
