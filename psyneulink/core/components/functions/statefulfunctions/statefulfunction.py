@@ -196,7 +196,7 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
-                 noise=0.0,
+                 noise: parameter_spec = 0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,

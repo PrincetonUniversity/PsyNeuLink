@@ -34,7 +34,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
     BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
-from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.globals.utilities import all_within_range, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -181,12 +181,14 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # was failing.
                  # For now, updated default_variable, noise, and Alternatively, we can change validation on
                  # default_variable=None,   # Changed to [] because None conflicts with initializer
+                 rate=1.0,
+                 noise=0.0,
                  # rate: parameter_spec=1.0,
-                 # noise=0.0,
+                 # noise: parameter_spec=0.0,
                  # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
                  # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
-                 rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
-                 noise: tc.optional(tc.any(int, float, list, np.array, callable)) = 0.0,
+                 # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
+                 # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
                  history: tc.optional(int) = None,
                  initializer=[],
                  params: tc.optional(dict) = None,
