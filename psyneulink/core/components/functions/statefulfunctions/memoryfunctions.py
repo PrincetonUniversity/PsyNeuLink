@@ -370,9 +370,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
     storage_prob : float in interval [0,1] : default 1.0
         specifies probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
 
+    rate : float, list, or array : default 1.0
+        specifies a value used to multiply key (first item of `variable <DND.variable>`) before storing in `dict
+        <DND.dict>` (see `rate <DND.noise> for details).
+
     noise : float, list, array, or Function : default 0.0
-        specifies a value applied to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`
-        (see `noise <DND.noise> for details).
+        specifies a random value added to key (first item of `variable <DND.variable>`) before storing in `dict
+        <DND.dict>` (see `noise <DND.noise> for details).
 
     initializer dict : default {}
         specifies an initial set of entries for `dict <DND.dict>`;  each key must have the same shape as
@@ -420,7 +424,11 @@ class DND(MemoryFunction):  # --------------------------------------------------
     storage_prob : float in interval [0,1]
         probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
 
-    noise : float, list, array, or Function
+    rate : float or 1d array
+        value applied multiplicatively to key (first item of `variable <DND.variable>`) before storing in `dict
+        <DND.dict>` (see `rate <Stateful_Rate>` for additional details).
+
+    noise : float, 1d array or Function
         value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`
         (see `noise <Stateful_Noise>` for additional details).
 
@@ -472,12 +480,14 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retrieval_prob = Param(1.0, modulable=True)
         storage_prob = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Param(1, stateful=True)
+        rate = Param(1.0, modulable=True)
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Param(1000)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         NOISE: None,
+        RATE: None,
         RETRIEVAL_PROB: 1.0,
         STORAGE_PROB: 1.0
     })
@@ -490,7 +500,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  default_variable=None,
                  retrieval_prob: tc.optional(tc.any(int, float))=1.0,
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
-                 noise: tc.optional(tc.any(int, float, callable))=0.0,
+                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
+                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
                  initializer: tc.optional(dict)=None,
                  distance_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
                  selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
@@ -507,6 +518,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
+                                                  rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
                                                   params=params)

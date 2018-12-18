@@ -116,6 +116,8 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
         <StatefulFunction.initializers>`. In most cases, the stateful_attributes, in that order, are the return values
         of the function.
 
+    .. _Stateful_Rate:
+
     rate : float or 1d array
         on each call to `function <StatefulFunction.function>`, applied to `variable <StatefulFunction.variable>`,
         `previous_value <StatefulFunction.previous_value>`, neither, or both, depending on implementation by
