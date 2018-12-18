@@ -2291,9 +2291,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     time step of integration:
 
     ..  math::
-
-        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2=\\sqrt{time\\_step\\_size
-        \\cdot noise})
+        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2)
+        where
+        \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise} \n
 
     Arguments
     ---------
@@ -2616,8 +2616,11 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     .. math::
 
-       previous\\_value + decay \\cdot  (previous\\_value - rate \\cdot variable) + \\sqrt{time\\_step\\_size \\cdot
-       noise} \\cdot Sample\\,from\\,Normal\\,Distribution
+       previous\\_value + decay \\cdot  (previous\\_value - rate \\cdot variable) + \\mathcal{N}(\\sigma^2)
+
+       where
+
+       \\sigma^2 = \\sqrt{time\\_step\\_size \\cdot noise}
 
     Arguments
     ---------
