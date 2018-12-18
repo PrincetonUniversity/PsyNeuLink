@@ -437,9 +437,6 @@ class TestModelBasedOptimizationControlMechanisms:
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(trial))
 
     def test_evc_gratton(self):
-        # Control Parameters
-        signalSearchRange = pnl.SampleSpec(start=1.0, stop=1.8, step=0.2)
-
         # Stimulus Mechanisms
         target_stim = pnl.TransferMechanism(name='Target Stimulus',
                                             function=pnl.Linear(slope=0.3324))
@@ -447,61 +444,44 @@ class TestModelBasedOptimizationControlMechanisms:
                                              function=pnl.Linear(slope=0.3545221843))
 
         # Processing Mechanisms (Control)
-        Target_Rep = pnl.TransferMechanism(
-            name='Target Representation',
-            function=pnl.Linear(
-                )
-            )
-
-        Flanker_Rep = pnl.TransferMechanism(
-            name='Flanker Representation',
-            function=pnl.Linear(
-            )
-        )
+        Target_Rep = pnl.TransferMechanism(name='Target Representation')
+        Flanker_Rep = pnl.TransferMechanism(name='Flanker Representation')
 
         # Processing Mechanism (Automatic)
-        Automatic_Component = pnl.TransferMechanism(
-            name='Automatic Component',
-            function=pnl.Linear(slope=(1.0))
-        )
+        Automatic_Component = pnl.TransferMechanism(name='Automatic Component')
 
-        # Decision Mechanisms
-        Decision = pnl.DDM(
-            function=pnl.DriftDiffusionAnalytical(
-                drift_rate=(1.0),
-                threshold=(0.2645),
-                noise=(0.5),
-                starting_point=(0),
-                t0=0.15
-            ),
-            name='Decision',
-            output_states=[
-                pnl.DECISION_VARIABLE,
-                pnl.RESPONSE_TIME,
-                pnl.PROBABILITY_UPPER_THRESHOLD
-            ],
-        )
+        # Decision Mechanism
+        Decision = pnl.DDM(name='Decision',
+                           function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0),
+                                                                 threshold=(0.2645),
+                                                                 noise=(0.5),
+                                                                 starting_point=(0),
+                                                                 t0=0.15),
+                           output_states=[pnl.DECISION_VARIABLE,
+                                          pnl.RESPONSE_TIME,
+                                          pnl.PROBABILITY_UPPER_THRESHOLD]
+                           )
 
-        # Outcome Mechanisms:
+        # Outcome Mechanism
         reward = pnl.TransferMechanism(name='reward')
 
-        # Pathways:
+        # Pathways
         target_control_pathway = [target_stim, Target_Rep, Decision]
-
         flanker_control_pathway = [flanker_stim, Flanker_Rep, Decision]
-
         target_automatic_pathway = [target_stim, Automatic_Component, Decision]
+        flanker_automatic_pathway = [flanker_stim, Automatic_Component, Decision]
+        pathways = [target_control_pathway, flanker_control_pathway, target_automatic_pathway,
+                    flanker_automatic_pathway]
 
-        flanker_automatic_pathway =[flanker_stim, Automatic_Component, Decision]
-
-        pathways = [target_control_pathway, flanker_control_pathway, target_automatic_pathway, flanker_automatic_pathway]
-
-        # Composition:
+        # Composition
         evc_gratton = pnl.Composition(name="EVCGratton")
         evc_gratton.add_c_node(Decision, required_roles=pnl.CNodeRole.TERMINAL)
         for path in pathways:
             evc_gratton.add_linear_processing_pathway(path)
         evc_gratton.add_c_node(reward, required_roles=pnl.CNodeRole.TERMINAL)
+
+        # Control Signals
+        signalSearchRange = pnl.SampleSpec(start=1.0, stop=1.8, step=0.2)
 
         target_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],
                                                       function=pnl.Linear,
@@ -510,35 +490,39 @@ class TestModelBasedOptimizationControlMechanisms:
                                                       allocation_samples=signalSearchRange)
 
         flanker_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Flanker_Rep)],
-                                                      function=pnl.Linear,
+                                                       function=pnl.Linear,
                                                        variable=1.0,
                                                        intensity_cost_function=pnl.Exponential(rate=0.8046),
-                                                      allocation_samples=signalSearchRange)
+                                                       allocation_samples=signalSearchRange)
 
+        objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                                                monitored_output_states=[reward,
+                                                                         (Decision.output_states[
+                                                                              pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
+        # Model Based OCM (formerly controller)
         evc_gratton.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
-                                                                                         features={pnl.SHADOW_EXTERNAL_INPUTS: [target_stim, flanker_stim, reward]},
-                                                                                         feature_function=pnl.AdaptiveIntegratorFunction(rate=1.0),
-                                                                                         objective_mechanism=pnl.ObjectiveMechanism(
-                                                                                         function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                                                                                                                        monitored_output_states=[reward,
-                                                                                                                                                 (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)]),
+                                                                                         features={
+                                                                                             pnl.SHADOW_EXTERNAL_INPUTS: [
+                                                                                                 target_stim,
+                                                                                                 flanker_stim, reward]},
+                                                                                         feature_function=pnl.AdaptiveIntegratorFunction(
+                                                                                             rate=1.0),
+                                                                                         objective_mechanism=objective_mech,
                                                                                          function=pnl.GridSearch(),
-                                                                                         control_signals=[target_rep_control_signal,
-                                                                                                          flanker_rep_control_signal]))
+                                                                                         control_signals=[
+                                                                                             target_rep_control_signal,
+                                                                                             flanker_rep_control_signal]))
         evc_gratton.enable_model_based_optimizer = True
 
-        nTrials = 3
         targetFeatures = [1, 1, 1]
-        flankerFeatures = [1, -1, 1]  # for full simulation: flankerFeatures = [-1,1]
+        flankerFeatures = [1, -1, 1]
         rewardValues = [100, 100, 100]
 
-        targetInputList = targetFeatures
-        flankerInputList = flankerFeatures
-        rewardList = rewardValues
+        stim_list_dict = {target_stim: targetFeatures,
+                          flanker_stim: flankerFeatures,
+                          reward: rewardValues}
 
-        stim_list_dict = {target_stim: targetInputList,
-                          flanker_stim: flankerInputList,
-                          reward: rewardList}
+        evc_gratton.run(inputs=stim_list_dict)
 
         expected_results_array = [[[0.32257752863413636], [0.9481940753514433], [100.]],
                                   [[0.42963678062444666], [0.47661180945923376], [100.]],
@@ -621,14 +605,6 @@ class TestModelBasedOptimizationControlMechanisms:
             [[0.28722523], [0.98054192], [100.]],
             [[0.28289958], [0.98320731], [100.]],
         ]
-
-        for control_signal in evc_gratton.model_based_optimizer.control_signals:
-            control_signal.allocation_samples = signalSearchRange
-
-        evc_gratton.run(
-            num_trials=nTrials,
-            inputs=stim_list_dict,
-        )
 
         for trial in range(len(evc_gratton.results)):
             assert np.allclose(expected_results_array[trial],
