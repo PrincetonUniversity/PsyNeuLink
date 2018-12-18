@@ -1491,7 +1491,7 @@ class State_Base(State):
                     if not iscompatible(projection.defaults.value, self.instance_defaults.variable[0]):
                     # if len(projection.value) != self.instance_defaults.variable.shape[-1]:
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
-                                         format(projection.name, projection.value, self.name, self.value))
+                                         format(projection.name, projection.value, self.name, self.defaults.value))
 
                 # ModualatoryProjection:
                 #    - check that projection's value is compatible with value of the function param being modulated
@@ -1804,10 +1804,10 @@ class State_Base(State):
                 else:
                     # Validate variable
                     #    - check that input to Projection is compatible with self.value
-                    if not iscompatible(self.value, projection.instance_defaults.variable):
+                    if not iscompatible(self.defaults.value, projection.instance_defaults.variable):
                         raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
                                          "the State from which it is supposed to project ({})".
-                                         format(projection.name, projection.instance_defaults.variable, self.value, self.name))
+                                         format(projection.name, projection.instance_defaults.variable, self.defaults.value, self.name))
 
                     # Validate value:
                     #    - check that output of projection's function (projection_spec.value) is compatible with

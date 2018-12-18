@@ -3227,9 +3227,8 @@ class System(System_Base):
         if execution_id is None:
             execution_id = self.default_execution_id
 
-        self._assign_context_values(execution_id)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if not (ContextFlags.SIMULATION & self.parameters.context.get(execution_id).flags):
+        if self.parameters.context.get(execution_id) is None or not (ContextFlags.SIMULATION & self.parameters.context.get(execution_id).flags):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         for mechanism in reinitialize_values:
@@ -5011,7 +5010,7 @@ class SystemInputState(OutputState):
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
            in Projection_Base._instantiate_sender()
 
-           self.value is used to represent the item of the targets arg to system.execute or system.run
+           value is used to represent the item of the targets arg to system.execute or system.run
     COMMENT
 
     A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the

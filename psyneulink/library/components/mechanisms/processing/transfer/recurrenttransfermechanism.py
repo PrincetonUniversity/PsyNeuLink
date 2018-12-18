@@ -976,7 +976,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         try:
             if auto is None and hetero is None:
                 if isinstance(self.matrix, list):
-                    self._matrix = np.asarray(self.matrix)
+                    self.matrix = np.asarray(self.matrix)
                 temp_matrix = self.matrix.copy()
                 self._auto = np.diag(temp_matrix).copy()
                 np.fill_diagonal(temp_matrix, 0)
@@ -1116,7 +1116,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.previous_value = None
+        self.parameters.previous_value.set(None, override=True)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1208,17 +1208,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             # If combination_function is a method of a subclass, let it pass
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
-                    self._combination_function = comb_fct(default_variable=self.instance_defaults.variable)
+                    self.combination_function = comb_fct(default_variable=self.instance_defaults.variable)
                 elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
                     pass
                 else:
-                    self._combination_function = UserDefinedFunction(custom_function=comb_fct,
+                    self.combination_function = UserDefinedFunction(custom_function=comb_fct,
                                                                      default_variable=self.instance_defaults.variable)
             else:
-                self._combination_function = comb_fct
+                self.combination_function = comb_fct
 
         else:
-            self._combination_function = None
+            self.combination_function = None
 
         if self.auto is None and self.hetero is None:
             self.matrix = specified_matrix
@@ -1482,13 +1482,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
         if learning_condition:
-            self._learning_condition = learning_condition
+            self.learning_condition = learning_condition
 
         if not isinstance(self.learning_condition, Condition):
             if self.learning_condition is CONVERGENCE:
-                self._learning_condition = WhenFinished(self)
+                self.learning_condition = WhenFinished(self)
             elif self.learning_condition is UPDATE:
-                self._learning_condition = None
+                self.learning_condition = None
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
@@ -1508,7 +1508,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     # def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
     #
     #     if self.context.initialization_status != ContextFlags.INITIALIZING:
-    #         self.previous_value = self.value
+    #         self.parameters.previous_value.set(self.value, override=True)
     #     self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
     #     return self._output
     #     # return super()._execute(variable, runtime_params, context)

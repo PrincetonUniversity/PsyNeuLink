@@ -306,9 +306,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.functions.learningfunctions import Hebbian, ContrastiveHebbian
+from psyneulink.core.components.functions.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
@@ -1293,11 +1293,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Set minus_phase activity, plus_phase, current_activity and initial_value
             #    all  to zeros with size of Mechanism's array
             # Should be OK to use attributes here because initialization should only occur during None context
-            self._initial_value = self.current_activity = self.minus_phase_activity = self.plus_phase_activity = \
-                self.input_states[RECURRENT].socket_template
+            self._set_multiple_parameter_values(
+                None,
+                initial_value=self.input_states[RECURRENT].socket_template,
+                current_activity=self.input_states[RECURRENT].socket_template,
+                minus_phase_activity=self.input_states[RECURRENT].socket_template,
+                plus_phase_activity=self.input_states[RECURRENT].socket_template,
+                execution_phase=None
+            )
             if self._target_included:
-                self.output_activity = self.input_states[TARGET].socket_template
-            self.execution_phase = None
+                self.parameters.output_activity.set(self.input_states[TARGET].socket_template)
 
         # Initialize execution_phase as minus_phase
         if self.parameters.execution_phase.get(execution_id) is None:

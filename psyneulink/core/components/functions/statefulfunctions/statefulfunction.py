@@ -467,7 +467,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if execution_context is None:
             # if this is run during initialization, self.parameters will refer to self.class_parameters
             # because self.parameters has not been created yet
-            self.previous_value = np.atleast_1d(initializer)
+            self.parameters.previous_value.set(np.atleast_1d(initializer), override=True)
         else:
             self.parameters.previous_value.set(np.atleast_1d(initializer), execution_context)
 
@@ -544,7 +544,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                         self.name,
                                         initializers_string))
 
-        # rebuilding self.value rather than simply returning reinitialization_values in case any of the stateful
+        # rebuilding value rather than simply returning reinitialization_values in case any of the stateful
         # attrs are modified during assignment
         value = []
         for i in range(len(self.stateful_attributes)):

@@ -780,7 +780,7 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
         shared_types = ()
 
     dict_types = (dict, collections.UserDict)
-    list_types = (list, collections.UserList)
+    list_types = (list, collections.UserList, collections.deque)
 
     if isinstance(obj, dict_types):
         result = obj.__class__()

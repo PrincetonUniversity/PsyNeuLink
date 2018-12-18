@@ -18,7 +18,7 @@ class TestKWTAInputs:
 
     def test_kwta_empty_spec(self):
         K = KWTAMechanism()
-        assert(K.value is None)
+        np.testing.assert_allclose(K.value, K.defaults.value)
         assert(K.instance_defaults.variable == [[0]])
         assert(K.size == [1])
         assert(K.matrix == [[5]])
@@ -28,7 +28,7 @@ class TestKWTAInputs:
             name='K',
             size=3
         )
-        assert(K.value is None)
+        np.testing.assert_allclose(K.value, K.defaults.value)
         assert(np.allclose(K.instance_defaults.variable, [[0., 0., 0.]]))
         assert(K.size == [3])
         assert(np.allclose(K.matrix, [[5, 0, 0], [0, 5, 0], [0, 0, 5]]))

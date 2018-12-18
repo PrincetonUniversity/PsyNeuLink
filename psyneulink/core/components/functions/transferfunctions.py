@@ -2533,7 +2533,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
+        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D array

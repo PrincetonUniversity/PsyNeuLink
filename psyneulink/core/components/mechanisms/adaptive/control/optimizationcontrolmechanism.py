@@ -881,7 +881,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       runtime_params=runtime_params,
                                                                                       context=context)
 
-        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.value),1))
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
 
         # Give agent_rep a chance to clean up
         try:

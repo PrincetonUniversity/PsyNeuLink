@@ -2752,7 +2752,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
+        self.parameters.previous_value.set(initializer, override=True)
         self.previous_time = starting_point
 
         super().__init__(

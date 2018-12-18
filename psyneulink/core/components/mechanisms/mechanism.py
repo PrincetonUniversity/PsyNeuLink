@@ -985,7 +985,10 @@ class MechParamsDict(UserDict):
 
 
 def _input_state_variables_getter(owning_component=None, execution_id=None):
-    return [input_state.parameters.variable.get(execution_id) for input_state in owning_component.input_states]
+    try:
+        return [input_state.parameters.variable.get(execution_id) for input_state in owning_component.input_states]
+    except TypeError:
+        return None
 
 
 class Mechanism_Base(Mechanism):
@@ -1035,7 +1038,7 @@ class Mechanism_Base(Mechanism):
             - the value of each ParameterState must be compatible with the corresponding parameter of  the Mechanism's
                  execute method
             - the number of OutputStates must correspond to the length of the output of the Mechanism's execute method,
-                (self.value)
+                (self.defaults.value)
             - the value of each OutputState must be compatible with the corresponding item of the self.value
                  (the output of the Mechanism's execute method)
 
@@ -1347,7 +1350,6 @@ class Mechanism_Base(Mechanism):
         value = Param(np.array([[0]]), read_only=True)
         previous_value = Param(None, read_only=True)
         function = Linear
-        has_initializers = False
 
         input_state_variables = Param(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
@@ -1486,11 +1488,7 @@ class Mechanism_Base(Mechanism):
                                              param_defaults=params,
                                              prefs=prefs,
                                              name=name)
-        # try:
-        #     self.instance_defaults.value = self.value.copy()
-        # except AttributeError:
-        #     self.instance_defaults.value = self.value
-        self.value = self._old_value = None
+
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
         self._receivesProcessInput = False
@@ -1786,8 +1784,8 @@ class Mechanism_Base(Mechanism):
             + OUTPUT_STATES:
                 <MechanismsOutputState object or class, specification dict, or numeric value(s);
                 if it is missing or not one of the above types, it is set to None here;
-                    and then to default value of self.value (output of execute method) in instantiate_output_state
-                    (since execute method must be instantiated before self.value is known)
+                    and then to default value of value (output of execute method) in instantiate_output_state
+                    (since execute method must be instantiated before self.defaults.value is known)
                 if OUTPUT_STATES is a list or OrderedDict, it is passed along (to instantiate_output_states)
                 if it is a OutputState class ref, object or specification dict, it is placed in a list
             + MONITORED_STATES:
@@ -1957,7 +1955,7 @@ class Mechanism_Base(Mechanism):
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self.previous_value = None
+        self.parameters.previous_value.set(None, override=True)
         self._instantiate_input_states(context=context)
         self._instantiate_parameter_states(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -2168,7 +2166,7 @@ class Mechanism_Base(Mechanism):
                                  "(It does not have an accumulator to reinitialize).".format(self.name))
 
         # if hasattr(self, PREVIOUS_VALUE):
-        #     self.previous_value = None
+        #     self.parameters.previous_value.set(None, override=True)
 
     def get_current_mechanism_param(self, param_name, execution_id=None):
         if param_name == "variable":

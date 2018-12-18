@@ -507,6 +507,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.parameters = self.Params(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
+        self._initialize_parameters()
+
         # Compiled resources
         self.__generated_wrappers = {}
         self.__compiled_mech = {}
@@ -1730,7 +1732,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
-                                                         default_variable=self.input_CIM.variable,
+                                                         default_variable=self.input_CIM.defaults.variable,
                                                          function=InterfaceStateMap(corresponding_input_state=interface_input_state),
                                                          name="INPUT_CIM_" + node.name + "_" + OutputState.__name__)
 
@@ -3198,6 +3200,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
+
         return output_values
 
     def reinitialize(self, values, execution_context=NotImplemented):
@@ -3398,6 +3401,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.parameters.results.set(full_results, execution_id)
             # KAM added the [-1] index after changing Composition run()
             # behavior to return only last trial of run (11/7/18)
+            self.most_recent_execution_context = execution_id
             return full_results[-1]
 
         # --- RESET FOR NEXT TRIAL ---
@@ -3492,6 +3496,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             full_results.extend(results)
 
         self.parameters.results.set(full_results, execution_id)
+
+        self.most_recent_execution_context = execution_id
         return trial_output
 
     # def save_state(self):
@@ -4226,7 +4232,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-            # need to update input states in order to get correct value for "outcome" (from objective mech) 
+            # need to update input states in order to get correct value for "outcome" (from objective mech)
             self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
 
             outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
@@ -4331,10 +4337,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def output_state(self):
         """Returns the index 0 OutputState that belongs to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_states[0]
-
-    @property
-    def results(self):
-        return self.parameters.results.get(self.default_execution_id)
 
     @property
     def class_parameters(self):

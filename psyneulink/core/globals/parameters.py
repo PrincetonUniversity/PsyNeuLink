@@ -46,8 +46,13 @@ is likely to be a Composition:
 
         >>> c.run({t: 5})
         [[array([5.])]]
+        >>> print(t.value)
+        [[5.]]
+
         >>> d.run({t: 10})
         [[array([10.])]]
+        >>> print(t.value)
+        [[10.]]
 
         >>> print(t.parameters.value.get(c))
         [[5.]]
@@ -58,6 +63,13 @@ is likely to be a Composition:
 The TransferMechanism in the above snippet has a different `value <Component.value>` for each Composition it is run in. This holds
 true for all of its `stateful Params <Component.stateful_parameters>`, so they can behave differently in different execution contexts
 and be modulated during `control <System_Execution_Control>`.
+
+.. _Parameter_Dot_Notation:
+
+.. note::
+    The "dot notation" version - ``t.value`` - refers to the most recent execution context in which *t* was executed. In
+    many cases, you can use this to get or set using the execution context you'd expect. However, in complex situations,
+    if there is doubt, it is best to explicitly specify the execution context.
 
 For Developers
 --------------
@@ -139,6 +151,7 @@ PNL methods. The most likely place this will come up would be for the *function*
 must be avoided at risk of causing computation errors. You may use standard attributes only when their values will never change during a
 `Run <TimeScale.RUN>`.
 
+You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code, as it is ambiguous and can potentially break statefulness.
 
 .. _Param_Attributes_Table:
 
@@ -767,15 +780,10 @@ class Param(types.SimpleNamespace):
                 kwargs
                     any additional arguments to be passed to this `Param`'s `getter` if it exists
         """
-        try:
-            owning_component = self._owner._owner
-        except AttributeError:
-            raise ParameterError(
-                'Unable to find an owning Component for {0}. Ensure that this Param belongs to a '
-                'Params instance that belongs to a Component'.format(self)
-            )
-
-        execution_id = parse_execution_context(execution_context)
+        if not self.stateful:
+            execution_id = None
+        else:
+            execution_id = parse_execution_context(execution_context)
 
         if self.getter is not None:
             kwargs = {**self._default_getter_kwargs, **{'execution_id': execution_id}, **kwargs}
@@ -785,11 +793,8 @@ class Param(types.SimpleNamespace):
             return value
         else:
             try:
-                if execution_id is None or not self.stateful:
-                    return getattr(owning_component, self.name)
-                else:
-                    return self.values[execution_id]
-            except (AttributeError, KeyError):
+                return self.values[execution_id]
+            except KeyError:
                 logger.info('Param \'{0}\' has no value for execution_id {1}'.format(self.name, execution_id))
                 if self.fallback_default:
                     return self.default_value
@@ -832,7 +837,7 @@ class Param(types.SimpleNamespace):
                 )
             ) from e
 
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, **kwargs):
+    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
         """
             Sets the value of this `Param` in the context of **execution_context**
             If no execution_context is specified, attributes on the associated `Component` will be used
@@ -852,9 +857,12 @@ class Param(types.SimpleNamespace):
                     any additional arguments to be passed to this `Param`'s `setter` if it exists
         """
         if not override and self.read_only:
-            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=2)
+            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
 
-        execution_id = parse_execution_context(execution_context)
+        if not self.stateful:
+            execution_id = None
+        else:
+            execution_id = parse_execution_context(execution_context)
 
         if self.setter is not None:
             kwargs = {
@@ -867,27 +875,9 @@ class Param(types.SimpleNamespace):
             }
             value = call_with_pruned_args(self.setter, value, **kwargs)
 
-        if not self.stateful:
-            execution_id = None
-
         self._set_value(value, execution_id, skip_history=skip_history, skip_log=skip_log)
 
     def _set_value(self, value, execution_id=None, skip_history=False, skip_log=False):
-        if execution_id is None:
-            try:
-                owning_component = self._owner._owner
-            except AttributeError:
-                raise ParameterError(
-                    'Unable to find an owning Component for {0}. Ensure that this Param belongs to a '
-                    'Params instance that belongs to a Component'.format(self)
-                )
-
-            try:
-                setattr(owning_component, self.name, value)
-            except AttributeError:
-                # if unsettable, continue
-                pass
-
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -959,13 +949,21 @@ class Param(types.SimpleNamespace):
 
         try:
             try:
-                cur_val = self.get(execution_context)
-            except TypeError:
-                # if there is a failure in getting the value, treat it as if nonexistent (like for getters, etc.)
+                cur_val = self.values[execution_context]
+            except KeyError:
                 cur_val = None
 
             if cur_val is None or override:
-                new_val = self.get(base_execution_context)
+                try:
+                    new_val = self.values[base_execution_context]
+                except KeyError:
+                    return
+
+                try:
+                    new_history = self.history[base_execution_context]
+                except KeyError:
+                    new_history = NotImplemented
+
                 shared_types = (Component, types.MethodType)
 
                 if isinstance(new_val, (dict, list)):
@@ -973,7 +971,14 @@ class Param(types.SimpleNamespace):
                 elif not isinstance(new_val, shared_types):
                     new_val = copy.deepcopy(new_val)
 
-                self.set(value=new_val, execution_context=execution_context, override=True, skip_history=True, skip_log=True)
+                self.values[execution_context] = new_val
+
+                if new_history is None:
+                    raise ParameterError('history should always be a collections.deque if it exists')
+                elif new_history is not NotImplemented:
+                    new_history = copy_dict_or_list_with_shared(new_history, shared_types)
+                    self.history[execution_context] = new_history
+
         except ParameterError as e:
             raise ParameterError('Error when attempting to initialize from {0}: {1}'.format(base_execution_context, e))
 

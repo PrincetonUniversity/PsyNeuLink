@@ -213,7 +213,6 @@ class MaskedMappingProjection(MappingProjection):
 
         """
         variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
-        matrix = Param(DEFAULT_MATRIX, modulable=True)
         mask = None
         mask_operation = MULTIPLY
 
@@ -270,7 +269,7 @@ class MaskedMappingProjection(MappingProjection):
                 return
             mask_shape = np.array(mask).shape
             matrix = get_matrix(self.user_params[FUNCTION_PARAMS][MATRIX],
-                                len(self.sender.value), len(self.receiver.value))
+                                len(self.sender.defaults.value), len(self.receiver.defaults.value))
             matrix_shape = matrix.shape
             if mask_shape != matrix_shape:
                 raise MaskedMappingProjectionError("Shape of the {} for {} ({}) "
