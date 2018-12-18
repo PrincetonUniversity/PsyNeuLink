@@ -51,18 +51,17 @@ class ObjectiveFunction(Function_Base):
             Attributes
             ----------
 
-                variable
-                    see `variable <Distance.variable>`
-
-                    :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
-                    :read only: True
-
                 metric
-                    see `metric <Distance.metric>`
+                    see `metric <ObjectiveFunction.metric>`
 
-                    :default value: `DIFFERENCE`
-                    :type: str
+                    :default value: None
+                    :type:
+
+                normalize
+                    see `normalize <ObjectiveFunction.normalize>`
+
+                    :default value: False
+                    :type: bool
 
         """
         normalize = False
@@ -198,18 +197,23 @@ COMMENT
             Attributes
             ----------
 
-                variable
-                    see `variable <Distance.variable>`
+                matrix
+                    see `matrix <Stability.matrix>`
 
-                    :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: `HOLLOW_MATRIX`
+                    :type: str
 
                 metric
-                    see `metric <Distance.metric>`
+                    see `metric <Stability.metric>`
 
-                    :default value: `DIFFERENCE`
+                    :default value: `ENERGY`
                     :type: str
+
+                transfer_fct
+                    see `transfer_fct <Stability.transfer_fct>`
+
+                    :default value: None
+                    :type:
 
         """
         matrix = HOLLOW_MATRIX
@@ -434,7 +438,7 @@ COMMENT
         # if self.metric is ENERGY:
         #     result = -np.sum(current * transformed)/2
         # else:
-        #     result = self._metric_fct.function(variable=[current,transformed], context=context)
+        #     result = self._metric_fct(variable=[current,transformed], context=context)
         #
         # if self.normalize:
         #     if self.metric is ENERGY:
@@ -442,7 +446,7 @@ COMMENT
         #     else:
         #         result /= len(variable)
         # MODIFIED 11/12/15 NEW:
-        result = self._metric_fct.function(variable=[current, transformed], context=context)
+        result = self._metric_fct(variable=[current, transformed], context=context)
         # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)

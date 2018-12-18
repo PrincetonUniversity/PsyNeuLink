@@ -182,13 +182,13 @@ from types import MethodType
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
-from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
-from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
+from psyneulink.core.components.functions.objectivefunctions import Distance, Stability
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegratorFunction
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -300,7 +300,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
     # if hasattr(owning_component, "recurrent_projection"):
-    #     owning_component.recurrent_projection.parameter_states["matrix"].function_object.parameters.previous_value.set(value, execution_id)
+    #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
 
     try:
         value = get_matrix(value, owning_component.size[0], owning_component.size[0])
@@ -813,22 +813,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             Attributes
             ----------
 
-                matrix
-                    see `matrix <RecurrentTransferMechanism.matrix>`
-
-                    :default value: `HOLLOW_MATRIX`
-                    :type: str
-
                 auto
                     see `auto <RecurrentTransferMechanism.auto>`
 
                     :default value: 1
-                    :type: int
-
-                hetero
-                    see `hetero <RecurrentTransferMechanism.hetero>`
-
-                    :default value: 0
                     :type: int
 
                 combination_function
@@ -837,11 +825,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                integration_rate
-                    see `integration_rate <RecurrentTransferMechanism.integration_rate>`
+                convergence_function
+                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
 
-                    :default value: 0.5
-                    :type: float
+                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
+                    :type: `Function`
 
                 enable_learning
                     see `enable_learning <RecurrentTransferMechanism.enable_learning>`
@@ -849,23 +837,17 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: False
                     :type: bool
 
-                noise
-                    see `noise <RecurrentTransferMechanism.noise>`
+                hetero
+                    see `hetero <RecurrentTransferMechanism.hetero>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 0
+                    :type: int
 
-                smoothing_factor
-                    see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
+                integration_rate
+                    see `integration_rate <RecurrentTransferMechanism.integration_rate>`
 
                     :default value: 0.5
                     :type: float
-
-                convergence_function
-                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
-
-                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
-                    :type: `Function`
 
                 learning_condition
                     see `learning_condition <RecurrentTransferMechanism.learning_condition>`
@@ -884,6 +866,24 @@ class RecurrentTransferMechanism(TransferMechanism):
 
                     :default value: None
                     :type:
+
+                matrix
+                    see `matrix <RecurrentTransferMechanism.matrix>`
+
+                    :default value: `HOLLOW_MATRIX`
+                    :type: str
+
+                noise
+                    see `noise <RecurrentTransferMechanism.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                smoothing_factor
+                    see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
+
+                    :default value: 0.5
+                    :type: float
 
         """
         matrix = Param(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
@@ -1252,7 +1252,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.output_states[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_states.names:
-            if self.function_object.bounds == (0,1) or self.clip == (0,1):
+            if self.function.bounds == (0,1) or self.clip == (0,1):
                 entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
@@ -1302,7 +1302,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # KDM 10/12/18: removing below because it doesn't seem to be correct, and also causes
         # unexpected values to be set to previous_value
         # if hasattr(self, "recurrent_projection"):
-        #     self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = val
+        #     self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
         if hasattr(self, '_parameter_states')\
                 and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if hasattr(self, 'size'):
@@ -1323,8 +1323,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             if hasattr(self, '_parameter_states') and name in self._parameter_states:
                 param_state = self._parameter_states[name]
 
-                if hasattr(param_state.function_object, 'initializer'):
-                    param_state.function_object.reinitialize = val
+                if hasattr(param_state.function, 'initializer'):
+                    param_state.function.reinitialize = val
 
     @property
     def auto(self):
@@ -1339,7 +1339,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             setattr(self, "_auto", val)
 
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
 
         # Update user_params dict with new value
         self.user_params.__additem__("auto", val)
@@ -1357,7 +1357,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             setattr(self, "_hetero", val)
 
         if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
 
         # Update user_params dict with new value
         self.user_params.__additem__("hetero", val)

@@ -65,16 +65,11 @@ class CombinationFunction(Function_Base):
             ----------
 
                 variable
-                    see `variable <PredictionErrorDeltaFunction.variable>`
+                    see `variable <CombinationFunction.variable>`
 
-                    :default value: numpy.array([[1], [1]])
+                    :default value: numpy.array([0])
                     :type: numpy.ndarray
-
-                gamma
-                    see `gamma <PredictionErrorDeltaFunction.gamma>`
-
-                    :default value: 1.0
-                    :type: float
+                    :read only: True
 
         """
         # variable = np.array([0, 0])
@@ -233,17 +228,35 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <PredictionErrorDeltaFunction.variable>`
+                exponents
+                    see `exponents <Reduce.exponents>`
 
-                    :default value: numpy.array([[1], [1]])
-                    :type: numpy.ndarray
+                    :default value: None
+                    :type:
 
-                gamma
-                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+                offset
+                    see `offset <Reduce.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                operation
+                    see `operation <Reduce.operation>`
+
+                    :default value: `SUM`
+                    :type: str
+
+                scale
+                    see `scale <Reduce.scale>`
 
                     :default value: 1.0
                     :type: float
+
+                weights
+                    see `weights <Reduce.weights>`
+
+                    :default value: None
+                    :type:
 
         """
         weights = None
@@ -599,17 +612,35 @@ class LinearCombination(
             Attributes
             ----------
 
-                variable
-                    see `variable <PredictionErrorDeltaFunction.variable>`
+                exponents
+                    see `exponents <LinearCombination.exponents>`
 
-                    :default value: numpy.array([[1], [1]])
-                    :type: numpy.ndarray
+                    :default value: None
+                    :type:
 
-                gamma
-                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+                offset
+                    see `offset <LinearCombination.offset>`
 
                     :default value: 1.0
                     :type: float
+
+                operation
+                    see `operation <LinearCombination.operation>`
+
+                    :default value: `SUM`
+                    :type: str
+
+                scale
+                    see `scale <LinearCombination.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+                weights
+                    see `weights <LinearCombination.weights>`
+
+                    :default value: None
+                    :type:
 
         """
         operation = SUM
@@ -1165,17 +1196,35 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <PredictionErrorDeltaFunction.variable>`
+                exponents
+                    see `exponents <CombineMeans.exponents>`
 
-                    :default value: numpy.array([[1], [1]])
-                    :type: numpy.ndarray
+                    :default value: None
+                    :type:
 
-                gamma
-                    see `gamma <PredictionErrorDeltaFunction.gamma>`
+                offset
+                    see `offset <CombineMeans.offset>`
 
                     :default value: 1.0
                     :type: float
+
+                operation
+                    see `operation <CombineMeans.operation>`
+
+                    :default value: `SUM`
+                    :type: str
+
+                scale
+                    see `scale <CombineMeans.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+                weights
+                    see `weights <CombineMeans.weights>`
+
+                    :default value: None
+                    :type:
 
         """
         weights = None

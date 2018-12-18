@@ -118,13 +118,13 @@ class NormalDist(DistributionFunction):
             ----------
 
                 mean
-                    see `mean <WaldDist.mean>`
+                    see `mean <NormalDist.mean>`
 
-                    :default value: 1.0
+                    :default value: 0.0
                     :type: float
 
-                scale
-                    see `scale <WaldDist.scale>`
+                standard_deviation
+                    see `standard_deviation <NormalDist.standard_deviation>`
 
                     :default value: 1.0
                     :type: float
@@ -258,14 +258,21 @@ class UniformToNormalDist(DistributionFunction):
             Attributes
             ----------
 
-                mean
-                    see `mean <WaldDist.mean>`
+                variable
+                    see `variable <UniformToNormalDist.variable>`
 
-                    :default value: 1.0
+                    :default value: numpy.array([0])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                mean
+                    see `mean <UniformToNormalDist.mean>`
+
+                    :default value: 0.0
                     :type: float
 
-                scale
-                    see `scale <WaldDist.scale>`
+                standard_deviation
+                    see `standard_deviation <UniformToNormalDist.standard_deviation>`
 
                     :default value: 1.0
                     :type: float
@@ -383,14 +390,8 @@ class ExponentialDist(DistributionFunction):
             Attributes
             ----------
 
-                mean
-                    see `mean <WaldDist.mean>`
-
-                    :default value: 1.0
-                    :type: float
-
-                scale
-                    see `scale <WaldDist.scale>`
+                beta
+                    see `beta <ExponentialDist.beta>`
 
                     :default value: 1.0
                     :type: float
@@ -500,16 +501,16 @@ class UniformDist(DistributionFunction):
             Attributes
             ----------
 
-                mean
-                    see `mean <WaldDist.mean>`
+                high
+                    see `high <UniformDist.high>`
 
                     :default value: 1.0
                     :type: float
 
-                scale
-                    see `scale <WaldDist.scale>`
+                low
+                    see `low <UniformDist.low>`
 
-                    :default value: 1.0
+                    :default value: 0.0
                     :type: float
 
         """
@@ -622,14 +623,14 @@ class GammaDist(DistributionFunction):
             Attributes
             ----------
 
-                mean
-                    see `mean <WaldDist.mean>`
+                dist_shape
+                    see `dist_shape <GammaDist.dist_shape>`
 
                     :default value: 1.0
                     :type: float
 
                 scale
-                    see `scale <WaldDist.scale>`
+                    see `scale <GammaDist.scale>`
 
                     :default value: 1.0
                     :type: float
@@ -933,40 +934,41 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
+                bias
+                    see `bias <DriftDiffusionAnalytical.bias>`
+
+                    :default value: 0.5
+                    :type: float
+                    :read only: True
+
+                drift_rate
+                    see `drift_rate <DriftDiffusionAnalytical.drift_rate>`
 
                     :default value: 1.0
                     :type: float
 
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
+                noise
+                    see `noise <DriftDiffusionAnalytical.noise>`
 
-                    :default value: 1.0
+                    :default value: 0.5
                     :type: float
 
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                offset
-                    see `offset <InteractiveActivation.offset>`
+                starting_point
+                    see `starting_point <DriftDiffusionAnalytical.starting_point>`
 
                     :default value: 0.0
                     :type: float
 
-                rate
-                    see `rate <InteractiveActivation.rate>`
+                t0
+                    see `t0 <DriftDiffusionAnalytical.t0>`
 
-                    :default value: 1.0
+                    :default value: 0.2
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                threshold
+                    see `threshold <DriftDiffusionAnalytical.threshold>`
 
-                    :default value: 0.0
+                    :default value: 1.0
                     :type: float
 
         """

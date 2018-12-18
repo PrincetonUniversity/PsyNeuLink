@@ -751,7 +751,7 @@ class LCControlMechanism(ControlMechanism):
                     raise LCControlMechanismError("The specification of the {} argument for {} "
                                                   "contained an item ({}) that is not a Mechanism.".
                                                   format(repr(MODULATED_MECHANISMS), self.name, mech))
-                elif not hasattr(mech.function_object, MULTIPLICATIVE_PARAM):
+                elif not hasattr(mech.function, MULTIPLICATIVE_PARAM):
                     raise LCControlMechanismError("The specification of the {} argument for {} "
                                                   "contained a Mechanism ({}) that does not have a {}.".
                                            format(repr(MODULATED_MECHANISMS),
@@ -785,7 +785,7 @@ class LCControlMechanism(ControlMechanism):
                         if (mech not in self.modulated_mechanisms and
                                 isinstance(mech, ProcessingMechanism_Base) and
                                 not (isinstance(mech, ObjectiveMechanism) and mech._role is CONTROL) and
-                                hasattr(mech.function_object, MULTIPLICATIVE_PARAM)):
+                                hasattr(mech.function, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
             # # elif hasattr(self, 'processes'):
             # elif self.processes:
@@ -794,7 +794,7 @@ class LCControlMechanism(ControlMechanism):
             #         for mech in process.mechanisms:
             #             if (mech not in self.modulated_mechanisms and
             #                     isinstance(mech, ProcessingMechanism_Base) and
-            #                     hasattr(mech.function_object, MULTIPLICATIVE_PARAM)):
+            #                     hasattr(mech.function, MULTIPLICATIVE_PARAM)):
             #                 self.modulated_mechanisms.append(mech)
             else:
                 # If LCControlMechanism is not in a Process or System, defer implementing OutputStates until it is
@@ -807,7 +807,7 @@ class LCControlMechanism(ControlMechanism):
                 self._modulated_mechanisms = [self.modulated_mechanisms]
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
-                multiplicative_param_names.append(mech.function_object.multiplicative_param)
+                multiplicative_param_names.append(mech.function.multiplicative_param)
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))

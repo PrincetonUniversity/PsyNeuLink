@@ -121,44 +121,16 @@ class LearningFunction(Function_Base):
             ----------
 
                 variable
-                    see `variable <BackPropagation.variable>`
+                    see `variable <LearningFunction.variable>`
 
-                    :default value: numpy.array([[0], [0], [0]])
+                    :default value: numpy.array([0, 0, 0])
                     :type: numpy.ndarray
                     :read only: True
 
-                activation_input
-                    see `activation_input <BackPropagation.activation_input>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                activation_output
-                    see `activation_output <BackPropagation.activation_output>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                error_matrix
-                    see `error_matrix <BackPropagation.error_matrix>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                error_signal
-                    see `error_signal <BackPropagation.error_signal>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
                 learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
+                    see `learning_rate <LearningFunction.learning_rate>`
 
-                    :default value: 1.0
+                    :default value: 0.05
                     :type: float
 
         """
@@ -341,45 +313,96 @@ class BayesGLM(LearningFunction):
             ----------
 
                 variable
-                    see `variable <BackPropagation.variable>`
+                    see `variable <BayesGLM.variable>`
 
-                    :default value: numpy.array([[0], [0], [0]])
+                    :default value: [numpy.array([0, 0, 0]), numpy.array([0])]
+                    :type: list
+                    :read only: True
+
+                value
+                    see `value <BayesGLM.value>`
+
+                    :default value: numpy.array([0])
                     :type: numpy.ndarray
                     :read only: True
 
-                activation_input
-                    see `activation_input <BackPropagation.activation_input>`
+                Lambda_0
+                    see `Lambda_0 <BayesGLM.Lambda_0>`
 
-                    :default value: [0]
-                    :type: list
-                    :read only: True
+                    :default value: 0
+                    :type: int
 
-                activation_output
-                    see `activation_output <BackPropagation.activation_output>`
+                Lambda_n
+                    see `Lambda_n <BayesGLM.Lambda_n>`
 
-                    :default value: [0]
-                    :type: list
-                    :read only: True
+                    :default value: 0
+                    :type: int
 
-                error_matrix
-                    see `error_matrix <BackPropagation.error_matrix>`
+                Lambda_prior
+                    see `Lambda_prior <BayesGLM.Lambda_prior>`
 
-                    :default value: None
-                    :type:
-                    :read only: True
+                    :default value: 0
+                    :type: int
 
-                error_signal
-                    see `error_signal <BackPropagation.error_signal>`
+                gamma_shape_0
+                    see `gamma_shape_0 <BayesGLM.gamma_shape_0>`
 
-                    :default value: [0]
-                    :type: list
-                    :read only: True
+                    :default value: 1
+                    :type: int
 
-                learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
+                gamma_shape_n
+                    see `gamma_shape_n <BayesGLM.gamma_shape_n>`
 
-                    :default value: 1.0
-                    :type: float
+                    :default value: 1
+                    :type: int
+
+                gamma_shape_prior
+                    see `gamma_shape_prior <BayesGLM.gamma_shape_prior>`
+
+                    :default value: 1
+                    :type: int
+
+                gamma_size_0
+                    see `gamma_size_0 <BayesGLM.gamma_size_0>`
+
+                    :default value: 1
+                    :type: int
+
+                gamma_size_n
+                    see `gamma_size_n <BayesGLM.gamma_size_n>`
+
+                    :default value: 1
+                    :type: int
+
+                gamma_size_prior
+                    see `gamma_size_prior <BayesGLM.gamma_size_prior>`
+
+                    :default value: 1
+                    :type: int
+
+                mu_0
+                    see `mu_0 <BayesGLM.mu_0>`
+
+                    :default value: 0
+                    :type: int
+
+                mu_n
+                    see `mu_n <BayesGLM.mu_n>`
+
+                    :default value: 0
+                    :type: int
+
+                mu_prior
+                    see `mu_prior <BayesGLM.mu_prior>`
+
+                    :default value: 0
+                    :type: int
+
+                sigma_0
+                    see `sigma_0 <BayesGLM.sigma_0>`
+
+                    :default value: 1
+                    :type: int
 
         """
         variable = Param([np.array([0, 0, 0]), np.array([0])], read_only=True)
@@ -687,45 +710,17 @@ class Kohonen(LearningFunction):  # --------------------------------------------
             ----------
 
                 variable
-                    see `variable <BackPropagation.variable>`
+                    see `variable <Kohonen.variable>`
 
-                    :default value: numpy.array([[0], [0], [0]])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                activation_input
-                    see `activation_input <BackPropagation.activation_input>`
-
-                    :default value: [0]
+                    :default value: [[0, 0], [0, 0], [[0, 0], [0, 0]]]
                     :type: list
                     :read only: True
 
-                activation_output
-                    see `activation_output <BackPropagation.activation_output>`
+                distance_function
+                    see `distance_function <Kohonen.distance_function>`
 
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                error_matrix
-                    see `error_matrix <BackPropagation.error_matrix>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                error_signal
-                    see `error_signal <BackPropagation.error_signal>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
-
-                    :default value: 1.0
-                    :type: float
+                    :default value: `GAUSSIAN`
+                    :type: str
 
         """
         variable = Param([[0, 0], [0, 0], [[0, 0], [0, 0]]], read_only=True)
@@ -996,45 +991,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
             ----------
 
                 variable
-                    see `variable <BackPropagation.variable>`
+                    see `variable <Hebbian.variable>`
 
-                    :default value: numpy.array([[0], [0], [0]])
+                    :default value: numpy.array([0, 0])
                     :type: numpy.ndarray
                     :read only: True
-
-                activation_input
-                    see `activation_input <BackPropagation.activation_input>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                activation_output
-                    see `activation_output <BackPropagation.activation_output>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                error_matrix
-                    see `error_matrix <BackPropagation.error_matrix>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                error_signal
-                    see `error_signal <BackPropagation.error_signal>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
-
-                    :default value: 1.0
-                    :type: float
 
         """
         variable = Param(np.array([0, 0]), read_only=True)
@@ -1261,45 +1222,11 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
             ----------
 
                 variable
-                    see `variable <BackPropagation.variable>`
+                    see `variable <ContrastiveHebbian.variable>`
 
-                    :default value: numpy.array([[0], [0], [0]])
+                    :default value: numpy.array([0, 0])
                     :type: numpy.ndarray
                     :read only: True
-
-                activation_input
-                    see `activation_input <BackPropagation.activation_input>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                activation_output
-                    see `activation_output <BackPropagation.activation_output>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                error_matrix
-                    see `error_matrix <BackPropagation.error_matrix>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                error_signal
-                    see `error_signal <BackPropagation.error_signal>`
-
-                    :default value: [0]
-                    :type: list
-                    :read only: True
-
-                learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
-
-                    :default value: 1.0
-                    :type: float
 
         """
         variable = Param(np.array([0, 0]), read_only=True)
@@ -1561,45 +1488,32 @@ class Reinforcement(LearningFunction):  # --------------------------------------
             ----------
 
                 variable
-                    see `variable <BackPropagation.variable>`
+                    see `variable <Reinforcement.variable>`
 
                     :default value: numpy.array([[0], [0], [0]])
                     :type: numpy.ndarray
                     :read only: True
 
                 activation_input
-                    see `activation_input <BackPropagation.activation_input>`
+                    see `activation_input <Reinforcement.activation_input>`
 
                     :default value: [0]
                     :type: list
                     :read only: True
 
                 activation_output
-                    see `activation_output <BackPropagation.activation_output>`
+                    see `activation_output <Reinforcement.activation_output>`
 
                     :default value: [0]
                     :type: list
-                    :read only: True
-
-                error_matrix
-                    see `error_matrix <BackPropagation.error_matrix>`
-
-                    :default value: None
-                    :type:
                     :read only: True
 
                 error_signal
-                    see `error_signal <BackPropagation.error_signal>`
+                    see `error_signal <Reinforcement.error_signal>`
 
                     :default value: [0]
                     :type: list
                     :read only: True
-
-                learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
-
-                    :default value: 1.0
-                    :type: float
 
         """
         variable = Param(np.array([[0], [0], [0]]), read_only=True)

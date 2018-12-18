@@ -3101,14 +3101,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 node._set_parameter_value(key, node._runtime_params_reset[execution_id][key], execution_id)
                         node._runtime_params_reset[execution_id] = {}
 
-                        if execution_id in node.function_object._runtime_params_reset:
-                            for key in node.function_object._runtime_params_reset[execution_id]:
-                                node.function_object._set_parameter_value(
+                        if execution_id in node.function._runtime_params_reset:
+                            for key in node.function._runtime_params_reset[execution_id]:
+                                node.function._set_parameter_value(
                                     key,
-                                    node.function_object._runtime_params_reset[execution_id][key],
+                                    node.function._runtime_params_reset[execution_id][key],
                                     execution_id
                                 )
-                        node.function_object._runtime_params_reset[execution_id] = {}
+                        node.function._runtime_params_reset[execution_id] = {}
                         node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
@@ -3500,9 +3500,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #             # TBI: Store state for a Composition, Reinitialize Composition
     #             pass
     #         elif isinstance(node, Mechanism):
-    #             if isinstance(node.function_object, IntegratorFunction):
-    #                 for attr in node.function_object.stateful_attributes:
-    #                     reinitialization_value.append(getattr(node.function_object, attr))
+    #             if isinstance(node.function, IntegratorFunction):
+    #                 for attr in node.function.stateful_attributes:
+    #                     reinitialization_value.append(getattr(node.function, attr))
     #             elif hasattr(node, "integrator_function"):
     #                 if isinstance(node.integrator_function, IntegratorFunction):
     #                     for attr in node.integrator_function.stateful_attributes:

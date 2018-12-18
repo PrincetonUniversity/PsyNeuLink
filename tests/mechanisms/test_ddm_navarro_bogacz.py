@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical, NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
@@ -43,17 +43,17 @@ def test_nf_vs_bogacz():
         # print("\tr_t0 = {}".format(r_t0))
         # print("ddm_params.z = {threshold}; ddm_params.c = {noise}; ddm_params.T0 = {t0}; [meanERs,meanRTs,meanDTs,condRTs,condVarRTs,condSkewRTs] = ddmSimFRG({drift_rate},{bias}, ddm_params, 1)".format(
         #        threshold=r_threshold, noise=r_noise, bias=r_bias, drift_rate=r_stim * r_drift_rate, t0=r_t0))
-        NF.function_object.drift_rate=r_stim*r_drift_rate # NavarroAndFuss doesn't multiply stimulus to drift, do it here.
-        NF.function_object.threshold=r_threshold
-        NF.function_object.starting_point=r_bias
-        NF.function_object.t0=r_t0
-        NF.function_object.noise=r_noise
+        NF.function.drift_rate=r_stim*r_drift_rate # NavarroAndFuss doesn't multiply stimulus to drift, do it here.
+        NF.function.threshold=r_threshold
+        NF.function.starting_point=r_bias
+        NF.function.t0=r_t0
+        NF.function.noise=r_noise
 
-        B.function_object.drift_rate = r_drift_rate
-        B.function_object.threshold = r_threshold
-        B.function_object.starting_point = r_starting_point
-        B.function_object.t0 = r_t0
-        B.function_object.noise = r_noise
+        B.function.drift_rate = r_drift_rate
+        B.function.threshold = r_threshold
+        B.function.starting_point = r_starting_point
+        B.function.t0 = r_t0
+        B.function.noise = r_noise
 
         results_nf = NF.execute(r_stim)
         results_b = B.execute(r_stim)

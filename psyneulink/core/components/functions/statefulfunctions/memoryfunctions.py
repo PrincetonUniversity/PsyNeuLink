@@ -596,11 +596,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         if isinstance(self.distance_function, type):
             self.distance_function = self.distance_function()
-        self.distance_function = self.distance_function.function
 
         if isinstance(self.selection_function, type):
             self.selection_function = self.selection_function()
-        self.selection_function = self.selection_function.function
 
     def reinitialize(self, *args, execution_context=None):
         """
