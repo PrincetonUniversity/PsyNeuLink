@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.4.8.0+1074.g6fdf1c4 documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.4.8.0+1076.g7c67ca0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1074.g6fdf1c4 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1076.g7c67ca0 documentation" href="index.html"/>
         <link rel="up" title="Component" href="Component.html"/>
         <link rel="next" title="UserDefinedFunction" href="UserDefinedFunction.html"/>
         <link rel="prev" title="GatingSignal" href="GatingSignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1074
+                0.4.8.0+1076
               </div>
             
           
@@ -91,33 +91,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Functions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="UserDefinedFunction.html">UserDefinedFunction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="TransferFunctions.html">TransferFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="CombinationFunctions.html">CombinationFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SelectionFunctions.html">SelectionFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="DistributionFunctions.html">DistributionFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="StatefulFunctions.html">StatefulFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ObjectiveFunctions.html">ObjectiveFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="OptimizationFunctions.html">OptimizationFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningFunctions.html">LearningFunctions</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -215,8 +193,8 @@
 </dl>
 <div class="section" id="overview">
 <span id="function-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A Function is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that “packages” a function (in its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> method)
-for use by other Components.  Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
+<p>A Function is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that “packages” a function for use by other Components.
+Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
 Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is executed.  The <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be any callable
 operation, although most commonly it is a mathematical operation (and, for those, almost always uses a call to one or
 more numpy functions).  There are two reasons PsyNeuLink packages functions in a Function Component:</p>
@@ -257,10 +235,7 @@ below.</p>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> – determines the computation carried out by the Function; it must be a
-callable object (that is, a python function or method of some kind). Unlike other PsyNeuLink <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>, it <em>cannot</em> be (another) Function object (it can’t be “turtles” all the way down!). If the Function
-has been assigned to another <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, then its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is also assigned as the
-the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of the Component to which it has been assigned (i.e., its
-<a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.</li>
+callable object (that is, a python function or method of some kind). Unlike other PsyNeuLink <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>, it <em>cannot</em> be (another) Function object (it can’t be “turtles” all the way down!).</li>
 </ul>
 <p>A Function also has an attribute for each of the parameters of its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </div>
@@ -268,7 +243,7 @@ the <a class="reference internal" href="Component.html#psyneulink.core.component
 <h3><em>Owner</em><a class="headerlink" href="#owner" title="Permalink to this headline">¶</a></h3>
 <p>If a Function has been assigned to another <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, then it also has an <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> attribute
 that refers to that Component.  The Function itself is assigned as the Component’s
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function_object" title="psyneulink.core.components.component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute.  Each of the Function’s attributes is also assigned
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Each of the Function’s attributes is also assigned
 as an attribute of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and those are each associated with with a
 <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  Projections to those parameterStates can be
 used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function’s parameters.</p>
@@ -285,8 +260,8 @@ of an <a class="reference internal" href="LCControlMechanism.html"><span class="
 </div>
 <div class="section" id="execution">
 <span id="function-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Functions are not executable objects, but their <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be called.   This can be done
-directly.  More commonly, however, they are called when their <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is executed.  The parameters
+<p>Functions are executable objects that can be called directly.  More commonly, however, they are called when
+their <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is executed.  The parameters
 of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be modified when it is executed, by assigning a
 <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> to the <strong>params</strong> argument in the
 call to the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
@@ -493,7 +468,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1074.g6fdf1c4',
+            VERSION:'0.4.8.0+1076.g7c67ca0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

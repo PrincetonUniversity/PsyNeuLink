@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterState &mdash; PsyNeuLink 0.4.8.0+1074.g6fdf1c4 documentation</title>
+  <title>ParameterState &mdash; PsyNeuLink 0.4.8.0+1076.g7c67ca0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1074.g6fdf1c4 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1076.g7c67ca0 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="OutputState" href="OutputState.html"/>
         <link rel="prev" title="InputState" href="InputState.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1074
+                0.4.8.0+1076
               </div>
             
           
@@ -195,7 +195,7 @@ an interface for parameter modulation.</p>
 <a class="reference internal" href="#psyneulink.core.components.states.parameterstate.ParameterState.function" title="psyneulink.core.components.states.parameterstate.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. The Projections received by a ParameterState  are listed in its <a class="reference internal" href="#psyneulink.core.components.states.parameterstate.ParameterState.mod_afferents" title="psyneulink.core.components.states.parameterstate.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
 <p>When the Mechanism or Projection to which a ParameterState belongs executes, that component and its function use the
 ParameterState’s value – not the parameter attribute’s value – for any computation. A ParameterState’s corresponding
-attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function_object.gain),
+attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function.gain),
 stores the “base value” of that parameter. The base value of a parameter is the variable of the ParameterState’s
 function. The base value can be viewed or changed at any time through this attribute.</p>
 <p>The ParameterState value is available on the ParameterState itself, as well as the mod_name attribute of the Mechanism
@@ -204,7 +204,7 @@ of the MyTransferMech mechanism.)</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Either of these options for looking up the value of the ParameterState will return the parameter state value that
-was used during the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the
+was used during the most recent execution. This means that if the value of MyTransferMech.function.gain (the
 base value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
 MyTransferMech.mod_gain) will not be computed again until execution #2.</p>
 <p class="last">As a result, if either MyTransferMech.mod_gain or MyTransferMech.parameter_states[“gain”].value is viewed in between
@@ -375,7 +375,7 @@ the Logistic function in the example.</p>
 <span class="gp">... </span>                     <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>        
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">5.0</span>                   
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]</span>             
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">2.0</span>   
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">2.0</span>   
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]</span>             
 </pre></div>
 </div>
@@ -384,10 +384,10 @@ on my_transfer_mechanism, while the slope attribute, which stores the base value
 my_transfer_mechanism, is on my_transfer_mechanism’s function. However, mod_noise and mod_slope are both properties on
 my_transfer_mechanism.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">=</span> <span class="mf">4.0</span>                           
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="mf">1.0</span>           
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="mf">1.0</span>           
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">4.0</span>                   
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]</span>             
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>   
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>   
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]</span>             
 </pre></div>
 </div>
@@ -397,7 +397,7 @@ until the mechanism executes.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">10.0</span><span class="p">])</span>                       
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">4.0</span>                   
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">]</span>             
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>   
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>   
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="mf">1.0</span>               
 </pre></div>
 </div>
@@ -443,7 +443,7 @@ read-only.</p>
 (see <a class="reference internal" href="#parameterstate-value-specification"><span class="std std-ref">above</span></a>.  Parameter values can also be modified by a assigning a value to
 the corresponding attribute, or in groups using the Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.assign_params" title="psyneulink.core.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.
 The parameters of a Component’s function can be modified by assigning a value to the corresponding attribute of the
-Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function_object" title="psyneulink.core.components.component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute (e.g., <code class="docutils literal"><span class="pre">myMechanism.function_object.my_parameter</span></code>)
+Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute (e.g., <code class="docutils literal"><span class="pre">myMechanism.function.my_parameter</span></code>)
 or in <em>FUNCTION_PARAMS</em> dict in a call to the Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.assign_params" title="psyneulink.core.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.
 See <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">ParameterStates and Parameters</span></a> for additional information.</p>
 </div>
@@ -583,7 +583,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1074.g6fdf1c4',
+            VERSION:'0.4.8.0+1076.g7c67ca0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
