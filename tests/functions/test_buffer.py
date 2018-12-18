@@ -66,7 +66,6 @@ class TestBuffer():
     def test_buffer_standalone_noise_function(self):
         np.random.seed(22)
         B = Buffer(history=3, rate = 1.0, noise=NormalDist(standard_deviation=0.1))
-        # B = Buffer(history=3, noise=[10, NormalDist(standard_deviation=0.1), 20])
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
@@ -76,16 +75,16 @@ class TestBuffer():
                                                 [10, 11, 12]])), val)
 
     def test_buffer_standalone_noise_function_in_array(self):
-        np.random.sample(22)
         B = Buffer(history=3, noise=[10, NormalDist(standard_deviation=0.1), 20])
+        np.random.seed(22)
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
         val = B.execute([10,11,12])
-        expected_val = [[24, 5.429365926218402, 46], [17, 8.214682963109201, 29], [10, 11, 12]]
+        expected_val = [[24, 5.0800314416734444, 46], [17, 8.040015720836722, 29], [10, 11, 12]]
         for i in range(len(val)):
             for j in range(len(val[i])):
-                np.allclose(expected_val[i][j], val[i][j], )
+                assert np.allclose(expected_val[i][j], val[i][j])
 
     def test_buffer_initializer_len_3(self):
         B = Buffer(default_variable=[[0.0], [1.0], [2.0]],
