@@ -977,12 +977,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         super(TransferMechanism, self).__init__(
             default_variable=default_variable,
             size=size,
+            input_states=input_states,
+            function=function,
             params=params,
             name=name,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR,
-            input_states=input_states,
-            function=function,
         )
 
     def _parse_arg_initial_value(self, initial_value):

@@ -53,6 +53,14 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     Abstract base class for Functions the result of which depend on their `previous_value
     <StatefulFunction.previous_value>` attribute.
 
+    COMMENT:
+    NARRATIVE HERE THAT EXPLAINS:
+    A) initializers and stateful_attributes
+    B) initializer (note singular) is a prespecified member of initializers
+       that contains the value with which to initiailzer previous_value
+    COMMENT
+
+
     Arguments
     ---------
 
@@ -60,7 +68,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         specifies a template for `variable <StatefulFunction.variable>`.
 
     initializer : float, list or 1d array : default 0.0
-        specifies initial value for `prvevious_value <StatefulFunction.previous_value>`.  If it is a list or array,
+        specifies initial value for `previous_value <StatefulFunction.previous_value>`.  If it is a list or array,
         it must be the same length as `variable <StatefulFunction.variable>` (see `initializer
         <StatefulFunction.initializer>` for details).
 
@@ -395,11 +403,14 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     def _try_execute_param(self, param, var):
 
+        # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D BELOW]
         param_shape = np.array(param).shape
+        if not len(param_shape):
+            param_shape = np.array(var).shape
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
             # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            # FIX: WHY FORCE 2D??
+            # FIX: WHY FORCE 2d??
             param = np.atleast_2d(param)
             for i in range(len(param)):
                 for j in range(len(param[i])):
@@ -411,12 +422,17 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         elif callable(param):
             # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
             new_param = []
+            # FIX: WHY FORCE 2d??
             for row in np.atleast_2d(var):
+            # for row in np.atleast_1d(var):
+            # for row in var:
                 new_row = []
                 for item in row:
                     new_row.append(param())
                 new_param.append(new_row)
             param = new_param
+            if len(np.squeeze(np.array(param))):
+                param = np.array(param).reshape(param_shape)
 
         return param
 

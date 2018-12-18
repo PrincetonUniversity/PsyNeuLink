@@ -163,11 +163,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     previous_value : 1d array
         stores previous value with which `variable <IntegratorFunction.variable>` is integrated.
 
-    initializers : list
-        stores the names of the initialization attributes for each of the stateful attributes of the function. The
-        index i item in initializers provides the initialization value for the index i item in `stateful_attributes
-        <IntegratorFunction.stateful_attributes>`.
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
