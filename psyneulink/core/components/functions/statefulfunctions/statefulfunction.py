@@ -62,18 +62,19 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
     default_variable : number, list or array : default ClassDefaults.variable
         specifies a template for `variable <StatefulFunction.variable>`.
 
-    initializer float, list or 1d array : default 0.0
+    initializer : float, list or 1d array : default 0.0
         specifies initial value for `prvevious_value <StatefulFunction.previous_value>`.  If it is a list or array,
-        it must be the same length as `default_variable <StatefulFunction.default_variable>` (see `initializer
+        it must be the same length as `variable <StatefulFunction.variable>` (see `initializer
         <StatefulFunction.initializer>` for details).
 
     rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <StatefulFunction.default_variable>` (see `rate <StatefulFunction.rate>` for details).
+        specifies value used as a scaling parameter in a subclass-dependent way (see `rate <StatefulFunction.rate>` for
+        details); if it is a list or array, it must be the same length as `variable <StatefulFunction.default_variable>`.
 
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <StatefulFunction.function>`. (see
-        `noise <StatefulFunction.noise>` for details).
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added in each call to `function <StatefulFunction.function>`; if it is a list or
+        array, it must be the same length as `variable <StatefulFunction.default_variable>` (see `noise
+        <StatefulFunction.noise>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -95,12 +96,11 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
     variable : number or array
         current input value.
 
-    initializer : 1d array or list
-        determines initial value assigned to `previous_value <StatefulFunction.previous_value>`.  If initializer is a
-        list or array, it must be the same length as `variable <StatefulFunction.default_variable>`. If initializer
-        is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list or array,
-        initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+    initializer : float or 1d array
+        determines initial value assigned to `previous_value <StatefulFunction.previous_value>`. If `variable
+        <StatefulFunction.variable>` is a list or array, and initializer is a float or has a single element, it is
+        applied to each element of `previous_value <StatefulFunction.previous_value>`. If initializer is a list or
+        array,each element is applied to the corresponding element of `previous_value <Integrator.previous_value>`.
 
     previous_value : 1d array
         last value returned (i.e., for which state is being maintained).
@@ -117,25 +117,26 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
         of the function.
 
     rate : float or 1d array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <StatefulFunction.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <StatefulFunction.variable>`.
+        on each call to `function <StatefulFunction.function>`, applied to `variable <StatefulFunction.variable>`,
+        `previous_value <StatefulFunction.previous_value>`, neither, or both, depending on implementation by
+        subclass.  If it is a float or has a single value, it is applied to all elements of its target(s);  if it has
+        more than one element, each element is applied to the corresponding element of its target(s).
+
+    .. _Stateful_Noise:
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <StatefulFunction.function>`.
+        random value added on each call to `function <StatefulFunction.function>`. If `variable
+        <StatefulFunction.variable>` is a list or array, and noise is a float or function, it is applied
+        for each element of `variable <StatefulFunction.variable>`. If noise is a function, it is executed and applied
+        separately for each element of `variable <StatefulFunction.variable>`.  If noise is a list or array,
+        it is applied elementwise (i.e., in Hadamard form).
 
-        If noise is a list or array, it must be the same length as `variable <StatefulFunction.default_variable>`.
-        If noise is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list
-        or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
-
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+        .. hint::
+            To generate random noise that varies for every execution, a probability distribution function should be
+            used (see `Distribution Functions <DistributionFunction>` for details), that generates a new noise value
+            from its distribution on each execution. If noise is specified as a float, a function with a fixed
+            output, or a list or array of either of these, then noise is simply an offset that remains the same
+            across all executions.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.

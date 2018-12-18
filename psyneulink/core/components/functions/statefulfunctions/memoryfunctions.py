@@ -79,17 +79,18 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         integrated.
 
     rate : float : default None
-        specifies a value applied to each item in the deque on each call.
+        specifies a value applied multiplicatively to each item in the deque on each call to `function
+        <Buffer.function>`.
 
     noise : float or Function : default 0.0
-        specifies a random value added to each item in the deque on each call.
+        specifies a random value added to each item in the deque on each call to `function <Buffer.function>`
+        (see `noise <Buffer.noise>` for details).
 
     history : int : default None
         specifies the maxlen of the deque, and hence `value <Buffer.value>`.
 
     initializer float, list or ndarray : default []
-        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
-        empty list.
+        specifies a starting value for the deque;  if none is specified, the deque is initialized with an empty list.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -112,16 +113,11 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         current input value appended to the end of the deque.
 
     rate : float
-        value added to each item of the deque on each call.
+        multiplicatively applied to each item in the deque on each call to `function <Buffer.function>`.
 
     noise : float or Function
-        random value added to each item of the deque in each call.
-
-        .. note::
-            In order to generate random noise, a probability distribution function should be used (see
-            `DistributionFunction <distributionfunctions>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+        random value added to each item of the deque in each call to `function <Buffer.function>`
+        (see `noise <Stateful_Noise>` for additional details).
 
     history : int
         determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
@@ -131,7 +127,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         the value returned continues to be extended indefinitely.
 
     initializer : float, list or ndarray
-        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
+        value assigned as the first item of the deque when the Function is initialized, or reinitialized
         if the **new_previous_value** argument is not specified in the call to `reinitialize
         <StatefulFUnction.reinitialize>`.
 
@@ -375,7 +371,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         specifies probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
 
     noise : float, list, array, or Function : default 0.0
-        specifies a value applied to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`.
+        specifies a value applied to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`
+        (see `noise <DND.noise> for details).
 
     initializer dict : default {}
         specifies an initial set of entries for `dict <DND.dict>`;  each key must have the same shape as
@@ -424,13 +421,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
 
     noise : float, list, array, or Function
-        value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`.
-
-        .. note::
-            In order to generate random noise, a probability distribution function should be used (see
-            `DistributionFunction <distributionfunctions>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+        value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`
+        (see `noise <Stateful_Noise>` for additional details).
 
     initializer dict : default {}
         initial set of entries for `dict <DND.dict>`.
