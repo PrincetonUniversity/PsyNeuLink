@@ -10,8 +10,6 @@
 # *****************************************  STATEFUL FUNCTION *********************************************************
 '''
 
-Functions that stores its current value that can be retrieved and/or combined with its previous value.
-
 * `StatefulFunction`
 * `IntegratorFunctions`
 * `MemoryFunctions`
@@ -38,7 +36,7 @@ from psyneulink.core.globals.context import ContextFlags
 __all__ = ['StatefulFunction']
 
 
-class StatefulFunction(Function_Base, abc.ABC): #  ---------------------------------------------------------------------
+class StatefulFunction(Function_Base): #  ---------------------------------------------------------------------
     """
     StatefulFunction(           \
         default_variable=None,  \
@@ -52,9 +50,8 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
 
     .. _StatefulFunction:
 
-    Base class for Functions that maintain the state of previous result (in `previous_value
-    <StatefulFunction.previous_value>`) and may use it in processing the current input provided in `variable
-    <StatefulFunction.variable>`.
+    Abstract base class for Functions the result of which depend on their `previous_value
+    <StatefulFunction.previous_value>` attribute.
 
     Arguments
     ---------
@@ -535,6 +532,7 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
+    @abc.abstractmethod
     def function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")
 
