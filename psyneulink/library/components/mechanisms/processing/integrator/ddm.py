@@ -1021,7 +1021,6 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {DriftDiffusionAnalytical,
-                     # NavarroAndFuss,
                      DriftDiffusionIntegratorFunction}
 
         if FUNCTION in target_set:
@@ -1154,19 +1153,6 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.RT_INCORRECT_MEAN_INDEX] = result[5]
                 return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[6]
                 return_value[self.RT_INCORRECT_SKEW_INDEX] = result[7]
-
-            # elif isinstance(self.function, NavarroAndFuss):
-            #     return_value = np.zeros(shape=(10, 1))
-            #     return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
-            #     return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
-            #     return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
-            #     # index 0 holds upper/correct/plus (1 holds lower/error/minus)
-            #     return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][0]
-            #     return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][0]
-            #     return_value[self.RT_CORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][0]
-            #     return_value[self.RT_INCORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
-            #     return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
-            #     return_value[self.RT_INCORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][1]
 
             else:
                 raise DDMError("The function specified ({}) for {} is not a valid function selection for the DDM".
