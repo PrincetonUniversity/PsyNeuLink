@@ -1087,7 +1087,6 @@ class EVCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:
         # self.system._restore_system_state()
-        print("optimal_control_allocation = ", control_allocation)
         return control_allocation
 
     def _update_predicted_input(self, execution_id=None):

@@ -504,12 +504,14 @@ class TestModelBasedOptimizationControlMechanisms:
 
         target_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],
                                                       function=pnl.Linear,
+                                                      variable=1.0,
                                                       intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                       allocation_samples=signalSearchRange)
 
         flanker_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Flanker_Rep)],
                                                       function=pnl.Linear,
-                                                      intensity_cost_function=pnl.Exponential(rate=0.8046),
+                                                       variable=1.0,
+                                                       intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                       allocation_samples=signalSearchRange)
 
         evc_gratton.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
@@ -621,14 +623,12 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for control_signal in evc_gratton.model_based_optimizer.control_signals:
             control_signal.allocation_samples = signalSearchRange
-        print("RUN")
+
         evc_gratton.run(
             num_trials=nTrials,
             inputs=stim_list_dict,
         )
 
-        for i in range(len(evc_gratton.results)):
-            print("\nResult", i, " = ", evc_gratton.results[i], "[Expected ", expected_results_array[i], "]")
         for trial in range(len(evc_gratton.results)):
             assert np.allclose(expected_results_array[trial],
                                # Note: Skip decision variable OutputState

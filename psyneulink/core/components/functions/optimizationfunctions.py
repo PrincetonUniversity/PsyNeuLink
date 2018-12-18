@@ -1457,7 +1457,7 @@ class GridSearch(OptimizationFunction):
                                             "(current_execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
                        self.owner.current_execution_count, self.num_iterations))
-        print("trying ", sample)
+
         return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
