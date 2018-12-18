@@ -431,8 +431,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     new_row.append(param())
                 new_param.append(new_row)
             param = new_param
-            if len(np.squeeze(np.array(param))):
-                param = np.array(param).reshape(param_shape)
+            # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D ABOVE]
+            try:
+                if len(np.squeeze(np.array(param))):
+                    param = np.array(param).reshape(param_shape)
+            except TypeError:
+                pass
 
         return param
 
