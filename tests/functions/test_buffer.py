@@ -58,9 +58,9 @@ class TestBuffer():
         # stores full mechanism value (full deque) on each trial
         expected_full_result = [np.array([[0.], [1.]]),
                                 np.array([[0.], [1.], [2.]]),
-                                np.array([[[1.]], [[2.]], [[3.]]]),   # Shape change
-                                np.array([[[2.]], [[3.]], [[4.]]]),
-                                np.array([[[3.]], [[4.]], [[5.]]])]
+                                np.array([[1.], [2.], [3.]]),   # Shape change
+                                np.array([[2.], [3.], [4.]]),
+                                np.array([[3.], [4.], [5.]])]
         for i in range(5):
             assert np.allclose(expected_full_result[i], full_result[i])
 
