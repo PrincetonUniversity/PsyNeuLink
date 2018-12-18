@@ -160,6 +160,7 @@ from psyneulink.core.compositions.composition import CNodeRole
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.composition import RunError
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import OWNER_VALUE, SOFT_CLAMP
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -612,6 +613,8 @@ class AutodiffComposition(Composition):
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
 
+            self._analyze_graph()  # ADDED by CW 12/17/18: unsure if correct here
+
             self._build_pytorch_representation(execution_id)
 
             autodiff_inputs = inputs["inputs"]
@@ -621,6 +624,7 @@ class AutodiffComposition(Composition):
                 autodiff_epochs = inputs["epochs"]
 
             output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id)
+            self.output_CIM.execute(execution_id=execution_id)
 
             return output
 
