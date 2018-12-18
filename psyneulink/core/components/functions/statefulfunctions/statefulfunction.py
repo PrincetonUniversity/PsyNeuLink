@@ -385,8 +385,9 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
                         noise[i] = noise[i]._execute
-                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
-                        raise FunctionError("The elements of a noise list or array must be floats or functions. "
+                    # if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                    if not np.isscalar(noise[i]) and not callable(noise[i]):
+                        raise FunctionError("The elements of a noise list or array must be scalars or functions. "
                                             "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         # Otherwise, must be a float, int or function
@@ -397,14 +398,18 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
 
     def _try_execute_param(self, param, var):
 
+        param_shape = np.array(param).shape
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
             # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            # FIX: WHY FORCE 2D??
             param = np.atleast_2d(param)
             for i in range(len(param)):
                 for j in range(len(param[i])):
                     if callable(param[i][j]):
                         param[i][j] = param[i][j]()
+            param = param.reshape(param_shape)
+
         # param is one function
         elif callable(param):
             # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
@@ -446,26 +451,27 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
 
     def reinitialize(self, *args, execution_context=None):
         """
-            Effectively begins accumulation over again at the specified value(s).
+            Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
+            to the specified value(s).
 
             If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
-            `stateful_attributes <StatefulFunction.stateful_attributes>` to the value of the corresponding argument. Next, it
-            sets the `value <StatefulFunction.value>` to a list containing each of the argument values.
+            `stateful_attributes <StatefulFunction.stateful_attributes>` to the value of the corresponding argument.
+            Next, it sets the `value <StatefulFunction.value>` to a list containing each of the argument values.
 
             If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
             <StatefulFunction.stateful_attributes>` to the value of the corresponding attribute in `initializers
-            <StatefulFunction.initializers>`. Next, it sets the `value <StatefulFunction.value>` to a list containing the values of
-            each of the attributes in `initializers <StatefulFunction.initializers>`.
+            <StatefulFunction.initializers>`. Next, it sets the `value <StatefulFunction.value>` to a list containing
+            the values of each of the attributes in `initializers <StatefulFunction.initializers>`.
 
             Often, the only attribute in `stateful_attributes <StatefulFunction.stateful_attributes>` is
             `previous_value <StatefulFunction.previous_value>` and the only attribute in `initializers
-            <StatefulFunction.initializers>` is `initializer <StatefulFunction.initializer>`, in which case the reinitialize method
-            sets `previous_value <StatefulFunction.previous_value>` and `value <StatefulFunction.value>` to either the value of the
-            argument (if an argument was passed into reinitialize) or the current value of `initializer
-            <StatefulFunction.initializer>`.
+            <StatefulFunction.initializers>` is `initializer <StatefulFunction.initializer>`, in which case
+            the reinitialize method sets `previous_value <StatefulFunction.previous_value>` and `value
+            <StatefulFunction.value>` to either the value of the argument (if an argument was passed into
+            reinitialize) or the current value of `initializer <StatefulFunction.initializer>`.
 
-            For specific types of StatefulFunction functions, the reinitialize method may carry out other reinitialization
-            steps.
+            For specific types of StatefulFunction functions, the reinitialize method may carry out other
+            reinitialization steps.
 
         """
 
@@ -521,7 +527,9 @@ class StatefulFunction(Function_Base, abc.ABC): #  -----------------------------
         value = []
         for i in range(len(self.stateful_attributes)):
             setattr(self, self.stateful_attributes[i], reinitialization_values[i])
-            getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i], execution_context, override=True)
+            getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i],
+                                                                      execution_context,
+                                                                      override=True)
             value.append(getattr(self, self.stateful_attributes[i]))
 
         self.parameters.value.set(value, execution_context, override=True)

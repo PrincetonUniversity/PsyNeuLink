@@ -50,7 +50,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     """
     Buffer(                     \
         default_variable=None,  \
-        rate=None,              \
+        rate=1.0,               \
         noise=0.0,              \
         history=None,           \
         initializer,            \
@@ -61,15 +61,24 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
     .. _Buffer:
 
-    Appends `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
-    which makes it a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
-    applied to each item in the deque (including the newly added one) on each call, as follows:
-
-    .. math::
-        item * rate + noise
+    Append `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-append
+    to deque of previous inputs).
 
     .. note::
-       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
+       Every appended item must have same shape as the first.
+
+    If specified, `rate <Buffer.rate>` and/or `noise <Buffer.noise>` are applied to items already stored in the
+    array, as follows:
+
+    .. math::
+        stored\\_item * rate + noise
+
+    .. note::
+       Because **rate** and **noise** are applied on every call, their effects accumulative exponentially over calls
+       to `function <Buffer.function>`.
+
+    If the length of the result exceeds `history <Buffer.history>`, delete the first item.
+    Return `previous_value <Buffer.previous_value>` appended with `variable <Buffer.variable>`.
 
     Arguments
     ---------
@@ -78,12 +87,12 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    rate : float : default None
-        specifies a value applied multiplicatively to each item in the deque on each call to `function
-        <Buffer.function>`.
+    rate : float, list or 1d array : default 1.0
+        specifies a value applied multiplicatively to each item already stored in the deque on each call to `function
+        <Buffer.function>`;  must be in interval [0,1]
 
     noise : float or Function : default 0.0
-        specifies a random value added to each item in the deque on each call to `function <Buffer.function>`
+        specifies a random value added to each item already in the deque on each call to `function <Buffer.function>`
         (see `noise <Buffer.noise>` for details).
 
     history : int : default None
@@ -112,8 +121,9 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     variable : number or array
         current input value appended to the end of the deque.
 
-    rate : float
-        multiplicatively applied to each item in the deque on each call to `function <Buffer.function>`.
+    rate : float or 1d array with all elements in interval [0,1]
+        multiplicatively applied to each item already in the deque on call to `function <Buffer.function>`;
+        implements exponential decay of stored items.
 
     noise : float or Function
         random value added to each item of the deque in each call to `function <Buffer.function>`
@@ -150,7 +160,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     componentName = BUFFER_FUNCTION
 
     class Params(StatefulFunction.Params):
-        rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
 
@@ -175,8 +185,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # noise=0.0,
                  # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
                  # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
-                 rate: tc.optional(tc.any(int, float)) = 1.0,
-                 noise: tc.optional(tc.any(int, float, callable)) = 0.0,
+                 rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
+                 noise: tc.optional(tc.any(int, float, list, np.array, callable)) = 0.0,
                  history: tc.optional(int) = None,
                  initializer=[],
                  params: tc.optional(dict) = None,
@@ -259,10 +269,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `previous_value <Buffer.previous_value>` appended with `variable
-        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
-
-        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
 
         Arguments
         ---------
@@ -294,16 +300,18 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
-        previous_value = self.get_previous_value(execution_id)
-        previous_value.append(variable)
+        previous_value = np.array(self.get_previous_value(execution_id))
 
-        # Apply rate and/or noise if they are specified
-        if rate != 1.0:
-            previous_value *= rate
-        if noise:
-            previous_value += noise
+        # Apply rate and/or noise, if they are specified, to all stored items
+        if len(previous_value):
+            if any(np.atleast_1d(rate) != 1.0):
+                previous_value = previous_value * rate
+            if any(np.atleast_1d(noise) != 0.0):
+                previous_value = previous_value + noise
 
         previous_value = deque(previous_value, maxlen=self.history)
+
+        previous_value.append(variable)
 
         self.parameters.previous_value.set(previous_value, execution_id)
         return self.convert_output_type(previous_value)

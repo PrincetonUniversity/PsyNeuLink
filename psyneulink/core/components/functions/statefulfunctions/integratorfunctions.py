@@ -168,12 +168,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         index i item in initializers provides the initialization value for the index i item in `stateful_attributes
         <IntegratorFunction.stateful_attributes>`.
 
-    stateful_attributes : list
-        stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes
-        is initialized by the value of the initialization attribute whose name is stored in index i of `initializers
-        <IntegratorFunction.initializers>`. In most cases, the stateful_attributes, in that order, are the return
-        values of the function.
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
