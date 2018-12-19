@@ -2797,7 +2797,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>`
         (see `offset <OrnsteinUhlenbeckIntegrator.offset>` for details)
 
-    t0 : float : default 0.0
+    starting_point : float : default 0.0
         specifies the starting time of the model and is used to compute `previous_time
         <OrnsteinUhlenbeckIntegrator.previous_time>`
 
@@ -2869,7 +2869,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
         `modulation <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator.function>`.
 
-    t0 : float
+    starting_point : float
         determines the start time of the integration process.
 
     time_step_size : float
@@ -2934,8 +2934,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                     :default value: 1.0
                     :type: float
 
-                t0
-                    see `t0 <OrnsteinUhlenbeckIntegrator.t0>`
+                starting_point
+                    see `starting_point <OrnsteinUhlenbeckIntegrator.starting_point>`
 
                     :default value: 0.0
                     :type: float
@@ -2951,7 +2951,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         decay = Param(1.0, modulable=True)
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(1.0, modulable=True)
-        t0 = 0.0
+        starting_point = 0.0
         previous_time = 0.0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -2967,7 +2967,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                  decay=1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
-                 t0=0.0,
+                 starting_point=0.0,
                  time_step_size=1.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
@@ -2975,7 +2975,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                  prefs: is_pref_set = None):
 
         if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "t0"]
+            self.initializers = ["initializer", "starting_point"]
 
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
@@ -2985,14 +2985,14 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                                                   decay=decay,
                                                   noise=noise,
                                                   offset=offset,
-                                                  t0=t0,
+                                                  starting_point=starting_point,
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
         self.previous_value = initializer
-        self.previous_time = t0
+        self.previous_time = starting_point
 
         super().__init__(
             default_variable=default_variable,
@@ -3002,7 +3002,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.previous_time = self.t0
+        self.previous_time = self.starting_point
         self.has_initializers = True
 
     def _validate_noise(self, noise):
