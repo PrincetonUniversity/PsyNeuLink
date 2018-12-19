@@ -2738,7 +2738,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         decay=1.0,                       \
         noise=0.0,                       \
         offset= 0.0,                     \
-        t0=0.0,                          \
+        starting_point=0.0,              \
         time_step_size=1.0,              \
         initializer=0.0,                 \
         params=None,                     \
