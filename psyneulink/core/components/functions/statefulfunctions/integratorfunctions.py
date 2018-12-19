@@ -80,7 +80,17 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     .. _Integrator:
 
     Base class for Functions that integrate current value of `variable <IntegratorFunction.variable>` with its prior
-    value.
+    value.  For most subclasses, `variable <IntegratorFunction.variable>` can be a single float or an array.  If it is
+    an array, each element is integrated independently of the others.
+
+    .. _IntegratorFunction_Parameter_Spec:
+
+    .. note::
+        If `variable <IntegratorFunction.variable>` is an array, for any parameter that is specified as a float its
+        value is applied uniformly to all elements of the relevant term of the integral (e.g., `variable
+        <IntegratorFunction.variable>` or `previous_value <IntegratorFunction.previous_value>`, depending on the
+        subclass);  for any paramter specified as an array, it must be the same length as `variable
+        <IntegratorFunction.variable>`, and it is applied elementwise (Hadarmard) to the relevant term of the integral.
 
     Arguments
     ---------
@@ -378,7 +388,7 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         the corresponding elements of the integral (i.e., Hadamard multiplication).  Serves as *MULTIPLICATIVE_PARAM*
         for `modulation <ModulatorySignal_Modulation>` of `function <ConstantIntegrator.function>`.
 
-    offset : float, list or 1d array
+    offset : float or 1d array
         constant value added to integral after scale is applied in each call to `function
         <ConstantIntegrator.function>`. If `variable <ConstantIntegrator.variable>` is an array and offset is a
         float, offset is applied to each element of the integral;  if offset is a list or array, each of its elements
@@ -914,7 +924,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         random value added to integral in each call to `function <SimpleIntegrator.function>`
         (see `noise <Integrator_Noise>` for details).
 
-    offset : float, list or 1d array : default 0.0
+    offset : float or 1d array
         constant value added to integral in each call to `function <SimpleIntegrator.function>`. If `variable
         <SimpleIntegrator.variable>` is an array and offset is a float, offset is applied to each element of the
         integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
@@ -1140,7 +1150,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         random value added to integral in each call to `function <AdaptiveIntegrator.function>`
         (see `noise <Integrator_Noise>` for details).
 
-    offset : float, list or 1d array : default 0.0
+    offset : float or 1d array
         constant value added to integral in each call to `function <AdaptiveIntegrator.function>`.
         If `variable <AdaptiveIntegrator.variable>` is a list or array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
@@ -1587,7 +1597,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         for `modulation <ModulatorySignal_Modulation>` of `function <DualAdaptiveIntegrator.function>`.
     COMMENT
 
-    offset : float, list or 1d array : default 0.0
+    offset : float or 1d array
         constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>` after logistics
         of short_term_avg and long_term_avg are combined. If `variable <DualAdaptiveIntegrator.variable>` is an array
         and offset is a float, offset is applied to each element of the integral;  if offset is a list or array, each
@@ -2365,7 +2375,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         rate=1.0,                       \
         noise=0.0,                      \
         offset= 0.0,                    \
-        t0=0.0,                         \
+        starting_point=0.0,             \
         threshold=1.0                   \
         time_step_size=1.0,             \
         initializer,                    \
@@ -2422,9 +2432,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`
         (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
-    t0 : float
-        determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
-        the DDM Mechanism.
+    starting_point : float, list or 1d array:  default 0.0
+        determspecifies ines the starting value for the integration process; if it is a list or array, it must be the
+        same length as `variable <DriftDiffusionIntegrator.variable>` (see `starting_point
+        <DriftDiffusionIntegrator.starting_point>` for details).
 
     threshold : float : default 0.0
         specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
@@ -2484,7 +2495,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         corresponding elements of `variable <DriftDiffusionIntegrator.variable>`.
     COMMENT
 
-    offset : float, list or 1d array : default 0.0
+    offset : float or 1d array
         constant value added to integral in each call to `function <DriftDiffusionIntegrator.function>`
         if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
         If `variable <DriftDiffusionIntegrator.variable>` is an array and offset is a float, offset is applied
@@ -2492,11 +2503,14 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
         `modulation <ModulatorySignal_Modulation>` of `function <DriftDiffusionIntegrator.function>`.
 
-    t0 : float
-        determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
-        the DDM Mechanism.
+    starting_point : float or 1d array
+        determines the start the starting value for the integration process; if it is a list or array, it must be the
+        same length as `variable <DriftDiffusionIntegrator.variable>`. If `variable <DriftDiffusionIntegrator.variable>`
+        is an array and starting_point is a float, starting_point is used for each element of the integral;  if
+        starting_point is a list or array, each of its elements is used as the starting point for each element of the
+        integral.
 
-    threshold : float : default 0.0
+    threshold : float
         determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
         terminate when the result of `function <DriftDiffusionIntegrator.function>` equals or exceeds either the
         positive or negative value of threshold (see hint).
@@ -2563,8 +2577,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                     :default value: 1.0
                     :type: float
 
-                t0
-                    see `t0 <DriftDiffusionIntegrator.t0>`
+                starting_point
+                    see `starting_point <DriftDiffusionIntegrator.starting_point>`
 
                     :default value: 0.0
                     :type: float
@@ -2584,7 +2598,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        t0 = 0.0
+        starting_point = 0.0
         threshold = Param(100.0, modulable=True)
         time_step_size = Param(1.0, modulable=True)
         previous_time = None
@@ -2601,7 +2615,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
-                 t0=0.0,
+                 starting_point=0.0,
                  threshold=100.0,
                  time_step_size=1.0,
                  initializer=None,
@@ -2610,7 +2624,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                  prefs: is_pref_set = None):
 
         if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "t0"]
+            self.initializers = ["initializer", "starting_point"]
 
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
@@ -2618,7 +2632,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
-                                                  t0=t0,
+                                                  starting_point=starting_point,
                                                   initializer=initializer,
                                                   threshold=threshold,
                                                   noise=noise,
@@ -2826,7 +2840,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         <OrnsteinUhlenbeckIntegrator.variable>`.  Serves as *MULTIPLICATIVE_PARAM* for `modulation
         <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator.function>`.
 
-    decay : float, list or 1d array : default 1.0
+    decay : float or 1d array
         applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`; If it is a float or
         has a single element, its value is applied to all the elements of `previous_value
         <OrnsteinUhlenbeckIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
@@ -2848,7 +2862,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         corresponding elements of `variable <OrnsteinUhlenbeckIntegrator.variable>`.
     COMMENT
 
-    offset : float, list or 1d array : default 0.0
+    offset : float or 1d array
         constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`.
         If `variable <OrnsteinUhlenbeckIntegrator.variable>` is an array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
@@ -3158,13 +3172,12 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         random value added to integral in each call to `function <LCAIntegrator.function>`.
         (see `noise <Integrator_Noise>` for details).
 
-    offset : float, list or 1d array : default 0.0
+    offset : float or 1d array
         constant value added to integral in each call to `function <LCAIntegrator.function>`. If `variable
         <LCAIntegrator.variable>` is an array and offset is a float, offset is applied to each element  of the
         integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
         elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for `modulation
         <ModulatorySignal_Modulation>` of `function <LCAIntegrator.function>`.
-
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise

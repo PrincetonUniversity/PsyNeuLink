@@ -213,7 +213,7 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
     ...     function=pnl.DriftDiffusionIntegrator(
     ...         noise=0.5,
     ...         initializer=1.0,
-    ...         t0=2.0,
+    ...         starting_point=2.0,
     ...         rate=3.0
     ...     ),
     ...     name='my_DDM_path_integrator'

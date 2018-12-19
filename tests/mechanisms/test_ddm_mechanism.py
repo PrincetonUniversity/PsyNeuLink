@@ -70,7 +70,7 @@ class TestReinitialize:
 
         # reinitialize only decision variable
         D.function.initializer = 1.0
-        D.function.t0 = 0.0
+        D.function.starting_point = 0.0
         D.reinitialize()
         assert np.allclose(D.function.value[0], 1.0)
         assert np.allclose(D.function.previous_value, 1.0)
@@ -677,7 +677,7 @@ def test_DDM_time():
             noise=0.0,
             rate=-5.0,
             time_step_size=0.2,
-            t0=0.5
+            starting_point=0.5
         )
     )
 
