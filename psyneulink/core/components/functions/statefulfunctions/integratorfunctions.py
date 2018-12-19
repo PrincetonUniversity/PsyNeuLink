@@ -13,9 +13,9 @@
 Functions that integrate current value of input with previous value.
 
 * `IntegratorFunction`
-* `SimpleIntegrator`
 * `ConstantIntegrator`
 * `AccumulatorIntegrator`
+* `SimpleIntegrator`
 * `AdaptiveIntegrator`
 * `DualAdapativeIntegrator`
 * `DriftDiffusionIntegrator`
