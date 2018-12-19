@@ -310,7 +310,7 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         integrated.
 
     rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        specifies the rate of integration;  if it is a list or array, it must be the same length as
         `variable <ConstantIntegrator.variable>` (see `rate <Integrator_Rate>` for details).
 
     noise : float, function, list or 1d array : default 0.0
@@ -320,11 +320,14 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
 
     scale : float, list or 1d array : default 1.0
         specifies a constant value by which integral is multiplied in each call to `function 
-        <ConstantIntegrator.function>`.
+        <ConstantIntegrator.function>`; if it is a list or array, it must be the same length as `variable
+        <ConstantIntegrator.variable>` (see `offset <ConstantIntegrator.offset>` for details).
+
 
     offset : float, list or 1d array : default 0.0
         specifies a constant value added to integral after scale is applied in each call to `function 
-        <ConstantIntegrator.function>`.
+        <ConstantIntegrator.function>`;  if it is a list or array, it must be the same length as
+        `variable <ConstantIntegrator.variable>` (see `offset <ConstantIntegrator.offset>` for details).
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
@@ -363,10 +366,15 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
 
     scale : float, list or 1d array
         constant value by which integral is multiplied in each call to `function <ConstantIntegrator.function>`.
+        If `variable <ConstantIntegrator.variable>` is a list or array and scale is a float, scale is applied
+        to each element of the integral;  if scale is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard multiplication).
 
     offset : float, list or 1d array
-        constant value added to integral after scale is applied in each call to `function 
-        <ConstantIntegrator.function>`.
+        constant value added to integral after scale is applied in each call to `function
+        <ConstantIntegrator.function>`. If `variable <ConstantIntegrator.variable>` is an array and offset is a
+        float, offset is applied to each element of the integral;  if offset is a list or array, each of its elements
+        is applied to each of the corresponding elements of the integral (i.e., Hadamard addition).
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
@@ -845,7 +853,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     offset : float, list or 1d array : default 0.0
         specifies constant value added to integral in each call to `function <SimpleIntegrator.function>`;
-        if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`.
+        if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`
+        (see `offset <SimpleIntegrator.offset>` for details).
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration;  if it is a list or array, it must be the same length as
@@ -883,7 +892,10 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         (see `noise <Integrator_Noise>` for details).
 
     offset : float, list or 1d array : default 0.0
-        constant value added to integral in each call to `function <SimpleIntegrator.function>`.
+        constant value added to integral in each call to `function <SimpleIntegrator.function>`. If `variable
+        <SimpleIntegrator.variable>` is an array and offset is a float, offset is applied to each element of the
+        integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
+        elements of the integral (i.e., Hadamard addition).
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value to which `previous_value
@@ -1034,7 +1046,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of input:
 
     .. math::
-        ((1-rate) * previous_value) + (rate * variable)  + noise
+        ((1-rate) * previous_value) + (rate * variable)  + noise + offset
 
     Arguments
     ---------
@@ -1055,7 +1067,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     offset : float, list or 1d array : default 0.0
         specifies constant value added to integral in each call to `function <AdaptiveIntegrator.function>`;  
-        if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`.
+        if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`
+        (see `offset <AdaptiveIntegrator.offset>` for details).
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
@@ -1097,6 +1110,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     offset : float, list or 1d array : default 0.0
         constant value added to integral in each call to `function <AdaptiveIntegrator.function>`.
+        If `variable <AdaptiveIntegrator.variable>` is a list or array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition).
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
@@ -1348,6 +1364,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         value = self._EWMA_filter(previous_value, rate, variable) + noise
+
         adjusted_value = value + offset
 
         # If this NOT an initialization run, update the old value
@@ -1460,7 +1477,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
     offset : float or 1d array
         constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>` after logistics
-        of short_term_avg and long_term_avg are combined (see `offset <DualAdaptiveIntegrator.offset>` for details.
+        of short_term_avg and long_term_avg are combined; if it is a list or array, it must be the same length as
+        `variable <DualAdaptiveIntegrator.variable>` (see `offset <DualAdaptiveIntegrator.offset>` for details.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1531,8 +1549,14 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
     COMMENT
 
     offset : float, list or 1d array : default 0.0
-        constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>`
-        after logistics of short_term_avg and long_term_avg are combined
+        constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>` after logistics
+        of short_term_avg and long_term_avg are combined. If `variable <DualAdaptiveIntegrator.variable>` is an array
+        and offset is a float, offset is applied to each element of the integral;  if offset is a list or array, each
+        of its elements is applied to each of the corresponding elements of the integral (i.e., Hadamard addition).
+
+        If it is a float or has a single element,
+        its value is applied to all the elements of the integral; if it is an array, each element is applied to the
+        corresponding element of the integral (i.e., Hadamard addition).
 
     previous_short_term_avg : 1d array
         stores previous value with which `variable <DualAdaptiveIntegrator.variable>` is integrated using the
@@ -1683,7 +1707,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 0.5,
+                 # rate: parameter_spec = 0.5,
                  # noise=0.0,
                  initializer=None,
                  initial_short_term_avg=0.0,
@@ -1708,7 +1732,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(initializer=initializer,
-                                                  rate=rate,
+                                                  # rate=rate,
                                                   # noise=noise,
                                                   offset=offset,
                                                   initial_short_term_avg=initial_short_term_avg,
@@ -1873,19 +1897,19 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         operation = self.get_current_function_param(OPERATION, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
 
-        s = 2*rate if rate <= 0.5 else 1
-        l = 2-(2*rate) if rate >= 0.5 else 1
+        # s = 2*rate if rate <= 0.5 else 1
+        # l = 2-(2*rate) if rate >= 0.5 else 1
 
-        short_term_logistic = s * self._logistic(variable=short_term_avg,
-                                                        gain=short_term_gain,
-                                                        bias=short_term_bias,
-                                                        )
+        short_term_logistic = self._logistic(variable=short_term_avg,
+                                             gain=short_term_gain,
+                                             bias=short_term_bias,
+                                             )
         self.parameters.short_term_logistic.set(short_term_logistic, execution_id)
 
-        long_term_logistic = l * self._logistic(variable=long_term_avg,
-                                                gain=long_term_gain,
-                                                bias=long_term_bias,
-                                                )
+        long_term_logistic = self._logistic(variable=long_term_avg,
+                                            gain=long_term_gain,
+                                            bias=long_term_bias,
+                                            )
         self.parameters.long_term_logistic.set(long_term_logistic, execution_id)
 
         if operation == "s*l":
@@ -2161,7 +2185,20 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 # **kwargs
+                 ):
+
+        # # This may be passed (as standard IntegratorFunction arg) but is not used by IA
+        # unsupported_args = {OFFSET}
+        # if any(k in unsupported_args for k in kwargs):
+        #     s = 's' if len(kwargs)>1 else ''
+        #     warnings.warn("{} arg{} not supported in {}".
+        #                   format(repr(", ".join(list(kwargs.keys()))),s, self.__class__.__name__))
+        #     for k in unsupported_args:
+        #         if k in kwargs:
+        #             del kwargs[k]
+
 
         if initializer is None:
             initializer = rest
@@ -2337,7 +2374,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     offset : float, list or 1d array : default 0.0
         specifies constant value added to integral in each call to `function <DriftDiffusionIntegrator.function>`
         if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
-        if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`.
+        if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`
+        (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
@@ -2402,9 +2440,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     offset : float, list or 1d array : default 0.0
         constant value added to integral in each call to `function <DriftDiffusionIntegrator.function>`
         if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
-        If `variable <DriftDiffusionIntegrator.variable>` is a list or array, and offset is a float, it is applied
-        to each element of the integral.  If offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral.
+        If `variable <DriftDiffusionIntegrator.variable>` is an array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition).
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
@@ -2688,7 +2726,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     offset : float, list or 1d array : default 0.0
         specifies a constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`;
-        if it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>`.
+        if it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>`
+        (see `offset <OrnsteinUhlenbeckIntegrator.offset>` for details)
 
     t0 : float : default 0.0
         specifies the starting time of the model and is used to compute `previous_time
@@ -2755,10 +2794,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     COMMENT
 
     offset : float, list or 1d array : default 0.0
-        constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`;
-        if `variable <OrnsteinUhlenbeckIntegrator.variable>` is a list or array, and offset is a float, it is applied
-        to each element of the integral.  If offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral.
+        constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`.
+        If `variable <OrnsteinUhlenbeckIntegrator.variable>` is an array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition).
 
     t0 : float
         determines the start time of the integration process.
@@ -3013,7 +3052,8 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
 
     offset : float, list or 1d array : default 0.0
         specifies a constant value added to integral in each call to `function <LCAIntegrator.function>`;
-        if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`.
+        if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`
+        (see `offset <LCAIntegrator.offset>` for details).
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
@@ -3056,10 +3096,10 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         (see `noise <Integrator_Noise>` for details).
 
     offset : float, list or 1d array : default 0.0
-        constant value added to integral in each call to `function <LCAIntegrator.function>`;
-        if `variable <LCAIntegrator.variable>` is a list or array, and offset is a float, it is applied
-        to each element of the integral.  If offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral.
+        constant value added to integral in each call to `function <LCAIntegrator.function>`. If `variable
+        <LCAIntegrator.variable>` is an array and offset is a float, offset is applied to each element  of the
+        integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
+        elements of the integral (i.e., Hadamard addition).
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
@@ -3673,14 +3713,6 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
                     :default value: 1.0
                     :type: float
 
-                COMMENT:
-                offset
-                    see `offset <FHNIntegrator.offset>`
-
-                    :default value: 0.0
-                    :type: float
-                COMMENT
-
                 previous_time
                     see `previous_time <FHNIntegrator.previous_time>`
 
@@ -3698,14 +3730,6 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
-
-                COMMENT:
-                scale
-                    see `scale <FHNIntegrator.scale>`
-
-                    :default value: 1.0
-                    :type: float
-                COMMENT
 
                 t_0
                     see `t_0 <FHNIntegrator.t_0>`
@@ -3745,8 +3769,6 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
         """
         variable = Param(np.array([1.0]), read_only=True)
-        # scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        # offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(0.05, modulable=True)
         a_v = Param(1.0 / 3, modulable=True)
         b_v = Param(0.0, modulable=True)
@@ -3779,9 +3801,6 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         INCREMENT: None,
     })
 
-    # multiplicative_param = SCALE
-    # additive_param = OFFSET
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -3812,9 +3831,14 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
                  **kwargs):
 
         # These may be passed (as standard IntegratorFunction args) but are not used by FHN
-        for k in {NOISE, INITIALIZER, RATE}:
-            if k in kwargs:
-                del kwargs[k]
+        unsupported_args = {NOISE, INITIALIZER, RATE, OFFSET}
+        if any(k in unsupported_args for k in kwargs):
+            s = 's' if len(kwargs)>1 else ''
+            warnings.warn("{} arg{} not supported in {}".
+                          format(repr(", ".join(list(kwargs.keys()))),s, self.__class__.__name__))
+            for k in unsupported_args:
+                if k in kwargs:
+                    del kwargs[k]
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initial_v", "initial_w", "t_0"]
@@ -3824,8 +3848,6 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
-                                                  # offset=offset,
-                                                  # scale=scale,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,
                                                   time_step_size=time_step_size,
