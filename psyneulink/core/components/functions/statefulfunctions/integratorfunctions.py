@@ -4202,6 +4202,12 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
         """
 
+        # FIX: SHOULDN'T THERE BE A CALL TO get_current_function_param('variable', execution_id) HERE??
+
+        # FIX: TEMPORARY CHECK UNTIL ARRAY IS SUPPORTED
+        if variable is not None and not np.isscalar(variable) and len(variable)>1:
+            raise FunctionError("{} presently supports only a scalar variable".format(self.__class__.__name__))
+
         a_v = self.get_current_function_param("a_v", execution_id)
         b_v = self.get_current_function_param("b_v", execution_id)
         c_v = self.get_current_function_param("c_v", execution_id)
