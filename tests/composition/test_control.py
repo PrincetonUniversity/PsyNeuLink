@@ -366,7 +366,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
                                                                                   features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, reward]},
-                                                                                  feature_function=pnl.AdaptiveIntegratorFunction(rate=0.5),
+                                                                                  feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
                                                                                                                              monitored_output_states=[reward,
                                                                                                                                                       Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -505,7 +505,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                                              pnl.SHADOW_EXTERNAL_INPUTS: [
                                                                                                  target_stim,
                                                                                                  flanker_stim, reward]},
-                                                                                         feature_function=pnl.AdaptiveIntegratorFunction(
+                                                                                         feature_function=pnl.AdaptiveIntegrator(
                                                                                              rate=1.0),
                                                                                          objective_mechanism=objective_mech,
                                                                                          function=pnl.GridSearch(),

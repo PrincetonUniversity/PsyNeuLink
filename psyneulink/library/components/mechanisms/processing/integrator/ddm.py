@@ -113,7 +113,7 @@ table below:
 |                                    |                     **Function**                        |
 |                                    |                      *(type)*                           |
 +                                    +----------------------------+----------------------------+
-|                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegratorFunction` |
+|                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegrator` |
 |                                    |   (`analytic               |   (`path integration)      |
 | **OutputStates:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
 +------------------------------------+----------------------------+----------------------------+
@@ -202,15 +202,15 @@ An example that illustrate all of the parameters is shown below:
 Path Integration
 ^^^^^^^^^^^^^^^^
 
-The Drift Diffusion Model `Function <Function>` that calculates a path integration is `DriftDiffusionIntegratorFunction
-<DriftDiffusionIntegratorFunction>`. The DDM Mechanism uses the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ to
+The Drift Diffusion Model `Function <Function>` that calculates a path integration is `DriftDiffusionIntegrator
+<DriftDiffusionIntegrator>`. The DDM Mechanism uses the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ to
 carry out numerical step-wise integration of the decision process (see `Execution <DDM_Execution>` below).  In this
 mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` are available.
 
 `IntegratorFunction <IntegratorFunction>` Function::
 
     >>> my_DDM_path_integrator = pnl.DDM(
-    ...     function=pnl.DriftDiffusionIntegratorFunction(
+    ...     function=pnl.DriftDiffusionIntegrator(
     ...         noise=0.5,
     ...         initializer=1.0,
     ...         t0=2.0,
@@ -353,7 +353,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import method_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
-    DriftDiffusionIntegratorFunction, IntegratorFunction
+    DriftDiffusionIntegrator, IntegratorFunction
 from psyneulink.core.components.functions.distributionfunctions import THRESHOLD, STARTING_POINT, \
     DriftDiffusionAnalytical
 from psyneulink.core.components.functions.combinationfunctions import Reduce
@@ -713,7 +713,7 @@ class DDM(ProcessingMechanism_Base):
         `DDM_Execution` for additional information.
         COMMENT:
            IS THIS MORE CORRECT FOR ABOVE:
-               if it is `DriftDiffusionIntegratorFunction`, then `numerical step-wise integration <DDM_Integration_Mode>`
+               if it is `DriftDiffusionIntegrator`, then `numerical step-wise integration <DDM_Integration_Mode>`
                is carried out.
         COMMENT
 
@@ -939,15 +939,15 @@ class DDM(ProcessingMechanism_Base):
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
 
         .. note::
-            The plot method is only available when the DriftDiffusionIntegratorFunction function is in use. The plot method does
+            The plot method is only available when the DriftDiffusionIntegrator function is in use. The plot method does
             not represent the results of this DDM mechanism in particular, and does not affect the current state of this
-            mechanism's DriftDiffusionIntegratorFunction. The plot method is only meant to visualize a possible path of a DDM
+            mechanism's DriftDiffusionIntegrator. The plot method is only meant to visualize a possible path of a DDM
             mechanism with these function parameters.
 
         Arguments
         ---------
         stimulus: float: default 1.0
-            specify a stimulus value for the AdaptiveIntegratorFunction function
+            specify a stimulus value for the AdaptiveIntegrator function
 
         threshold: float: default 10.0
             specify the threshold at which the DDM will stop integrating
@@ -1022,7 +1022,7 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {DriftDiffusionAnalytical,
-                     DriftDiffusionIntegratorFunction}
+                     DriftDiffusionIntegrator}
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
@@ -1069,11 +1069,11 @@ class DDM(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _instantiate_plotting_functions(self, context=None):
-        if "DriftDiffusionIntegratorFunction" in str(self.function):
-            self.get_axes_function = DriftDiffusionIntegratorFunction(rate=self.function_params['rate'],
-                                                                      noise=self.function_params['noise']).function
-            self.plot_function = DriftDiffusionIntegratorFunction(rate=self.function_params['rate'],
-                                                                  noise=self.function_params['noise']).function
+        if "DriftDiffusionIntegrator" in str(self.function):
+            self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+                                                              noise=self.function_params['noise']).function
+            self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+                                                          noise=self.function_params['noise']).function
 
     def _execute(
         self,

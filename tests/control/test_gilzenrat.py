@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FHNIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FHNIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.process import Process
@@ -85,7 +85,7 @@ class TestGilzenratMechanisms:
 
         F = IntegratorMechanism(
             name='IntegratorMech-FHNFunction',
-            function=FHNIntegratorFunction(
+            function=FHNIntegrator(
                 initial_v=initial_v,
                 initial_w=initial_w,
                 time_step_size=0.01,

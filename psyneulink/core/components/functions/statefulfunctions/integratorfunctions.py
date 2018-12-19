@@ -13,16 +13,16 @@
 Functions that integrate current value of input with previous value.
 
 * `IntegratorFunction`
-* `SimpleIntegratorFunction`
+* `ConstantIntegrator`
+* `AccumulatorIntegrator`
+* `SimpleIntegrator`
+* `AdaptiveIntegrator`
+* `DualAdaptiveIntegrator`
+* `DriftDiffusionIntegrator`
+* `OrnsteinUhlenbeckIntegrator`
 * `InteractiveActivation`
-* `ConstantIntegratorFunction`
-* `AdaptiveIntegratorFunction`
-* `DriftDiffusionIntegratorFunction`
-* `OrnsteinUhlenbeckIntegratorFunction`
-* `AccumulatorIntegratorFunction`
-* `LCAIntegratorFunction`
-* `FHNIntegratorFunction`
-* `AGTUtilityIntegratorFunction`
+* `LCAIntegrator`
+* `FHNIntegrator`
 
 '''
 
@@ -46,7 +46,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, \
     OFFSET, OPERATION, \
     ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, \
-    TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION, \
+    TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
@@ -54,10 +54,9 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 
-__all__ = ['SimpleIntegratorFunction', 'ConstantIntegratorFunction', 'AdaptiveIntegratorFunction', 'DriftDiffusionIntegratorFunction', 'OrnsteinUhlenbeckIntegratorFunction',
-           'FHNIntegratorFunction',
-           'AccumulatorIntegratorFunction', 'LCAIntegratorFunction', 'AGTUtilityIntegratorFunction', 'InteractiveActivation',
-
+__all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
+           'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator', 'AccumulatorIntegrator', 'LCAIntegrator',
+           'DualAdaptiveIntegrator', 'InteractiveActivation',
            ]
 
 
@@ -90,18 +89,19 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <IntegratorFunction.default_variable>` (see `initializer <IntegratorFunction.initializer>`
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `variable <IntegratorFunction.variable>` (see `initializer <IntegratorFunction.initializer>`
         for details).
 
     rate : float, list or 1d array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <IntegratorFunction.default_variable>` (see `rate <IntegratorFunction.rate>` for details).
+        `variable <IntegratorFunction.variable>` (see `rate <IntegratorFunction.rate>` for details).
 
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <IntegratorFunction.function>`. (see
-        `noise <IntegratorFunction.noise>` for details).
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added to integral in each call to `function <IntegratorFunction.function>`;
+        if it is a list or array, it must be the same length as `variable <IntegratorFunction.variable>`
+        (see `noise <Integrator_Noise>` for additonal details).
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process
@@ -127,49 +127,41 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         current input value some portion of which (determined by `rate <IntegratorFunction.rate>`) that will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
+    .. _Integrator_Rate:
+
     rate : float or 1d array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <IntegratorFunction.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <IntegratorFunction.variable>`.
+        determines the rate of integration. If it is a float or has a single value, it is applied to all elements
+        of `variable <IntegratorFunction.variable>` and/or `previous_value <IntegrationFunction.previous_value>`
+        (depending on the subclass);  if it has more than one element, each element is applied to the corresponding
+        element of `variable <IntegratorFunction.variable>` and/or `previous_value <IntegratorFunction.previous_value>`.
 
-    noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <IntegratorFunction.function>`.
+    .. _Integrator_Noise:
 
-        If noise is a list or array, it must be the same length as `variable <IntegratorFunction.default_variable>`. If noise is
-        specified as a single float or function, while `variable <IntegratorFunction.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+    noise : float, Function or 1d array
+        random value added to integral in each call to `function <Integrator.function>`. If `variable
+        <Integrator.variable>` is a list or array, and noise is a float or function, it is applied
+        for each element of `variable <Integrator.variable>`. If noise is a function, it is executed and applied
+        separately for each element of `variable <Integrator.variable>`.  If noise is a list or array, each
+        element is applied to each element of the integral corresponding that of `variable <Integrator.variable>`.
 
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+        .. hint::
+            To generate random noise that varies for every execution, a probability distribution function should be
+            used (see `Distribution Functions <DistributionFunction>` for details), that generates a new noise value
+            from its distribution on each execution. If noise is specified as a float, a function with a fixed
+            output, or a list or array of either of these, then noise is simply an offset that remains the same
+            across all executions.
 
-    initializer : 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <IntegratorFunction.previous_value>` is set.
+    .. _Integrator_Initializer:
 
-        If initializer is a list or array, it must be the same length as `variable <IntegratorFunction.default_variable>`. If
-        initializer is specified as a single float or function, while `variable <IntegratorFunction.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <IntegratorFunction.previous_value>` is set.  If `variable <Integrator.variable>` is a list or array, and
+        initializer is a float or has a single element, it is applied to each element of `previous_value
+        <Integrator.previous_value>`. If initializer is a list or array, each element is applied to the corresponding
+        element of `previous_value <Integrator.previous_value>`.
 
     previous_value : 1d array
         stores previous value with which `variable <IntegratorFunction.variable>` is integrated.
-
-    initializers : list
-        stores the names of the initialization attributes for each of the stateful attributes of the function. The
-        index i item in initializers provides the initialization value for the index i item in `stateful_attributes
-        <IntegratorFunction.stateful_attributes>`.
-
-    stateful_attributes : list
-        stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes is
-        initialized by the value of the initialization attribute whose name is stored in index i of `initializers
-        <IntegratorFunction.initializers>`. In most cases, the stateful_attributes, in that order, are the return values of the
-        function.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -199,14 +191,14 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: float
 
                 noise
-                    see `noise <IntegratorFunction.rest>`
+                    see `noise <IntegratorFunction.noise>`
 
                     :default value: 0.0
                     :type: float
 
         """
-        noise = Param(0.0, modulable=True)
         rate = Param(1.0, modulable=True)
+        noise = Param(0.0, modulable=True)
         previous_value = np.array([0])
         initializer = np.array([0])
 
@@ -224,11 +216,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  context=None):
 
       # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(# rate=rate,
-                                                  # initializer=initializer,
-                                                  # previous_value=previous_value,
-                                                  # noise=noise,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(params=params)
 
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         # params[INITIALIZER] = initializer
@@ -243,6 +231,15 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                          context=context)
 
         self.has_initializers = True
+
+    def _EWMA_filter(self, previous_value, rate, variable):
+        '''Return `exponentially weighted moving average (EWMA)
+        <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of a variable'''
+        return (1 - rate) * previous_value + rate * variable
+
+    def _logistic(self, variable, gain, bias):
+        '''Return logistic transform of variable'''
+        return 1 / (1 + np.exp(-(gain * variable) + bias))
 
     def _euler(self, previous_value, previous_time, slope, time_step_size):
 
@@ -280,25 +277,35 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
 
-class SimpleIntegratorFunction(IntegratorFunction):  # -----------------------------------------------------------------
+
+class ConstantIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
     """
-    SimpleIntegratorFunction(                 \
-        default_variable=None,  \
-        rate=1.0,               \
-        noise=0.0,              \
-        initializer,            \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
+    ConstantIntegrator(        \
+        default_variable=None, \
+        rate=1.0,              \
+        noise=0.0,             \
+        scale=1.0,             \
+        offset=0.0,            \
+        initializer,           \
+        params=None,           \
+        owner=None,            \
+        prefs=None,            \
         )
 
-    .. _SimpleIntegrator:
+    .. _ConstantIntegrator:
 
-    Integrate current value of `variable <SimpleIntegratorFunction.variable>` with its prior value:
+    `function <ConstantIntegrator.function>` returns:
 
-    `previous_value <SimpleIntegratorFunction.previous_value>` + \
-    `rate <SimpleIntegratorFunction.rate>` *`variable <variable.SimpleIntegratorFunction.variable>` + \
-    `noise <SimpleIntegratorFunction.noise>`;
+    .. math::
+        scale \\cdot (previous\\_value + rate  + noise) + offset
+
+    (ignores `variable <IntegratorFunction.variable>`).
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `offset <ConstantIntegrator.offset>`
+    | *ADDITIVE_PARAM:* `rate <ConstantIntegrator.rate>`
+    |
 
     Arguments
     ---------
@@ -308,16 +315,28 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
         integrated.
 
     rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <SimpleIntegratorFunction.default_variable>` (see `rate <SimpleIntegratorFunction.rate>` for details).
+        specifies the rate of integration;  if it is a list or array, it must be the same length as
+        `variable <ConstantIntegrator.variable>` (see `rate <ConstantIntegrator.rate>` for details).
 
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <SimpleIntegratorFunction.function>`. (see
-        `noise <SimpleIntegratorFunction.noise>` for details).
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value to be added to integral in each call to `function <ConstantIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <ConstantIntegrator.variable>`
+        (see `noise <Integrator_Noise>` for additonal details).
 
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <SimpleIntegratorFunction.default_variable>` (see `initializer <SimpleIntegratorFunction.initializer>`
+    scale : float, list or 1d array : default 1.0
+        specifies a constant value by which integral is multiplied in each call to `function 
+        <ConstantIntegrator.function>`; if it is a list or array, it must be the same length as `variable
+        <ConstantIntegrator.variable>` (see `offset <ConstantIntegrator.offset>` for details).
+
+
+    offset : float, list or 1d array : default 0.0
+        specifies a constant value added to integral after scale is applied in each call to `function 
+        <ConstantIntegrator.function>`;  if it is a list or array, it must be the same length as
+        `variable <ConstantIntegrator.variable>` (see `offset <ConstantIntegrator.offset>` for details).
+
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <ConstantIntegrator.variable>` (see `initializer <Integrator_Initializer>`
         for details).
 
     params : Dict[param keyword: param value] : default None
@@ -338,38 +357,576 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
     ----------
 
     variable : number or array
-        current input value some portion of which (determined by `rate <SimpleIntegratorFunction.rate>`) will be
+        **Ignored** by the ConstantIntegrator function. Use `LCAIntegrator` or `AdaptiveIntegrator` for integrator
+         functions that depend on both a prior value and a new value (variable).
+
+    rate : float or 1d array
+        determines the rate of integration. If it is a float or has a single element, its value is applied to all
+        the elements of `previous_value <ConstantIntegrator.previous_value>`; if it is an array, each
+        element is applied to the corresponding element of `previous_value <ConstantIntegrator.previous_value>`.
+        Serves as *ADDITIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <ConstantIntegrator.function>`.
+
+    noise : float, Function or 1d array
+        random value added to integral in each call to `function <ConstantIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
+
+    scale : float, list or 1d array
+        constant value by which integral is multiplied in each call to `function <ConstantIntegrator.function>`.
+        If `variable <ConstantIntegrator.variable>` is a list or array and scale is a float, scale is applied
+        to each element of the integral;  if scale is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard multiplication).  Serves as *MULTIPLICATIVE_PARAM*
+        for `modulation <ModulatorySignal_Modulation>` of `function <ConstantIntegrator.function>`.
+
+    offset : float, list or 1d array
+        constant value added to integral after scale is applied in each call to `function
+        <ConstantIntegrator.function>`. If `variable <ConstantIntegrator.variable>` is an array and offset is a
+        float, offset is applied to each element of the integral;  if offset is a list or array, each of its elements
+        is applied to each of the corresponding elements of the integral (i.e., Hadamard addition).
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <ConstantIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+
+    previous_value : 1d array : default ClassDefaults.variable
+        stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
+        added.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = CONSTANT_INTEGRATOR_FUNCTION
+
+    class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                noise
+                    see `noise <ConstantIntegrator.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                offset
+                    see `offset <ConstantIntegrator.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <ConstantIntegrator.rate>`
+
+                    :default value: 0.0
+                    :type: float
+
+                scale
+                    see `scale <ConstantIntegrator.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+
+
+        """
+        rate = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        noise = Param(0.0, modulable=True)
+        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True)
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        RATE: None,
+        NOISE: None,
+        SCALE: None,
+        OFFSET: None,
+    })
+
+    multiplicative_param = SCALE
+    additive_param = RATE
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 # rate: parameter_spec = 1.0,
+                 rate=0.0,
+                 noise=0.0,
+                 scale=1.0,
+                 offset=0.0,
+                 initializer=None,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  noise=noise,
+                                                  scale=scale,
+                                                  offset=offset,
+                                                  initializer=initializer,
+                                                  params=params)
+
+        # Assign here as default, for use in initialization of function
+        self.previous_value = initializer
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        # Reassign to initializer in case default value was overridden
+
+        self.has_initializers = True
+
+    def _validate_rate(self, rate):
+        # unlike other Integrators, variable does not need to match rate
+
+        if isinstance(rate, list):
+            rate = np.asarray(rate)
+
+        rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
+        if isinstance(rate, np.ndarray):
+            # kmantel: current test_gating test depends on 2d rate
+            #   this should be looked at but for now this restriction is removed
+            # if rate.ndim > 1:
+            #     raise FunctionError(rate_type_msg.format(self.name, rate))
+            pass
+        elif not isinstance(rate, numbers.Number):
+            raise FunctionError(rate_type_msg.format(self.name, rate))
+
+        if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+            self.instance_defaults.variable = np.zeros_like(np.array(rate))
+            self._instantiate_value()
+            self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+
+        Arguments
+        ---------
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        rate = np.array(self.rate).astype(float)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+        scale = self.get_current_function_param(SCALE, execution_id)
+        noise = self._try_execute_param(self.noise, variable)
+
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
+
+        value = previous_value + rate + noise
+
+        adjusted_value = value * scale + offset
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(adjusted_value, execution_id)
+        return self.convert_output_type(adjusted_value)
+
+
+class AccumulatorIntegrator(IntegratorFunction):  # --------------------------------------------------------------------
+    """
+    AccumulatorIntegrator(              \
+        default_variable=None,          \
+        rate=1.0,                       \
+        increment=0.0,                  \
+        noise=0.0,                      \
+        initializer,                    \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
+        )
+
+    .. _AccumulatorIntegrator:
+
+    `function <AccumulatorIntegrator.function>` returns:
+
+    .. math::
+        previous_value * rate + increment  + noise
+
+    (ignores `variable <IntegratorFunction.variable>`).
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AccumulatorIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `increment <AccumulatorIntegrator.increment>`
+    |
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d array : default 1.0
+        specifies the rate of decay;  if it is a list or array, it must be the same length as `variable
+        <AccumulatorIntegrator.variable>` (see `rate <AccumulatorIntegrator.rate>` for additional details.
+
+    increment : float, list or 1d array : default 0.0
+        specifies an amount to be added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>` (see `increment <AccumulatorIntegrator.increment>` for details).
+        If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.variable>`
+        (see `increment <AccumulatorIntegrator.increment>` for details).
+
+    noise : float, Function, list or 1d array : default 0.0
+        specifies random value added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>`; if it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.variable>` (see `noise <Integrator_Noise>` for additonal details).
+
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <AccumulatorIntegrator.variable>` (see `initializer
+        <AccumulatorIntegrator.initializer>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        **Ignored** by the AccumulatorIntegrator function. Use `LCAIntegrator` or `AdaptiveIntegrator` for integrator
+         functions that depend on both a prior value and a new value (variable).
+
+    rate : float or 1d array
+        determines the rate of exponential decay of `previous_value <AccumulatorIntegrator.previous_value>` in each
+        call to `function <AccumulatorIntegrator.function>`. If it is a float or has a single element, its value is
+        applied to all the elements of `previous_value <AccumulatorIntegrator.previous_value>`; if it is an array, each
+        element is applied to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`.
+        Serves as *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <AccumulatorIntegrator.function>`.
+
+    increment : float, function, or 1d array
+        determines the amount added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>`.  If it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.variable>` and each element is added to the corresponding element of
+        `previous_value <AccumulatorIntegrator.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
+        scalar or has a single element, its value is added to all the elements of `previous_value
+        <AccumulatorIntegrator.previous_value>`.  Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <AccumulatorIntegrator.function>`.
+
+    noise : float, Function or 1d array
+        random value added in each call to `function <AccumulatorIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <AccumulatorIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+
+    previous_value : 1d array : default ClassDefaults.variable
+        stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
+        will be added.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
+
+    class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                increment
+                    see `increment <AccumulatorIntegrator.increment>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <AccumulatorIntegrator.rate>`
+
+                    :default value: None
+                    :type:
+
+
+        """
+        rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        increment = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        RATE: None,
+        INCREMENT: None,
+        NOISE: None,
+    })
+
+    # multiplicative param does not make sense in this case
+    multiplicative_param = RATE
+    additive_param = INCREMENT
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate=None,
+                 increment=None,
+                 noise=0.0,
+                 initializer=None,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  increment=increment,
+                                                  noise=noise,
+                                                  initializer=initializer,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def _accumulator_check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
+        """validate params and assign any runtime params.
+
+        Called by AccumulatorIntegrator to validate params
+        Validation can be suppressed by turning parameter_validation attribute off
+        target_set is a params dictionary to which params should be assigned;
+           otherwise, they are assigned to paramsCurrent;
+
+        Does the following:
+        - assign runtime params to paramsCurrent
+        - validate params if PARAM_VALIDATION is set
+
+        :param params: (dict) - params to validate
+        :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
+        :return:
+        """
+
+        # PARAMS ------------------------------------------------------------
+
+        # If target_set is not specified, use paramsCurrent
+        if target_set is None:
+            target_set = self.paramsCurrent
+
+        # # MODIFIED 11/27/16 OLD:
+        # # If parameter_validation is set, the function was called with params,
+        # #   and they have changed, then validate requested values and assign to target_set
+        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
+        #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
+        #     self._validate_params(request_set=params, target_set=target_set, context=context)
+
+        # If params have been passed, treat as runtime params and assign to paramsCurrent
+        #   (relabel params as runtime_params for clarity)
+        if execution_id in self._runtime_params_reset:
+            for key in self._runtime_params_reset[execution_id]:
+                self._set_parameter_value(key, self._runtime_params_reset[execution_id][key], execution_id)
+        self._runtime_params_reset[execution_id] = {}
+
+        runtime_params = params
+        if runtime_params:
+            for param_name in runtime_params:
+                if hasattr(self, param_name):
+                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
+                        continue
+                    if execution_id not in self._runtime_params_reset:
+                        self._runtime_params_reset[execution_id] = {}
+                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name).get(execution_id)
+                    self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+
+        Arguments
+        ---------
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+        self._accumulator_check_args(variable, execution_id=execution_id, params=params, context=context)
+
+        rate = self.get_current_function_param(RATE, execution_id)
+        increment = self.get_current_function_param(INCREMENT, execution_id)
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+
+        if rate is None:
+            rate = 1.0
+
+        if increment is None:
+            increment = 0.0
+
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
+
+        value = previous_value * rate + noise + increment
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(value, execution_id, override=True)
+
+        return self.convert_output_type(value)
+
+
+class SimpleIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------
+    """
+    SimpleIntegrator(           \
+        default_variable=None,  \
+        rate=1.0,               \
+        noise=0.0,              \
+        offset=0.0,             \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _SimpleIntegrator:
+
+    `function <SimpleIntegrator.function>` returns:
+
+    .. math::
+
+        previous_value + rate * variable + noise + offset
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <SimpleIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <SimpleIntegrator.offset>`
+    |
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d array : default 1.0
+        specifies the rate of integration;  if it is a list or array, it must be the same length as
+        `variable <SimpleIntegrator.variable>` (see `rate <SimpleIntegrator.rate>` for details).
+
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added to integral in each call to `function <SimpleIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`
+        (see `noise <Integrator_Noise>` for details).
+
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <SimpleIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`
+        (see `offset <SimpleIntegrator.offset>` for details).
+
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration;  if it is a list or array, it must be the same length as
+        `default_variable <SimpleIntegrator.variable>` (see `initializer <Integrator_Initializer>`
+        for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value some portion of which (determined by `rate <SimpleIntegrator.rate>`) will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d array
-        determines the rate of integration based on current and prior values. If it has a single element, it applies
-        to all elements of `variable <SimpleIntegratorFunction.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <SimpleIntegratorFunction.variable>`.
+        determines the rate of integration. If it is a float or has a single element, it is applied
+        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
+        is applied to the corresponding element of `variable <SimpleIntegrator.variable>`.  Serves as
+        *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function <SimpleIntegrator.function>`.
 
-    noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <SimpleIntegratorFunction.function>`.
+    noise : float, Function or 1d array
+        random value added to integral in each call to `function <SimpleIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
 
-        If noise is a list or array, it must be the same length as `variable <SimpleIntegratorFunction.default_variable>`.
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <SimpleIntegrator.function>`. If `variable
+        <SimpleIntegrator.variable>` is an array and offset is a float, offset is applied to each element of the
+        integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
+        elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <SimpleIntegrator.function>`.
 
-        If noise is specified as a single float or function, while `variable <SimpleIntegratorFunction.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <SimpleIntegratorFunction.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <SimpleIntegratorFunction.default_variable>`.
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value to which `previous_value
+        <SimpleIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
     previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <SimpleIntegratorFunction.variable>` is integrated.
+        stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -388,8 +945,9 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
+        RATE: None,
         NOISE: None,
-        RATE: None
+        OFFSET: None
     })
 
     multiplicative_param = RATE
@@ -401,13 +959,13 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
             ----------
 
                 offset
-                    see `offset <SimpleIntegratorFunction.offset>`
+                    see `offset <SimpleIntegrator.offset>`
 
                     :default value: 0.0
                     :type: float
 
                 rate
-                    see `rate <SimpleIntegratorFunction.rate>`
+                    see `rate <SimpleIntegrator.rate>`
 
                     :default value: 1.0
                     :type: float
@@ -429,9 +987,9 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
                                                   noise=noise,
                                                   offset=offset,
+                                                  initializer=initializer,
                                                   params=params)
         super().__init__(
             default_variable=default_variable,
@@ -449,11 +1007,6 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
                  params=None,
                  context=None):
         """
-        Return: `variable <Linear.slope>` combined with `previous_value <SimpleIntegratorFunction.previous_value>`
-        according to:
-        `previous_value <SimpleIntegratorFunction.previous_value>` + `rate <SimpleIntegratorFunction.rate>` *`variable
-        <variable.SimpleIntegratorFunction.variable>` + `noise <SimpleIntegratorFunction.noise>`;
-
         Arguments
         ---------
 
@@ -498,7 +1051,947 @@ class SimpleIntegratorFunction(IntegratorFunction):  # -------------------------
         return self.convert_output_type(adjusted_value)
 
 
-class InteractiveActivation(IntegratorFunction):  # ----------------------------------------------------------------------------
+class AdaptiveIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
+    """
+    AdaptiveIntegrator(         \
+        default_variable=None,  \
+        rate=1.0,               \
+        noise=0.0,              \
+        offset=0.0,             \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _AdaptiveIntegrator:
+
+    `function <AdapativeIntegrator.function>` returns `exponentially weighted moving average (EWMA)
+    <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of input:
+
+    .. math::
+        ((1-rate) * previous_value) + (rate * variable)  + noise + offset
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d array : default 1.0
+        specifies the smoothing factor of the `EWMA <AdaptiveIntegrator>`.  If it is a list or array, it must be the
+        same length as `variable <AdaptiveIntegrator.variable>` (see `rate <AdaptiveIntegrator.rate>` for
+        details).
+
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added to integral in each call to `function <AdaptiveIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`
+        (see `noise <Integrator_Noise>` for details).
+
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <AdaptiveIntegrator.function>`;  
+        if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`
+        (see `offset <AdaptiveIntegrator.offset>` for details).
+
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <AdaptiveIntegrator.variable>` (see `initializer <Integrator_Initializer>`
+        for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value some portion of which (determined by `rate <AdaptiveIntegrator.rate>`) will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    rate : float or 1d array
+        determines the smoothing factor of the `EWMA <AdaptiveIntegrator>`. All rate elements must be between 0 and 1
+        (rate = 0 --> no change, `variable <AdaptiveAdaptiveIntegrator.variable>` is ignored; rate = 1 -->
+        `previous_value <AdaptiveIntegrator.previous_value>` is ignored).  If rate is a float or has a single element,
+        its value is applied to all elements of `variable <AdaptiveAdaptiveIntegrator.variable>` and `previous_value
+        <AdaptiveIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding element
+        of `variable <AdaptiveIntegrator.variable>` and `previous_value <AdaptiveIntegrator.previous_value>`).
+        Serves as *MULTIPLICATIVE_PARAM*  for `modulation <ModulatorySignal_Modulation>` of `function
+        <AdaptiveIntegrator.function>`.
+
+    noise : float, Function or 1d array
+        random value added to integral in each call to `function <AdaptiveIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
+
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <AdaptiveIntegrator.function>`.
+        If `variable <AdaptiveIntegrator.variable>` is a list or array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <AdaptiveIntegrator.function>`.
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <AdaptiveIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+
+    previous_value : 1d array : default ClassDefaults.variable
+        stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = ADAPTIVE_INTEGRATOR_FUNCTION
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        RATE: None,
+        NOISE: None,
+        OFFSET: None
+    })
+
+    class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                offset
+                    see `offset <AdaptiveIntegrator.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <AdaptiveIntegrator.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate=1.0,
+                 noise=0.0,
+                 offset=0.0,
+                 initializer=None,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  noise=noise,
+                                                  offset=offset,
+                                                  initializer=initializer,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign ClassDefaults.variable accordingly
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
+                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function
+                    #       parameter (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]])
+                    #       before the object itself, thus does not see the array specification for the input.
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the {} parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".
+                                    format(len(rate), repr(RATE), rate, self.name,
+                                    np.array(self.instance_defaults.variable).size, self.instance_defaults.variable))
+                    else:
+                        raise FunctionError(
+                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                            "must match the length ({}) of the default input ({})".format(
+                                len(rate),
+                                rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                self.instance_defaults.variable,
+                            )
+                        )
+                        # OLD:
+                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator
+                        # function to have a rate parameter of type ndarray/list
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+
+        # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
+        if RATE in target_set:
+            # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
+            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
+                             "must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+
+            if isinstance(rate, np.ndarray) and rate.ndim > 0:
+                for r in rate:
+                    if r < 0.0 or r > 1.0:
+                        raise FunctionError(rate_value_msg.format(rate, self.name))
+            else:
+                if rate < 0.0 or rate > 1.0:
+                    raise FunctionError(rate_value_msg.format(rate, self.name))
+
+        if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
+            self._validate_noise(target_set[NOISE])
+            # if INITIALIZER in target_set:
+            #     self._validate_initializer(target_set[INITIALIZER])
+
+    def _validate_rate(self, rate):
+        super()._validate_rate(rate)
+
+        if isinstance(rate, list):
+            rate = np.asarray(rate)
+
+        rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
+                         "must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+
+        if not all_within_range(rate, 0, 1):
+            raise FunctionError(rate_value_msg.format(rate, self.name))
+
+    def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
+        offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
+
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
+
+        if isinstance(rate_p.type.pointee, pnlvm.ir.ArrayType) and rate_p.type.pointee.count > 1:
+            rate_p = builder.gep(rate_p, [ctx.int32_ty(0), index])
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
+
+        if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
+            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
+        noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
+
+        # Get the only context member -- previous value
+        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
+        vi_val = builder.load(vi_ptr)
+
+        rev_rate = builder.fsub(ctx.float_ty(1), rate)
+        old_val = builder.fmul(prev_val, rev_rate)
+        new_val = builder.fmul(vi_val, rate)
+
+        ret = builder.fadd(old_val, new_val)
+        ret = builder.fadd(ret, noise)
+        res = builder.fadd(ret, offset)
+
+        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(res, vo_ptr)
+        builder.store(res, prev_ptr)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        # Get rid of 2d array.
+        # When part of a Mechanism the input, and output are 2d arrays.
+        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+        arg_out = ctx.unwrap_2d_array(builder, arg_out)
+
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
+        inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
+            inner(*args)
+
+        return builder
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+
+        Arguments
+        ---------
+
+        variable : number, list or array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
+
+        value = self._EWMA_filter(previous_value, rate, variable) + noise
+
+        adjusted_value = value + offset
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(adjusted_value, execution_id)
+
+        return self.convert_output_type(adjusted_value)
+
+
+class DualAdaptiveIntegrator(IntegratorFunction):  # ------------------------------------------------------------------
+    """
+    DualAdaptiveIntegrator(         \
+        default_variable=None,       \
+        initializer=None,            \
+        initial_short_term_avg=0.0,  \
+        initial_long_term_avg=0.0,   \
+        short_term_gain=1.0,         \
+        long_term_gain=1.0,          \
+        short_term_bias=0.0,         \
+        long_term_bias=0.0,          \
+        short_term_rate=1.0,         \
+        long_term_rate=1.0,          \
+        operation='s*l',             \
+        offset=0.0,                  \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None,                  \
+        )
+
+    .. _DualAdaptiveIntegrator:
+
+    Combines two `exponentially weighted moving averages (EWMA)
+    <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of its input, each with a different
+    rate, as implemented in `Aston-Jones & Cohen (2005)
+    <https://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ to integrate utility over two
+    time scales.
+
+    `function <DualAdaptiveIntegrator.function>` computes the EWMA of `variable <DualAdaptiveIntegrator.variable>`
+    using two integration rates (`short_term_rate <DualAdaptiveIntegrator.short_term_rate>` and `long_term_rate
+    <DualAdaptiveIntegrator.long_term_rate>), transforms each using a logistic function, and then combines them,
+    as follows:
+
+    * **short time scale integral**:
+
+      .. math::
+         short\\_term\\_avg = short\\_term\\_rate \\cdot variable + (1 - short\\_term\\_rate) \\cdot
+         previous\\_short\\_term\\_avg
+
+    * **long time scale integral**:
+
+      .. math::
+         long\\_term\\_avg = long\\_term\\_rate \\cdot variable + (1 - long\\_term\\_rate) \\cdot
+         previous\\_long\\_term\\_avg
+
+    .. _DualAdaptive_Combined:
+
+    * **combined integral**:
+
+      .. math::
+         value = operation(1-\\frac{1}{1+e^{short\\_term\\_gain\\ \\cdot\\ short\\_term\\_avg\\ +\\
+         short\\_term\\_bias}},\\
+         \\frac{1}{1+e^{long\\_term\\_gain\\ \\cdot\\ long\\_term\\_avg + long\\_term\\_bias}})\\ +\\ offset
+
+      where *operation* is the arithmetic `operation <DualAdaptiveIntegrator.operation>` used to combine the terms.
+
+
+    *Modulatory Parameters:*
+
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
+    Arguments
+    ---------
+
+    COMMENT:
+    noise : float, function, list or 1d array : default 0.0
+        TBI?
+    COMMENT
+
+    initial_short_term_avg : float : default 0.0
+        specifies starting value for integration of short_term_avg
+
+    initial_long_term_avg : float : default 0.0
+        specifies starting value for integration of long_term_avg
+
+    short_term_gain : float : default 1.0
+        specifies gain for logistic function applied to short_term_avg
+
+    long_term_gain : float : default 1.0
+        specifies gain for logistic function applied to long_term_avg
+
+    short_term_bias : float : default 0.0
+        specifies bias for logistic function applied to short_term_avg
+
+    long_term_bias : float : default 0.0
+        specifies bias for logistic function applied to long_term_avg
+
+    short_term_rate : float : default 1.0
+        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to short_term_avg
+
+    long_term_rate : float : default 1.0
+        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
+
+    COMMENT:
+    rate : float or 1d array
+        determines weight assigned to `short_term_logistic and long_term_logistic <DualAdaptive_Combined>` when combined
+        by `operation <DualAdaptiveIntegrator.operation>` (see `rate <DualAdaptiveIntegrator.rate>` for details.
+    COMMENT
+
+    operation : s*l or s+l or s-l or l-s : default 's*l'
+        specifies the arithmetic operation used to combine the logistics of the short_term_avg and long_term_avg
+        (see `operation <DualAdaptiveIntegrator.operation>` for details).
+
+    offset : float or 1d array
+        constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>` after logistics
+        of short_term_avg and long_term_avg are combined; if it is a list or array, it must be the same length as
+        `variable <DualAdaptiveIntegrator.variable>` (see `offset <DualAdaptiveIntegrator.offset>` for details.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value used to compute both the short term and long term `EWMA <DualAdaptiveIntegrator>` averages.
+
+    COMMENT:
+    noise : float, Function or 1d array : default 0.0
+        TBI?
+    COMMENT
+
+    initial_short_term_avg : float
+        determines starting value for integration of short_term_avg
+
+    initial_long_term_avg : float
+        determines starting value for integration of long_term_avg
+
+    short_term_gain : float
+        determines gain for logistic function applied to short_term_avg
+
+    long_term_gain : float
+        determines gain for logistic function applied to long_term_avg
+
+    short_term_bias : float
+        determines bias for logistic function applied to short_term_avg
+
+    long_term_bias : float
+        determines bias for logistic function applied to long_term_avg
+
+    short_term_rate : float
+        determines smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to short_term_avg
+
+    long_term_rate : float
+        determines smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
+
+    operation : str
+        determines the arithmetic operation used to combine `short_term_logistic and long_term_logistic
+        <DualAdaptive_Combined>`:
+
+        * **s\*l** = (1 - short_term_logistic) * long_term_logistic
+        * **s+l** = (1 - short_term_logistic) + long_term_logistic
+        * **s-l** = (1 - short_term_logistic) - long_term_logistic
+        * **l-s** = long_term_logistic - (1 - short_term_logistic)
+
+    COMMENT:
+    rate : float or 1d array with element(s) in interval [0,1]: default 0.5
+        determines the linearly-weighted contribution of `short_term_logistic and long_term_logistic
+        <DualAdaptive_Combined>` to the integral.  For rate=0.5, each receives and equal weight of 1;  for rate<0.5,
+        short_term_avg diminishes linearly to 0 while long_term_avg remains at 1;  for rate>0.5, long_term_avg
+        diminishes linearly to 0 wile short_term_avg remains at 1.  If it is a float or has a single element,
+        its value is applied to all the elements of short_term_logistic and long_term_logistic; if it is an array,
+        each element is applied to the corresponding elements of each logistic. Serves as *MULTIPLICATIVE_PARAM*
+        for `modulation <ModulatorySignal_Modulation>` of `function <DualAdaptiveIntegrator.function>`.
+    COMMENT
+
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>` after logistics
+        of short_term_avg and long_term_avg are combined. If `variable <DualAdaptiveIntegrator.variable>` is an array
+        and offset is a float, offset is applied to each element of the integral;  if offset is a list or array, each
+        of its elements is applied to each of the corresponding elements of the integral (i.e., Hadamard addition).
+        Serves as *ADDITIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <DualAdaptiveIntegrator.function>`.
+
+    previous_short_term_avg : 1d array
+        stores previous value with which `variable <DualAdaptiveIntegrator.variable>` is integrated using the
+        `EWMA <DualAdaptiveIntegrator>` filter and short term parameters
+
+    previous_long_term_avg : 1d array
+        stores previous value with which `variable <DualAdaptiveIntegrator.variable>` is integrated using the
+        `EWMA <DualAdaptiveIntegrator>` filter and long term parameters
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
+
+    # multiplicative_param = RATE
+    additive_param = OFFSET
+
+    class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                initial_long_term_utility
+                    see `initial_long_term_utility <DualAdaptiveIntegrator.initial_long_term_utility>`
+
+                    :default value: 0.0
+                    :type: float
+
+                initial_short_term_utility
+                    see `initial_short_term_utility <DualAdaptiveIntegrator.initial_short_term_utility>`
+
+                    :default value: 0.0
+                    :type: float
+
+                long_term_bias
+                    see `long_term_bias <DualAdaptiveIntegrator.long_term_bias>`
+
+                    :default value: 0.0
+                    :type: float
+
+                long_term_gain
+                    see `long_term_gain <DualAdaptiveIntegrator.long_term_gain>`
+
+                    :default value: 1.0
+                    :type: float
+
+                long_term_rate
+                    see `long_term_rate <DualAdaptiveIntegrator.long_term_rate>`
+
+                    :default value: 0.1
+                    :type: float
+
+                long_term_utility_logistic
+                    see `long_term_utility_logistic <DualAdaptiveIntegrator.long_term_utility_logistic>`
+
+                    :default value: None
+                    :type:
+
+                offset
+                    see `offset <DualAdaptiveIntegrator.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                operation
+                    see `operation <DualAdaptiveIntegrator.operation>`
+
+                    :default value: `S*L`
+                    :type: str
+
+                previous_long_term_utility
+                    see `previous_long_term_utility <DualAdaptiveIntegrator.previous_long_term_utility>`
+
+                    :default value: None
+                    :type:
+
+                previous_short_term_utility
+                    see `previous_short_term_utility <DualAdaptiveIntegrator.previous_short_term_utility>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <DualAdaptiveIntegrator.rate>`
+
+                    :default value: 0.5
+                    :type: float
+
+                short_term_bias
+                    see `short_term_bias <DualAdaptiveIntegrator.short_term_bias>`
+
+                    :default value: 0.0
+                    :type: float
+
+                short_term_gain
+                    see `short_term_gain <DualAdaptiveIntegrator.short_term_gain>`
+
+                    :default value: 1.0
+                    :type: float
+
+                short_term_rate
+                    see `short_term_rate <DualAdaptiveIntegrator.short_term_rate>`
+
+                    :default value: 0.9
+                    :type: float
+
+                short_term_utility_logistic
+                    see `short_term_utility_logistic <DualAdaptiveIntegrator.short_term_utility_logistic>`
+
+                    :default value: None
+                    :type:
+
+        """
+        rate = Param(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        initial_short_term_avg = 0.0
+        initial_long_term_avg = 0.0
+        short_term_gain = Param(1.0, modulable=True)
+        long_term_gain = Param(1.0, modulable=True)
+        short_term_bias = Param(0.0, modulable=True)
+        long_term_bias = Param(0.0, modulable=True)
+        short_term_rate = Param(0.9, modulable=True)
+        long_term_rate = Param(0.1, modulable=True)
+        operation = "s*l"
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        previous_short_term_avg = None
+        previous_long_term_avg = None
+        short_term_logistic = None
+        long_term_logistic = None
+
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        RATE: None,
+        # NOISE: None,
+        OFFSET: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 # rate: parameter_spec = 0.5,
+                 # noise=0.0,
+                 initializer=None,
+                 initial_short_term_avg=0.0,
+                 initial_long_term_avg=0.0,
+                 short_term_gain=1.0,
+                 long_term_gain=1.0,
+                 short_term_bias=0.0,
+                 long_term_bias=0.0,
+                 short_term_rate=0.9,
+                 long_term_rate=0.1,
+                 operation="s*l",
+                 offset=0.0,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initial_long_term_avg", "initial_short_term_avg"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_short_term_avg", "previous_long_term_avg"]
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(initializer=initializer,
+                                                  # rate=rate,
+                                                  # noise=noise,
+                                                  offset=offset,
+                                                  initial_short_term_avg=initial_short_term_avg,
+                                                  initial_long_term_avg=initial_long_term_avg,
+                                                  short_term_gain=short_term_gain,
+                                                  long_term_gain=long_term_gain,
+                                                  short_term_bias=short_term_bias,
+                                                  long_term_bias=long_term_bias,
+                                                  short_term_rate=short_term_rate,
+                                                  long_term_rate=long_term_rate,
+                                                  operation=operation,
+                                                  params=params)
+
+        self.previous_long_term_avg = self.initial_long_term_avg
+        self.previous_short_term_avg = self.initial_short_term_avg
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign ClassDefaults.variable accordingly
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
+                    #       DualAdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable
+                            )
+                    else:
+                        raise FunctionError(
+                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                            "must match the length ({}) of the default input ({})".format(
+                                len(rate),
+                                rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                self.instance_defaults.variable,
+                            )
+                        )
+                        # OLD:
+                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                        # to have a rate parameter of type ndarray/list
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if RATE in target_set:
+            # if isinstance(target_set[RATE], (list, np.ndarray)):
+            #     for r in target_set[RATE]:
+            #         if r < 0.0 or r > 1.0:
+            #             raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+            #                                 "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+            #                                 format(target_set[RATE], self.name))
+            # else:
+            #     if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+            #         raise FunctionError(
+            #             "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+            #             "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+            if not all_within_range(target_set[RATE], 0, 1):
+                raise FunctionError("The rate parameter ({}) (or all of its elements) of {} "
+                                    "must be in the interval [0,1]".format(target_set[RATE], self.name))
+
+        if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
+            self._validate_noise(target_set[NOISE])
+            # if INITIALIZER in target_set:
+            #     self._validate_initializer(target_set[INITIALIZER])
+
+        if OPERATION in target_set:
+            if not target_set[OPERATION] in {'s*l', 's+l', 's-l', 'l-s'}:
+                raise FunctionError("\'{}\' arg for {} must be one of the following: {}".
+                                    format(OPERATION, self.name, {'s*l', 's+l', 's-l', 'l-s'}))
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+
+        Arguments
+        ---------
+
+        variable : number, list or array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        # rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+        # execute noise if it is a function
+        # noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+        short_term_rate = self.get_current_function_param("short_term_rate", execution_id)
+        long_term_rate = self.get_current_function_param("long_term_rate", execution_id)
+
+        # Integrate Short Term Utility:
+        short_term_avg = self._EWMA_filter(short_term_rate,
+                                           self.previous_short_term_avg,
+                                           variable)
+        # Integrate Long Term Utility:
+        long_term_avg = self._EWMA_filter(long_term_rate,
+                                          self.previous_long_term_avg,
+                                          variable)
+
+        value = self._combine_terms(short_term_avg, long_term_avg, execution_id=execution_id)
+
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_short_term_avg.set(short_term_avg, execution_id)
+            self.parameters.previous_long_term_avg.set(long_term_avg, execution_id)
+
+        return self.convert_output_type(value)
+
+    def _combine_terms(self, short_term_avg, long_term_avg, execution_id=None):
+
+        short_term_gain = self.get_current_function_param("short_term_gain", execution_id)
+        short_term_bias = self.get_current_function_param("short_term_bias", execution_id)
+        long_term_gain = self.get_current_function_param("long_term_gain", execution_id)
+        long_term_bias = self.get_current_function_param("long_term_bias", execution_id)
+        rate = self.get_current_function_param(RATE, execution_id)
+        operation = self.get_current_function_param(OPERATION, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+
+        # s = 2*rate if rate <= 0.5 else 1
+        # l = 2-(2*rate) if rate >= 0.5 else 1
+
+        short_term_logistic = self._logistic(variable=short_term_avg,
+                                             gain=short_term_gain,
+                                             bias=short_term_bias,
+                                             )
+        self.parameters.short_term_logistic.set(short_term_logistic, execution_id)
+
+        long_term_logistic = self._logistic(variable=long_term_avg,
+                                            gain=long_term_gain,
+                                            bias=long_term_bias,
+                                            )
+        self.parameters.long_term_logistic.set(long_term_logistic, execution_id)
+
+        if operation == "s*l":
+            value = (1 - short_term_logistic) * long_term_logistic
+        elif operation == "s-l":
+            value = (1 - short_term_logistic) - long_term_logistic
+        elif operation == "s+l":
+            value = (1 - short_term_logistic) + long_term_logistic
+        elif operation == "l-s":
+            value = long_term_logistic - (1 - short_term_logistic)
+
+        return value + offset
+
+    def reinitialize(self, short=None, long=None, execution_context=None):
+
+        """
+        Effectively begins accumulation over again at the specified utilities.
+
+        Sets `previous_short_term_avg <DualAdaptiveIntegrator.previous_short_term_avg>` to the quantity specified
+        in the first argument and `previous_long_term_avg <DualAdaptiveIntegrator.previous_long_term_avg>` to the
+        quantity specified in the second argument.
+
+        Sets `value <DualAdaptiveIntegrator.value>` by computing it based on the newly updated values for
+        `previous_short_term_avg <DualAdaptiveIntegrator.previous_short_term_avg>` and
+        `previous_long_term_avg <DualAdaptiveIntegrator.previous_long_term_avg>`.
+
+        If no arguments are specified, then the current values of `initial_short_term_avg
+        <DualAdaptiveIntegrator.initial_short_term_avg>` and `initial_long_term_avg
+        <DualAdaptiveIntegrator.initial_long_term_avg>` are used.
+        """
+
+        if short is None:
+            short = self.get_current_function_param("initial_short_term_avg", execution_context)
+        if long is None:
+            long = self.get_current_function_param("initial_long_term_avg", execution_context)
+
+        self.parameters.previous_short_term_avg.set(short, execution_context)
+        self.parameters.previous_long_term_avg.set(long, execution_context)
+        value = self._combine_terms(short, long)
+
+        self.parameters.value.set(value, execution_context, override=True)
+        return value
+
+
+class InteractiveActivation(IntegratorFunction):  # --------------------------------------------------------------------
     """
     InteractiveActivation(      \
         default_variable=None,  \
@@ -516,13 +2009,12 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
 
     .. _InteractiveActivation:
 
-    Integrate current value of `variable <InteractiveActivation.variable>` toward an asymptotic maximum
-    value for positive inputs and toward an asymptotic mininum value for negative inputs.
-
-    Implements a generalized version of the interactive activation function used to update unit activites in
-    `McClelland and Rumelhart (1981)
-    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.298.4480&rep=rep1&type=pdf>`_.
-
+    Implements a generalized version of the interactive activation from `McClelland and Rumelhart (1981)
+    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.298.4480&rep=rep1&type=pdf>`_ that integrates
+    current value of `variable <InteractiveActivation.variable>` toward an asymptotic maximum
+    value `max_val <InteractiveActivation.max_val>` for positive inputs and toward an asymptotic mininum value
+    (`min_val <InteractiveActivation.min_val>`) for negative inputs, and decays asymptotically towards an intermediate
+    resting value (`rest <InteractiveActivation.rest>`).
 
     `function <InteractiveActivation.function>` returns:
 
@@ -549,44 +2041,43 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         integrated.
 
     rate : float, list or 1d array : default 1.0
-        specifies the rate of at which activity increments toward either `max_val <InteractiveActivation.max_val>` or
-        `min_val <InteractiveActivation.min_val>`, depending on the sign of `variable <InteractiveActivation.variable>`.
-        If it is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`;
+        specifies the rate of change in activity; its value(s) must be in the interval [0,1].  If it is a list or
+        array, it must be the same length as `variable <InteractiveActivation.variable>`.
+
+    decay : float, list or 1d array : default 1.0
+        specifies the rate of at which activity decays toward `rest <InteractiveActivation.rest>`.
+        If it is a list or array, it must be the same length as `variable <InteractiveActivation.variable>`;
         its value(s) must be in the interval [0,1].
 
     rest : float, list or 1d array : default 0.0
         specifies the initial value and one toward which value `decays <InteractiveActivation.decay>`.
-        If it is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
+        If it is a list or array, it must be the same length as `variable <InteractiveActivation.variable>`.
         COMMENT:
         its value(s) must be between `max_val <InteractiveActivation.max_val>` and `min_val
         <InteractiveActivation.min_val>`.
         COMMENT
 
-    decay : float, list or 1d array : default 1.0
-        specifies the rate of at which activity decays toward `rest <InteractiveActivation.rest>`.
-        If it is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`;
-        its value(s) must be in the interval [0,1].
-
     max_val : float, list or 1d array : default 1.0
         specifies the maximum asymptotic value toward which integration occurs for positive values of `variable
         <InteractiveActivation.variable>`.  If it is a list or array, it must be the same length as `variable
-        <InteractiveActivation.default_variable>`; all values must be greater than the corresponding values of
+        <InteractiveActivation.variable>`; all values must be greater than the corresponding values of
         `min_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.max_val>` for details).
 
     min_val : float, list or 1d array : default 1.0
         specifies the minimum asymptotic value toward which integration occurs for negative values of `variable
         <InteractiveActivation.variable>`.  If it is a list or array, it must be the same length as `variable
-        <InteractiveActivation.default_variable>`; all values must be greater than the corresponding values of
+        <InteractiveActivation.variable>`; all values must be greater than the corresponding values of
         `max_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.min_val>` for details).
 
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added to `variable <InteractiveActivation.noise>` in each call to `function
-        <InteractiveActivation.function>` (see `noise <InteractiveActivation.noise>` for details).
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added to `variable <InteractiveActivation.noise>` in each call to `function
+        <InteractiveActivation.function>`; if it is a list or array, it must be the same length as `variable
+        <IntegratorFunction.variable>` (see `noise <Integrator_Noise>` for details).
 
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <InteractiveActivation.default_variable>`
-        (see `initializer <InteractiveActivation.initializer>` for details).
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <InteractiveActivation.variable>` (see `initializer <Integrator_Initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -612,51 +2103,43 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
     rate : float or 1d array in interval [0,1]
         determines the rate at which activity increments toward either `max_val <InteractiveActivation.max_val>`
         (`variable <InteractiveActivation.variable>` is positive) or `min_val <InteractiveActivation.min_val>`
-        (if `variable <InteractiveActivation.variable>` is negative).  If it has more than one element, each element
-        applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+        (if `variable <InteractiveActivation.variable>` is negative).  If it is a float or has a single element,
+        it is applied to all elements of `variable <InteractiveActivation.variable>`; if it has more than one
+        element, each element is applied to the corresponding element of `variable <InteractiveActivation.variable>`.
+        Serves as *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <InteractiveActivation.function>`.
 
-    rest : float, list or 1d array
-        determines the initial value and one toward which value `decays <InteractiveActivation.decay>` (similar
-        to *bias* in other IntegratorFunctions).
-
-    decay : float, list or 1d array
+    decay : float or 1d array
         determines the rate of at which activity decays toward `rest <InteractiveActivation.rest>` (similary to
-        *rate* in other IntegratorFuncgtions).  If it is a list or array, it must be the same length as `variable
-        <InteractiveActivation.default_variable>`.
+        *rate* in other IntegratorFuncgtions).  If it is a float or has a single element, it applies to all elements
+        of `variable <InteractiveActivation.variable>`;  if it has more than one element, each element applies to
+        the corresponding element of `variable <InteractiveActivation.variable>`.
+
+    rest : float or 1d array
+        determines the initial value and one toward which value `decays <InteractiveActivation.decay>` (similar
+        to *bias* in other IntegratorFunctions).  If it is a float or has a single element,
+        it applies to all elements of `variable <InteractiveActivation.variable>`;  if it has more than one
+        element, each element applies to the corresponding element of `variable <InteractiveActivation.variable>`.
 
     max_val : float or 1d array
         determines the maximum asymptotic value toward which integration occurs for positive values of `variable
-        <InteractiveActivation.variable>`.  If it has a single element, it applies to all elements of `variable
-        <InteractiveActivation.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+        <InteractiveActivation.variable>`.  If it is a float or has a single element, it applies to all elements of
+        `variable <InteractiveActivation.variable>`;  if it has more than one element, each element applies to the
+        corresponding element of `variable <InteractiveActivation.variable>`.
 
     min_val : float or 1d array
         determines the minimum asymptotic value toward which integration occurs for negative values of `variable
-        <InteractiveActivation.variable>`.  If it has a single element, it applies to all elements of `variable
-        <InteractiveActivation.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+        <InteractiveActivation.variable>`.  If it is a float or has a single element, it applies to all elements of
+        `variable <InteractiveActivation.variable>`;  if it has more than one element, each element applies to the
+        corresponding element of `variable <InteractiveActivation.variable>`.
 
-    noise : float, function, list, or 1d array
-        specifies random value to be added to `variable <InteractiveActivation.noise>` in each call to `function
-        <InteractiveActivation.function>`.
+    noise : float, Function or 1d array
+        random value added to `variable <InteractiveActivation.noise>` in each call to `function
+        <InteractiveActivation.function>` (see `noise <Integrator_Noise>` for details).
 
-        If noise is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <InteractiveActivation.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <InteractiveActivation.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <InteractiveActivation.default_variable>`.
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <InteractiveActivation.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
     previous_value : 1d array : default ClassDefaults.variable
         stores previous value with which `variable <InteractiveActivation.variable>` is integrated.
@@ -728,7 +2211,6 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         rest = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_val = Param(1.0)
         min_val = Param(1.0)
-        # offset = Param(0.0)
 
     @tc.typecheck
     def __init__(self,
@@ -739,11 +2221,23 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
                  max_val: parameter_spec = 1.0,
                  min_val: parameter_spec = -1.0,
                  noise=0.0,
-                 # offset=None,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 # **kwargs
+                 ):
+
+        # # This may be passed (as standard IntegratorFunction arg) but is not used by IA
+        # unsupported_args = {OFFSET}
+        # if any(k in unsupported_args for k in kwargs):
+        #     s = 's' if len(kwargs)>1 else ''
+        #     warnings.warn("{} arg{} not supported in {}".
+        #                   format(repr(", ".join(list(kwargs.keys()))),s, self.__class__.__name__))
+        #     for k in unsupported_args:
+        #         if k in kwargs:
+        #             del kwargs[k]
+
 
         if initializer is None:
             initializer = rest
@@ -864,631 +2358,16 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         return self.convert_output_type(new_value)
 
 
-class ConstantIntegratorFunction(IntegratorFunction):  # -------------------------------------------------------------------------------
+class DriftDiffusionIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
     """
-    ConstantIntegratorFunction(                 \
+    DriftDiffusionIntegrator(           \
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
-        initializer,                    \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
-        )
-
-    .. _ConstantIntegrator:
-
-    Integrates prior value by adding `rate <IntegratorFunction.rate>` and `noise <IntegratorFunction.noise>`. (Ignores
-    `variable <IntegratorFunction.variable>`).
-
-    `previous_value <ConstantIntegratorFunction.previous_value>` + `rate <ConstantIntegratorFunction.rate>` +
-    `noise <ConstantIntegratorFunction.noise>`
-
-    Arguments
-    ---------
-
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <ConstantIntegratorFunction.default_variable>` (see `rate <ConstantIntegratorFunction.rate>` for details).
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <ConstantIntegratorFunction.function>`. (see
-        `noise <ConstantIntegratorFunction.noise>` for details).
-
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <ConstantIntegratorFunction.default_variable>` (see `initializer <ConstantIntegratorFunction.initializer>`
-        for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        **Ignored** by the ConstantIntegratorFunction function. Refer to LCAIntegratorFunction or AdaptiveIntegratorFunction for integrator
-         functions that depend on both a prior value and a new value (variable).
-
-    rate : float or 1d array
-        determines the rate of integration.
-
-        If it has a single element, that element is added to each element of
-        `previous_value <ConstantIntegratorFunction.previous_value>`.
-
-        If it has more than one element, each element is added to the corresponding element of
-        `previous_value <ConstantIntegratorFunction.previous_value>`.
-
-    noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <ConstantIntegratorFunction.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <ConstantIntegratorFunction.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <ConstantIntegratorFunction.variable>` is a list
-        or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <ConstantIntegratorFunction.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as
-        `variable <ConstantIntegratorFunction.default_variable>`.
-
-    previous_value : 1d array : default ClassDefaults.variable
-        stores previous value to which `rate <ConstantIntegratorFunction.rate>` and `noise <ConstantIntegratorFunction.noise>` will be
-        added.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = CONSTANT_INTEGRATOR_FUNCTION
-
-    class Params(IntegratorFunction.Params):
-        """
-            Attributes
-            ----------
-
-                noise
-                    see `noise <ConstantIntegratorFunction.noise>`
-
-                    :default value: 0.0
-                    :type: float
-
-                offset
-                    see `offset <ConstantIntegratorFunction.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
-                rate
-                    see `rate <ConstantIntegratorFunction.rate>`
-
-                    :default value: 0.0
-                    :type: float
-
-                scale
-                    see `scale <ConstantIntegratorFunction.scale>`
-
-                    :default value: 1.0
-                    :type: float
-
-        """
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        rate = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Param(0.0, modulable=True)
-        noise = Param(0.0, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None,
-        OFFSET: None,
-        SCALE: None,
-    })
-
-    multiplicative_param = SCALE
-    additive_param = RATE
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 # rate: parameter_spec = 1.0,
-                 rate=0.0,
-                 noise=0.0,
-                 offset=0.0,
-                 scale=1.0,
-                 initializer=None,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        # Reassign to initializer in case default value was overridden
-
-        self.has_initializers = True
-
-    def _validate_rate(self, rate):
-        # unlike other Integrators, variable does not need to match rate
-
-        if isinstance(rate, list):
-            rate = np.asarray(rate)
-
-        rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
-        if isinstance(rate, np.ndarray):
-            # kmantel: current test_gating test depends on 2d rate
-            #   this should be looked at but for now this restriction is removed
-            # if rate.ndim > 1:
-            #     raise FunctionError(rate_type_msg.format(self.name, rate))
-            pass
-        elif not isinstance(rate, numbers.Number):
-            raise FunctionError(rate_type_msg.format(self.name, rate))
-
-        if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-            self.instance_defaults.variable = np.zeros_like(np.array(rate))
-            self._instantiate_value()
-            self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-        Return: the sum of `previous_value <ConstantIntegratorFunction.previous_value>`, `rate <ConstantIntegratorFunction.rate>`, and
-        `noise <ConstantIntegratorFunction.noise>`.
-
-        Arguments
-        ---------
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        updated value of integral : 2d array
-
-        """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        rate = np.array(self.rate).astype(float)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        noise = self._try_execute_param(self.noise, variable)
-
-        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-
-        value = previous_value + rate + noise
-
-        adjusted_value = value * scale + offset
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(adjusted_value, execution_id)
-        return self.convert_output_type(adjusted_value)
-
-
-class AdaptiveIntegratorFunction(IntegratorFunction):  # -------------------------------------------------------------------------------
-    """
-    AdaptiveIntegratorFunction(                 \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
-        initializer,                    \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
-        )
-
-    .. _AdaptiveIntegrator:
-
-    Computes an exponentially weighted moving average.
-
-    (1 - `rate <AdaptiveIntegratorFunction.rate>`) * `previous_value <AdaptiveIntegratorFunction.previous_value>` + `rate
-    <AdaptiveIntegratorFunction.rate>` * `variable <AdaptiveIntegratorFunction.variable>` + `noise <AdaptiveIntegratorFunction.noise>`
-
-
-    Arguments
-    ---------
-
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d array : default 1.0
-        specifies the smoothing factor of the EWMA.  If it is a list or array, it must be the same length as
-        `variable <AdaptiveIntegratorFunction.default_variable>` (see `rate <AdaptiveIntegratorFunction.rate>` for details).
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <AdaptiveIntegratorFunction.function>`. (see
-        `noise <AdaptiveIntegratorFunction.noise>` for details).
-
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <AdaptiveIntegratorFunction.default_variable>` (see `initializer <AdaptiveIntegratorFunction.initializer>`
-        for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        current input value some portion of which (determined by `rate <AdaptiveIntegratorFunction.rate>`) will be
-        added to the prior value;  if it is an array, each element is independently integrated.
-
-    rate : float or 1d array
-        determines the smoothing factor of the EWMA. All rate elements must be between 0 and 1 (rate = 0 --> no change,
-        `variable <AdaptiveAdaptiveIntegrator.variable>` is ignored; rate = 1 -->
-        `previous_value <AdaptiveIntegratorFunction.previous_value>` is ignored).
-
-        If rate is a float, it is applied to all elements of `variable <AdaptiveAdaptiveIntegrator.variable>` (and
-        `previous_value <AdaptiveIntegratorFunction.previous_value>`); if it has more than one element, each element is applied
-        to the corresponding element of `variable <AdaptiveAdaptiveIntegrator.variable>` (and
-        `previous_value <AdaptiveIntegratorFunction.previous_value>`).
-
-    noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <AdaptiveIntegratorFunction.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <AdaptiveIntegratorFunction.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <AdaptiveIntegratorFunction.variable>` is a list
-        or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d array or list
-        determines the starting value for time-averaging (i.e., the value to which
-        `previous_value <AdaptiveIntegratorFunction.previous_value>` is originally set).
-
-        If initializer is a list or array, it must be the same length as
-        `variable <AdaptiveIntegratorFunction.default_variable>`.
-
-    previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <AdaptiveIntegratorFunction.variable>` is integrated.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = ADAPTIVE_INTEGRATOR_FUNCTION
-
-    multiplicative_param = RATE
-    additive_param = OFFSET
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    class Params(IntegratorFunction.Params):
-        """
-            Attributes
-            ----------
-
-                offset
-                    see `offset <AdaptiveIntegratorFunction.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
-                rate
-                    see `rate <AdaptiveIntegratorFunction.rate>`
-
-                    :default value: 1.0
-                    :type: float
-
-        """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate=1.0,
-                 noise=0.0,
-                 offset=0.0,
-                 initializer=None,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        self.has_initializers = True
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        # Handle list or array for rate specification
-        if RATE in request_set:
-            rate = request_set[RATE]
-            if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
-                    # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
-                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       AdaptiveIntegratorFunction's constructor, where that is used as a specification for a function
-                    #       parameter (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]])
-                    #       before the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-                        if self.verbosePref:
-                            warnings.warn(
-                                "The length ({}) of the array specified for the {} parameter ({}) of {} "
-                                "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".
-                                    format(len(rate), repr(RATE), rate, self.name,
-                                    np.array(self.instance_defaults.variable).size, self.instance_defaults.variable))
-                    else:
-                        raise FunctionError(
-                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({})".format(
-                                len(rate),
-                                rate,
-                                self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
-                            )
-                        )
-                        # OLD:
-                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator
-                        # function to have a rate parameter of type ndarray/list
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
-
-        # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
-        if RATE in target_set:
-            # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
-            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
-                             "must be between 0.0 and 1.0 because it is an AdaptiveIntegratorFunction"
-
-            if isinstance(rate, np.ndarray) and rate.ndim > 0:
-                for r in rate:
-                    if r < 0.0 or r > 1.0:
-                        raise FunctionError(rate_value_msg.format(rate, self.name))
-            else:
-                if rate < 0.0 or rate > 1.0:
-                    raise FunctionError(rate_value_msg.format(rate, self.name))
-
-        if NOISE in target_set:
-            noise = target_set[NOISE]
-            if isinstance(noise, DistributionFunction):
-                noise.owner = self
-                target_set[NOISE] = noise._execute
-            self._validate_noise(target_set[NOISE])
-            # if INITIALIZER in target_set:
-            #     self._validate_initializer(target_set[INITIALIZER])
-
-    def _validate_rate(self, rate):
-        super()._validate_rate(rate)
-
-        if isinstance(rate, list):
-            rate = np.asarray(rate)
-
-        rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} " \
-                         "must be between 0.0 and 1.0 because it is an AdaptiveIntegratorFunction"
-
-        if not all_within_range(rate, 0, 1):
-            raise FunctionError(rate_value_msg.format(rate, self.name))
-
-    def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-        rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
-        offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
-
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
-
-        if isinstance(rate_p.type.pointee, pnlvm.ir.ArrayType) and rate_p.type.pointee.count > 1:
-            rate_p = builder.gep(rate_p, [ctx.int32_ty(0), index])
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
-
-        if isinstance(noise_p.type.pointee, pnlvm.ir.ArrayType) and noise_p.type.pointee.count > 1:
-            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
-        noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
-
-        # Get the only context member -- previous value
-        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        # Get rid of 2d array. When part of a Mechanism the input,
-        # (and output, and context) are 2d arrays.
-        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
-        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
-
-        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
-        prev_val = builder.load(prev_ptr)
-
-        vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
-        vi_val = builder.load(vi_ptr)
-
-        rev_rate = builder.fsub(ctx.float_ty(1), rate)
-        old_val = builder.fmul(prev_val, rev_rate)
-        new_val = builder.fmul(vi_val, rate)
-
-        ret = builder.fadd(old_val, new_val)
-        ret = builder.fadd(ret, noise)
-        res = builder.fadd(ret, offset)
-
-        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
-        builder.store(res, vo_ptr)
-        builder.store(res, prev_ptr)
-
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        # Get rid of 2d array.
-        # When part of a Mechanism the input, and output are 2d arrays.
-        arg_in = ctx.unwrap_2d_array(builder, arg_in)
-        arg_out = ctx.unwrap_2d_array(builder, arg_out)
-
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
-        inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
-            inner(*args)
-
-        return builder
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-        Return: some fraction of `variable <AdaptiveIntegratorFunction.variable>` combined with some fraction of `previous_value
-        <AdaptiveIntegratorFunction.previous_value>`.
-
-        Arguments
-        ---------
-
-        variable : number, list or array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-
-        Returns
-        -------
-
-        updated value of integral : 2d array
-
-        """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
-
-        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-
-        value = (1 - rate) * previous_value + rate * variable + noise
-        adjusted_value = value + offset
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(adjusted_value, execution_id)
-
-        return self.convert_output_type(adjusted_value)
-
-
-class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -------------------------------------------------------------------------
-    """
-    DriftDiffusionIntegratorFunction(           \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        scale= 1.0,                     \
         offset= 0.0,                    \
-        time_step_size=1.0,             \
         t0=0.0,                         \
-        decay=0.0,                      \
         threshold=1.0                   \
+        time_step_size=1.0,             \
         initializer,                    \
         params=None,                    \
         owner=None,                     \
@@ -1497,8 +2376,22 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulates evidence over time based on a stimulus, rate, previous position, and noise. Stops accumulating at a
-    threshold.
+    Accumulate "evidence" to a bound.  `function <DriftDiffusionIntegrator.function>` returns one
+    time step of integration:
+
+    ..  math::
+        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2)
+
+    where
+
+    ..  math::
+        \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
 
     Arguments
     ---------
@@ -1507,35 +2400,44 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
         specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
     rate : float, list or 1d array : default 1.0
-        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
+        applied multiplicatively to `variable <DriftDiffusionIntegrator.variable>`;  If it is a list or array, it must
+        be the same length as `variable <DriftDiffusionIntegrator.variable>` (see `rate <DriftDiffusionIntegrator.rate>`
+        for details).
 
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        scales the random value to be added in each call to `function <DriftDiffusionIntegratorFunction.function>`. (see
-        `noise <DriftDiffusionIntegratorFunction.noise>` for details).
+    noise : float : default 0.0
+        specifies a value by which to scale the normally distributed random value added to the integral in each call to
+        `function <DriftDiffusionIntegrator.function>` (see `noise <DriftDiffusionIntegrator.noise>` for details).
 
-    time_step_size : float : default 0.0
-        determines the timing precision of the integration process (see `time_step_size
-        <DriftDiffusionIntegratorFunction.time_step_size>` for details.
+    COMMENT:
+    FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
+    noise : float, list or 1d array : default 0.0
+        specifies a value by which to scale the normally distributed random value added to the integral in each call to
+        `function <DriftDiffusionIntegrator.function>`; if it is a list or array, it must be the same length as
+        `variable <DriftDiffusionIntegrator.variable>` (see `noise <DriftDiffusionIntegrator.noise>` for details).
+    COMMENT
+
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <DriftDiffusionIntegrator.function>`
+        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
+        if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`
+        (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
         the DDM Mechanism.
 
-    initializer : float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <DriftDiffusionIntegratorFunction.default_variable>` (see `initializer
-        <DriftDiffusionIntegratorFunction.initializer>` for details).
-
     threshold : float : default 0.0
-        specifies the threshold (boundaries) of the drift diffusion process (i.e., at which the
-        integration process is assumed to terminate).
+        specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
+        integration process terminates (see `threshold <DriftDiffusionIntegrator.threshold>` for details).
 
-        Once the magnitude of the decision variable has exceeded the threshold, the function will simply return the
-        threshold magnitude (with the appropriate sign) for that execution and any future executions.
+    time_step_size : float : default 0.0
+        specifies the timing precision of the integration process (see `time_step_size
+        <DriftDiffusionIntegrator.time_step_size>` for details.
 
-        If the function is in a `DDM mechanism <DDM>`, crossing the threshold will also cause the return value of `is_finished`
-        from False to True. This value may be important for the `Scheduler <Scheduler>` when using
-         `Conditions <Condition>` such as `WhenFinished <WhenFinished>`.
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <DriftDiffusionIntegrator.variable>` (see `initializer <Integrator_Initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1554,56 +2456,71 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
     Attributes
     ----------
 
-    variable : number or array
-        current input value, which represents the stimulus component of drift.
+    variable : float or array
+        current input value (can be thought of as implementing the stimulus component of the drift rate);  if it is an
+        array, each element represents an independently integrated decision variable.
 
     rate : float or 1d array
-        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
+        applied multiplicatively to `variable <DriftDiffusionIntegrator.variable>` (can be thought of as implementing
+        the attentional component of the drift rate).  If it is a float or has a single element, its value is applied
+        to all the elements of `variable <DriftDiffusionIntegrator.variable>`; if it is an array, each element is
+        applied to the corresponding element of `variable <DriftDiffusionIntegrator.variable>`. Serves as
+        *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <DriftDiffusionIntegrator.function>`.
 
-    noise : float, function, list, or 1d array
-        scales the random value to be added in each call to `function <DriftDiffusionIntegratorFunction.function> according to
-        the standard DDM probability distribution.
+    noise : float
+        scales the normally distributed random value added to integral in each call to `function
+        <DriftDiffusionIntegrator.function>`.  A single random term is generated each execution, and applied to all
+        elements of `variable <DriftDiffusionIntegrator.variable>` if that is an array with more than one element.
 
-        On each call to `function <DriftDiffusionIntegratorFunction.function>, :math:`\\sqrt{time\\_step\\_size \\cdot noise}
-        \\cdot Sample\\,From\\,Normal\\,distribution` is added to the accumulated evidence.
+    COMMENT:
+    FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
+    noise : float or 1d array
+        scales the normally distributed random value added to integral in each call to `function
+        <DriftDiffusionIntegrator.function>`. If `variable <DriftDiffusionIntegrator.variable>` is a list or array,
+        and noise is a float, a single random term is generated and applied for each element of `variable
+        <DriftDiffusionIntegrator.variable>`.  If noise is a list or array, it must be the same length as `variable
+        <DriftDiffusionIntegrator.variable>`, and a separate random term scaled by noise is applied for each of the
+        corresponding elements of `variable <DriftDiffusionIntegrator.variable>`.
+    COMMENT
 
-        Noise must be specified as a float (or list or array of floats).
-
-    time_step_size : float
-        determines the timing precision of the integration process and is used to scale the `noise
-        <DriftDiffusionIntegratorFunction.noise>` parameter according to the standard DDM probability distribution.
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <DriftDiffusionIntegrator.function>`
+        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
+        If `variable <DriftDiffusionIntegrator.variable>` is an array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <DriftDiffusionIntegrator.function>`.
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
         the DDM Mechanism.
 
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <DriftDiffusionIntegratorFunction.previous_value>` is set.
+    threshold : float : default 0.0
+        determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
+        terminate when the result of `function <DriftDiffusionIntegrator.function>` equals or exceeds either the
+        positive or negative value of threshold (see hint).
 
-        If initializer is a list or array, it must be the same length as
-        `variable <DriftDiffusionIntegratorFunction.default_variable>`.
+        .. hint::
+           For a Mechanism to terminate execution when the DriftDiffusionIntegrator reaches its threshold, the
+           `function <DriftDiffusionIntegrator.function>`, the `Mechanism` to which it assigned must belong to a
+           `System` or `Composition` with a `Scheduler <Scheduler>` that applies the `WhenFinished <WhenFinished>`
+           `Condition <Condition>` to that Mechanism.
+
+    time_step_size : float
+        determines the timing precision of the integration process and is used to scale the `noise
+        <DriftDiffusionIntegrator.noise>` parameter according to the standard DDM probability distribution.
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
-        `time_step_size <DriftDiffusionIntegratorFunction.default_time_step_size>`.
+        `time_step_size <DriftDiffusionIntegrator.default_time_step_size>`.
 
     previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <DriftDiffusionIntegratorFunction.variable>` is integrated.
-
-    threshold : float : default 0.0
-        when used properly determines the threshold (boundaries) of the drift diffusion process (i.e., at which the
-        integration process is assumed to terminate).
-
-        If the system is assembled as follows, then the DriftDiffusionIntegratorFunction function stops accumulating when its
-        value reaches +threshold or -threshold
-
-            (1) the function is used in the `DDM mechanism <DDM>`
-
-            (2) the mechanism is part of a `System <System>` with a `Scheduler <Scheduler>` which applies the
-            `WhenFinished <WhenFinished>` `Condition <Condition>` to the mechanism
-
-        Otherwise, `threshold <DriftDiffusionIntegratorFunction.threshold>` does not influence the function at all.
+        stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1629,37 +2546,37 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
             ----------
 
                 offset
-                    see `offset <DriftDiffusionIntegratorFunction.offset>`
+                    see `offset <DriftDiffusionIntegrator.offset>`
 
                     :default value: 0.0
                     :type: float
 
                 previous_time
-                    see `previous_time <DriftDiffusionIntegratorFunction.previous_time>`
+                    see `previous_time <DriftDiffusionIntegrator.previous_time>`
 
                     :default value: None
                     :type:
 
                 rate
-                    see `rate <DriftDiffusionIntegratorFunction.rate>`
+                    see `rate <DriftDiffusionIntegrator.rate>`
 
                     :default value: 1.0
                     :type: float
 
                 t0
-                    see `t0 <DriftDiffusionIntegratorFunction.t0>`
+                    see `t0 <DriftDiffusionIntegrator.t0>`
 
                     :default value: 0.0
                     :type: float
 
                 threshold
-                    see `threshold <DriftDiffusionIntegratorFunction.threshold>`
+                    see `threshold <DriftDiffusionIntegrator.threshold>`
 
                     :default value: 100.0
                     :type: float
 
                 time_step_size
-                    see `time_step_size <DriftDiffusionIntegratorFunction.time_step_size>`
+                    see `time_step_size <DriftDiffusionIntegrator.time_step_size>`
 
                     :default value: 1.0
                     :type: float
@@ -1667,10 +2584,10 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
         """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        t0 = 0.0
         threshold = Param(100.0, modulable=True)
         time_step_size = Param(1.0, modulable=True)
         previous_time = None
-        t0 = 0.0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -1684,9 +2601,9 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
+                 t0=0.0,
                  threshold=100.0,
                  time_step_size=1.0,
-                 t0=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -1732,7 +2649,7 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
             raise FunctionError(
-                "Invalid noise parameter for {}. DriftDiffusionIntegratorFunction requires noise parameter to be a float. Noise"
+                "Invalid noise parameter for {}. DriftDiffusionIntegrator requires noise parameter to be a float. Noise"
                 " parameter is used to construct the standard DDM noise distribution".format(self.name))
 
     def function(self,
@@ -1741,18 +2658,13 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
                  params=None,
                  context=None):
         """
-        Return: One time step of evidence accumulation according to the Drift Diffusion Model
-
-        ..  math::
-
-            previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\sqrt{time\\_step\\_size \\cdot noise}
-            \\cdot Sample\\,from\\,Normal\\,Distribution
 
         Arguments
         ---------
 
         variable : number, list or array : default ClassDefaults.variable
-            specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
+           a single value or array of values to be integrated (can be thought of as the stimulus component of
+           the drift rate).
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1768,8 +2680,8 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        offset = self.get_current_function_param(OFFSET, execution_id)
         noise = self.get_current_function_param(NOISE, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
         threshold = self.get_current_function_param(THRESHOLD, execution_id)
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
 
@@ -1804,25 +2716,38 @@ class DriftDiffusionIntegratorFunction(IntegratorFunction):  # -----------------
         return previous_value, previous_time
 
 
-class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # ----------------------------------------------------------------------
+class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # --------------------------------------------------------------
     """
-    OrnsteinUhlenbeckIntegratorFunction(        \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        offset= 0.0,                    \
-        time_step_size=1.0,             \
-        t0=0.0,                         \
-        decay=1.0,                      \
-        initializer=0.0,                \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
+    OrnsteinUhlenbeckIntegrator(         \
+        default_variable=None,           \
+        rate=1.0,                        \
+        decay=1.0,                       \
+        noise=0.0,                       \
+        offset= 0.0,                     \
+        t0=0.0,                          \
+        time_step_size=1.0,              \
+        initializer=0.0,                 \
+        params=None,                     \
+        owner=None,                      \
+        prefs=None,                      \
         )
 
     .. _OrnsteinUhlenbeckIntegrator:
 
-    Accumulate evidence overtime based on a stimulus, noise, decay, and previous position.
+    `function <_OrnsteinUhlenbeckIntegrator.function>` returns one time step of integration according to an
+    `Ornstein Uhlenbeck process <https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process>`_:
+
+    .. math::
+       previous\\_value + (decay \\cdot  previous\\_value) - (rate \\cdot variable) + \\mathcal{N}(\\sigma^2)
+    where
+    ..  math::
+        \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
 
     Arguments
     ---------
@@ -1832,24 +2757,44 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
         rate
 
     rate : float, list or 1d array : default 1.0
-        specifies  the attentional component of drift rate -- the drift rate is the product of variable and rate
+        specifies value applied multiplicatively to `variable <OrnsteinUhlenbeckIntegrator.variable>`;  If it is a
+        list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>` (see `rate
+        <OrnsteinUhlenbeckIntegrator.rate>` for details).
 
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        scales random value to be added in each call to `function <OrnsteinUhlenbeckIntegratorFunction.function>`. (see
-        `noise <OrnsteinUhlenbeckIntegratorFunction.noise>` for details).
+    decay : float, list or 1d array : default 1.0
+        specifies value applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`;
+        If it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>` (
+        see `decay <OrnsteinUhlenbeckIntegrator.rate>` for details).
+
+    noise : float : default 0.0
+        specifies a value by which to scale the normally distributed random value added to the integral in each call to
+        `function <OrnsteinUhlenbeckIntegrator.function>` (see `noise <OrnsteinUhlenbeckIntegrator.noise>` for details).
+
+    COMMENT:
+    FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
+    noise : float, list or 1d array : default 0.0
+        specifies a value by which to scale the normally distributed random value added to the integral in each call to
+        `function <OrnsteinUhlenbeckIntegrator.function>`; if it is a list or array, it must be the same length as
+        `variable <OrnsteinUhlenbeckIntegrator.variable>` (see `noise <OrnsteinUhlenbeckIntegrator.noise>` for details).
+    COMMENT
+
+    offset : float, list or 1d array : default 0.0
+        specifies a constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>`
+        (see `offset <OrnsteinUhlenbeckIntegrator.offset>` for details)
+
+    t0 : float : default 0.0
+        specifies the starting time of the model and is used to compute `previous_time
+        <OrnsteinUhlenbeckIntegrator.previous_time>`
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
-        <OrnsteinUhlenbeckIntegratorFunction.time_step_size>` for details.
+        <OrnsteinUhlenbeckIntegrator.time_step_size>` for details.
 
-    t0 : float : default 0.0
-        represents the starting time of the model and is used to compute
-        `previous_time <OrnsteinUhlenbeckIntegratorFunction.previous_time>`
-
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <OrnsteinUhlenbeckIntegratorFunction.default_variable>` (see `initializer
-        <OrnsteinUhlenbeckIntegratorFunction.initializer>` for details).
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <OrnsteinUhlenbeckIntegrator.variable>` (see `initializer <Integrator_Initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1870,39 +2815,63 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
 
     variable : number or array
         represents the stimulus component of drift. The product of
-        `variable <OrnsteinUhlenbeckIntegratorFunction.variable>` and `rate <OrnsteinUhlenbeckIntegratorFunction.rate>` is multiplied
-        by `time_step_size <OrnsteinUhlenbeckIntegratorFunction.time_step_size>` to model the accumulation of evidence during
+        `variable <OrnsteinUhlenbeckIntegrator.variable>` and `rate <OrnsteinUhlenbeckIntegrator.rate>` is multiplied
+        by `time_step_size <OrnsteinUhlenbeckIntegrator.time_step_size>` to model the accumulation of evidence during
         one step.
 
     rate : float or 1d array
-        represents the attentional component of drift. The product of `rate <OrnsteinUhlenbeckIntegratorFunction.rate>` and
-        `variable <OrnsteinUhlenbeckIntegratorFunction.variable>` is multiplied by
-        `time_step_size <OrnsteinUhlenbeckIntegratorFunction.time_step_size>` to model the accumulation of evidence during
-        one step.
+        applied multiplicatively to `variable <OrnsteinUhlenbeckIntegrator.variable>`.  If it is a float or has a
+        single element, its value is applied to all the elements of `variable <OrnsteinUhlenbeckIntegrator.variable>`;
+        if it is an array, each element is applied to the corresponding element of `variable
+        <OrnsteinUhlenbeckIntegrator.variable>`.  Serves as *MULTIPLICATIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator.function>`.
 
-    noise : float, function, list, or 1d array
-        scales the random value to be added in each call to `function <OrnsteinUhlenbeckIntegratorFunction.function>`
+    decay : float, list or 1d array : default 1.0
+        applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`; If it is a float or
+        has a single element, its value is applied to all the elements of `previous_value
+        <OrnsteinUhlenbeckIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
+        element of `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`.
 
-        Noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution.
+    noise : float
+        scales the normally distributed random value added to integral in each call to `function
+        <OrnsteinUhlenbeckIntegrator.function>`.  A single random term is generated each execution, and applied to all
+        elements of `variable <OrnsteinUhlenbeckIntegrator.variable>` if that is an array with more than one element.
+
+    COMMENT:
+    FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
+    noise : float or 1d array
+        scales the normally distributed random value added to integral in each call to `function
+        <OrnsteinUhlenbeckIntegrator.function>`. If `variable <OrnsteinUhlenbeckIntegrator.variable>` is a list or
+        array, and noise is a float, a single random term is generated and applied for each element of `variable
+        <OrnsteinUhlenbeckIntegrator.variable>`.  If noise is a list or array, it must be the same length as `variable
+        <OrnsteinUhlenbeckIntegrator.variable>`, and a separate random term scaled by noise is applied for each of the
+        corresponding elements of `variable <OrnsteinUhlenbeckIntegrator.variable>`.
+    COMMENT
+
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`.
+        If `variable <OrnsteinUhlenbeckIntegrator.variable>` is an array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator.function>`.
+
+    t0 : float
+        determines the start time of the integration process.
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
-        <OrnsteinUhlenbeckIntegratorFunction.noise>` parameter appropriately.
+        <OrnsteinUhlenbeckIntegrator.noise>` parameter appropriately.
 
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <OrnsteinUhlenbeckIntegratorFunction.previous_value>` is originally set.)
-
-        If initializer is a list or array, it must be the same length as `variable
-        <OrnsteinUhlenbeckIntegratorFunction.default_variable>`.
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <OrnsteinUhlenbeckIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
     previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <OrnsteinUhlenbeckIntegratorFunction.variable>` is integrated.
+        stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
-        `time_step_size <OrnsteinUhlenbeckIntegratorFunction.default_time_step_size>`.
+        `time_step_size <OrnsteinUhlenbeckIntegrator.default_time_step_size>`.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1928,46 +2897,46 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
             ----------
 
                 decay
-                    see `decay <OrnsteinUhlenbeckIntegratorFunction.decay>`
+                    see `decay <OrnsteinUhlenbeckIntegrator.decay>`
 
                     :default value: 1.0
                     :type: float
 
                 offset
-                    see `offset <OrnsteinUhlenbeckIntegratorFunction.offset>`
+                    see `offset <OrnsteinUhlenbeckIntegrator.offset>`
 
                     :default value: 0.0
                     :type: float
 
                 previous_time
-                    see `previous_time <OrnsteinUhlenbeckIntegratorFunction.previous_time>`
+                    see `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>`
 
                     :default value: 0.0
                     :type: float
 
                 rate
-                    see `rate <OrnsteinUhlenbeckIntegratorFunction.rate>`
+                    see `rate <OrnsteinUhlenbeckIntegrato.rate>`
 
                     :default value: 1.0
                     :type: float
 
                 t0
-                    see `t0 <OrnsteinUhlenbeckIntegratorFunction.t0>`
+                    see `t0 <OrnsteinUhlenbeckIntegrator.t0>`
 
                     :default value: 0.0
                     :type: float
 
                 time_step_size
-                    see `time_step_size <OrnsteinUhlenbeckIntegratorFunction.time_step_size>`
+                    see `time_step_size <OrnsteinUhlenbeckIntegrator.time_step_size>`
 
                     :default value: 1.0
                     :type: float
 
         """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        decay = Param(1.0, modulable=True)
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(1.0, modulable=True)
-        decay = Param(1.0, modulable=True)
         t0 = 0.0
         previous_time = 0.0
 
@@ -1981,11 +2950,11 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
+                 decay=1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
-                 time_step_size=1.0,
                  t0=0.0,
-                 decay=1.0,
+                 time_step_size=1.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -1999,12 +2968,12 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  time_step_size=time_step_size,
                                                   decay=decay,
-                                                  initializer=initializer,
-                                                  t0=t0,
                                                   noise=noise,
                                                   offset=offset,
+                                                  t0=t0,
+                                                  time_step_size=time_step_size,
+                                                  initializer=initializer,
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
@@ -2025,7 +2994,7 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
             raise FunctionError(
-                "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegratorFunction requires noise parameter to be a float. "
+                "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
                 "Noise parameter is used to construct the standard DDM noise distribution".format(self.name))
 
     @property
@@ -2044,18 +3013,12 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
                  params=None,
                  context=None):
         """
-        Return: One time step of evidence accumulation according to the Ornstein Uhlenbeck Model
-
-        previous_value + decay * (previous_value -  rate * variable) + :math:`\\sqrt{time_step_size * noise}` * random
-        sample from Normal distribution
-
 
         Arguments
         ---------
 
         variable : number, list or array : default ClassDefaults.variable
-           the stimulus component of drift rate in the Drift Diffusion Model.
-
+           a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -2072,10 +3035,10 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
         decay = self.get_current_function_param(DECAY, execution_id)
         noise = self.get_current_function_param(NOISE, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+        time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
 
         previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
@@ -2103,12 +3066,258 @@ class OrnsteinUhlenbeckIntegratorFunction(IntegratorFunction):  # --------------
         return previous_value, previous_time
 
 
-class FHNIntegratorFunction(IntegratorFunction):  # --------------------------------------------------------------------------------
+class LCAIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
     """
-    FHNIntegratorFunction(                      \
+    LCAIntegrator(                  \
+        default_variable=None,      \
+        rate=1.0,                   \
+        noise=0.0,                  \
+        offset=None,                \
+        time_step_size=0.1,         \
+        initializer=0.0,            \
+        params=None,                \
+        owner=None,                 \
+        prefs=None,                 \
+        )
+
+    .. _LCAIntegrator:
+
+    Implements Leaky Competitive Accumulator (LCA) described in `Usher & McClelland (2001)
+    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.  `function <LCAIntegrator.function>` returns:
+
+    .. math::
+
+        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d array : default 1.0
+        specifies the value used to scale the contribution of `previous_value <LCAIntegrator.previous_value>` to the
+        integral on each time step.  If it is a list or array, it must be the same length as `variable
+        <ConstantIntegrator.variable>` (see `rate <LCAIntegrator.rate>` for details).
+
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added to integral in each call to `function <LCAIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`
+        (see `noise <Integrator_Noise>` for additonal details).
+
+    offset : float, list or 1d array : default 0.0
+        specifies a constant value added to integral in each call to `function <LCAIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`
+        (see `offset <LCAIntegrator.offset>` for details).
+
+    time_step_size : float : default 0.0
+        determines the timing precision of the integration process (see `time_step_size
+        <LCAIntegrator.time_step_size>` for details.
+
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <default_variable.variable>` (see `initializer <Integrator_Initializer>`
+        for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value some portion of which (determined by `rate <LCAIntegrator.rate>`) will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    rate : float or 1d array
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the `value
+        <LCAIntegrator.value>` on each time step. If it is a float or has a single element, its value is applied to
+        all the elements of `previous_value <LCAIntegrator.previous_value>`; if it is an array, each element is
+        applied to the corresponding element of `previous_value <LCAIntegrator.previous_value>`.  Serves as
+        *MULTIPLICATIVE_PARAM*  for `modulation <ModulatorySignal_Modulation>` of `function <LCAIntegrator.function>`.
+
+    noise : float, Function, or 1d array
+        random value added to integral in each call to `function <LCAIntegrator.function>`.
+        (see `noise <Integrator_Noise>` for details).
+
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <LCAIntegrator.function>`. If `variable
+        <LCAIntegrator.variable>` is an array and offset is a float, offset is applied to each element  of the
+        integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
+        elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <LCAIntegrator.function>`.
+
+
+    time_step_size : float
+        determines the timing precision of the integration process and is used to scale the `noise
+        <LCAIntegrator.noise>` parameter appropriately.
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <LCAIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+
+    previous_value : 1d array : default ClassDefaults.variable
+        stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = LCAMechanism_INTEGRATOR_FUNCTION
+
+    class Params(IntegratorFunction.Params):
+        """
+            Attributes
+            ----------
+
+                offset
+                    see `offset <LCAIntegrator.offset>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <LCAIntegrator.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                time_step_size
+                    see `time_step_size <LCAIntegrator.time_step_size>`
+
+                    :default value: 0.1
+                    :type: float
+
+        """
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Param(0.1, modulable=True)
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        RATE: None,
+        OFFSET: None,
+        NOISE: None
+    })
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: parameter_spec = 1.0,
+                 noise=0.0,
+                 offset=None,
+                 time_step_size=0.1,
+                 initializer=None,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  noise=noise,
+                                                  offset=offset,
+                                                  time_step_size=time_step_size,
+                                                  initializer=initializer,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+
+        Arguments
+        ---------
+
+        variable : number, list or array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        rate = np.atleast_1d(self.get_current_function_param(RATE, execution_id))
+        initializer = self.get_current_function_param(INITIALIZER, execution_id)  # unnecessary?
+        time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+
+        if offset is None:
+            offset = 0.0
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+        previous_value = self.get_previous_value(execution_id)
+        new_value = variable
+
+        # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
+        value = previous_value + (rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
+
+        adjusted_value = value + offset
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(adjusted_value, execution_id)
+
+        return self.convert_output_type(adjusted_value)
+
+
+class FHNIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
+    """
+    FHNIntegrator(                      \
         default_variable=1.0,           \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
         time_step_size=0.05,            \
@@ -2135,54 +3344,63 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
 
     .. _FHNIntegrator:
 
-    The FHN IntegratorFunction function in PsyNeuLink implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order
-    Runge-Kutta numerical integration.
+    `function <FHNIntegrator.function>` returns one time step of integration of the `Fitzhugh-Nagumo model
+    https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ of an excitable oscillator:
 
-    In order to support several common representations of the model, the FHNIntegratorFunction includes many parameters, some of
-    which would not be sensible to use in combination. The equations of the Fitzhugh-Nagumo model are expressed below in
-    terms of all of the parameters exposed in PsyNeuLink:
+    .. math::
+            time\\_constant_v \\frac{dv}{dt} = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 +
+            d_v + e_v * w + f_v * I_{ext}
+
+    where
+    .. math::
+            time\\_constant_w * \\frac{dw}{dt} =` mode * a_w * v + b_w * w +c_w + (1 - mode) * uncorrelated\\_activity
+
+    Either `Euler <https://en.wikipedia.org/wiki/Euler_method>`_ or `Dormand–Prince (4th Order Runge-Kutta)
+    <https://en.wikipedia.org/wiki/Dormand–Prince_method>`_ methods of numerical integration can be used.
+
+    The FHNIntegrator implements all of the parameters of the FHN model; however, not all combinations of
+    these are sensible. Typically, they are combined into two sets.  These are described below, followed by
+    a describption of how they are used to implement three common variants of the model with the FHNIntegrator.
+
+    Parameter Sets
+    ^^^^^^^^^^^^^^
 
     **Fast, Excitatory Variable:**
 
-
     .. math::
-
-        \\frac{dv}{dt} = \\frac{a_v v^{3} + b_v v^{2} (1+threshold) - c_v v\\, threshold + d_v + e_v\\, previous_w + f_v\\, variable)}{time\\, constant_v}
+       \\frac{dv}{dt} = \\frac{a_v v^{3} + b_v v^{2} (1+threshold) - c_v v\\, threshold + d_v + e_v\\, previous_w +
+       f_v\\, variable)}{time\\, constant_v}
 
 
     **Slow, Inactivating Variable:**
 
-
     .. math::
+       \\frac{dw}{dt} = \\frac{a_w\\, mode\\, previous_v + b_w w + c_w + uncorrelated\\,activity\\,(1-mode)}{time\\,
+       constant_w}
 
-        \\frac{dw}{dt} = \\frac{a_w\\, mode\\, previous_v + b_w w + c_w +
-                    uncorrelated\\,activity\\,(1-mode)}{time\\, constant_w}
-
-    *The three formulations that the FHNIntegratorFunction was designed to allow are:*
+    Three Common Variants
+    ^^^^^^^^^^^^^^^^^^^^^
 
     (1) **Fitzhugh-Nagumo Model**
 
         **Fast, Excitatory Variable:**
 
         .. math::
-
             \\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}
 
         **Slow, Inactivating Variable:**
 
         .. math::
-
             \\frac{dw}{dt} = \\frac{v + a - bw}{T}
 
         :math:`\\frac{dw}{dt}` often has the following parameter values:
 
         .. math::
-
             \\frac{dw}{dt} = 0.08\\,(v + 0.7 - 0.8 w)
 
-        *How to implement this model in PsyNeuLink:*
+        **Implementation in FHNIntegrator**
 
-            In PsyNeuLink, the default parameter values of the FHNIntegratorFunction function implement the above equations.
+        The default values implement the above equations.
 
 
     (2) **Modified FHN Model**
@@ -2190,57 +3408,53 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
         **Fast, Excitatory Variable:**
 
         .. math::
-
             \\frac{dv}{dt} = v(a-v)(v-1) - w + I_{ext}
 
         **Slow, Inactivating Variable:**
 
         .. math::
-
             \\frac{dw}{dt} = bv - cw
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
 
-        *How to implement this model in PsyNeuLink:*
+        **Implementation in FHNIntegrator**
 
-            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
-            equation for :math:`\\frac{dv}{dt}`:
+            The following parameter values must be specified in the equation for :math:`\\frac{dv}{dt}`:
 
-            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
-            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v | f_v |time_constant_v|
-            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
-            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |1.0  |1.0            |
-            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
+            +---------------------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**FHNIntegrator Parameter**| a_v | b_v | c_v | d_v | e_v | f_v |time_constant_v|
+            +---------------------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**Value**                  |-1.0 |1.0  |1.0  |0.0  |-1.0 |1.0  |1.0            |
+            +---------------------------+-----+-----+-----+-----+-----+-----+---------------+
 
-            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            When the parameters above are set to the listed values, the FHNIntegrator equation for :math:`\\frac{dv}{dt}`
             reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
             correspond as follows:
 
-            +--------------------------+---------------------------------------+---------------------------------------+
-            |**PNL Parameter**         |`threshold <FHNIntegratorFunction.threshold>`  |`variable <FHNIntegratorFunction.variable>`    |
-            +--------------------------+---------------------------------------+---------------------------------------+
-            |**Modified FHN Parameter**|a                                      |:math:`I_{ext}`                        |
-            +--------------------------+---------------------------------------+---------------------------------------+
+            +-----------------------------+---------------------------------------+------------------------------------+
+            |**FHNIntegrator Parameter**  |`threshold <FHNIntegrator.threshold>`  |`variable <FHNIntegrator.variable>` |
+            +-----------------------------+---------------------------------------+------------------------------------+
+            |**Modified FHN Parameter**   |a                                      |:math:`I_{ext}`                     |
+            +-----------------------------+---------------------------------------+------------------------------------+
 
-            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
-            equation for :math:`\\frac{dw}{dt}`:
+            Te following parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
 
-            +-----------------+-----+------+---------------+----------------------+
-            |**PNL Parameter**|c_w  | mode |time_constant_w|uncorrelated_activity |
-            +-----------------+-----+------+---------------+----------------------+
-            |**Value**        | 0.0 | 1.0  |1.0            | 0.0                  |
-            +-----------------+-----+------+---------------+----------------------+
+            +----------------------------+-----+------+- ---------------+-----------------------+
+            |**FHNIntegrator Parameter** |c_w  | mode | time_constant_w | uncorrelated_activity |
+            +----------------------------+-----+------+- ---------------+-----------------------+
+            |**Value**                   | 0.0 | 1.0  | 1.0             |  0.0                  |
+            +----------------------------+-----+------+- ---------------+-----------------------+
 
-            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
+            When the parameters above are set to the listed values, the FHNIntegrator equation for :math:`\\frac{dw}{dt}`
             reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
             correspond as follows:
 
-            +--------------------------+---------------------------------------+---------------------------------------+
-            |**PNL Parameter**         |`a_w <FHNIntegratorFunction.a_w>`              |*NEGATIVE* `b_w <FHNIntegratorFunction.b_w>`   |
-            +--------------------------+---------------------------------------+---------------------------------------+
-            |**Modified FHN Parameter**|b                                      |c                                      |
-            +--------------------------+---------------------------------------+---------------------------------------+
+            +------------------------------+----------------------------+-------------------------------------+
+            |**FHNIntegrator Parameter**   |`a_w <FHNIntegrator.a_w>`   |*NEGATIVE* `b_w <FHNIntegrator.b_w>` |
+            +------------------------------+----------------------------+-------------------------------------+
+            |**Modified FHN Parameter**    |b                           |c                                    |
+            +------------------------------+----------------------------+-------------------------------------+
 
     (3) **Modified FHN Model as implemented in** `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_
 
@@ -2260,45 +3474,43 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
 
             \\tau_u \\frac{du}{dt} = Cv + (1-C)\\, d - u
 
-        *How to implement this model in PsyNeuLink:*
+        **Implementation in FHNIntegrator**
 
-            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
-            equation for :math:`\\frac{dv}{dt}`:
+            The following FHNIntegrator parameter values must be set in the equation for :math:`\\frac{dv}{dt}`:
 
-            +-----------------+-----+-----+-----+-----+-----+
-            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v |
-            +-----------------+-----+-----+-----+-----+-----+
-            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |
-            +-----------------+-----+-----+-----+-----+-----+
+            +---------------------------+-----+-----+-----+-----+-----+
+            |**FHNIntegrator Parameter**| a_v | b_v | c_v | d_v | e_v |
+            +---------------------------+-----+-----+-----+-----+-----+
+            |**Value**                  |-1.0 |1.0  |1.0  |0.0  |-1.0 |
+            +---------------------------+-----+-----+-----+-----+-----+
 
-            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            When the parameters above are set to the listed values, the FHNIntegrator equation for :math:`\\frac{dv}{dt}`
             reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
             correspond as follows:
 
-            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
-            |**PNL Parameter**      |`threshold <FHNIntegratorFunction.threshold>`|`variable <FHNIntegratorFunction.variable>`|`f_v <FHNIntegratorFunction.f_v>`|`time_constant_v <FHNIntegratorFunction.time_constant_v>`   |
-            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
-            |**Gilzenrat Parameter**|a                                    |:math:`f(X_1)`                     |:math:`w_{vX_1}`         |:math:`T_{v}`                                       |
-            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            +----------------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**FHNIntegrator Parameter** |`threshold <FHNIntegrator.threshold>`|`variable <FHNIntegrator.variable>`|`f_v <FHNIntegrator.f_v>`|`time_constant_v <FHNIntegrator.time_constant_v>`   |
+            +----------------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**     |a                                    |:math:`f(X_1)`                     |:math:`w_{vX_1}`         |:math:`T_{v}`                                       |
+            +----------------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
 
-            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
-            equation for :math:`\\frac{dw}{dt}`:
+            The following FHNIntegrator parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
 
-            +-----------------+-----+-----+-----+
-            |**PNL Parameter**| a_w | b_w | c_w |
-            +-----------------+-----+-----+-----+
-            |**Value**        | 1.0 |-1.0 |0.0  |
-            +-----------------+-----+-----+-----+
+            +----------------------------+-----+-----+-----+
+            |**FHNIntegrator Parameter** | a_w | b_w | c_w |
+            +----------------------------+-----+-----+-----+
+            |**Value**                   | 1.0 |-1.0 |0.0  |
+            +----------------------------+-----+-----+-----+
 
-            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
-            reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
-            correspond as follows:
+            When the parameters above are set to the listed values, the FHNIntegrator equation for
+            :math:`\\frac{dw}{dt}` reduces to the Gilzenrat formulation, and the remaining parameters in the
+            :math:`\\frac{dw}{dt}` equation correspond as follows:
 
-            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
-            |**PNL Parameter**         |`mode <FHNIntegratorFunction.mode>`            |`uncorrelated_activity <FHNIntegratorFunction.uncorrelated_activity>`|`time_constant_v <FHNIntegratorFunction.time_constant_w>`   |
-            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
-            |**Gilzenrat Parameter**   |C                                      |d                                                            |:math:`T_{u}`                                       |
-            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            +-----------------------------+-----------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**FHNIntegrator Parameter**  |`mode <FHNIntegrator.mode>`  |`uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`|`time_constant_v <FHNIntegrator.time_constant_w>`   |
+            +-----------------------------+-----------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**      |C                            |d                                                            |:math:`T_{u}`                                       |
+            +-----------------------------+-----------------------------+-------------------------------------------------------------+----------------------------------------------------+
 
     Arguments
     ---------
@@ -2308,11 +3520,11 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
 
     initial_w : float, list or 1d array : default 0.0
         specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegratorFunction.default_variable>`
+        `default_variable <FHNIntegrator.variable>`
 
     initial_v : float, list or 1d array : default 0.0
         specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegratorFunction.default_variable>`
+        `default_variable <FHNIntegrator.variable>`
 
     time_step_size : float : default 0.1
         specifies the time step size of numerical integration
@@ -2336,7 +3548,7 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
         coefficient on the w term in the dv/dt equation
 
     f_v : float : default  1.0
-        coefficient on the external stimulus (`variable <FHNIntegratorFunction.variable>`) term in the dv/dt equation
+        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
 
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
@@ -2402,11 +3614,11 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
 
     initial_w : float, list or 1d array : default 0.0
         specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegratorFunction.default_variable>`
+        `default_variable <FHNIntegrator.variable>`
 
     initial_v : float, list or 1d array : default 0.0
         specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegratorFunction.default_variable>`
+        `default_variable <FHNIntegrator.variable>`
 
     time_step_size : float : default 0.1
         specifies the time step size of numerical integration
@@ -2430,7 +3642,7 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
         coefficient on the w term in the dv/dt equation
 
     f_v : float : default  1.0
-        coefficient on the external stimulus (`variable <FHNIntegratorFunction.variable>`) term in the dv/dt equation
+        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
 
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
@@ -2482,160 +3694,146 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
             ----------
 
                 variable
-                    see `variable <FHNIntegratorFunction.variable>`
+                    see `variable <FHNIntegrator.variable>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
                     :read only: True
 
                 a_v
-                    see `a_v <FHNIntegratorFunction.a_v>`
+                    see `a_v <FHNIntegrator.a_v>`
 
                     :default value: 0.3333333333333333
                     :type: float
 
                 a_w
-                    see `a_w <FHNIntegratorFunction.a_w>`
+                    see `a_w <FHNIntegrator.a_w>`
 
                     :default value: 1.0
                     :type: float
 
                 b_v
-                    see `b_v <FHNIntegratorFunction.b_v>`
+                    see `b_v <FHNIntegrator.b_v>`
 
                     :default value: 0.0
                     :type: float
 
                 b_w
-                    see `b_w <FHNIntegratorFunction.b_w>`
+                    see `b_w <FHNIntegrator.b_w>`
 
                     :default value: -0.8
                     :type: float
 
                 c_v
-                    see `c_v <FHNIntegratorFunction.c_v>`
+                    see `c_v <FHNIntegrator.c_v>`
 
                     :default value: 1.0
                     :type: float
 
                 c_w
-                    see `c_w <FHNIntegratorFunction.c_w>`
+                    see `c_w <FHNIntegrator.c_w>`
 
                     :default value: 0.7
                     :type: float
 
                 d_v
-                    see `d_v <FHNIntegratorFunction.d_v>`
+                    see `d_v <FHNIntegrator.d_v>`
 
                     :default value: 0.0
                     :type: float
 
                 e_v
-                    see `e_v <FHNIntegratorFunction.e_v>`
+                    see `e_v <FHNIntegrator.e_v>`
 
                     :default value: -1.0
                     :type: float
 
                 f_v
-                    see `f_v <FHNIntegratorFunction.f_v>`
+                    see `f_v <FHNIntegrator.f_v>`
 
                     :default value: 1.0
                     :type: float
 
                 initial_v
-                    see `initial_v <FHNIntegratorFunction.initial_v>`
+                    see `initial_v <FHNIntegrator.initial_v>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
                 initial_w
-                    see `initial_w <FHNIntegratorFunction.initial_w>`
+                    see `initial_w <FHNIntegrator.initial_w>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
                 integration_method
-                    see `integration_method <FHNIntegratorFunction.integration_method>`
+                    see `integration_method <FHNIntegrator.integration_method>`
 
                     :default value: `RK4`
                     :type: str
 
                 mode
-                    see `mode <FHNIntegratorFunction.mode>`
+                    see `mode <FHNIntegrator.mode>`
 
                     :default value: 1.0
                     :type: float
 
-                offset
-                    see `offset <FHNIntegratorFunction.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
                 previous_time
-                    see `previous_time <FHNIntegratorFunction.previous_time>`
+                    see `previous_time <FHNIntegrator.previous_time>`
 
                     :default value: 0.0
                     :type: float
 
                 previous_v
-                    see `previous_v <FHNIntegratorFunction.previous_v>`
+                    see `previous_v <FHNIntegrator.previous_v>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
                 previous_w
-                    see `previous_w <FHNIntegratorFunction.previous_w>`
+                    see `previous_w <FHNIntegrator.previous_w>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
-                scale
-                    see `scale <FHNIntegratorFunction.scale>`
-
-                    :default value: 1.0
-                    :type: float
-
                 t_0
-                    see `t_0 <FHNIntegratorFunction.t_0>`
+                    see `t_0 <FHNIntegrator.t_0>`
 
                     :default value: 0.0
                     :type: float
 
                 threshold
-                    see `threshold <FHNIntegratorFunction.threshold>`
+                    see `threshold <FHNIntegrator.threshold>`
 
                     :default value: -1.0
                     :type: float
 
                 time_constant_v
-                    see `time_constant_v <FHNIntegratorFunction.time_constant_v>`
+                    see `time_constant_v <FHNIntegrator.time_constant_v>`
 
                     :default value: 1.0
                     :type: float
 
                 time_constant_w
-                    see `time_constant_w <FHNIntegratorFunction.time_constant_w>`
+                    see `time_constant_w <FHNIntegrator.time_constant_w>`
 
                     :default value: 12.5
                     :type: float
 
                 time_step_size
-                    see `time_step_size <FHNIntegratorFunction.time_step_size>`
+                    see `time_step_size <FHNIntegrator.time_step_size>`
 
                     :default value: 0.05
                     :type: float
 
                 uncorrelated_activity
-                    see `uncorrelated_activity <FHNIntegratorFunction.uncorrelated_activity>`
+                    see `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
 
                     :default value: 0.0
                     :type: float
 
         """
         variable = Param(np.array([1.0]), read_only=True)
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(0.05, modulable=True)
         a_v = Param(1.0 / 3, modulable=True)
         b_v = Param(0.0, modulable=True)
@@ -2668,18 +3866,13 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
         INCREMENT: None,
     })
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 offset=0.0,
-                 scale=1.0,
+                 # scale=1.0,
+                 # offset=0.0,
                  initial_w=0.0,
                  initial_v=0.0,
-                 time_step_size=0.05,
-                 t_0=0.0,
                  a_v=-1 / 3,
                  b_v=0.0,
                  c_v=1.0,
@@ -2690,8 +3883,10 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
                  a_w=1.0,
                  b_w=-0.8,
                  c_w=0.7,
-                 threshold=-1.0,
                  time_constant_w=12.5,
+                 t_0=0.0,
+                 threshold=-1.0,
+                 time_step_size=0.05,
                  mode=1.0,
                  uncorrelated_activity=0.0,
                  integration_method="RK4",
@@ -2701,9 +3896,14 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
                  **kwargs):
 
         # These may be passed (as standard IntegratorFunction args) but are not used by FHN
-        for k in {NOISE, INITIALIZER, RATE}:
-            if k in kwargs:
-                del kwargs[k]
+        unsupported_args = {NOISE, INITIALIZER, RATE, OFFSET}
+        if any(k in unsupported_args for k in kwargs):
+            s = 's' if len(kwargs)>1 else ''
+            warnings.warn("{} arg{} not supported in {}".
+                          format(repr(", ".join(list(kwargs.keys()))),s, self.__class__.__name__))
+            for k in unsupported_args:
+                if k in kwargs:
+                    del kwargs[k]
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initial_v", "initial_w", "t_0"]
@@ -2713,8 +3913,6 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
-                                                  offset=offset,
-                                                  scale=scale,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,
                                                   time_step_size=time_step_size,
@@ -2988,20 +4186,6 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
                  params=None,
                  context=None):
         """
-        Return: current v, current w
-
-        The model is defined by the following system of differential equations:
-
-            *time_constant_v* :math:`* \\frac{dv}{dt} =`
-
-                *a_v* :math:`* v^3 + (1 + threshold) *` *b_v* :math:`* v^2 + (- threshold) *` *c_v*
-                :math:`* v^2 +` *d_v* :math:`+` *e_v* :math:`* w +` *f_v* :math:`* I_{ext}`
-
-            *time_constant_w* :math:`* dw/dt =`
-
-                :math:`mode *` *a_w* :math:`* v +` *b_w* :math:`* w +` *c_w*
-                :math:`+ (1 - self.mode) *` *self.uncorrelated_activity*
-
 
         Arguments
         ---------
@@ -3017,6 +4201,12 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
         current value of v , current value of w : float, list, or array
 
         """
+
+        # FIX: SHOULDN'T THERE BE A CALL TO get_current_function_param('variable', execution_id) HERE??
+
+        # # FIX: TEMPORARY CHECK UNTIL ARRAY IS SUPPORTED
+        # if variable is not None and not np.isscalar(variable) and len(variable)>1:
+        #     raise FunctionError("{} presently supports only a scalar variable".format(self.__class__.__name__))
 
         a_v = self.get_current_function_param("a_v", execution_id)
         b_v = self.get_current_function_param("b_v", execution_id)
@@ -3334,1051 +4524,4 @@ class FHNIntegratorFunction(IntegratorFunction):  # ----------------------------
         return res
 
 
-class AccumulatorIntegratorFunction(IntegratorFunction):  # ----------------------------------------------------------------------------
-    """
-    AccumulatorIntegratorFunction(              \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
-        initializer,                    \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
-        )
 
-    .. _AccumulatorIntegrator:
-
-    Integrates prior value by multiplying `previous_value <AccumulatorIntegratorFunction.previous_value>` by `rate
-    <IntegratorFunction.rate>` and adding `increment <AccumulatorIntegratorFunction.increment>` and  `noise
-    <AccumulatorIntegratorFunction.noise>`. Ignores `variable <IntegratorFunction.variable>`).
-
-    Arguments
-    ---------
-
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d array : default 1.0
-        specifies the multiplicative decrement of `previous_value <AccumulatorIntegratorFunction.previous_value>` (i.e.,
-        the rate of exponential decay).  If it is a list or array, it must be the same length as
-        `variable <AccumulatorIntegratorFunction.default_variable>`.
-
-    increment : float, list or 1d array : default 0.0
-        specifies an amount to be added to `previous_value <AccumulatorIntegratorFunction.previous_value>` in each call to
-        `function <AccumulatorIntegratorFunction.function>` (see `increment <AccumulatorIntegratorFunction.increment>` for details).
-        If it is a list or array, it must be the same length as `variable <AccumulatorIntegratorFunction.default_variable>`
-        (see `increment <AccumulatorIntegratorFunction.increment>` for details).
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added to `prevous_value <AccumulatorIntegratorFunction.previous_value>` in each call to
-        `function <AccumulatorIntegratorFunction.function>`. If it is a list or array, it must be the same length as
-        `variable <AccumulatorIntegratorFunction.default_variable>` (see `noise <AccumulatorIntegratorFunction.noise>` for details).
-
-    initializer float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <AccumulatorIntegratorFunction.default_variable>` (see `initializer
-        <AccumulatorIntegratorFunction.initializer>` for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        **Ignored** by the AccumulatorIntegratorFunction function. Refer to LCAIntegratorFunction or AdaptiveIntegratorFunction for
-        integrator functions that depend on both a prior value and a new value (variable).
-
-    rate : float or 1d array
-        determines the multiplicative decrement of `previous_value <AccumulatorIntegratorFunction.previous_value>` (i.e., the
-        rate of exponential decay) in each call to `function <AccumulatorIntegratorFunction.function>`.  If it is a list or
-        array, it must be the same length as `variable <AccumulatorIntegratorFunction.default_variable>` and each element is
-        used to multiply the corresponding element of `previous_value <AccumulatorIntegratorFunction.previous_value>` (i.e.,
-        it is used for Hadamard multiplication).  If it is a scalar or has a single element, its value is used to
-        multiply all the elements of `previous_value <AccumulatorIntegratorFunction.previous_value>`.
-
-    increment : float, function, list, or 1d array
-        determines the amount added to `previous_value <AccumulatorIntegratorFunction.previous_value>` in each call to
-        `function <AccumulatorIntegratorFunction.function>`.  If it is a list or array, it must be the same length as
-        `variable <AccumulatorIntegratorFunction.default_variable>` and each element is added to the corresponding element of
-        `previous_value <AccumulatorIntegratorFunction.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
-        scalar or has a single element, its value is added to all the elements of `previous_value
-        <AccumulatorIntegratorFunction.previous_value>`.
-
-    noise : float, function, list, or 1d array
-        determines a random value to be added in each call to `function <AccumulatorIntegratorFunction.function>`.
-        If it is a list or array, it must be the same length as `variable <AccumulatorIntegratorFunction.default_variable>` and
-        each element is added to the corresponding element of `previous_value <AccumulatorIntegratorFunction.previous_value>`
-        (i.e., it is used for Hadamard addition).  If it is a scalar or has a single element, its value is added to all
-        the elements of `previous_value <AccumulatorIntegratorFunction.previous_value>`.  If it is a function, it will be
-        executed separately and added to each element.
-
-        .. note::
-
-            In order to generate random noise, a probability distribution function should be selected (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which `previous_value
-        <AccumulatorIntegratorFunction.previous_value>` is set. If initializer is a list or array, it must be the same length
-        as `variable <AccumulatorIntegratorFunction.default_variable>`.
-
-    previous_value : 1d array : default ClassDefaults.variable
-        stores previous value to which `rate <AccumulatorIntegratorFunction.rate>` and `noise <AccumulatorIntegratorFunction.noise>`
-        will be added.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
-
-    class Params(IntegratorFunction.Params):
-        """
-            Attributes
-            ----------
-
-                increment
-                    see `increment <AccumulatorIntegratorFunction.increment>`
-
-                    :default value: None
-                    :type:
-
-                rate
-                    see `rate <AccumulatorIntegratorFunction.rate>`
-
-                    :default value: None
-                    :type:
-
-        """
-        rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        increment = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None,
-        INCREMENT: None,
-    })
-
-    # multiplicative param does not make sense in this case
-    multiplicative_param = RATE
-    additive_param = INCREMENT
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 # rate: parameter_spec = 1.0,
-                 rate=None,
-                 noise=0.0,
-                 increment=None,
-                 initializer=None,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  increment=increment,
-                                                  params=params)
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        self.has_initializers = True
-
-    def _accumulator_check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
-        """validate params and assign any runtime params.
-
-        Called by AccumulatorIntegratorFunction to validate params
-        Validation can be suppressed by turning parameter_validation attribute off
-        target_set is a params dictionary to which params should be assigned;
-           otherwise, they are assigned to paramsCurrent;
-
-        Does the following:
-        - assign runtime params to paramsCurrent
-        - validate params if PARAM_VALIDATION is set
-
-        :param params: (dict) - params to validate
-        :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
-        :return:
-        """
-
-        # PARAMS ------------------------------------------------------------
-
-        # If target_set is not specified, use paramsCurrent
-        if target_set is None:
-            target_set = self.paramsCurrent
-
-        # # MODIFIED 11/27/16 OLD:
-        # # If parameter_validation is set, the function was called with params,
-        # #   and they have changed, then validate requested values and assign to target_set
-        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
-        #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
-        #     self._validate_params(request_set=params, target_set=target_set, context=context)
-
-        # If params have been passed, treat as runtime params and assign to paramsCurrent
-        #   (relabel params as runtime_params for clarity)
-        if execution_id in self._runtime_params_reset:
-            for key in self._runtime_params_reset[execution_id]:
-                self._set_parameter_value(key, self._runtime_params_reset[execution_id][key], execution_id)
-        self._runtime_params_reset[execution_id] = {}
-
-        runtime_params = params
-        if runtime_params:
-            for param_name in runtime_params:
-                if hasattr(self, param_name):
-                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
-                        continue
-                    if execution_id not in self._runtime_params_reset:
-                        self._runtime_params_reset[execution_id] = {}
-                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name).get(execution_id)
-                    self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-        Return: `previous_value <ConstantIntegratorFunction.previous_value>` combined with `rate <ConstantIntegratorFunction.rate>` and
-        `noise <ConstantIntegratorFunction.noise>`.
-
-        Arguments
-        ---------
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-
-        Returns
-        -------
-
-        updated value of integral : 2d array
-
-        """
-        self._accumulator_check_args(variable, execution_id=execution_id, params=params, context=context)
-
-        rate = self.get_current_function_param(RATE, execution_id)
-        increment = self.get_current_function_param(INCREMENT, execution_id)
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
-
-        if rate is None:
-            rate = 1.0
-
-        if increment is None:
-            increment = 0.0
-
-        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-
-        value = previous_value * rate + noise + increment
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(value, execution_id, override=True)
-
-        return self.convert_output_type(value)
-
-
-class LCAIntegratorFunction(IntegratorFunction):  # ------------------------------------------------------------------------------------
-    """
-    LCAIntegratorFunction(                  \
-        default_variable=None,      \
-        noise=0.0,                  \
-        initializer=0.0,            \
-        rate=1.0,                   \
-        offset=None,                \
-        time_step_size=0.1,         \
-        params=None,                \
-        owner=None,                 \
-        prefs=None,                 \
-        )
-
-    .. _LCAIntegrator:
-
-    Integrate current value of `variable <LCAIntegratorFunction.variable>` with its prior value:
-
-    .. math::
-
-        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
-
-    COMMENT:
-    `rate <LCAIntegratorFunction.rate>` * `previous_value <LCAIntegratorFunction.previous_value>` + \
-    `variable <variable.LCAIntegratorFunction.variable>` + \
-    `noise <LCAIntegratorFunction.noise>`;
-    COMMENT
-
-    Arguments
-    ---------
-
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d array : default 1.0
-        scales the contribution of `previous_value <LCAIntegratorFunction.previous_value>` to the accumulation of the
-        `value <LCAIntegratorFunction.value>` on each time step
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <LCAIntegratorFunction.function>`. (see
-        `noise <LCAIntegratorFunction.noise>` for details).
-
-    initializer : float, list or 1d array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <LCAIntegratorFunction.default_variable>` (see `initializer <LCAIntegratorFunction.initializer>` for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        current input value some portion of which (determined by `rate <LCAIntegratorFunction.rate>`) will be
-        added to the prior value;  if it is an array, each element is independently integrated.
-
-    rate : float or 1d array
-        scales the contribution of `previous_value <LCAIntegratorFunction.previous_value>` to the
-        accumulation of the `value <LCAIntegratorFunction.value>` on each time step. If rate has a single element, it
-        applies to all elements of `variable <LCAIntegratorFunction.variable>`;  if rate has more than one element, each element
-        applies to the corresponding element of `variable <LCAIntegratorFunction.variable>`.
-
-    noise : float, function, list, or 1d array
-        specifies a value to be added in each call to `function <LCAIntegratorFunction.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <LCAIntegratorFunction.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <LCAIntegratorFunction.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <LCAIntegratorFunction.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <LCAIntegratorFunction.default_variable>`.
-
-    previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <LCAIntegratorFunction.variable>` is integrated.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = LCAMechanism_INTEGRATOR_FUNCTION
-
-    class Params(IntegratorFunction.Params):
-        """
-            Attributes
-            ----------
-
-                offset
-                    see `offset <LCAIntegratorFunction.offset>`
-
-                    :default value: None
-                    :type:
-
-                rate
-                    see `rate <LCAIntegratorFunction.rate>`
-
-                    :default value: 1.0
-                    :type: float
-
-                time_step_size
-                    see `time_step_size <LCAIntegratorFunction.time_step_size>`
-
-                    :default value: 0.1
-                    :type: float
-
-        """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Param(0.1, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    multiplicative_param = RATE
-    additive_param = OFFSET
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 noise=0.0,
-                 offset=None,
-                 initializer=None,
-                 time_step_size=0.1,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  time_step_size=time_step_size,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        self.has_initializers = True
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-        Return:
-
-        .. math::
-
-            rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
-
-        Arguments
-        ---------
-
-        variable : number, list or array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        updated value of integral : 2d array
-
-        """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        rate = np.atleast_1d(self.get_current_function_param(RATE, execution_id))
-        initializer = self.get_current_function_param(INITIALIZER, execution_id)  # unnecessary?
-        time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-
-        if offset is None:
-            offset = 0.0
-
-        # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
-        previous_value = self.get_previous_value(execution_id)
-        new_value = variable
-
-        # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
-
-        adjusted_value = value + offset
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(adjusted_value, execution_id)
-
-        return self.convert_output_type(adjusted_value)
-
-
-class AGTUtilityIntegratorFunction(IntegratorFunction):  # -----------------------------------------------------------------------------
-    """
-    AGTUtilityIntegratorFunction(                    \
-        default_variable=None,            \
-        rate=1.0,                         \
-        noise=0.0,                        \
-        scale: parameter_spec = 1.0,      \
-        offset: parameter_spec = 0.0,     \
-        initializer,                      \
-        initial_short_term_utility = 0.0, \
-        initial_long_term_utility = 0.0,  \
-        short_term_gain = 1.0,            \
-        long_term_gain =1.0,              \
-        short_term_bias = 0.0,            \
-        long_term_bias=0.0,               \
-        short_term_rate=1.0,              \
-        long_term_rate=1.0,               \
-        params=None,                      \
-        owner=None,                       \
-        prefs=None,                       \
-        )
-
-    .. _AGTUtilityIntegrator:
-
-    Computes an exponentially weighted moving average on the variable using two sets of parameters:
-
-    short_term_utility =
-
-       (1 - `short_term_rate <AGTUtilityIntegratorFunction.short_term_rate>`) :math:`*` `previous_short_term_utility
-       <AGTUtilityIntegratorFunction.previous_short_term_utility>` + `short_term_rate <AGTUtilityIntegratorFunction.short_term_rate>`
-       :math:`*` `variable <AGTUtilityIntegratorFunction.variable>`
-
-    long_term_utility =
-
-       (1 - `long_term_rate <AGTUtilityIntegratorFunction.long_term_rate>`) :math:`*` `previous_long_term_utility
-       <AGTUtilityIntegratorFunction.previous_long_term_utility>` + `long_term_rate <AGTUtilityIntegratorFunction.long_term_rate>`
-       :math:`*` `variable <AGTUtilityIntegratorFunction.variable>`
-
-    then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.
-
-    Finally, computes a single value which combines the two values according to:
-
-    value = [1-short_term_utility_logistic]*long_term_utility_logistic
-
-    Arguments
-    ---------
-
-    rate : float, list or 1d array : default 1.0
-        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        TBI?
-
-    initial_short_term_utility : float : default 0.0
-        specifies starting value for integration of short_term_utility
-
-    initial_long_term_utility : float : default 0.0
-        specifies starting value for integration of long_term_utility
-
-    short_term_gain : float : default 1.0
-        specifies gain for logistic function applied to short_term_utility
-
-    long_term_gain : float : default 1.0
-        specifies gain for logistic function applied to long_term_utility
-
-    short_term_bias : float : default 0.0
-        specifies bias for logistic function applied to short_term_utility
-
-    long_term_bias : float : default 0.0
-        specifies bias for logistic function applied to long_term_utility
-
-    short_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to short_term_utility
-
-    long_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to long_term_utility
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        current input value used in both the short term and long term EWMA computations
-
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        TBI?
-
-    initial_short_term_utility : float : default 0.0
-        specifies starting value for integration of short_term_utility
-
-    initial_long_term_utility : float : default 0.0
-        specifies starting value for integration of long_term_utility
-
-    short_term_gain : float : default 1.0
-        specifies gain for logistic function applied to short_term_utility
-
-    long_term_gain : float : default 1.0
-        specifies gain for logistic function applied to long_term_utility
-
-    short_term_bias : float : default 0.0
-        specifies bias for logistic function applied to short_term_utility
-
-    long_term_bias : float : default 0.0
-        specifies bias for logistic function applied to long_term_utility
-
-    short_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to short_term_utility
-
-    long_term_rate : float : default 1.0
-        specifies smoothing factor of EWMA filter applied to long_term_utility
-
-    previous_short_term_utility : 1d array
-        stores previous value with which `variable <AGTUtilityIntegratorFunction.variable>` is integrated using the EWMA filter and
-        short term parameters
-
-    previous_long_term_utility : 1d array
-        stores previous value with which `variable <AGTUtilityIntegratorFunction.variable>` is integrated using the EWMA filter and
-        long term parameters
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = UTILITY_INTEGRATOR_FUNCTION
-
-    multiplicative_param = RATE
-    additive_param = OFFSET
-
-    class Params(IntegratorFunction.Params):
-        """
-            Attributes
-            ----------
-
-                initial_long_term_utility
-                    see `initial_long_term_utility <AGTUtilityIntegratorFunction.initial_long_term_utility>`
-
-                    :default value: 0.0
-                    :type: float
-
-                initial_short_term_utility
-                    see `initial_short_term_utility <AGTUtilityIntegratorFunction.initial_short_term_utility>`
-
-                    :default value: 0.0
-                    :type: float
-
-                long_term_bias
-                    see `long_term_bias <AGTUtilityIntegratorFunction.long_term_bias>`
-
-                    :default value: 0.0
-                    :type: float
-
-                long_term_gain
-                    see `long_term_gain <AGTUtilityIntegratorFunction.long_term_gain>`
-
-                    :default value: 1.0
-                    :type: float
-
-                long_term_rate
-                    see `long_term_rate <AGTUtilityIntegratorFunction.long_term_rate>`
-
-                    :default value: 0.1
-                    :type: float
-
-                long_term_utility_logistic
-                    see `long_term_utility_logistic <AGTUtilityIntegratorFunction.long_term_utility_logistic>`
-
-                    :default value: None
-                    :type:
-
-                offset
-                    see `offset <AGTUtilityIntegratorFunction.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
-                operation
-                    see `operation <AGTUtilityIntegratorFunction.operation>`
-
-                    :default value: `S*L`
-                    :type: str
-
-                previous_long_term_utility
-                    see `previous_long_term_utility <AGTUtilityIntegratorFunction.previous_long_term_utility>`
-
-                    :default value: None
-                    :type:
-
-                previous_short_term_utility
-                    see `previous_short_term_utility <AGTUtilityIntegratorFunction.previous_short_term_utility>`
-
-                    :default value: None
-                    :type:
-
-                rate
-                    see `rate <AGTUtilityIntegratorFunction.rate>`
-
-                    :default value: 1.0
-                    :type: float
-
-                short_term_bias
-                    see `short_term_bias <AGTUtilityIntegratorFunction.short_term_bias>`
-
-                    :default value: 0.0
-                    :type: float
-
-                short_term_gain
-                    see `short_term_gain <AGTUtilityIntegratorFunction.short_term_gain>`
-
-                    :default value: 1.0
-                    :type: float
-
-                short_term_rate
-                    see `short_term_rate <AGTUtilityIntegratorFunction.short_term_rate>`
-
-                    :default value: 0.9
-                    :type: float
-
-                short_term_utility_logistic
-                    see `short_term_utility_logistic <AGTUtilityIntegratorFunction.short_term_utility_logistic>`
-
-                    :default value: None
-                    :type:
-
-        """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        short_term_gain = Param(1.0, modulable=True)
-        long_term_gain = Param(1.0, modulable=True)
-        short_term_bias = Param(0.0, modulable=True)
-        long_term_bias = Param(0.0, modulable=True)
-        short_term_rate = Param(0.9, modulable=True)
-        long_term_rate = Param(0.1, modulable=True)
-
-        operation = "s*l"
-        initial_short_term_utility = 0.0
-        initial_long_term_utility = 0.0
-
-        previous_short_term_utility = None
-        previous_long_term_utility = None
-
-        short_term_utility_logistic = None
-        long_term_utility_logistic = None
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 noise=0.0,
-                 offset=0.0,
-                 initializer=None,
-                 initial_short_term_utility=0.0,
-                 initial_long_term_utility=0.0,
-                 short_term_gain=1.0,
-                 long_term_gain=1.0,
-                 short_term_bias=0.0,
-                 long_term_bias=0.0,
-                 short_term_rate=0.9,
-                 long_term_rate=0.1,
-                 operation="s*l",
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initial_long_term_utility", "initial_short_term_utility"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  offset=offset,
-                                                  initial_short_term_utility=initial_short_term_utility,
-                                                  initial_long_term_utility=initial_long_term_utility,
-                                                  short_term_gain=short_term_gain,
-                                                  long_term_gain=long_term_gain,
-                                                  short_term_bias=short_term_bias,
-                                                  long_term_bias=long_term_bias,
-                                                  short_term_rate=short_term_rate,
-                                                  long_term_rate=long_term_rate,
-                                                  operation=operation,
-                                                  params=params)
-
-        self.previous_long_term_utility = self.initial_long_term_utility
-        self.previous_short_term_utility = self.initial_short_term_utility
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        self.has_initializers = True
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        # Handle list or array for rate specification
-        if RATE in request_set:
-            rate = request_set[RATE]
-            if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
-                    # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
-                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       AGTUtilityIntegratorFunction's constructor, where that is used as a specification for a function parameter
-                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
-                    #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-                        if self.verbosePref:
-                            warnings.warn(
-                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".format(
-                                    len(rate),
-                                    rate,
-                                    self.name,
-                                    np.array(self.instance_defaults.variable).size
-                                ),
-                                self.instance_defaults.variable
-                            )
-                    else:
-                        raise FunctionError(
-                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({})".format(
-                                len(rate),
-                                rate,
-                                self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
-                            )
-                        )
-                        # OLD:
-                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
-        if RATE in target_set:
-            if isinstance(target_set[RATE], (list, np.ndarray)):
-                for r in target_set[RATE]:
-                    if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                            format(target_set[RATE], self.name))
-            else:
-                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                    raise FunctionError(
-                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-
-        if NOISE in target_set:
-            noise = target_set[NOISE]
-            if isinstance(noise, DistributionFunction):
-                noise.owner = self
-                target_set[NOISE] = noise._execute
-            self._validate_noise(target_set[NOISE])
-            # if INITIALIZER in target_set:
-            #     self._validate_initializer(target_set[INITIALIZER])
-
-        if OPERATION in target_set:
-            if not target_set[OPERATION] in {'s*l', 's+l', 's-l', 'l-s'}:
-                raise FunctionError("\'{}\' arg for {} must be one of the following: {}".
-                                    format(OPERATION, self.name, {'s*l', 's+l', 's-l', 'l-s'}))
-
-    def _EWMA_filter(self, a, rate, b):
-
-        return (1 - rate) * a + rate * b
-
-    def _logistic(self, variable, gain, bias):
-
-        return 1 / (1 + np.exp(-(gain * variable) + bias))
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-        Return: some fraction of `variable <AGTUtilityIntegratorFunction.variable>` combined with some fraction of `previous_value
-        <AGTUtilityIntegratorFunction.previous_value>`.
-
-        Arguments
-        ---------
-
-        variable : number, list or array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        updated value of integral : 2d array
-
-        """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
-        short_term_rate = self.get_current_function_param("short_term_rate", execution_id)
-        long_term_rate = self.get_current_function_param("long_term_rate", execution_id)
-
-        # Integrate Short Term Utility:
-        short_term_utility = self._EWMA_filter(self.previous_short_term_utility,
-                                               short_term_rate,
-                                               variable)
-        # Integrate Long Term Utility:
-        long_term_utility = self._EWMA_filter(self.previous_long_term_utility,
-                                              long_term_rate,
-                                              variable)
-
-        value = self.combine_utilities(short_term_utility, long_term_utility, execution_id=execution_id)
-
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_short_term_utility.set(short_term_utility, execution_id)
-            self.parameters.previous_long_term_utility.set(long_term_utility, execution_id)
-
-        return self.convert_output_type(value)
-
-    def combine_utilities(self, short_term_utility, long_term_utility, execution_id=None):
-        short_term_gain = self.get_current_function_param("short_term_gain", execution_id)
-        short_term_bias = self.get_current_function_param("short_term_bias", execution_id)
-        long_term_gain = self.get_current_function_param("long_term_gain", execution_id)
-        long_term_bias = self.get_current_function_param("long_term_bias", execution_id)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-
-        short_term_utility_logistic = self._logistic(
-            variable=short_term_utility,
-            gain=short_term_gain,
-            bias=short_term_bias,
-        )
-        self.parameters.short_term_utility_logistic.set(short_term_utility_logistic, execution_id)
-
-        long_term_utility_logistic = self._logistic(
-            variable=long_term_utility,
-            gain=long_term_gain,
-            bias=long_term_bias,
-        )
-        self.parameters.long_term_utility_logistic.set(long_term_utility_logistic, execution_id)
-
-        if operation == "s*l":
-            # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
-            value = (1 - short_term_utility_logistic) * long_term_utility_logistic
-        elif operation == "s-l":
-            # Engagement in current task = [1—logistic(short term utility)] - [logistic{long - term utility}]
-            value = (1 - short_term_utility_logistic) - long_term_utility_logistic
-        elif operation == "s+l":
-            # Engagement in current task = [1—logistic(short term utility)] + [logistic{long - term utility}]
-            value = (1 - short_term_utility_logistic) + long_term_utility_logistic
-        elif operation == "l-s":
-            # Engagement in current task = [logistic{long - term utility}] - [1—logistic(short term utility)]
-            value = long_term_utility_logistic - (1 - short_term_utility_logistic)
-
-        return value + offset
-
-    def reinitialize(self, short=None, long=None, execution_context=None):
-
-        """
-        Effectively begins accumulation over again at the specified utilities.
-
-        Sets `previous_short_term_utility <AGTUtilityIntegratorFunction.previous_short_term_utility>` to the quantity specified
-        in the first argument and `previous_long_term_utility <AGTUtilityIntegratorFunction.previous_long_term_utility>` to the
-        quantity specified in the second argument.
-
-        Sets `value <AGTUtilityIntegratorFunction.value>` by computing it based on the newly updated values for
-        `previous_short_term_utility <AGTUtilityIntegratorFunction.previous_short_term_utility>` and
-        `previous_long_term_utility <AGTUtilityIntegratorFunction.previous_long_term_utility>`.
-
-        If no arguments are specified, then the current values of `initial_short_term_utility
-        <AGTUtilityIntegratorFunction.initial_short_term_utility>` and `initial_long_term_utility
-        <AGTUtilityIntegratorFunction.initial_long_term_utility>` are used.
-        """
-
-        if short is None:
-            short = self.get_current_function_param("initial_short_term_utility", execution_context)
-        if long is None:
-            long = self.get_current_function_param("initial_long_term_utility", execution_context)
-
-        self.parameters.previous_short_term_utility.set(short, execution_context)
-        self.parameters.previous_long_term_utility.set(long, execution_context)
-        value = self.combine_utilities(short, long)
-
-        self.parameters.value.set(value, execution_context, override=True)
-        return value

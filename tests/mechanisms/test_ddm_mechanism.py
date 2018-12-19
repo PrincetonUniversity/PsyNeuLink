@@ -5,7 +5,7 @@ import typecheck
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist, DriftDiffusionAnalytical
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import Never, WhenFinished
@@ -17,7 +17,7 @@ class TestReinitialize:
     def test_valid(self):
         D = DDM(
             name='DDM',
-            function=DriftDiffusionIntegratorFunction(),
+            function=DriftDiffusionIntegrator(),
         )
 
         #  returns previous_value + rate * variable * time_step_size  + noise
@@ -82,7 +82,7 @@ class TestReinitialize:
 class TestThreshold:
     def test_threshold_param(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegratorFunction(threshold=10.0))
+                function=DriftDiffusionIntegrator(threshold=10.0))
 
         assert D.function.threshold == 10.0
 
@@ -91,7 +91,7 @@ class TestThreshold:
 
     def test_threshold_sets_is_finished(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegratorFunction(threshold=5.0))
+                function=DriftDiffusionIntegrator(threshold=5.0))
         D.execute(2.0)  # 2.0 < 5.0
         assert not D.is_finished()
 
@@ -103,7 +103,7 @@ class TestThreshold:
 
     def test_threshold_stops_accumulation(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegratorFunction(threshold=5.0))
+                function=DriftDiffusionIntegrator(threshold=5.0))
         decision_variables = []
         time_points = []
         for i in range(5):
@@ -119,7 +119,7 @@ class TestThreshold:
 
     def test_threshold_stops_accumulation_negative(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegratorFunction(threshold=5.0))
+                function=DriftDiffusionIntegrator(threshold=5.0))
         decision_variables = []
         time_points = []
         for i in range(5):
@@ -136,7 +136,7 @@ class TestThreshold:
     # def test_threshold_stops_accumulation_multiple_variables(self):
     #     D = IntegratorMechanism(name='DDM',
     #                             default_variable=[[0,0,0]],
-    #                             function=DriftDiffusionIntegratorFunction(threshold=[5.0, 5.0, 10.0],
+    #                             function=DriftDiffusionIntegrator(threshold=[5.0, 5.0, 10.0],
     #                                                               initializer=[[0.0, 0.0, 0.0]],
     #                                                               rate=[2.0, -2.0, -2.0 ]))
     #     decision_variables_a = []
@@ -155,7 +155,7 @@ class TestThreshold:
 
     def test_is_finished_stops_system(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegratorFunction(threshold=10.0))
+                function=DriftDiffusionIntegrator(threshold=10.0))
         P = Process(pathway=[D])
         S = System(processes=[P],
                    reinitialize_mechanisms_when=Never())
@@ -170,7 +170,7 @@ class TestThreshold:
 
     # def test_is_finished_stops_mechanism(self):
     #     D = DDM(name='DDM',
-    #             function=DriftDiffusionIntegratorFunction(threshold=10.0))
+    #             function=DriftDiffusionIntegrator(threshold=10.0))
     #     T = TransferMechanism(function=Linear(slope=2.0))
     #     P = Process(pathway=[D, T])
     #     S = System(processes=[P])
@@ -235,7 +235,7 @@ def test_DDM_zero_noise():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -253,7 +253,7 @@ def test_DDM_noise_0_5():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.5,
             rate=1.0,
             time_step_size=1.0
@@ -273,7 +273,7 @@ def test_DDM_noise_2_0():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=2.0,
             rate=1.0,
             time_step_size=1.0
@@ -296,7 +296,7 @@ def test_DDM_noise_int():
         stim = 10
         T = DDM(
             name='DDM',
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
 
                 noise=2,
                 rate=1.0,
@@ -304,7 +304,7 @@ def test_DDM_noise_int():
             ),
         )
         float(T.execute(stim)[0])
-    assert "DriftDiffusionIntegratorFunction requires noise parameter to be a float" in str(error_text.value)
+    assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -316,7 +316,7 @@ def test_DDM_noise_fn():
         stim = 10
         T = DDM(
             name='DDM',
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
 
                 noise=NormalDist(),
                 rate=1.0,
@@ -324,7 +324,7 @@ def test_DDM_noise_fn():
             ),
         )
         float(T.execute(stim)[0])
-    assert "DriftDiffusionIntegratorFunction requires noise parameter to be a float" in str(error_text.value)
+    assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ======================================= INPUT TESTS ============================================
 
@@ -339,7 +339,7 @@ def test_DDM_input_int():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -357,7 +357,7 @@ def test_DDM_input_list_len_1():
     stim = [10]
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -375,7 +375,7 @@ def test_DDM_input_float():
     stim = 10.0
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -399,7 +399,7 @@ def test_DDM_input_list_len_2():
         T = DDM(
             name='DDM',
             default_variable=[0, 0],
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
 
                 noise=0.0,
                 rate=1.0,
@@ -424,7 +424,7 @@ def test_DDM_input_fn():
         stim = NormalDist()
         T = DDM(
             name='DDM',
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
 
                 noise=0.0,
                 rate=1.0,
@@ -447,7 +447,7 @@ def test_DDM_rate_int():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=5,
             time_step_size=1.0
@@ -467,7 +467,7 @@ def test_DDM_rate_list_len_1():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=[5],
             time_step_size=1.0
@@ -485,7 +485,7 @@ def test_DDM_rate_float():
     stim = 10
     T = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=5,
             time_step_size=1.0
@@ -508,7 +508,7 @@ def test_DDM_input_rate_negative():
     T = DDM(
         name='DDM',
         default_variable=[0],
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
             time_step_size=1.0
@@ -537,7 +537,7 @@ def test_DDM_rate_fn():
         T = DDM(
             name='DDM',
             default_variable=[0],
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
 
                 noise=0.0,
                 rate=NormalDist().function,
@@ -563,7 +563,7 @@ def test_DDM_size_int_check_var():
     T = DDM(
         name='DDM',
         size=1,
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
             time_step_size=1.0
@@ -580,7 +580,7 @@ def test_DDM_size_int_inputs():
     T = DDM(
         name='DDM',
         size=1,
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
             time_step_size=1.0
@@ -606,7 +606,7 @@ def test_DDM_mech_size_zero():
         T = DDM(
             name='DDM',
             size=0,
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -624,7 +624,7 @@ def test_DDM_mech_size_negative_one():
         T = DDM(
             name='DDM',
             size=-1.0,
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -642,7 +642,7 @@ def test_DDM_size_too_large():
         T = DDM(
             name='DDM',
             size=3.0,
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -660,7 +660,7 @@ def test_DDM_size_too_long():
         T = DDM(
             name='DDM',
             size=[1, 1],
-            function=DriftDiffusionIntegratorFunction(
+            function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
                 time_step_size=1.0
@@ -673,7 +673,7 @@ def test_DDM_time():
 
     D = DDM(
         name='DDM',
-        function=DriftDiffusionIntegratorFunction(
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
             time_step_size=0.2,

@@ -231,7 +231,7 @@ Again, while not as simple as specifying these as arguments in the function's co
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function
 itself (see `DDM <DDM_Creation>` for an example).
 
-.. _Mechanism_Function_Object:
+.. _Mechanism_Function:
 
 `function <Mechanism_Base.function>` Attribute
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -260,8 +260,8 @@ the parameters in the  example above could also be accessed as ``my_mechanism.fu
 Some Mechanisms have auxiliary functions that are inherent (i.e., not made available as arguments in the Mechanism's
 constructor;  e.g., the `integrator_function <TransferMechanism.integrator_function>` of a `TransferMechanism`);
 however, the Mechanism may include parameters for those functions in its constructor (e.g., the **noise** argument in
-the constructor for a `TransferMechanism` is used as the `noise <AdaptiveIntegratorFunction.noise>` parameter of the
-`AdaptiveIntegratorFunction` assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`).
+the constructor for a `TransferMechanism` is used as the `noise <AdaptiveIntegrator.noise>` parameter of the
+`AdaptiveIntegrator` assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`).
 
 COMMENT:
 NOT CURRENTLY IMPLEMENTED
@@ -574,7 +574,7 @@ value to the attribute for the parameter, or by using the Mechanism's `assign_pa
 see `ParameterState_Specification`).  Note that the attributes for the parameters of a Mechanism's `function
 <Mechanism_Base.function>` usually belong to the `Function <Function_Overview>` referenced in its `function
 <Component.function>` attribute, not the Mechanism itself, and therefore must be assigned to the Function
-Component (see `Mechanism_Function_Object` above).
+Component (see `Mechanism_Function` above).
 
 All of the Mechanism's parameters are listed in a dictionary in its `user_params` attribute; that dictionary contains
 a *FUNCTION_PARAMS* entry that contains a sub-dictionary with the parameters of the Mechanism's `function

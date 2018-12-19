@@ -10,8 +10,6 @@
 # *****************************************  STATEFUL FUNCTION *********************************************************
 '''
 
-Functions that stores its current value that can be retrieved and/or combined with its previous value.
-
 * `StatefulFunction`
 * `IntegratorFunctions`
 * `MemoryFunctions`
@@ -23,6 +21,8 @@ import typecheck as tc
 import itertools
 import warnings
 import numbers
+
+import abc
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
@@ -36,7 +36,7 @@ from psyneulink.core.globals.context import ContextFlags
 __all__ = ['StatefulFunction']
 
 
-class StatefulFunction(Function_Base): # -------------------------------------------------------------------------------
+class StatefulFunction(Function_Base): #  ---------------------------------------------------------------------
     """
     StatefulFunction(           \
         default_variable=None,  \
@@ -50,9 +50,16 @@ class StatefulFunction(Function_Base): # ---------------------------------------
 
     .. _StatefulFunction:
 
-    Base class for Functions that maintain the state of previous result (in `previous_value
-    <StatefulFunction.previous_value>`) and may use it in processing the current input provided in `variable
-    <StatefulFunction.variable>`.
+    Abstract base class for Functions the result of which depend on their `previous_value
+    <StatefulFunction.previous_value>` attribute.
+
+    COMMENT:
+    NARRATIVE HERE THAT EXPLAINS:
+    A) initializers and stateful_attributes
+    B) initializer (note singular) is a prespecified member of initializers
+       that contains the value with which to initiailzer previous_value
+    COMMENT
+
 
     Arguments
     ---------
@@ -60,18 +67,19 @@ class StatefulFunction(Function_Base): # ---------------------------------------
     default_variable : number, list or array : default ClassDefaults.variable
         specifies a template for `variable <StatefulFunction.variable>`.
 
-    initializer float, list or 1d array : default 0.0
-        specifies initial value for `prvevious_value <StatefulFunction.previous_value>`.  If it is a list or array,
-        it must be the same length as `default_variable <StatefulFunction.default_variable>` (see `initializer
+    initializer : float, list or 1d array : default 0.0
+        specifies initial value for `previous_value <StatefulFunction.previous_value>`.  If it is a list or array,
+        it must be the same length as `variable <StatefulFunction.variable>` (see `initializer
         <StatefulFunction.initializer>` for details).
 
     rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <StatefulFunction.default_variable>` (see `rate <StatefulFunction.rate>` for details).
+        specifies value used as a scaling parameter in a subclass-dependent way (see `rate <StatefulFunction.rate>` for
+        details); if it is a list or array, it must be the same length as `variable <StatefulFunction.default_variable>`.
 
-    noise : float, PsyNeuLink Function, list or 1d array : default 0.0
-        specifies random value to be added in each call to `function <StatefulFunction.function>`. (see
-        `noise <StatefulFunction.noise>` for details).
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added in each call to `function <StatefulFunction.function>`; if it is a list or
+        array, it must be the same length as `variable <StatefulFunction.default_variable>` (see `noise
+        <StatefulFunction.noise>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -93,12 +101,11 @@ class StatefulFunction(Function_Base): # ---------------------------------------
     variable : number or array
         current input value.
 
-    initializer : 1d array or list
-        determines initial value assigned to `previous_value <StatefulFunction.previous_value>`.  If initializer is a
-        list or array, it must be the same length as `variable <StatefulFunction.default_variable>`. If initializer
-        is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list or array,
-        initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+    initializer : float or 1d array
+        determines initial value assigned to `previous_value <StatefulFunction.previous_value>`. If `variable
+        <StatefulFunction.variable>` is a list or array, and initializer is a float or has a single element, it is
+        applied to each element of `previous_value <StatefulFunction.previous_value>`. If initializer is a list or
+        array,each element is applied to the corresponding element of `previous_value <Integrator.previous_value>`.
 
     previous_value : 1d array
         last value returned (i.e., for which state is being maintained).
@@ -114,26 +121,29 @@ class StatefulFunction(Function_Base): # ---------------------------------------
         <StatefulFunction.initializers>`. In most cases, the stateful_attributes, in that order, are the return values
         of the function.
 
+    .. _Stateful_Rate:
+
     rate : float or 1d array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <StatefulFunction.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <StatefulFunction.variable>`.
+        on each call to `function <StatefulFunction.function>`, applied to `variable <StatefulFunction.variable>`,
+        `previous_value <StatefulFunction.previous_value>`, neither, or both, depending on implementation by
+        subclass.  If it is a float or has a single value, it is applied to all elements of its target(s);  if it has
+        more than one element, each element is applied to the corresponding element of its target(s).
+
+    .. _Stateful_Noise:
 
     noise : float, function, list, or 1d array
-        specifies random value to be added in each call to `function <StatefulFunction.function>`.
+        random value added on each call to `function <StatefulFunction.function>`. If `variable
+        <StatefulFunction.variable>` is a list or array, and noise is a float or function, it is applied
+        for each element of `variable <StatefulFunction.variable>`. If noise is a function, it is executed and applied
+        separately for each element of `variable <StatefulFunction.variable>`.  If noise is a list or array,
+        it is applied elementwise (i.e., in Hadamard form).
 
-        If noise is a list or array, it must be the same length as `variable <StatefulFunction.default_variable>`.
-        If noise is specified as a single float or function, while `variable <StatefulFunction.variable>` is a list
-        or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
-
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+        .. hint::
+            To generate random noise that varies for every execution, a probability distribution function should be
+            used (see `Distribution Functions <DistributionFunction>` for details), that generates a new noise value
+            from its distribution on each execution. If noise is specified as a float, a function with a fixed
+            output, or a list or array of either of these, then noise is simply an offset that remains the same
+            across all executions.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -196,7 +206,7 @@ class StatefulFunction(Function_Base): # ---------------------------------------
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
-                 noise=0.0,
+                 noise: parameter_spec = 0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -385,8 +395,9 @@ class StatefulFunction(Function_Base): # ---------------------------------------
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
                         noise[i] = noise[i]._execute
-                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
-                        raise FunctionError("The elements of a noise list or array must be floats or functions. "
+                    # if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                    if not np.isscalar(noise[i]) and not callable(noise[i]):
+                        raise FunctionError("The elements of a noise list or array must be scalars or functions. "
                                             "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         # Otherwise, must be a float, int or function
@@ -397,24 +408,40 @@ class StatefulFunction(Function_Base): # ---------------------------------------
 
     def _try_execute_param(self, param, var):
 
+        # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D BELOW]
+        param_shape = np.array(param).shape
+        if not len(param_shape):
+            param_shape = np.array(var).shape
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
             # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            # FIX: WHY FORCE 2d??
             param = np.atleast_2d(param)
             for i in range(len(param)):
                 for j in range(len(param[i])):
                     if callable(param[i][j]):
                         param[i][j] = param[i][j]()
+            param = param.reshape(param_shape)
+
         # param is one function
         elif callable(param):
             # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
             new_param = []
+            # FIX: WHY FORCE 2d??
             for row in np.atleast_2d(var):
+            # for row in np.atleast_1d(var):
+            # for row in var:
                 new_row = []
                 for item in row:
                     new_row.append(param())
                 new_param.append(new_row)
             param = new_param
+            # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D ABOVE]
+            try:
+                if len(np.squeeze(np.array(param))):
+                    param = np.array(param).reshape(param_shape)
+            except TypeError:
+                pass
 
         return param
 
@@ -446,26 +473,27 @@ class StatefulFunction(Function_Base): # ---------------------------------------
 
     def reinitialize(self, *args, execution_context=None):
         """
-            Effectively begins accumulation over again at the specified value(s).
+            Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
+            to the specified value(s).
 
             If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
-            `stateful_attributes <StatefulFunction.stateful_attributes>` to the value of the corresponding argument. Next, it
-            sets the `value <StatefulFunction.value>` to a list containing each of the argument values.
+            `stateful_attributes <StatefulFunction.stateful_attributes>` to the value of the corresponding argument.
+            Next, it sets the `value <StatefulFunction.value>` to a list containing each of the argument values.
 
             If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
             <StatefulFunction.stateful_attributes>` to the value of the corresponding attribute in `initializers
-            <StatefulFunction.initializers>`. Next, it sets the `value <StatefulFunction.value>` to a list containing the values of
-            each of the attributes in `initializers <StatefulFunction.initializers>`.
+            <StatefulFunction.initializers>`. Next, it sets the `value <StatefulFunction.value>` to a list containing
+            the values of each of the attributes in `initializers <StatefulFunction.initializers>`.
 
             Often, the only attribute in `stateful_attributes <StatefulFunction.stateful_attributes>` is
             `previous_value <StatefulFunction.previous_value>` and the only attribute in `initializers
-            <StatefulFunction.initializers>` is `initializer <StatefulFunction.initializer>`, in which case the reinitialize method
-            sets `previous_value <StatefulFunction.previous_value>` and `value <StatefulFunction.value>` to either the value of the
-            argument (if an argument was passed into reinitialize) or the current value of `initializer
-            <StatefulFunction.initializer>`.
+            <StatefulFunction.initializers>` is `initializer <StatefulFunction.initializer>`, in which case
+            the reinitialize method sets `previous_value <StatefulFunction.previous_value>` and `value
+            <StatefulFunction.value>` to either the value of the argument (if an argument was passed into
+            reinitialize) or the current value of `initializer <StatefulFunction.initializer>`.
 
-            For specific types of StatefulFunction functions, the reinitialize method may carry out other reinitialization
-            steps.
+            For specific types of StatefulFunction functions, the reinitialize method may carry out other
+            reinitialization steps.
 
         """
 
@@ -521,12 +549,15 @@ class StatefulFunction(Function_Base): # ---------------------------------------
         value = []
         for i in range(len(self.stateful_attributes)):
             setattr(self, self.stateful_attributes[i], reinitialization_values[i])
-            getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i], execution_context, override=True)
+            getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i],
+                                                                      execution_context,
+                                                                      override=True)
             value.append(getattr(self, self.stateful_attributes[i]))
 
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
+    @abc.abstractmethod
     def function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")
 

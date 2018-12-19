@@ -46,7 +46,7 @@ action_selection = pnl.TransferMechanism(size=2,
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
                                                          pnl.FUNCTION: psyneulink.core.components.functions
-                                         .integratorfunctions.AdaptiveIntegratorFunction(rate=0.2)},
+                                         .integratorfunctions.AdaptiveIntegrator(rate=0.2)},
                                                         {pnl.NAME: 'CONFLICT K',
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
@@ -65,7 +65,7 @@ action_selection = pnl.TransferMechanism(size=2,
 
 
 # rate = pnl.ObjectiveMechanism(monitored_output_states=[action_selection.output_states[0]],
-#                               function=pnl.AdaptiveIntegratorFunction(rate=0.2,
+#                               function=pnl.AdaptiveIntegrator(rate=0.2,
 #                                                               noise=reward,
 #                                                               time_step_size=0.02),
 #                               name='REWARD RATE')
@@ -77,10 +77,10 @@ action_selection = pnl.TransferMechanism(size=2,
 #                           name='K')
 
 conflicts = pnl.IntegratorMechanism(input_states=[action_selection.output_states[2]],
-                                    function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AGTUtilityIntegratorFunction(short_term_gain=6.0,
-                                                                                                                                                     long_term_gain=6.0,
-                                                                                                                                                     short_term_rate=0.05,
-                                                                                                                                                     long_term_rate=0.2),
+                                    function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator(short_term_gain=6.0,
+                                                                                                                                                long_term_gain=6.0,
+                                                                                                                                                short_term_rate=0.05,
+                                                                                                                                                long_term_rate=0.2),
                                     name='Short- and Long-term conflict')
 
 decision_process = pnl.Process(default_variable=[0, 0],
