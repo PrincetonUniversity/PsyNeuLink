@@ -4158,27 +4158,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    # copied from Component, because Compositions are not Components but we want same behavior
-    def _initialize_from_context(self, execution_context, base_execution_context=None, override=True):
-        for param in self.stateful_parameters:
-            param._initialize_from_context(execution_context, base_execution_context, override)
-
-        for comp in self._dependent_components:
-            comp._initialize_from_context(execution_context, base_execution_context, override)
-
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        context_param = self.parameters.context.get(execution_id)
-        if context_param is None:
-            self.parameters.context._initialize_from_context(execution_id, base_execution_id)
-            context_param = self.parameters.context.get(execution_id)
-            context_param.execution_id = execution_id
-
-        for context_item, value in kwargs.items():
-            setattr(context_param, context_item, value)
-
-        for comp in self._dependent_components:
-            comp._assign_context_values(execution_id, base_execution_id, **kwargs)
-
     def evaluate(
         self,
         predicted_input=None,
