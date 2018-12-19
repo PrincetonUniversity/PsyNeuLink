@@ -1392,24 +1392,41 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     <DualAdapativeIntegrator.long_term_rate>), transforms each using a logistic function, and then combines them,
     as follows:
 
-    * **short time scale integration**:
+    * **short time scale integral**:
 
       .. math::
-         short\\_term\\_avg = short\\_term\\_rate * variable + (1 - short\\_term\\_rate) * previous\\_short\\_term\\_avg
+         short\\_term\\_avg = short\\_term\\_rate \\cdot variable + (1 - short\\_term\\_rate) \\cdot
+         previous\\_short\\_term\\_avg
 
-    * **long time scale integration**:
-
-      .. math::
-         long\\_term\\_avg = long\\_term\\_rate * variable + (1 - long\\_term\\_rate) * previous\\_long\\_term\\_avg
-
-    * **combined integration**:
+    * **long time scale integral**:
 
       .. math::
+         long\\_term\\_avg = long\\_term\\_rate \\cdot variable + (1 - long\\_term\\_rate) \\cdot
+         previous\\_long\\_term\\_avg
+
+    * **combined integral**:
+
+      .. math::
+         value = operation(s \\cdot short\\_term\\_logistic,\\ l \\cdot long\\_term\\_logistic) + offset
+
+         COMMENT:
          value = (1-\\frac{1}{1+e^{short\\_term\\_gain * short\\_term\\_avg + short\\_term\\_bias}}) <operation>
          \\frac{1}{1+e^{long\\_term\\_gain * long\\_term\\_avg + long\\_term\\_bias}} + offset
+         COMMENT
 
-      where *operation* designates the arithmetic operation used to combine the terms as determined by the
-      `operation <DualAdaptiveIntegrator.operation>` attribute.
+      where:
+
+          :math:`short\\_term\\_logistic = 1-\\frac{1}{1+e^{short\\_term\\_gain\\ \\cdot\\ short\\_term\\_avg\\ +\\
+          short\\_term\\_bias}}`
+
+          :math:`long\\_term\\_logistic = \\frac{1}{1+e^{long\\_term\\_gain\\ \\cdot\\ long\\_term\\_avg\\ +\\
+          long\\_term\\_bias}}`
+
+          :math:`s = 2 \\cdot rate\\ if\\ rate <= 0.5,\\ else\\ 1`
+
+          :math:`l = 2 - (2 \\cdot rate)\\ if\\ rate >= 0.5,\\ else\\ 1`
+
+      and *operation* is the arithmetic `operation <DualAdaptiveIntegrator.operation>` used to combine the terms.
 
 
     Arguments
@@ -1448,13 +1465,17 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     long_term_rate : float : default 1.0
         specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
 
-    operation : s*l | s+l | s-l | l-s : default 's*l'
-        specifies the arithmetic operation used to combine the logistics of the short_term_avg and long_term_avg
-        (see `operation <DualAdaptiveIntegrator>` for details).
+    rate : float or 1d array
+        determines weight assigned to short_term_logistic and long_term_logistic when combined by `operation
+        <DualAdaptiveIntegrator.operation>` (see `rate <DualAdaptiveIntegrator.rate>` for details.
 
-    offset : float, list or 1d array : default 0.0
-        specifies a constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>`
-        after logistics of short_term_avg and long_term_avg are combined.
+    operation : s*l or s+l or s-l or l-s : default 's*l'
+        specifies the arithmetic operation used to combine the logistics of the short_term_avg and long_term_avg
+        (see `operation <DualAdaptiveIntegrator.operation>` for details).
+
+    offset : float or 1d array
+        constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>` after logistics
+        of short_term_avg and long_term_avg are combined (see `offset <DualAdaptiveIntegrator.offset>` for details.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1477,10 +1498,6 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         current input value used to compute both the short term and long term `EWMA <DualAdaptiveIntegrator>` averages.
 
     COMMENT:
-    rate : float, list or 1d array : default 1.0
-        determines overall smoothing factor of the `EWMA <DualAdaptiveIntegrator>` used to combine the long term
-        and short term averages.
-
     noise : float, Function or 1d array : default 0.0
         TBI?
     COMMENT
@@ -1517,6 +1534,15 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         * **s-l** = (1 - short_term_logistic) - long_term_logistic
         * **l-s** = long_term_logistic - (1 - short_term_logistic)
 
+    rate : float or 1d array with element(s) in interval [0,1]: default 0.5
+        determines the linearly-weighted contribution of the short_term_logistic and long_term_logistic to
+        integral.  For rate=0.5,
+        each receives and equal weight of 1;  for rate<0.5, short_term_avg diminishes linearly to 0 while
+        long_term_avg remains at 1;  for rate>0.5, long_term_avg diminishes linearly to 0 wile short_term_avg remains
+        at 1.  If it is a float or has a single element, its value is applied to all the elements of
+        short_term_logistic and long_term_logistic; if it is an array, each element is
+        applied to the corresponding elements of each logistic.
+
     offset : float, list or 1d array : default 0.0
         constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>`
         after logistics of short_term_avg and long_term_avg are combined
@@ -1544,7 +1570,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
     componentName = UTILITY_INTEGRATOR_FUNCTION
 
-    # multiplicative_param = RATE
+    multiplicative_param = RATE
     additive_param = OFFSET
 
     class Params(IntegratorFunction.Params):
@@ -1612,13 +1638,11 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
                     :default value: None
                     :type:
 
-                COMMENT:
                 rate
                     see `rate <DualAdaptiveIntegrator.rate>`
 
-                    :default value: 1.0
+                    :default value: 0.5
                     :type: float
-                COMMENT
 
                 short_term_bias
                     see `short_term_bias <DualAdaptiveIntegrator.short_term_bias>`
@@ -1645,7 +1669,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
                     :type:
 
         """
-        # rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Param(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         initial_short_term_avg = 0.0
         initial_long_term_avg = 0.0
         short_term_gain = Param(1.0, modulable=True)
@@ -1664,7 +1688,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # RATE: None
+        RATE: None,
         # NOISE: None,
         OFFSET: None
     })
@@ -1672,7 +1696,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # rate: parameter_spec = 1.0,
+                 rate: parameter_spec = 0.5,
                  # noise=0.0,
                  initializer=None,
                  initial_short_term_avg=0.0,
@@ -1696,8 +1720,8 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
             self.stateful_attributes = ["previous_short_term_avg", "previous_long_term_avg"]
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
+        params = self._assign_args_to_param_dicts(initializer=initializer,
+                                                  rate=rate,
                                                   # noise=noise,
                                                   offset=offset,
                                                   initial_short_term_avg=initial_short_term_avg,
@@ -1726,75 +1750,78 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        # # Handle list or array for rate specification
-        # if RATE in request_set:
-        #     rate = request_set[RATE]
-        #     if isinstance(rate, (list, np.ndarray)):
-        #         if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
-        #             # If the variable was not specified, then reformat it to match rate specification
-        #             #    and assign ClassDefaults.variable accordingly
-        #             # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-        #             #       DualAdapativeIntegrator's constructor, where that is used as a specification for a function parameter
-        #             #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-        #             #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-        #             #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
-        #             #       the object itself, thus does not see the array specification for the input.
-        #             if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-        #                 self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-        #                 if self.verbosePref:
-        #                     warnings.warn(
-        #                         "The length ({}) of the array specified for the rate parameter ({}) of {} "
-        #                         "must match the length ({}) of the default input ({});  "
-        #                         "the default input has been updated to match".format(
-        #                             len(rate),
-        #                             rate,
-        #                             self.name,
-        #                             np.array(self.instance_defaults.variable).size
-        #                         ),
-        #                         self.instance_defaults.variable
-        #                     )
-        #             else:
-        #                 raise FunctionError(
-        #                     "The length ({}) of the array specified for the rate parameter ({}) of {} "
-        #                     "must match the length ({}) of the default input ({})".format(
-        #                         len(rate),
-        #                         rate,
-        #                         self.name,
-        #                         np.array(self.instance_defaults.variable).size,
-        #                         self.instance_defaults.variable,
-        #                     )
-        #                 )
-        #                 # OLD:
-        #                 # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-        #
-        #                 # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-        #                 # to have a rate parameter of type ndarray/list
-        #
-        # super()._validate_params(request_set=request_set,
-        #                          target_set=target_set,
-        #                          context=context)
-        #
-        # if RATE in target_set:
-        #     if isinstance(target_set[RATE], (list, np.ndarray)):
-        #         for r in target_set[RATE]:
-        #             if r < 0.0 or r > 1.0:
-        #                 raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-        #                                     "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-        #                                     format(target_set[RATE], self.name))
-        #     else:
-        #         if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-        #             raise FunctionError(
-        #                 "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-        #                 "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign ClassDefaults.variable accordingly
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
+                    #       DualAdapativeIntegrator's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable
+                            )
+                    else:
+                        raise FunctionError(
+                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                            "must match the length ({}) of the default input ({})".format(
+                                len(rate),
+                                rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                self.instance_defaults.variable,
+                            )
+                        )
+                        # OLD:
+                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
-        # if NOISE in target_set:
-        #     noise = target_set[NOISE]
-        #     if isinstance(noise, DistributionFunction):
-        #         noise.owner = self
-        #         target_set[NOISE] = noise._execute
-        #     self._validate_noise(target_set[NOISE])
-        #     # if INITIALIZER in target_set:
-        #     #     self._validate_initializer(target_set[INITIALIZER])
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                        # to have a rate parameter of type ndarray/list
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if RATE in target_set:
+            # if isinstance(target_set[RATE], (list, np.ndarray)):
+            #     for r in target_set[RATE]:
+            #         if r < 0.0 or r > 1.0:
+            #             raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+            #                                 "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+            #                                 format(target_set[RATE], self.name))
+            # else:
+            #     if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+            #         raise FunctionError(
+            #             "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+            #             "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+            if not all_within_range(target_set[RATE], 0, 1):
+                raise FunctionError("The rate parameter ({}) (or all of its elements) of {} "
+                                    "must be in the interval [0,1]".format(target_set[RATE], self.name))
+
+        if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
+            self._validate_noise(target_set[NOISE])
+            # if INITIALIZER in target_set:
+            #     self._validate_initializer(target_set[INITIALIZER])
 
         if OPERATION in target_set:
             if not target_set[OPERATION] in {'s*l', 's+l', 's-l', 'l-s'}:
@@ -1841,7 +1868,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
                                           self.previous_long_term_avg,
                                           variable)
 
-        value = self.combine_utilities(short_term_avg, long_term_avg, execution_id=execution_id)
+        value = self._combine_terms(short_term_avg, long_term_avg, execution_id=execution_id)
 
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_short_term_avg.set(short_term_avg, execution_id)
@@ -1849,26 +1876,29 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
         return self.convert_output_type(value)
 
-    def combine_utilities(self, short_term_avg, long_term_avg, execution_id=None):
+    def _combine_terms(self, short_term_avg, long_term_avg, execution_id=None):
+
         short_term_gain = self.get_current_function_param("short_term_gain", execution_id)
         short_term_bias = self.get_current_function_param("short_term_bias", execution_id)
         long_term_gain = self.get_current_function_param("long_term_gain", execution_id)
         long_term_bias = self.get_current_function_param("long_term_bias", execution_id)
+        rate = self.get_current_function_param(RATE, execution_id)
         operation = self.get_current_function_param(OPERATION, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
 
-        short_term_logistic = self._logistic(
-            variable=short_term_avg,
-            gain=short_term_gain,
-            bias=short_term_bias,
-        )
+        s = 2*rate if rate <= 0.5 else 1
+        l = 2-(2*rate) if rate >= 0.5 else 1
+
+        short_term_logistic = s * self._logistic(variable=short_term_avg,
+                                                        gain=short_term_gain,
+                                                        bias=short_term_bias,
+                                                        )
         self.parameters.short_term_logistic.set(short_term_logistic, execution_id)
 
-        long_term_logistic = self._logistic(
-            variable=long_term_avg,
-            gain=long_term_gain,
-            bias=long_term_bias,
-        )
+        long_term_logistic = l * self._logistic(variable=long_term_avg,
+                                                gain=long_term_gain,
+                                                bias=long_term_bias,
+                                                )
         self.parameters.long_term_logistic.set(long_term_logistic, execution_id)
 
         if operation == "s*l":
@@ -1907,7 +1937,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
         self.parameters.previous_short_term_avg.set(short, execution_context)
         self.parameters.previous_long_term_avg.set(long, execution_context)
-        value = self.combine_utilities(short, long)
+        value = self._combine_terms(short, long)
 
         self.parameters.value.set(value, execution_context, override=True)
         return value

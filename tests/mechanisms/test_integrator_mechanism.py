@@ -83,14 +83,14 @@ class TestReinitialize:
         assert np.allclose([[0.3]], I.function.previous_short_term_avg)
         assert np.allclose([[0.7]], I.function.previous_long_term_avg)
         print(I.value)
-        print(I.function.combine_utilities(0.3, 0.7))
-        assert np.allclose(I.function.combine_utilities(0.3, 0.7), I.value)
+        print(I.function._combine_terms(0.3, 0.7))
+        assert np.allclose(I.function._combine_terms(0.3, 0.7), I.value)
 
         I.reinitialize()
 
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
-        assert np.allclose(I.function.combine_utilities(0.0, 0.0), I.value)
+        assert np.allclose(I.function._combine_terms(0.0, 0.0), I.value)
 
     def test_Simple_valid(self):
         I = IntegratorMechanism(
