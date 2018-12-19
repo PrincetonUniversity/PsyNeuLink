@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0.4.8.0+1078.gee497a8 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0.4.8.0+1079.g3f1a845 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1078.gee497a8 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1079.g3f1a845 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="next" title="ObjectiveMechanism" href="ObjectiveMechanism.html"/>
         <link rel="prev" title="TransferMechanism" href="TransferMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1078
+                0.4.8.0+1079
               </div>
             
           
@@ -204,7 +204,7 @@ assigned a custom function.</p>
 specifying <em>INTEGRATOR_MECHANISM</em> as its <strong>mech_spec</strong> argument.  Its function is specified in the <strong>function</strong>
 argument, which can be parametrized by calling its constructor with parameter values:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">AdaptiveIntegratorFunction</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">AdaptiveIntegrator</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>The <strong>default_variable</strong> argument specifies the format of its input (i.e., whether it is a single scalar or an
@@ -215,7 +215,7 @@ argument can be used to specify the length of the array, in which case it will b
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>An IntegratorMechanism has a single <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, the <code class="xref any docutils literal"><span class="pre">value</span></code> of which is
 used as the  <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable" title="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <code class="xref any docutils literal"><span class="pre">function</span></code>.
-The default for <code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">AdaptiveIntegratorFunction(rate=0.5)</span></code>. However,
+The default for <code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">AdaptiveIntegrator(rate=0.5)</span></code>. However,
 a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
 values as its input, and returns a value of the same type and format.  The Mechanism has a single <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>,
 the <code class="xref any docutils literal"><span class="pre">value</span></code> of which is assigned the result of  the call to the Mechanism’s
@@ -235,7 +235,7 @@ list or array, then each element will be used as the rate for the corresponding 
 <span id="integratormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.integratormechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=AdaptiveIntegratorFunction(rate=0.5)</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.integratormechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=AdaptiveIntegrator(rate=0.5)</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.integratormechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that integrates its input.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -337,7 +337,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1078.gee497a8',
+            VERSION:'0.4.8.0+1079.g3f1a845',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
