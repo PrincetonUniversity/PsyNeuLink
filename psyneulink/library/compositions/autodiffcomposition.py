@@ -727,7 +727,7 @@ class AutodiffComposition(Composition):
                                                .format(node.component, self.name))
 
             # raise error if a node's mechanism doesn't have a Linear, Logistic, or ReLU function
-            if not isinstance(node.component.function_object, (Linear, Logistic, ReLU)):
+            if not isinstance(node.component.function, (Linear, Logistic, ReLU)):
                 raise AutodiffCompositionError("Function {0} of mechanism {1} in {2} is not a valid function "
                                                "for a Autodiff Composition. Functions of mechanisms in "
                                                "Autodiff Compositions can only be Linear, Logistic, or ReLU."

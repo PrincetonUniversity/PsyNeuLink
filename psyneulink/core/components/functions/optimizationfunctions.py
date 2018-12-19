@@ -549,29 +549,67 @@ class OptimizationFunction(Function_Base):
             ----------
 
                 variable
-                    see `variable <GaussianProcess.variable>`
+                    see `variable <OptimizationFunction.variable>`
 
-                    :default value: [[0], [0]]
-                    :type: list
+                    :default value: numpy.array([0, 0, 0])
+                    :type: numpy.ndarray
                     :read only: True
 
-                direction
-                    see `direction <GaussianProcess.direction>`
+                max_iterations
+                    see `max_iterations <OptimizationFunction.max_iterations>`
 
-                    :default value: `MAXIMIZE`
-                    :type: str
+                    :default value: None
+                    :type:
+
+                objective_function
+                    see `objective_function <OptimizationFunction.objective_function>`
+
+                    :default value: lambda x: 0
+                    :type: <class 'function'>
 
                 save_samples
-                    see `save_samples <GaussianProcess.save_samples>`
+                    see `save_samples <OptimizationFunction.save_samples>`
 
-                    :default value: True
+                    :default value: False
                     :type: bool
 
                 save_values
-                    see `save_values <GaussianProcess.save_values>`
+                    see `save_values <OptimizationFunction.save_values>`
 
-                    :default value: True
+                    :default value: False
                     :type: bool
+
+                saved_samples
+                    see `saved_samples <OptimizationFunction.saved_samples>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                saved_values
+                    see `saved_values <OptimizationFunction.saved_values>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                search_function
+                    see `search_function <OptimizationFunction.search_function>`
+
+                    :default value: lambda x: x
+                    :type: <class 'function'>
+
+                search_space
+                    see `search_space <OptimizationFunction.search_space>`
+
+                    :default value: [`SampleIterator`]
+                    :type: list
+
+                search_termination_function
+                    see `search_termination_function <OptimizationFunction.search_termination_function>`
+
+                    :default value: lambda x, y, z: True
+                    :type: <class 'function'>
 
         """
         variable = Param(np.array([0, 0, 0]), read_only=True)
@@ -1007,29 +1045,61 @@ class GradientOptimization(OptimizationFunction):
             ----------
 
                 variable
-                    see `variable <GaussianProcess.variable>`
+                    see `variable <GradientOptimization.variable>`
 
                     :default value: [[0], [0]]
                     :type: list
                     :read only: True
 
-                direction
-                    see `direction <GaussianProcess.direction>`
+                annealing_function
+                    see `annealing_function <GradientOptimization.annealing_function>`
 
-                    :default value: `MAXIMIZE`
+                    :default value: None
+                    :type:
+
+                convergence_criterion
+                    see `convergence_criterion <GradientOptimization.convergence_criterion>`
+
+                    :default value: `VALUE`
                     :type: str
 
-                save_samples
-                    see `save_samples <GaussianProcess.save_samples>`
+                convergence_threshold
+                    see `convergence_threshold <GradientOptimization.convergence_threshold>`
 
-                    :default value: True
-                    :type: bool
+                    :default value: 0.001
+                    :type: float
 
-                save_values
-                    see `save_values <GaussianProcess.save_values>`
+                direction
+                    see `direction <GradientOptimization.direction>`
 
-                    :default value: True
-                    :type: bool
+                    :default value: `ASCENT`
+                    :type: str
+
+                max_iterations
+                    see `max_iterations <GradientOptimization.max_iterations>`
+
+                    :default value: 1000
+                    :type: int
+
+                previous_value
+                    see `previous_value <GradientOptimization.previous_value>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                previous_variable
+                    see `previous_variable <GradientOptimization.previous_variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                step
+                    see `step <GradientOptimization.step>`
+
+                    :default value: 1.0
+                    :type: float
 
         """
         variable = Param([[0], [0]], read_only=True)
@@ -1309,27 +1379,26 @@ class GridSearch(OptimizationFunction):
             Attributes
             ----------
 
-                variable
-                    see `variable <GaussianProcess.variable>`
-
-                    :default value: [[0], [0]]
-                    :type: list
-                    :read only: True
-
                 direction
-                    see `direction <GaussianProcess.direction>`
+                    see `direction <GridSearch.direction>`
 
                     :default value: `MAXIMIZE`
                     :type: str
 
+                grid
+                    see `grid <GridSearch.grid>`
+
+                    :default value: None
+                    :type:
+
                 save_samples
-                    see `save_samples <GaussianProcess.save_samples>`
+                    see `save_samples <GridSearch.save_samples>`
 
                     :default value: True
                     :type: bool
 
                 save_values
-                    see `save_values <GaussianProcess.save_values>`
+                    see `save_values <GridSearch.save_values>`
 
                     :default value: True
                     :type: bool
@@ -1548,7 +1617,6 @@ class GridSearch(OptimizationFunction):
                 params=params,
                 context=context
             )
-
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:
@@ -1571,6 +1639,7 @@ class GridSearch(OptimizationFunction):
                                             "(current_execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
                        self.owner.current_execution_count, self.num_iterations))
+
         return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):

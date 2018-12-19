@@ -1324,11 +1324,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def learning_rate(self):
-        return self.function_object.learning_rate
+        return self.function.learning_rate
 
     @learning_rate.setter
     def learning_rate(self, assignment):
-        self.function_object.learning_rate = assignment
+        self.function.learning_rate = assignment
 
     @property
     def input_source(self):

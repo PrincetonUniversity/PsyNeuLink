@@ -1827,13 +1827,13 @@ class TestIntegratorMode:
         integrator_fn = AdaptiveIntegrator(rate=0.5,
                                            default_variable=[[0.0, 0.0], [0.0, 0.0]],
                                            initializer=[[1.0, 2.0], [3.0, 4.0]])
-        expected_result_integrator = integrator_fn.function([[1.5, 2.5], [3.5, 4.5]])
+        expected_result_integrator = integrator_fn([[1.5, 2.5], [3.5, 4.5]])
 
         S1 = SoftMax()
-        expected_result_s1 = S1.function([[1.25, 2.25]])
+        expected_result_s1 = S1([[1.25, 2.25]])
 
         S2 = SoftMax()
-        expected_result_s2 = S2.function([[3.25, 4.25]])
+        expected_result_s2 = S2([[3.25, 4.25]])
 
         assert np.allclose(expected_result_integrator, T.parameters.integrator_function_value.get(S))
         assert np.allclose(expected_result_s1, result[0])

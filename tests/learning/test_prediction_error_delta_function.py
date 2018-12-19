@@ -24,7 +24,7 @@ def test_prediction_error_delta_first_run():
         print("Timestep {}".format(t))
         new_sample = sample * weights
         # print("sample = {}".format(new_sample))
-        delta_vals[t] = delta_function.function(variable=[new_sample, target])
+        delta_vals[t] = delta_function(variable=[new_sample, target])
         print("delta: {}".format(delta_vals[t]))
 
         for i in range(59):

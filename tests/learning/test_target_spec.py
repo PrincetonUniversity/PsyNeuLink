@@ -112,8 +112,8 @@ class TestSimpleLearningPathway:
                    processes=[LP])
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
-            val_2 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
+            val_2 = NormalDist(mean=3.0)()
             target_value = np.array([val_1, val_2])
             return target_value
 
@@ -173,7 +173,7 @@ class TestMultilayerLearning:
                    processes=[P])
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
             return val_1
 
         S.run(inputs={A: 1.0},
@@ -258,7 +258,7 @@ class TestDivergingLearningPathways:
                    )
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
             return val_1
 
         S.run(inputs={A: 1.0},
@@ -434,8 +434,8 @@ class TestInvalidTargetSpecs:
                    )
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
-            val_2 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
+            val_2 = NormalDist(mean=3.0)()
             return [val_1, val_2]
 
         with pytest.raises(RunError) as error_text:

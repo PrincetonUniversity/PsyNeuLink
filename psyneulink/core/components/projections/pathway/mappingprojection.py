@@ -286,14 +286,14 @@ class MappingError(Exception):
 
 
 def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
-    return owning_component.function_object.parameters.matrix.get(execution_id)
+    return owning_component.function.parameters.matrix.get(execution_id)
 
 
 def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
-    owning_component.function_object.parameters.matrix.set(value, execution_id)
+    owning_component.function.parameters.matrix.set(value, execution_id)
     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-    owning_component.parameter_states["matrix"].function_object.parameters.previous_value.set(value, execution_id)
+    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
 
     return value
 
@@ -545,12 +545,12 @@ class MappingProjection(PathwayProjection_Base):
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
-        self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
+        self._parameter_states[MATRIX].function = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
                                                                                default_variable=matrix,
                                                                                initializer=matrix,
                                                                                # rate=initial_rate
                                                                                )
-        self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
+
 
         # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
         # self._parameter_states[MATRIX].log = self.log
@@ -667,7 +667,7 @@ class MappingProjection(PathwayProjection_Base):
 
     @property
     def matrix(self):
-        return self.function_object.matrix
+        return self.function.matrix
 
     @matrix.setter
     def matrix(self, matrix):
@@ -681,12 +681,12 @@ class MappingProjection(PathwayProjection_Base):
         matrix = np.array(matrix)
 
         # FIX: Hack to prevent recursion in calls to setter and assign_params
-        self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        self.function.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
-        self.function_object.matrix = matrix
+        self.function.matrix = matrix
 
         if hasattr(self, "_parameter_states"):
-            self.parameter_states["matrix"].function_object.previous_value = matrix
+            self.parameter_states["matrix"].function.previous_value = matrix
 
     @property
     def _matrix_spec(self):

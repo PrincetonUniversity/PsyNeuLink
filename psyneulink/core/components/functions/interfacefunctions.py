@@ -22,12 +22,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import Function_Base
-from psyneulink.core.globals.keywords import \
-    IDENTITY_FUNCTION, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    PARAMETER_STATE_PARAMS, kwPreferenceSetName
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.preferences.componentpreferenceset import \
-    kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+from psyneulink.core.globals.keywords import FUNCTION_OUTPUT_TYPE_CONVERSION, IDENTITY_FUNCTION, PARAMETER_STATE_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, kwPreferenceSetName
+from psyneulink.core.globals.preferences.componentpreferenceset import PreferenceEntry, PreferenceLevel, is_pref_set, kpReportOutputPref
 
 
 __all__ = ['InterfaceFunction', 'Identity', 'InterfaceStateMap']
@@ -340,7 +337,7 @@ class InterfaceStateMap(InterfaceFunction):
         #       does not update its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
-            return ctx.get_output_struct_type(self.owner.owner.function_object)
+            return ctx.get_output_struct_type(self.owner.owner.function)
         return ctx.get_input_struct_type(super())
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):

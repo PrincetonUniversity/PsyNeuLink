@@ -83,8 +83,8 @@ class TestReinitializeValues:
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
         reinitialize_values = []
-        for attr in A.function_object.stateful_attributes:
-            reinitialize_values.append(getattr(A.function_object, attr))
+        for attr in A.function.stateful_attributes:
+            reinitialize_values.append(getattr(A.function, attr))
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
@@ -161,9 +161,9 @@ class TestReinitializeValues:
             # the reinitialize method on each stateful mechanism.
             reinitialization_value = []
 
-            if isinstance(mechanism.function_object, IntegratorFunction):
-                for attr in mechanism.function_object.stateful_attributes:
-                    reinitialization_value.append(getattr(mechanism.function_object.parameters, attr).get(S))
+            if isinstance(mechanism.function, IntegratorFunction):
+                for attr in mechanism.function.stateful_attributes:
+                    reinitialization_value.append(getattr(mechanism.function.parameters, attr).get(S))
             elif hasattr(mechanism, "integrator_function"):
                 if isinstance(mechanism.integrator_function, IntegratorFunction):
                     for attr in mechanism.integrator_function.stateful_attributes:

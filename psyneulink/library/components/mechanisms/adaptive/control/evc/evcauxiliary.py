@@ -596,9 +596,9 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         # the reinitialize method on each stateful mechanism.
         reinitialization_value = []
 
-        if isinstance(mechanism.function_object, StatefulFunction):
-            for attr in mechanism.function_object.stateful_attributes:
-                reinitialization_value.append(mechanism.function_object.get_current_function_param(attr, execution_id))
+        if isinstance(mechanism.function, StatefulFunction):
+            for attr in mechanism.function.stateful_attributes:
+                reinitialization_value.append(mechanism.function.get_current_function_param(attr, execution_id))
         elif hasattr(mechanism, "integrator_function"):
             if isinstance(mechanism.integrator_function, IntegratorFunction):
                 for attr in mechanism.integrator_function.stateful_attributes:
@@ -628,7 +628,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
             context=context
         )
         EVC_list.append(
-            ctlr.value_function.function(
+            ctlr.value_function(
                 controller=ctlr,
                 outcome=outcome,
                 costs=ctlr.parameters.control_signal_costs.get(sim_execution_id),

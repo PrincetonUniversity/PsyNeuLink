@@ -958,6 +958,7 @@ class DDM(ProcessingMechanism_Base):
             Matplotlib window of the Mechanism's function plotting dynamically over time with specified parameters
             towards a specified threshold
 
+
         """
         import matplotlib.pyplot as plt
         import time
@@ -1021,7 +1022,6 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {DriftDiffusionAnalytical,
-                     # NavarroAndFuss,
                      DriftDiffusionIntegrator}
 
         if FUNCTION in target_set:
@@ -1123,7 +1123,7 @@ class DDM(ProcessingMechanism_Base):
         variable = self._validate_variable(variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
-        if isinstance(self.function.__self__, IntegratorFunction):
+        if isinstance(self.function, IntegratorFunction):
 
             result = super()._execute(variable, execution_id=execution_id, context=context)
 
@@ -1142,7 +1142,7 @@ class DDM(ProcessingMechanism_Base):
                 context=context
             )
 
-            if isinstance(self.function.__self__, DriftDiffusionAnalytical):
+            if isinstance(self.function, DriftDiffusionAnalytical):
                 return_value = np.zeros(shape=(10,1))
                 return_value[self.RESPONSE_TIME_INDEX] = result[0]
                 return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[1]
@@ -1155,45 +1155,31 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[6]
                 return_value[self.RT_INCORRECT_SKEW_INDEX] = result[7]
 
-            # elif isinstance(self.function.__self__, NavarroAndFuss):
-            #     return_value = np.zeros(shape=(10, 1))
-            #     return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
-            #     return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
-            #     return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
-            #     # index 0 holds upper/correct/plus (1 holds lower/error/minus)
-            #     return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][0]
-            #     return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][0]
-            #     return_value[self.RT_CORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][0]
-            #     return_value[self.RT_INCORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
-            #     return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
-            #     return_value[self.RT_INCORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][1]
-
             else:
                 raise DDMError("The function specified ({}) for {} is not a valid function selection for the DDM".
-                               format(self.function_object.name, self.name))
+                               format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function_object.get_current_function_param(THRESHOLD, execution_id))
+            threshold = float(self.function.get_current_function_param(THRESHOLD, execution_id))
             if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
-
             return return_value
 
     def reinitialize(self, *args, execution_context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
-        if isinstance(self.function_object, IntegratorFunction):
-            new_values = self.function_object.reinitialize(*args, execution_context=execution_context)
+        if isinstance(self.function, IntegratorFunction):
+            new_values = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.array(new_values), execution_context, override=True)
             self._update_output_states(execution_id=parse_execution_context(execution_context),
                                        context="REINITIALIZING")
 
     def is_finished(self, execution_context=None):
         # find the single numeric entry in previous_value
-        single_value = self.function_object.get_previous_value(execution_context)
+        single_value = self.function.get_previous_value(execution_context)
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
             while True:
@@ -1203,16 +1189,15 @@ class DDM(ProcessingMechanism_Base):
                     break
 
         if (
-            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD, execution_context)
-            and isinstance(self.function.__self__, IntegratorFunction)
+            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, execution_context)
+            and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function_object.get_current_function_param(THRESHOLD, execution_context)
+                    self.function.get_current_function_param(THRESHOLD, execution_context)
                 )
             )
             return True
-
         return False

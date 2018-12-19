@@ -133,17 +133,17 @@ class PytorchModelCreator(torch.nn.Module):
     # parameters and uses them to create a function object representing the function, then returns it
     def function_creator(self, node, execution_id=None):
         def get_fct_param_value(param_name):
-            val = node.function_object.get_current_function_param(param_name, execution_id)
+            val = node.function.get_current_function_param(param_name, execution_id)
             if val is None:
-                val = node.function_object.get_current_function_param(param_name, None)
+                val = node.function.get_current_function_param(param_name, None)
             return float(val)
 
-        if isinstance(node.function_object, Linear):
+        if isinstance(node.function, Linear):
             slope = get_fct_param_value('slope')
             intercept = get_fct_param_value('intercept')
             return lambda x: x * slope + intercept
 
-        elif isinstance(node.function_object, Logistic):
+        elif isinstance(node.function, Logistic):
             gain = get_fct_param_value('gain')
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')

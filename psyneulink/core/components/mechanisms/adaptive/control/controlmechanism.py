@@ -356,10 +356,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
-    PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1061,8 +1058,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # TBI: For control mechanisms that accumulate, starting output must be equal to the initial "previous value"
         # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
-        # if (isinstance(self.function_object, IntegratorFunction)):
-        #     control_signal._intensity = function_object.initializer
+        # if (isinstance(self.function, IntegratorFunction)):
+        #     control_signal._intensity = function.initializer
 
         # Add ControlSignal to output_states list
         self._output_states.append(control_signal)

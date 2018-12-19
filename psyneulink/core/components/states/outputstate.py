@@ -706,7 +706,7 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 return getattr(owner.parameters, owner_param_name).get(execution_id)
             except AttributeError:
                 try:
-                    return getattr(owner.function_object.parameters, owner_param_name).get(execution_id)
+                    return getattr(owner.function.parameters, owner_param_name).get(execution_id)
                 except AttributeError:
                     raise OutputStateError(
                         "Can't parse variable ({}) for {} of {}".format(
@@ -1680,16 +1680,15 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
 
     if isinstance(function, type) and issubclass(function, Function):
         function = function()
-    if isinstance(function, Function):
-        fct = function.function
-    else:
+
+    if not isinstance(function, Function):
         raise OutputStateError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
                                "or a callable object (Python function or method)".
                                format(FUNCTION.upper(), output_state_name, owner.name, Function.__name__))
     if params_dict_as_variable:
         # Function can accept params_dict as its variable
         if hasattr(function, 'params_dict_as_variable'):
-            return fct
+            return function
         # Allow params_dict to be passed to any function, that will use the first item of the owner's value by default
         else:
             if owner.verbosePref is True:
@@ -1697,8 +1696,8 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
                               "1st item of {}'s {} attribute will be used instead".
                               format(PARAMS_DICT.upper(), VARIABLE.upper(), function.name, FUNCTION.upper(),
                                      OutputState.name, owner.name, owner.name, VALUE))
-            return lambda x : fct(x[OWNER_VALUE][0])
-    return fct
+            return lambda x: function(x[OWNER_VALUE][0])
+    return function
 
 
 @tc.typecheck

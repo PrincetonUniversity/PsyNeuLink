@@ -774,12 +774,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         weights = [input_state.weight for input_state in self.input_states]
         exponents = [input_state.exponent for input_state in self.input_states]
 
-        if hasattr(self.function_object, WEIGHTS):
+        if hasattr(self.function, WEIGHTS):
             if any(weight is not None for weight in weights):
-                self.function_object.weights = [[weight or DEFAULT_WEIGHT] for weight in weights]
-        if hasattr(self.function_object, EXPONENTS):
+                self.function.weights = [[weight or DEFAULT_WEIGHT] for weight in weights]
+        if hasattr(self.function, EXPONENTS):
             if any(exponent is not None for exponent in exponents):
-                self.function_object.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
+                self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
     @property
@@ -798,12 +798,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     @property
     def monitored_output_states_weights_and_exponents(self):
-        if hasattr(self.function_object, WEIGHTS) and self.function_object.weights is not None:
-            weights = self.function_object.weights
+        if hasattr(self.function, WEIGHTS) and self.function.weights is not None:
+            weights = self.function.weights
         else:
             weights = [input_state.weight for input_state in self.input_states]
-        if hasattr(self.function_object, EXPONENTS) and self.function_object.exponents is not None:
-            exponents = self.function_object.exponents
+        if hasattr(self.function, EXPONENTS) and self.function.exponents is not None:
+            exponents = self.function.exponents
         else:
             exponents = [input_state.exponent for input_state in self.input_states]
         return [(w,e) for w, e in zip(weights,exponents)]

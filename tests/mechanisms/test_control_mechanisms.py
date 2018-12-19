@@ -1,10 +1,10 @@
+import functools
 import numpy as np
 import psyneulink as pnl
 import pytest
-import functools
 
-import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.llvm as pnlvm
 
 
 class TestLCControlMechanism:
@@ -57,8 +57,8 @@ class TestLCControlMechanism:
             gain_created_by_LC_output_state_1.append(LC.output_state.parameters.value.get(system))
             mod_gain_assigned_to_A.append(A.get_mod_gain(system))
             mod_gain_assigned_to_B.append(B.get_mod_gain(system))
-            base_gain_assigned_to_A.append(A.function_object.gain)
-            base_gain_assigned_to_B.append(B.function_object.gain)
+            base_gain_assigned_to_A.append(A.function.gain)
+            base_gain_assigned_to_B.append(B.function.gain)
 
         benchmark(S.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
               call_after_trial=functools.partial(report_trial, S))

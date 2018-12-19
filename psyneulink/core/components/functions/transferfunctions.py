@@ -93,36 +93,11 @@ class TransferFunction(Function_Base):
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
-
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
-
                 bounds
-                    see `bounds <SoftMax.bounds>`
+                    see `bounds <TransferFunction.bounds>`
 
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
-
-                gain
-                    see `gain <SoftMax.gain>`
-
-                    :default value: 1.0
-                    :type: float
-
-                output
-                    see `output <SoftMax.output>`
-
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
+                    :default value: None
+                    :type:
 
         """
         bounds = None
@@ -287,36 +262,17 @@ class Linear(TransferFunction):  # ---------------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                intercept
+                    see `intercept <Linear.intercept>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: 0.0
+                    :type: float
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
-
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
-
-                gain
-                    see `gain <SoftMax.gain>`
+                slope
+                    see `slope <Linear.slope>`
 
                     :default value: 1.0
                     :type: float
-
-                output
-                    see `output <SoftMax.output>`
-
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
 
         """
         slope = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -547,36 +503,29 @@ class Exponential(TransferFunction):  # ----------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <Exponential.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: 0.0
+                    :type: float
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
+                offset
+                    see `offset <Exponential.offset>`
 
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
-                gain
-                    see `gain <SoftMax.gain>`
+                rate
+                    see `rate <Exponential.rate>`
 
                     :default value: 1.0
                     :type: float
 
-                output
-                    see `output <SoftMax.output>`
+                scale
+                    see `scale <Exponential.scale>`
 
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
+                    :default value: 1.0
+                    :type: float
 
         """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -817,36 +766,35 @@ class Logistic(TransferFunction):  # -------------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <Logistic.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
-
-                bounds
-                    see `bounds <SoftMax.bounds>`
-
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
                 gain
-                    see `gain <SoftMax.gain>`
+                    see `gain <Logistic.gain>`
 
                     :default value: 1.0
                     :type: float
 
-                output
-                    see `output <SoftMax.output>`
+                offset
+                    see `offset <Logistic.offset>`
 
-                    :default value: `ALL`
-                    :type: str
+                    :default value: 0.0
+                    :type: float
 
-                per_item
-                    see `per_item <SoftMax.per_item>`
+                scale
+                    see `scale <Logistic.scale>`
 
-                    :default value: True
-                    :type: bool
+                    :default value: 1.0
+                    :type: float
+
+                x_0
+                    see `x_0 <Logistic.x_0>`
+
+                    :default value: 0.0
+                    :type: float
 
         """
         gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -1119,36 +1067,35 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <Tanh.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
-
-                bounds
-                    see `bounds <SoftMax.bounds>`
-
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
                 gain
-                    see `gain <SoftMax.gain>`
+                    see `gain <Tanh.gain>`
 
                     :default value: 1.0
                     :type: float
 
-                output
-                    see `output <SoftMax.output>`
+                offset
+                    see `offset <Tanh.offset>`
 
-                    :default value: `ALL`
-                    :type: str
+                    :default value: 0.0
+                    :type: float
 
-                per_item
-                    see `per_item <SoftMax.per_item>`
+                scale
+                    see `scale <Tanh.scale>`
 
-                    :default value: True
-                    :type: bool
+                    :default value: 1.0
+                    :type: float
+
+                x_0
+                    see `x_0 <Tanh.x_0>`
+
+                    :default value: 0.0
+                    :type: float
 
         """
         gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -1367,36 +1314,23 @@ class ReLU(TransferFunction):  # -----------------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <ReLU.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
-
-                bounds
-                    see `bounds <SoftMax.bounds>`
-
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
                 gain
-                    see `gain <SoftMax.gain>`
+                    see `gain <ReLU.gain>`
 
                     :default value: 1.0
                     :type: float
 
-                output
-                    see `output <SoftMax.output>`
+                leak
+                    see `leak <ReLU.leak>`
 
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
+                    :default value: 0.0
+                    :type: float
 
         """
         gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -1619,36 +1553,29 @@ class Gaussian(TransferFunction):  # -------------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <Gaussian.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: 0.0
+                    :type: float
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
+                offset
+                    see `offset <Gaussian.offset>`
 
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
-                gain
-                    see `gain <SoftMax.gain>`
+                scale
+                    see `scale <Gaussian.scale>`
+
+                    :default value: 0.0
+                    :type: float
+
+                standard_deviation
+                    see `standard_deviation <Gaussian.standard_deviation>`
 
                     :default value: 1.0
                     :type: float
-
-                output
-                    see `output <SoftMax.output>`
-
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
 
         """
         standard_deviation = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -2566,36 +2493,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                matrix
+                    see `matrix <LinearMatrix.matrix>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
-
-                bounds
-                    see `bounds <SoftMax.bounds>`
-
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
-
-                gain
-                    see `gain <SoftMax.gain>`
-
-                    :default value: 1.0
-                    :type: float
-
-                output
-                    see `output <SoftMax.output>`
-
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
+                    :default value: None
+                    :type:
 
         """
         matrix = Param(None, modulable=True)
