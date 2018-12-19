@@ -230,7 +230,7 @@ import weakref
 
 from psyneulink.core.globals.context import ContextFlags, _get_time
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared
+from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Param', 'ParamAlias', 'ParameterError',
@@ -1125,7 +1125,7 @@ class Parameters(ParamsTemplate):
 
                 if value.aliases is not None:
                     for alias in value.aliases:
-                        if not hasattr(self, alias) or getattr(self, alias)._owner is not self:
+                        if not hasattr(self, alias) or unproxy_weakproxy(getattr(self, alias)._owner) is not self:
                             super().__setattr__(alias, ParamAlias(source=getattr(self, attr), name=alias))
                             self._register_parameter(alias)
 
