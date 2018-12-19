@@ -2204,18 +2204,22 @@ class Component(object, metaclass=ComponentsMeta):
         for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParamAlias)]:
             param._initialize_from_context(execution_context, base_execution_context, override)
 
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+    def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
         context_param = self.parameters.context.get(execution_id)
         if context_param is None:
             self.parameters.context._initialize_from_context(execution_id, base_execution_id)
             context_param = self.parameters.context.get(execution_id)
-            context_param.execution_id = execution_id
+
+            if context_param is None:
+                context_param = Context(owner=self)
+                self.parameters.context.set(context_param, execution_id)
 
         for context_item, value in kwargs.items():
             setattr(context_param, context_item, value)
 
-        for comp in self._dependent_components:
-            comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+        if propagate:
+            for comp in self._dependent_components:
+                comp._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     def _set_multiple_parameter_values(self, execution_id, override=False, **kwargs):
         """
