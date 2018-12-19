@@ -280,16 +280,16 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
 class ConstantIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
     """
-    ConstantIntegrator(                 \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
-        initializer,                    \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
+    ConstantIntegrator(        \
+        default_variable=None, \
+        rate=1.0,              \
+        noise=0.0,             \
+        scale=1.0,             \
+        offset=0.0,            \
+        initializer,           \
+        params=None,           \
+        owner=None,            \
+        prefs=None,            \
         )
 
     .. _ConstantIntegrator:
@@ -297,7 +297,7 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
     `function <ConstantIntegrator.function>` returns:
 
     .. math::
-        previous_value  + rate  + noise
+        scale \\cdot (previous_value + rate  + noise) + offset
 
     (ignores `variable <IntegratorFunction.variable>`).
 
@@ -317,6 +317,14 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         specifies random value to be added to integral in each call to `function <ConstantIntegrator.function>`;
         if it is a list or array, it must be the same length as `variable <ConstantIntegrator.variable>`
         (see `noise <Integrator_Noise>` for additonal details).
+
+    scale : float, list or 1d array : default 1.0
+        specifies a constant value by which integral is multiplied in each call to `function 
+        <ConstantIntegrator.function>`.
+
+    offset : float, list or 1d array : default 0.0
+        specifies a constant value added to integral after scale is applied in each call to `function 
+        <ConstantIntegrator.function>`.
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
@@ -352,6 +360,13 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
     noise : float, Function or 1d array
         random value added to integral in each call to `function <ConstantIntegrator.function>`
         (see `noise <Integrator_Noise>` for details).
+
+    scale : float, list or 1d array
+        constant value by which integral is multiplied in each call to `function <ConstantIntegrator.function>`.
+
+    offset : float, list or 1d array
+        constant value added to integral after scale is applied in each call to `function 
+        <ConstantIntegrator.function>`.
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
@@ -408,17 +423,17 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
 
 
         """
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         rate = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Param(0.0, modulable=True)
         noise = Param(0.0, modulable=True)
+        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        NOISE: None,
         RATE: None,
-        OFFSET: None,
+        NOISE: None,
         SCALE: None,
+        OFFSET: None,
     })
 
     multiplicative_param = SCALE
@@ -430,8 +445,8 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
                  # rate: parameter_spec = 1.0,
                  rate=0.0,
                  noise=0.0,
-                 offset=0.0,
                  scale=1.0,
+                 offset=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -439,10 +454,10 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
                                                   noise=noise,
                                                   scale=scale,
                                                   offset=offset,
+                                                  initializer=initializer,
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
@@ -528,9 +543,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     AccumulatorIntegrator(              \
         default_variable=None,          \
         rate=1.0,                       \
+        increment=0.0,                  \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
         initializer,                    \
         params=None,                    \
         owner=None,                     \
@@ -600,7 +614,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         applied to all the elements of `previous_value <AccumulatorIntegrator.previous_value>`; if it is an array, each
         element is applied to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`.
 
-    increment : float, function, list, or 1d array
+    increment : float, function, or 1d array
         determines the amount added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
         `function <AccumulatorIntegrator.function>`.  If it is a list or array, it must be the same length as
         `variable <AccumulatorIntegrator.variable>` and each element is added to the corresponding element of
@@ -640,35 +654,18 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
+                increment
+                    see `increment <AccumulatorIntegrator.increment>`
 
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
+                    :default value: None
+                    :type:
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <AccumulatorIntegrator.rate>`
 
-                    :default value: 1.0
-                    :type: float
+                    :default value: None
+                    :type:
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
-
-                    :default value: 0.0
-                    :type: float
 
         """
         rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -676,9 +673,9 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        NOISE: None,
         RATE: None,
         INCREMENT: None,
+        NOISE: None,
     })
 
     # multiplicative param does not make sense in this case
@@ -688,10 +685,9 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # rate: parameter_spec = 1.0,
                  rate=None,
-                 noise=0.0,
                  increment=None,
+                 noise=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -699,9 +695,9 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
                                                   increment=increment,
+                                                  noise=noise,
+                                                  initializer=initializer,
                                                   params=params)
 
         super().__init__(
@@ -815,6 +811,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         default_variable=None,  \
         rate=1.0,               \
         noise=0.0,              \
+        offset=0.0,             \
         initializer,            \
         params=None,            \
         owner=None,             \
@@ -827,7 +824,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. math::
 
-        previous_value + rate * variable + noise
+        previous_value + rate * variable + noise + offset
 
 
     Arguments
@@ -838,7 +835,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         integrated.
 
     rate : float, list or 1d array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        specifies the rate of integration;  if it is a list or array, it must be the same length as
         `variable <SimpleIntegrator.variable>` (see `rate <SimpleIntegrator.rate>` for details).
 
     noise : float, function, list or 1d array : default 0.0
@@ -846,8 +843,12 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`
         (see `noise <Integrator_Noise>` for details).
 
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <SimpleIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`.
+
     initializer : float, list or 1d array : default 0.0
-        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        specifies starting value(s) for integration;  if it is a list or array, it must be the same length as
         `default_variable <SimpleIntegrator.variable>` (see `initializer <Integrator_Initializer>`
         for details).
 
@@ -881,6 +882,9 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         random value added to integral in each call to `function <SimpleIntegrator.function>`
         (see `noise <Integrator_Noise>` for details).
 
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <SimpleIntegrator.function>`.
+
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value to which `previous_value
         <SimpleIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
@@ -905,8 +909,9 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
+        RATE: None,
         NOISE: None,
-        RATE: None
+        OFFSET: None
     })
 
     multiplicative_param = RATE
@@ -930,8 +935,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                     :type: float
 
         """
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -946,9 +951,9 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
                                                   noise=noise,
                                                   offset=offset,
+                                                  initializer=initializer,
                                                   params=params)
         super().__init__(
             default_variable=default_variable,
@@ -1012,16 +1017,15 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
 class AdaptiveIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
     """
-    AdaptiveIntegrator(                 \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
-        initializer,                    \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
+    AdaptiveIntegrator(         \
+        default_variable=None,  \
+        rate=1.0,               \
+        noise=0.0,              \
+        offset=0.0,             \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
         )
 
     .. _AdaptiveIntegrator:
@@ -1048,6 +1052,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         specifies random value added to integral in each call to `function <AdaptiveIntegrator.function>`;
         if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`
         (see `noise <Integrator_Noise>` for details).
+
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <AdaptiveIntegrator.function>`;  
+        if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`.
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
@@ -1087,6 +1095,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         random value added to integral in each call to `function <AdaptiveIntegrator.function>`
         (see `noise <Integrator_Noise>` for details).
 
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <AdaptiveIntegrator.function>`.
+
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <AdaptiveIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
@@ -1114,8 +1125,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
+        RATE: None,
         NOISE: None,
-        RATE: None
+        OFFSET: None
     })
 
     class Params(IntegratorFunction.Params):
@@ -1124,7 +1136,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             ----------
 
                 offset
-                    see `offset <.offset>`
+                    see `offset <AdaptiveIntegrator.offset>`
 
                     :default value: 0.0
                     :type: float
@@ -1152,9 +1164,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
                                                   noise=noise,
                                                   offset=offset,
+                                                  initializer=initializer,
                                                   params=params)
 
         super().__init__(
@@ -1349,23 +1361,22 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
 class DualAdapativeIntegrator(IntegratorFunction):  # ------------------------------------------------------------------
     """
-    DualAdapativeIntegrator(              \
-        default_variable=None,            \
-        rate=1.0,                         \
-        scale: parameter_spec = 1.0,      \
-        offset: parameter_spec = 0.0,     \
-        initializer,                      \
-        initial_short_term_avg = 0.0,     \
-        initial_long_term_avg = 0.0,      \
-        short_term_gain = 1.0,            \
-        long_term_gain =1.0,              \
-        short_term_bias = 0.0,            \
-        long_term_bias=0.0,               \
-        short_term_rate=1.0,              \
-        long_term_rate=1.0,               \
-        params=None,                      \
-        owner=None,                       \
-        prefs=None,                       \
+    DualAdapativeIntegrator(         \
+        default_variable=None,       \
+        initializer=None,            \
+        initial_short_term_avg=0.0,  \
+        initial_long_term_avg=0.0,   \
+        short_term_gain=1.0,         \
+        long_term_gain=1.0,          \
+        short_term_bias=0.0,         \
+        long_term_bias=0.0,          \
+        short_term_rate=1.0,         \
+        long_term_rate=1.0,          \
+        operation='s*l',             \
+        offset=0.0,                  \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None,                  \
         )
 
     .. _DualAdaptiveIntegrator:
@@ -1394,18 +1405,21 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     * **combined integration**:
 
       .. math::
-         value = (1-\\frac{1}{1+e^{short\\_term\\_gain * short\\_term\\_avg + short\\_term\\_bias}}) *
-         \\frac{1}{1+e^{long\\_term\\_gain * long\\_term\\_avg + long\\_term\\_bias}}
+         value = (1-\\frac{1}{1+e^{short\\_term\\_gain * short\\_term\\_avg + short\\_term\\_bias}}) <operation>
+         \\frac{1}{1+e^{long\\_term\\_gain * long\\_term\\_avg + long\\_term\\_bias}} + offset
+
+      where *operation* designates the arithmetic operation used to combine the terms as determined by the
+      `operation <DualAdaptiveIntegrator.operation>` attribute.
 
 
     Arguments
     ---------
 
-    rate : float, list or 1d array : default 1.0
-        specifies the overall smoothing factor of the `EWMA <DualAdaptiveIntegrator>` used to combine the long term and
-        short term averages.
-
     COMMENT:
+    rate : float, list or 1d array : default 1.0
+        specifies the overall smoothing factor of the `EWMA <DualAdaptiveIntegrator>` used to combine
+        the logistics of long term and short term averages.
+
     noise : float, function, list or 1d array : default 0.0
         TBI?
     COMMENT
@@ -1434,6 +1448,14 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     long_term_rate : float : default 1.0
         specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
 
+    operation : s*l | s+l | s-l | l-s : default 's*l'
+        specifies the arithmetic operation used to combine the logistics of the short_term_avg and long_term_avg
+        (see `operation <DualAdaptiveIntegrator>` for details).
+
+    offset : float, list or 1d array : default 0.0
+        specifies a constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>`
+        after logistics of short_term_avg and long_term_avg are combined.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1455,33 +1477,49 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         current input value used to compute both the short term and long term `EWMA <DualAdaptiveIntegrator>` averages.
 
     COMMENT:
+    rate : float, list or 1d array : default 1.0
+        determines overall smoothing factor of the `EWMA <DualAdaptiveIntegrator>` used to combine the long term
+        and short term averages.
+
     noise : float, Function or 1d array : default 0.0
         TBI?
     COMMENT
 
-    initial_short_term_avg : float : default 0.0
-        specifies starting value for integration of short_term_avg
+    initial_short_term_avg : float
+        determines starting value for integration of short_term_avg
 
-    initial_long_term_avg : float : default 0.0
-        specifies starting value for integration of long_term_avg
+    initial_long_term_avg : float
+        determines starting value for integration of long_term_avg
 
-    short_term_gain : float : default 1.0
-        specifies gain for logistic function applied to short_term_avg
+    short_term_gain : float
+        determines gain for logistic function applied to short_term_avg
 
-    long_term_gain : float : default 1.0
-        specifies gain for logistic function applied to long_term_avg
+    long_term_gain : float
+        determines gain for logistic function applied to long_term_avg
 
-    short_term_bias : float : default 0.0
-        specifies bias for logistic function applied to short_term_avg
+    short_term_bias : float
+        determines bias for logistic function applied to short_term_avg
 
-    long_term_bias : float : default 0.0
-        specifies bias for logistic function applied to long_term_avg
+    long_term_bias : float
+        determines bias for logistic function applied to long_term_avg
 
-    short_term_rate : float : default 1.0
-        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to short_term_avg
+    short_term_rate : float
+        determines smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to short_term_avg
 
-    long_term_rate : float : default 1.0
-        specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
+    long_term_rate : float
+        determines smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
+
+    operation : str
+        determines the arithmetic operation used to combine the logistics of short_term_avg and long_term_avg:
+
+        * **s\*l** = (1 - short_term_logistic) * long_term_logistic
+        * **s+l** = (1 - short_term_logistic) + long_term_logistic
+        * **s-l** = (1 - short_term_logistic) - long_term_logistic
+        * **l-s** = long_term_logistic - (1 - short_term_logistic)
+
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>`
+        after logistics of short_term_avg and long_term_avg are combined
 
     previous_short_term_avg : 1d array
         stores previous value with which `variable <DualAdapativeIntegrator.variable>` is integrated using the
@@ -1506,7 +1544,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
     componentName = UTILITY_INTEGRATOR_FUNCTION
 
-    multiplicative_param = RATE
+    # multiplicative_param = RATE
     additive_param = OFFSET
 
     class Params(IntegratorFunction.Params):
@@ -1514,74 +1552,128 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
+                initial_long_term_utility
+                    see `initial_long_term_utility <DualAdaptiveIntegrator.initial_long_term_utility>`
+
+                    :default value: 0.0
+                    :type: float
+
+                initial_short_term_utility
+                    see `initial_short_term_utility <DualAdaptiveIntegrator.initial_short_term_utility>`
+
+                    :default value: 0.0
+                    :type: float
+
+                long_term_bias
+                    see `long_term_bias <DualAdaptiveIntegrator.long_term_bias>`
+
+                    :default value: 0.0
+                    :type: float
+
+                long_term_gain
+                    see `long_term_gain <DualAdaptiveIntegrator.long_term_gain>`
 
                     :default value: 1.0
                     :type: float
 
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
+                long_term_rate
+                    see `long_term_rate <DualAdaptiveIntegrator.long_term_rate>`
 
-                    :default value: 1.0
+                    :default value: 0.1
                     :type: float
 
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
+                long_term_utility_logistic
+                    see `long_term_utility_logistic <DualAdaptiveIntegrator.long_term_utility_logistic>`
 
-                    :default value: 1.0
-                    :type: float
+                    :default value: None
+                    :type:
 
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <DualAdaptiveIntegrator.offset>`
 
                     :default value: 0.0
                     :type: float
 
+                operation
+                    see `operation <DualAdaptiveIntegrator.operation>`
+
+                    :default value: `S*L`
+                    :type: str
+
+                previous_long_term_utility
+                    see `previous_long_term_utility <DualAdaptiveIntegrator.previous_long_term_utility>`
+
+                    :default value: None
+                    :type:
+
+                previous_short_term_utility
+                    see `previous_short_term_utility <DualAdaptiveIntegrator.previous_short_term_utility>`
+
+                    :default value: None
+                    :type:
+
+                COMMENT:
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <DualAdaptiveIntegrator.rate>`
+
+                    :default value: 1.0
+                    :type: float
+                COMMENT
+
+                short_term_bias
+                    see `short_term_bias <DualAdaptiveIntegrator.short_term_bias>`
+
+                    :default value: 0.0
+                    :type: float
+
+                short_term_gain
+                    see `short_term_gain <DualAdaptiveIntegrator.short_term_gain>`
 
                     :default value: 1.0
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                short_term_rate
+                    see `short_term_rate <DualAdaptiveIntegrator.short_term_rate>`
 
-                    :default value: 0.0
+                    :default value: 0.9
                     :type: float
 
+                short_term_utility_logistic
+                    see `short_term_utility_logistic <DualAdaptiveIntegrator.short_term_utility_logistic>`
+
+                    :default value: None
+                    :type:
+
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        # rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        initial_short_term_avg = 0.0
+        initial_long_term_avg = 0.0
         short_term_gain = Param(1.0, modulable=True)
         long_term_gain = Param(1.0, modulable=True)
         short_term_bias = Param(0.0, modulable=True)
         long_term_bias = Param(0.0, modulable=True)
         short_term_rate = Param(0.9, modulable=True)
         long_term_rate = Param(0.1, modulable=True)
-
         operation = "s*l"
-        initial_short_term_avg = 0.0
-        initial_long_term_avg = 0.0
-
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         previous_short_term_avg = None
         previous_long_term_avg = None
-
         short_term_logistic = None
         long_term_logistic = None
 
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
+        # RATE: None
+        # NOISE: None,
+        OFFSET: None
     })
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
+                 # rate: parameter_spec = 1.0,
                  # noise=0.0,
-                 offset=0.0,
                  initializer=None,
                  initial_short_term_avg=0.0,
                  initial_long_term_avg=0.0,
@@ -1592,6 +1684,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
                  short_term_rate=0.9,
                  long_term_rate=0.1,
                  operation="s*l",
+                 offset=0.0,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -1633,75 +1726,75 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        # Handle list or array for rate specification
-        if RATE in request_set:
-            rate = request_set[RATE]
-            if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
-                    # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
-                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       DualAdapativeIntegrator's constructor, where that is used as a specification for a function parameter
-                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
-                    #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-                        if self.verbosePref:
-                            warnings.warn(
-                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".format(
-                                    len(rate),
-                                    rate,
-                                    self.name,
-                                    np.array(self.instance_defaults.variable).size
-                                ),
-                                self.instance_defaults.variable
-                            )
-                    else:
-                        raise FunctionError(
-                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({})".format(
-                                len(rate),
-                                rate,
-                                self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
-                            )
-                        )
-                        # OLD:
-                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+        # # Handle list or array for rate specification
+        # if RATE in request_set:
+        #     rate = request_set[RATE]
+        #     if isinstance(rate, (list, np.ndarray)):
+        #         if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+        #             # If the variable was not specified, then reformat it to match rate specification
+        #             #    and assign ClassDefaults.variable accordingly
+        #             # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
+        #             #       DualAdapativeIntegrator's constructor, where that is used as a specification for a function parameter
+        #             #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+        #             #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+        #             #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
+        #             #       the object itself, thus does not see the array specification for the input.
+        #             if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+        #                 self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+        #                 if self.verbosePref:
+        #                     warnings.warn(
+        #                         "The length ({}) of the array specified for the rate parameter ({}) of {} "
+        #                         "must match the length ({}) of the default input ({});  "
+        #                         "the default input has been updated to match".format(
+        #                             len(rate),
+        #                             rate,
+        #                             self.name,
+        #                             np.array(self.instance_defaults.variable).size
+        #                         ),
+        #                         self.instance_defaults.variable
+        #                     )
+        #             else:
+        #                 raise FunctionError(
+        #                     "The length ({}) of the array specified for the rate parameter ({}) of {} "
+        #                     "must match the length ({}) of the default input ({})".format(
+        #                         len(rate),
+        #                         rate,
+        #                         self.name,
+        #                         np.array(self.instance_defaults.variable).size,
+        #                         self.instance_defaults.variable,
+        #                     )
+        #                 )
+        #                 # OLD:
+        #                 # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+        #
+        #                 # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+        #                 # to have a rate parameter of type ndarray/list
+        #
+        # super()._validate_params(request_set=request_set,
+        #                          target_set=target_set,
+        #                          context=context)
+        #
+        # if RATE in target_set:
+        #     if isinstance(target_set[RATE], (list, np.ndarray)):
+        #         for r in target_set[RATE]:
+        #             if r < 0.0 or r > 1.0:
+        #                 raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+        #                                     "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+        #                                     format(target_set[RATE], self.name))
+        #     else:
+        #         if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+        #             raise FunctionError(
+        #                 "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+        #                 "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
-        if RATE in target_set:
-            if isinstance(target_set[RATE], (list, np.ndarray)):
-                for r in target_set[RATE]:
-                    if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                            format(target_set[RATE], self.name))
-            else:
-                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                    raise FunctionError(
-                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-
-        if NOISE in target_set:
-            noise = target_set[NOISE]
-            if isinstance(noise, DistributionFunction):
-                noise.owner = self
-                target_set[NOISE] = noise._execute
-            self._validate_noise(target_set[NOISE])
-            # if INITIALIZER in target_set:
-            #     self._validate_initializer(target_set[INITIALIZER])
+        # if NOISE in target_set:
+        #     noise = target_set[NOISE]
+        #     if isinstance(noise, DistributionFunction):
+        #         noise.owner = self
+        #         target_set[NOISE] = noise._execute
+        #     self._validate_noise(target_set[NOISE])
+        #     # if INITIALIZER in target_set:
+        #     #     self._validate_initializer(target_set[INITIALIZER])
 
         if OPERATION in target_set:
             if not target_set[OPERATION] in {'s*l', 's+l', 's-l', 'l-s'}:
@@ -1733,9 +1826,9 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
 
         """
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+        # rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+        # noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
         short_term_rate = self.get_current_function_param("short_term_rate", execution_id)
         long_term_rate = self.get_current_function_param("long_term_rate", execution_id)
 
@@ -1779,16 +1872,12 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         self.parameters.long_term_logistic.set(long_term_logistic, execution_id)
 
         if operation == "s*l":
-            # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
             value = (1 - short_term_logistic) * long_term_logistic
         elif operation == "s-l":
-            # Engagement in current task = [1—logistic(short term utility)] - [logistic{long - term utility}]
             value = (1 - short_term_logistic) - long_term_logistic
         elif operation == "s+l":
-            # Engagement in current task = [1—logistic(short term utility)] + [logistic{long - term utility}]
             value = (1 - short_term_logistic) + long_term_logistic
         elif operation == "l-s":
-            # Engagement in current task = [logistic{long - term utility}] - [1—logistic(short term utility)]
             value = long_term_logistic - (1 - short_term_logistic)
 
         return value + offset
@@ -1877,6 +1966,11 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         specifies the rate of change in activity; its value(s) must be in the interval [0,1].  If it is a list or
         array, it must be the same length as `variable <InteractiveActivation.variable>`.
 
+    decay : float, list or 1d array : default 1.0
+        specifies the rate of at which activity decays toward `rest <InteractiveActivation.rest>`.
+        If it is a list or array, it must be the same length as `variable <InteractiveActivation.variable>`;
+        its value(s) must be in the interval [0,1].
+
     rest : float, list or 1d array : default 0.0
         specifies the initial value and one toward which value `decays <InteractiveActivation.decay>`.
         If it is a list or array, it must be the same length as `variable <InteractiveActivation.variable>`.
@@ -1884,11 +1978,6 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         its value(s) must be between `max_val <InteractiveActivation.max_val>` and `min_val
         <InteractiveActivation.min_val>`.
         COMMENT
-
-    decay : float, list or 1d array : default 1.0
-        specifies the rate of at which activity decays toward `rest <InteractiveActivation.rest>`.
-        If it is a list or array, it must be the same length as `variable <InteractiveActivation.variable>`;
-        its value(s) must be in the interval [0,1].
 
     max_val : float, list or 1d array : default 1.0
         specifies the maximum asymptotic value toward which integration occurs for positive values of `variable
@@ -1940,17 +2029,17 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         it is applied to all elements of `variable <InteractiveActivation.variable>`; if it has more than one
         element, each element is applied to the corresponding element of `variable <InteractiveActivation.variable>`.
 
-    rest : float or 1d array
-        determines the initial value and one toward which value `decays <InteractiveActivation.decay>` (similar
-        to *bias* in other IntegratorFunctions).  If it is a float or has a single element,
-        it applies to all elements of `variable <InteractiveActivation.variable>`;  if it has more than one
-        element, each element applies to the corresponding element of `variable <InteractiveActivation.variable>`.
-
     decay : float or 1d array
         determines the rate of at which activity decays toward `rest <InteractiveActivation.rest>` (similary to
         *rate* in other IntegratorFuncgtions).  If it is a float or has a single element, it applies to all elements
         of `variable <InteractiveActivation.variable>`;  if it has more than one element, each element applies to
         the corresponding element of `variable <InteractiveActivation.variable>`.
+
+    rest : float or 1d array
+        determines the initial value and one toward which value `decays <InteractiveActivation.decay>` (similar
+        to *bias* in other IntegratorFunctions).  If it is a float or has a single element,
+        it applies to all elements of `variable <InteractiveActivation.variable>`;  if it has more than one
+        element, each element applies to the corresponding element of `variable <InteractiveActivation.variable>`.
 
     max_val : float or 1d array
         determines the maximum asymptotic value toward which integration occurs for positive values of `variable
@@ -2024,12 +2113,6 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
                     :default value: 1.0
                     :type: float
 
-                offset
-                    see `offset <InteractiveActivation.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
                 rate
                     see `rate <InteractiveActivation.rate>`
 
@@ -2048,7 +2131,6 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         rest = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_val = Param(1.0)
         min_val = Param(1.0)
-        # offset = Param(0.0)
 
     @tc.typecheck
     def __init__(self,
@@ -2059,7 +2141,6 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
                  max_val: parameter_spec = 1.0,
                  min_val: parameter_spec = -1.0,
                  noise=0.0,
-                 # offset=None,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -2190,12 +2271,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale= 1.0,                     \
         offset= 0.0,                    \
-        time_step_size=1.0,             \
         t0=0.0,                         \
-        decay=0.0,                      \
         threshold=1.0                   \
+        time_step_size=1.0,             \
         initializer,                    \
         params=None,                    \
         owner=None,                     \
@@ -2209,7 +2288,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     ..  math::
         previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2)
+
     where
+
     ..  math::
         \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
 
@@ -2236,23 +2317,27 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         `variable <DriftDiffusionIntegrator.variable>` (see `noise <DriftDiffusionIntegrator.noise>` for details).
     COMMENT
 
-
-    time_step_size : float : default 0.0
-        specifies the timing precision of the integration process (see `time_step_size
-        <DriftDiffusionIntegrator.time_step_size>` for details.
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <DriftDiffusionIntegrator.function>`
+        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
+        if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`.
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
         the DDM Mechanism.
 
+    threshold : float : default 0.0
+        specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
+        integration process terminates (see `threshold <DriftDiffusionIntegrator.threshold>` for details).
+
+    time_step_size : float : default 0.0
+        specifies the timing precision of the integration process (see `time_step_size
+        <DriftDiffusionIntegrator.time_step_size>` for details.
+
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.variable>` (see `initializer <Integrator_Initializer>`
         for details).
-
-    threshold : float : default 0.0
-        specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
-        integration process terminates (see `threshold <DriftDiffusionIntegrator.threshold>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -2297,24 +2382,16 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         corresponding elements of `variable <DriftDiffusionIntegrator.variable>`.
     COMMENT
 
-    time_step_size : float
-        determines the timing precision of the integration process and is used to scale the `noise
-        <DriftDiffusionIntegrator.noise>` parameter according to the standard DDM probability distribution.
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <DriftDiffusionIntegrator.function>`
+        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
+        If `variable <DriftDiffusionIntegrator.variable>` is a list or array, and offset is a float, it is applied
+        to each element of the integral.  If offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral.
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
         the DDM Mechanism.
-
-    initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
-
-    previous_time : float
-        stores previous time at which the function was executed and accumulates with each execution according to
-        `time_step_size <DriftDiffusionIntegrator.default_time_step_size>`.
-
-    previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
     threshold : float : default 0.0
         determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
@@ -2326,6 +2403,21 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
            `function <DriftDiffusionIntegrator.function>`, the `Mechanism` to which it assigned must belong to a
            `System` or `Composition` with a `Scheduler <Scheduler>` that applies the `WhenFinished <WhenFinished>`
            `Condition <Condition>` to that Mechanism.
+
+    time_step_size : float
+        determines the timing precision of the integration process and is used to scale the `noise
+        <DriftDiffusionIntegrator.noise>` parameter according to the standard DDM probability distribution.
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+
+    previous_time : float
+        stores previous time at which the function was executed and accumulates with each execution according to
+        `time_step_size <DriftDiffusionIntegrator.default_time_step_size>`.
+
+    previous_value : 1d array : default ClassDefaults.variable
+        stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -2389,10 +2481,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        t0 = 0.0
         threshold = Param(100.0, modulable=True)
         time_step_size = Param(1.0, modulable=True)
         previous_time = None
-        t0 = 0.0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -2406,9 +2498,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
+                 t0=0.0,
                  threshold=100.0,
                  time_step_size=1.0,
-                 t0=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -2485,8 +2577,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        offset = self.get_current_function_param(OFFSET, execution_id)
         noise = self.get_current_function_param(NOISE, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
         threshold = self.get_current_function_param(THRESHOLD, execution_id)
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
 
@@ -2526,11 +2618,11 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     OrnsteinUhlenbeckIntegrator(         \
         default_variable=None,           \
         rate=1.0,                        \
+        decay=1.0,                       \
         noise=0.0,                       \
         offset= 0.0,                     \
-        time_step_size=1.0,              \
         t0=0.0,                          \
-        decay=1.0,                       \
+        time_step_size=1.0,              \
         initializer=0.0,                 \
         params=None,                     \
         owner=None,                      \
@@ -2543,7 +2635,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     `Ornstein Uhlenbeck process <https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process>`_:
 
     .. math::
-       previous\\_value + decay \\cdot  (previous\\_value - rate \\cdot variable) + \\mathcal{N}(\\sigma^2)
+       previous\\_value + (decay \\cdot  previous\\_value) - (rate \\cdot variable) + \\mathcal{N}(\\sigma^2)
     where
     ..  math::
         \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
@@ -2556,9 +2648,14 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         rate
 
     rate : float, list or 1d array : default 1.0
-        applied multiplicatively to `variable <OrnsteinUhlenbeckIntegrator.variable>`;  If it is a list or array,
-        it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>` (see `rate
+        specifies value applied multiplicatively to `variable <OrnsteinUhlenbeckIntegrator.variable>`;  If it is a
+        list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>` (see `rate
         <OrnsteinUhlenbeckIntegrator.rate>` for details).
+
+    decay : float, list or 1d array : default 1.0
+        specifies value applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`;
+        If it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>` (
+        see `decay <OrnsteinUhlenbeckIntegrator.rate>` for details).
 
     noise : float : default 0.0
         specifies a value by which to scale the normally distributed random value added to the integral in each call to
@@ -2572,13 +2669,17 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         `variable <OrnsteinUhlenbeckIntegrator.variable>` (see `noise <OrnsteinUhlenbeckIntegrator.noise>` for details).
     COMMENT
 
+    offset : float, list or 1d array : default 0.0
+        specifies a constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>`.
+
+    t0 : float : default 0.0
+        specifies the starting time of the model and is used to compute `previous_time
+        <OrnsteinUhlenbeckIntegrator.previous_time>`
+
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
         <OrnsteinUhlenbeckIntegrator.time_step_size>` for details.
-
-    t0 : float : default 0.0
-        represents the starting time of the model and is used to compute
-        `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>`
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
@@ -2614,6 +2715,12 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if it is an array, each element is applied to the corresponding element of `variable
         <OrnsteinUhlenbeckIntegrator.variable>`.
 
+    decay : float, list or 1d array : default 1.0
+        applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`; If it is a float or
+        has a single element, its value is applied to all the elements of `previous_value
+        <OrnsteinUhlenbeckIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
+        element of `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`.
+
     noise : float
         scales the normally distributed random value added to integral in each call to `function
         <OrnsteinUhlenbeckIntegrator.function>`.  A single random term is generated each execution, and applied to all
@@ -2629,6 +2736,15 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         <OrnsteinUhlenbeckIntegrator.variable>`, and a separate random term scaled by noise is applied for each of the
         corresponding elements of `variable <OrnsteinUhlenbeckIntegrator.variable>`.
     COMMENT
+
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`;
+        if `variable <OrnsteinUhlenbeckIntegrator.variable>` is a list or array, and offset is a float, it is applied
+        to each element of the integral.  If offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral.
+
+    t0 : float
+        determines the start time of the integration process.
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
@@ -2706,9 +2822,9 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         """
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        decay = Param(1.0, modulable=True)
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(1.0, modulable=True)
-        decay = Param(1.0, modulable=True)
         t0 = 0.0
         previous_time = 0.0
 
@@ -2722,11 +2838,11 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
+                 decay=1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
-                 time_step_size=1.0,
                  t0=0.0,
-                 decay=1.0,
+                 time_step_size=1.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -2740,12 +2856,12 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  time_step_size=time_step_size,
                                                   decay=decay,
-                                                  initializer=initializer,
-                                                  t0=t0,
                                                   noise=noise,
                                                   offset=offset,
+                                                  t0=t0,
+                                                  time_step_size=time_step_size,
+                                                  initializer=initializer,
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
@@ -2807,10 +2923,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
         decay = self.get_current_function_param(DECAY, execution_id)
         noise = self.get_current_function_param(NOISE, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+        time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
 
         previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
@@ -2842,11 +2958,11 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
     """
     LCAIntegrator(                  \
         default_variable=None,      \
-        noise=0.0,                  \
-        initializer=0.0,            \
         rate=1.0,                   \
+        noise=0.0,                  \
         offset=None,                \
         time_step_size=0.1,         \
+        initializer=0.0,            \
         params=None,                \
         owner=None,                 \
         prefs=None,                 \
@@ -2877,6 +2993,14 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         specifies random value added to integral in each call to `function <LCAIntegrator.function>`;
         if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`
         (see `noise <Integrator_Noise>` for additonal details).
+
+    offset : float, list or 1d array : default 0.0
+        specifies a constant value added to integral in each call to `function <LCAIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`.
+
+    time_step_size : float : default 0.0
+        determines the timing precision of the integration process (see `time_step_size
+        <LCAIntegrator.time_step_size>` for details.
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
@@ -2914,6 +3038,16 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         random value added to integral in each call to `function <LCAIntegrator.function>`.
         (see `noise <Integrator_Noise>` for details).
 
+    offset : float, list or 1d array : default 0.0
+        constant value added to integral in each call to `function <LCAIntegrator.function>`;
+        if `variable <LCAIntegrator.variable>` is a list or array, and offset is a float, it is applied
+        to each element of the integral.  If offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral.
+
+    time_step_size : float
+        determines the timing precision of the integration process and is used to scale the `noise
+        <LCAIntegrator.noise>` parameter appropriately.
+
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <LCAIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
@@ -2941,40 +3075,22 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
             Attributes
             ----------
 
-                decay
-                    see `decay <InteractiveActivation.decay>`
-
-                    :default value: 1.0
-                    :type: float
-
-                max_val
-                    see `max_val <InteractiveActivation.max_val>`
-
-                    :default value: 1.0
-                    :type: float
-
-                min_val
-                    see `min_val <InteractiveActivation.min_val>`
-
-                    :default value: 1.0
-                    :type: float
-
                 offset
-                    see `offset <InteractiveActivation.offset>`
+                    see `offset <LCAIntegrator.offset>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: None
+                    :type:
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <LCAIntegrator.rate>`
 
                     :default value: 1.0
                     :type: float
 
-                rest
-                    see `rest <InteractiveActivation.rest>`
+                time_step_size
+                    see `time_step_size <LCAIntegrator.time_step_size>`
 
-                    :default value: 0.0
+                    :default value: 0.1
                     :type: float
 
         """
@@ -2984,8 +3100,9 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
+        RATE: None,
+        OFFSET: None,
+        NOISE: None
     })
 
     multiplicative_param = RATE
@@ -2997,18 +3114,18 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset=None,
-                 initializer=None,
                  time_step_size=0.1,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
                                                   noise=noise,
-                                                  time_step_size=time_step_size,
                                                   offset=offset,
+                                                  time_step_size=time_step_size,
+                                                  initializer=initializer,
                                                   params=params)
 
         super().__init__(
@@ -3079,8 +3196,6 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
     """
     FHNIntegrator(                      \
         default_variable=1.0,           \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
         time_step_size=0.05,            \
@@ -3541,11 +3656,13 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
                     :default value: 1.0
                     :type: float
 
+                COMMENT:
                 offset
                     see `offset <FHNIntegrator.offset>`
 
                     :default value: 0.0
                     :type: float
+                COMMENT
 
                 previous_time
                     see `previous_time <FHNIntegrator.previous_time>`
@@ -3565,11 +3682,13 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
+                COMMENT:
                 scale
                     see `scale <FHNIntegrator.scale>`
 
                     :default value: 1.0
                     :type: float
+                COMMENT
 
                 t_0
                     see `t_0 <FHNIntegrator.t_0>`
@@ -3609,8 +3728,8 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
         """
         variable = Param(np.array([1.0]), read_only=True)
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        # scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        # offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(0.05, modulable=True)
         a_v = Param(1.0 / 3, modulable=True)
         b_v = Param(0.0, modulable=True)
@@ -3643,18 +3762,16 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         INCREMENT: None,
     })
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
+    # multiplicative_param = SCALE
+    # additive_param = OFFSET
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 offset=0.0,
-                 scale=1.0,
+                 # scale=1.0,
+                 # offset=0.0,
                  initial_w=0.0,
                  initial_v=0.0,
-                 time_step_size=0.05,
-                 t_0=0.0,
                  a_v=-1 / 3,
                  b_v=0.0,
                  c_v=1.0,
@@ -3665,8 +3782,10 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
                  a_w=1.0,
                  b_w=-0.8,
                  c_w=0.7,
-                 threshold=-1.0,
                  time_constant_w=12.5,
+                 t_0=0.0,
+                 threshold=-1.0,
+                 time_step_size=0.05,
                  mode=1.0,
                  uncorrelated_activity=0.0,
                  integration_method="RK4",
@@ -3688,8 +3807,8 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
-                                                  offset=offset,
-                                                  scale=scale,
+                                                  # offset=offset,
+                                                  # scale=scale,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,
                                                   time_step_size=time_step_size,
