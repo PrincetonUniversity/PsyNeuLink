@@ -8,7 +8,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    LCAIntegrator, DualAdapativeIntegrator
+    LCAIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -63,7 +63,7 @@ class TestReinitialize:
 
     def test_AGTUtility_valid(self):
         I = IntegratorMechanism(name="I",
-                                function=DualAdapativeIntegrator())
+                                function=DualAdaptiveIntegrator())
         I.reinitialize_when = Never()
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
@@ -1215,8 +1215,8 @@ class TestDualAdaptiveIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "DualAdapativeIntegrator",
-            function=DualAdapativeIntegrator(
+            name = "DualAdaptiveIntegrator",
+            function=DualAdaptiveIntegrator(
             )
 
         )
@@ -1242,8 +1242,8 @@ class TestDualAdaptiveIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "DualAdapativeIntegrator",
-            function=DualAdapativeIntegrator(
+            name = "DualAdaptiveIntegrator",
+            function=DualAdaptiveIntegrator(
                 operation="s-l"
             )
 
@@ -1270,8 +1270,8 @@ class TestDualAdaptiveIntegrator:
         # long_term_rate = 1.0
 
         U = IntegratorMechanism(
-            name = "DualAdapativeIntegrator",
-            function=DualAdapativeIntegrator(
+            name = "DualAdaptiveIntegrator",
+            function=DualAdaptiveIntegrator(
                 operation="s+l"
             )
 

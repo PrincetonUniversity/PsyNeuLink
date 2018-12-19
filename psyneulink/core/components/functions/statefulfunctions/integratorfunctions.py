@@ -17,7 +17,7 @@ Functions that integrate current value of input with previous value.
 * `AccumulatorIntegrator`
 * `SimpleIntegrator`
 * `AdaptiveIntegrator`
-* `DualAdapativeIntegrator`
+* `DualAdaptiveIntegrator`
 * `DriftDiffusionIntegrator`
 * `OrnsteinUhlenbeckIntegrator`
 * `InteractiveActivation`
@@ -56,7 +56,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 
 __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator', 'AccumulatorIntegrator', 'LCAIntegrator',
-           'DualAdapativeIntegrator', 'InteractiveActivation',
+           'DualAdaptiveIntegrator', 'InteractiveActivation',
            ]
 
 
@@ -1359,9 +1359,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         return self.convert_output_type(adjusted_value)
 
 
-class DualAdapativeIntegrator(IntegratorFunction):  # ------------------------------------------------------------------
+class DualAdaptiveIntegrator(IntegratorFunction):  # ------------------------------------------------------------------
     """
-    DualAdapativeIntegrator(         \
+    DualAdaptiveIntegrator(         \
         default_variable=None,       \
         initializer=None,            \
         initial_short_term_avg=0.0,  \
@@ -1387,9 +1387,9 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     <https://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ to integrate utility over two
     time scales.
 
-    `function <DualAdapativeIntegrator.function>` computes the EWMA of `variable <DualAdapativeIntegrator.variable>`
-    using two integration rates (`short_term_rate <DualAdapativeIntegrator.short_term_rate>` and `long_term_rate
-    <DualAdapativeIntegrator.long_term_rate>), transforms each using a logistic function, and then combines them,
+    `function <DualAdaptiveIntegrator.function>` computes the EWMA of `variable <DualAdaptiveIntegrator.variable>`
+    using two integration rates (`short_term_rate <DualAdaptiveIntegrator.short_term_rate>` and `long_term_rate
+    <DualAdaptiveIntegrator.long_term_rate>), transforms each using a logistic function, and then combines them,
     as follows:
 
     * **short time scale integral**:
@@ -1404,39 +1404,22 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
          long\\_term\\_avg = long\\_term\\_rate \\cdot variable + (1 - long\\_term\\_rate) \\cdot
          previous\\_long\\_term\\_avg
 
+    .. _DualAdaptive_Combined:
+
     * **combined integral**:
 
       .. math::
-         value = operation(s \\cdot short\\_term\\_logistic,\\ l \\cdot long\\_term\\_logistic) + offset
+         value = operation(1-\\frac{1}{1+e^{short\\_term\\_gain\\ \\cdot\\ short\\_term\\_avg\\ +\\
+         short\\_term\\_bias}},\\
+         \\frac{1}{1+e^{long\\_term\\_gain\\ \\cdot\\ long\\_term\\_avg + long\\_term\\_bias}})\\ +\\ offset
 
-         COMMENT:
-         value = (1-\\frac{1}{1+e^{short\\_term\\_gain * short\\_term\\_avg + short\\_term\\_bias}}) <operation>
-         \\frac{1}{1+e^{long\\_term\\_gain * long\\_term\\_avg + long\\_term\\_bias}} + offset
-         COMMENT
-
-      where:
-
-          :math:`short\\_term\\_logistic = 1-\\frac{1}{1+e^{short\\_term\\_gain\\ \\cdot\\ short\\_term\\_avg\\ +\\
-          short\\_term\\_bias}}`
-
-          :math:`long\\_term\\_logistic = \\frac{1}{1+e^{long\\_term\\_gain\\ \\cdot\\ long\\_term\\_avg\\ +\\
-          long\\_term\\_bias}}`
-
-          :math:`s = 2 \\cdot rate\\ if\\ rate <= 0.5,\\ else\\ 1`
-
-          :math:`l = 2 - (2 \\cdot rate)\\ if\\ rate >= 0.5,\\ else\\ 1`
-
-      and *operation* is the arithmetic `operation <DualAdaptiveIntegrator.operation>` used to combine the terms.
+      where *operation* is the arithmetic `operation <DualAdaptiveIntegrator.operation>` used to combine the terms.
 
 
     Arguments
     ---------
 
     COMMENT:
-    rate : float, list or 1d array : default 1.0
-        specifies the overall smoothing factor of the `EWMA <DualAdaptiveIntegrator>` used to combine
-        the logistics of long term and short term averages.
-
     noise : float, function, list or 1d array : default 0.0
         TBI?
     COMMENT
@@ -1465,9 +1448,11 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
     long_term_rate : float : default 1.0
         specifies smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
 
+    COMMENT:
     rate : float or 1d array
-        determines weight assigned to short_term_logistic and long_term_logistic when combined by `operation
-        <DualAdaptiveIntegrator.operation>` (see `rate <DualAdaptiveIntegrator.rate>` for details.
+        determines weight assigned to `short_term_logistic and long_term_logistic <DualAdaptive_Combined>` when combined
+        by `operation <DualAdaptiveIntegrator.operation>` (see `rate <DualAdaptiveIntegrator.rate>` for details.
+    COMMENT
 
     operation : s*l or s+l or s-l or l-s : default 's*l'
         specifies the arithmetic operation used to combine the logistics of the short_term_avg and long_term_avg
@@ -1527,32 +1512,34 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         determines smoothing factor of `EWMA <DualAdaptiveIntegrator>` filter applied to long_term_avg
 
     operation : str
-        determines the arithmetic operation used to combine the logistics of short_term_avg and long_term_avg:
+        determines the arithmetic operation used to combine `short_term_logistic and long_term_logistic
+        <DualAdaptive_Combined>`:
 
         * **s\*l** = (1 - short_term_logistic) * long_term_logistic
         * **s+l** = (1 - short_term_logistic) + long_term_logistic
         * **s-l** = (1 - short_term_logistic) - long_term_logistic
         * **l-s** = long_term_logistic - (1 - short_term_logistic)
 
+    COMMENT:
     rate : float or 1d array with element(s) in interval [0,1]: default 0.5
-        determines the linearly-weighted contribution of the short_term_logistic and long_term_logistic to
-        integral.  For rate=0.5,
-        each receives and equal weight of 1;  for rate<0.5, short_term_avg diminishes linearly to 0 while
-        long_term_avg remains at 1;  for rate>0.5, long_term_avg diminishes linearly to 0 wile short_term_avg remains
-        at 1.  If it is a float or has a single element, its value is applied to all the elements of
-        short_term_logistic and long_term_logistic; if it is an array, each element is
-        applied to the corresponding elements of each logistic.
+        determines the linearly-weighted contribution of `short_term_logistic and long_term_logistic
+        <DualAdaptive_Combined>` to the integral.  For rate=0.5, each receives and equal weight of 1;  for rate<0.5,
+        short_term_avg diminishes linearly to 0 while long_term_avg remains at 1;  for rate>0.5, long_term_avg
+        diminishes linearly to 0 wile short_term_avg remains at 1.  If it is a float or has a single element,
+        its value is applied to all the elements of short_term_logistic and long_term_logistic; if it is an array,
+        each element is applied to the corresponding elements of each logistic.
+    COMMENT
 
     offset : float, list or 1d array : default 0.0
         constant value added to integral in each call to `function <DualAdaptiveIntegrator.function>`
         after logistics of short_term_avg and long_term_avg are combined
 
     previous_short_term_avg : 1d array
-        stores previous value with which `variable <DualAdapativeIntegrator.variable>` is integrated using the
+        stores previous value with which `variable <DualAdaptiveIntegrator.variable>` is integrated using the
         `EWMA <DualAdaptiveIntegrator>` filter and short term parameters
 
     previous_long_term_avg : 1d array
-        stores previous value with which `variable <DualAdapativeIntegrator.variable>` is integrated using the
+        stores previous value with which `variable <DualAdaptiveIntegrator.variable>` is integrated using the
         `EWMA <DualAdaptiveIntegrator>` filter and long term parameters
 
     owner : Component
@@ -1758,7 +1745,7 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       DualAdapativeIntegrator's constructor, where that is used as a specification for a function parameter
+                    #       DualAdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
@@ -1917,17 +1904,17 @@ class DualAdapativeIntegrator(IntegratorFunction):  # --------------------------
         """
         Effectively begins accumulation over again at the specified utilities.
 
-        Sets `previous_short_term_avg <DualAdapativeIntegrator.previous_short_term_avg>` to the quantity specified
-        in the first argument and `previous_long_term_avg <DualAdapativeIntegrator.previous_long_term_avg>` to the
+        Sets `previous_short_term_avg <DualAdaptiveIntegrator.previous_short_term_avg>` to the quantity specified
+        in the first argument and `previous_long_term_avg <DualAdaptiveIntegrator.previous_long_term_avg>` to the
         quantity specified in the second argument.
 
-        Sets `value <DualAdapativeIntegrator.value>` by computing it based on the newly updated values for
-        `previous_short_term_avg <DualAdapativeIntegrator.previous_short_term_avg>` and
-        `previous_long_term_avg <DualAdapativeIntegrator.previous_long_term_avg>`.
+        Sets `value <DualAdaptiveIntegrator.value>` by computing it based on the newly updated values for
+        `previous_short_term_avg <DualAdaptiveIntegrator.previous_short_term_avg>` and
+        `previous_long_term_avg <DualAdaptiveIntegrator.previous_long_term_avg>`.
 
         If no arguments are specified, then the current values of `initial_short_term_avg
-        <DualAdapativeIntegrator.initial_short_term_avg>` and `initial_long_term_avg
-        <DualAdapativeIntegrator.initial_long_term_avg>` are used.
+        <DualAdaptiveIntegrator.initial_short_term_avg>` and `initial_long_term_avg
+        <DualAdaptiveIntegrator.initial_long_term_avg>` are used.
         """
 
         if short is None:
