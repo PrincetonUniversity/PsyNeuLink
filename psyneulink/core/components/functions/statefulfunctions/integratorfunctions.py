@@ -1418,6 +1418,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
         return self.convert_output_type(adjusted_value)
 
+# S-L = 's-l'
+# L-S = 'l-s'
+# OPERATIONS = {PRODUCT, SUM, S-L, L-S}
+
 
 class DualAdaptiveIntegrator(IntegratorFunction):  # ------------------------------------------------------------------
     """
