@@ -46,7 +46,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, \
     OFFSET, OPERATION, \
     ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, \
-    TIME_STEP_SIZE, UTILITY_INTEGRATOR_FUNCTION, \
+    TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
@@ -1616,7 +1616,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         <LINK>` for details).
     """
 
-    componentName = UTILITY_INTEGRATOR_FUNCTION
+    componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
 
     # multiplicative_param = RATE
     additive_param = OFFSET
@@ -4204,9 +4204,9 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
         # FIX: SHOULDN'T THERE BE A CALL TO get_current_function_param('variable', execution_id) HERE??
 
-        # FIX: TEMPORARY CHECK UNTIL ARRAY IS SUPPORTED
-        if variable is not None and not np.isscalar(variable) and len(variable)>1:
-            raise FunctionError("{} presently supports only a scalar variable".format(self.__class__.__name__))
+        # # FIX: TEMPORARY CHECK UNTIL ARRAY IS SUPPORTED
+        # if variable is not None and not np.isscalar(variable) and len(variable)>1:
+        #     raise FunctionError("{} presently supports only a scalar variable".format(self.__class__.__name__))
 
         a_v = self.get_current_function_param("a_v", execution_id)
         b_v = self.get_current_function_param("b_v", execution_id)
