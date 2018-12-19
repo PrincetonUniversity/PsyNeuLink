@@ -297,10 +297,15 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
     `function <ConstantIntegrator.function>` returns:
 
     .. math::
-        scale \\cdot (previous_value + rate  + noise) + offset
+        scale \\cdot (previous\\_value + rate  + noise) + offset
 
     (ignores `variable <IntegratorFunction.variable>`).
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `offset <ConstantIntegrator.offset>`
+    | *ADDITIVE_PARAM:* `rate <ConstantIntegrator.rate>`
+    |
 
     Arguments
     ---------
@@ -311,7 +316,7 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
 
     rate : float, list or 1d array : default 1.0
         specifies the rate of integration;  if it is a list or array, it must be the same length as
-        `variable <ConstantIntegrator.variable>` (see `rate <Integrator_Rate>` for details).
+        `variable <ConstantIntegrator.variable>` (see `rate <ConstantIntegrator.rate>` for details).
 
     noise : float, function, list or 1d array : default 0.0
         specifies random value to be added to integral in each call to `function <ConstantIntegrator.function>`;
@@ -359,6 +364,8 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         determines the rate of integration. If it is a float or has a single element, its value is applied to all
         the elements of `previous_value <ConstantIntegrator.previous_value>`; if it is an array, each
         element is applied to the corresponding element of `previous_value <ConstantIntegrator.previous_value>`.
+        Serves as *ADDITIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <ConstantIntegrator.function>`.
 
     noise : float, Function or 1d array
         random value added to integral in each call to `function <ConstantIntegrator.function>`
@@ -368,7 +375,8 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         constant value by which integral is multiplied in each call to `function <ConstantIntegrator.function>`.
         If `variable <ConstantIntegrator.variable>` is a list or array and scale is a float, scale is applied
         to each element of the integral;  if scale is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral (i.e., Hadamard multiplication).
+        the corresponding elements of the integral (i.e., Hadamard multiplication).  Serves as *MULTIPLICATIVE_PARAM*
+        for `modulation <ModulatorySignal_Modulation>` of `function <ConstantIntegrator.function>`.
 
     offset : float, list or 1d array
         constant value added to integral after scale is applied in each call to `function
@@ -568,6 +576,12 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     (ignores `variable <IntegratorFunction.variable>`).
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AccumulatorIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `increment <AccumulatorIntegrator.increment>`
+    |
+
     Arguments
     ---------
 
@@ -621,6 +635,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         call to `function <AccumulatorIntegrator.function>`. If it is a float or has a single element, its value is
         applied to all the elements of `previous_value <AccumulatorIntegrator.previous_value>`; if it is an array, each
         element is applied to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`.
+        Serves as *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <AccumulatorIntegrator.function>`.
 
     increment : float, function, or 1d array
         determines the amount added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
@@ -628,7 +644,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         `variable <AccumulatorIntegrator.variable>` and each element is added to the corresponding element of
         `previous_value <AccumulatorIntegrator.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
         scalar or has a single element, its value is added to all the elements of `previous_value
-        <AccumulatorIntegrator.previous_value>`.
+        <AccumulatorIntegrator.previous_value>`.  Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <AccumulatorIntegrator.function>`.
 
     noise : float, Function or 1d array
         random value added in each call to `function <AccumulatorIntegrator.function>`
@@ -834,6 +851,11 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
         previous_value + rate * variable + noise + offset
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <SimpleIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <SimpleIntegrator.offset>`
+    |
 
     Arguments
     ---------
@@ -885,7 +907,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     rate : float or 1d array
         determines the rate of integration. If it is a float or has a single element, it is applied
         to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
-        is applied to the corresponding element of `variable <SimpleIntegrator.variable>`.
+        is applied to the corresponding element of `variable <SimpleIntegrator.variable>`.  Serves as
+        *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function <SimpleIntegrator.function>`.
 
     noise : float, Function or 1d array
         random value added to integral in each call to `function <SimpleIntegrator.function>`
@@ -895,7 +918,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         constant value added to integral in each call to `function <SimpleIntegrator.function>`. If `variable
         <SimpleIntegrator.variable>` is an array and offset is a float, offset is applied to each element of the
         integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
-        elements of the integral (i.e., Hadamard addition).
+        elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <SimpleIntegrator.function>`.
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value to which `previous_value
@@ -1048,6 +1072,12 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     .. math::
         ((1-rate) * previous_value) + (rate * variable)  + noise + offset
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
     Arguments
     ---------
 
@@ -1103,6 +1133,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         its value is applied to all elements of `variable <AdaptiveAdaptiveIntegrator.variable>` and `previous_value
         <AdaptiveIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding element
         of `variable <AdaptiveIntegrator.variable>` and `previous_value <AdaptiveIntegrator.previous_value>`).
+        Serves as *MULTIPLICATIVE_PARAM*  for `modulation <ModulatorySignal_Modulation>` of `function
+        <AdaptiveIntegrator.function>`.
 
     noise : float, Function or 1d array
         random value added to integral in each call to `function <AdaptiveIntegrator.function>`
@@ -1112,7 +1144,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         constant value added to integral in each call to `function <AdaptiveIntegrator.function>`.
         If `variable <AdaptiveIntegrator.variable>` is a list or array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral (i.e., Hadamard addition).
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <AdaptiveIntegrator.function>`.
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
@@ -1433,6 +1466,11 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
       where *operation* is the arithmetic `operation <DualAdaptiveIntegrator.operation>` used to combine the terms.
 
 
+    *Modulatory Parameters:*
+
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
     Arguments
     ---------
 
@@ -1545,7 +1583,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         short_term_avg diminishes linearly to 0 while long_term_avg remains at 1;  for rate>0.5, long_term_avg
         diminishes linearly to 0 wile short_term_avg remains at 1.  If it is a float or has a single element,
         its value is applied to all the elements of short_term_logistic and long_term_logistic; if it is an array,
-        each element is applied to the corresponding elements of each logistic.
+        each element is applied to the corresponding elements of each logistic. Serves as *MULTIPLICATIVE_PARAM*
+        for `modulation <ModulatorySignal_Modulation>` of `function <DualAdaptiveIntegrator.function>`.
     COMMENT
 
     offset : float, list or 1d array : default 0.0
@@ -1553,10 +1592,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         of short_term_avg and long_term_avg are combined. If `variable <DualAdaptiveIntegrator.variable>` is an array
         and offset is a float, offset is applied to each element of the integral;  if offset is a list or array, each
         of its elements is applied to each of the corresponding elements of the integral (i.e., Hadamard addition).
-
-        If it is a float or has a single element,
-        its value is applied to all the elements of the integral; if it is an array, each element is applied to the
-        corresponding element of the integral (i.e., Hadamard addition).
+        Serves as *ADDITIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <DualAdaptiveIntegrator.function>`.
 
     previous_short_term_avg : 1d array
         stores previous value with which `variable <DualAdaptiveIntegrator.variable>` is integrated using the
@@ -1581,7 +1618,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
     componentName = UTILITY_INTEGRATOR_FUNCTION
 
-    multiplicative_param = RATE
+    # multiplicative_param = RATE
     additive_param = OFFSET
 
     class Params(IntegratorFunction.Params):
@@ -2069,6 +2106,8 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         (if `variable <InteractiveActivation.variable>` is negative).  If it is a float or has a single element,
         it is applied to all elements of `variable <InteractiveActivation.variable>`; if it has more than one
         element, each element is applied to the corresponding element of `variable <InteractiveActivation.variable>`.
+        Serves as *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <InteractiveActivation.function>`.
 
     decay : float or 1d array
         determines the rate of at which activity decays toward `rest <InteractiveActivation.rest>` (similary to
@@ -2348,6 +2387,12 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     ..  math::
         \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
     Arguments
     ---------
 
@@ -2419,7 +2464,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         applied multiplicatively to `variable <DriftDiffusionIntegrator.variable>` (can be thought of as implementing
         the attentional component of the drift rate).  If it is a float or has a single element, its value is applied
         to all the elements of `variable <DriftDiffusionIntegrator.variable>`; if it is an array, each element is
-        applied to the corresponding element of `variable <DriftDiffusionIntegrator.variable>`.
+        applied to the corresponding element of `variable <DriftDiffusionIntegrator.variable>`. Serves as
+        *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <DriftDiffusionIntegrator.function>`.
 
     noise : float
         scales the normally distributed random value added to integral in each call to `function
@@ -2442,7 +2489,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`.
         If `variable <DriftDiffusionIntegrator.variable>` is an array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral (i.e., Hadamard addition).
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <DriftDiffusionIntegrator.function>`.
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
@@ -2695,6 +2743,12 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     ..  math::
         \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
     Arguments
     ---------
 
@@ -2769,7 +2823,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         applied multiplicatively to `variable <OrnsteinUhlenbeckIntegrator.variable>`.  If it is a float or has a
         single element, its value is applied to all the elements of `variable <OrnsteinUhlenbeckIntegrator.variable>`;
         if it is an array, each element is applied to the corresponding element of `variable
-        <OrnsteinUhlenbeckIntegrator.variable>`.
+        <OrnsteinUhlenbeckIntegrator.variable>`.  Serves as *MULTIPLICATIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator.function>`.
 
     decay : float, list or 1d array : default 1.0
         applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`; If it is a float or
@@ -2797,7 +2852,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         constant value added to integral in each call to `function <OrnsteinUhlenbeckIntegrator.function>`.
         If `variable <OrnsteinUhlenbeckIntegrator.variable>` is an array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral (i.e., Hadamard addition).
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator.function>`.
 
     t0 : float
         determines the start time of the integration process.
@@ -3033,6 +3089,12 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
 
         rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
     Arguments
     ---------
 
@@ -3089,7 +3151,8 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the `value
         <LCAIntegrator.value>` on each time step. If it is a float or has a single element, its value is applied to
         all the elements of `previous_value <LCAIntegrator.previous_value>`; if it is an array, each element is
-        applied to the corresponding element of `previous_value <LCAIntegrator.previous_value>`.
+        applied to the corresponding element of `previous_value <LCAIntegrator.previous_value>`.  Serves as
+        *MULTIPLICATIVE_PARAM*  for `modulation <ModulatorySignal_Modulation>` of `function <LCAIntegrator.function>`.
 
     noise : float, Function, or 1d array
         random value added to integral in each call to `function <LCAIntegrator.function>`.
@@ -3099,7 +3162,9 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         constant value added to integral in each call to `function <LCAIntegrator.function>`. If `variable
         <LCAIntegrator.variable>` is an array and offset is a float, offset is applied to each element  of the
         integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
-        elements of the integral (i.e., Hadamard addition).
+        elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <LCAIntegrator.function>`.
+
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
