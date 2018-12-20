@@ -22,7 +22,7 @@ Functions that integrate current value of input with previous value.
 * `OrnsteinUhlenbeckIntegrator`
 * `InteractiveActivation`
 * `LCAIntegrator`
-* `FHNIntegrator`
+* `FitzHughNagumoIntegrator`
 
 '''
 
@@ -42,7 +42,7 @@ from psyneulink.core.components.functions.distributionfunctions import Distribut
 from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, DECAY, \
-    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FHN_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
+    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
     INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, \
     OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, RATE, REST, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, \
@@ -55,7 +55,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 
 
 __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
-           'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator', 'AccumulatorIntegrator', 'LCAIntegrator',
+           'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator', 'LCAIntegrator',
            'DualAdaptiveIntegrator', 'InteractiveActivation', 'S_MINUS_L', 'L_MINUS_S'
            ]
 
@@ -3331,9 +3331,9 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         return self.convert_output_type(adjusted_value)
 
 
-class FHNIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
+class FitzHughNagumoIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
     """
-    FHNIntegrator(                      \
+    FitzHughNagumoIntegrator(                      \
         default_variable=1.0,           \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
@@ -3359,9 +3359,9 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         prefs=None,                     \
         )
 
-    .. _FHNIntegrator:
+    .. _FitzHughNagumoIntegrator:
 
-    `function <FHNIntegrator.function>` returns one time step of integration of the `Fitzhugh-Nagumo model
+    `function <FitzHughNagumoIntegrator.function>` returns one time step of integration of the `Fitzhugh-Nagumo model
     https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ of an excitable oscillator:
 
     .. math::
@@ -3375,9 +3375,9 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
     Either `Euler <https://en.wikipedia.org/wiki/Euler_method>`_ or `Dormand–Prince (4th Order Runge-Kutta)
     <https://en.wikipedia.org/wiki/Dormand–Prince_method>`_ methods of numerical integration can be used.
 
-    The FHNIntegrator implements all of the parameters of the FHN model; however, not all combinations of
+    The FitzHughNagumoIntegrator implements all of the parameters of the FitzHughNagumo model; however, not all combinations of
     these are sensible. Typically, they are combined into two sets.  These are described below, followed by
-    a describption of how they are used to implement three common variants of the model with the FHNIntegrator.
+    a describption of how they are used to implement three common variants of the model with the FitzHughNagumoIntegrator.
 
     Parameter Sets
     ^^^^^^^^^^^^^^
@@ -3415,12 +3415,12 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         .. math::
             \\frac{dw}{dt} = 0.08\\,(v + 0.7 - 0.8 w)
 
-        **Implementation in FHNIntegrator**
+        **Implementation in FitzHughNagumoIntegrator**
 
         The default values implement the above equations.
 
 
-    (2) **Modified FHN Model**
+    (2) **Modified FitzHughNagumo Model**
 
         **Fast, Excitatory Variable:**
 
@@ -3435,45 +3435,45 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
 
-        **Implementation in FHNIntegrator**
+        **Implementation in FitzHughNagumoIntegrator**
 
             The following parameter values must be specified in the equation for :math:`\\frac{dv}{dt}`:
 
             +---------------------------+-----+-----+-----+-----+-----+-----+---------------+
-            |**FHNIntegrator Parameter**| a_v | b_v | c_v | d_v | e_v | f_v |time_constant_v|
+            |**FitzHughNagumoIntegrator Parameter**| a_v | b_v | c_v | d_v | e_v | f_v |time_constant_v|
             +---------------------------+-----+-----+-----+-----+-----+-----+---------------+
             |**Value**                  |-1.0 |1.0  |1.0  |0.0  |-1.0 |1.0  |1.0            |
             +---------------------------+-----+-----+-----+-----+-----+-----+---------------+
 
-            When the parameters above are set to the listed values, the FHNIntegrator equation for :math:`\\frac{dv}{dt}`
-            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
+            When the parameters above are set to the listed values, the FitzHughNagumoIntegrator equation for :math:`\\frac{dv}{dt}`
+            reduces to the Modified FitzHughNagumo formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
             correspond as follows:
 
             +-----------------------------+---------------------------------------+------------------------------------+
-            |**FHNIntegrator Parameter**  |`threshold <FHNIntegrator.threshold>`  |`variable <FHNIntegrator.variable>` |
+            |**FitzHughNagumoIntegrator Parameter**  |`threshold <FitzHughNagumoIntegrator.threshold>`  |`variable <FitzHughNagumoIntegrator.variable>` |
             +-----------------------------+---------------------------------------+------------------------------------+
-            |**Modified FHN Parameter**   |a                                      |:math:`I_{ext}`                     |
+            |**Modified FitzHughNagumo Parameter**   |a                                      |:math:`I_{ext}`                     |
             +-----------------------------+---------------------------------------+------------------------------------+
 
             Te following parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
 
             +----------------------------+-----+------+- ---------------+-----------------------+
-            |**FHNIntegrator Parameter** |c_w  | mode | time_constant_w | uncorrelated_activity |
+            |**FitzHughNagumoIntegrator Parameter** |c_w  | mode | time_constant_w | uncorrelated_activity |
             +----------------------------+-----+------+- ---------------+-----------------------+
             |**Value**                   | 0.0 | 1.0  | 1.0             |  0.0                  |
             +----------------------------+-----+------+- ---------------+-----------------------+
 
-            When the parameters above are set to the listed values, the FHNIntegrator equation for :math:`\\frac{dw}{dt}`
-            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
+            When the parameters above are set to the listed values, the FitzHughNagumoIntegrator equation for :math:`\\frac{dw}{dt}`
+            reduces to the Modified FitzHughNagumo formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
             correspond as follows:
 
             +------------------------------+----------------------------+-------------------------------------+
-            |**FHNIntegrator Parameter**   |`a_w <FHNIntegrator.a_w>`   |*NEGATIVE* `b_w <FHNIntegrator.b_w>` |
+            |**FitzHughNagumoIntegrator Parameter**   |`a_w <FitzHughNagumoIntegrator.a_w>`   |*NEGATIVE* `b_w <FitzHughNagumoIntegrator.b_w>` |
             +------------------------------+----------------------------+-------------------------------------+
-            |**Modified FHN Parameter**    |b                           |c                                    |
+            |**Modified FitzHughNagumo Parameter**    |b                           |c                                    |
             +------------------------------+----------------------------+-------------------------------------+
 
-    (3) **Modified FHN Model as implemented in** `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_
+    (3) **Modified FitzHughNagumo Model as implemented in** `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_
 
         **Fast, Excitatory Variable:**
 
@@ -3491,40 +3491,40 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
             \\tau_u \\frac{du}{dt} = Cv + (1-C)\\, d - u
 
-        **Implementation in FHNIntegrator**
+        **Implementation in FitzHughNagumoIntegrator**
 
-            The following FHNIntegrator parameter values must be set in the equation for :math:`\\frac{dv}{dt}`:
+            The following FitzHughNagumoIntegrator parameter values must be set in the equation for :math:`\\frac{dv}{dt}`:
 
             +---------------------------+-----+-----+-----+-----+-----+
-            |**FHNIntegrator Parameter**| a_v | b_v | c_v | d_v | e_v |
+            |**FitzHughNagumoIntegrator Parameter**| a_v | b_v | c_v | d_v | e_v |
             +---------------------------+-----+-----+-----+-----+-----+
             |**Value**                  |-1.0 |1.0  |1.0  |0.0  |-1.0 |
             +---------------------------+-----+-----+-----+-----+-----+
 
-            When the parameters above are set to the listed values, the FHNIntegrator equation for :math:`\\frac{dv}{dt}`
+            When the parameters above are set to the listed values, the FitzHughNagumoIntegrator equation for :math:`\\frac{dv}{dt}`
             reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
             correspond as follows:
 
             +----------------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
-            |**FHNIntegrator Parameter** |`threshold <FHNIntegrator.threshold>`|`variable <FHNIntegrator.variable>`|`f_v <FHNIntegrator.f_v>`|`time_constant_v <FHNIntegrator.time_constant_v>`   |
+            |**FitzHughNagumoIntegrator Parameter** |`threshold <FitzHughNagumoIntegrator.threshold>`|`variable <FitzHughNagumoIntegrator.variable>`|`f_v <FitzHughNagumoIntegrator.f_v>`|`time_constant_v <FitzHughNagumoIntegrator.time_constant_v>`   |
             +----------------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
             |**Gilzenrat Parameter**     |a                                    |:math:`f(X_1)`                     |:math:`w_{vX_1}`         |:math:`T_{v}`                                       |
             +----------------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
 
-            The following FHNIntegrator parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
+            The following FitzHughNagumoIntegrator parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
 
             +----------------------------+-----+-----+-----+
-            |**FHNIntegrator Parameter** | a_w | b_w | c_w |
+            |**FitzHughNagumoIntegrator Parameter** | a_w | b_w | c_w |
             +----------------------------+-----+-----+-----+
             |**Value**                   | 1.0 |-1.0 |0.0  |
             +----------------------------+-----+-----+-----+
 
-            When the parameters above are set to the listed values, the FHNIntegrator equation for
+            When the parameters above are set to the listed values, the FitzHughNagumoIntegrator equation for
             :math:`\\frac{dw}{dt}` reduces to the Gilzenrat formulation, and the remaining parameters in the
             :math:`\\frac{dw}{dt}` equation correspond as follows:
 
             +-----------------------------+-----------------------------+-------------------------------------------------------------+----------------------------------------------------+
-            |**FHNIntegrator Parameter**  |`mode <FHNIntegrator.mode>`  |`uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`|`time_constant_v <FHNIntegrator.time_constant_w>`   |
+            |**FitzHughNagumoIntegrator Parameter**  |`mode <FitzHughNagumoIntegrator.mode>`  |`uncorrelated_activity <FitzHughNagumoIntegrator.uncorrelated_activity>`|`time_constant_v <FitzHughNagumoIntegrator.time_constant_w>`   |
             +-----------------------------+-----------------------------+-------------------------------------------------------------+----------------------------------------------------+
             |**Gilzenrat Parameter**      |C                            |d                                                            |:math:`T_{u}`                                       |
             +-----------------------------+-----------------------------+-------------------------------------------------------------+----------------------------------------------------+
@@ -3537,11 +3537,11 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
     initial_w : float, list or 1d array : default 0.0
         specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegrator.variable>`
+        `default_variable <FitzHughNagumoIntegrator.variable>`
 
     initial_v : float, list or 1d array : default 0.0
         specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegrator.variable>`
+        `default_variable <FitzHughNagumoIntegrator.variable>`
 
     time_step_size : float : default 0.1
         specifies the time step size of numerical integration
@@ -3565,7 +3565,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         coefficient on the w term in the dv/dt equation
 
     f_v : float : default  1.0
-        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
+        coefficient on the external stimulus (`variable <FitzHughNagumoIntegrator.variable>`) term in the dv/dt equation
 
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
@@ -3631,11 +3631,11 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
     initial_w : float, list or 1d array : default 0.0
         specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegrator.variable>`
+        `default_variable <FitzHughNagumoIntegrator.variable>`
 
     initial_v : float, list or 1d array : default 0.0
         specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegrator.variable>`
+        `default_variable <FitzHughNagumoIntegrator.variable>`
 
     time_step_size : float : default 0.1
         specifies the time step size of numerical integration
@@ -3659,7 +3659,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         coefficient on the w term in the dv/dt equation
 
     f_v : float : default  1.0
-        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
+        coefficient on the external stimulus (`variable <FitzHughNagumoIntegrator.variable>`) term in the dv/dt equation
 
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
@@ -3675,7 +3675,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
     threshold : float : default -1.0
         coefficient that scales both the v^2 [ (1+threshold)*v^2 ] and v [ (-threshold)*v ] terms in the dv/dt equation
-        under a specific formulation of the FHN equations, the threshold parameter behaves as a "threshold of
+        under a specific formulation of the FitzHughNagumo equations, the threshold parameter behaves as a "threshold of
         excitation", and has the following relationship with variable (the external stimulus):
 
             - when the external stimulus is below the threshold of excitation, the system is either in a stable state,
@@ -3703,7 +3703,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
-    componentName = FHN_INTEGRATOR_FUNCTION
+    componentName = FITZHUGHNAGUMO_INTEGRATOR_FUNCTION
 
     class Params(IntegratorFunction.Params):
         """
@@ -3711,140 +3711,140 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
             ----------
 
                 variable
-                    see `variable <FHNIntegrator.variable>`
+                    see `variable <FitzHughNagumoIntegrator.variable>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
                     :read only: True
 
                 a_v
-                    see `a_v <FHNIntegrator.a_v>`
+                    see `a_v <FitzHughNagumoIntegrator.a_v>`
 
                     :default value: 0.3333333333333333
                     :type: float
 
                 a_w
-                    see `a_w <FHNIntegrator.a_w>`
+                    see `a_w <FitzHughNagumoIntegrator.a_w>`
 
                     :default value: 1.0
                     :type: float
 
                 b_v
-                    see `b_v <FHNIntegrator.b_v>`
+                    see `b_v <FitzHughNagumoIntegrator.b_v>`
 
                     :default value: 0.0
                     :type: float
 
                 b_w
-                    see `b_w <FHNIntegrator.b_w>`
+                    see `b_w <FitzHughNagumoIntegrator.b_w>`
 
                     :default value: -0.8
                     :type: float
 
                 c_v
-                    see `c_v <FHNIntegrator.c_v>`
+                    see `c_v <FitzHughNagumoIntegrator.c_v>`
 
                     :default value: 1.0
                     :type: float
 
                 c_w
-                    see `c_w <FHNIntegrator.c_w>`
+                    see `c_w <FitzHughNagumoIntegrator.c_w>`
 
                     :default value: 0.7
                     :type: float
 
                 d_v
-                    see `d_v <FHNIntegrator.d_v>`
+                    see `d_v <FitzHughNagumoIntegrator.d_v>`
 
                     :default value: 0.0
                     :type: float
 
                 e_v
-                    see `e_v <FHNIntegrator.e_v>`
+                    see `e_v <FitzHughNagumoIntegrator.e_v>`
 
                     :default value: -1.0
                     :type: float
 
                 f_v
-                    see `f_v <FHNIntegrator.f_v>`
+                    see `f_v <FitzHughNagumoIntegrator.f_v>`
 
                     :default value: 1.0
                     :type: float
 
                 initial_v
-                    see `initial_v <FHNIntegrator.initial_v>`
+                    see `initial_v <FitzHughNagumoIntegrator.initial_v>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
                 initial_w
-                    see `initial_w <FHNIntegrator.initial_w>`
+                    see `initial_w <FitzHughNagumoIntegrator.initial_w>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
                 integration_method
-                    see `integration_method <FHNIntegrator.integration_method>`
+                    see `integration_method <FitzHughNagumoIntegrator.integration_method>`
 
                     :default value: `RK4`
                     :type: str
 
                 mode
-                    see `mode <FHNIntegrator.mode>`
+                    see `mode <FitzHughNagumoIntegrator.mode>`
 
                     :default value: 1.0
                     :type: float
 
                 previous_time
-                    see `previous_time <FHNIntegrator.previous_time>`
+                    see `previous_time <FitzHughNagumoIntegrator.previous_time>`
 
                     :default value: 0.0
                     :type: float
 
                 previous_v
-                    see `previous_v <FHNIntegrator.previous_v>`
+                    see `previous_v <FitzHughNagumoIntegrator.previous_v>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
                 previous_w
-                    see `previous_w <FHNIntegrator.previous_w>`
+                    see `previous_w <FitzHughNagumoIntegrator.previous_w>`
 
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
                 t_0
-                    see `t_0 <FHNIntegrator.t_0>`
+                    see `t_0 <FitzHughNagumoIntegrator.t_0>`
 
                     :default value: 0.0
                     :type: float
 
                 threshold
-                    see `threshold <FHNIntegrator.threshold>`
+                    see `threshold <FitzHughNagumoIntegrator.threshold>`
 
                     :default value: -1.0
                     :type: float
 
                 time_constant_v
-                    see `time_constant_v <FHNIntegrator.time_constant_v>`
+                    see `time_constant_v <FitzHughNagumoIntegrator.time_constant_v>`
 
                     :default value: 1.0
                     :type: float
 
                 time_constant_w
-                    see `time_constant_w <FHNIntegrator.time_constant_w>`
+                    see `time_constant_w <FitzHughNagumoIntegrator.time_constant_w>`
 
                     :default value: 12.5
                     :type: float
 
                 time_step_size
-                    see `time_step_size <FHNIntegrator.time_step_size>`
+                    see `time_step_size <FitzHughNagumoIntegrator.time_step_size>`
 
                     :default value: 0.05
                     :type: float
 
                 uncorrelated_activity
-                    see `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
+                    see `uncorrelated_activity <FitzHughNagumoIntegrator.uncorrelated_activity>`
 
                     :default value: 0.0
                     :type: float
@@ -3912,7 +3912,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
                  prefs: is_pref_set = None,
                  **kwargs):
 
-        # These may be passed (as standard IntegratorFunction args) but are not used by FHN
+        # These may be passed (as standard IntegratorFunction args) but are not used by FitzHughNagumo
         unsupported_args = {NOISE, INITIALIZER, RATE, OFFSET}
         if any(k in unsupported_args for k in kwargs):
             s = 's' if len(kwargs)>1 else ''
@@ -3977,7 +3977,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}. Choose 'RK4' or 'EULER'".
                                 format(self.integration_method, self.name))
 
-    def _euler_FHN(
+    def _euler_FitzHughNagumo(
         self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
         a_v,
         threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w, uncorrelated_activity,
@@ -4019,7 +4019,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
 
         return new_v, new_w
 
-    def _runge_kutta_4_FHN(
+    def _runge_kutta_4_FitzHughNagumo(
         self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w,
         time_step_size,
         a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w,
@@ -4247,7 +4247,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
         # integration_method is a compile time parameter
         integration_method = self.get_current_function_param("integration_method", execution_id)
         if integration_method == "RK4":
-            approximate_values = self._runge_kutta_4_FHN(
+            approximate_values = self._runge_kutta_4_FitzHughNagumo(
                 variable,
                 previous_v,
                 previous_w,
@@ -4273,7 +4273,7 @@ class FHNIntegrator(IntegratorFunction):  # ------------------------------------
             )
 
         elif integration_method == "EULER":
-            approximate_values = self._euler_FHN(
+            approximate_values = self._euler_FitzHughNagumo(
                 variable,
                 previous_v,
                 previous_w,
