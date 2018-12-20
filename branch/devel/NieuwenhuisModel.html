@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.4.8.0+1079.g3f1a845 documentation</title>
+  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.4.8.0+1080.g87a5fba documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1079.g3f1a845 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1080.g87a5fba documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+1079
+                0.4.8.0+1080
               </div>
             
           
@@ -219,14 +219,14 @@ off-diagonal elements.</p>
 </div>
 <div class="section" id="lc-subsystem">
 <h3>LC Subsystem<a class="headerlink" href="#lc-subsystem" title="Permalink to this headline">¶</a></h3>
-<p><strong>LC</strong>: an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>, that uses the FHNIntegrator to implement a FitzHugh-Nagumo model as a
+<p><strong>LC</strong>: an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>, that uses the FitzHughNagumoIntegrator to implement a FitzHugh-Nagumo model as a
 simulation of the population-level activity of the LC. The LCControlMechanism outputs three values on each execution:</p>
 <blockquote id="nieuwenhuis-lc-params">
 <div><ul class="simple">
-<li><em>v</em> (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC</li>
+<li><em>v</em> (excitation variable of the FitzHugh-Nagumo model) representing the state (i.e., net input) of the LC</li>
 </ul>
 <ul class="simple">
-<li><em>w</em> (relaxation variable of the FHN model) representing noradrenergic output of the LC</li>
+<li><em>w</em> (relaxation variable of the FitzHugh-Nagumo model) representing noradrenergic output of the LC</li>
 </ul>
 <ul class="simple">
 <li><span class="math">\(gain(t)\)</span>, where <span class="math">\(g(t) = G + k w(t), G\)</span> = <strong>base_level_gain</strong>, <em>k</em> = <strong>scaling_factor</strong>, and
@@ -302,7 +302,7 @@ and <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1079.g3f1a845',
+            VERSION:'0.4.8.0+1080.g87a5fba',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
