@@ -166,6 +166,7 @@ from psyneulink.core.globals.parameters import Param
 from psyneulink.core.scheduling.scheduler import Scheduler
 
 import numpy as np
+import copy
 
 from collections import Iterable
 from toposort import toposort
@@ -624,7 +625,12 @@ class AutodiffComposition(Composition):
                 autodiff_epochs = inputs["epochs"]
 
             output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id)
-            self.output_CIM.execute(execution_id=execution_id)
+            ctx = self.output_CIM.parameters.context.get(execution_id)
+            # new_ctx = copy.deepcopy(ctx)
+            # new_ctx.execution_phase = ContextFlags.PROCESSING
+            # self.output_CIM.parameters.context.set(new_ctx, execution_id=execution_id)
+            ctx.execution_phase = ContextFlags.PROCESSING  # CW 12/18/18
+            self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
             return output
 
