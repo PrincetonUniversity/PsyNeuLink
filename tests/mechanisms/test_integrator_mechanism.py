@@ -1244,7 +1244,7 @@ class TestDualAdaptiveIntegrator:
         U = IntegratorMechanism(
             name = "DualAdaptiveIntegrator",
             function=DualAdaptiveIntegrator(
-                operation="s-l"
+                operation=pnl.S_MINUS_L
             )
 
         )
@@ -1272,7 +1272,7 @@ class TestDualAdaptiveIntegrator:
         U = IntegratorMechanism(
             name = "DualAdaptiveIntegrator",
             function=DualAdaptiveIntegrator(
-                operation="s+l"
+                operation=pnl.SUM
             )
 
         )

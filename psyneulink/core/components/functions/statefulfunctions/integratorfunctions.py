@@ -44,8 +44,8 @@ from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, DECAY, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FHN_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
     INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, \
-    OFFSET, OPERATION, \
-    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, \
+    OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, RATE, REST, \
+    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, \
     TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Param
@@ -56,7 +56,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 
 __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator', 'AccumulatorIntegrator', 'LCAIntegrator',
-           'DualAdaptiveIntegrator', 'InteractiveActivation',
+           'DualAdaptiveIntegrator', 'InteractiveActivation', 'S_MINUS_L', 'L_MINUS_S'
            ]
 
 
@@ -1418,9 +1418,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
         return self.convert_output_type(adjusted_value)
 
-# S-L = 's-l'
-# L-S = 'l-s'
-# OPERATIONS = {PRODUCT, SUM, S-L, L-S}
+S_MINUS_L = 's-l'
+L_MINUS_S = 'l-s'
+OPERATIONS = {PRODUCT, SUM, S_MINUS_L, L_MINUS_S}
 
 
 class DualAdaptiveIntegrator(IntegratorFunction):  # ------------------------------------------------------------------
@@ -1436,7 +1436,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_bias=0.0,          \
         short_term_rate=1.0,         \
         long_term_rate=1.0,          \
-        operation='s*l',             \
+        operation=PRODUCT,           \
         offset=0.0,                  \
         params=None,                 \
         owner=None,                  \
@@ -1523,7 +1523,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         by `operation <DualAdaptiveIntegrator.operation>` (see `rate <DualAdaptiveIntegrator.rate>` for details.
     COMMENT
 
-    operation : s*l or s+l or s-l or l-s : default 's*l'
+    operation : PRODUCT, SUM, S_MINUS_L or L_MINUS_S : default PRODUCT
         specifies the arithmetic operation used to combine the logistics of the short_term_avg and long_term_avg
         (see `operation <DualAdaptiveIntegrator.operation>` for details).
 
@@ -1585,10 +1585,10 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         determines the arithmetic operation used to combine `short_term_logistic and long_term_logistic
         <DualAdaptive_Combined>`:
 
-        * **s\*l** = (1 - short_term_logistic) * long_term_logistic
-        * **s+l** = (1 - short_term_logistic) + long_term_logistic
-        * **s-l** = (1 - short_term_logistic) - long_term_logistic
-        * **l-s** = long_term_logistic - (1 - short_term_logistic)
+        * *PRODUCT* = (1 - short_term_logistic) * long_term_logistic
+        * *SUM* = (1 - short_term_logistic) + long_term_logistic
+        * *S_MINUS_L* = (1 - short_term_logistic) - long_term_logistic
+        * *L_MINUS_S* = long_term_logistic - (1 - short_term_logistic)
 
     COMMENT:
     rate : float or 1d array with element(s) in interval [0,1]: default 0.5
@@ -1685,7 +1685,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                 operation
                     see `operation <DualAdaptiveIntegrator.operation>`
 
-                    :default value: `S*L`
+                    :default value: PRODUCT
                     :type: str
 
                 previous_long_term_utility
@@ -1740,7 +1740,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_bias = Param(0.0, modulable=True)
         short_term_rate = Param(0.9, modulable=True)
         long_term_rate = Param(0.1, modulable=True)
-        operation = "s*l"
+        operation = PRODUCT
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         previous_short_term_avg = None
         previous_long_term_avg = None
@@ -1769,7 +1769,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  long_term_bias=0.0,
                  short_term_rate=0.9,
                  long_term_rate=0.1,
-                 operation="s*l",
+                 operation=PRODUCT,
                  offset=0.0,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -1886,9 +1886,9 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             #     self._validate_initializer(target_set[INITIALIZER])
 
         if OPERATION in target_set:
-            if not target_set[OPERATION] in {'s*l', 's+l', 's-l', 'l-s'}:
+            if not target_set[OPERATION] in OPERATIONS:
                 raise FunctionError("\'{}\' arg for {} must be one of the following: {}".
-                                    format(OPERATION, self.name, {'s*l', 's+l', 's-l', 'l-s'}))
+                                    format(OPERATION, self.name, OPERATIONS))
 
     def function(self,
                  variable=None,
@@ -1963,13 +1963,13 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                             )
         self.parameters.long_term_logistic.set(long_term_logistic, execution_id)
 
-        if operation == "s*l":
+        if operation == PRODUCT:
             value = (1 - short_term_logistic) * long_term_logistic
-        elif operation == "s-l":
-            value = (1 - short_term_logistic) - long_term_logistic
-        elif operation == "s+l":
+        elif operation == SUM:
             value = (1 - short_term_logistic) + long_term_logistic
-        elif operation == "l-s":
+        elif operation == S_MINUS_L:
+            value = (1 - short_term_logistic) - long_term_logistic
+        elif operation == L_MINUS_S:
             value = long_term_logistic - (1 - short_term_logistic)
 
         return value + offset
