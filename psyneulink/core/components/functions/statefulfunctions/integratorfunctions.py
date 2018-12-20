@@ -56,7 +56,8 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 
 __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
-           'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator', 'S_MINUS_L', 'L_MINUS_S'
+           'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
+           'S_MINUS_L', 'L_MINUS_S'
            ]
 
 
@@ -64,7 +65,7 @@ __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'Drif
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-class IntegratorFunction(StatefulFunction):  # -------------------------------------------------------------------------------
+class IntegratorFunction(StatefulFunction):  # -------------------------------------------------------------------------
     """
     IntegratorFunction(         \
         default_variable=None,  \
