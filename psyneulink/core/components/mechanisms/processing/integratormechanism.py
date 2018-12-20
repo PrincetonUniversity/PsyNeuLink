@@ -14,7 +14,7 @@ Overview
 
 An IntegratorMechanism integrates its input, possibly based on its prior values.  The input can be a single
 scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
-independently integrated.  The default function (`Integrator`) can be parametrized to implement either a simple
+independently integrated.  The default function (`IntegratorFunction`) can be parametrized to implement either a simple
 increment rate, additive accumulator, or an (exponentially weighted) time-averaging of its input.  It can also be
 assigned a custom function.
 
@@ -54,11 +54,11 @@ Execution
 
 When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
 result to the `value <IntegratorMechanism.value>` of its `primary OutputState <OutputState_Primary>`.  For the default
-function (`Integrator`), if the value specified for **default_variable** is a list or array, or **size** is greater
-than 1, each element of the array is independently integrated.  If its `rate <Integrator.rate>` parameter is a
-single value,  that rate will be used for integrating each element.  If the `rate <Integrator.rate>` parameter is a
+function (`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **size** is greater
+than 1, each element of the array is independently integrated.  If its `rate <IntegratorFunction.rate>` parameter is a
+single value,  that rate will be used for integrating each element.  If the `rate <IntegratorFunction.rate>` parameter is a
 list or array, then each element will be used as the rate for the corresponding element of the input (in this case,
-`rate <Integrator.rate>` must be the same length as the value specified for **default_variable** or **size**).
+`rate <IntegratorFunction.rate>` must be the same length as the value specified for **default_variable** or **size**).
 
 
 .. _IntegratorMechanism_Class_Reference:
@@ -71,7 +71,7 @@ from collections import Iterable
 
 import typecheck as tc
 
-from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
@@ -144,7 +144,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    function : IntegratorFunction : default Integrator
+    function : IntegratorFunction : default IntegratorFunction
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
 

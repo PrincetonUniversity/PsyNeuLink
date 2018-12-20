@@ -1,8 +1,7 @@
-import pytest
-import os
 import numpy as np
+import os
 
-from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 # Get location of this script so we can load the txt files present in it regardless of the working
@@ -17,7 +16,8 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
     stim, drift_rate, threshold, starting_point, bias, t0, noise, mean ER, mean RT,
     correct RT mean, correct RT variance, correct RT skew
 
-    See gen_matlab_ddm_test_data.py script to generate more test data in this form.
+    See gen_matlab_ddm_test_data.py script to generate more test data in this form. This script has since
+    been deleted, see commit 7c67ca0f2.
 
     :param B:
     :param data:
@@ -28,11 +28,11 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
         r_stim, r_drift_rate, r_threshold, r_starting_point, r_bias, r_t0, r_noise = data[i, 0:7].tolist()
         ground_truth = data[i,7:]
 
-        B.function_object.drift_rate = r_drift_rate
-        B.function_object.threshold = r_threshold
-        B.function_object.starting_point = r_starting_point
-        B.function_object.t0 = r_t0
-        B.function_object.noise = r_noise
+        B.function.drift_rate = r_drift_rate
+        B.function.threshold = r_threshold
+        B.function.starting_point = r_starting_point
+        B.function.t0 = r_t0
+        B.function.noise = r_noise
 
         results_b = B.execute(r_stim)
 

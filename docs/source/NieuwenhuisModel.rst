@@ -87,7 +87,7 @@ off-diagonal elements.
 LC Subsystem
 ~~~~~~~~~~~~
 
-**LC**: an `LCControlMechanism`, that uses the FHNIntegratorFunction to implement a FitzHugh-Nagumo model as a
+**LC**: an `LCControlMechanism`, that uses the FHNIntegrator to implement a FitzHugh-Nagumo model as a
 simulation of the population-level activity of the LC. The LCControlMechanism outputs three values on each execution:
 
 .. _Nieuwenhuis_LC_Params:

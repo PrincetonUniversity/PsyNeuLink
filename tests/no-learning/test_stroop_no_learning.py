@@ -1,7 +1,7 @@
 import numpy as np
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 
@@ -41,9 +41,10 @@ class TestStroop:
                                                     name='COLORS HIDDEN')
         #    words_hidden: ('RED','GREEN')
         words_hidden_layer = pnl.TransferMechanism(size=2,
-                                                   function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
+                                                   function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                    integrator_mode=True,
-                                                   noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                                   noise=pnl.NormalDist(mean=0,
+                                                                        standard_deviation=unit_noise).function,
                                                    integration_rate=0.1,
                                                    name='WORDS HIDDEN')
 
@@ -63,16 +64,14 @@ class TestStroop:
         #   sigma = noise = 0.1
         #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
         accumulator_noise = 0.1
-        respond_red_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions
-                                                          .integratorfunctions.SimpleIntegrator(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
-                                                                                                                                                                            standard_deviation=accumulator_noise).function,
-                                                                                                                                             rate=0.1),
+        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
+                                                                                                             standard_deviation=accumulator_noise).function,
+                                                                                        rate=0.1),
                                                           name='respond_red_accumulator')
         #   Respond green accumulator
-        respond_green_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions
-                                                            .integratorfunctions.SimpleIntegrator(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
-                                                                                                                                                                                                                           standard_deviation=accumulator_noise).function,
-                                                                                                                                               rate=0.1),
+        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
+                                                                                                               standard_deviation=accumulator_noise).function,
+                                                                                          rate=0.1),
                                                             name='respond_green_accumulator')
 
         #   LOGGING

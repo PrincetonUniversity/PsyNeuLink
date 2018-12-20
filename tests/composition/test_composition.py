@@ -10,7 +10,7 @@ from itertools import product
 
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.function import ModulationParam
-from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -1118,7 +1118,7 @@ class TestExecutionOrder:
         B = ProcessingMechanism(name="B",
                                 function=Logistic)
 
-        # comp1 separates Integrator fn and Logistic fn into mech A and mech B
+        # comp1 separates IntegratorFunction fn and Logistic fn into mech A and mech B
         comp1 = Composition(name="comp1")
         comp1.add_linear_processing_pathway([A, B])
 
@@ -3453,7 +3453,7 @@ class TestNestedCompositions:
                               integration_rate=0.1,
                               integrator_mode=True)
 
-        # comp1 separates Integrator fn and Logistic fn into mech A and mech B
+        # comp1 separates IntegratorFunction fn and Logistic fn into mech A and mech B
         comp1 = Composition(name="comp1")
         comp1.add_linear_processing_pathway([A, B])
 
@@ -3542,7 +3542,7 @@ class TestNestedCompositions:
 
 
     # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
-    # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version 
+    # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
     # def test_recurrent_transfer_mechanism_composition(self):
     #
     #     # mechanisms
@@ -3555,7 +3555,7 @@ class TestNestedCompositions:
     #                                    integration_rate=0.1,
     #                                    integrator_mode=True)
     #
-    #     # comp1 separates Integrator fn and Logistic fn into mech A and mech B and uses a "feedback" proj for recurrence
+    #     # comp1 separates IntegratorFunction fn and Logistic fn into mech A and mech B and uses a "feedback" proj for recurrence
     #     comp1 = Composition(name="comp1")
     #     comp1.add_linear_processing_pathway([A, B])
     #     comp1.add_linear_processing_pathway([B, A], feedback=True)

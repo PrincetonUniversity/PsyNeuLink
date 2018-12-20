@@ -204,44 +204,15 @@ class LeabraFunction(Function_Base):
             Attributes
             ----------
 
-                hidden_layers
-                    see `hidden_layers <LeabraMechanism.hidden_layers>`
+                variable
+                    see `variable <LeabraFunction.variable>`
 
-                    :default value: 0
-                    :type: int
-
-                hidden_sizes
-                    see `hidden_sizes <LeabraMechanism.hidden_sizes>`
-
-                    :default value: None
-                    :type:
-
-                input_size
-                    see `input_size <LeabraMechanism.input_size>`
-
-                    :default value: 1
-                    :type: int
+                    :default value: numpy.array([[0], [0]])
+                    :type: numpy.ndarray
+                    :read only: True
 
                 network
-                    see `network <LeabraMechanism.network>`
-
-                    :default value: None
-                    :type:
-
-                output_size
-                    see `output_size <LeabraMechanism.output_size>`
-
-                    :default value: 1
-                    :type: int
-
-                quarter_size
-                    see `quarter_size <LeabraMechanism.quarter_size>`
-
-                    :default value: 50
-                    :type: int
-
-                training_flag
-                    see `training_flag <LeabraMechanism.training_flag>`
+                    see `network <LeabraFunction.network>`
 
                     :default value: None
                     :type:
@@ -343,11 +314,11 @@ class LeabraFunction(Function_Base):
 
 
 def _network_getter(owning_component=None, execution_id=None):
-    return owning_component.function_object.parameters.network.get(execution_id)
+    return owning_component.function.parameters.network.get(execution_id)
 
 
 def _network_setter(value, owning_component=None, execution_id=None):
-    owning_component.function_object.parameters.network.set(value, execution_id)
+    owning_component.function.parameters.network.set(value, execution_id)
     return value
 
 
@@ -658,16 +629,16 @@ class LeabraMechanism(ProcessingMechanism_Base):
     def training_flag(self, value):
         if self._training_flag is value:
             return
-        set_training(self.function_object.network, value)
+        set_training(self.function.network, value)
         self._training_flag = value
 
     @property
     def network(self):
-        return self.function_object.network
+        return self.function.network
 
     @network.setter
     def network(self, value):
-        self.function_object.network = value
+        self.function.network = value
 
 
 def convert_to_2d_input(array_like):

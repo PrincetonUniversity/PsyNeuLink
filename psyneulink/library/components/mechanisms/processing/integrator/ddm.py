@@ -21,7 +21,7 @@
 Overview
 --------
 The DDM Mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
-Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
+Linear IntegratorFunction, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
 forced choice (TAFC) decision making ([REF]).
 
@@ -207,7 +207,7 @@ The Drift Diffusion Model `Function <Function>` that calculates a path integrati
 carry out numerical step-wise integration of the decision process (see `Execution <DDM_Execution>` below).  In this
 mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` are available.
 
-`Integrator <Integrator>` Function::
+`IntegratorFunction <IntegratorFunction>` Function::
 
     >>> my_DDM_path_integrator = pnl.DDM(
     ...     function=pnl.DriftDiffusionIntegrator(
@@ -253,7 +253,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
                 STARTING_POINT:-0.5
             },
         )
-    The parameters for the DDM when `function <DDM.function>` is set to `DriftDiffusionAnalytical` or `NavarroAndFuss` are:
+    The parameters for the DDM when `function <DDM.function>` is set to `DriftDiffusionAnalytical` are:
 
     .. _DDM_Drift_Rate:
 
@@ -352,8 +352,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import method_type
-from psyneulink.core.components.functions.integratorfunctions import Integrator, DriftDiffusionIntegrator, THRESHOLD, \
-    STARTING_POINT, DriftDiffusionAnalytical, NF_Results, NavarroAndFuss
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+    DriftDiffusionIntegrator, IntegratorFunction
+from psyneulink.core.components.functions.distributionfunctions import THRESHOLD, STARTING_POINT, \
+    DriftDiffusionAnalytical
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -361,7 +363,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Param, parse_execution_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -409,12 +411,12 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or l
                               {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
-                              {NAME: RT_CORRECT_MEAN},              # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_CORRECT_VARIANCE},          # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_CORRECT_SKEW},              # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_MEAN},            # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_VARIANCE},        # (DriftDiffusionAnalytical and NavarroAndFuss only)
-                              {NAME: RT_INCORRECT_SKEW},            # (DriftDiffusionAnalytical and NavarroAndFuss only)
+                              {NAME: RT_CORRECT_MEAN},              # (DriftDiffusionAnalytical only)
+                              {NAME: RT_CORRECT_VARIANCE},          # (DriftDiffusionAnalytical only)
+                              {NAME: RT_CORRECT_SKEW},              # (DriftDiffusionAnalytical only)
+                              {NAME: RT_INCORRECT_MEAN},            # (DriftDiffusionAnalytical only)
+                              {NAME: RT_INCORRECT_VARIANCE},        # (DriftDiffusionAnalytical only)
+                              {NAME: RT_INCORRECT_SKEW},            # (DriftDiffusionAnalytical only)
                               ]
 
 # This is a convenience class that provides list of standard_output_state names in IDE
@@ -515,8 +517,8 @@ class DDM_OUTPUT():
 
     .. _DDM_RT_CORRECT_MEAN:
 
-    *RT_CORRECT_MEAN* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+    *RT_CORRECT_MEAN* : floa
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the mean reaction time (in seconds) for responses in which the decision
         variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -526,7 +528,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_CORRECT_VARIANCE:
 
     *RT_CORRECT_VARIANCE* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the decision
         variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -536,7 +538,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_CORRECT_SKEW:
 
     *RT_CORRECT_SKEW* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the skew of decision time (in seconds) for responses in which the decision
         variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -546,7 +548,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_INCORRECT_MEAN:
 
     *RT_INCORRECT_MEAN* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the mean reaction time (in seconds) for responses in which the decision
         variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -556,7 +558,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_INCORRECT_VARIANCE:
 
     *RT_INCORRECT_VARIANCE* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the variance of reaction time (in seconds) for responses in which the decision
         variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -566,7 +568,7 @@ class DDM_OUTPUT():
     .. _DDM_RT_INCORRECT_SKEW:
 
     *RT_INCORRECT_SKEW* : float
-      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical` or `NavarroAndFuss`) \n
+      (only applicable if `function <DDM.function>` is `DriftDiffusionAnalytical`) \n
       • `analytic mode <DDM_Analytic_Mode>`:  the skew of decision time (in seconds) for responses in which the decision
         variable reached the negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
         closed form analytic solutions from Srivastava et al. (https://arxiv.org/abs/1601.06420) \n
@@ -704,9 +706,9 @@ class DDM(ProcessingMechanism_Base):
 
     function :  IntegratorFunction : default DriftDiffusionAnalytical
         the function used to `execute <DDM_Execution>` the decision process; determines the mode of execution.
-        If it is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>` or `NavarroAndFuss <NavarroAndFuss>`, an `analytic solution
+        If it is `DriftDiffusionAnalytical <DriftDiffusionAnalytical>`, an `analytic solution
         <DDM_Analytic_Mode>` is calculated (note:  the latter requires that the MatLab engine is installed); if it is
-        an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION*,
+        an `IntegratorFunction` Function with an `integration_type <IntegratorFunction.integration_type>` of *DIFFUSION*,
         then `numerical step-wise integration <DDM_Integration_Mode>` is carried out.  See `DDM_Modes` and
         `DDM_Execution` for additional information.
         COMMENT:
@@ -826,7 +828,7 @@ class DDM(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 # function:tc.enum(type(DriftDiffusionAnalytical), type(NavarroAndFuss))=DriftDiffusionAnalytical(drift_rate=1.0,
+                 # function:tc.enum(type(DriftDiffusionAnalytical))=DriftDiffusionAnalytical(drift_rate=1.0,
                  # input_states:tc.optional(tc.any(list, dict))=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=SCALAR,
                  function=DriftDiffusionAnalytical(drift_rate=1.0,
@@ -956,6 +958,7 @@ class DDM(ProcessingMechanism_Base):
             Matplotlib window of the Mechanism's function plotting dynamically over time with specified parameters
             towards a specified threshold
 
+
         """
         import matplotlib.pyplot as plt
         import time
@@ -1018,7 +1021,8 @@ class DDM(ProcessingMechanism_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        functions = {DriftDiffusionAnalytical, NavarroAndFuss, DriftDiffusionIntegrator}
+        functions = {DriftDiffusionAnalytical,
+                     DriftDiffusionIntegrator}
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
@@ -1119,7 +1123,7 @@ class DDM(ProcessingMechanism_Base):
         variable = self._validate_variable(variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
-        if isinstance(self.function.__self__, Integrator):
+        if isinstance(self.function, IntegratorFunction):
 
             result = super()._execute(variable, execution_id=execution_id, context=context)
 
@@ -1138,7 +1142,7 @@ class DDM(ProcessingMechanism_Base):
                 context=context
             )
 
-            if isinstance(self.function.__self__, DriftDiffusionAnalytical):
+            if isinstance(self.function, DriftDiffusionAnalytical):
                 return_value = np.zeros(shape=(10,1))
                 return_value[self.RESPONSE_TIME_INDEX] = result[0]
                 return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[1]
@@ -1151,45 +1155,31 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[6]
                 return_value[self.RT_INCORRECT_SKEW_INDEX] = result[7]
 
-            elif isinstance(self.function.__self__, NavarroAndFuss):
-                return_value = np.zeros(shape=(10, 1))
-                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
-                return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
-                return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
-                # index 0 holds upper/correct/plus (1 holds lower/error/minus)
-                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][0]
-                return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][0]
-                return_value[self.RT_CORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][0]
-                return_value[self.RT_INCORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
-                return_value[self.RT_INCORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
-                return_value[self.RT_INCORRECT_SKEW_INDEX] = result[NF_Results.COND_SKEW_RTS.value][1]
-
             else:
                 raise DDMError("The function specified ({}) for {} is not a valid function selection for the DDM".
-                               format(self.function_object.name, self.name))
+                               format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function_object.get_current_function_param(THRESHOLD, execution_id))
+            threshold = float(self.function.get_current_function_param(THRESHOLD, execution_id))
             if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
-
             return return_value
 
     def reinitialize(self, *args, execution_context=None):
-        from psyneulink.core.components.functions.integratorfunctions import Integrator
+        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
-        if isinstance(self.function_object, Integrator):
-            new_values = self.function_object.reinitialize(*args, execution_context=execution_context)
+        if isinstance(self.function, IntegratorFunction):
+            new_values = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.array(new_values), execution_context, override=True)
             self._update_output_states(execution_id=parse_execution_context(execution_context),
                                        context="REINITIALIZING")
 
     def is_finished(self, execution_context=None):
         # find the single numeric entry in previous_value
-        single_value = self.function_object.get_previous_value(execution_context)
+        single_value = self.function.get_previous_value(execution_context)
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
             while True:
@@ -1199,16 +1189,15 @@ class DDM(ProcessingMechanism_Base):
                     break
 
         if (
-            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD, execution_context)
-            and isinstance(self.function.__self__, Integrator)
+            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, execution_context)
+            and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function_object.get_current_function_param(THRESHOLD, execution_context)
+                    self.function.get_current_function_param(THRESHOLD, execution_context)
                 )
             )
             return True
-
         return False

@@ -270,10 +270,9 @@ Class Reference
 """
 import typecheck as tc
 
-from llvmlite import ir
-
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from psyneulink.core.components.functions.integratorfunctions import FHNIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FHNIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
@@ -285,8 +284,6 @@ from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
-
-from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -349,7 +346,8 @@ class LCControlMechanism(ControlMechanism):
 
     objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d \
     np.array]] : default ObjectiveMechanism(function=CombineMeans)
-        specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputStates it should
+        specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputStates it
+        should
         monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
@@ -360,61 +358,84 @@ class LCControlMechanism(ControlMechanism):
         `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism  belongs.
 
     initial_w_FHN : float : default 0.0
-        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     initial_v_FHN : float : default 0.0
-        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     time_step_size_FHN : float : default 0.0
-        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     t_0_FHN : float : default 0.0
-        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     a_v_FHN : float : default -1/3
-        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     b_v_FHN : float : default 0.0
-        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     c_v_FHN : float : default 1.0
-        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     d_v_FHN : float : default 0.0
-        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     e_v_FHN : float : default -1.0
-        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     f_v_FHN : float : default 1.0
-        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     threshold_FHN : float : default -1.0
-        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     time_constant_v_FHN : float : default 1.0
-        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     a_w_FHN : float : default 1.0
-        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     b_w_FHN : float : default -0.8,
-        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     c_w_FHN : float : default 0.7
-        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     mode_FHN : float : default 1.0
-        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     uncorrelated_activity_FHN : float : default 0.0
-        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     time_constant_w_FHN  : float : default  12.5
-        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     integration_method : float : default "RK4"
-        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     base_level_gain : float : default 0.5
         sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
@@ -479,7 +500,8 @@ class LCControlMechanism(ControlMechanism):
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
     function : FHNIntegrator
-        takes the LCControlMechanism's `input <LCControlMechanism_Input>` and generates its response <LCControlMechanism_Output>` under
+        takes the LCControlMechanism's `input <LCControlMechanism_Input>` and generates its response
+        <LCControlMechanism_Output>` under
         the influence of the `FHNIntegrator` Function's `mode <FHNIntegrator.mode>` attribute
         (see `LCControlMechanism_Function` for additional details).
 
@@ -505,61 +527,84 @@ class LCControlMechanism(ControlMechanism):
         list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism.
 
         initial_w_FHN : float : default 0.0
-        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     initial_v_FHN : float : default 0.0
-        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     time_step_size_FHN : float : default 0.0
-        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     t_0_FHN : float : default 0.0
-        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     a_v_FHN : float : default -1/3
-        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     b_v_FHN : float : default 0.0
-        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     c_v_FHN : float : default 1.0
-        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     d_v_FHN : float : default 0.0
-        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     e_v_FHN : float : default -1.0
-        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     f_v_FHN : float : default 1.0
-        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     threshold_FHN : float : default -1.0
-        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     time_constant_v_FHN : float : default 1.0
-        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     a_w_FHN : float : default 1.0
-        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     b_w_FHN : float : default -0.8,
-        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     c_w_FHN : float : default 0.7
-        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     mode_FHN : float : default 1.0
-        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator
+        <FHNIntegrator>` function
 
     uncorrelated_activity_FHN : float : default 0.0
-        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     time_constant_w_FHN  : float : default  12.5
-        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     integration_method : float : default "RK4"
-        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's
+        `FHNIntegrator
+        <FHNIntegrator>` function
 
     base_level_gain : float : default 0.5
         sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
@@ -689,26 +734,26 @@ class LCControlMechanism(ControlMechanism):
                          default_variable=default_variable,
                          objective_mechanism=objective_mechanism,
                          monitor_for_control=monitor_for_control,
-                         function=FHNIntegrator(  integration_method=integration_method,
-                                                  initial_v=initial_v_FHN,
-                                                  initial_w=initial_w_FHN,
-                                                  time_step_size=time_step_size_FHN,
-                                                  t_0=t_0_FHN,
-                                                  a_v=a_v_FHN,
-                                                  b_v=b_v_FHN,
-                                                  c_v=c_v_FHN,
-                                                  d_v=d_v_FHN,
-                                                  e_v=e_v_FHN,
-                                                  f_v=f_v_FHN,
-                                                  time_constant_v=time_constant_v_FHN,
-                                                  a_w=a_w_FHN,
-                                                  b_w=b_w_FHN,
-                                                  c_w=c_w_FHN,
-                                                  threshold=threshold_FHN,
-                                                  mode=mode_FHN,
-                                                  uncorrelated_activity=uncorrelated_activity_FHN,
-                                                  time_constant_w=time_constant_w_FHN,
-                         ),
+                         function=FHNIntegrator(integration_method=integration_method,
+                                                initial_v=initial_v_FHN,
+                                                initial_w=initial_w_FHN,
+                                                time_step_size=time_step_size_FHN,
+                                                t_0=t_0_FHN,
+                                                a_v=a_v_FHN,
+                                                b_v=b_v_FHN,
+                                                c_v=c_v_FHN,
+                                                d_v=d_v_FHN,
+                                                e_v=e_v_FHN,
+                                                f_v=f_v_FHN,
+                                                time_constant_v=time_constant_v_FHN,
+                                                a_w=a_w_FHN,
+                                                b_w=b_w_FHN,
+                                                c_w=c_w_FHN,
+                                                threshold=threshold_FHN,
+                                                mode=mode_FHN,
+                                                uncorrelated_activity=uncorrelated_activity_FHN,
+                                                time_constant_w=time_constant_w_FHN,
+                                                ),
                          modulation=modulation,
                          params=params,
                          name=name,
@@ -742,7 +787,7 @@ class LCControlMechanism(ControlMechanism):
                     raise LCControlMechanismError("The specification of the {} argument for {} "
                                                   "contained an item ({}) that is not a Mechanism.".
                                                   format(repr(MODULATED_MECHANISMS), self.name, mech))
-                elif not hasattr(mech.function_object, MULTIPLICATIVE_PARAM):
+                elif not hasattr(mech.function, MULTIPLICATIVE_PARAM):
                     raise LCControlMechanismError("The specification of the {} argument for {} "
                                                   "contained a Mechanism ({}) that does not have a {}.".
                                            format(repr(MODULATED_MECHANISMS),
@@ -776,7 +821,7 @@ class LCControlMechanism(ControlMechanism):
                         if (mech not in self.modulated_mechanisms and
                                 isinstance(mech, ProcessingMechanism_Base) and
                                 not (isinstance(mech, ObjectiveMechanism) and mech._role is CONTROL) and
-                                hasattr(mech.function_object, MULTIPLICATIVE_PARAM)):
+                                hasattr(mech.function, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
             # # elif hasattr(self, 'processes'):
             # elif self.processes:
@@ -785,7 +830,7 @@ class LCControlMechanism(ControlMechanism):
             #         for mech in process.mechanisms:
             #             if (mech not in self.modulated_mechanisms and
             #                     isinstance(mech, ProcessingMechanism_Base) and
-            #                     hasattr(mech.function_object, MULTIPLICATIVE_PARAM)):
+            #                     hasattr(mech.function, MULTIPLICATIVE_PARAM)):
             #                 self.modulated_mechanisms.append(mech)
             else:
                 # If LCControlMechanism is not in a Process or System, defer implementing OutputStates until it is
@@ -798,7 +843,7 @@ class LCControlMechanism(ControlMechanism):
                 self._modulated_mechanisms = [self.modulated_mechanisms]
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
-                multiplicative_param_names.append(mech.function_object.multiplicative_param)
+                multiplicative_param_names.append(mech.function.multiplicative_param)
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
@@ -842,7 +887,7 @@ class LCControlMechanism(ControlMechanism):
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
         elements = gain_ty, *mf_out.type.pointee.elements
-        elements_ty = ir.LiteralStructType(elements)
+        elements_ty = pnlvm.ir.LiteralStructType(elements)
 
         # allocate new output type
         new_out = builder.alloca(elements_ty, 1)

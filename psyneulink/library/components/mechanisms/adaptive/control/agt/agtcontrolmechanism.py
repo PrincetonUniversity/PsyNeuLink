@@ -13,7 +13,7 @@
 Overview
 --------
 
-An AGTControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `AGTUtilityIntegrator`
+An AGTControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `DualAdaptiveIntegrator`
 Function to regulate its `control_allocation <ControlMechanism.control_allocation>`.  When used with an `LCControlMechanism`
 to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the
 `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus
@@ -29,7 +29,7 @@ An AGTControlMechanism can be created in any of the ways used to `create a Contr
 Like all ControlMechanisms, an AGTControlMechanism it receives its `input <AGTControlMechanism_Input>` from an `ObjectiveMechanism`.
 However, unlike standard ControlMechanism, an AGTControlMechanism does not have an **objective_mechanism** argument in its
 constructor.  When an AGTControlMechanism is created, it automatically creates an ObjectiveMechanism and assigns a
-`AGTUtilityIntegrator` Function as its `function <ObjectiveMechanism.function>`.
+`DualAdaptiveIntegrator` Function as its `function <ObjectiveMechanism.function>`.
 
 The OutputStates to be monitored by the AGTControlMechanism's `objective_mechanism <AGTControlMechanism.objective_mechanism>` are
 specified using the **monitored_output_states** argument of the AGTControlMechanism's constructor, using any of the ways to
@@ -52,7 +52,7 @@ Structure
 
 An AGTControlMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
 `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
-The ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `AGTUtilityIntegrator` as its
+The ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `DualAdaptiveIntegrator` as its
 `function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
 <AGTControlMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value <OutputState.value>`\\s
 of the OutputStates that it monitors, integrates their aggregated value at two different rates, and combines those to
@@ -103,7 +103,7 @@ automatically created and assigned to the LCControlMechanism when it is created:
       specified in the **mode** argument of the LCControlMechanism's constructor;  these are listed in the
       LCControlMechanism's `monitored_output_states <LCControlMechanism.monitored_output_states>` attribute,
       as well as that attribute of the AGTUtilityIntegratorMechanism and LCController.  They are evaluated by the
-      AGTUtilityIntegratorMechanism's `AGTUtilityIntegrator` Function, the result of whch is used by the LCControl to
+      AGTUtilityIntegratorMechanism's `DualAdaptiveIntegrator` Function, the result of whch is used by the LCControl to
       control the value of the LCControlMechanism's `mode <FHNIntegrator.mode>` attribute.
     ..
     * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
@@ -146,13 +146,13 @@ Class Reference
 """
 import typecheck as tc
 
+from psyneulink.core.compositions.composition import MonitoredOutputStatesOption
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
-from psyneulink.core.components.functions.integratorfunctions import AGTUtilityIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -231,7 +231,7 @@ class AGTControlMechanism(ControlMechanism):
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, the output of which is used as `input <AGTControlMechanism_Input>` to the
-        AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a `AGTUtilityIntegrator` as
+        AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a `DualAdaptiveIntegrator` as
         is `function <ObjectiveMechanism.function>`.
 
     monitored_output_states : List[OutputState]
@@ -296,7 +296,6 @@ class AGTControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    from psyneulink.core.components.functions.transferfunctions import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None
@@ -323,7 +322,7 @@ class AGTControlMechanism(ControlMechanism):
             system=system,
             objective_mechanism=ObjectiveMechanism(
                 monitored_output_states=monitored_output_states,
-                function=AGTUtilityIntegrator
+                function=DualAdaptiveIntegrator
             ),
             control_signals=control_signals,
             modulation=modulation,
@@ -373,79 +372,79 @@ class AGTControlMechanism(ControlMechanism):
 
     @property
     def initial_short_term_utility(self):
-        return self._objective_mechanism.function_object._initial_short_term_utility
+        return self._objective_mechanism.function._initial_short_term_avg
 
     @initial_short_term_utility.setter
     def initial_short_term_utility(self, value):
-        self._objective_mechanism.function_object.initial_short_term_utility = value
+        self._objective_mechanism.function.initial_short_term_avg = value
 
     @property
     def initial_long_term_utility(self):
-        return self._objective_mechanism.function_object._initial_long_term_utility
+        return self._objective_mechanism.function._initial_long_term_avg
 
     @initial_long_term_utility.setter
     def initial_long_term_utility(self, value):
-        self._objective_mechanism.function_object.initial_long_term_utility = value
+        self._objective_mechanism.function.initial_long_term_avg = value
 
     @property
     def short_term_gain(self):
-        return self._objective_mechanism.function_object._short_term_gain
+        return self._objective_mechanism.function._short_term_gain
 
     @short_term_gain.setter
     def short_term_gain(self, value):
-        self._objective_mechanism.function_object.short_term_gain = value
+        self._objective_mechanism.function.short_term_gain = value
 
     @property
     def long_term_gain(self):
-        return self._objective_mechanism.function_object._long_term_gain
+        return self._objective_mechanism.function._long_term_gain
 
     @long_term_gain.setter
     def long_term_gain(self, value):
-        self._objective_mechanism.function_object.long_term_gain = value
+        self._objective_mechanism.function.long_term_gain = value
 
     @property
     def short_term_bias(self):
-        return self._objective_mechanism.function_object._short_term_bias
+        return self._objective_mechanism.function._short_term_bias
 
     @short_term_bias.setter
     def short_term_bias(self, value):
-        self._objective_mechanism.function_object.short_term_bias = value
+        self._objective_mechanism.function.short_term_bias = value
 
     @property
     def    long_term_bias(self):
-        return self._objective_mechanism.function_object._long_term_bias
+        return self._objective_mechanism.function._long_term_bias
 
     @long_term_bias.setter
     def long_term_bias(self, value):
-        self._objective_mechanism.function_object.long_term_bias = value
+        self._objective_mechanism.function.long_term_bias = value
 
     @property
     def    short_term_rate(self):
-        return self._objective_mechanism.function_object._short_term_rate
+        return self._objective_mechanism.function._short_term_rate
 
     @short_term_rate.setter
     def short_term_rate(self, value):
-        self._objective_mechanism.function_object.short_term_rate = value
+        self._objective_mechanism.function.short_term_rate = value
 
     @property
     def    long_term_rate(self):
-        return self._objective_mechanism.function_object._long_term_rate
+        return self._objective_mechanism.function._long_term_rate
 
     @long_term_rate.setter
     def long_term_rate(self, value):
-        self._objective_mechanism.function_object.long_term_rate = value
+        self._objective_mechanism.function.long_term_rate = value
 
     @property
     def operation(self):
-        return self._objective_mechanism.function_object._operation
+        return self._objective_mechanism.function._operation
 
     @operation.setter
     def operation(self, value):
-        self._objective_mechanism.function_object.operation = value
+        self._objective_mechanism.function.operation = value
 
     @property
     def agt_function_parameters(self):
-        return self.objective_mechanism.function_object.parameters
+        return self.objective_mechanism.function.parameters
 
     def show(self):
         """Display the `OutputStates <OutputState>` monitored by the AGTControlMechanism's `objective_mechanism`

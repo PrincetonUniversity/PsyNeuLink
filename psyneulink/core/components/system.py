@@ -860,18 +860,10 @@ class System(System_Base):
             ----------
 
                 variable
-                    see `variable <SystemInputState.variable>`
+                    see `variable <System.variable>`
 
-                    :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                value
-                    see `value <SystemInputState.value>`
-
-                    :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: None
+                    :type:
 
         """
         variable = None
@@ -1979,8 +1971,8 @@ class System(System_Base):
             #    for which a mechanism-specific learning_rate has NOT been assigned
             if (isinstance(item, LearningMechanism) and
                         self.learning_rate is not None and
-                        item.function_object.learning_rate is None):
-                item.function_object.learning_rate = self.learning_rate
+                        item.function.learning_rate is None):
+                item.function.learning_rate = self.learning_rate
 
             if not item in self._learning_mechs:
                 self._learning_mechs.append(item)
@@ -2937,10 +2929,10 @@ class System(System_Base):
                         mechanism._set_parameter_value(key, mechanism._runtime_params_reset[execution_id][key], execution_id)
                 mechanism._runtime_params_reset[execution_id] = {}
 
-                if execution_id in mechanism.function_object._runtime_params_reset:
-                    for key in mechanism.function_object._runtime_params_reset[execution_id]:
-                        mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[execution_id][key], execution_id)
-                mechanism.function_object._runtime_params_reset[execution_id] = {}
+                if execution_id in mechanism.function._runtime_params_reset:
+                    for key in mechanism.function._runtime_params_reset[execution_id]:
+                        mechanism.function._set_parameter_value(key, mechanism.function._runtime_params_reset[execution_id][key], execution_id)
+                mechanism.function._runtime_params_reset[execution_id] = {}
 
                 mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
@@ -3164,7 +3156,7 @@ class System(System_Base):
             a dictionary containing Mechanism: value pairs. Each Mechanism in the dictionary calls its `reinitialize
             <Mechanism_Base.reinitialize>` method at the start of the Run. The Mechanism's value in the
             reinitialize_values dictionary is passed into its `reinitialize <Mechanism_Base.reinitialize>` method. See
-            the `reinitialize method <Integrator.reinitialize>` of the `function <Mechanism_Base.function>`
+            the `reinitialize method <IntegratorFunction.reinitialize>` of the `function <Mechanism_Base.function>`
             or `integrator_function <TransferMechanism.integrator_function>` of the Mechanism for details on which
             values must be passed in as arguments. Keep in mind that only stateful Mechanisms may be reinitialized, and
             that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when

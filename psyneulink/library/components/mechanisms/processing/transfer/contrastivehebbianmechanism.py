@@ -306,7 +306,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.learningfunctions import Hebbian, ContrastiveHebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
@@ -712,7 +712,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     integrator_function:
         used by the Mechanism when it executes if `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` is
         `True`.  Uses the `integration_rate  <ContrastiveHebbianMechanism.integration_rate>` parameter
-        of the ContrastiveHebbianMechanism as the `rate <Integrator.rate>` of the ContrastiveHebbianMechanism's
+        of the ContrastiveHebbianMechanism as the `rate <IntegratorFunction.rate>` of the ContrastiveHebbianMechanism's
         `integrator_function`; see TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
         and `ContrastiveHebbian_Execution` above for additional details).
 

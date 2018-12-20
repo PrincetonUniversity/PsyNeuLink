@@ -78,8 +78,8 @@ class SampleSpec():
     Specify the information needed to create a SampleIterator which will either (1) generate values in a range or (2)
     call a function.
 
-    (1) Generate values in a range by explicitly specifying a finite reqular sequence of values, using an appropriate
-        combination of the **start**, **stop**, **step** and/or **num** arguments.
+    (1) Generate values in a range by explicitly specifying a finite regular sequence of values, using an appropriate
+        combination of the **start**, **stop**, **step** and/or **num**arguments.
 
         * if **start**, **stop**, and **step** are specified, the behavior is similar to `Numpy's arange
           <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.arange.html>`_. Calling
@@ -375,9 +375,8 @@ class OptimizationFunction(Function_Base):
     `search_termination_function <OptimizationFunction.search_termination_function>`. Subclasses can override
     `function <OptimizationFunction.function>` to implement their own optimization function or call an external one.
 
-    Samples in `search_space <OptimizationFunction.search_space>` are assumed a list of one or more `SampleIterator`
-    objects;  if there is more than one SampleIterator in the list, they must either generate lists of equal length
-    or ones that do not terminate (i.e., `num <SampleIterator>` = None).
+    Samples in `search_space <OptimizationFunction.search_space>` are assumed to be a list of one or more
+    `SampleIterator` objects.
 
     .. _OptimizationFunction_Procedure:
 
@@ -470,10 +469,9 @@ class OptimizationFunction(Function_Base):
         evaluated `objective_function <OptimizationFunction.objective_function>` in each iteration of the
         `optimization process <OptimizationFunction_Procedure>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
-        (e.g., as does `GradientOptimization`), and all of the SampleIterators in the list that are `finite
-        <SampleIterator_Finite>` must have equal `num <SampleIterators.num>`. If it is required and
-        not specified, the optimization process executes exactly once using the value passed as its `variable
-        <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
+        (e.g., as does `GradientOptimization`). If it is required and not specified, the optimization process
+        executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
+        (see `note <OptimizationFunction_Defaults>`).
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
@@ -551,29 +549,67 @@ class OptimizationFunction(Function_Base):
             ----------
 
                 variable
-                    see `variable <GaussianProcess.variable>`
+                    see `variable <OptimizationFunction.variable>`
 
-                    :default value: [[0], [0]]
-                    :type: list
+                    :default value: numpy.array([0, 0, 0])
+                    :type: numpy.ndarray
                     :read only: True
 
-                direction
-                    see `direction <GaussianProcess.direction>`
+                max_iterations
+                    see `max_iterations <OptimizationFunction.max_iterations>`
 
-                    :default value: `MAXIMIZE`
-                    :type: str
+                    :default value: None
+                    :type:
+
+                objective_function
+                    see `objective_function <OptimizationFunction.objective_function>`
+
+                    :default value: lambda x: 0
+                    :type: <class 'function'>
 
                 save_samples
-                    see `save_samples <GaussianProcess.save_samples>`
+                    see `save_samples <OptimizationFunction.save_samples>`
 
-                    :default value: True
+                    :default value: False
                     :type: bool
 
                 save_values
-                    see `save_values <GaussianProcess.save_values>`
+                    see `save_values <OptimizationFunction.save_values>`
 
-                    :default value: True
+                    :default value: False
                     :type: bool
+
+                saved_samples
+                    see `saved_samples <OptimizationFunction.saved_samples>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                saved_values
+                    see `saved_values <OptimizationFunction.saved_values>`
+
+                    :default value: []
+                    :type: list
+                    :read only: True
+
+                search_function
+                    see `search_function <OptimizationFunction.search_function>`
+
+                    :default value: lambda x: x
+                    :type: <class 'function'>
+
+                search_space
+                    see `search_space <OptimizationFunction.search_space>`
+
+                    :default value: [`SampleIterator`]
+                    :type: list
+
+                search_termination_function
+                    see `search_termination_function <OptimizationFunction.search_termination_function>`
+
+                    :default value: lambda x, y, z: True
+                    :type: <class 'function'>
 
         """
         variable = Param(np.array([0, 0, 0]), read_only=True)
@@ -647,6 +683,8 @@ class OptimizationFunction(Function_Base):
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
+        # super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
         if OBJECTIVE_FUNCTION in request_set and request_set[OBJECTIVE_FUNCTION] is not None:
             if not is_function_type(request_set[OBJECTIVE_FUNCTION]):
                 raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
@@ -666,14 +704,6 @@ class OptimizationFunction(Function_Base):
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
                                                        SampleIterator.__name__))
-            # Check that all finite iterators (i.e., with num!=None) are of the same length:
-            finite_iterators = [s.num for s in search_space if s.num is not None]
-            if not all(l==finite_iterators[0] for l in finite_iterators):
-                raise OptimizationFunctionError("All finite {}s in {} arg of {} must have the same number of steps".
-                                                format(SampleIterator.__name__,
-                                                       repr(SEARCH_SPACE),
-                                                       self.__class__.__name__,
-                                                       ))
 
         if SEARCH_TERMINATION_FUNCTION in request_set and request_set[SEARCH_TERMINATION_FUNCTION] is not None:
             if not is_function_type(request_set[SEARCH_TERMINATION_FUNCTION]):
@@ -1015,29 +1045,61 @@ class GradientOptimization(OptimizationFunction):
             ----------
 
                 variable
-                    see `variable <GaussianProcess.variable>`
+                    see `variable <GradientOptimization.variable>`
 
                     :default value: [[0], [0]]
                     :type: list
                     :read only: True
 
-                direction
-                    see `direction <GaussianProcess.direction>`
+                annealing_function
+                    see `annealing_function <GradientOptimization.annealing_function>`
 
-                    :default value: `MAXIMIZE`
+                    :default value: None
+                    :type:
+
+                convergence_criterion
+                    see `convergence_criterion <GradientOptimization.convergence_criterion>`
+
+                    :default value: `VALUE`
                     :type: str
 
-                save_samples
-                    see `save_samples <GaussianProcess.save_samples>`
+                convergence_threshold
+                    see `convergence_threshold <GradientOptimization.convergence_threshold>`
 
-                    :default value: True
-                    :type: bool
+                    :default value: 0.001
+                    :type: float
 
-                save_values
-                    see `save_values <GaussianProcess.save_values>`
+                direction
+                    see `direction <GradientOptimization.direction>`
 
-                    :default value: True
-                    :type: bool
+                    :default value: `ASCENT`
+                    :type: str
+
+                max_iterations
+                    see `max_iterations <GradientOptimization.max_iterations>`
+
+                    :default value: 1000
+                    :type: int
+
+                previous_value
+                    see `previous_value <GradientOptimization.previous_value>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                previous_variable
+                    see `previous_variable <GradientOptimization.previous_variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                step
+                    see `step <GradientOptimization.step>`
+
+                    :default value: 1.0
+                    :type: float
 
         """
         variable = Param([[0], [0]], read_only=True)
@@ -1224,8 +1286,10 @@ class GridSearch(OptimizationFunction):
         ..
         - compute value of `objective_function <GridSearch.objective_function>` for that sample;
 
-    The current iteration is contained in `iteration <GridSearch.iteration>`. Iteration continues until all values in
-    `search_space <GridSearch.search_space>` have been evaluated, or `max_iterations <GridSearch.max_iterations>` is
+    The current iteration is contained in `iteration <GridSearch.iteration>` and the total number comprising the
+    `search_space <GridSearch.search_space>2` is contained in `num_iterations <GridSearch.num_iterations>`).
+    Iteration continues until all values in `search_space <GridSearch.search_space>` have been evaluated (i.e.,
+    `num_iterations <GridSearch.num_iterations>` is reached), or `max_iterations <GridSearch.max_iterations>` is
     execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
     is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
     <GridSearch.objective_function>`, along with the value for that sample, as well as lists containing all of the
@@ -1245,7 +1309,8 @@ class GridSearch(OptimizationFunction):
 
     search_space : list or array of SampleIterators
         specifies `SampleIterators <SampleIterator>` used to generate samples evaluated by `objective_function
-        <GridSearch.objective_function>`.
+        <GridSearch.objective_function>`;  all of the iterators be finite (i.e., must have a `num <SampleIterator>`
+        attribute;  see `SampleSpec` for additional details).
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         specifies the direction of optimization:  if *MAXIMIZE*, the highest value of `objective_function
@@ -1276,7 +1341,7 @@ class GridSearch(OptimizationFunction):
 
     search_space : list or array of Sampleiterators
         contains `SampleIterators <SampleIterator>` for generating samples evaluated by `objective_function
-        <GridSearch.objective_function>` in iterations of the `optimization process <GridSearch_Procedure>`.
+        <GridSearch.objective_function>` in iterations of the `optimization process <GridSearch_Procedure>`;
 
     grid : iterator
         generates samples from the Cartesian product of `SampleIterators in `search_space <GridSearch.search_sapce>`.
@@ -1287,6 +1352,11 @@ class GridSearch(OptimizationFunction):
 
     iteration : int
         the currention iteration of the `optimization process <GridSearch_Procedure>`.
+
+    num_iterations : int
+        number of iterations required to complete the entire grid search;  equal to the produce of all the `num
+        <SampleIterator.num>` attributes of the `SampleIterators <SampleIterator>` in the `search_space
+        <GridSearch.search_space>`.
 
     max_iterations : int
         determines the maximum number of times the `optimization process<GridSearch_Procedure>` is allowed to iterate;
@@ -1309,27 +1379,26 @@ class GridSearch(OptimizationFunction):
             Attributes
             ----------
 
-                variable
-                    see `variable <GaussianProcess.variable>`
-
-                    :default value: [[0], [0]]
-                    :type: list
-                    :read only: True
-
                 direction
-                    see `direction <GaussianProcess.direction>`
+                    see `direction <GridSearch.direction>`
 
                     :default value: `MAXIMIZE`
                     :type: str
 
+                grid
+                    see `grid <GridSearch.grid>`
+
+                    :default value: None
+                    :type:
+
                 save_samples
-                    see `save_samples <GaussianProcess.save_samples>`
+                    see `save_samples <GridSearch.save_samples>`
 
                     :default value: True
                     :type: bool
 
                 save_values
-                    see `save_values <GaussianProcess.save_values>`
+                    see `save_values <GridSearch.save_values>`
 
                     :default value: True
                     :type: bool
@@ -1375,6 +1444,29 @@ class GridSearch(OptimizationFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
+            search_space = request_set[SEARCH_SPACE]
+
+            # Check that all iterators are finite (i.e., with num!=None)
+            if not all(s.num is not None for s in search_space if s.num):
+                raise OptimizationFunctionError("All {}s in {} arg of {} must be finite (i.e., SampleIteror.num!=None)".
+                                                format(SampleIterator.__name__,
+                                                       repr(SEARCH_SPACE),
+                                                       self.__class__.__name__))
+
+            # # Check that all finite iterators (i.e., with num!=None) are of the same length:
+            # finite_iterators = [s.num for s in search_space if s.num is not None]
+            # if not all(l==finite_iterators[0] for l in finite_iterators):
+            #     raise OptimizationFunctionError("All finite {}s in {} arg of {} must have the same number of steps".
+            #                                     format(SampleIterator.__name__,
+            #                                            repr(SEARCH_SPACE),
+            #                                            self.__class__.__name__,
+            #                                            ))
+
 
     def reinitialize(self, *args, execution_id=None):
         '''Assign size of `search_space <GridSearch.search_space>'''
@@ -1525,7 +1617,6 @@ class GridSearch(OptimizationFunction):
                 params=params,
                 context=context
             )
-
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:
@@ -1548,6 +1639,7 @@ class GridSearch(OptimizationFunction):
                                             "(current_execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
                        self.owner.current_execution_count, self.num_iterations))
+
         return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):

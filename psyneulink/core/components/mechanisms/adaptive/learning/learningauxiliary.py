@@ -135,9 +135,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, BackPropagation, TDLearning
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.learningfunctions import BackPropagation, Hebbian, Reinforcement, TDLearning
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -149,9 +149,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
-    IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, OUTCOME, MATRIX, MONITOR_FOR_LEARNING, NAME, \
-    PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
+from psyneulink.core.globals.keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, OUTCOME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 
 __all__ = [
@@ -929,8 +927,8 @@ class LearningComponents(object):
             if not self.activation_output_mech:
                 return None
             try:
-                self.activation_mech_fct = self.activation_output_mech.function_object
-                return self.activation_output_mech.function_object
+                self.activation_mech_fct = self.activation_output_mech.function
+                return self.activation_output_mech.function
             except AttributeError:
                 raise LearningAuxiliaryError("activation_mech_fct not identified: activation_output_mech ({})"
                                               "not appear to have been assiged a Function.".
@@ -954,8 +952,8 @@ class LearningComponents(object):
             if not self.activation_mech_fct:
                 return None
             try:
-                self._activation_derivative = self.activation_output_mech.function_object.derivative
-                return self.activation_output_mech.function_object.derivative
+                self._activation_derivative = self.activation_output_mech.function.derivative
+                return self.activation_output_mech.function.derivative
             except AttributeError:
                 raise LearningAuxiliaryError("activation_derivative not identified: activation_mech_fct ({})"
                                               "not appear to have a derivative defined.".
@@ -1109,12 +1107,12 @@ class LearningComponents(object):
             if not self.error_mech:
                 return None
             try:
-                self.error_derivative = self.error_mech.function_object.derivative
-                return self.error_mech.function_object.derivative
+                self.error_derivative = self.error_mech.function.derivative
+                return self.error_mech.function.derivative
             except AttributeError:
                 raise LearningAuxiliaryError("error_derivative not identified: the function ({}) "
                                               "for error_mech ({}) does not have a derivative attribute".
-                                             format(self.error_mech.function_object.__class__.__name__,
+                                             format(self.error_mech.function.__class__.__name__,
                                                      self.error_mech.name))
         return self._error_derivative or _get_error_deriv()
 

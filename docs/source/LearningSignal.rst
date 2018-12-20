@@ -3,4 +3,4 @@ LearningSignal
 
 .. automodule:: psyneulink.core.components.states.modulatorysignals.learningsignal
    :members:
-   :exclude-members: Linear, random
+   :exclude-members: Linear, random, Params

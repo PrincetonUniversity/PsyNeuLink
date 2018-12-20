@@ -2,14 +2,13 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
-from psyneulink.core.components.functions.distributionfunctions import NormalDist, UniformToNormalDist, \
-    ExponentialDist, \
-    UniformDist, GammaDist, WaldDist
-from psyneulink.core.components.functions.integratorfunctions import Integrator, SimpleIntegrator, ConstantIntegrator, \
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist, \
+    UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    AGTUtilityIntegrator, DriftDiffusionAnalytical, NavarroAndFuss
+    DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -92,8 +91,8 @@ class TestProcessingMechanismFunctions:
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
-    def test_processing_mechanism_AGTUtilityIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AGTUtilityIntegrator)
+    def test_processing_mechanism_DualAdaptiveIntegrator_function(self):
+        PM1 = ProcessingMechanism(function=DualAdaptiveIntegrator)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 

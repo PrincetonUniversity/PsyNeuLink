@@ -4,7 +4,7 @@ import psyneulink.core.llvm as pnlvm
 import numpy as np
 import psyneulink.core.components.functions.function as Function
 import psyneulink.core.components.functions.objectivefunctions as Functions
-from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -105,7 +105,7 @@ def test_nested_transfer_mechanism_composition_parallel(benchmark, executions):
 @pytest.mark.cuda
 @pytest.mark.parallel
 @pytest.mark.composition
-@pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
+@pytest.mark.benchmark(group="TransferMechanism nested composition parallel run")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_nested_transfer_mechanism_composition_run_parallel(benchmark, executions):
@@ -142,7 +142,7 @@ def test_nested_transfer_mechanism_composition_run_parallel(benchmark, execution
 @pytest.mark.cuda
 @pytest.mark.parallel
 @pytest.mark.composition
-@pytest.mark.benchmark(group="TransferMechanism nested composition parallel")
+@pytest.mark.benchmark(group="TransferMechanism nested composition parallel run multi")
 @pytest.mark.parametrize("executions", [1,5,100])
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_nested_transfer_mechanism_composition_run_multi_parallel(benchmark, executions):

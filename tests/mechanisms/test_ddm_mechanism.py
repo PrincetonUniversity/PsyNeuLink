@@ -4,8 +4,8 @@ import typecheck
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionIntegrator, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import Never, WhenFinished
@@ -28,28 +28,28 @@ class TestReinitialize:
         assert np.allclose(D.output_states[1].value, 1.0)
 
         # reinitialize function
-        D.function_object.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value[0], 2.0)
-        assert np.allclose(D.function_object.previous_value, 2.0)
-        assert np.allclose(D.function_object.previous_time, 0.1)
+        D.function.reinitialize(2.0, 0.1)
+        assert np.allclose(D.function.value[0], 2.0)
+        assert np.allclose(D.function.previous_value, 2.0)
+        assert np.allclose(D.function.previous_time, 0.1)
         assert np.allclose(D.value,  [[1.0], [1.0]])
         assert np.allclose(D.output_states[0].value, 1.0)
         assert np.allclose(D.output_states[1].value, 1.0)
 
         # reinitialize function without value spec
-        D.function_object.reinitialize()
-        assert np.allclose(D.function_object.value[0], 0.0)
-        assert np.allclose(D.function_object.previous_value, 0.0)
-        assert np.allclose(D.function_object.previous_time, 0.0)
+        D.function.reinitialize()
+        assert np.allclose(D.function.value[0], 0.0)
+        assert np.allclose(D.function.previous_value, 0.0)
+        assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.value, [[1.0], [1.0]])
         assert np.allclose(D.output_states[0].value, 1.0)
         assert np.allclose(D.output_states[1].value, 1.0)
 
         # reinitialize mechanism
         D.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value[0], 2.0)
-        assert np.allclose(D.function_object.previous_value, 2.0)
-        assert np.allclose(D.function_object.previous_time, 0.1)
+        assert np.allclose(D.function.value[0], 2.0)
+        assert np.allclose(D.function.previous_value, 2.0)
+        assert np.allclose(D.function.previous_time, 0.1)
         assert np.allclose(D.value, [[2.0], [0.1]])
         assert np.allclose(D.output_states[0].value, 2.0)
         assert np.allclose(D.output_states[1].value, 0.1)
@@ -62,19 +62,19 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         D.reinitialize()
-        assert np.allclose(D.function_object.value[0], 0.0)
-        assert np.allclose(D.function_object.previous_value, 0.0)
-        assert np.allclose(D.function_object.previous_time, 0.0)
+        assert np.allclose(D.function.value[0], 0.0)
+        assert np.allclose(D.function.previous_value, 0.0)
+        assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 0.0)
         assert np.allclose(D.output_states[1].value[0], 0.0)
 
         # reinitialize only decision variable
-        D.function_object.initializer = 1.0
-        D.function_object.t0 = 0.0
+        D.function.initializer = 1.0
+        D.function.t0 = 0.0
         D.reinitialize()
-        assert np.allclose(D.function_object.value[0], 1.0)
-        assert np.allclose(D.function_object.previous_value, 1.0)
-        assert np.allclose(D.function_object.previous_time, 0.0)
+        assert np.allclose(D.function.value[0], 1.0)
+        assert np.allclose(D.function.previous_value, 1.0)
+        assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 1.0)
         assert np.allclose(D.output_states[1].value[0], 0.0)
 
@@ -84,10 +84,10 @@ class TestThreshold:
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
 
-        assert D.function_object.threshold == 10.0
+        assert D.function.threshold == 10.0
 
-        D.function_object.threshold = 5.0
-        assert D.function_object._threshold == 5.0
+        D.function.threshold = 5.0
+        assert D.function._threshold == 5.0
 
     def test_threshold_sets_is_finished(self):
         D = DDM(name='DDM',
@@ -681,7 +681,7 @@ def test_DDM_time():
         )
     )
 
-    time_0 = D.function_object.previous_time   # t_0  = 0.5
+    time_0 = D.function.previous_time   # t_0  = 0.5
     np.testing.assert_allclose(time_0, 0.5, atol=1e-08)
 
     time_1 = D.execute(10)[1][0]   # t_1  = 0.5 + 0.2 = 0.7

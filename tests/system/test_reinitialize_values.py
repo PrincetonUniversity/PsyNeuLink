@@ -1,11 +1,10 @@
 import numpy as np
 
-from psyneulink.core.components.functions.integratorfunctions import Integrator, AdaptiveIntegrator, \
-    DriftDiffusionIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator, \
+    IntegratorFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
-from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import AtTrial, Never
 
@@ -84,8 +83,8 @@ class TestReinitializeValues:
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
         reinitialize_values = []
-        for attr in A.function_object.stateful_attributes:
-            reinitialize_values.append(getattr(A.function_object, attr))
+        for attr in A.function.stateful_attributes:
+            reinitialize_values.append(getattr(A.function, attr))
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
@@ -162,11 +161,11 @@ class TestReinitializeValues:
             # the reinitialize method on each stateful mechanism.
             reinitialization_value = []
 
-            if isinstance(mechanism.function_object, Integrator):
-                for attr in mechanism.function_object.stateful_attributes:
-                    reinitialization_value.append(getattr(mechanism.function_object.parameters, attr).get(S))
+            if isinstance(mechanism.function, IntegratorFunction):
+                for attr in mechanism.function.stateful_attributes:
+                    reinitialization_value.append(getattr(mechanism.function.parameters, attr).get(S))
             elif hasattr(mechanism, "integrator_function"):
-                if isinstance(mechanism.integrator_function, Integrator):
+                if isinstance(mechanism.integrator_function, IntegratorFunction):
                     for attr in mechanism.integrator_function.stateful_attributes:
                         reinitialization_value.append(getattr(mechanism.integrator_function.parameters, attr).get(S))
 

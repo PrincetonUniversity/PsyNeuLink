@@ -201,7 +201,7 @@ that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjection
 
 Recall that the ParameterState value is referenced anywhere that the controlled parameter is used in computation, and
 that it does not update until the component to which the ParameterState belongs executes. If the distinction between the
-base value stored in the parameter attribute (i.e. MyTransferMech.function_object.gain) and the value of the
+base value stored in the parameter attribute (i.e. MyTransferMech.function.gain) and the value of the
 ParameterState is unfamiliar, see `Parameter State documentation <ParameterState>` for more details, or see
 `ModulatorySignal_Modulation` for a detailed description of how modulation operates.
 
@@ -304,31 +304,27 @@ from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
-from collections import namedtuple
 
 from psyneulink.core.components.component import function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.integratorfunctions import IntegratorFunction, SimpleIntegrator
-from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Exponential
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
-from psyneulink.core.components.functions.optimizationfunctions import SampleSpec, SampleIterator
+from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction, SimpleIntegrator
+from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec
+from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, TransferFunction
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, \
-    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, iscompatible, \
-    kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
@@ -421,7 +417,7 @@ class ControlSignal(ModulatorySignal):
         costs_options=None,                                       \
         intensity_cost_function=Exponential,                      \
         adjustment_cost_function=Linear,                          \
-        duration_cost_function=Integrator,                        \
+        duration_cost_function=IntegratorFunction,                        \
         combine_costs_function=Reduce(operation=SUM),             \
         allocation_samples=self.ClassDefaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
@@ -482,7 +478,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to calculate the contribution of the change in the ControlSignal's `intensity`
         (from its `last_intensity` value) to its `cost <ControlSignal.cost>`.
 
-    duration_cost_function : IntegratorFunction : default Integrator
+    duration_cost_function : IntegratorFunction : default IntegratorFunction
         specifies the function used to calculate the contribution of the ControlSignal's duration to its
         `cost <ControlSignal.cost>`.
 
@@ -939,6 +935,13 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_allocation_samples(self, context=None):
         '''Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
         a = self.paramsCurrent[ALLOCATION_SAMPLES]
+
+        # KDM 12/14/18: below is a temporary fix that exists to bypass a validation loop
+        # resulting from the function_object->function refactor. When this validation/assign_params/etc.
+        # is taken care of, this check can be removed
+        if isinstance(a, SampleIterator):
+            return
+
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
         self.parameters.allocation_samples.set(SampleIterator(specification=a))
@@ -971,7 +974,6 @@ class ControlSignal(ModulatorySignal):
             # cost_function is Function object
             if isinstance(cost_function, Function):
                 cost_function.owner = self
-                cost_function = cost_function.function
             # cost_function is custom-specified function
             elif isinstance(cost_function, function_type):
                 pass

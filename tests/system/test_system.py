@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionAnalytical
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
@@ -9,9 +9,9 @@ from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES
 from psyneulink.core.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial
+from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
 
 
 def test_danglingControlledMech():
@@ -756,18 +756,18 @@ class TestRuntimeParams:
 
         # Construction
         T = TransferMechanism()
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
 
         # Runtime param used for slope
         T.execute(runtime_params={"slope": 10.0}, input=2.0)
-        assert T.function_object.slope == 10.0
+        assert T.function.slope == 10.0
         assert T.parameter_states['slope'].value == 10.0
         assert T.value == 20.0
 
         # Runtime param NOT used for slope
         T.execute(input=2.0)
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
         assert T.value == 2.0
 
@@ -795,25 +795,25 @@ class TestRuntimeParams:
         T = TransferMechanism()
 
         # Intercept attr updated
-        T.function_object.intercept = 2.0
-        assert T.function_object.intercept == 2.0
+        T.function.intercept = 2.0
+        assert T.function.intercept == 2.0
 
         # Runtime param used for slope
         T.execute(runtime_params={"slope": 10.0}, input=2.0)
-        assert T.function_object.slope == 10.0
+        assert T.function.slope == 10.0
         assert T.parameter_states['slope'].value == 10.0
 
         # Intercept attr NOT affected by runtime params
-        assert T.function_object.intercept == 2.0
+        assert T.function.intercept == 2.0
         assert T.value == 22.0
 
         # Runtime param NOT used for slope
         T.execute(input=2.0)
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
 
         # Intercept attr NOT affected by runtime params reset
-        assert T.function_object.intercept == 2.0
+        assert T.function.intercept == 2.0
         assert T.value == 4.0
 
     def test_runtime_params_reset_to_most_recent_val(self):
@@ -821,22 +821,22 @@ class TestRuntimeParams:
 
         # Construction
         T = TransferMechanism()
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
 
         # Set slope attribute value directly
-        T.function_object.slope = 2.0
-        assert T.function_object.slope == 2.0
+        T.function.slope = 2.0
+        assert T.function.slope == 2.0
 
         # Runtime param used for slope
         T.execute(runtime_params={"slope": 10.0}, input=2.0)
-        assert T.function_object.slope == 10.0
+        assert T.function.slope == 10.0
         assert T.parameter_states['slope'].value == 10.0
         assert T.value == 20.0
 
         # Runtime param NOT used for slope - reset to most recent slope value (2.0)
         T.execute(input=2.0)
-        assert T.function_object.slope == 2.0
+        assert T.function.slope == 2.0
         assert T.value == 4.0
 
     def test_system_run_function_param_no_condition(self):
@@ -845,19 +845,19 @@ class TestRuntimeParams:
         T = TransferMechanism()
         P = Process(pathway=[T])
         S = System(processes=[P])
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
 
         # Runtime param used for slope
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
         S.run(inputs={T: 2.0}, runtime_params={T: {"slope": 10.0}})
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
         assert T.parameters.value.get(S) == 20.0
 
         # Runtime param NOT used for slope
         S.run(inputs={T: 2.0})
-        assert T.function_object.slope == 1.0
+        assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
         assert T.parameters.value.get(S) == 2.0
 

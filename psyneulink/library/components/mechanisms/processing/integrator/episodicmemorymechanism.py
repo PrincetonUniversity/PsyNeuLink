@@ -14,7 +14,7 @@
 Overview
 --------
 
-A EpisodicMemoryMechanism is an `Integrator` Function that can store and retrieve cue-associate pairs.
+A EpisodicMemoryMechanism is an `IntegratorFunction` Function that can store and retrieve cue-associate pairs.
 
 .. _EpisodicMemoryMechanism_Creation:
 
@@ -82,13 +82,13 @@ Class Reference
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.integratorfunctions import DND, STORAGE_PROB, RETRIEVAL_PROB
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import RETRIEVAL_PROB, STORAGE_PROB, DND
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.globals.parameters import Param
-from psyneulink.core.globals.keywords import NAME, SIZE, VARIABLE, OWNER_VALUE
-from psyneulink.core.globals.utilities import all_within_range
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
+from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = ['EpisodicMemoryMechanism', 'CUE_INPUT', 'ASSOC_INPUT', 'CUE_OUTPUT', 'ASSOC_OUTPUT']
 
@@ -226,14 +226,14 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         if not all_within_range(self._storage_prob, 0, 1):
             raise EpisodicMemoryMechanismError("{} arg of {} ({}) must be a float in the interval [0,1]".
                                 format(repr(STORAGE_PROB), self.__class___.__name__, self._storage_prob))
-        if hasattr(self.function_object, STORAGE_PROB):
-            self.function_object.parameters.storage_prob.set(self._storage_prob)
+        if hasattr(self.function, STORAGE_PROB):
+            self.function.parameters.storage_prob.set(self._storage_prob)
 
         if not all_within_range(self._retrieval_prob, 0, 1):
             raise EpisodicMemoryMechanismError("{} arg of {} ({}) must be a float in the interval [0,1]".
                                 format(repr(RETRIEVAL_PROB), self.__class___.__name__, self._retrieval_prob))
-        if hasattr(self.function_object, RETRIEVAL_PROB):
-            self.function_object.parameters.retrieval_prob.set(self._retrieval_prob)
+        if hasattr(self.function, RETRIEVAL_PROB):
+            self.function.parameters.retrieval_prob.set(self._retrieval_prob)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         return super()._execute(variable=variable,

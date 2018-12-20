@@ -69,7 +69,7 @@ def my_conflict_function(variable):
 color_feature_layer = pnl.RecurrentTransferMechanism(
     size=2,                     # Define unit size
     function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),       # to 4 & bias to 1
-    integrator_mode=True,       # Set Integrator mode to True
+    integrator_mode=True,       # Set IntegratorFunction mode to True
     integration_rate=Lambda,    # smoothing factor ==  integration rate
     hetero=inhibition,          # Inhibition among units within a layer
     output_states=[{                          # Create new output state by applying
@@ -83,7 +83,7 @@ color_feature_layer = pnl.RecurrentTransferMechanism(
 word_feature_layer = pnl.RecurrentTransferMechanism(
     size=2,                     # Define unit size
     function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
-    integrator_mode=True,   # Set Integrator mode to True
+    integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition,      # Inhibition among units within a layer
     output_states=[{              # Create new output state by applying
@@ -98,7 +98,7 @@ word_feature_layer = pnl.RecurrentTransferMechanism(
 response_layer = pnl.RecurrentTransferMechanism(
     size=2,                         # Define unit size
     function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),           # to 4 & bias to 1
-    integrator_mode=True,           # Set Integrator mode to True
+    integrator_mode=True,           # Set IntegratorFunction mode to True
     integration_rate=Lambda,        # smoothing factor ==  integration rate
     hetero=inhibition,              # Inhibition among units within a layer
     output_states=[{           # Create new output state by applying
@@ -114,7 +114,7 @@ response_layer = pnl.RecurrentTransferMechanism(
 task_demand_layer = pnl.RecurrentTransferMechanism(
     size=2,                      # Define unit size
     function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
-    integrator_mode=True,   # Set Integrator mode to True
+    integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition_task,  # Inhibition among units within a layer
     output_states=[               # Create new output state by applying

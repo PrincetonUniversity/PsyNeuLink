@@ -18,12 +18,15 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core.components.functions.function import Function_Base
-from psyneulink.core.components.functions.integratorfunctions import Integrator, Buffer
+from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
-from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
+from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
+    kwPreferenceSetName, kwProgressBarChar
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -593,11 +596,11 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         # the reinitialize method on each stateful mechanism.
         reinitialization_value = []
 
-        if isinstance(mechanism.function_object, Integrator):
-            for attr in mechanism.function_object.stateful_attributes:
-                reinitialization_value.append(mechanism.function_object.get_current_function_param(attr, execution_id))
+        if isinstance(mechanism.function, StatefulFunction):
+            for attr in mechanism.function.stateful_attributes:
+                reinitialization_value.append(mechanism.function.get_current_function_param(attr, execution_id))
         elif hasattr(mechanism, "integrator_function"):
-            if isinstance(mechanism.integrator_function, Integrator):
+            if isinstance(mechanism.integrator_function, IntegratorFunction):
                 for attr in mechanism.integrator_function.stateful_attributes:
                     reinitialization_value.append(mechanism.integrator_function.get_current_function_param(attr, execution_id))
 
@@ -625,7 +628,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
             context=context
         )
         EVC_list.append(
-            ctlr.value_function.function(
+            ctlr.value_function(
                 controller=ctlr,
                 outcome=outcome,
                 costs=ctlr.parameters.control_signal_costs.get(sim_execution_id),
@@ -726,10 +729,11 @@ class PredictionMechanism(IntegratorMechanism):
       are assigned as the `Linear` function's `slope <Linear.slope>` and `intercept <Linear.intercept>` parameters,
       respectively.
 
-    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegrator` Function to compute an exponentially weighted time-average
-      of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise** arguments can be used
-      to specify the corresponding `rate <AdaptiveIntegrator.rate>` and `noise <AdaptiveIntegrator.noise>` parameters
-      of the function.  The function returns the time-averaged input as a single item.
+    * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegrator` Function to compute an exponentially weighted
+      time-average of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise**
+      arguments can be used to specify the corresponding `rate <AdaptiveIntegrator.rate>` and `noise
+      <AdaptiveIntegrator.noise>` parameters of the function.  The function returns the time-averaged input
+      as a single item.
 
     * *AVERAGE_INPUTS:* uses a `Buffer` Function to compute the average of the number of preceding inputs specified in
       the PredictionMechanism's **window_size** argument.  If the **rate** and/or **noise** arguments are specified,

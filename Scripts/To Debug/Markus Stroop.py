@@ -1,12 +1,10 @@
 import numpy as np
-import random
-import matplotlib.pyplot as plt
 import psyneulink as pnl
 
 #  INPUT UNITS
 #  colors: ('red', 'green'), words: ('RED','GREEN')
 import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 colors_input_layer = pnl.TransferMechanism(size=2,
@@ -57,14 +55,14 @@ response_layer = pnl.TransferMechanism(size=2,
 #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
 accumulator_noise = 0.01 #0.03
 respond_red_accumulator = pnl.IntegratorMechanism(
-                                   function=psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator(
+                                   function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator(
                                                    noise=psyneulink.core.components.functions.distributionfunctions
                                                        .NormalDist(mean=0, standard_deviation=accumulator_noise).function,
                                                    rate=0.1),
                                    name='respond_red_accumulator')
 #   Respond green accumulator
 respond_green_accumulator = pnl.IntegratorMechanism(
-                                   function=psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator(
+                                   function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator(
                                                    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=accumulator_noise).function,
                                                    rate=0.1),
                                    name='respond_green_accumulator')

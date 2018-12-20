@@ -89,7 +89,7 @@ Component._initialize_from_context, which when called on a Component copies the 
 and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
 
 - `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
-other Components to function properly (beyond "standard" things like Component.function_object, \
+other Components to function properly (beyond "standard" things like Component.function, \
 or Mechanism.input_states, as these are added in the proper classes' _dependent_components)
     - the intent is that with ``_dependent_components`` set properly, calling \
     ``obj._initialize_from_context(new_execution_id, base_execution_id)`` should be sufficient to run obj \
@@ -415,7 +415,7 @@ If a runtime parameter is meant to be used throughout the `Run`, then the `Condi
 >>> T = pnl.TransferMechanism()
 >>> P = pnl.Process(pathway=[T])
 >>> S = pnl.System(processes=[P])
->>> T.function_object.slope  # slope starts out at 1.0
+>>> T.function.slope  # slope starts out at 1.0
 1.0
 
 >>> # During the following run, 10.0 will be used as the slope
@@ -423,7 +423,7 @@ If a runtime parameter is meant to be used throughout the `Run`, then the `Condi
 ...       runtime_params={T: {"slope": 10.0}})
 [ 20.]
 
->>> T.function_object.slope  # After the run, T.slope resets to 1.0
+>>> T.function.slope  # After the run, T.slope resets to 1.0
 
 Otherwise, the runtime parameter value will be used on all executions of the
 `Run` during which the `Condition` is True:
@@ -432,8 +432,8 @@ Otherwise, the runtime parameter value will be used on all executions of the
 >>> P = pnl.Process(pathway=[T])
 >>> S = pnl.System(processes=[P])
 
->>> T.function_object.intercept     # intercept starts out at 0.0
->>> T.function_object.slope         # slope starts out at 1.0
+>>> T.function.intercept     # intercept starts out at 0.0
+>>> T.function.slope         # slope starts out at 1.0
 
 >>> S.run(inputs={T: 2.0},
 ...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
@@ -565,8 +565,8 @@ to computations made during the run.
         ...            processes=[LP])
 
         >>> def target_function():
-        ...     val_1 = NormalDist(mean=3.0).function()
-        ...     val_2 = NormalDist(mean=3.0).function()
+        ...     val_1 = NormalDist(mean=3.0)()
+        ...     val_2 = NormalDist(mean=3.0)()
         ...     target_value = np.array([val_1, val_2])
         ...     return target_value
 

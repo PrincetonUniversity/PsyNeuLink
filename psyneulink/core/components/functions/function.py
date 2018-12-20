@@ -21,8 +21,8 @@ Example function:
 Overview
 --------
 
-A Function is a `Component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by other Components.  Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
+A Function is a `Component <Component>` that "packages" a function for use by other Components.
+Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
 Function's `function <Function_Base.function>` is executed.  The `function <Function_Base.function>` can be any callable
 operation, although most commonly it is a mathematical operation (and, for those, almost always uses a call to one or
 more numpy functions).  There are two reasons PsyNeuLink packages functions in a Function Component:
@@ -70,10 +70,7 @@ Every Function has the following core attributes:
 ..
 * `function <Function_Base.function>` -- determines the computation carried out by the Function; it must be a
   callable object (that is, a python function or method of some kind). Unlike other PsyNeuLink `Components
-  <Component>`, it *cannot* be (another) Function object (it can't be "turtles" all the way down!). If the Function
-  has been assigned to another `Component`, then its `function <Function_Base.function>` is also assigned as the
-  the `function <Component.function>` attribute of the Component to which it has been assigned (i.e., its
-  `owner <Function_Base.owner>`.
+  <Component>`, it *cannot* be (another) Function object (it can't be "turtles" all the way down!).
 
 A Function also has an attribute for each of the parameters of its `function <Function_Base.function>`.
 
@@ -82,7 +79,7 @@ A Function also has an attribute for each of the parameters of its `function <Fu
 
 If a Function has been assigned to another `Component`, then it also has an `owner <Function_Base.owner>` attribute
 that refers to that Component.  The Function itself is assigned as the Component's
-`function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
+`function <Component.function>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
 `parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
 used by `ControlProjections <ControlProjection>` to modify the Function's parameters.
@@ -122,8 +119,8 @@ of an `LCControlMechanism` to modulate the `multiplicative_param` of the `functi
 Execution
 ---------
 
-Functions are not executable objects, but their `function <Function_Base.function>` can be called.   This can be done
-directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
+Functions are executable objects that can be called directly.  More commonly, however, they are called when
+their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
 `parameter specification dictionary <ParameterState_Specification>` to the **params** argument in the
 call to the `function <Function_Base.function>`.
@@ -328,10 +325,10 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     function_mod_meta_param_obj = mod_proj.sender.modulation
 
     # # MODIFIED 6/27/18 OLD
-    # # Get the actual parameter of owner.function_object to be modulated
-    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.value.attrib_name]
+    # # Get the actual parameter of owner.function to be modulated
+    # function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
     # # Get the function parameter's value
-    # function_param_value = owner.function_object.params[function_param_name]
+    # function_param_value = owner.function.params[function_param_name]
     # # MODIFIED 6/27/18 NEW:
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
         # function_param_name = function_mod_meta_param_obj
@@ -340,10 +337,10 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
         function_param_name = function_mod_meta_param_obj
         function_param_value = mod_proj.sender.parameters.value.get(execution_context)
     else:
-        # Get the actual parameter of owner.function_object to be modulated
-        function_param_name = owner.function_object.params[function_mod_meta_param_obj.value.attrib_name]
+        # Get the actual parameter of owner.function to be modulated
+        function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
         # Get the function parameter's value
-        function_param_value = owner.function_object.params[function_param_name]
+        function_param_value = owner.function.params[function_param_name]
     # # MODIFIED 6/27/18 NEWER:
     # from psyneulink.core.globals.utilities import Modulation
     # mod_spec = function_mod_meta_param_obj.value.attrib_name
@@ -354,10 +351,10 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     #     function_param_name = mod_spec
     #     function_param_value = None
     # else:
-    #     # Get name of the actual parameter of owner.function_object to be modulated
-    #     function_param_name = owner.function_object.params[mod_spec]
+    #     # Get name of the actual parameter of owner.function to be modulated
+    #     function_param_name = owner.function.params[mod_spec]
     #     # Get the function parameter's value
-    #     function_param_value = owner.function_object.params[mod_spec]
+    #     function_param_value = owner.function.params[mod_spec]
     # MODIFIED 6/27/18 END
 
     # Return the meta_parameter object, function_param name, and function_param_value
@@ -673,6 +670,9 @@ class Function_Base(Function):
                          param_defaults=params,
                          name=name,
                          prefs=prefs)
+
+    def __call__(self, *args, **kwargs):
+        return self.function(*args, **kwargs)
 
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):
