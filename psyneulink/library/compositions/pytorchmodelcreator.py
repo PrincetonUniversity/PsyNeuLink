@@ -126,8 +126,9 @@ class PytorchModelCreator(torch.nn.Module):
 
     def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
         for component, value in outputs.items():
-            component.parameters.value.set(value, execution_id, override=True)
-            component.output_state.parameters.value.set(value, execution_id, override=True)
+            detached_value = value.detach().numpy()
+            component.parameters.value.set(detached_value, execution_id, override=True)
+            component.output_state.parameters.value.set(detached_value, execution_id, override=True)
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it
