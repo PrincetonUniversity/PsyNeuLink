@@ -1393,7 +1393,11 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     for item in owner_value))):
         pass
     else:
-        converted_to_2d = np.atleast_2d(owner.value)
+        # # MODIFIED 12/19/18 OLD:
+        # converted_to_2d = np.atleast_2d(owner.value)
+        # MODIFIED 12/19/18 NEW: [JDC]
+        converted_to_2d = np.atleast_2d(owner.parameters.value.get())
+        # MODIFIED 12/19/18 END
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
             owner_value = owner.instance_defaults.value

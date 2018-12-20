@@ -2812,7 +2812,7 @@ class Component(object, metaclass=ComponentsMeta):
         if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
 
-        self.parameters.value.set(value, override=True)
+        # self.parameters.value.set(value, override=True)
         try:
             # Could be mutable, so assign copy
             self.instance_defaults.value = value.copy()

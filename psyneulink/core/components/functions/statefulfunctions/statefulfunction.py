@@ -467,9 +467,18 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if execution_context is None:
             # if this is run during initialization, self.parameters will refer to self.class_parameters
             # because self.parameters has not been created yet
-            self.previous_value = np.atleast_1d(initializer)
+            # # MODIFIED 12/19/18 OLD:
+            # self.previous_value = np.atleast_1d(initializer)
+            # MODIFIED 12/19/18 NEW: [JDC]
+            self.parameters.value.set(np.atleast_1d(initializer), execution_context)
+            # MODIFIED 12/19/18 END
         else:
-            self.parameters.previous_value.set(np.atleast_1d(initializer), execution_context)
+            # # MODIFIED 12/19/18 OLD:
+            # self.parameters.previous_value.set(np.atleast_1d(initializer), execution_context)
+            # MODIFIED 12/19/18 NEW: [JDC]
+            self.parameters.value.set(np.atleast_1d(initializer), execution_context, override=True)
+            # MODIFIED 12/19/18 END
+
 
     def reinitialize(self, *args, execution_context=None):
         """

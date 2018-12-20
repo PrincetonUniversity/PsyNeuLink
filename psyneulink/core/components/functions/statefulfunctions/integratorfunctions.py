@@ -488,7 +488,11 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
+        # # MODIFIED 12/19/18 OLD:
+        # self.previous_value = initializer
+        # MODIFIED 12/19/18 NEW: [JDC]
+        self.parameters.value.set(initializer)
+        # MODIFIED 12/19/18 END
 
         super().__init__(
             default_variable=default_variable,
@@ -828,15 +832,26 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         if increment is None:
             increment = 0.0
 
+        # # MODIFIED 12/19/18 OLD:
         previous_value = np.atleast_2d(self.get_previous_value(execution_id))
+        # MODIFIED 12/19/18 NEW: [JDC]
+        previous_value = self.parameters.value.get_previous(execution_id)
+        if previous_value is None:
+            previous_value = self.parameters.initializer.get(execution_id)
+        previous_value = np.atleast_2d(previous_value)
+        # MODIFIED 12/19/18 END
 
         value = previous_value * rate + noise + increment
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(value, execution_id, override=True)
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            # # MODIFIED 12/19/18 OLD:
+            # self.parameters.previous_value.set(value, execution_id, override=True)
+            # MODIFIED 12/19/18 NEW: [JDC]
+            self.parameters.value.set(previous_value, execution_id, override=True, skip_history=True)
+            # MODIFIED 12/19/18 END
 
         return self.convert_output_type(value)
 
