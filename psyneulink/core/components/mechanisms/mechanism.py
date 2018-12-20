@@ -1349,9 +1349,6 @@ class Mechanism_Base(Mechanism):
 
         input_state_variables = Param(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
-    class _CompilationData(Parameters):
-        nv_state = None
-
     registry = MechanismRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
@@ -1496,8 +1493,6 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-
-        self._nv_state = None
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2187,8 +2182,7 @@ class Mechanism_Base(Mechanism):
                 input=None,
                 execution_id=None,
                 runtime_params=None,
-                context=None,
-                bin_execute=False):
+                context=None):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
         COMMENT:
@@ -2344,18 +2338,14 @@ class Mechanism_Base(Mechanism):
 
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        if bin_execute:
-            e = pnlvm.MechExecution(self, [execution_id])
-            value = e.execute(variable)
-        else:
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
-            value = self._execute(
-                variable=variable,
-                execution_id=execution_id,
-                runtime_params=runtime_params,
-                context=context
-            )
+        value = self._execute(
+            variable=variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2552,13 +2542,13 @@ class Mechanism_Base(Mechanism):
         param_list = [input_param_struct, function_param_struct,
                       output_param_struct, param_param_struct]
 
-        mech_params = self._get_mech_params_type()
+        mech_params = self._get_mech_params_type(ctx)
         if mech_params is not None:
             param_list.append(mech_params)
 
         return ir.LiteralStructType(param_list)
 
-    def _get_mech_params_type(self):
+    def _get_mech_params_type(self, ctx):
         pass
 
     def _get_input_context_struct_type(self, ctx):
@@ -2585,13 +2575,13 @@ class Mechanism_Base(Mechanism):
         context_list = [input_context_struct, function_context_struct,
                         output_context_struct, param_context_struct]
 
-        mech_context = self._get_mech_context_type()
+        mech_context = self._get_mech_context_type(ctx)
         if mech_context is not None:
             context_list.append(mech_context)
 
         return ir.LiteralStructType(context_list)
 
-    def _get_mech_context_type(self):
+    def _get_mech_context_type(self, ctx):
         pass
 
     def _get_output_struct_type(self, ctx):

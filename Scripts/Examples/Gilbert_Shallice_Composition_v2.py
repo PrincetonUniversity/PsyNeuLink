@@ -19,6 +19,7 @@ WORD_OUTPUT_LAYER = pnl.RecurrentTransferMechanism(size = 3,
                                                    hetero=0.0,#-2.0,
                                                    function=pnl.Linear(),
                                                    integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6), # also tried these values: rate = 0.5,decay=0.5
+                                                   integrator_mode= True,
                                                    name='WORD OUTPUT LAYER')
 WORD_OUTPUT_LAYER.set_log_conditions('value')
 WORD_OUTPUT_LAYER.set_log_conditions('InputState-0')
@@ -30,6 +31,7 @@ COLOR_OUTPUT_LAYER = pnl.RecurrentTransferMechanism(size = 3,
                                                    hetero=0.0,#-2.0,
                                                    function=pnl.Linear(),
                                                    integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6),
+                                                    integrator_mode= True,
                                                    name='COLOR OUTPUT LAYER')
 
 COLOR_OUTPUT_LAYER.set_log_conditions('value')
@@ -39,7 +41,8 @@ TASK_DEMAND_LAYER = pnl.RecurrentTransferMechanism(size = 2,
                                                    auto=0.0,
                                                    hetero=0.0,#-2.0,
                                                    function=pnl.Linear(),
-                                                   integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6),
+                                                   integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-4),
+                                                   integrator_mode= True,
                                                    name='TASK DEMAND LAYER')
 
 TASK_DEMAND_LAYER.set_log_conditions('value')
@@ -192,7 +195,7 @@ Gilbert_Shallice_System._analyze_graph()
 Gilbert_Shallice_System.show_graph()
 
 input_dict = {COLOR_INPUT_LAYER: [1, 0, 0],
-              WORD_INPUT_LAYER: [1, 0, 0]
+              WORD_INPUT_LAYER: [0, 1, 0]
               # TASK_DEMAND_LAYER: [1, 0]
               }
 
