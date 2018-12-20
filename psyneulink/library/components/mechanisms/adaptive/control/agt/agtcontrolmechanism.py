@@ -15,7 +15,7 @@ Overview
 
 An AGTControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `DualAdaptiveIntegrator`
 Function to regulate its `control_allocation <ControlMechanism.control_allocation>`.  When used with an `LCControlMechanism`
-to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the
+to regulate the `mode <FitzHughNagumoIntegrator.mode>` parameter of its `FitzHughNagumoIntegrator` Function, it implements a form of the
 `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus
 coeruleus-norepinephrine (LC-NE) system.
 
@@ -95,8 +95,8 @@ If the **mode** argument of the LCControlMechanism's constructor is specified, t
 automatically created and assigned to the LCControlMechanism when it is created:
 
     * an `LCController` -- takes the output of the AGTUtilityIntegratorMechanism (see below) and uses this to
-      control the value of the LCControlMechanism's `mode <FHNIntegrator.mode>` attribute.  It is assigned a single
-      `ControlSignal` that projects to the `ParameterState` for the LCControlMechanism's `mode <FHNIntegrator.mode>`
+      control the value of the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>` attribute.  It is assigned a single
+      `ControlSignal` that projects to the `ParameterState` for the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>`
       attribute.
     ..
     * a `AGTUtilityIntegratorMechanism` -- monitors the `value <OutputState.value>` of any `OutputStates <OutputState>`
@@ -104,7 +104,7 @@ automatically created and assigned to the LCControlMechanism when it is created:
       LCControlMechanism's `monitored_output_states <LCControlMechanism.monitored_output_states>` attribute,
       as well as that attribute of the AGTUtilityIntegratorMechanism and LCController.  They are evaluated by the
       AGTUtilityIntegratorMechanism's `DualAdaptiveIntegrator` Function, the result of whch is used by the LCControl to
-      control the value of the LCControlMechanism's `mode <FHNIntegrator.mode>` attribute.
+      control the value of the LCControlMechanism's `mode <FitzHughNagumoIntegrator.mode>` attribute.
     ..
     * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
       the AGTUtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
@@ -113,7 +113,7 @@ automatically created and assigned to the LCControlMechanism when it is created:
       <AGTUtilityIntegratorMechanism_Structure>` to the LCControlMechanism's *MODE* <InputState_Primary>`.
     ..
     * a `ControlProjection` from the LCController's ControlSignal to the `ParameterState` for the LCControlMechanism's
-      `mode <FHNIntegrator.mode>` attribute.
+      `mode <FitzHughNagumoIntegrator.mode>` attribute.
 COMMENT
 
 

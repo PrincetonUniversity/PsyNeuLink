@@ -6,9 +6,9 @@ import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
-    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
-    LCAIntegrator, DualAdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+    SimpleIntegrator, ConstantIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, \
+    FitzHughNagumoIntegrator, AccumulatorIntegrator, LeakyCompetingIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -19,9 +19,9 @@ from psyneulink.core.scheduling.condition import Never
 
 
 class TestReinitialize:
-    def test_FHN_valid(self):
+    def test_FitzHughNagumo_valid(self):
         I = IntegratorMechanism(name="I",
-                                function=FHNIntegrator())
+                                function=FitzHughNagumoIntegrator())
         I.reinitialize_when = Never()
         I.execute(1.0)
 
@@ -307,7 +307,7 @@ class TestReinitialize:
     def test_LCAMechanism_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=LCAIntegrator(),
+            function=LeakyCompetingIntegrator(),
         )
 
         # previous_value + (rate*previous_value + new_value)*time_step_size + noise
@@ -467,11 +467,11 @@ class TestIntegratorFunctions:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=[pytest.mark.llvm]),
                                       pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
-    def test_FHN_simple_scalar(self, benchmark, mode):
+    def test_FitzHughNagumo_simple_scalar(self, benchmark, mode):
         var = [1.0]
         I = IntegratorMechanism(name="I",
                                 default_variable=[var],
-                                function=FHNIntegrator())
+                                function=FitzHughNagumoIntegrator())
 
         if mode == 'Python':
             val = I.execute(var)
@@ -494,11 +494,11 @@ class TestIntegratorFunctions:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=[pytest.mark.llvm]),
                                       pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
-    def test_FHN_simple_vector(self, benchmark, mode):
+    def test_FitzHughNagumo_simple_vector(self, benchmark, mode):
         var = [1.0, 3.0]
         I = IntegratorMechanism(name="I",
                                 default_variable=var,
-                                function=FHNIntegrator)
+                                function=FitzHughNagumoIntegrator)
 
         if mode == 'Python':
             val = I.execute(var)
@@ -642,7 +642,7 @@ class TestIntegratorFunctions:
                 initializer=10.0,
                 rate=10,
                 time_step_size=0.2,
-                t0=0.5,
+                starting_point=0.5,
                 decay=0.1,
                 offset=10,
             )
@@ -1244,7 +1244,7 @@ class TestDualAdaptiveIntegrator:
         U = IntegratorMechanism(
             name = "DualAdaptiveIntegrator",
             function=DualAdaptiveIntegrator(
-                operation="s-l"
+                operation=pnl.S_MINUS_L
             )
 
         )
@@ -1272,7 +1272,7 @@ class TestDualAdaptiveIntegrator:
         U = IntegratorMechanism(
             name = "DualAdaptiveIntegrator",
             function=DualAdaptiveIntegrator(
-                operation="s+l"
+                operation=pnl.SUM
             )
 
         )
@@ -1365,11 +1365,11 @@ class TestDualAdaptiveIntegrator:
 
     # @pytest.mark.mechanism
     # @pytest.mark.integrator_mechanism
-    # def test_FHN_gilzenrat(self):
+    # def test_FitzHughNagumo_gilzenrat(self):
     #
     #     F = IntegratorMechanism(
-    #         name='IntegratorMech-FHNFunction',
-    #         function=FHNIntegrator(
+    #         name='IntegratorMech-FitzHughNagumoFunction',
+    #         function=FitzHughNagumoIntegrator(
     #             time_step_size=0.1,
     #             initial_v=0.2,
     #             initial_w=0.0,
@@ -1421,11 +1421,11 @@ class TestDualAdaptiveIntegrator:
     #     #                                              1.7817328532815251])
     #     #
     #
-    # def test_FHN_gilzenrat_low_electrotonic_coupling(self):
+    # def test_FitzHughNagumo_gilzenrat_low_electrotonic_coupling(self):
     #
     #     F = IntegratorMechanism(
-    #         name='IntegratorMech-FHNFunction',
-    #         function=FHNIntegrator(
+    #         name='IntegratorMech-FitzHughNagumoFunction',
+    #         function=FitzHughNagumoIntegrator(
     #             time_step_size=0.1,
     #             initial_v=0.2,
     #             initial_w=0.0,

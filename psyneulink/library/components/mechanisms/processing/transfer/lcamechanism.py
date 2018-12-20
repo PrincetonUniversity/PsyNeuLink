@@ -55,7 +55,7 @@ The self-excitatory and mutually-inhibitory connections are implemented as a rec
 with a `matrix <LCAMechanism.matrix>` in which the diagonal consists of uniform weights specified by **self_excitation** and the
 off-diagonal consists of uniform weights specified by the *negative* of the **competition** argument.
 
-The *noise*, *leak*, *initial_value*, and *time_step_size* arguments are used to implement the `LCAIntegrator`
+The *noise*, *leak*, *initial_value*, and *time_step_size* arguments are used to implement the `LeakyCompetingIntegrator`
 as the `LCAMechanism.integrator_function <LCAMechanism.integrator_function>` of the mechanism. *integrator_mode* determines whether the
 `LCAMechanism.integrator_function <LCAMechanism.integrator_function>` will execute.
 
@@ -88,7 +88,7 @@ Structure
 
 The key distinguishing features of an LCAMechanism are:
 
-1. its `integrator_function <LCAMechanism.integrator_function>`, which implements the `LCAIntegrator`. (Note that a
+1. its `integrator_function <LCAMechanism.integrator_function>`, which implements the `LeakyCompetingIntegrator`. (Note that a
 standard `RecurrentTransferMechanism` would implement the `AdaptiveIntegrator` as its `integrator_function
 <RecurrentTransferMechanism.integrator_function>`)
 
@@ -140,7 +140,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LCAIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
@@ -253,7 +253,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     The key distinguishing features of an LCAMechanism are:
 
-    1. its `integrator_function <LCAMechanism.integrator_function>`, which implements the `LCAIntegrator`. (where *rate*
+    1. its `integrator_function <LCAMechanism.integrator_function>`, which implements the `LeakyCompetingIntegrator`. (where *rate*
     = *leak*)
 
     2. its `matrix <LCAMechanism.matrix>` consisting of `self_excitation <LCAMechanism.self_excitation>` and `competition
@@ -297,22 +297,22 @@ class LCAMechanism(RecurrentTransferMechanism):
         COMMENT
 
     leak : value : default 0.5
-        sets the `rate <LCAIntegrator.rate>` on the `LCAIntegrator function <LCAIntegrator>`, which scales the
-        contribution of the `LCAIntegrator's <LCAIntegrator>` `previous_value <LCAIntegrator.previous_value>` to the
-        accumulation of the `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
-        `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
+        sets the `rate <LeakyCompetingIntegrator.rate>` on the `LeakyCompetingIntegrator function <LeakyCompetingIntegrator>`, which scales the
+        contribution of the `LeakyCompetingIntegrator's <LeakyCompetingIntegrator>` `previous_value <LeakyCompetingIntegrator.previous_value>` to the
+        accumulation of the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See
+        `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     competition : value : default 1.0
         sets the magnitude of the off-diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the
         contributions of the competing unit (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the
-        `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
-        `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
+        `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See
+        `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     self_excitation : value : default 0.0
         sets the diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the contributions of each unit's own
-        recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LCAIntegrator's value <LCAIntegrator.value>`
-        (:math:`x_{i}`) on each time step. See `LCAIntegrator <LCAIntegrator>` for more details on what the
-        `LCAIntegrator function  <LCAIntegrator>` computes.
+        recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>`
+        (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the
+        `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     noise : float or function : default 0.0
         a value added to the result of the `function <LCAMechanism.function>` or to the result of `integrator_function
@@ -363,22 +363,22 @@ class LCAMechanism(RecurrentTransferMechanism):
         `competition <LCAMechanism.competition>` attribute sets the magnitude of the negative off-diagonal values.
 
     leak : value : default 0.5
-        sets the `rate <LCAIntegrator.rate>` on the `LCAIntegrator function <LCAIntegrator>`, which scales the
-        contribution of the `LCAIntegrator's <LCAIntegrator>` `previous_value <LCAIntegrator.previous_value>` to the
-        accumulation of the `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
-        `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
+        sets the `rate <LeakyCompetingIntegrator.rate>` on the `LeakyCompetingIntegrator function <LeakyCompetingIntegrator>`, which scales the
+        contribution of the `LeakyCompetingIntegrator's <LeakyCompetingIntegrator>` `previous_value <LeakyCompetingIntegrator.previous_value>` to the
+        accumulation of the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See
+        `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     competition : value : default 1.0
         sets the magnitude of the off-diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the
         contributions of the competing unit (all :math:`f(x)_{j}` where :math:`j \\neq i`) to the accumulation of the
-        `LCAIntegrator's value <LCAIntegrator.value>` (:math:`x_{i}`) on each time step. See
-        `LCAIntegrator <LCAIntegrator>` for more details on what the `LCAIntegrator function  <LCAIntegrator>` computes.
+        `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>` (:math:`x_{i}`) on each time step. See
+        `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     self_excitation : value : default 0.0
         sets the diagonal terms in the LCAMechanism's recurrent projection, thereby scaling the contributions of each unit's own
-        recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LCAIntegrator's value <LCAIntegrator.value>`
-        (:math:`x_{i}`) on each time step. See `LCAIntegrator <LCAIntegrator>` for more details on what the
-        `LCAIntegrator function  <LCAIntegrator>` computes.
+        recurrent value (:math:`f(x)_{i}`) to the accumulation of the `LeakyCompetingIntegrator's value <LeakyCompetingIntegrator.value>`
+        (:math:`x_{i}`) on each time step. See `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what the
+        `LeakyCompetingIntegrator function  <LeakyCompetingIntegrator>` computes.
 
     recurrent_projection : MappingProjection
         a `MappingProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
@@ -393,9 +393,9 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     integrator_function:
         When *integrator_mode* is set to True, the LCAMechanism executes its `integrator_function <LCAMechanism.integrator_function>`,
-        which is the `LCAIntegrator`. See `LCAIntegrator <LCAIntegrator>` for more details on what it computes.
-        Keep in mind that the `leak <LCAMechanism.leak>` parameter of the `LCAMechanism` determines the `rate <LCAIntegrator.rate>` of the
-        `LCAIntegrator`.
+        which is the `LeakyCompetingIntegrator`. See `LeakyCompetingIntegrator <LeakyCompetingIntegrator>` for more details on what it computes.
+        Keep in mind that the `leak <LCAMechanism.leak>` parameter of the `LCAMechanism` determines the `rate <LeakyCompetingIntegrator.rate>` of the
+        `LeakyCompetingIntegrator`.
 
     integrator_mode:
         **When integrator_mode is set to True:**
@@ -607,7 +607,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
 
-        integrator_function = LCAIntegrator
+        integrator_function = LeakyCompetingIntegrator
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -630,7 +630,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                          auto=self_excitation,
                          hetero=-competition,
                          function=function,
-                         integrator_function=LCAIntegrator,
+                         integrator_function=LeakyCompetingIntegrator,
                          initial_value=initial_value,
                          noise=noise,
                          clip=clip,
@@ -646,7 +646,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         # if not self.integrator_function:
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            self.integrator_function = LCAIntegrator(
+            self.integrator_function = LeakyCompetingIntegrator(
                 function_variable,
                 initializer=initial_value,
                 noise=noise,

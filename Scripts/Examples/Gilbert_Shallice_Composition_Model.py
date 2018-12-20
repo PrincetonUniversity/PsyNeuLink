@@ -16,7 +16,7 @@ COLOR_INPUT_LAYER = pnl.TransferMechanism(size = 3,
 WORD_OUTPUT_LAYER = pnl.IntegratorMechanism(size = 3,
                                                    # auto= 0.0,
                                                    # hetero= -2.0,
-                                                   function= pnl.InteractiveActivation(decay= 0.0015, rest=-6),
+                                                   function= pnl.InteractiveActivationIntegrator(decay= 0.0015, rest=-6),
                                                    name='WORD OUTPUT LAYER')
 WORD_OUTPUT_LAYER.set_log_conditions('value')
 
@@ -24,7 +24,7 @@ WORD_OUTPUT_LAYER.set_log_conditions('value')
 COLOR_OUTPUT_LAYER = pnl.IntegratorMechanism(size = 3,
                                                    # auto= 0.0,
                                                    # hetero= -2.0,
-                                                   function= pnl.InteractiveActivation(decay= 0.0015, rest=-6, ),
+                                                   function= pnl.InteractiveActivationIntegrator(decay= 0.0015, rest=-6, ),
                                              #  (rest= -6),
                                                    name='COLOR OUTPUT LAYER')
 
@@ -34,7 +34,7 @@ COLOR_OUTPUT_LAYER.set_log_conditions('value')
 TASK_DEMAND_LAYER = pnl.IntegratorMechanism(size = 2,
                                                    # auto= 0.0,
                                                    # hetero= -2.0,
-                                                   function= pnl.InteractiveActivation(decay= 0.0015, max_val=1,
+                                                   function= pnl.InteractiveActivationIntegrator(decay= 0.0015, max_val=1,
                                                                                        min_val= 1, rest= -4),
                                                    name='TASK DEMAND LAYER')
 
