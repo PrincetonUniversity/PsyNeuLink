@@ -8,7 +8,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, AccumulatorIntegrator, \
-    LCAIntegrator, DualAdaptiveIntegrator
+    LeakyCompetingIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -307,7 +307,7 @@ class TestReinitialize:
     def test_LCAMechanism_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=LCAIntegrator(),
+            function=LeakyCompetingIntegrator(),
         )
 
         # previous_value + (rate*previous_value + new_value)*time_step_size + noise

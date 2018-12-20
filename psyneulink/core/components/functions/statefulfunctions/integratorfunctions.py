@@ -20,8 +20,8 @@ Functions that integrate current value of input with previous value.
 * `DualAdaptiveIntegrator`
 * `DriftDiffusionIntegrator`
 * `OrnsteinUhlenbeckIntegrator`
-* `InteractiveActivation`
-* `LCAIntegrator`
+* `InteractiveActivationIntegrator`
+* `LeakyCompetingIntegrator`
 * `FitzHughNagumoIntegrator`
 
 '''
@@ -43,7 +43,7 @@ from psyneulink.core.components.functions.statefulfunctions.statefulfunction imp
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, DECAY, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
-    INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, NOISE, \
+    INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, NOISE, \
     OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, RATE, REST, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, \
     TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
@@ -55,8 +55,8 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 
 
 __all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
-           'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator', 'LCAIntegrator',
-           'DualAdaptiveIntegrator', 'InteractiveActivation', 'S_MINUS_L', 'L_MINUS_S'
+           'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
+           'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator', 'S_MINUS_L', 'L_MINUS_S'
            ]
 
 
@@ -367,8 +367,8 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
     ----------
 
     variable : number or array
-        **Ignored** by the ConstantIntegrator function. Use `LCAIntegrator` or `AdaptiveIntegrator` for integrator
-         functions that depend on both a prior value and a new value (variable).
+        **Ignored** by the ConstantIntegrator function. Use `LeakyCompetingIntegrator` or `AdaptiveIntegrator` for
+        integrator functions that depend on both a prior value and a new value (variable).
 
     rate : float or 1d array
         determines the rate of integration. If it is a float or has a single element, its value is applied to all
@@ -637,8 +637,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     ----------
 
     variable : number or array
-        **Ignored** by the AccumulatorIntegrator function. Use `LCAIntegrator` or `AdaptiveIntegrator` for integrator
-         functions that depend on both a prior value and a new value (variable).
+        **Ignored** by the AccumulatorIntegrator function. Use `LeakyCompetingIntegrator` or `AdaptiveIntegrator` for
+        integrator functions that depend on both a prior value and a new value (variable).
 
     rate : float or 1d array
         determines the rate of exponential decay of `previous_value <AccumulatorIntegrator.previous_value>` in each
@@ -2005,9 +2005,9 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         return value
 
 
-class InteractiveActivation(IntegratorFunction):  # --------------------------------------------------------------------
+class InteractiveActivationIntegrator(IntegratorFunction):  # ----------------------------------------------------------
     """
-    InteractiveActivation(      \
+    InteractiveActivationIntegrator(      \
         default_variable=None,  \
         rate=1.0,               \
         decay=1.0,              \
@@ -2021,16 +2021,16 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
         prefs=None,             \
         )
 
-    .. _InteractiveActivation:
+    .. _InteractiveActivationIntegrator:
 
     Implements a generalized version of the interactive activation from `McClelland and Rumelhart (1981)
-    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.298.4480&rep=rep1&type=pdf>`_ that integrates
-    current value of `variable <InteractiveActivation.variable>` toward an asymptotic maximum
-    value `max_val <InteractiveActivation.max_val>` for positive inputs and toward an asymptotic mininum value
-    (`min_val <InteractiveActivation.min_val>`) for negative inputs, and decays asymptotically towards an intermediate
-    resting value (`rest <InteractiveActivation.rest>`).
+    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.298.4480&rep=rep1&type=pdf>`_ that integrates current
+    value of `variable <InteractiveActivationIntegrator.variable>` toward an asymptotic maximum value `max_val
+    <InteractiveActivationIntegrator.max_val>` for positive inputs and toward an asymptotic mininum value (`min_val
+    <InteractiveActivationIntegrator.min_val>`) for negative inputs, and decays asymptotically towards an intermediate
+    resting value (`rest <InteractiveActivationIntegrator.rest>`).
 
-    `function <InteractiveActivation.function>` returns:
+    `function <InteractiveActivationIntegrator.function>` returns:
 
     .. math::
         previous\_value + (rate * (variable + noise) * distance\_from\_asymptote) - (decay * distance\_from\_rest)
@@ -2056,41 +2056,43 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
 
     rate : float, list or 1d array : default 1.0
         specifies the rate of change in activity; its value(s) must be in the interval [0,1].  If it is a list or
-        array, it must be the same length as `variable <InteractiveActivation.variable>`.
+        array, it must be the same length as `variable <InteractiveActivationIntegrator.variable>`.
 
     decay : float, list or 1d array : default 1.0
-        specifies the rate of at which activity decays toward `rest <InteractiveActivation.rest>`.
-        If it is a list or array, it must be the same length as `variable <InteractiveActivation.variable>`;
+        specifies the rate of at which activity decays toward `rest <InteractiveActivationIntegrator.rest>`.
+        If it is a list or array, it must be the same length as `variable <InteractiveActivationIntegrator.variable>`;
         its value(s) must be in the interval [0,1].
 
     rest : float, list or 1d array : default 0.0
-        specifies the initial value and one toward which value `decays <InteractiveActivation.decay>`.
-        If it is a list or array, it must be the same length as `variable <InteractiveActivation.variable>`.
+        specifies the initial value and one toward which value `decays <InteractiveActivationIntegrator.decay>`.
+        If it is a list or array, it must be the same length as `variable <InteractiveActivationIntegrator.variable>`.
         COMMENT:
-        its value(s) must be between `max_val <InteractiveActivation.max_val>` and `min_val
-        <InteractiveActivation.min_val>`.
+        its value(s) must be between `max_val <InteractiveActivationIntegrator.max_val>` and `min_val
+        <InteractiveActivationIntegrator.min_val>`.
         COMMENT
 
     max_val : float, list or 1d array : default 1.0
         specifies the maximum asymptotic value toward which integration occurs for positive values of `variable
-        <InteractiveActivation.variable>`.  If it is a list or array, it must be the same length as `variable
-        <InteractiveActivation.variable>`; all values must be greater than the corresponding values of
-        `min_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.max_val>` for details).
+        <InteractiveActivationIntegrator.variable>`.  If it is a list or array, it must be the same length as `variable
+        <InteractiveActivationIntegrator.variable>`; all values must be greater than the corresponding values of
+        `min_val <InteractiveActivationIntegrator.min_val>` (see `max_val <InteractiveActivationIntegrator.max_val>`
+        for details).
 
     min_val : float, list or 1d array : default 1.0
         specifies the minimum asymptotic value toward which integration occurs for negative values of `variable
-        <InteractiveActivation.variable>`.  If it is a list or array, it must be the same length as `variable
-        <InteractiveActivation.variable>`; all values must be greater than the corresponding values of
-        `max_val <InteractiveActivation.min_val>` (see `max_val <InteractiveActivation.min_val>` for details).
+        <InteractiveActivationIntegrator.variable>`.  If it is a list or array, it must be the same length as `variable
+        <InteractiveActivationIntegrator.variable>`; all values must be greater than the corresponding values of
+        `max_val <InteractiveActivationIntegrator.min_val>` (see `max_val <InteractiveActivationIntegrator.min_val>`
+        for details).
 
     noise : float, function, list or 1d array : default 0.0
-        specifies random value added to `variable <InteractiveActivation.noise>` in each call to `function
-        <InteractiveActivation.function>`; if it is a list or array, it must be the same length as `variable
+        specifies random value added to `variable <InteractiveActivationIntegrator.noise>` in each call to `function
+        <InteractiveActivationIntegrator.function>`; if it is a list or array, it must be the same length as `variable
         <IntegratorFunction.variable>` (see `noise <Integrator_Noise>` for details).
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <InteractiveActivation.variable>` (see `initializer <Integrator_Initializer>`
+        `default_variable <InteractiveActivationIntegrator.variable>` (see `initializer <Integrator_Initializer>`
         for details).
 
     params : Dict[param keyword: param value] : default None
@@ -2111,52 +2113,54 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
     ----------
 
     variable : number or array
-        current input value some portion of which (determined by `rate <InteractiveActivation.rate>`) will be
+        current input value some portion of which (determined by `rate <InteractiveActivationIntegrator.rate>`) will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d array in interval [0,1]
-        determines the rate at which activity increments toward either `max_val <InteractiveActivation.max_val>`
-        (`variable <InteractiveActivation.variable>` is positive) or `min_val <InteractiveActivation.min_val>`
-        (if `variable <InteractiveActivation.variable>` is negative).  If it is a float or has a single element,
-        it is applied to all elements of `variable <InteractiveActivation.variable>`; if it has more than one
-        element, each element is applied to the corresponding element of `variable <InteractiveActivation.variable>`.
-        Serves as *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
-        <InteractiveActivation.function>`.
+        determines the rate at which activity increments toward either `max_val
+        <InteractiveActivationIntegrator.max_val>` (`variable <InteractiveActivationIntegrator.variable>` is
+        positive) or `min_val <InteractiveActivationIntegrator.min_val>` (if `variable
+        <InteractiveActivationIntegrator.variable>` is negative).  If it is a float or has a single element, it is
+        applied to all elements of `variable <InteractiveActivationIntegrator.variable>`; if it has more than one
+        element, each element is applied to the corresponding element of `variable
+        <InteractiveActivationIntegrator.variable>`. Serves as *MULTIPLICATIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <InteractiveActivationIntegrator.function>`.
 
     decay : float or 1d array
-        determines the rate of at which activity decays toward `rest <InteractiveActivation.rest>` (similary to
-        *rate* in other IntegratorFuncgtions).  If it is a float or has a single element, it applies to all elements
-        of `variable <InteractiveActivation.variable>`;  if it has more than one element, each element applies to
-        the corresponding element of `variable <InteractiveActivation.variable>`.
+        determines the rate of at which activity decays toward `rest <InteractiveActivationIntegrator.rest>` (similary
+        to *rate* in other IntegratorFuncgtions).  If it is a float or has a single element, it applies to all elements
+        of `variable <InteractiveActivationIntegrator.variable>`;  if it has more than one element, each element applies
+        to the corresponding element of `variable <InteractiveActivationIntegrator.variable>`.
 
     rest : float or 1d array
-        determines the initial value and one toward which value `decays <InteractiveActivation.decay>` (similar
-        to *bias* in other IntegratorFunctions).  If it is a float or has a single element,
-        it applies to all elements of `variable <InteractiveActivation.variable>`;  if it has more than one
-        element, each element applies to the corresponding element of `variable <InteractiveActivation.variable>`.
+        determines the initial value and one toward which value `decays <InteractiveActivationIntegrator.decay>`
+        (similar to *bias* in other IntegratorFunctions).  If it is a float or has a single element, it applies to
+        all elements of `variable <InteractiveActivationIntegrator.variable>`;  if it has more than one element,
+        each element applies to the corresponding element of `variable <InteractiveActivationIntegrator.variable>`.
 
     max_val : float or 1d array
         determines the maximum asymptotic value toward which integration occurs for positive values of `variable
-        <InteractiveActivation.variable>`.  If it is a float or has a single element, it applies to all elements of
-        `variable <InteractiveActivation.variable>`;  if it has more than one element, each element applies to the
-        corresponding element of `variable <InteractiveActivation.variable>`.
+        <InteractiveActivationIntegrator.variable>`.  If it is a float or has a single element, it applies to all
+        elements of `variable <InteractiveActivationIntegrator.variable>`;  if it has more than one element,
+        each element applies to the corresponding element of `variable <InteractiveActivationIntegrator.variable>`.
 
     min_val : float or 1d array
         determines the minimum asymptotic value toward which integration occurs for negative values of `variable
-        <InteractiveActivation.variable>`.  If it is a float or has a single element, it applies to all elements of
-        `variable <InteractiveActivation.variable>`;  if it has more than one element, each element applies to the
-        corresponding element of `variable <InteractiveActivation.variable>`.
+        <InteractiveActivationIntegrator.variable>`.  If it is a float or has a single element, it applies to all
+        elements of `variable <InteractiveActivationIntegrator.variable>`;  if it has more than one element,
+        each element applies to the corresponding element of `variable <InteractiveActivationIntegrator.variable>`.
 
     noise : float, Function or 1d array
-        random value added to `variable <InteractiveActivation.noise>` in each call to `function
-        <InteractiveActivation.function>` (see `noise <Integrator_Noise>` for details).
+        random value added to `variable <InteractiveActivationIntegrator.noise>` in each call to `function
+        <InteractiveActivationIntegrator.function>` (see `noise <Integrator_Noise>` for details).
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <InteractiveActivation.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        <InteractiveActivationIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>`
+        for details).
 
     previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <InteractiveActivation.variable>` is integrated.
+        stores previous value with which `variable <InteractiveActivationIntegrator.variable>` is integrated.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -2190,31 +2194,31 @@ class InteractiveActivation(IntegratorFunction):  # ----------------------------
             ----------
 
                 decay
-                    see `decay <InteractiveActivation.decay>`
+                    see `decay <InteractiveActivationIntegrator.decay>`
 
                     :default value: 1.0
                     :type: float
 
                 max_val
-                    see `max_val <InteractiveActivation.max_val>`
+                    see `max_val <InteractiveActivationIntegrator.max_val>`
 
                     :default value: 1.0
                     :type: float
 
                 min_val
-                    see `min_val <InteractiveActivation.min_val>`
+                    see `min_val <InteractiveActivationIntegrator.min_val>`
 
                     :default value: 1.0
                     :type: float
 
                 rate
-                    see `rate <InteractiveActivation.rate>`
+                    see `rate <InteractiveActivationIntegrator.rate>`
 
                     :default value: 1.0
                     :type: float
 
                 rest
-                    see `rest <InteractiveActivation.rest>`
+                    see `rest <InteractiveActivationIntegrator.rest>`
 
                     :default value: 0.0
                     :type: float
@@ -3084,9 +3088,9 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         return previous_value, previous_time
 
 
-class LCAIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
+class LeakyCompetingIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
     """
-    LCAIntegrator(                  \
+    LeakyCompetingIntegrator(                  \
         default_variable=None,      \
         rate=1.0,                   \
         noise=0.0,                  \
@@ -3098,10 +3102,10 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         prefs=None,                 \
         )
 
-    .. _LCAIntegrator:
+    .. _LeakyCompetingIntegrator:
 
     Implements Leaky Competitive Accumulator (LCA) described in `Usher & McClelland (2001)
-    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.  `function <LCAIntegrator.function>` returns:
+    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.  `function <LeakyCompetingIntegrator.function>` returns:
 
     .. math::
 
@@ -3121,23 +3125,23 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         integrated.
 
     rate : float, list or 1d array : default 1.0
-        specifies the value used to scale the contribution of `previous_value <LCAIntegrator.previous_value>` to the
-        integral on each time step.  If it is a list or array, it must be the same length as `variable
-        <ConstantIntegrator.variable>` (see `rate <LCAIntegrator.rate>` for details).
+        specifies the value used to scale the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>`
+        to the integral on each time step.  If it is a list or array, it must be the same length as `variable
+        <ConstantIntegrator.variable>` (see `rate <LeakyCompetingIntegrator.rate>` for details).
 
     noise : float, function, list or 1d array : default 0.0
-        specifies random value added to integral in each call to `function <LCAIntegrator.function>`;
-        if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`
+        specifies random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <LeakyCompetingIntegrator.variable>`
         (see `noise <Integrator_Noise>` for additonal details).
 
     offset : float, list or 1d array : default 0.0
-        specifies a constant value added to integral in each call to `function <LCAIntegrator.function>`;
-        if it is a list or array, it must be the same length as `variable <LCAIntegrator.variable>`
-        (see `offset <LCAIntegrator.offset>` for details).
+        specifies a constant value added to integral in each call to `function <LeakyCompetingIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <LeakyCompetingIntegrator.variable>`
+        (see `offset <LeakyCompetingIntegrator.offset>` for details).
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
-        <LCAIntegrator.time_step_size>` for details.
+        <LeakyCompetingIntegrator.time_step_size>` for details.
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
@@ -3162,37 +3166,38 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
     ----------
 
     variable : number or array
-        current input value some portion of which (determined by `rate <LCAIntegrator.rate>`) will be
+        current input value some portion of which (determined by `rate <LeakyCompetingIntegrator.rate>`) will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d array
-        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the `value
-        <LCAIntegrator.value>` on each time step. If it is a float or has a single element, its value is applied to
-        all the elements of `previous_value <LCAIntegrator.previous_value>`; if it is an array, each element is
-        applied to the corresponding element of `previous_value <LCAIntegrator.previous_value>`.  Serves as
-        *MULTIPLICATIVE_PARAM*  for `modulation <ModulatorySignal_Modulation>` of `function <LCAIntegrator.function>`.
+        scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of
+        the `value <LeakyCompetingIntegrator.value>` on each time step. If it is a float or has a single element,
+        its value is applied to all the elements of `previous_value <LeakyCompetingIntegrator.previous_value>`; if it
+        is an array, each element is applied to the corresponding element of `previous_value
+        <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for `modulation
+        <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
 
     noise : float, Function, or 1d array
-        random value added to integral in each call to `function <LCAIntegrator.function>`.
+        random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`.
         (see `noise <Integrator_Noise>` for details).
 
     offset : float or 1d array
-        constant value added to integral in each call to `function <LCAIntegrator.function>`. If `variable
-        <LCAIntegrator.variable>` is an array and offset is a float, offset is applied to each element  of the
-        integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
+        constant value added to integral in each call to `function <LeakyCompetingIntegrator.function>`. If `variable
+        <LeakyCompetingIntegrator.variable>` is an array and offset is a float, offset is applied to each element  of
+        the integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
         elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for `modulation
-        <ModulatorySignal_Modulation>` of `function <LCAIntegrator.function>`.
+        <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
-        <LCAIntegrator.noise>` parameter appropriately.
+        <LeakyCompetingIntegrator.noise>` parameter appropriately.
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <LCAIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        <LeakyCompetingIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
     previous_value : 1d array : default ClassDefaults.variable
-        stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
+        stores previous value with which `variable <LeakyCompetingIntegrator.variable>` is integrated.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3207,7 +3212,7 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
         <LINK>` for details).
     """
 
-    componentName = LCAMechanism_INTEGRATOR_FUNCTION
+    componentName = LEAKY_COMPETING_INTEGRATOR_FUNCTION
 
     class Params(IntegratorFunction.Params):
         """
@@ -3215,19 +3220,19 @@ class LCAIntegrator(IntegratorFunction):  # ------------------------------------
             ----------
 
                 offset
-                    see `offset <LCAIntegrator.offset>`
+                    see `offset <LeakyCompetingIntegrator.offset>`
 
                     :default value: None
                     :type:
 
                 rate
-                    see `rate <LCAIntegrator.rate>`
+                    see `rate <LeakyCompetingIntegrator.rate>`
 
                     :default value: 1.0
                     :type: float
 
                 time_step_size
-                    see `time_step_size <LCAIntegrator.time_step_size>`
+                    see `time_step_size <LeakyCompetingIntegrator.time_step_size>`
 
                     :default value: 0.1
                     :type: float

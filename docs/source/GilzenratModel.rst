@@ -28,8 +28,8 @@ Similar plots *with noise* were included in the original
 `Gilzenrat et al. (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ paper in
 figures 4A and 5A.
 
-The `FHNIntegrator <FHNIntegrator>` function documentation includes details on how to tailor the PsyNeuLink FHN
-implementation to the equations (6, 7, and 8) in Gilzenrat et al. 2002.
+The `FitzHughNagumoIntegrator <FitzHughNagumoIntegrator>` function documentation includes details on how to tailor
+the PsyNeuLink FitzHughNagumo implementation to the equations (6, 7, and 8) in Gilzenrat et al. 2002.
 
 
 Script: :download:`Download GilzenratModel.py <../../Scripts/Models/GilzenratModel.py>`
