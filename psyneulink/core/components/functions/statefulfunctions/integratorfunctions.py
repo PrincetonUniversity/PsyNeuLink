@@ -597,16 +597,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         * **exponentially** by steps of :math:`increment \\cdot rate \\cdot rate^{time\\ step},\\  if\\ |rate|>1.0`.
 
-        COMMENT:
-        * **asymptotically** toward 2 :math:`\\cdot` `increment`,  if :math:`\\mid`rate`\|<1.0;
-
-        * **linearly** by `increment`,  if `rate`\=1.0;
-
-        * **exponentially** by steps of `increment` :math:`\\cdot` `rate` :math:`\\cdot` `rate` :math:`^{time\\ step}`,
-          if |`rate`\|>1.0`.
-        COMMENT
-
-
     *Modulatory Parameters:*
 
     | *MULTIPLICATIVE_PARAM:* `rate <AccumulatorIntegrator.rate>`
