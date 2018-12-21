@@ -140,8 +140,62 @@ and specifying inputs and targets:
     >>> # input specification
     >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
     >>> my_targets = {my_mech_2: [[4, 5]]}
-    >>> input_dict = {"inputs": my_input_dict, "targets": my_targets_dict, "epochs": 2}
+    >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>> my_autodiff.run(inputs = input_dict)
+
+Nested Execution
+----------------
+COMMENT:
+    Need to add link to docs about nesting ordinary Compositions, once those docs are written.
+COMMENT
+In general, an AutodiffComposition may be nested inside another Composition, like ordinary Composition nesting. However,
+there are a few differences. The input format of an AutodiffComposition with learning enabled is quite unusual. Thus,
+when learning is enabled, the AutodiffComposition must be an origin mechanism of the Composition.
+
+.. note::
+
+    Like with all nested Compositions, you must call an AutodiffComposition's `_analyze_graph()` method
+    (or execute the AutodiffComposition) before nesting it.
+
+However, when learning is not enabled, AutodiffComposition works just like an ordinary Composition, in theory. Thus, an
+AutodiffComposition with learning not enabled receives input in the same format as an ordinary Composition, and can
+therefore be placed anywhere in a Composition.
+
+.. note::
+
+    Using an AutodiffComposition not as an origin mechanism is currently buggy, and might produce unexpected results.
+
+Below is an example script showing how to nest an AutodiffComposition with learning enabled.
+
+    >>> import psyneulink as pnl
+    >>> # set up PsyNeuLink Components
+    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear, size = 3)
+    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Linear, size = 2)
+    >>> my_projection = pnl.MappingProjection(matrix=np.random.randn(3,2),
+    ...                     sender=my_mech_1,
+    ...                     receiver=my_mech_2)
+    >>> # create AutodiffComposition
+    >>> my_autodiff = pnl.AutodiffComposition()
+    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
+    >>> my_autodiff._analyze_graph()  # alternatively, my_autodiff.run( ... )
+    >>>
+    >>> # input specification
+    >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
+    >>> my_targets = {my_mech_2: [[4, 5]]}
+    >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
+    >>>
+    >>> parentComposition = pnl.Composition()
+    >>> parentComposition.add_c_node(my_autodiff)
+    >>>
+    >>> training_input = {my_autodiff: input_dict}
+    >>> result1 = parentComposition.run(inputs=input)
+    >>>
+    >>> my_autodiff.learning_enabled = False
+    >>> no_training_input = {my_autodiff: my_inputs}
+    >>> result2 = parentComposition.run(inputs=no_training_input)
+
 
 .. _Composition_Class_Reference:
 
