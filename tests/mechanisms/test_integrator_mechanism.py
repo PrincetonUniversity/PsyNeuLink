@@ -180,7 +180,7 @@ class TestReinitialize:
     def test_Constant_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=AccumulatorIntegrator,
+            function=AccumulatorIntegrator(increment=1.0),
         )
 
         #  returns previous_value + rate + noise
@@ -541,7 +541,7 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism(
             function=AccumulatorIntegrator(
                 initializer=10.0,
-                inrcement=15.0,
+                increment=15.0,
             )
         )
         # P = Process(pathway=[I])
