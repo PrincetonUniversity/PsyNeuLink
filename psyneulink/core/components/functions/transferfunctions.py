@@ -923,9 +923,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         """
         if output is not None and input is not None and self.prefs.paramValidationPref:
             if isinstance(input, numbers.Number):
-                valid = output == self.function(input)
+                valid = output == self.function(input, execution_id=execution_id)
             else:
-                valid = all(output[i] == self.function(input)[i] for i in range(len(input)))
+                valid = all(output[i] == self.function(input, execution_id=execution_id)[i] for i in range(len(input)))
             if not valid:
                 raise FunctionError("Value of {} arg passed to {} ({}) "
                                     "does not match the value expected for specified {} ({})".
@@ -936,7 +936,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         scale = self.get_current_function_param(SCALE, execution_id)
 
         if output is None:
-            output = self.function(input)
+            output = self.function(input, execution_id=execution_id)
 
         return gain * scale * output * (1 - output)
 
@@ -2329,7 +2329,7 @@ class SoftMax(TransferFunction):
 
         output_type = self.params[OUTPUT_TYPE]
         size = len(output)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL})
+        sm = self.function(output, params={OUTPUT_TYPE: ALL}, execution_id=execution_id)
 
         if output_type is ALL:
             # Return full Jacobian matrix of derivatives

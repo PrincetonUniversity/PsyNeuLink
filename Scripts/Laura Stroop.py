@@ -73,12 +73,12 @@ response_layer = pnl.TransferMechanism(size=2,
 #noise will be
 # squareroot(time_step_size * noise) * a random sample from a normal distribution
 respond_red_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions
-                                                  .SimpleIntegratorFunction(noise=0.1,
-                                                                            rate=0.1),
+                                                  .SimpleIntegrator(noise=0.1,
+                                                                    rate=0.1),
                                                   name='respond_red_accumulator')
 #   Respond green accumulator
-respond_green_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegratorFunction(noise=0.1,
-                                                                                                                                                                 rate=0.1),
+respond_green_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator(noise=0.1,
+                                                                                                                                                         rate=0.1),
                                                     name='respond_green_accumulator')
 
 #   add logging

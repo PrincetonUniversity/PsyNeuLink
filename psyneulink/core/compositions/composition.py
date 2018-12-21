@@ -3192,7 +3192,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
-
         return output_values
 
     def reinitialize(self, values, execution_context=NotImplemented):
@@ -4160,27 +4159,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    # copied from Component, because Compositions are not Components but we want same behavior
-    def _initialize_from_context(self, execution_context, base_execution_context=None, override=True):
-        for param in self.stateful_parameters:
-            param._initialize_from_context(execution_context, base_execution_context, override)
-
-        for comp in self._dependent_components:
-            comp._initialize_from_context(execution_context, base_execution_context, override)
-
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        context_param = self.parameters.context.get(execution_id)
-        if context_param is None:
-            self.parameters.context._initialize_from_context(execution_id, base_execution_id)
-            context_param = self.parameters.context.get(execution_id)
-            context_param.execution_id = execution_id
-
-        for context_item, value in kwargs.items():
-            setattr(context_param, context_item, value)
-
-        for comp in self._dependent_components:
-            comp._assign_context_values(execution_id, base_execution_id, **kwargs)
-
     def evaluate(
         self,
         predicted_input=None,
@@ -4237,6 +4215,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+            # need to update input states in order to get correct value for "outcome" (from objective mech) 
+            self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
+
             outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
             all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
             combined_costs = self.model_based_optimizer.combine_costs(all_costs)

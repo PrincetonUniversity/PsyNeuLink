@@ -1506,24 +1506,18 @@ class CNodeRole(Enum):
     """
 
     - ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`, and
-        that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may have
-        only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN` Mechanism of a Process is not
-        necessarily an `ORIGIN` of the System to which it belongs, as it may receive `Projections <Projection>` from
-        other Processes in the System (see `example <LearningProjection_Target_vs_Terminal_Figure>`). The `ORIGIN`
-        Mechanisms of a Process or System are listed in its :keyword:`origin_nodes` attribute, and can be displayed
-        using its :keyword:`show` method.  For additional details about `ORIGIN` Mechanisms in Processes, see `Process
-        Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`; and for Systems see
-        `System Mechanisms <System_Mechanisms>` and `System Input and Initialization
-        <System_Execution_Input_And_Initialization>`.
+        A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
+
+    - INPUT
+        A Node that receives external input. A Composition may have many `INPUT` Nodes.
 
     - INTERNAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
-
+        A Node that is not designated as having any other status.
+COMMENT:
     - CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
-        <Projection>` that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then
-        it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
+        A Node that is *not* an `ORIGIN` Mechanism, and receives a `Projection <Projection>` that closes a recurrent
+        loop in a Composition.  If it is an `ORIGIN` Node, then it is simply designated as such (since it will be
+        assigned input and therefore be initialized in any event).
 
     - INITIALIZE_CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
@@ -1532,24 +1526,18 @@ class CNodeRole(Enum):
         assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
         additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-
+COMMENT
     - TERMINAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
-        that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
-        have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
-        Mechanism of a Process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
-        as it may send Projections to other Processes in the System (see `example
-        <LearningProjection_Target_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
-        its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
-        additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
-        `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
+        A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
 
+    - OUTPUT
+        A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
+        Composition may have many `OUTPUT` Nodes.
+COMMENT:
     - SINGLETON
-        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Process` and/or `System`.
+        A `ProcessingNode <ProcessingNode>` that is the only Node in a `Process` and/or `System`.
         It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
-    - MONITORED
-        .
 
     - LEARNING
         A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
@@ -1565,7 +1553,7 @@ class CNodeRole(Enum):
 
     - RECURRENT_INIT
         .
-
+COMMENT
 
     """
     ORIGIN = 0
@@ -1579,6 +1567,8 @@ class CNodeRole(Enum):
     TARGET = 8
     RECURRENT_INIT = 9
     OBJECTIVE = 10
+    INPUT = 11
+    OUTPUT = 12
 
 
 def unproxy_weakproxy(proxy):

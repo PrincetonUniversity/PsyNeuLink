@@ -16,11 +16,11 @@ Overview
 An LCControlMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
 <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
 It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that
-uses an `FHNIntegratorFunction` Function to generate its output.  This is modulated by a `mode <LCControlMechanism.mode_FHN>`
+uses an `FitzHughNagumoIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanism.mode_FitzHughNagumo>`
 parameter that regulates its function between `"tonic" and "phasic" modes of operation
 <LCControlMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCControlMechanism can be listed using
 its `show <LCControlMechanism.show>` method.  When used with an `AGTControlMechanism` to regulate the `mode
-<FHNIntegratorFunction.mode>` parameter of its `FHNIntegratorFunction` Function, it implements a form of the `Adaptive Gain Theory
+<FitzHughNagumoIntegrator.mode>` parameter of its `FitzHughNagumoIntegrator` Function, it implements a form of the `Adaptive Gain Theory
 <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
 (LC-NE) system.
 
@@ -126,13 +126,13 @@ displayed using the LCControlMechanism's `show <LCControlMechanism.show>` method
 *Function*
 ~~~~~~~~~~
 
-An LCControlMechanism uses the `FHNIntegratorFunction` as its `function <LCControlMechanism.function>`; this implements a
+An LCControlMechanism uses the `FitzHughNagumoIntegrator` as its `function <LCControlMechanism.function>`; this implements a
 `FitzHugh-Nagumo model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of
 a neuron, but in this case the population activity of the LC (see `Gilzenrat et al., 2002
-<http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_). The `FHNIntegratorFunction` Function
-of an LCControlMechanism takes a scalar as its `variable <FHNIntegratorFunction.variable>`, received from the
+<http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_). The `FitzHughNagumoIntegrator` Function
+of an LCControlMechanism takes a scalar as its `variable <FitzHughNagumoIntegrator.variable>`, received from the
 the `input <LCControlMechanism_Input>` to the LCControlMechanism, and the result serves as the `control_allocation
-<LCControlMechanism.control_allocation>` for the LCControlMechanism. All of the parameters of the `FHNIntegratorFunction`
+<LCControlMechanism.control_allocation>` for the LCControlMechanism. All of the parameters of the `FitzHughNagumoIntegrator`
 function are accessible as attributes of the LCControlMechanism.
 
 .. _LCControlMechanism_Modes_Of_Operation:
@@ -140,14 +140,14 @@ function are accessible as attributes of the LCControlMechanism.
 LC Modes of Operation
 ^^^^^^^^^^^^^^^^^^^^^
 
-The `mode <FHNIntegratorFunction.mode>` parameter of the LCControlMechanism's `FHNIntegratorFunction` Function regulates its operation
+The `mode <FitzHughNagumoIntegrator.mode>` parameter of the LCControlMechanism's `FitzHughNagumoIntegrator` Function regulates its operation
 between `"tonic" and "phasic" modes <https://www.ncbi.nlm.nih.gov/pubmed/8027789>`_:
 
-  * in the *tonic mode* (low value of `mode <FHNIntegratorFunction.mode>`), the output of the LCControlMechanism is moderately
+  * in the *tonic mode* (low value of `mode <FitzHughNagumoIntegrator.mode>`), the output of the LCControlMechanism is moderately
     low and constant; that is, it is relatively unaffected by its `input <LCControlMechanism_Input`.  This blunts the
     response of the Mechanisms that the LCControlMechanism controls to their inputs.
 
-  * in the *phasic mode* (high value of `mode <FHNIntegratorFunction.mode>`), when the `input to the LCControlMechanism
+  * in the *phasic mode* (high value of `mode <FitzHughNagumoIntegrator.mode>`), when the `input to the LCControlMechanism
     <LCControlMechanism_Input>` is low, its `output <LCControlMechanism_Output>` is even lower than when it is in the
     tonic regime, and thus the response of the Mechanisms it controls to their outputs is even more blunted.  However,
     when the LCControlMechanism's input rises above a certain value (determined by the `threshold
@@ -250,7 +250,7 @@ An LCControlMechanism executes within a `Composition` at a point specified in th
 is the `controller <System>` for a `Composition`, after all of the other Mechanisms in the Composition have `executed
 <Composition_Execution>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
 <InputState.value>` of the LCControlMechanism's `primary InputState <InputState_Primary>` as its input, and generates a
-response -- under the influence of its `mode <FHNIntegratorFunction.mode>` parameter -- that is assigned as the `allocation
+response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the `allocation
 <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its `ControlProjections
 <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the Mechanisms the
 LCControlMechanism controls.
@@ -272,7 +272,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FHNIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FitzHughNagumoIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
@@ -306,24 +306,24 @@ class LCControlMechanism(ControlMechanism):
         system=None,                        \
         objective_mechanism=None,           \
         modulated_mechanisms=None,          \
-        initial_w_FHN=0.0,                  \
-        initial_v_FHN=0.0,                  \
-        time_step_size_FHN=0.05,            \
-        t_0_FHN=0.0,                        \
-        a_v_FHN=-1/3,                       \
-        b_v_FHN=0.0,                        \
-        c_v_FHN=1.0,                        \
-        d_v_FHN=0.0,                        \
-        e_v_FHN=-1.0,                       \
-        f_v_FHN=1.0,                        \
-        threshold_FHN=-1.0                  \
-        time_constant_v_FHN=1.0,            \
-        a_w_FHN=1.0,                        \
-        b_w_FHN=-0.8,                       \
-        c_w_FHN=0.7,                        \
-        mode_FHN=1.0,                       \
-        uncorrelated_activity_FHN=0.0       \
-        time_constant_w_FHN = 12.5,         \
+        initial_w_FitzHughNagumo=0.0,                  \
+        initial_v_FitzHughNagumo=0.0,                  \
+        time_step_size_FitzHughNagumo=0.05,            \
+        t_0_FitzHughNagumo=0.0,                        \
+        a_v_FitzHughNagumo=-1/3,                       \
+        b_v_FitzHughNagumo=0.0,                        \
+        c_v_FitzHughNagumo=1.0,                        \
+        d_v_FitzHughNagumo=0.0,                        \
+        e_v_FitzHughNagumo=-1.0,                       \
+        f_v_FitzHughNagumo=1.0,                        \
+        threshold_FitzHughNagumo=-1.0                  \
+        time_constant_v_FitzHughNagumo=1.0,            \
+        a_w_FitzHughNagumo=1.0,                        \
+        b_w_FitzHughNagumo=-0.8,                       \
+        c_w_FitzHughNagumo=0.7,                        \
+        mode_FitzHughNagumo=1.0,                       \
+        uncorrelated_activity_FitzHughNagumo=0.0       \
+        time_constant_w_FitzHughNagumo = 12.5,         \
         integration_method="RK4"        \
         base_level_gain=0.5,                \
         scaling_factor_gain=3.0,            \
@@ -357,67 +357,85 @@ class LCControlMechanism(ControlMechanism):
         <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the
         `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism  belongs.
 
-    initial_w_FHN : float : default 0.0
-        sets `initial_w <initial_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    initial_w_FitzHughNagumo : float : default 0.0
+        sets `initial_w <initial_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    initial_v_FHN : float : default 0.0
-        sets `initial_v <initial_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    initial_v_FitzHughNagumo : float : default 0.0
+        sets `initial_v <initial_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    time_step_size_FHN : float : default 0.0
-        sets `time_step_size <time_step_size.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    time_step_size_FitzHughNagumo : float : default 0.0
+        sets `time_step_size <time_step_size.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    t_0_FHN : float : default 0.0
-        sets `t_0 <t_0.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    t_0_FitzHughNagumo : float : default 0.0
+        sets `t_0 <t_0.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    a_v_FHN : float : default -1/3
-        sets `a_v <a_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    a_v_FitzHughNagumo : float : default -1/3
+        sets `a_v <a_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    b_v_FHN : float : default 0.0
-        sets `b_v <b_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    b_v_FitzHughNagumo : float : default 0.0
+        sets `b_v <b_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    c_v_FHN : float : default 1.0
-        sets `c_v <c_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    c_v_FitzHughNagumo : float : default 1.0
+        sets `c_v <c_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    d_v_FHN : float : default 0.0
-        sets `d_v <d_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    d_v_FitzHughNagumo : float : default 0.0
+        sets `d_v <d_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    e_v_FHN : float : default -1.0
-        sets `e_v <e_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    e_v_FitzHughNagumo : float : default -1.0
+        sets `e_v <e_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    f_v_FHN : float : default 1.0
-        sets `f_v <f_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    f_v_FitzHughNagumo : float : default 1.0
+        sets `f_v <f_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    threshold_FHN : float : default -1.0
-        sets `threshold <threshold.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    threshold_FitzHughNagumo : float : default -1.0
+        sets `threshold <threshold.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    time_constant_v_FHN : float : default 1.0
-        sets `time_constant_w <time_constant_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    time_constant_v_FitzHughNagumo : float : default 1.0
+        sets `time_constant_w <time_constant_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    a_w_FHN : float : default 1.0
-        sets `a_w <a_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    a_w_FitzHughNagumo : float : default 1.0
+        sets `a_w <a_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    b_w_FHN : float : default -0.8,
-        sets `b_w <b_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    b_w_FitzHughNagumo : float : default -0.8,
+        sets `b_w <b_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    c_w_FHN : float : default 0.7
-        sets `c_w <c_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    c_w_FitzHughNagumo : float : default 0.7
+        sets `c_w <c_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    mode_FHN : float : default 1.0
-        sets `mode <mode.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    mode_FitzHughNagumo : float : default 1.0
+        sets `mode <mode.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    uncorrelated_activity_FHN : float : default 0.0
-        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    uncorrelated_activity_FitzHughNagumo : float : default 0.0
+        sets `uncorrelated_activity <uncorrelated_activity.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    time_constant_w_FHN  : float : default  12.5
-        sets `time_constant_w <time_constant_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    time_constant_w_FitzHughNagumo  : float : default  12.5
+        sets `time_constant_w <time_constant_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
     integration_method : float : default "RK4"
-        sets `integration_method <integration_method.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+        sets `integration_method <integration_method.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
     base_level_gain : float : default 0.5
         sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
@@ -481,10 +499,10 @@ class LCControlMechanism(ControlMechanism):
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
-    function : FHNIntegratorFunction
+    function : FitzHughNagumoIntegrator
         takes the LCControlMechanism's `input <LCControlMechanism_Input>` and generates its response
         <LCControlMechanism_Output>` under
-        the influence of the `FHNIntegratorFunction` Function's `mode <FHNIntegratorFunction.mode>` attribute
+        the influence of the `FitzHughNagumoIntegrator` Function's `mode <FitzHughNagumoIntegrator.mode>` attribute
         (see `LCControlMechanism_Function` for additional details).
 
     control_allocation : 2d np.array
@@ -508,67 +526,85 @@ class LCControlMechanism(ControlMechanism):
     modulated_mechanisms : List[Mechanism]
         list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism.
 
-        initial_w_FHN : float : default 0.0
-        sets `initial_w <initial_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+        initial_w_FitzHughNagumo : float : default 0.0
+        sets `initial_w <initial_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    initial_v_FHN : float : default 0.0
-        sets `initial_v <initial_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    initial_v_FitzHughNagumo : float : default 0.0
+        sets `initial_v <initial_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    time_step_size_FHN : float : default 0.0
-        sets `time_step_size <time_step_size.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    time_step_size_FitzHughNagumo : float : default 0.0
+        sets `time_step_size <time_step_size.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    t_0_FHN : float : default 0.0
-        sets `t_0 <t_0.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    t_0_FitzHughNagumo : float : default 0.0
+        sets `t_0 <t_0.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    a_v_FHN : float : default -1/3
-        sets `a_v <a_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    a_v_FitzHughNagumo : float : default -1/3
+        sets `a_v <a_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    b_v_FHN : float : default 0.0
-        sets `b_v <b_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    b_v_FitzHughNagumo : float : default 0.0
+        sets `b_v <b_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    c_v_FHN : float : default 1.0
-        sets `c_v <c_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    c_v_FitzHughNagumo : float : default 1.0
+        sets `c_v <c_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    d_v_FHN : float : default 0.0
-        sets `d_v <d_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    d_v_FitzHughNagumo : float : default 0.0
+        sets `d_v <d_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    e_v_FHN : float : default -1.0
-        sets `e_v <e_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    e_v_FitzHughNagumo : float : default -1.0
+        sets `e_v <e_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    f_v_FHN : float : default 1.0
-        sets `f_v <f_v.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    f_v_FitzHughNagumo : float : default 1.0
+        sets `f_v <f_v.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    threshold_FHN : float : default -1.0
-        sets `threshold <threshold.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    threshold_FitzHughNagumo : float : default -1.0
+        sets `threshold <threshold.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    time_constant_v_FHN : float : default 1.0
-        sets `time_constant_w <time_constant_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    time_constant_v_FitzHughNagumo : float : default 1.0
+        sets `time_constant_w <time_constant_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    a_w_FHN : float : default 1.0
-        sets `a_w <a_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    a_w_FitzHughNagumo : float : default 1.0
+        sets `a_w <a_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    b_w_FHN : float : default -0.8,
-        sets `b_w <b_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    b_w_FitzHughNagumo : float : default -0.8,
+        sets `b_w <b_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    c_w_FHN : float : default 0.7
-        sets `c_w <c_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    c_w_FitzHughNagumo : float : default 0.7
+        sets `c_w <c_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    mode_FHN : float : default 1.0
-        sets `mode <mode.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction <FHNIntegratorFunction>` function
+    mode_FitzHughNagumo : float : default 1.0
+        sets `mode <mode.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    uncorrelated_activity_FHN : float : default 0.0
-        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    uncorrelated_activity_FitzHughNagumo : float : default 0.0
+        sets `uncorrelated_activity <uncorrelated_activity.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
-    time_constant_w_FHN  : float : default  12.5
-        sets `time_constant_w <time_constant_w.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+    time_constant_w_FitzHughNagumo  : float : default  12.5
+        sets `time_constant_w <time_constant_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
     integration_method : float : default "RK4"
-        sets `integration_method <integration_method.FHNIntegratorFunction>` on the LCControlMechanism's `FHNIntegratorFunction
-        <FHNIntegratorFunction>` function
+        sets `integration_method <integration_method.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator
+        <FitzHughNagumoIntegrator>` function
 
     base_level_gain : float : default 0.5
         sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
@@ -630,7 +666,7 @@ class LCControlMechanism(ControlMechanism):
                 function
                     see `function <LCControlMechanism.function>`
 
-                    :default value: `FHNIntegratorFunction`
+                    :default value: `FitzHughNagumoIntegrator`
                     :type: `Function`
 
                 scaling_factor_gain
@@ -640,13 +676,13 @@ class LCControlMechanism(ControlMechanism):
                     :type: float
 
         """
-        function = Param(FHNIntegratorFunction, stateful=False, loggable=False)
+        function = Param(FitzHughNagumoIntegrator, stateful=False, loggable=False)
 
         base_level_gain = Param(0.5, modulable=True)
         scaling_factor_gain = Param(3.0, modulable=True)
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION:FHNIntegratorFunction,
+    paramClassDefaults.update({FUNCTION:FitzHughNagumoIntegrator,
                                CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
                                })
@@ -660,24 +696,24 @@ class LCControlMechanism(ControlMechanism):
                  modulated_mechanisms=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  integration_method="RK4",
-                 initial_w_FHN=0.0,
-                 initial_v_FHN=0.0,
-                 time_step_size_FHN=0.05,
-                 t_0_FHN=0.0,
-                 a_v_FHN=-1/3,
-                 b_v_FHN=0.0,
-                 c_v_FHN=1.0,
-                 d_v_FHN=0.0,
-                 e_v_FHN=-1.0,
-                 f_v_FHN=1.0,
-                 time_constant_v_FHN=1.0,
-                 a_w_FHN=1.0,
-                 b_w_FHN=-0.8,
-                 c_w_FHN=0.7,
-                 threshold_FHN=-1.0,
-                 time_constant_w_FHN=12.5,
-                 mode_FHN=1.0,
-                 uncorrelated_activity_FHN=0.0,
+                 initial_w_FitzHughNagumo=0.0,
+                 initial_v_FitzHughNagumo=0.0,
+                 time_step_size_FitzHughNagumo=0.05,
+                 t_0_FitzHughNagumo=0.0,
+                 a_v_FitzHughNagumo=-1/3,
+                 b_v_FitzHughNagumo=0.0,
+                 c_v_FitzHughNagumo=1.0,
+                 d_v_FitzHughNagumo=0.0,
+                 e_v_FitzHughNagumo=-1.0,
+                 f_v_FitzHughNagumo=1.0,
+                 time_constant_v_FitzHughNagumo=1.0,
+                 a_w_FitzHughNagumo=1.0,
+                 b_w_FitzHughNagumo=-0.8,
+                 c_w_FitzHughNagumo=0.7,
+                 threshold_FitzHughNagumo=-1.0,
+                 time_constant_w_FitzHughNagumo=12.5,
+                 mode_FitzHughNagumo=1.0,
+                 uncorrelated_activity_FitzHughNagumo=0.0,
                  base_level_gain=0.5,
                  scaling_factor_gain=3.0,
                  params=None,
@@ -698,26 +734,26 @@ class LCControlMechanism(ControlMechanism):
                          default_variable=default_variable,
                          objective_mechanism=objective_mechanism,
                          monitor_for_control=monitor_for_control,
-                         function=FHNIntegratorFunction(integration_method=integration_method,
-                                                        initial_v=initial_v_FHN,
-                                                        initial_w=initial_w_FHN,
-                                                        time_step_size=time_step_size_FHN,
-                                                        t_0=t_0_FHN,
-                                                        a_v=a_v_FHN,
-                                                        b_v=b_v_FHN,
-                                                        c_v=c_v_FHN,
-                                                        d_v=d_v_FHN,
-                                                        e_v=e_v_FHN,
-                                                        f_v=f_v_FHN,
-                                                        time_constant_v=time_constant_v_FHN,
-                                                        a_w=a_w_FHN,
-                                                        b_w=b_w_FHN,
-                                                        c_w=c_w_FHN,
-                                                        threshold=threshold_FHN,
-                                                        mode=mode_FHN,
-                                                        uncorrelated_activity=uncorrelated_activity_FHN,
-                                                        time_constant_w=time_constant_w_FHN,
-                                                        ),
+                         function=FitzHughNagumoIntegrator(integration_method=integration_method,
+                                                initial_v=initial_v_FitzHughNagumo,
+                                                initial_w=initial_w_FitzHughNagumo,
+                                                time_step_size=time_step_size_FitzHughNagumo,
+                                                t_0=t_0_FitzHughNagumo,
+                                                a_v=a_v_FitzHughNagumo,
+                                                b_v=b_v_FitzHughNagumo,
+                                                c_v=c_v_FitzHughNagumo,
+                                                d_v=d_v_FitzHughNagumo,
+                                                e_v=e_v_FitzHughNagumo,
+                                                f_v=f_v_FitzHughNagumo,
+                                                time_constant_v=time_constant_v_FitzHughNagumo,
+                                                a_w=a_w_FitzHughNagumo,
+                                                b_w=b_w_FitzHughNagumo,
+                                                c_w=c_w_FitzHughNagumo,
+                                                threshold=threshold_FitzHughNagumo,
+                                                mode=mode_FitzHughNagumo,
+                                                uncorrelated_activity=uncorrelated_activity_FitzHughNagumo,
+                                                time_constant_w=time_constant_w_FitzHughNagumo,
+                                                ),
                          modulation=modulation,
                          params=params,
                          name=name,

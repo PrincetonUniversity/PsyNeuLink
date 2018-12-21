@@ -118,26 +118,26 @@ decision_process = pnl.Process(
 
 LC = pnl.LCControlMechanism(
         integration_method="EULER",
-        threshold_FHN=a,
-        uncorrelated_activity_FHN=d,
+        threshold_FitzHughNagumo=a,
+        uncorrelated_activity_FitzHughNagumo=d,
         base_level_gain=G,
         scaling_factor_gain=k,
-        time_step_size_FHN=dt,
-        mode_FHN=C,
-        time_constant_v_FHN=tau_v,
-        time_constant_w_FHN=tau_u,
-        a_v_FHN=-1.0,
-        b_v_FHN=1.0,
-        c_v_FHN=1.0,
-        d_v_FHN=0.0,
-        e_v_FHN=-1.0,
-        f_v_FHN=1.0,
-        a_w_FHN=1.0,
-        b_w_FHN=-1.0,
-        c_w_FHN=0.0,
-        t_0_FHN=0.0,
-        initial_v_FHN=initial_v,
-        initial_w_FHN=initial_u,
+        time_step_size_FitzHughNagumo=dt,
+        mode_FitzHughNagumo=C,
+        time_constant_v_FitzHughNagumo=tau_v,
+        time_constant_w_FitzHughNagumo=tau_u,
+        a_v_FitzHughNagumo=-1.0,
+        b_v_FitzHughNagumo=1.0,
+        c_v_FitzHughNagumo=1.0,
+        d_v_FitzHughNagumo=0.0,
+        e_v_FitzHughNagumo=-1.0,
+        f_v_FitzHughNagumo=1.0,
+        a_w_FitzHughNagumo=1.0,
+        b_w_FitzHughNagumo=-1.0,
+        c_w_FitzHughNagumo=0.0,
+        t_0_FitzHughNagumo=0.0,
+        initial_v_FitzHughNagumo=initial_v,
+        initial_w_FitzHughNagumo=initial_u,
         objective_mechanism=pnl.ObjectiveMechanism(
                 function=psyneulink.core.components.functions.transferfunctions.Linear,
                 monitored_output_states=[(
@@ -211,11 +211,13 @@ sys.stdout.write("\r0% complete")
 sys.stdout.flush()
 
 # Run the model
+print('\nRunning model...')
 task.run(
     inputs=stimulus_dictionary,
     num_trials=trials,
     call_after_trial=record_trial
 )
+print('\nModel run, generating plots...')
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
 
@@ -268,3 +270,4 @@ plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 plt.show()
 
 task.show()
+print('\nPlots generated')
