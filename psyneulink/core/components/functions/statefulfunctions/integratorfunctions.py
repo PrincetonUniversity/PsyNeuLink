@@ -305,12 +305,14 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
 
     .. _ConstantIntegrator:
 
-    `function <ConstantIntegrator.function>` returns:
+    Integrates at a constant rate (specified by its `rate <ConstantIntegrator.rate>` parameter), subject to
+    `noise <ConstantIntegrator.noise>` and an `offset <ConstantIntegrator.offset>`;  `function
+    <ConstantIntegrator.function>` returns:
 
     .. math::
         scale \\cdot (previous\\_value + rate  + noise) + offset
 
-    (ignores `variable <IntegratorFunction.variable>`).
+    (ignores `variable <ConstantIntegrator.variable>`).
 
     *Modulatory Parameters:*
 
@@ -580,12 +582,30 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     .. _AccumulatorIntegrator:
 
-    `function <AccumulatorIntegrator.function>` returns:
+    Accumulates at a constant rate, that is either linear or exponential, depending on `rate
+    <AccumulatorIntegrator.rate>`.  `function <AccumulatorIntegrator.function>` ignores `variable
+    <AccumulatorIntegrator.variable>` and returns:
 
     .. math::
-        previous_value * rate + increment  + noise
+        previous\\_value \\cdot rate + increment  + noise
 
-    (ignores `variable <IntegratorFunction.variable>`).
+    Value returned with each call to `function <AccumulatorIntegrator.function>` increases:
+
+        * **asymptotically** toward :math:`2 \\cdot increment,\\  if\\ |rate| <1.0`;
+
+        * **linearly** by :math:`increment,\\  if\\ rate=1.0`;
+
+        * **exponentially** by steps of :math:`increment \\cdot rate \\cdot rate^{time\\ step},\\  if\\ |rate|>1.0`.
+
+        COMMENT:
+        * **asymptotically** toward 2 :math:`\\cdot` `increment`,  if :math:`\\mid`rate`\|<1.0;
+
+        * **linearly** by `increment`,  if `rate`\=1.0;
+
+        * **exponentially** by steps of `increment` :math:`\\cdot` `rate` :math:`\\cdot` `rate` :math:`^{time\\ step}`,
+          if |`rate`\|>1.0`.
+        COMMENT
+
 
     *Modulatory Parameters:*
 
@@ -606,9 +626,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     increment : float, list or 1d array : default 0.0
         specifies an amount to be added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
-        `function <AccumulatorIntegrator.function>` (see `increment <AccumulatorIntegrator.increment>` for details).
-        If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.variable>`
-        (see `increment <AccumulatorIntegrator.increment>` for details).
+        `function <AccumulatorIntegrator.function>`; if it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.variable>` (see `increment <AccumulatorIntegrator.increment>` for details).
 
     noise : float, Function, list or 1d array : default 0.0
         specifies random value added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
