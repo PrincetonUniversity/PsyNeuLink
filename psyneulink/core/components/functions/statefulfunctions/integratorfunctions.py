@@ -13,7 +13,6 @@
 Functions that integrate current value of input with previous value.
 
 * `IntegratorFunction`
-* `ConstantIntegrator`
 * `AccumulatorIntegrator`
 * `SimpleIntegrator`
 * `AdaptiveIntegrator`
@@ -41,7 +40,7 @@ from psyneulink.core.components.functions.function import \
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction, THRESHOLD
 from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, DECAY, \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, DECAY, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
     INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, NOISE, \
     OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, RATE, REST, \
@@ -54,7 +53,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 
-__all__ = ['SimpleIntegrator', 'ConstantIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
+__all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
            'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
            'S_MINUS_L', 'L_MINUS_S'
@@ -287,284 +286,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
-
-
-class ConstantIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
-    """
-    ConstantIntegrator(        \
-        default_variable=None, \
-        rate=1.0,              \
-        noise=0.0,             \
-        scale=1.0,             \
-        offset=0.0,            \
-        initializer=None,      \
-        params=None,           \
-        owner=None,            \
-        prefs=None,            \
-        )
-
-    .. _ConstantIntegrator:
-
-    Integrates at a constant rate (specified by its `rate <ConstantIntegrator.rate>` parameter), subject to
-    `noise <ConstantIntegrator.noise>` and an `offset <ConstantIntegrator.offset>`;  `function
-    <ConstantIntegrator.function>` returns:
-
-    .. math::
-        scale \\cdot (previous\\_value + rate  + noise) + offset
-
-    (ignores `variable <ConstantIntegrator.variable>`).
-
-    *Modulatory Parameters:*
-
-    | *MULTIPLICATIVE_PARAM:* `offset <ConstantIntegrator.offset>`
-    | *ADDITIVE_PARAM:* `rate <ConstantIntegrator.rate>`
-    |
-
-    Arguments
-    ---------
-
-    default_variable : number, list or array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d array : default 1.0
-        specifies the rate of integration;  if it is a list or array, it must be the same length as
-        `variable <ConstantIntegrator.variable>` (see `rate <ConstantIntegrator.rate>` for details).
-
-    noise : float, function, list or 1d array : default 0.0
-        specifies random value to be added to integral in each call to `function <ConstantIntegrator.function>`;
-        if it is a list or array, it must be the same length as `variable <ConstantIntegrator.variable>`
-        (see `noise <Integrator_Noise>` for additonal details).
-
-    scale : float, list or 1d array : default 1.0
-        specifies a constant value by which integral is multiplied in each call to `function 
-        <ConstantIntegrator.function>`; if it is a list or array, it must be the same length as `variable
-        <ConstantIntegrator.variable>` (see `offset <ConstantIntegrator.offset>` for details).
-
-
-    offset : float, list or 1d array : default 0.0
-        specifies a constant value added to integral after scale is applied in each call to `function 
-        <ConstantIntegrator.function>`;  if it is a list or array, it must be the same length as
-        `variable <ConstantIntegrator.variable>` (see `offset <ConstantIntegrator.offset>` for details).
-
-    initializer : float, list or 1d array : default 0.0
-        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <ConstantIntegrator.variable>` (see `initializer <Integrator_Initializer>`
-        for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        **Ignored** by the ConstantIntegrator function. Use `LeakyCompetingIntegrator` or `AdaptiveIntegrator` for
-        integrator functions that depend on both a prior value and a new value (variable).
-
-    rate : float or 1d array
-        determines the rate of integration. If it is a float or has a single element, its value is applied to all
-        the elements of `previous_value <ConstantIntegrator.previous_value>`; if it is an array, each
-        element is applied to the corresponding element of `previous_value <ConstantIntegrator.previous_value>`.
-        Serves as *ADDITIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
-        <ConstantIntegrator.function>`.
-
-    noise : float, Function or 1d array
-        random value added to integral in each call to `function <ConstantIntegrator.function>`
-        (see `noise <Integrator_Noise>` for details).
-
-    scale : float, list or 1d array
-        constant value by which integral is multiplied in each call to `function <ConstantIntegrator.function>`.
-        If `variable <ConstantIntegrator.variable>` is a list or array and scale is a float, scale is applied
-        to each element of the integral;  if scale is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral (i.e., Hadamard multiplication).  Serves as *MULTIPLICATIVE_PARAM*
-        for `modulation <ModulatorySignal_Modulation>` of `function <ConstantIntegrator.function>`.
-
-    offset : float or 1d array
-        constant value added to integral after scale is applied in each call to `function
-        <ConstantIntegrator.function>`. If `variable <ConstantIntegrator.variable>` is an array and offset is a
-        float, offset is applied to each element of the integral;  if offset is a list or array, each of its elements
-        is applied to each of the corresponding elements of the integral (i.e., Hadamard addition).
-
-    initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <ConstantIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
-
-    previous_value : 1d array : default ClassDefaults.variable
-        stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
-        added.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = CONSTANT_INTEGRATOR_FUNCTION
-
-    class Params(IntegratorFunction.Params):
-        """
-            Attributes
-            ----------
-
-                noise
-                    see `noise <ConstantIntegrator.noise>`
-
-                    :default value: 0.0
-                    :type: float
-
-                offset
-                    see `offset <ConstantIntegrator.offset>`
-
-                    :default value: 0.0
-                    :type: float
-
-                rate
-                    see `rate <ConstantIntegrator.rate>`
-
-                    :default value: 0.0
-                    :type: float
-
-                scale
-                    see `scale <ConstantIntegrator.scale>`
-
-                    :default value: 1.0
-                    :type: float
-
-
-
-        """
-        rate = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        noise = Param(0.0, modulable=True)
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        RATE: None,
-        NOISE: None,
-        SCALE: None,
-        OFFSET: None,
-    })
-
-    multiplicative_param = SCALE
-    additive_param = RATE
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 # rate: parameter_spec = 1.0,
-                 rate=0.0,
-                 noise=0.0,
-                 scale=1.0,
-                 offset=0.0,
-                 initializer=None,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  noise=noise,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  initializer=initializer,
-                                                  params=params)
-
-        # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        # Reassign to initializer in case default value was overridden
-
-        self.has_initializers = True
-
-    def _validate_rate(self, rate):
-        # unlike other Integrators, variable does not need to match rate
-
-        if isinstance(rate, list):
-            rate = np.asarray(rate)
-
-        rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
-        if isinstance(rate, np.ndarray):
-            # kmantel: current test_gating test depends on 2d rate
-            #   this should be looked at but for now this restriction is removed
-            # if rate.ndim > 1:
-            #     raise FunctionError(rate_type_msg.format(self.name, rate))
-            pass
-        elif not isinstance(rate, numbers.Number):
-            raise FunctionError(rate_type_msg.format(self.name, rate))
-
-        if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-            self.instance_defaults.variable = np.zeros_like(np.array(rate))
-            self._instantiate_value()
-            self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
-
-    def function(self,
-                 variable=None,
-                 execution_id=None,
-                 params=None,
-                 context=None):
-        """
-
-        Arguments
-        ---------
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        updated value of integral : 2d array
-
-        """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        rate = np.array(self.rate).astype(float)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        noise = self._try_execute_param(self.noise, variable)
-
-        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-
-        value = previous_value + rate + noise
-
-        adjusted_value = value * scale + offset
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(adjusted_value, execution_id)
-        return self.convert_output_type(adjusted_value)
 
 
 class AccumulatorIntegrator(IntegratorFunction):  # --------------------------------------------------------------------
@@ -3143,7 +2864,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     rate : float, list or 1d array : default 1.0
         specifies the value used to scale the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>`
         to the integral on each time step.  If it is a list or array, it must be the same length as `variable
-        <ConstantIntegrator.variable>` (see `rate <LeakyCompetingIntegrator.rate>` for details).
+        <LeakyCompetingIntegrator.variable>` (see `rate <LeakyCompetingIntegrator.rate>` for details).
 
     noise : float, function, list or 1d array : default 0.0
         specifies random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`;

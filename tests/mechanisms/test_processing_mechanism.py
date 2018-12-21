@@ -6,9 +6,9 @@ from psyneulink.core.components.functions.learningfunctions import Hebbian, Rein
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
 from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist, \
     UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
-    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, AccumulatorIntegrator, \
-    DualAdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, \
+    AccumulatorIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -60,11 +60,6 @@ class TestProcessingMechanismFunctions:
     def test_processing_mechanism_SimpleIntegrator_function(self):
         PM1 = ProcessingMechanism(function=SimpleIntegrator)
         PM1.execute(1.0)
-
-    def test_processing_mechanism_ConstantIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=ConstantIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_AdaptiveIntegrator_function(self):
         PM1 = ProcessingMechanism(function=AdaptiveIntegrator)

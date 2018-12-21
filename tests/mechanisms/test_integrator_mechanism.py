@@ -7,7 +7,7 @@ import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
-    SimpleIntegrator, ConstantIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, \
+    SimpleIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, \
     FitzHughNagumoIntegrator, AccumulatorIntegrator, LeakyCompetingIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
@@ -180,9 +180,7 @@ class TestReinitialize:
     def test_Constant_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                rate=1.0
-            ),
+            function=AccumulatorIntegrator,
         )
 
         #  returns previous_value + rate + noise
@@ -541,10 +539,9 @@ class TestIntegratorFunctions:
     @pytest.mark.integrator_mechanism
     def test_constant_integrator(self):
         I = IntegratorMechanism(
-            function=ConstantIntegrator(
+            function=AccumulatorIntegrator(
                 initializer=10.0,
-                rate=5.0,
-                offset=10
+                inrcement=15.0,
             )
         )
         # P = Process(pathway=[I])
@@ -814,8 +811,8 @@ class TestIntegratorRate:
     def test_integrator_type_constant_rate_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                rate=5.0
+            function=AccumulatorIntegrator(
+                increment=5.0
             )
         )
         # P = Process(pathway=[I])
@@ -861,8 +858,8 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                rate=[5.0, 5.0, 5.0]
+            function=AccumulatorIntegrator(
+                increment=[5.0, 5.0, 5.0]
             )
         )
         # P = Process(pathway=[I])
@@ -957,8 +954,8 @@ class TestIntegratorRate:
         with pytest.raises(ComponentError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
-                function=ConstantIntegrator(
-                    rate=[5.0, 5.0, 5.0]
+                function=AccumulatorIntegrator(
+                    increment=[5.0, 5.0, 5.0]
                 )
             )
             # P = Process(pathway=[I])
@@ -1080,7 +1077,7 @@ class TestIntegratorNoise:
     def test_integrator_constant_noise_fn(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
+            function=AccumulatorIntegrator(
                 noise=NormalDist()
             ),
         )
@@ -1095,7 +1092,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
-            function=ConstantIntegrator(
+            function=AccumulatorIntegrator(
                 noise=NormalDist(),
             ),
         )
