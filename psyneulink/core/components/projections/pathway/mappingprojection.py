@@ -182,8 +182,9 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   MappingProjection's `matrix <MappingProjection.matrix>` parameter in response to `learning
   <LearningMechanism>`.  The `function <ParameterState.function>` of a *MATRIX* ParameterState is an
   `AccumulatorIntegrator`, which accumulates the weight changes received from the LearningProjections
-  that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that can take
-  as its input an array or matrix, and return one of the same size.
+  that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that defines an
+  *ADDITIVE_PARAM* `modulatory parameter <ModulatorySignal_Modulation>`), and that takes as its input an array or
+  matrix and returns one of the same size.
 
 .. _Mapping_Weight_Exponent:
 
