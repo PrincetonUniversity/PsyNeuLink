@@ -356,7 +356,7 @@ sequence <Process_Learning_Sequence>`. These are used to calculate a `learning_s
 
 .. note::
    The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
-   projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   projections are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 The `learning_signal <LearningMechanism>`\\s for a learning sequence are calculated, for each sequence, so as to reduce
 the difference between the value received by the *TARGET* Mechanism in its *SAMPLE* `InputState

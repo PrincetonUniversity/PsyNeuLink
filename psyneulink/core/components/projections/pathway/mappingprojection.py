@@ -246,7 +246,8 @@ PsyNeuLink).  The most recent value of the matrix used by the MappingProjection 
 <ParameterState.value>` of its *MATRIX* ParameterState. As noted `above <Mapping_Execution>`, however, this does not
 reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterState's
 `value <ParameterState.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
-the MappingProjection is executed in the next `TRIAL` of execution.
+the MappingProjection is executed in the next `TRIAL` of execution (see :ref:`Lazy Evaluation <LINK>` for an explanation
+of "lazy" updating)
 
 .. _Mapping_Class_Reference:
 
