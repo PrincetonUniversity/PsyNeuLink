@@ -69,7 +69,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     """
     IntegratorFunction(         \
         default_variable=None,  \
-        initializer,            \
+        initializer=None,       \
         rate=1.0,               \
         noise=0.0,              \
         time_step_size=1.0,     \
@@ -297,7 +297,7 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
         noise=0.0,             \
         scale=1.0,             \
         offset=0.0,            \
-        initializer,           \
+        initializer=None,      \
         params=None,           \
         owner=None,            \
         prefs=None,            \
@@ -574,7 +574,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         rate=1.0,                       \
         increment=0.0,                  \
         noise=0.0,                      \
-        initializer,                    \
+        initializer=None,               \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -589,13 +589,19 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     .. math::
         previous\\_value \\cdot rate + increment  + noise
 
-    Value returned with each call to `function <AccumulatorIntegrator.function>` increases:
+    so that, with each call to `function <AccumulatorIntegrator.function>`, the accumulated value increases by:
 
-        * **asymptotically** toward :math:`2 \\cdot increment,\\  if\\ |rate| <1.0`;
+    .. math::
+        increment \\cdot rate^{time\\ step}.
 
-        * **linearly** by :math:`increment,\\  if\\ rate=1.0`;
+    This means that accumulation increases:
 
-        * **exponentially** by steps of :math:`increment \\cdot rate \\cdot rate^{time\\ step},\\  if\\ |rate|>1.0`.
+        * **lineary** in steps of :math:`increment,\\  if\\ rate=1.0`;
+        ..
+        * **asymptotically** toward :math:`increment \\cdot 2,\\  if\\ |rate| <1.0`;
+        ..
+        * **exponentially** :math:`if\\ |rate|>1.0`.
+
 
     *Modulatory Parameters:*
 
@@ -857,7 +863,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         rate=1.0,               \
         noise=0.0,              \
         offset=0.0,             \
-        initializer,            \
+        initializer=None,       \
         params=None,            \
         owner=None,             \
         prefs=None,             \
@@ -1078,7 +1084,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         rate=1.0,               \
         noise=0.0,              \
         offset=0.0,             \
-        initializer,            \
+        initializer=None,       \
         params=None,            \
         owner=None,             \
         prefs=None,             \
@@ -2025,7 +2031,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         max_val=1.0,            \
         min_val=-1.0,           \
         noise=0.0,              \
-        initializer,            \
+        initializer=None,       \
         params=None,            \
         owner=None,             \
         prefs=None,             \
@@ -2396,7 +2402,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         starting_point=0.0,             \
         threshold=1.0                   \
         time_step_size=1.0,             \
-        initializer,                    \
+        initializer=None,               \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
