@@ -447,8 +447,6 @@ class ConstantIntegrator(IntegratorFunction):  # -------------------------------
                     :default value: 1.0
                     :type: float
 
-
-
         """
         rate = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         noise = Param(0.0, modulable=True)
@@ -701,7 +699,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
                     :default value: None
                     :type:
-
 
         """
         rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -1641,14 +1638,14 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             Attributes
             ----------
 
-                initial_long_term_utility
-                    see `initial_long_term_utility <DualAdaptiveIntegrator.initial_long_term_utility>`
+                initial_long_term_avg
+                    see `initial_long_term_avg <DualAdaptiveIntegrator.initial_long_term_avg>`
 
                     :default value: 0.0
                     :type: float
 
-                initial_short_term_utility
-                    see `initial_short_term_utility <DualAdaptiveIntegrator.initial_short_term_utility>`
+                initial_short_term_avg
+                    see `initial_short_term_avg <DualAdaptiveIntegrator.initial_short_term_avg>`
 
                     :default value: 0.0
                     :type: float
@@ -1665,17 +1662,17 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     :default value: 1.0
                     :type: float
 
+                long_term_logistic
+                    see `long_term_logistic <DualAdaptiveIntegrator.long_term_logistic>`
+
+                    :default value: None
+                    :type:
+
                 long_term_rate
                     see `long_term_rate <DualAdaptiveIntegrator.long_term_rate>`
 
                     :default value: 0.1
                     :type: float
-
-                long_term_utility_logistic
-                    see `long_term_utility_logistic <DualAdaptiveIntegrator.long_term_utility_logistic>`
-
-                    :default value: None
-                    :type:
 
                 offset
                     see `offset <DualAdaptiveIntegrator.offset>`
@@ -1686,17 +1683,17 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                 operation
                     see `operation <DualAdaptiveIntegrator.operation>`
 
-                    :default value: PRODUCT
+                    :default value: `PRODUCT`
                     :type: str
 
-                previous_long_term_utility
-                    see `previous_long_term_utility <DualAdaptiveIntegrator.previous_long_term_utility>`
+                previous_long_term_avg
+                    see `previous_long_term_avg <DualAdaptiveIntegrator.previous_long_term_avg>`
 
                     :default value: None
                     :type:
 
-                previous_short_term_utility
-                    see `previous_short_term_utility <DualAdaptiveIntegrator.previous_short_term_utility>`
+                previous_short_term_avg
+                    see `previous_short_term_avg <DualAdaptiveIntegrator.previous_short_term_avg>`
 
                     :default value: None
                     :type:
@@ -1719,17 +1716,17 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     :default value: 1.0
                     :type: float
 
+                short_term_logistic
+                    see `short_term_logistic <DualAdaptiveIntegrator.short_term_logistic>`
+
+                    :default value: None
+                    :type:
+
                 short_term_rate
                     see `short_term_rate <DualAdaptiveIntegrator.short_term_rate>`
 
                     :default value: 0.9
                     :type: float
-
-                short_term_utility_logistic
-                    see `short_term_utility_logistic <DualAdaptiveIntegrator.short_term_utility_logistic>`
-
-                    :default value: None
-                    :type:
 
         """
         rate = Param(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -2938,7 +2935,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                     :type: float
 
                 rate
-                    see `rate <OrnsteinUhlenbeckIntegrato.rate>`
+                    see `rate <OrnsteinUhlenbeckIntegrator.rate>`
 
                     :default value: 1.0
                     :type: float
