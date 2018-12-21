@@ -629,7 +629,8 @@ class AutodiffComposition(Composition):
             # new_ctx = copy.deepcopy(ctx)
             # new_ctx.execution_phase = ContextFlags.PROCESSING
             # self.output_CIM.parameters.context.set(new_ctx, execution_id=execution_id)
-            ctx.execution_phase = ContextFlags.PROCESSING  # CW 12/18/18
+            if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
+                ctx.execution_phase = ContextFlags.PROCESSING
             self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
             return output
