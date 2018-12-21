@@ -1606,3 +1606,505 @@ class TestTrainingIdenticalness():
         assert np.allclose(comp_weights[map_h2_is], map_h2_is_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
+
+
+@pytest.mark.skipif(
+    not torch_available,
+    reason='Pytorch python module (torch) is not installed. Please install it with '
+           '`pip install torch` or `pip3 install torch`'
+)
+@pytest.mark.acnested
+class TestNested:
+    @pytest.mark.parametrize(
+        'num_epochs, learning_rate, patience, min_delta', [
+            (2000, 4, 10, .00001),
+        ]
+    )
+    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate, patience, min_delta):
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # -----------------------------------------------------------------
+
+        xor_in = pnl.TransferMechanism(name='xor_in',
+                                       default_variable=np.zeros(2))
+
+        xor_hid = pnl.TransferMechanism(name='xor_hid',
+                                        default_variable=np.zeros(10),
+                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+
+        xor_out = pnl.TransferMechanism(name='xor_out',
+                                        default_variable=np.zeros(1),
+                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+
+        hid_map = pnl.MappingProjection(name='input_to_hidden',
+                                        matrix=np.random.randn(2, 10) * 0.1,
+                                        sender=xor_in,
+                                        receiver=xor_hid)
+
+        out_map = pnl.MappingProjection(name='hidden_to_output',
+                                        matrix=np.random.randn(10, 1) * 0.1,
+                                        sender=xor_hid,
+                                        receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        xor_autodiff = AutodiffComposition(
+            param_init_from_pnl=True,
+            patience=patience,
+            min_delta=min_delta,
+            learning_rate=learning_rate,
+            randomize=False,
+            learning_enabled=True
+        )
+
+        xor_autodiff.add_c_node(xor_in)
+        xor_autodiff.add_c_node(xor_hid)
+        xor_autodiff.add_c_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        xor_autodiff._analyze_graph()
+
+        no_training_input_dict = {xor_in: xor_inputs}
+        input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+
+        parentComposition = pnl.Composition()
+        parentComposition.add_c_node(xor_autodiff)
+        input = {xor_autodiff: input_dict}
+        no_training_input = {xor_autodiff: no_training_input_dict}
+
+        result1 = parentComposition.run(inputs=input)
+
+        xor_autodiff.learning_enabled = False
+        result2 = parentComposition.run(inputs=no_training_input)
+
+        assert np.allclose(result1, [[0]], atol=0.1)
+        assert np.allclose(result2, [[0]], atol=0.1)
+
+    @pytest.mark.parametrize(
+        'num_epochs, learning_rate, patience, min_delta', [
+            (2000, 4, 10, .00001),
+        ]
+    )
+    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate, patience, min_delta):
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # -----------------------------------------------------------------
+
+        xor_in = pnl.TransferMechanism(name='xor_in',
+                                       default_variable=np.zeros(2))
+
+        xor_hid = pnl.TransferMechanism(name='xor_hid',
+                                        default_variable=np.zeros(10),
+                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+
+        xor_out = pnl.TransferMechanism(name='xor_out',
+                                        default_variable=np.zeros(1),
+                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+
+        hid_map = pnl.MappingProjection(name='input_to_hidden',
+                                        matrix=np.random.randn(2, 10) * 0.1,
+                                        sender=xor_in,
+                                        receiver=xor_hid)
+
+        out_map = pnl.MappingProjection(name='hidden_to_output',
+                                        matrix=np.random.randn(10, 1) * 0.1,
+                                        sender=xor_hid,
+                                        receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        xor_autodiff = AutodiffComposition(
+            param_init_from_pnl=True,
+            patience=patience,
+            min_delta=min_delta,
+            learning_rate=learning_rate,
+            randomize=False,
+            learning_enabled=False
+        )
+
+        xor_autodiff.add_c_node(xor_in)
+        xor_autodiff.add_c_node(xor_hid)
+        xor_autodiff.add_c_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        xor_autodiff._analyze_graph()
+
+        no_training_input_dict = {xor_in: xor_inputs}
+        input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+
+        parentComposition = pnl.Composition()
+        parentComposition.add_c_node(xor_autodiff)
+        input = {xor_autodiff: input_dict}
+        no_training_input = {xor_autodiff: no_training_input_dict}
+
+        result1 = parentComposition.run(inputs=no_training_input)
+
+        xor_autodiff.learning_enabled = True
+        result2 = parentComposition.run(inputs=input)
+
+        assert np.allclose(result2, [[0]], atol=0.1)
+
+    @pytest.mark.parametrize(
+        'num_epochs, learning_rate, patience, min_delta', [
+            (2000, 4, 10, .00001),
+        ]
+    )
+    def test_xor_nest_not_origin_after_train(self, num_epochs, learning_rate, patience, min_delta):
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # -----------------------------------------------------------------
+
+        xor_in = pnl.TransferMechanism(name='xor_in',
+                                       default_variable=np.zeros(2))
+
+        xor_hid = pnl.TransferMechanism(name='xor_hid',
+                                        default_variable=np.zeros(10),
+                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+
+        xor_out = pnl.TransferMechanism(name='xor_out',
+                                        default_variable=np.zeros(1),
+                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+
+        hid_map = pnl.MappingProjection(name='input_to_hidden',
+                                        matrix=np.random.randn(2, 10) * 0.1,
+                                        sender=xor_in,
+                                        receiver=xor_hid)
+
+        out_map = pnl.MappingProjection(name='hidden_to_output',
+                                        matrix=np.random.randn(10, 1) * 0.1,
+                                        sender=xor_hid,
+                                        receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        xor_autodiff = AutodiffComposition(
+            param_init_from_pnl=True,
+            patience=patience,
+            min_delta=min_delta,
+            learning_rate=learning_rate,
+            randomize=False,
+            learning_enabled=True
+        )
+
+        xor_autodiff.add_c_node(xor_in)
+        xor_autodiff.add_c_node(xor_hid)
+        xor_autodiff.add_c_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+        xor_autodiff.run(inputs = input_dict)
+        myTransfer = pnl.TransferMechanism(size = 2)
+        myMappingProj = pnl.MappingProjection(sender = myTransfer, receiver = xor_autodiff)
+
+        no_training_input_dict = {xor_in: xor_inputs}
+
+        parentComposition = pnl.Composition()
+        parentComposition.add_c_node(myTransfer)
+        parentComposition.add_c_node(xor_autodiff)
+        parentComposition.add_projection(myMappingProj, sender=myTransfer, receiver=xor_autodiff)
+        xor_autodiff.learning_enabled = False
+
+        no_training_input = {myTransfer: no_training_input_dict}
+
+        result = parentComposition.run(inputs=no_training_input)
+
+        assert np.allclose(result, [[0]], atol=0.1)
+
+    @pytest.mark.parametrize(
+        'eps, opt', [
+            (1, 'sgd'),
+        ]
+    )
+    def test_semantic_net_nested(self, eps, opt):
+
+        # SET UP MECHANISMS FOR SEMANTIC NET:
+
+        nouns_in = TransferMechanism(name="nouns_input",
+                                     default_variable=np.zeros(8))
+
+        rels_in = TransferMechanism(name="rels_input",
+                                    default_variable=np.zeros(3))
+
+        h1 = TransferMechanism(name="hidden_nouns",
+                               default_variable=np.zeros(8),
+                               function=Logistic())
+
+        h2 = TransferMechanism(name="hidden_mixed",
+                               default_variable=np.zeros(15),
+                               function=Logistic())
+
+        out_sig_I = TransferMechanism(name="sig_outs_I",
+                                      default_variable=np.zeros(8),
+                                      function=Logistic())
+
+        out_sig_is = TransferMechanism(name="sig_outs_is",
+                                       default_variable=np.zeros(12),
+                                       function=Logistic())
+
+        out_sig_has = TransferMechanism(name="sig_outs_has",
+                                        default_variable=np.zeros(9),
+                                        function=Logistic())
+
+        out_sig_can = TransferMechanism(name="sig_outs_can",
+                                        default_variable=np.zeros(9),
+                                        function=Logistic())
+
+        # SET UP MECHANISMS FOR SYSTEM
+
+        nouns_in_sys = TransferMechanism(name="nouns_input_sys",
+                                         default_variable=np.zeros(8))
+
+        rels_in_sys = TransferMechanism(name="rels_input_sys",
+                                        default_variable=np.zeros(3))
+
+        h1_sys = TransferMechanism(name="hidden_nouns_sys",
+                                   default_variable=np.zeros(8),
+                                   function=Logistic())
+
+        h2_sys = TransferMechanism(name="hidden_mixed_sys",
+                                   default_variable=np.zeros(15),
+                                   function=Logistic())
+
+        out_sig_I_sys = TransferMechanism(name="sig_outs_I_sys",
+                                          default_variable=np.zeros(8),
+                                          function=Logistic())
+
+        out_sig_is_sys = TransferMechanism(name="sig_outs_is_sys",
+                                           default_variable=np.zeros(12),
+                                           function=Logistic())
+
+        out_sig_has_sys = TransferMechanism(name="sig_outs_has_sys",
+                                            default_variable=np.zeros(9),
+                                            function=Logistic())
+
+        out_sig_can_sys = TransferMechanism(name="sig_outs_can_sys",
+                                            default_variable=np.zeros(9),
+                                            function=Logistic())
+
+        # SET UP PROJECTIONS FOR SEMANTIC NET
+
+        map_nouns_h1 = MappingProjection(matrix=np.random.rand(8,8),
+                                 name="map_nouns_h1",
+                                 sender=nouns_in,
+                                 receiver=h1)
+
+        map_rels_h2 = MappingProjection(matrix=np.random.rand(3,15),
+                                    name="map_relh2",
+                                    sender=rels_in,
+                                    receiver=h2)
+
+        map_h1_h2 = MappingProjection(matrix=np.random.rand(8,15),
+                                    name="map_h1_h2",
+                                    sender=h1,
+                                    receiver=h2)
+
+        map_h2_I = MappingProjection(matrix=np.random.rand(15,8),
+                                    name="map_h2_I",
+                                    sender=h2,
+                                    receiver=out_sig_I)
+
+        map_h2_is = MappingProjection(matrix=np.random.rand(15,12),
+                                    name="map_h2_is",
+                                    sender=h2,
+                                    receiver=out_sig_is)
+
+        map_h2_has = MappingProjection(matrix=np.random.rand(15,9),
+                                    name="map_h2_has",
+                                    sender=h2,
+                                    receiver=out_sig_has)
+
+        map_h2_can = MappingProjection(matrix=np.random.rand(15,9),
+                                    name="map_h2_can",
+                                    sender=h2,
+                                    receiver=out_sig_can)
+
+        # SET UP PROJECTIONS FOR SYSTEM
+
+        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.copy(),
+                                             name="map_nouns_h1_sys",
+                                             sender=nouns_in_sys,
+                                             receiver=h1_sys)
+
+        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.copy(),
+                                        name="map_relh2_sys",
+                                        sender=rels_in_sys,
+                                        receiver=h2_sys)
+
+        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.copy(),
+                                          name="map_h1_h2_sys",
+                                          sender=h1_sys,
+                                          receiver=h2_sys)
+
+        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.copy(),
+                                         name="map_h2_I_sys",
+                                         sender=h2_sys,
+                                         receiver=out_sig_I_sys)
+
+        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.copy(),
+                                          name="map_h2_is_sys",
+                                          sender=h2_sys,
+                                          receiver=out_sig_is_sys)
+
+        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.copy(),
+                                           name="map_h2_has_sys",
+                                           sender=h2_sys,
+                                           receiver=out_sig_has_sys)
+
+        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.copy(),
+                                           name="map_h2_can_sys",
+                                           sender=h2_sys,
+                                           receiver=out_sig_can_sys)
+
+        # SET UP COMPOSITION FOR SEMANTIC NET
+
+        sem_net = AutodiffComposition(param_init_from_pnl=True,
+                                      learning_rate=0.5,
+                                      optimizer_type=opt)
+
+        sem_net.add_c_node(nouns_in)
+        sem_net.add_c_node(rels_in)
+        sem_net.add_c_node(h1)
+        sem_net.add_c_node(h2)
+        sem_net.add_c_node(out_sig_I)
+        sem_net.add_c_node(out_sig_is)
+        sem_net.add_c_node(out_sig_has)
+        sem_net.add_c_node(out_sig_can)
+
+        sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
+        sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
+        sem_net.add_projection(sender=h1, projection=map_h1_h2, receiver=h2)
+        sem_net.add_projection(sender=h2, projection=map_h2_I, receiver=out_sig_I)
+        sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
+        sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
+        sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
+
+        # INPUTS & OUTPUTS FOR SEMANTIC NET:
+
+        nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
+        relations = ['is', 'has', 'can']
+        is_list = ['living', 'living thing', 'plant', 'animal', 'tree', 'flower', 'bird', 'fish', 'big', 'green', 'red',
+                   'yellow']
+        has_list = ['roots', 'leaves', 'bark', 'branches', 'skin', 'feathers', 'wings', 'gills', 'scales']
+        can_list = ['grow', 'move', 'swim', 'fly', 'breathe', 'breathe underwater', 'breathe air', 'walk', 'photosynthesize']
+
+        nouns_input = np.identity(len(nouns))
+
+        rels_input = np.identity(len(relations))
+
+        truth_nouns = np.identity(len(nouns))
+
+        truth_is = np.zeros((len(nouns), len(is_list)))
+
+        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
+        truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
+
+        truth_has = np.zeros((len(nouns), len(has_list)))
+
+        truth_has[0, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[1, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[2, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[3, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[4, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[5, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[6, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+        truth_has[7, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+
+        truth_can = np.zeros((len(nouns), len(can_list)))
+
+        truth_can[0, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[1, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[2, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[3, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[4, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[5, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[6, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+        truth_can[7, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+
+        # SETTING UP DICTIONARY OF INPUTS/OUTPUTS FOR SEMANTIC NET
+
+        inputs_dict = {}
+        inputs_dict[nouns_in] = []
+        inputs_dict[rels_in] = []
+
+        targets_dict = {}
+        targets_dict[out_sig_I] = []
+        targets_dict[out_sig_is] = []
+        targets_dict[out_sig_has] = []
+        targets_dict[out_sig_can] = []
+
+        for i in range(len(nouns)):
+            for j in range(len(relations)):
+                inputs_dict[nouns_in].append(nouns_input[i])
+                inputs_dict[rels_in].append(rels_input[j])
+                targets_dict[out_sig_I].append(truth_nouns[i])
+                targets_dict[out_sig_is].append(truth_is[i])
+                targets_dict[out_sig_has].append(truth_has[i])
+                targets_dict[out_sig_can].append(truth_can[i])
+
+        # comp_weights = sem_net.get_parameters()[0]
+
+        # TRAIN COMPOSITION
+        input_dict = {"inputs": inputs_dict,
+                      "targets": targets_dict,
+                      "epochs": eps}
+        sem_net._analyze_graph()
+
+        parentComposition = pnl.Composition()
+        parentComposition.add_c_node(sem_net)
+
+        input = {sem_net: input_dict}
+        no_training_input = {sem_net: inputs_dict.copy()}
+
+        parentComposition.run(inputs=input)
+
+        sem_net.learning_enabled = False
+
+        parentComposition.run(inputs=no_training_input)
