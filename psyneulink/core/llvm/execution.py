@@ -118,22 +118,46 @@ class FuncExecution(CUDAExecution):
         super().__init__()
         self._bin_func = component._llvmBinFunction
         self._execution_ids = execution_ids
+        self._component = component
 
         par_struct_ty, ctx_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        # TODO: Consolidate these
         if len(execution_ids) > 1:
             par_struct_ty = par_struct_ty * len(execution_ids)
             ctx_struct_ty = ctx_struct_ty * len(execution_ids)
 
             par_initializer = (component._get_param_initializer(ex_id) for ex_id in execution_ids)
             ctx_initializer = (component._get_context_initializer(ex_id) for ex_id in execution_ids)
-        else:
-            par_initializer = component._get_param_initializer(execution_ids[0])
-            ctx_initializer = component._get_context_initializer(execution_ids[0])
+            self.__param_struct = par_struct_ty(*par_initializer)
+            self.__context_struct = ctx_struct_ty(*ctx_initializer)
 
-        self._param_struct = par_struct_ty(*par_initializer)
-        self._context_struct = ctx_struct_ty(*ctx_initializer)
+    @property
+    def _param_struct(self):
+        if len(self._execution_ids) > 1:
+            return self.__param_struct
+
+        par_struct = self._component._compilation_data.parameter_struct.get(self._execution_ids[0])
+        if par_struct is None:
+            par_initializer = self._component._get_param_initializer(self._execution_ids[0])
+            par_struct_ty = self._bin_func.byref_arg_types[0]
+            par_struct = par_struct_ty(*par_initializer)
+            self._component._compilation_data.parameter_struct.set(par_struct, execution_id = self._execution_ids[0])
+
+        return par_struct
+
+    @property
+    def _context_struct(self):
+        if len(self._execution_ids) > 1:
+            return self.__context_struct
+
+        ctx_struct = self._component._compilation_data.context_struct.get(self._execution_ids[0])
+        if ctx_struct is None:
+            ctx_initializer = self._component._get_context_initializer(self._execution_ids[0])
+            ctx_struct_ty = self._bin_func.byref_arg_types[1]
+            ctx_struct = ctx_struct_ty(*ctx_initializer)
+            self._component._compilation_data.context_struct.set(ctx_struct, execution_id = self._execution_ids[0])
+
+        return ctx_struct
 
     def execute(self, variable):
         new_var = np.asfarray(variable)
