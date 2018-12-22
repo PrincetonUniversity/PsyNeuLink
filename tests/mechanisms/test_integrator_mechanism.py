@@ -537,7 +537,7 @@ class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_constant_integrator(self):
+    def test_accumulator_integrator(self):
         I = IntegratorMechanism(
             function=AccumulatorIntegrator(
                 initializer=10.0,
@@ -808,7 +808,7 @@ class TestIntegratorRate:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_constant_rate_float(self):
+    def test_integrator_type_accumulator_increment_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
@@ -854,7 +854,7 @@ class TestIntegratorRate:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_constant_rate_list(self):
+    def test_integrator_type_accumulator_increment_list(self):
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
@@ -950,7 +950,7 @@ class TestIntegratorRate:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_constant_rate_list_input_float(self):
+    def test_integrator_type_accumulator_increment_list_input_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
@@ -1004,6 +1004,7 @@ class TestIntegratorRate:
     #     assert (val, val2) == (51, 256)
 
 
+# ======================================= NOISE TESTS ============================================
 class TestIntegratorNoise:
 
     @pytest.mark.mechanism
@@ -1067,35 +1068,6 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
         np.testing.assert_allclose(val, [0.44386323, 0.33367433, 1.49407907, -0.20515826])
-
-    @pytest.mark.mechanism
-    @pytest.mark.integrator_mechanism
-    def test_integrator_constant_noise_fn(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=AccumulatorIntegrator(
-                noise=NormalDist()
-            ),
-        )
-
-        val = float(I.execute(10))
-
-        np.testing.assert_allclose(val, -0.977277879876411)
-
-    @pytest.mark.mechanism
-    @pytest.mark.integrator_mechanism
-    def test_integrator_constant_noise_fn_var_list(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            default_variable=[0, 0, 0, 0],
-            function=AccumulatorIntegrator(
-                noise=NormalDist(),
-            ),
-        )
-
-        val = I.execute([10, 10, 10, 10])[0]
-
-        np.testing.assert_allclose(val, [ 0.44386323, 0.33367433,  1.49407907, -0.20515826])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism

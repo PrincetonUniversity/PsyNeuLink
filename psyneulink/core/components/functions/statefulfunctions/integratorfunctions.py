@@ -586,7 +586,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         return self.convert_output_type(value)
 
 
-
 class SimpleIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------
     """
     SimpleIntegrator(           \
