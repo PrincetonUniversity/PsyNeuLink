@@ -188,6 +188,7 @@ class CompExecution(CUDAExecution):
         self.__frozen_vals = None
         self.__conds = None
         self._execution_ids = execution_ids
+        self._bin_func = None
 
         # At least the input_CIM wrapper should be generated
         with LLVMBuilderContext() as ctx:
@@ -324,51 +325,51 @@ class CompExecution(CUDAExecution):
         assert inputs is not None or node is not self._composition.input_CIM
 
         assert node in self._composition._all_nodes
-        bin_node = self._composition._get_bin_mechanism(node)
-        bin_node.wrap_call(self._context_struct, self._param_struct,
+        self._bin_func = self._composition._get_bin_mechanism(node)
+        self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
     def execute(self, inputs):
         inputs = self._get_input_struct(inputs)
-        bin_exec = self._composition._get_bin_execution()
-        bin_exec.wrap_call(self._context_struct, self._param_struct,
+        self._bin_func = self._composition._get_bin_execution()
+        self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self._data_struct, self._conditions)
 
     def run(self, inputs, runs, num_input_sets):
-        bin_run = self._composition._get_bin_run()
+        self._bin_func = self._composition._get_bin_run()
         inputs = self._get_run_input_struct(inputs, num_input_sets)
-        outputs = (bin_run.byref_arg_types[4] * runs)()
+        outputs = (self._bin_func.byref_arg_types[4] * runs)()
         runs_count = ctypes.c_int(runs)
         input_count = ctypes.c_int(num_input_sets)
-        bin_run.wrap_call(self._context_struct, self._param_struct,
+        self._bin_func.wrap_call(self._context_struct, self._param_struct,
                           self._data_struct, inputs, outputs, runs_count,
                           input_count)
         return _convert_ctype_to_python(outputs)
 
     def cuda_execute(self, inputs):
-        bin_exec = self._composition._get_bin_execution()
+        self._bin_func = self._composition._get_bin_execution()
         # Create input buffer
         inputs = self._get_input_struct(inputs)
         data_in = self.upload_ctype(inputs)
 
-        bin_exec.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
+        self._bin_func.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                            data_in, self._cuda_data_struct, self._cuda_conditions,
                            threads=len(self._execution_ids))
 
         # Copy the data struct from the device
-        vo_ty = bin_exec.byref_arg_types[3]
+        vo_ty = self._bin_func.byref_arg_types[3]
         if len(self._execution_ids) > 1:
             vo_ty = vo_ty * len(self._execution_ids)
         self._data_struct = self.download_ctype(self._cuda_data_struct, vo_ty)
 
     def cuda_run(self, inputs, runs, num_input_sets):
-        bin_run = self._composition._get_bin_run()
+        self._bin_func = self._composition._get_bin_run()
         # Create input buffer
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         data_in = self.upload_ctype(inputs)
 
         # Create output buffer
-        output_type = (bin_run.byref_arg_types[4] * runs)
+        output_type = (self._bin_func.byref_arg_types[4] * runs)
         if len(self._execution_ids) > 1:
             output_type = output_type * len(self._execution_ids)
         output_size = ctypes.sizeof(output_type)
@@ -378,7 +379,7 @@ class CompExecution(CUDAExecution):
         input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
         self._uploaded_bytes += 8 # runs_count + input_count
 
-        bin_run.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
+        self._bin_func.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                           self._cuda_data_struct, data_in, data_out, runs_count,
                           input_count, threads=len(self._execution_ids))
 
