@@ -804,20 +804,22 @@ class TestIntegratorRate:
         val = float(I.execute(10.0))
         assert val == 50.0
 
-    # rate = float, integration_type = constant
+    # rate = float, increment = float, integration_type = constant
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_accumulator_increment_float(self):
+    def test_integrator_type_accumulator_rate_and_increment_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
-                increment=5.0
+                rate=2.0,
+                increment=3.0
             )
         )
         # P = Process(pathway=[I])
-        val = float(I.execute(10.0))
-        assert val == 5.0
+        float(I.execute())
+        val = float(I.execute())
+        assert val == 9.0
 
     # rate = float, integration_type = diffusion
 
@@ -850,21 +852,60 @@ class TestIntegratorRate:
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [50.0, 50.0, 50.0]
 
-    # rate = list, integration_type = constant
+    # rate = float, increment = list, integration_type = constant
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_accumulator_increment_list(self):
+    def test_integrator_type_accumulator_rate_float_increment_list(self):
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
-                increment=[5.0, 5.0, 5.0]
+                rate = [2.0],
+                increment=[4.0, 5.0, 6.0]
             )
         )
         # P = Process(pathway=[I])
+        list(I.execute([10.0, 10.0, 10.0])[0])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [5.0, 5.0, 5.0]
+        assert val == [12.0, 15.0, 18.0]
+
+    # rate = float, increment = list, integration_type = constant
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_type_accumulator_rate_list_increment_float(self):
+        I = IntegratorMechanism(
+            default_variable=[0, 0, 0],
+            name='IntegratorMechanism',
+            function=AccumulatorIntegrator(
+                rate = [2.0, 3.0, 4.0],
+                increment=[5.0]
+            )
+        )
+        # P = Process(pathway=[I])
+        list(I.execute([10.0, 10.0, 10.0])[0])
+        val = list(I.execute([10.0, 10.0, 10.0])[0])
+        assert val == [15.0, 20.0, 25.0]
+
+    # rate = list, increment = list, integration_type = constant
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_type_accumulator_rate_and_increment_list(self):
+        I = IntegratorMechanism(
+            default_variable=[0, 0, 0],
+            name='IntegratorMechanism',
+            function=AccumulatorIntegrator(
+                rate = [1.0, 2.0, 3.0],
+                increment=[4.0, 5.0, 6.0]
+            )
+        )
+        # P = Process(pathway=[I])
+        list(I.execute([10.0, 10.0, 10.0])[0])
+        val = list(I.execute([10.0, 10.0, 10.0])[0])
+        assert val == [8.0, 15.0, 24.0]
+
 
     # rate = list, integration_type = diffusion
 
@@ -930,6 +971,8 @@ class TestIntegratorRate:
 
     # INVALID RATE:
 
+    # rate = list, execute float, integration_type = simple
+
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_integrator_type_simple_rate_list_input_float(self):
@@ -937,7 +980,6 @@ class TestIntegratorRate:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
                 function=SimpleIntegrator(
-
                     rate=[5.0, 5.0, 5.0]
                 )
             )
@@ -948,18 +990,23 @@ class TestIntegratorRate:
             and "to which it is being assigned" in str(error_text)
         )
 
+    # rate = list len 2, incrment = list len 3, integration_type = simple
+
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_integrator_type_accumulator_increment_list_input_float(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=AccumulatorIntegrator(
-                increment=[5.0, 5.0, 5.0]
-            )
+        with pytest.raises(ComponentError) as error_text:
+            I = IntegratorMechanism(
+                name='IntegratorMechanism',
+                function=SimpleIntegrator(
+                    rate=[1.0, 2.0],
+                    increment=[3.0, 4.0, 5.0]
+                ))
+        assert (
+            "is not compatible with the variable format" in str(error_text)
+            and "to which it is being assigned" in str(error_text)
         )
-        # P = Process(pathway=[I])
-        val = I.execute(10.0)
-        np.testing.assert_allclose(val, [[5., 5., 5.]])
+
 
     # @pytest.mark.mechanism
     # @pytest.mark.integrator_mechanism
