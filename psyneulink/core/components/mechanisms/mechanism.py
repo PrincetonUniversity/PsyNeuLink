@@ -2142,7 +2142,7 @@ class Mechanism_Base(Mechanism):
             if isinstance(self.integrator_function, IntegratorFunction):
                 new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context)[0]
                 self.parameters.value.set(
-                    self.function.execute(variable=new_input, context="REINITIALIZING"),
+                    self.function.execute(variable=new_input, execution_id=execution_context, context="REINITIALIZING"),
                     execution_context=execution_context,
                     override=True
                 )
