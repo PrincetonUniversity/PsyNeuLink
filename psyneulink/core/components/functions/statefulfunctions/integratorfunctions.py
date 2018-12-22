@@ -560,12 +560,15 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         """
         self._accumulator_check_args(variable, execution_id=execution_id, params=params, context=context)
 
-        if (self.context.initialization_status != ContextFlags.INITIALIZING
+        # Warn if being called as a standalone function and variable is passed
+        # Don't warn if it belongs to a Component, ans that Component's function may pass in a value for variable
+        # (such as a MappingProjection that uses AccumulatorFunction in its matrix ParameterState for learning)
+        if (not self.owner
+                and self.context.initialization_status != ContextFlags.INITIALIZING
                 and variable is not None
                 and variable is not self.instance_defaults.variable):
-            owner_str = ' by {}'.format(self.owner.name) if self.owner else ''
-            warnings.warn("{} does not use its variable;  value passed{} ({}) will be ignored".
-                          format(self.__class__.__name__, owner_str, variable))
+            warnings.warn("{} does not use its variable;  value passed ({}) will be ignored".
+                          format(self.__class__.__name__, variable))
 
         rate = self.get_current_function_param(RATE, execution_id)
         increment = self.get_current_function_param(INCREMENT, execution_id)
