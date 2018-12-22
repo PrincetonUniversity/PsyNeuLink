@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.8.0+1086.g764c02e documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.8.0+1088.g46e4089 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1086.g764c02e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1088.g46e4089 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1086
+                0.4.8.0+1088
               </div>
             
           
@@ -91,11 +91,23 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Condition.html">Condition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Time.html">Time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Log</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -192,7 +204,7 @@ values of a Component.  The key for each entry is a string that is the name of t
 of <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuples recording its values.  Each <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuple has three items:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>time</em> – the <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was recorded;</li>
+<li><em>time</em> – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was recorded;</li>
 <li><em>context</em> – a string indicating the context in which the value was recorded;</li>
 <li><em>value</em> – the value of the item.</li>
 </ul>
@@ -309,8 +321,8 @@ requires that it be assigned in the <strong>prefs</strong> argument of the Compo
 </div>
 <div class="admonition hint">
 <p class="first admonition-title">Hint</p>
-<p class="last"><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.TRIAL</span></code></a> logs the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component at the end of a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  To log its
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> at the start of a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log_values" title="psyneulink.core.components.component.Component.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method in the
+<p class="last"><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.TRIAL</span></code></a> logs the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component at the end of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  To log its
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log_values" title="psyneulink.core.components.component.Component.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method in the
 <strong>call_before_trial</strong> argument of the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 </div>
 </div>
@@ -805,7 +817,7 @@ property of its class, and its own <a class="reference internal" href="Component
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1086.g764c02e',
+            VERSION:'0.4.8.0+1088.g46e4089',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
