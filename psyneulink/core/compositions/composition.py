@@ -4075,6 +4075,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             trial_adjusted_stimulus_list.append(translated_stimulus_dict[state][trial])
                         adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
                     stimuli[node] = adjusted_stimulus_list
+                    stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
 
             # excludes any input states marked "internal_only" (usually recurrent)
             input_must_match = node.external_input_values

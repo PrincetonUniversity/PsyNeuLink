@@ -140,8 +140,62 @@ and specifying inputs and targets:
     >>> # input specification
     >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
     >>> my_targets = {my_mech_2: [[4, 5]]}
-    >>> input_dict = {"inputs": my_input_dict, "targets": my_targets_dict, "epochs": 2}
+    >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>> my_autodiff.run(inputs = input_dict)
+
+Nested Execution
+----------------
+COMMENT:
+    Need to add link to docs about nesting ordinary Compositions, once those docs are written.
+COMMENT
+In general, an AutodiffComposition may be nested inside another Composition, like ordinary Composition nesting. However,
+there are a few differences. The input format of an AutodiffComposition with learning enabled is quite unusual. Thus,
+when learning is enabled, the AutodiffComposition must be an origin mechanism of the Composition.
+
+.. note::
+
+    Like with all nested Compositions, you must call an AutodiffComposition's `_analyze_graph()` method
+    (or execute the AutodiffComposition) before nesting it.
+
+However, when learning is not enabled, AutodiffComposition works just like an ordinary Composition, in theory. Thus, an
+AutodiffComposition with learning not enabled receives input in the same format as an ordinary Composition, and can
+therefore be placed anywhere in a Composition.
+
+.. note::
+
+    Using an AutodiffComposition not as an origin mechanism is currently buggy, and might produce unexpected results.
+
+Below is an example script showing how to nest an AutodiffComposition with learning enabled.
+
+    >>> import psyneulink as pnl
+    >>> # set up PsyNeuLink Components
+    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear, size = 3)
+    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Linear, size = 2)
+    >>> my_projection = pnl.MappingProjection(matrix=np.random.randn(3,2),
+    ...                     sender=my_mech_1,
+    ...                     receiver=my_mech_2)
+    >>> # create AutodiffComposition
+    >>> my_autodiff = pnl.AutodiffComposition()
+    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
+    >>> my_autodiff._analyze_graph()  # alternatively, my_autodiff.run( ... )
+    >>>
+    >>> # input specification
+    >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
+    >>> my_targets = {my_mech_2: [[4, 5]]}
+    >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
+    >>>
+    >>> parentComposition = pnl.Composition()
+    >>> parentComposition.add_c_node(my_autodiff)
+    >>>
+    >>> training_input = {my_autodiff: input_dict}
+    >>> result1 = parentComposition.run(inputs=input)
+    >>>
+    >>> my_autodiff.learning_enabled = False
+    >>> no_training_input = {my_autodiff: my_inputs}
+    >>> result2 = parentComposition.run(inputs=no_training_input)
+
 
 .. _Composition_Class_Reference:
 
@@ -150,21 +204,17 @@ Class Reference
 
 """
 
-from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.compositions.composition import CNodeRole
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
-from psyneulink.core.compositions.composition import RunError
-from psyneulink.core.globals.keywords import OWNER_VALUE, SOFT_CLAMP
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
 
 import numpy as np
+import copy
 
 from collections import Iterable
 from toposort import toposort
@@ -252,9 +302,6 @@ class AutodiffComposition(Composition):
 
     Attributes
     ----------
-
-    target_CIM : CompositionInterfaceMechanism
-        analogous to the input_CIM attribute, except it provides targets
 
     pytorch_representation : PytorchModelCreator
         the PyTorch representation of the PsyNeuLink model
@@ -612,6 +659,8 @@ class AutodiffComposition(Composition):
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
 
+            self._analyze_graph()  # ADDED by CW 12/17/18: unsure if correct here
+
             self._build_pytorch_representation(execution_id)
 
             autodiff_inputs = inputs["inputs"]
@@ -621,6 +670,13 @@ class AutodiffComposition(Composition):
                 autodiff_epochs = inputs["epochs"]
 
             output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id)
+            ctx = self.output_CIM.parameters.context.get(execution_id)
+            # new_ctx = copy.deepcopy(ctx)
+            # new_ctx.execution_phase = ContextFlags.PROCESSING
+            # self.output_CIM.parameters.context.set(new_ctx, execution_id=execution_id)
+            if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
+                ctx.execution_phase = ContextFlags.PROCESSING
+            self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
             return output
 
