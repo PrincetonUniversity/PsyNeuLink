@@ -732,7 +732,7 @@ class InputState(State_Base):
                 function
                     see `function <InputState.function>`
 
-                    :default value: `LinearCombination`(offset=1.0, operation=sum, scale=1.0)
+                    :default value: `LinearCombination`(offset=0.0, operation=sum, scale=1.0)
                     :type: `Function`
 
                 internal_only

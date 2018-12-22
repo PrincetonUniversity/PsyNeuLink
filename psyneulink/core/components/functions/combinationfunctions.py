@@ -621,7 +621,7 @@ class LinearCombination(
                 offset
                     see `offset <LinearCombination.offset>`
 
-                    :default value: 1.0
+                    :default value: 0.0
                     :type: float
 
                 operation
@@ -1205,7 +1205,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                 offset
                     see `offset <CombineMeans.offset>`
 
-                    :default value: 1.0
+                    :default value: 0.0
                     :type: float
 
                 operation
