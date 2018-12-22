@@ -5,6 +5,7 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
     SimpleIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, \
@@ -861,7 +862,7 @@ class TestIntegratorRate:
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
-                rate = [2.0],
+                rate = 2.0,
                 increment=[4.0, 5.0, 6.0]
             )
         )
@@ -880,7 +881,7 @@ class TestIntegratorRate:
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
                 rate = [2.0, 3.0, 4.0],
-                increment=[5.0]
+                increment=5.0
             )
         )
         # P = Process(pathway=[I])
@@ -990,21 +991,21 @@ class TestIntegratorRate:
             and "to which it is being assigned" in str(error_text)
         )
 
-    # rate = list len 2, incrment = list len 3, integration_type = simple
+    # rate = list len 2, incrment = list len 3, integration_type = accumulator
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_integrator_type_accumulator_increment_list_input_float(self):
-        with pytest.raises(ComponentError) as error_text:
+        with pytest.raises(FunctionError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
-                function=SimpleIntegrator(
+                function=AccumulatorIntegrator(
                     rate=[1.0, 2.0],
                     increment=[3.0, 4.0, 5.0]
                 ))
         assert (
-            "is not compatible with the variable format" in str(error_text)
-            and "to which it is being assigned" in str(error_text)
+            "args are both specified as lists or arrays for" in str(error_text)
+            and "respectively) must be the same" in str(error_text)
         )
 
 
