@@ -178,7 +178,15 @@ class TestReinitialize:
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
-    def test_Constant_valid(self):
+    def test_Accumulator_warning(self):
+        with pytest.warns(UserWarning) as warning_msg:
+            I = AccumulatorIntegrator()
+            I(1000)
+        warning_txt = warning_msg[0].message.args[0]
+        assert "AccumulatorIntegrator does not use its variable" in str(warning_txt) \
+               and "value passed" in str(warning_txt)
+
+    def test_Accumulator_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(increment=1.0),
@@ -208,7 +216,7 @@ class TestReinitialize:
         assert np.allclose(I.value, 2.0)
         assert np.allclose(I.output_states[0].value, 2.0)
 
-        I.execute(1.0)
+        I.execute(1000)
         #  2.0 + 1.0 = 3.0
         assert np.allclose(I.value, 3.0)
         assert np.allclose(I.output_states[0].value, 3.0)
@@ -546,7 +554,7 @@ class TestIntegratorFunctions:
             )
         )
         # P = Process(pathway=[I])
-        # constant integrator does not use input value (variable)
+        # accumulator integrator does not use input value (variable)
 
         # step 1:
         val = I.execute(20000)
@@ -805,7 +813,7 @@ class TestIntegratorRate:
         val = float(I.execute(10.0))
         assert val == 50.0
 
-    # rate = float, increment = float, integration_type = constant
+    # rate = float, increment = float, integration_type = accumulator
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -853,7 +861,7 @@ class TestIntegratorRate:
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [50.0, 50.0, 50.0]
 
-    # rate = float, increment = list, integration_type = constant
+    # rate = float, increment = list, integration_type = accumulator
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -871,7 +879,7 @@ class TestIntegratorRate:
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [12.0, 15.0, 18.0]
 
-    # rate = float, increment = list, integration_type = constant
+    # rate = float, increment = list, integration_type = accumulator
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -889,7 +897,7 @@ class TestIntegratorRate:
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [15.0, 20.0, 25.0]
 
-    # rate = list, increment = list, integration_type = constant
+    # rate = list, increment = list, integration_type = accumulator
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1387,14 +1395,14 @@ class TestDualAdaptiveIntegrator:
     #             initial_v=0.2,
     #             initial_w=0.0,
     #             t_0=0.0,
-    #             time_constant_v=1.0,
+    #             time_accumulator_v=1.0,
     #             a_v=-1.0,
     #             b_v=1.5,
     #             c_v=-0.5,
     #             d_v=0.0,
     #             e_v=-1.0,
     #             f_v=0.0,
-    #             time_constant_w=100.0,
+    #             time_accumulator_w=100.0,
     #             a_w=1.0,
     #             b_w=-0.5,
     #             c_w=0.0
@@ -1443,7 +1451,7 @@ class TestDualAdaptiveIntegrator:
     #             initial_v=0.2,
     #             initial_w=0.0,
     #             t_0=0.0,
-    #             time_constant_v=1.0,
+    #             time_accumulator_v=1.0,
     #             a_v=-1.0,
     #             b_v=0.5,
     #             c_v=0.5,
@@ -1451,7 +1459,7 @@ class TestDualAdaptiveIntegrator:
     #             e_v=-1.0,
     #             f_v=0.0,
     #             electrotonic_coupling=0.55,
-    #             time_constant_w=100.0,
+    #             time_accumulator_w=100.0,
     #             a_w=1.0,
     #             b_w=-0.5,
     #             c_w=0.0
