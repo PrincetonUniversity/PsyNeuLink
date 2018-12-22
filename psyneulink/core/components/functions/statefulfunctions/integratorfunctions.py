@@ -315,14 +315,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     .. math::
         increment \\cdot rate^{time\\ step}.
 
-    This means that accumulation increases:
-
-        * **lineary** in steps of :math:`increment,\\  if\\ rate=1.0`;
-        ..
-        * **asymptotically** toward :math:`increment \\cdot 2,\\  if\\ |rate| <1.0`;
-        ..
-        * **exponentially** :math:`if\\ |rate|>1.0`.
-
+    Thus, accumulation increases lineary in steps of `increment <AccumulatorIntegrator.increment>`
+    if `rate <AccumulatorIntegrator.rate>`\=1.0, and exponentially otherwise.
 
     *Modulatory Parameters:*
 
