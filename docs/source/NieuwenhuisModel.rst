@@ -87,14 +87,14 @@ off-diagonal elements.
 LC Subsystem
 ~~~~~~~~~~~~
 
-**LC**: an `LCControlMechanism`, that uses the FHNIntegratorFunction to implement a FitzHugh-Nagumo model as a
+**LC**: an `LCControlMechanism`, that uses the FitzHughNagumoIntegrator to implement a FitzHugh-Nagumo model as a
 simulation of the population-level activity of the LC. The LCControlMechanism outputs three values on each execution:
 
 .. _Nieuwenhuis_LC_Params:
 
-   * *v* (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC
+   * *v* (excitation variable of the FitzHugh-Nagumo model) representing the state (i.e., net input) of the LC
    ..
-   * *w* (relaxation variable of the FHN model) representing noradrenergic output of the LC
+   * *w* (relaxation variable of the FitzHugh-Nagumo model) representing noradrenergic output of the LC
    ..
    * :math:`gain(t)`, where :math:`g(t) = G + k w(t), G` = **base_level_gain**, *k* = **scaling_factor**, and
      *w(t)* = the current noradrenergic output

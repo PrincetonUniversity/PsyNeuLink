@@ -155,7 +155,7 @@ which it belongs.
       +--------------------+-----------------------+--------------------------------------+----------------------------+
       | **Gating** (brown) |   *MULTIPLICATIVE*    | Mechanism `InputState`/`OutputState` | `Linear` (`slope`)         |
       +--------------------+-----------------------+--------------------------------------+----------------------------+
-      |**Learning** (green)|     *ADDITIVE*        | MappingProjection `ParameterState`   | `AccumulatorIntegratorFunction`    |
+      |**Learning** (green)|     *ADDITIVE*        | MappingProjection `ParameterState`   | `AccumulatorIntegrator`    |
       |                    |                       |                                      | (`increment`)              |
       +--------------------+-----------------------+--------------------------------------+----------------------------+
 

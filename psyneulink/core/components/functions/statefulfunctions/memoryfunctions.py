@@ -34,7 +34,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
     BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
-from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.globals.utilities import all_within_range, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -50,7 +50,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     """
     Buffer(                     \
         default_variable=None,  \
-        rate=None,              \
+        rate=1.0,               \
         noise=0.0,              \
         history=None,           \
         initializer,            \
@@ -61,15 +61,24 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
     .. _Buffer:
 
-    Appends `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
-    which makes it a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
-    applied to each item in the deque (including the newly added one) on each call, as follows:
-
-    .. math::
-        item * rate + noise
+    Append `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-append
+    to deque of previous inputs).
 
     .. note::
-       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
+       Every appended item must have same shape as the first.
+
+    If specified, `rate <Buffer.rate>` and/or `noise <Buffer.noise>` are applied to items already stored in the
+    array, as follows:
+
+    .. math::
+        stored\\_item * rate + noise
+
+    .. note::
+       Because **rate** and **noise** are applied on every call, their effects accumulative exponentially over calls
+       to `function <Buffer.function>`.
+
+    If the length of the result exceeds `history <Buffer.history>`, delete the first item.
+    Return `previous_value <Buffer.previous_value>` appended with `variable <Buffer.variable>`.
 
     Arguments
     ---------
@@ -78,18 +87,19 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    rate : float : default None
-        specifies a value applied to each item in the deque on each call.
+    rate : float, list or 1d array : default 1.0
+        specifies a value applied multiplicatively to each item already stored in the deque on each call to `function
+        <Buffer.function>`;  must be in interval [0,1]
 
     noise : float or Function : default 0.0
-        specifies a random value added to each item in the deque on each call.
+        specifies a random value added to each item already in the deque on each call to `function <Buffer.function>`
+        (see `noise <Buffer.noise>` for details).
 
     history : int : default None
         specifies the maxlen of the deque, and hence `value <Buffer.value>`.
 
     initializer float, list or ndarray : default []
-        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
-        empty list.
+        specifies a starting value for the deque;  if none is specified, the deque is initialized with an empty list.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -111,17 +121,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     variable : number or array
         current input value appended to the end of the deque.
 
-    rate : float
-        value added to each item of the deque on each call.
+    rate : float or 1d array with all elements in interval [0,1]
+        multiplicatively applied to each item already in the deque on call to `function <Buffer.function>`;
+        implements exponential decay of stored items.
 
     noise : float or Function
-        random value added to each item of the deque in each call.
-
-        .. note::
-            In order to generate random noise, a probability distribution function should be used (see
-            `DistributionFunction <distributionfunctions>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+        random value added to each item of the deque in each call to `function <Buffer.function>`
+        (see `noise <Stateful_Noise>` for additional details).
 
     history : int
         determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
@@ -131,7 +137,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         the value returned continues to be extended indefinitely.
 
     initializer : float, list or ndarray
-        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
+        value assigned as the first item of the deque when the Function is initialized, or reinitialized
         if the **new_previous_value** argument is not specified in the call to `reinitialize
         <StatefulFUnction.reinitialize>`.
 
@@ -154,7 +160,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     componentName = BUFFER_FUNCTION
 
     class Params(StatefulFunction.Params):
-        rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
 
@@ -175,12 +181,14 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # was failing.
                  # For now, updated default_variable, noise, and Alternatively, we can change validation on
                  # default_variable=None,   # Changed to [] because None conflicts with initializer
+                 rate=1.0,
+                 noise=0.0,
                  # rate: parameter_spec=1.0,
-                 # noise=0.0,
+                 # noise: parameter_spec=0.0,
                  # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
                  # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
-                 rate: tc.optional(tc.any(int, float)) = 1.0,
-                 noise: tc.optional(tc.any(int, float, callable)) = 0.0,
+                 # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
+                 # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
                  history: tc.optional(int) = None,
                  initializer=[],
                  params: tc.optional(dict) = None,
@@ -263,10 +271,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `previous_value <Buffer.previous_value>` appended with `variable
-        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
-
-        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
 
         Arguments
         ---------
@@ -298,16 +302,18 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
-        previous_value = self.get_previous_value(execution_id)
-        previous_value.append(variable)
+        previous_value = np.array(self.get_previous_value(execution_id))
 
-        # Apply rate and/or noise if they are specified
-        if rate != 1.0:
-            previous_value *= rate
-        if noise:
-            previous_value += noise
+        # Apply rate and/or noise, if they are specified, to all stored items
+        if len(previous_value):
+            if any(np.atleast_1d(rate) != 1.0):
+                previous_value = previous_value * rate
+            if any(np.atleast_1d(noise) != 0.0):
+                previous_value = previous_value + noise
 
         previous_value = deque(previous_value, maxlen=self.history)
+
+        previous_value.append(variable)
 
         self.parameters.previous_value.set(previous_value, execution_id)
         return self.convert_output_type(previous_value)
@@ -374,8 +380,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
     storage_prob : float in interval [0,1] : default 1.0
         specifies probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
 
+    rate : float, list, or array : default 1.0
+        specifies a value used to multiply key (first item of `variable <DND.variable>`) before storing in `dict
+        <DND.dict>` (see `rate <DND.noise> for details).
+
     noise : float, list, array, or Function : default 0.0
-        specifies a value applied to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`.
+        specifies a random value added to key (first item of `variable <DND.variable>`) before storing in `dict
+        <DND.dict>` (see `noise <DND.noise> for details).
 
     initializer dict : default {}
         specifies an initial set of entries for `dict <DND.dict>`;  each key must have the same shape as
@@ -423,14 +434,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
     storage_prob : float in interval [0,1]
         probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
 
-    noise : float, list, array, or Function
-        value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`.
+    rate : float or 1d array
+        value applied multiplicatively to key (first item of `variable <DND.variable>`) before storing in `dict
+        <DND.dict>` (see `rate <Stateful_Rate>` for additional details).
 
-        .. note::
-            In order to generate random noise, a probability distribution function should be used (see
-            `DistributionFunction <distributionfunctions>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
+    noise : float, 1d array or Function
+        value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`
+        (see `noise <Stateful_Noise>` for additional details).
 
     initializer dict : default {}
         initial set of entries for `dict <DND.dict>`.
@@ -480,12 +490,14 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retrieval_prob = Param(1.0, modulable=True)
         storage_prob = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Param(1, stateful=True)
+        rate = Param(1.0, modulable=True)
         noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Param(1000)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         NOISE: None,
+        RATE: None,
         RETRIEVAL_PROB: 1.0,
         STORAGE_PROB: 1.0
     })
@@ -498,7 +510,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  default_variable=None,
                  retrieval_prob: tc.optional(tc.any(int, float))=1.0,
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
-                 noise: tc.optional(tc.any(int, float, callable))=0.0,
+                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
+                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
                  initializer: tc.optional(dict)=None,
                  distance_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
                  selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
@@ -515,6 +528,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
+                                                  rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
                                                   params=params)

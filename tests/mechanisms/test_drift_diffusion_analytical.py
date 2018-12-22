@@ -16,7 +16,8 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
     stim, drift_rate, threshold, starting_point, bias, t0, noise, mean ER, mean RT,
     correct RT mean, correct RT variance, correct RT skew
 
-    See gen_matlab_ddm_test_data.py script to generate more test data in this form.
+    See gen_matlab_ddm_test_data.py script to generate more test data in this form. This script has since
+    been deleted, see commit 7c67ca0f2.
 
     :param B:
     :param data:

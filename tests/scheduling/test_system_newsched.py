@@ -1,6 +1,6 @@
 import numpy
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -102,7 +102,7 @@ class TestLinear:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5,
             )
         )
@@ -138,7 +138,7 @@ class TestLinear:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -190,7 +190,7 @@ class TestLinear:
         B = IntegratorMechanism(
             name='B',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -234,7 +234,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -298,7 +298,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -360,7 +360,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -424,7 +424,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -432,7 +432,7 @@ class TestBranching:
         B = IntegratorMechanism(
             name='B',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -487,7 +487,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -495,7 +495,7 @@ class TestBranching:
         B = IntegratorMechanism(
             name='B',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -550,7 +550,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -558,7 +558,7 @@ class TestBranching:
         B = IntegratorMechanism(
             name='B',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -566,7 +566,7 @@ class TestBranching:
         C = IntegratorMechanism(
             name='C',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -628,7 +628,7 @@ class TestBranching:
         B = IntegratorMechanism(
             name='B',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -636,7 +636,7 @@ class TestBranching:
         C = IntegratorMechanism(
             name='C',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -693,7 +693,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -701,7 +701,7 @@ class TestBranching:
         B = IntegratorMechanism(
             name='B',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -709,7 +709,7 @@ class TestBranching:
         C = IntegratorMechanism(
             name='C',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -717,7 +717,7 @@ class TestBranching:
         D = IntegratorMechanism(
             name='D',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -801,7 +801,7 @@ class TestBranching:
         C = IntegratorMechanism(
             name='C',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )
@@ -874,7 +874,7 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -882,7 +882,7 @@ class TestBranching:
         B = IntegratorMechanism(
             name='B',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -890,7 +890,7 @@ class TestBranching:
         C = IntegratorMechanism(
             name='C',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -898,7 +898,7 @@ class TestBranching:
         D = IntegratorMechanism(
             name='D',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -906,7 +906,7 @@ class TestBranching:
         E = IntegratorMechanism(
             name='E',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -914,7 +914,7 @@ class TestBranching:
         F = IntegratorMechanism(
             name='F',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=1
             )
         )
@@ -1026,7 +1026,7 @@ class TestTermination:
         A = IntegratorMechanism(
             name='A',
             default_variable=[0],
-            function=SimpleIntegratorFunction(
+            function=SimpleIntegrator(
                 rate=.5
             )
         )

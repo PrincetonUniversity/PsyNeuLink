@@ -446,7 +446,7 @@ COMMENT
         #     else:
         #         result /= len(variable)
         # MODIFIED 11/12/15 NEW:
-        result = self._metric_fct(variable=[current, transformed], context=context)
+        result = self._metric_fct(variable=[current, transformed], execution_id=execution_id, context=context)
         # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)

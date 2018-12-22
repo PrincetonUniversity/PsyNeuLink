@@ -21,18 +21,18 @@ def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
     return val
 
 test_data = [
-    (Functions.AdaptiveIntegratorFunction, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
-    (Functions.AdaptiveIntegratorFunction, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
-    (Functions.AdaptiveIntegratorFunction, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
-    (Functions.AdaptiveIntegratorFunction, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
+    (Functions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
+    (Functions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
+    (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
+    (Functions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
 ]
 
 # use list, naming function produces ugly names
 names = [
-    "AdaptiveIntegratorFunction",
-    "AdaptiveIntegratorFunction Noise Array",
-    "AdaptiveIntegratorFunction Initializer",
-    "AdaptiveIntegratorFunction Initializer Noise Array",
+    "AdaptiveIntegrator",
+    "AdaptiveIntegrator Noise Array",
+    "AdaptiveIntegrator Initializer",
+    "AdaptiveIntegrator Initializer Noise Array",
 ]
 
 GROUP_PREFIX="IntegratorFunction "

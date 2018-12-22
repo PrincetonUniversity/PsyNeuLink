@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FHNIntegratorFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FitzHughNagumoIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.process import Process
@@ -77,15 +77,15 @@ class TestGilzenratMechanisms:
         # X = 1.04 + 0.0408 = 1.0808 <--- previous value 1.0808
         # f(X) = 2.1616  <--- return 2.1616
 
-    def test_fhn_gilzenrat_figure_2(self):
-        # Isolate the FHN mechanism for testing and recreate figure 2 from the gilzenrat paper
+    def test_fitzHughNagumo_gilzenrat_figure_2(self):
+        # Isolate the FitzHughNagumo mechanism for testing and recreate figure 2 from the gilzenrat paper
 
         initial_v = 0.2
         initial_w = 0.0
 
         F = IntegratorMechanism(
-            name='IntegratorMech-FHNFunction',
-            function=FHNIntegratorFunction(
+            name='IntegratorMech-FitzHughNagumoFunction',
+            function=FitzHughNagumoIntegrator(
                 initial_v=initial_v,
                 initial_w=initial_w,
                 time_step_size=0.01,
@@ -214,24 +214,24 @@ class TestGilzenratMechanisms:
 #         # Implement response layer with input_state for ObjectiveMechanism that has a single value
 #         # and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
 #         LC = LCControlMechanism(
-#             time_step_size_FHN=time_step_size,  # integrating step size
-#             mode_FHN=C,  # coherence: set to either .95 or .55
-#             uncorrelated_activity_FHN=d,  # Baseline level of intrinsic, uncorrelated LC activity
-#             time_constant_v_FHN=0.05,
-#             time_constant_w_FHN=5,
-#             a_v_FHN=-1.0,
-#             b_v_FHN=1.0,
-#             c_v_FHN=1.0,
-#             d_v_FHN=0.0,
-#             e_v_FHN=-1.0,
-#             f_v_FHN=1.0,
-#             a_w_FHN=1.0,
-#             b_w_FHN=-1.0,
-#             c_w_FHN=0.0,
-#             t_0_FHN=0,
-#             initial_v_FHN=initial_v,
-#             initial_w_FHN=initial_w,
-#             threshold_FHN=0.5,
+#             time_step_size_FitzHughNagumo=time_step_size,  # integrating step size
+#             mode_FitzHughNagumo=C,  # coherence: set to either .95 or .55
+#             uncorrelated_activity_FitzHughNagumo=d,  # Baseline level of intrinsic, uncorrelated LC activity
+#             time_constant_v_FitzHughNagumo=0.05,
+#             time_constant_w_FitzHughNagumo=5,
+#             a_v_FitzHughNagumo=-1.0,
+#             b_v_FitzHughNagumo=1.0,
+#             c_v_FitzHughNagumo=1.0,
+#             d_v_FitzHughNagumo=0.0,
+#             e_v_FitzHughNagumo=-1.0,
+#             f_v_FitzHughNagumo=1.0,
+#             a_w_FitzHughNagumo=1.0,
+#             b_w_FitzHughNagumo=-1.0,
+#             c_w_FitzHughNagumo=0.0,
+#             t_0_FitzHughNagumo=0,
+#             initial_v_FitzHughNagumo=initial_v,
+#             initial_w_FitzHughNagumo=initial_w,
+#             threshold_FitzHughNagumo=0.5,
 #             # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
 #             objective_mechanism=ObjectiveMechanism(
 #                 function=Linear,

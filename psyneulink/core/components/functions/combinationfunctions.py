@@ -621,7 +621,7 @@ class LinearCombination(
                 offset
                     see `offset <LinearCombination.offset>`
 
-                    :default value: 1.0
+                    :default value: 0.0
                     :type: float
 
                 operation
@@ -648,7 +648,7 @@ class LinearCombination(
         weights = Param(None, modulable=True)
         exponents = Param(None, modulable=True)
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -1205,7 +1205,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                 offset
                     see `offset <CombineMeans.offset>`
 
-                    :default value: 1.0
+                    :default value: 0.0
                     :type: float
 
                 operation
@@ -1231,7 +1231,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         exponents = None
         operation = SUM
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
