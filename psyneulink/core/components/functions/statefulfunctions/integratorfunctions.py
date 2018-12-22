@@ -482,6 +482,9 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         self.has_initializers = True
 
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    #     self.instance_defaults.variable = None
+
     def _accumulator_check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
 
@@ -553,6 +556,12 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         """
         self._accumulator_check_args(variable, execution_id=execution_id, params=params, context=context)
+
+        if (self.context.initialization_status != ContextFlags.INITIALIZING
+                and variable is not self.instance_defaults.variable):
+            owner_str = ' by {}'.format(self.owner.name) if self.owner else ''
+            warnings.warn("{} does not use its variable;  value passed{} ({}) will be ignored".
+                          format(self.__class__.__name__, owner_str, variable))
 
         rate = self.get_current_function_param(RATE, execution_id)
         increment = self.get_current_function_param(INCREMENT, execution_id)

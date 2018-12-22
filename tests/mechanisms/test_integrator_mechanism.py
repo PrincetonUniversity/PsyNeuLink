@@ -951,19 +951,15 @@ class TestIntegratorRate:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_integrator_type_constant_rate_list_input_float(self):
-        with pytest.raises(ComponentError) as error_text:
-            I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                function=AccumulatorIntegrator(
-                    increment=[5.0, 5.0, 5.0]
-                )
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=AccumulatorIntegrator(
+                increment=[5.0, 5.0, 5.0]
             )
-            # P = Process(pathway=[I])
-            float(I.execute(10.0))
-        assert (
-            "is not compatible with the variable format" in str(error_text)
-            and "to which it is being assigned" in str(error_text)
         )
+        # P = Process(pathway=[I])
+        val = I.execute(10.0)
+        np.testing.assert_allclose(val, [[5., 5., 5.]])
 
     # @pytest.mark.mechanism
     # @pytest.mark.integrator_mechanism
@@ -1084,7 +1080,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        np.testing.assert_allclose(val, 0.9500884175255894)
+        np.testing.assert_allclose(val, -0.977277879876411)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1099,7 +1095,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [0.33367433, 1.49407907, -0.20515826, 0.3130677])
+        np.testing.assert_allclose(val, [ 0.44386323, 0.33367433,  1.49407907, -0.20515826])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
