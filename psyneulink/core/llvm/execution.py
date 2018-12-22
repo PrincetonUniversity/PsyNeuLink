@@ -131,33 +131,30 @@ class FuncExecution(CUDAExecution):
             self.__param_struct = par_struct_ty(*par_initializer)
             self.__context_struct = ctx_struct_ty(*ctx_initializer)
 
+    def _get_compilation_param(self, name, initializer, arg, execution_id):
+        param = getattr(self._component._compilation_data, name)
+        struct = param.get(execution_id)
+        if struct is None:
+            initializer = getattr(self._component, initializer)(execution_id)
+            struct_ty = self._bin_func.byref_arg_types[arg]
+            struct = struct_ty(*initializer)
+            param.set(struct, execution_id=execution_id)
+
+        return struct
+
     @property
     def _param_struct(self):
         if len(self._execution_ids) > 1:
             return self.__param_struct
 
-        par_struct = self._component._compilation_data.parameter_struct.get(self._execution_ids[0])
-        if par_struct is None:
-            par_initializer = self._component._get_param_initializer(self._execution_ids[0])
-            par_struct_ty = self._bin_func.byref_arg_types[0]
-            par_struct = par_struct_ty(*par_initializer)
-            self._component._compilation_data.parameter_struct.set(par_struct, execution_id = self._execution_ids[0])
-
-        return par_struct
+        return self._get_compilation_param('parameter_struct', '_get_param_initializer', 0, self._execution_ids[0])
 
     @property
     def _context_struct(self):
         if len(self._execution_ids) > 1:
             return self.__context_struct
 
-        ctx_struct = self._component._compilation_data.context_struct.get(self._execution_ids[0])
-        if ctx_struct is None:
-            ctx_initializer = self._component._get_context_initializer(self._execution_ids[0])
-            ctx_struct_ty = self._bin_func.byref_arg_types[1]
-            ctx_struct = ctx_struct_ty(*ctx_initializer)
-            self._component._compilation_data.context_struct.set(ctx_struct, execution_id = self._execution_ids[0])
-
-        return ctx_struct
+        return self._get_compilation_param('context_struct', '_get_context_initializer', 1, self._execution_ids[0])
 
     def execute(self, variable):
         new_var = np.asfarray(variable)
