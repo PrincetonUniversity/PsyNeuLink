@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+1085.g0f658ca documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+1086.g764c02e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1085.g0f658ca documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1086.g764c02e documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Compositions.html"/>
         <link rel="next" title="Subsystems" href="Subystems.html"/>
         <link rel="prev" title="Compositions" href="Compositions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1085
+                0.4.8.0+1086
               </div>
             
           
@@ -261,7 +261,7 @@ at initialization by the <strong>loss_type</strong> arguments.</p>
 </div>
 <div class="section" id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="System.html#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as in a Composition. When
+<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as in a Composition. When
 <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is False, the arguments are the same, since in this
 case the AutodiffComposition executes like a Composition.</p>
 <p>However, if <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is True, the <strong>inputs</strong> argument
@@ -286,8 +286,57 @@ and specifying inputs and targets:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># input specification</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_1</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_targets</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_2</span><span class="p">:</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">my_input_dict</span><span class="p">,</span> <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">my_targets_dict</span><span class="p">,</span> <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">my_inputs</span><span class="p">,</span> <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">my_targets</span><span class="p">,</span> <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="nested-execution">
+<h2>Nested Execution<a class="headerlink" href="#nested-execution" title="Permalink to this headline">¶</a></h2>
+<p>In general, an AutodiffComposition may be nested inside another Composition, like ordinary Composition nesting. However,
+there are a few differences. The input format of an AutodiffComposition with learning enabled is quite unusual. Thus,
+when learning is enabled, the AutodiffComposition must be an origin mechanism of the Composition.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Like with all nested Compositions, you must call an AutodiffComposition’s <code class="xref any docutils literal"><span class="pre">_analyze_graph()</span></code> method
+(or execute the AutodiffComposition) before nesting it.</p>
+</div>
+<p>However, when learning is not enabled, AutodiffComposition works just like an ordinary Composition, in theory. Thus, an
+AutodiffComposition with learning not enabled receives input in the same format as an ordinary Composition, and can
+therefore be placed anywhere in a Composition.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Using an AutodiffComposition not as an origin mechanism is currently buggy, and might produce unexpected results.</p>
+</div>
+<p>Below is an example script showing how to nest an AutodiffComposition with learning enabled.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># set up PsyNeuLink Components</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_projection</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+<span class="gp">... </span>                    <span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">receiver</span><span class="o">=</span><span class="n">my_mech_2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># create AutodiffComposition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AutodiffComposition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_c_node</span><span class="p">(</span><span class="n">my_mech_1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_c_node</span><span class="p">(</span><span class="n">my_mech_1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_projection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="n">my_projection</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">my_mech_2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">_analyze_graph</span><span class="p">()</span>  <span class="c1"># alternatively, my_autodiff.run( ... )</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># input specification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_1</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_targets</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_mech_2</span><span class="p">:</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">my_inputs</span><span class="p">,</span> <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">my_targets</span><span class="p">,</span> <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parentComposition</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parentComposition</span><span class="o">.</span><span class="n">add_c_node</span><span class="p">(</span><span class="n">my_autodiff</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">training_input</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_autodiff</span><span class="p">:</span> <span class="n">input_dict</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result1</span> <span class="o">=</span> <span class="n">parentComposition</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">learning_enabled</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">no_training_input</span> <span class="o">=</span> <span class="p">{</span><span class="n">my_autodiff</span><span class="p">:</span> <span class="n">my_inputs</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result2</span> <span class="o">=</span> <span class="n">parentComposition</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">no_training_input</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -340,7 +389,7 @@ and specifying inputs and targets:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1085.g0f658ca',
+            VERSION:'0.4.8.0+1086.g764c02e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
