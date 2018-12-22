@@ -98,7 +98,6 @@ def test_llvm(variable, metric, normalize, fail, expected, benchmark):
 @pytest.mark.distance_function
 @pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
-@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_ptx_cuda(variable, metric, normalize, fail, expected, benchmark):
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     if fail is not None:

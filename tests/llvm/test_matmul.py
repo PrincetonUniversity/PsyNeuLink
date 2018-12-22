@@ -39,21 +39,20 @@ def test_matmul_llvm(benchmark):
     assert np.allclose(llvm_res, result)
 
 @pytest.mark.llvm
+@pytest.mark.cuda
 @pytest.mark.benchmark
-@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_matmul_cuda(benchmark):
     llvm_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
-    import pycuda
-    cuda_vec = pycuda.driver.In(vector)
-    cuda_mat = pycuda.driver.In(matrix)
-    cuda_res = pycuda.driver.Out(llvm_res)
+    cuda_vec = pnlvm.jit_engine.pycuda.driver.In(vector)
+    cuda_mat = pnlvm.jit_engine.pycuda.driver.In(matrix)
+    cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_res)
     benchmark(llvm_fun.cuda_call, cuda_vec, cuda_mat, np.int32(x), np.int32(y), cuda_res)
     assert np.allclose(llvm_res, result)
 
 @pytest.mark.llvm
 @pytest.mark.benchmark
 @pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"))])
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_matmul_llvm_constant_dim(benchmark, mode):
     custom_name = None
 

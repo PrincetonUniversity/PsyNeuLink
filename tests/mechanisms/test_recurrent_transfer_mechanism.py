@@ -102,8 +102,8 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
@@ -129,8 +129,8 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
@@ -153,8 +153,8 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_recurrent_mech_integrator(self, benchmark, mode):
         R = RecurrentTransferMechanism(size=2,
                                        function=Logistic(),
@@ -199,8 +199,8 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_recurrent_mech_no_inputs(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R'

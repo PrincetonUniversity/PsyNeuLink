@@ -20,7 +20,7 @@ x, y = matrix.shape
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"))])
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_fixed_dimensions__pnl_builtin_vxm(mode):
     # The original builtin mxv function
     binf = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')

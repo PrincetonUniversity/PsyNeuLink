@@ -863,7 +863,7 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                      pytest.param('LLVM', marks=pytest.mark.llvm),
                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                     pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+                     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_3_mechanisms_frozen_values(self, benchmark, mode):
         #
         #   B
@@ -901,7 +901,7 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_multi_control_1_terminal(self, benchmark, mode):
         #
@@ -946,7 +946,7 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
@@ -991,7 +991,7 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
         #
@@ -1036,7 +1036,7 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_disable_control_1_terminal(self, benchmark, mode):
         #
@@ -1081,8 +1081,8 @@ class TestExecutionOrder:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
-                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                              ])
     def test_transfer_mechanism(self, benchmark, mode):
 
@@ -1107,8 +1107,8 @@ class TestExecutionOrder:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
-                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                              ])
     def test_transfer_mechanism_split(self, benchmark, mode):
 
@@ -1623,7 +1623,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_input_grow(self, mode):
         comp = Composition()
@@ -1648,7 +1648,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_input_shrink(self, mode):
         comp = Composition()
@@ -1672,7 +1672,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_input_5(self, mode):
         comp = Composition()
@@ -1728,7 +1728,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_5_mechanisms_2_origins_1_terminal(self, mode):
         # A ----> C --
@@ -1787,7 +1787,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_with_scheduling_AAB_transfer(self, mode):
         comp = Composition()
@@ -1812,7 +1812,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_with_multiple_trials_of_input_values(self, mode):
         comp = Composition()
@@ -1833,7 +1833,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_sender_receiver_not_specified(self, mode):
         comp = Composition()
@@ -1854,7 +1854,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_reuse_input(self, mode):
         comp = Composition()
@@ -1873,7 +1873,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_double_trial_specs(self, mode):
         comp = Composition()
@@ -1893,7 +1893,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -1917,7 +1917,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_LPP(self, benchmark, mode):
 
@@ -1942,7 +1942,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_LPP_with_projections(self, mode):
         comp = Composition()
@@ -2028,7 +2028,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_LPP_two_origins_one_terminal(self, mode):
         # A ----> C --
@@ -2059,7 +2059,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_composition(self, benchmark, mode):
         comp = Composition()
@@ -2080,7 +2080,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_composition_default(self, benchmark, mode):
         comp = Composition()
@@ -2115,7 +2115,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal(self, benchmark, mode):
         # C --
@@ -2147,7 +2147,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_1_origin_2_terminals(self, benchmark, mode):
         #       ==> D
@@ -2178,7 +2178,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal_mimo_last(self, benchmark, mode):
         # C --
@@ -2211,7 +2211,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(self, benchmark, mode):
         # C --
@@ -2246,7 +2246,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal_mimo_all_sum(self, benchmark, mode):
         # C --
@@ -2280,7 +2280,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism(self, benchmark, mode):
         comp = Composition()
@@ -2302,7 +2302,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
         comp = Composition()
@@ -2331,7 +2331,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python', 
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
         comp = Composition()
@@ -2362,7 +2362,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
         comp = Composition()
@@ -2388,7 +2388,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
         comp = Composition()
@@ -2417,7 +2417,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
         comp = Composition()
@@ -3438,8 +3438,8 @@ class TestNestedCompositions:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
-                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                              ])
     def test_transfer_mechanism_composition(self, mode):
 
@@ -3474,8 +3474,8 @@ class TestNestedCompositions:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
-                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                              ])
     def test_nested_transfer_mechanism_composition(self, mode):
 
@@ -3505,8 +3505,8 @@ class TestNestedCompositions:
                              pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")]),
-                             pytest.param('PTXRun', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                              ])
     def test_nested_transfer_mechanism_composition_parallel(self, mode):
 

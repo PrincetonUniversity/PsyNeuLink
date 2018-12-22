@@ -82,8 +82,8 @@ class TestLCControlMechanism:
     @pytest.mark.control_mechanism
     @pytest.mark.benchmark(group="LCControlMechanism Basic")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_lc_control_mech_basic(self, benchmark, mode):
 
         LC = pnl.LCControlMechanism(

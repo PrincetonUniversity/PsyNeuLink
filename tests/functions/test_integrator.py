@@ -74,7 +74,6 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
-@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_ptx_cuda(func, variable, params, expected, benchmark):
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
