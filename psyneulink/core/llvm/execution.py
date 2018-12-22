@@ -174,10 +174,6 @@ class FuncExecution(CUDAExecution):
 
 class MechExecution(FuncExecution):
 
-    def __init__(self, mechanism, execution_ids = [None]):
-        self._mechanism = mechanism
-        super().__init__(mechanism, execution_ids)
-
     def execute(self, variable):
         # convert to 3d. we always assume that:
         # a) the input is vector of input states
