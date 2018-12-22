@@ -6,7 +6,7 @@ import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import ConstantIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, get_matrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
@@ -570,7 +570,7 @@ class TestRecurrentTransferMechanismFunction:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=[0, 0, 0, 0],
-                function=ConstantIntegrator(),
+                function=AccumulatorIntegrator(),
                 integration_rate=1.0,
                 integrator_mode=True
             )

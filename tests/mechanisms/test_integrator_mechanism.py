@@ -5,9 +5,10 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
-    SimpleIntegrator, ConstantIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, \
+    SimpleIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, \
     FitzHughNagumoIntegrator, AccumulatorIntegrator, LeakyCompetingIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
@@ -180,9 +181,7 @@ class TestReinitialize:
     def test_Constant_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                rate=1.0
-            ),
+            function=AccumulatorIntegrator(increment=1.0),
         )
 
         #  returns previous_value + rate + noise
@@ -539,12 +538,11 @@ class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_constant_integrator(self):
+    def test_accumulator_integrator(self):
         I = IntegratorMechanism(
-            function=ConstantIntegrator(
+            function=AccumulatorIntegrator(
                 initializer=10.0,
-                rate=5.0,
-                offset=10
+                increment=15.0,
             )
         )
         # P = Process(pathway=[I])
@@ -807,20 +805,22 @@ class TestIntegratorRate:
         val = float(I.execute(10.0))
         assert val == 50.0
 
-    # rate = float, integration_type = constant
+    # rate = float, increment = float, integration_type = constant
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_constant_rate_float(self):
+    def test_integrator_type_accumulator_rate_and_increment_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                rate=5.0
+            function=AccumulatorIntegrator(
+                rate=2.0,
+                increment=3.0
             )
         )
         # P = Process(pathway=[I])
-        val = float(I.execute(10.0))
-        assert val == 5.0
+        float(I.execute())
+        val = float(I.execute())
+        assert val == 9.0
 
     # rate = float, integration_type = diffusion
 
@@ -853,21 +853,60 @@ class TestIntegratorRate:
         val = list(I.execute([10.0, 10.0, 10.0])[0])
         assert val == [50.0, 50.0, 50.0]
 
-    # rate = list, integration_type = constant
+    # rate = float, increment = list, integration_type = constant
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_constant_rate_list(self):
+    def test_integrator_type_accumulator_rate_float_increment_list(self):
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                rate=[5.0, 5.0, 5.0]
+            function=AccumulatorIntegrator(
+                rate = 2.0,
+                increment=[4.0, 5.0, 6.0]
             )
         )
         # P = Process(pathway=[I])
+        list(I.execute([10.0, 10.0, 10.0])[0])
         val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [5.0, 5.0, 5.0]
+        assert val == [12.0, 15.0, 18.0]
+
+    # rate = float, increment = list, integration_type = constant
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_type_accumulator_rate_list_increment_float(self):
+        I = IntegratorMechanism(
+            default_variable=[0, 0, 0],
+            name='IntegratorMechanism',
+            function=AccumulatorIntegrator(
+                rate = [2.0, 3.0, 4.0],
+                increment=5.0
+            )
+        )
+        # P = Process(pathway=[I])
+        list(I.execute([10.0, 10.0, 10.0])[0])
+        val = list(I.execute([10.0, 10.0, 10.0])[0])
+        assert val == [15.0, 20.0, 25.0]
+
+    # rate = list, increment = list, integration_type = constant
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_type_accumulator_rate_and_increment_list(self):
+        I = IntegratorMechanism(
+            default_variable=[0, 0, 0],
+            name='IntegratorMechanism',
+            function=AccumulatorIntegrator(
+                rate = [1.0, 2.0, 3.0],
+                increment=[4.0, 5.0, 6.0]
+            )
+        )
+        # P = Process(pathway=[I])
+        list(I.execute([10.0, 10.0, 10.0])[0])
+        val = list(I.execute([10.0, 10.0, 10.0])[0])
+        assert val == [8.0, 15.0, 24.0]
+
 
     # rate = list, integration_type = diffusion
 
@@ -933,6 +972,8 @@ class TestIntegratorRate:
 
     # INVALID RATE:
 
+    # rate = list, execute float, integration_type = simple
+
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_integrator_type_simple_rate_list_input_float(self):
@@ -940,7 +981,6 @@ class TestIntegratorRate:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
                 function=SimpleIntegrator(
-
                     rate=[5.0, 5.0, 5.0]
                 )
             )
@@ -950,23 +990,24 @@ class TestIntegratorRate:
             "is not compatible with the variable format" in str(error_text)
             and "to which it is being assigned" in str(error_text)
         )
+
+    # rate = list len 2, incrment = list len 3, integration_type = accumulator
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_type_constant_rate_list_input_float(self):
-        with pytest.raises(ComponentError) as error_text:
+    def test_integrator_type_accumulator_increment_list_input_float(self):
+        with pytest.raises(FunctionError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
-                function=ConstantIntegrator(
-                    rate=[5.0, 5.0, 5.0]
-                )
-            )
-            # P = Process(pathway=[I])
-            float(I.execute(10.0))
+                function=AccumulatorIntegrator(
+                    rate=[1.0, 2.0],
+                    increment=[3.0, 4.0, 5.0]
+                ))
         assert (
-            "is not compatible with the variable format" in str(error_text)
-            and "to which it is being assigned" in str(error_text)
+            "args are both specified as lists or arrays for" in str(error_text)
+            and "respectively) must be the same" in str(error_text)
         )
+
 
     # @pytest.mark.mechanism
     # @pytest.mark.integrator_mechanism
@@ -1011,6 +1052,7 @@ class TestIntegratorRate:
     #     assert (val, val2) == (51, 256)
 
 
+# ======================================= NOISE TESTS ============================================
 class TestIntegratorNoise:
 
     @pytest.mark.mechanism
@@ -1074,35 +1116,6 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
         np.testing.assert_allclose(val, [0.44386323, 0.33367433, 1.49407907, -0.20515826])
-
-    @pytest.mark.mechanism
-    @pytest.mark.integrator_mechanism
-    def test_integrator_constant_noise_fn(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                noise=NormalDist()
-            ),
-        )
-
-        val = float(I.execute(10))
-
-        np.testing.assert_allclose(val, 0.9500884175255894)
-
-    @pytest.mark.mechanism
-    @pytest.mark.integrator_mechanism
-    def test_integrator_constant_noise_fn_var_list(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            default_variable=[0, 0, 0, 0],
-            function=ConstantIntegrator(
-                noise=NormalDist(),
-            ),
-        )
-
-        val = I.execute([10, 10, 10, 10])[0]
-
-        np.testing.assert_allclose(val, [0.33367433, 1.49407907, -0.20515826, 0.3130677])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism

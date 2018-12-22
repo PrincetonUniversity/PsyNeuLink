@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="py.test" name="pytest for test_transfer_mechanism.TestTransferMechanismTimeConstant.test_transfer_mech_integration_rate_2" nameIsGenerated="true" singleton="true" type="tests">
-    <module name="" />
+  <configuration default="false" name="pytest for test_integrator_mechanism.TestIntegratorRate.test_integrator_type_accumulator_increment_list_input_float" type="tests" factoryName="py.test" singleton="false" nameIsGenerated="true">
+    <module name="PsyNeuLink (Dropbox)" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <option name="SDK_HOME" value="" />
@@ -11,7 +11,7 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;-n 0&quot;" />
-    <option name="_new_target" value="&quot;test_transfer_mechanism.TestTransferMechanismTimeConstant.test_transfer_mech_integration_rate_2&quot;" />
+    <option name="_new_target" value="&quot;test_integrator_mechanism.TestIntegratorRate.test_integrator_type_accumulator_increment_list_input_float&quot;" />
     <option name="_new_targetType" value="&quot;PYTHON&quot;" />
     <method v="2" />
   </configuration>

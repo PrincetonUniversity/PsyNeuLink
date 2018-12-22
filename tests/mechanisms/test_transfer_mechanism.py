@@ -4,7 +4,7 @@ import pytest
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import ConstantIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
@@ -586,7 +586,7 @@ class TestTransferMechanismFunctions:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
-                function=ConstantIntegrator(),
+                function=AccumulatorIntegrator(),
                 integration_rate=1.0,
                 integrator_mode=True
             )
