@@ -567,6 +567,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         self._accumulator_check_args(variable, execution_id=execution_id, params=params, context=context)
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING
+                and variable is not None
                 and variable is not self.instance_defaults.variable):
             owner_str = ' by {}'.format(self.owner.name) if self.owner else ''
             warnings.warn("{} does not use its variable;  value passed{} ({}) will be ignored".
