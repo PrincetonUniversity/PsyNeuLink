@@ -1,9 +1,12 @@
 import numpy as np
 
-from psyneulink.core.components.process import Process
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.globals.keywords import MATRIX
 
 class TestAccumulator():
 
@@ -163,23 +166,29 @@ class TestAccumulator():
             for j in range(len(val[i])):
                 assert np.allclose(expected_val[i][j], val[i][j])
 
-    # def test_accumulator_as_function_of_processing_mech(self):
-    #
-    #     P = ProcessingMechanism(function=AccumulatorIntegrator(default_variable=[[0.0]],
-    #                                             initializer=[0.0],
-    #                                             history=3))
-    #     val = P.execute(1.0)
-    #
-    #     # assert np.allclose(val, [[0., 1.]])
-    #     print(val, [[0., 1.]])
+    def test_accumulator_as_function_of_processing_mech(self):
 
-    # def test_accumulator_as_function_of_matrix_param_of_mapping_projection(self):
-    #
-    #     T1 = TransferMechanism(size=3)
-    #     T2 = TransferMechanism(size=3)
-    #     M = MappingProjection()
-    #     P = Process(pathway=[T1, M, T2])
-    #     val = P.execute(1.0)
-    #
-    #     # assert np.allclose(val, [[0., 1.]])
-    #     print(val, [[0., 1.]])
+        P = ProcessingMechanism(function=AccumulatorIntegrator(initializer=[0.0],
+                                                               rate=.02,
+                                                               increment=1))
+        P.execute(1.0)
+        P.execute(1.0)
+        val = P.execute(1.0)
+        assert np.allclose(val, [[1.0204]])
+
+    def test_accumulator_as_function_of_matrix_param_of_mapping_projection(self):
+        # Test that accumulator is function of parameter_state of mapping project,
+        # and that its increment param works properly (used as modulatory param by LearningProjetion)
+
+        T1 = TransferMechanism(size=3)
+        T2 = TransferMechanism(size=3)
+        M = MappingProjection(sender=T1, receiver=T2)
+        C = Composition()
+        C.add_linear_processing_pathway([T1, M, T2])
+        C.run(inputs={T1: [1.0, 1.0, 1.0]})
+        assert np.allclose(M.matrix, [[ 1.,  0.,  0.], [ 0.,  1.,  0.],[ 0.,  0.,  1.]])
+        M.parameter_states[MATRIX].function._increment=2
+        C.run(inputs={T1: [1.0, 1.0, 1.0]})
+        assert np.allclose(M.matrix, [[ 3.,  2.,  2.], [ 2.,  3.,  2.], [ 2.,  2.,  3.]])
+        C.run(inputs={T1: [1.0, 1.0, 1.0]})
+        assert np.allclose(M.matrix, [[ 5.,  4.,  4.], [ 4.,  5.,  4.], [ 4.,  4.,  5.]])
