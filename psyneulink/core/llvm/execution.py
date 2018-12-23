@@ -186,7 +186,6 @@ class CompExecution(CUDAExecution):
         super().__init__(buffers=['context_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self.__frozen_vals = None
-        self.__conds = None
         self._execution_ids = execution_ids
         self._bin_func = None
 
@@ -214,20 +213,26 @@ class CompExecution(CUDAExecution):
             self.__context_struct = c_context(*ctx_initializer)
             self.__param_struct = c_param(*par_initializer)
             self.__data_struct = c_data(*data_initializer)
+            self.__conds = None
 
     @property
     def _conditions(self):
-        if self.__conds is None:
-            bin_exec = self._composition._get_bin_execution()
-            gen = helpers.ConditionGenerator(None, self._composition)
-            if len(self._execution_ids) > 1:
-                cond_type = bin_exec.byref_arg_types[4] * len(self._execution_ids)
+        if len(self._execution_ids) > 1:
+            if self.__conds is None:
+                cond_type = self._bin_func.byref_arg_types[4] * len(self._execution_ids)
+                gen = helpers.ConditionGenerator(None, self._composition)
                 cond_initializer = (gen.get_condition_initializer() for _ in self._execution_ids)
-            else:
-                cond_type = bin_exec.byref_arg_types[4]
-                cond_initializer = gen.get_condition_initializer()
-            self.__conds = cond_type(*cond_initializer)
-        return self.__conds
+                self.__conds = cond_type(*cond_initializer)
+            return self.__conds
+
+        conds = self._composition._compilation_data.scheduler_conditions.get(self._execution_ids[0])
+        if conds is None:
+            cond_type = self._bin_func.byref_arg_types[4]
+            gen = helpers.ConditionGenerator(None, self._composition)
+            cond_initializer = gen.get_condition_initializer()
+            conds = cond_type(*cond_initializer)
+            self._composition._compilation_data.scheduler_conditions.set(conds, execution_context=self._execution_ids[0])
+        return conds
 
     def _get_compilation_param(self, name, initializer, arg, execution_id):
         param = getattr(self._composition._compilation_data, name)

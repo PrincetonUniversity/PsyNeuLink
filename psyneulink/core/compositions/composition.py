@@ -441,6 +441,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         parameter_struct = None
         context_struct = None
         data_struct = None
+        scheduler_conditions = None
 
     def __init__(
         self,
@@ -3637,6 +3638,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._compilation_data.parameter_struct.set(None, execution_context)
         self._compilation_data.context_struct.set(None, execution_context)
         self._compilation_data.data_struct.set(None, execution_context)
+        self._compilation_data.scheduler_conditions.set(None, execution_context)
 
     def __bin_initialize(self, execution_id=None):
         if self._compilation_data.execution.get(execution_id) is None:
