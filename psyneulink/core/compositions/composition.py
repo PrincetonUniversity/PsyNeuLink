@@ -2999,8 +2999,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if bin_execute:
             try:
-                self.__bin_initialize(execution_id)
                 if str(bin_execute).endswith('Exec'):
+                    self.__bin_initialize(execution_id)
                     __execution = self._compilation_data.execution.get(execution_id)
                     if bin_execute.startswith('LLVM'):
                         __execution.execute(inputs)
@@ -3027,7 +3027,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 bin_execute = False
 
         if bin_execute:
-            self._compilation_data.execution.get(execution_id).execute_node(self.input_CIM, inputs, execution_id=execution_id)
+            _comp_ex = pnlvm.CompExecution(self, [execution_id])
+            _comp_ex.execute_node(self.input_CIM, inputs)
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, execution_context=execution_id)
@@ -3051,7 +3052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             frozen_values = {}
             new_values = {}
             if bin_execute:
-                self._compilation_data.execution.get(execution_id).freeze_values()
+                _comp_ex.freeze_values()
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
@@ -3090,7 +3091,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
                     if bin_execute:
-                        self._compilation_data.execution.get(execution_id).execute_node(node)
+                        _comp_ex.execute_node(node)
                         node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
                     else:
                         if node is not self.model_based_optimizer:
@@ -3122,7 +3123,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
                         for src_node in srcs:
                             assert src_node in self.c_nodes or src_node is self.input_CIM
-                            data = self._compilation_data.execution.get(execution_id).extract_frozen_node_output(src_node)
+                            data = _comp_ex.extract_frozen_node_output(src_node)
                             for i, v in enumerate(data):
                                 #This sets frozen values
                                 src_node.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
@@ -3143,7 +3144,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      context=ContextFlags.COMPOSITION)
                     if bin_execute:
                         # Update result in binary data structure
-                        self._compilation_data.execution.get(execution_id).insert_node_output(node, ret)
+                        _comp_ex.insert_node_output(node, ret)
                         for i, v in enumerate(ret):
                             # Set current output. This will be stored to "new_values" below
                             node.output_CIM.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
@@ -3172,11 +3173,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # extract result here
         if bin_execute:
-            __execution = self._compilation_data.execution.get(execution_id)
-            __execution.freeze_values()
-            __execution.execute_node(self.output_CIM)
-
-            return __execution.extract_node_output(self.output_CIM)
+            _comp_ex.freeze_values()
+            _comp_ex.execute_node(self.output_CIM)
+            return _comp_ex.extract_node_output(self.output_CIM)
 
         # control phase
         execution_phase = self.parameters.context.get(execution_id).execution_phase
