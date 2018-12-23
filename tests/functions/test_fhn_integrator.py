@@ -91,7 +91,6 @@ def test_llvm(func, variable, integration_method, params, expected, benchmark):
 @pytest.mark.fitzHughNagumo_integrator_function
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
 @pytest.mark.benchmark(group="FitzHughNagumoIntegrator")
-@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_cuda_ptx(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
 

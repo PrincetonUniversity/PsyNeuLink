@@ -17,7 +17,7 @@ vector = np.random.rand(DIM_X)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"))])
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_helper_fclamp(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
@@ -62,7 +62,7 @@ def test_helper_fclamp(mode):
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"))])
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_helper_fclamp_const(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
