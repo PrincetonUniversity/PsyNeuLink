@@ -276,7 +276,6 @@ def test_linear_combination_function_in_mechanism_llvm(operation, input, size, i
 @pytest.mark.combination_function
 @pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
 @pytest.mark.benchmark
-@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_linear_combination_function_in_mechanism_ptx_cuda(operation, input, size, input_states, scale, offset, expected, benchmark):
     f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)

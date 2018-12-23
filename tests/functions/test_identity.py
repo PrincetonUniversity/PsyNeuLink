@@ -33,7 +33,6 @@ def test_llvm(size, benchmark):
 @pytest.mark.identity_function
 @pytest.mark.parametrize("size", [1, 2, 4, 8, 16])
 @pytest.mark.benchmark(group="IdentityFunction")
-@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_ptx_cuda(size, benchmark):
     variable = np.random.rand(size)
     f = Functions.Identity(default_variable=variable)

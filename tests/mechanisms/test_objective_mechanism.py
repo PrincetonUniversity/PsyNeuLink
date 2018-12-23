@@ -13,8 +13,8 @@ class TestObjectiveMechanism:
     @pytest.mark.objective_mechanism
     @pytest.mark.benchmark(group="ObjectiveMechanism")
     @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm]),
-                                      pytest.param('PTX', marks=[pytest.mark.cuda, pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")])])
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_objective_mech_inputs_list_of_ints(self, benchmark, mode):
 
         O = ObjectiveMechanism(

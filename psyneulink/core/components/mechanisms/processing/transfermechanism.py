@@ -354,7 +354,6 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.llvm import helpers
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator

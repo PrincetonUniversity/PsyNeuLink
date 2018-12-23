@@ -868,6 +868,10 @@ class Component(object, metaclass=ComponentsMeta):
         'init_args'
     ])
 
+    class _CompilationData(Parameters):
+        parameter_struct = None
+        context_struct = None
+
     def __init__(self,
                  default_variable,
                  param_defaults,
@@ -1089,6 +1093,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         self.__llvm_function_name = None
         self.__llvm_bin_function = None
+        self._compilation_data = self._CompilationData(owner=self)
 
     @property
     def _llvm_symbol_name(self):

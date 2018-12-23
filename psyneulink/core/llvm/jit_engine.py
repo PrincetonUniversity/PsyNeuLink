@@ -119,7 +119,8 @@ def _ptx_jit_constructor():
 
 def _try_parse_module(module):
     if "llvm" in debug_env:
-        print(module)
+        with open(module.name + '.parse.ll', 'w') as dump_file:
+            dump_file.write(str(module))
 
     # IR module is not the same as binding module.
     # "assembly" in this case is LLVM IR assembly.
@@ -153,12 +154,13 @@ class jit_engine:
     def opt_and_add_bin_module(self, module):
         self._pass_manager.run(module)
         if "opt" in self.__debug_env:
-            print(module)
+            with open(self.__class__.__name__ + '-' + str(self.__opt_modules) + '.opt.ll', 'w') as dump_file:
+                dump_file.write(str(module))
 
         # This prints generated x86 assembly
         if "isa" in self.__debug_env:
-            print("ISA assembly:")
-            print(self._target_machine.emit_assembly(module))
+            with open(self.__class__.__name__ + '-' + str(self.__opt_modules) + '.S', 'w') as dump_file:
+                dump_file.write(self._target_machine.emit_assembly(module))
 
         self._engine.add_module(module)
         self._engine.finalize_object()
@@ -168,12 +170,17 @@ class jit_engine:
         self._engine.remove_module(module)
 
     def opt_and_append_bin_module(self, module):
+        mod_name = module.name
         if self.__mod is None:
             self.__mod = module
         else:
             self._remove_bin_module(self.__mod)
             # Linking here invalidates 'module'
             self.__mod.link_in(module)
+
+        if "llvm" in debug_env:
+            with open(mod_name + '.linked.ll', 'w') as dump_file:
+                dump_file.write(str(self.__mod))
 
         self.opt_and_add_bin_module(self.__mod)
 
@@ -201,6 +208,7 @@ class jit_engine:
             new_mod = _try_parse_module(m)
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
+                mod_bundle.name = m.name # Set the name of the last module
                 compiled_modules.add(m)
 
         self.opt_and_append_bin_module(mod_bundle)

@@ -29,6 +29,11 @@ def pytest_runtest_setup(item):
         if getattr(item.obj, m, None) and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
 
+    if 'cuda' in item.keywords:
+        from psyneulink.core.llvm import ptx_enabled
+        if not ptx_enabled:
+            pytest.skip('PTX engine not enabled/available')
+
     doctest.ELLIPSIS_MARKER = "[...]"
 
 

@@ -76,7 +76,6 @@ def test_llvm(func, variable, params, fail, expected, benchmark):
 @pytest.mark.transfer_function
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
-@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_ptx_cuda(func, variable, params, fail, expected, benchmark):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName;
