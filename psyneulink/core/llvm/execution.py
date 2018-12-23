@@ -315,32 +315,6 @@ class CompExecution(CUDAExecution):
 
         return c_input(*_tupleize(input_data))
 
-    def _get_run_input_struct(self, inputs, num_input_sets):
-        origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        input_type = self._composition._get_bin_run().byref_arg_types[3]
-        c_input = input_type * num_input_sets
-        if len(self._execution_ids) > 1:
-            c_input = c_input * len(self._execution_ids)
-            run_inputs = []
-            for inp in inputs:
-                run_inps = []
-                # Extract inputs for each trial
-                for i in range(num_input_sets):
-                    run_inps.append([])
-                    for m in origins:
-                        run_inps[i] += [[v] for v in inp[m][i]]
-                run_inputs.append(run_inps)
-
-        else:
-            run_inputs = []
-            # Extract inputs for each trial
-            for i in range(num_input_sets):
-                run_inputs.append([])
-                for m in origins:
-                    run_inputs[i] += [[v] for v in inputs[m][i]]
-
-        return c_input(*_tupleize(run_inputs))
-
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self._data_struct)
 
@@ -372,17 +346,6 @@ class CompExecution(CUDAExecution):
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self._data_struct, self._conditions)
 
-    def run(self, inputs, runs, num_input_sets):
-        self._bin_func = self._composition._get_bin_run()
-        inputs = self._get_run_input_struct(inputs, num_input_sets)
-        outputs = (self._bin_func.byref_arg_types[4] * runs)()
-        runs_count = ctypes.c_int(runs)
-        input_count = ctypes.c_int(num_input_sets)
-        self._bin_func.wrap_call(self._context_struct, self._param_struct,
-                          self._data_struct, inputs, outputs, runs_count,
-                          input_count)
-        return _convert_ctype_to_python(outputs)
-
     def cuda_execute(self, inputs):
         self._bin_func = self._composition._get_bin_execution()
         # Create input buffer
@@ -398,6 +361,45 @@ class CompExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             vo_ty = vo_ty * len(self._execution_ids)
         self._data_struct = self.download_ctype(self._cuda_data_struct, vo_ty)
+
+    # Methods used to accelerate "Run"
+
+    def _get_run_input_struct(self, inputs, num_input_sets):
+        origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        input_type = self._composition._get_bin_run().byref_arg_types[3]
+        c_input = input_type * num_input_sets
+        if len(self._execution_ids) > 1:
+            c_input = c_input * len(self._execution_ids)
+            run_inputs = []
+            for inp in inputs:
+                run_inps = []
+                # Extract inputs for each trial
+                for i in range(num_input_sets):
+                    run_inps.append([])
+                    for m in origins:
+                        run_inps[i] += [[v] for v in inp[m][i]]
+                run_inputs.append(run_inps)
+
+        else:
+            run_inputs = []
+            # Extract inputs for each trial
+            for i in range(num_input_sets):
+                run_inputs.append([])
+                for m in origins:
+                    run_inputs[i] += [[v] for v in inputs[m][i]]
+
+        return c_input(*_tupleize(run_inputs))
+
+    def run(self, inputs, runs, num_input_sets):
+        self._bin_func = self._composition._get_bin_run()
+        inputs = self._get_run_input_struct(inputs, num_input_sets)
+        outputs = (self._bin_func.byref_arg_types[4] * runs)()
+        runs_count = ctypes.c_int(runs)
+        input_count = ctypes.c_int(num_input_sets)
+        self._bin_func.wrap_call(self._context_struct, self._param_struct,
+                          self._data_struct, inputs, outputs, runs_count,
+                          input_count)
+        return _convert_ctype_to_python(outputs)
 
     def cuda_run(self, inputs, runs, num_input_sets):
         self._bin_func = self._composition._get_bin_run()
