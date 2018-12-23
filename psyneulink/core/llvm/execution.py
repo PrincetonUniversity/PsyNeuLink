@@ -138,7 +138,7 @@ class FuncExecution(CUDAExecution):
             initializer = getattr(self._component, initializer)(execution_id)
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
-            param.set(struct, execution_id=execution_id)
+            param.set(struct, execution_context=execution_id)
 
         return struct
 
