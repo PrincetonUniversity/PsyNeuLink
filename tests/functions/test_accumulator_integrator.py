@@ -8,6 +8,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.keywords import MATRIX
 
+
 class TestAccumulator():
 
     def test_accumulator_standalone(self):
