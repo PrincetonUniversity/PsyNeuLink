@@ -195,14 +195,14 @@ class CompExecution(CUDAExecution):
             input_cim_fn_name = composition._get_node_wrapper(composition.input_CIM)
             input_cim_fn = ctx.get_llvm_function(input_cim_fn_name)
 
-        # Input structures
-        # TODO: Use the compiled version to get these
-        c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
-        c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
-        c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
-
         # TODO: Consolidate these
         if len(execution_ids) > 1:
+            # Input structures
+            # TODO: Use the compiled version to get these
+            c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
+            c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
+            c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
+
             c_context = c_context * len(execution_ids)
             c_param = c_param * len(execution_ids)
             c_data = c_data * len(execution_ids)
@@ -210,15 +210,10 @@ class CompExecution(CUDAExecution):
             ctx_initializer = (composition._get_context_initializer(ex_id) for ex_id in execution_ids)
             par_initializer = (composition._get_param_initializer(ex_id) for ex_id in execution_ids)
             data_initializer = (composition._get_data_initializer(ex_id) for ex_id in execution_ids)
-        else:
-            ctx_initializer = composition._get_context_initializer(execution_ids[0])
-            par_initializer = composition._get_param_initializer(execution_ids[0])
-            data_initializer = composition._get_data_initializer(execution_ids[0])
-
-        # Instantiate structures
-        self._context_struct = c_context(*ctx_initializer)
-        self._param_struct = c_param(*par_initializer)
-        self._data_struct = c_data(*data_initializer)
+            # Instantiate structures
+            self.__context_struct = c_context(*ctx_initializer)
+            self.__param_struct = c_param(*par_initializer)
+            self.__data_struct = c_data(*data_initializer)
 
     @property
     def _conditions(self):
@@ -233,6 +228,48 @@ class CompExecution(CUDAExecution):
                 cond_initializer = gen.get_condition_initializer()
             self.__conds = cond_type(*cond_initializer)
         return self.__conds
+
+    def _get_compilation_param(self, name, initializer, arg, execution_id):
+        param = getattr(self._composition._compilation_data, name)
+        struct = param.get(execution_id)
+        if struct is None:
+            initializer = getattr(self._composition, initializer)(execution_id)
+            struct_ty = self._bin_func.byref_arg_types[arg]
+            struct = struct_ty(*initializer)
+            param.set(struct, execution_context=execution_id)
+
+        return struct
+
+    @property
+    def _param_struct(self):
+        if len(self._execution_ids) > 1:
+            return self.__param_struct
+
+        return self._get_compilation_param('parameter_struct', '_get_param_initializer', 1, self._execution_ids[0])
+
+    @property
+    def _context_struct(self):
+        if len(self._execution_ids) > 1:
+            return self.__context_struct
+
+        return self._get_compilation_param('context_struct', '_get_context_initializer', 0, self._execution_ids[0])
+
+    @property
+    def _data_struct(self):
+        if len(self._execution_ids) > 1:
+            return self.__data_struct
+
+        # Run wrapper changed argument order
+        arg = 2 if len(self._bin_func.byref_arg_types) > 5 else 3
+
+        return self._get_compilation_param('data_struct', '_get_data_initializer', arg, self._execution_ids[0])
+
+    @_data_struct.setter
+    def _data_struct(self, data_struct):
+        if len(self._execution_ids) > 1:
+            self.__data_struct = data_struct
+        else:
+            self._composition._compilation_data.data_struct.set(data_struct, execution_context = self._execution_ids[0])
 
     def extract_frozen_node_output(self, node):
         return self._extract_node_output(node, self.__frozen_vals)

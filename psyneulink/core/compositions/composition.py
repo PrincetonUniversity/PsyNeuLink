@@ -438,6 +438,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     class _CompilationData(Parameters):
         execution = None
+        parameter_struct = None
+        context_struct = None
+        data_struct = None
 
     def __init__(
         self,
@@ -3631,6 +3634,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_context = self.default_execution_id
 
         self._compilation_data.execution.set(None, execution_context)
+        self._compilation_data.parameter_struct.set(None, execution_context)
+        self._compilation_data.context_struct.set(None, execution_context)
+        self._compilation_data.data_struct.set(None, execution_context)
 
     def __bin_initialize(self, execution_id=None):
         if self._compilation_data.execution.get(execution_id) is None:
