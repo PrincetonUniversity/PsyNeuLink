@@ -3001,13 +3001,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute:
             try:
                 if str(bin_execute).endswith('Exec'):
-                    self.__bin_initialize(execution_id)
-                    __execution = self._compilation_data.execution.get(execution_id)
                     if bin_execute.startswith('LLVM'):
-                        __execution.execute(inputs)
+                        _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                        _comp_ex.execute(inputs)
+                        return _comp_ex.extract_node_output(self.output_CIM)
                     elif bin_execute.startswith('PTX'):
+                        self.__bin_initialize(execution_id)
+                        __execution = self._compilation_data.execution.get(execution_id)
                         __execution.cuda_execute(inputs)
-                    return __execution.extract_node_output(self.output_CIM)
+                        return __execution.extract_node_output(self.output_CIM)
 
                 # Filter out mechanisms. Nested nodes are not executed in this mode
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
