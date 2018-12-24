@@ -3381,11 +3381,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
-            self.__bin_initialize(execution_id)
-            EX = self._compilation_data.execution.get(execution_id)
             if bin_execute.startswith('LLVM'):
-                results += EX.run(inputs, num_trials, num_inputs_sets)
+                _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
             elif bin_execute.startswith('PTX'):
+                self.__bin_initialize(execution_id)
+                EX = self._compilation_data.execution.get(execution_id)
                 results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
             full_results = self.parameters.results.get(execution_id)
