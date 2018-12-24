@@ -437,7 +437,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         simulation_results = Param([], loggable=False)
 
     class _CompilationData(Parameters):
-        execution = None
+        ptx_execution = None
         parameter_struct = None
         context_struct = None
         data_struct = None
@@ -3001,13 +3001,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute:
             try:
                 if str(bin_execute).endswith('Exec'):
-                    self.__bin_initialize(execution_id)
-                    __execution = self._compilation_data.execution.get(execution_id)
                     if bin_execute.startswith('LLVM'):
-                        __execution.execute(inputs)
+                        _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                        _comp_ex.execute(inputs)
+                        return _comp_ex.extract_node_output(self.output_CIM)
                     elif bin_execute.startswith('PTX'):
+                        self.__ptx_initialize(execution_id)
+                        __execution = self._compilation_data.ptx_execution.get(execution_id)
                         __execution.cuda_execute(inputs)
-                    return __execution.extract_node_output(self.output_CIM)
+                        return __execution.extract_node_output(self.output_CIM)
 
                 # Filter out mechanisms. Nested nodes are not executed in this mode
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
@@ -3379,11 +3381,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
-            self.__bin_initialize(execution_id)
-            EX = self._compilation_data.execution.get(execution_id)
             if bin_execute.startswith('LLVM'):
-                results += EX.run(inputs, num_trials, num_inputs_sets)
+                _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
             elif bin_execute.startswith('PTX'):
+                self.__ptx_initialize(execution_id)
+                EX = self._compilation_data.ptx_execution.get(execution_id)
                 results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
             full_results = self.parameters.results.get(execution_id)
@@ -3634,15 +3637,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_context is NotImplemented:
             execution_context = self.default_execution_id
 
-        self._compilation_data.execution.set(None, execution_context)
+        self._compilation_data.ptx_execution.set(None, execution_context)
         self._compilation_data.parameter_struct.set(None, execution_context)
         self._compilation_data.context_struct.set(None, execution_context)
         self._compilation_data.data_struct.set(None, execution_context)
         self._compilation_data.scheduler_conditions.set(None, execution_context)
 
-    def __bin_initialize(self, execution_id=None):
-        if self._compilation_data.execution.get(execution_id) is None:
-            self._compilation_data.execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
+    def __ptx_initialize(self, execution_id=None):
+        if self._compilation_data.ptx_execution.get(execution_id) is None:
+            self._compilation_data.ptx_execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
         is_mech = isinstance(node, Mechanism)

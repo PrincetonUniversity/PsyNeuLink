@@ -101,7 +101,8 @@ class CUDAExecution:
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_context_struct,
-                                 data_in, self._cuda_out_buf, threads=len(self._execution_ids))
+                                 data_in, self._cuda_out_buf,
+                                 threads=len(self._execution_ids))
 
         # Copy the result from the device
         vo_ty = self._bin_func.byref_arg_types[3]
