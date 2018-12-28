@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.4.8.0+1114.gc7210a7 documentation</title>
+  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.4.8.0+1115.gc2e0e47 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1114.gc7210a7 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1115.gc2e0e47 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+1114
+                0.4.8.0+1115
               </div>
             
           
@@ -205,26 +205,26 @@ value, the other one set to zero), and assigned a <a class="reference internal" 
 <p><strong>COLOR HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two colors, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two words, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>TASK DEMAND LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two tasks, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value. A second output state is specified that computes the conflict between the two task
 units.</p>
 <p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong>=2 (one element for each of the two responses, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong>=4.0 and <strong>bias</strong>=1.0. The <strong>integrator_mode</strong>=<code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong>=0.03. Both units receive mutually inhibitory weights (<strong>hetero</strong>=-2). A python function that
-sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the  network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
@@ -290,7 +290,7 @@ and the response layer. These values are used to produce the plot of the Figure.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1114.gc7210a7',
+            VERSION:'0.4.8.0+1115.gc2e0e47',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

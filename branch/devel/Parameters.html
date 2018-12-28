@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.4.8.0+1114.gc7210a7 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.4.8.0+1115.gc2e0e47 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1114.gc7210a7 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1115.gc2e0e47 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+1114
+                0.4.8.0+1115
               </div>
             
           
@@ -194,8 +194,13 @@ is likely to be a Composition:</p>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
 <span class="go">[[array([5.])]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="go">[[5.]]</span>
+
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
 <span class="go">[[array([10.])]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="go">[[10.]]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
 <span class="go">[[5.]]</span>
@@ -206,6 +211,12 @@ is likely to be a Composition:</p>
 <p>The TransferMechanism in the above snippet has a different <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for each Composition it is run in. This holds
 true for all of its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.stateful_parameters" title="psyneulink.core.components.component.Component.stateful_parameters"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span> <span class="pre">Params</span></code></a>, so they can behave differently in different execution contexts
 and be modulated during <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">control</span></a>.</p>
+<div class="admonition note" id="parameter-dot-notation">
+<p class="first admonition-title">Note</p>
+<p class="last">The “dot notation” version - <code class="docutils literal"><span class="pre">t.value</span></code> - refers to the most recent execution context in which <em>t</em> was executed. In
+many cases, you can use this to get or set using the execution context you’d expect. However, in complex situations,
+if there is doubt, it is best to explicitly specify the execution context.</p>
+</div>
 <div class="section" id="for-developers">
 <h3>For Developers<a class="headerlink" href="#for-developers" title="Permalink to this headline">¶</a></h3>
 <p>Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a <a class="reference internal" href="Run.html#run-overview"><span class="std std-ref">run</span></a>
@@ -298,6 +309,7 @@ PNL methods. The most likely place this will come up would be for the <em>functi
 <a class="reference internal" href="Components.html"><span class="doc">Components</span></a>. Any getting and setting of stateful parameter values must use this <em>execution_id</em>, and using standard attributes to store data
 must be avoided at risk of causing computation errors. You may use standard attributes only when their values will never change during a
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">Run</span></code></a>.</p>
+<p>You should avoid using <a class="reference internal" href="#parameter-dot-notation"><span class="std std-ref">dot notation</span></a> in internal code, as it is ambiguous and can potentially break statefulness.</p>
 <p id="param-attributes-table"><a class="reference internal" href="#psyneulink.core.globals.parameters.Param" title="psyneulink.core.globals.parameters.Param"><code class="xref any py py-class docutils literal"><span class="pre">Param</span></code></a> <strong>attributes</strong>:</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -791,7 +803,7 @@ If no execution_context is specified, attributes on the associated <a class="ref
 
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Param.set">
-<code class="descname">set</code><span class="sig-paren">(</span><em>value</em>, <em>execution_context=None</em>, <em>override=False</em>, <em>skip_history=False</em>, <em>skip_log=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Param.set" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set</code><span class="sig-paren">(</span><em>value</em>, <em>execution_context=None</em>, <em>override=False</em>, <em>skip_history=False</em>, <em>skip_log=False</em>, <em>_ro_warning_stacklevel=2</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Param.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the value of this <a class="reference internal" href="#psyneulink.core.globals.parameters.Param" title="psyneulink.core.globals.parameters.Param"><code class="xref any py py-class docutils literal"><span class="pre">Param</span></code></a> in the context of <strong>execution_context</strong>
 If no execution_context is specified, attributes on the associated <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> will be used</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -870,7 +882,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1114.gc7210a7',
+            VERSION:'0.4.8.0+1115.gc2e0e47',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
