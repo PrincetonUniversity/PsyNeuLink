@@ -466,7 +466,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import EXPONENT, FEATURE_INPUT_STATE, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SIZE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible
@@ -675,7 +675,7 @@ class FeatureInputState(InputState):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
-    class Params(State_Base.Params):
+    class Parameters(State_Base.Parameters):
         """
             Attributes
             ----------
@@ -705,11 +705,11 @@ class FeatureInputState(InputState):
                     :type:
 
         """
-        function = Param(LinearCombination(operation=SUM), stateful=False, loggable=False)
-        weight = Param(None, modulable=True)
-        exponent = Param(None, modulable=True)
+        function = Parameter(LinearCombination(operation=SUM), stateful=False, loggable=False)
+        weight = Parameter(None, modulable=True)
+        exponent = Parameter(None, modulable=True)
         combine = None
-        internal_only = Param(False, stateful=False, loggable=False)
+        internal_only = Parameter(False, stateful=False, loggable=False)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,

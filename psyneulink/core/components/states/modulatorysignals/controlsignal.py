@@ -321,7 +321,7 @@ from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
-from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
+from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
@@ -620,7 +620,7 @@ class ControlSignal(ModulatorySignal):
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
-    class Params(ModulatorySignal.Params):
+    class Parameters(ModulatorySignal.Parameters):
         """
             Attributes
             ----------
@@ -700,11 +700,11 @@ class ControlSignal(ModulatorySignal):
 
         """
         # NOTE: if the specification of this getter is happening in several other classes, should consider
-        # refactoring Param to allow individual attributes to be inherited, othwerise, leaving this is an
+        # refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an
         # isolated case
-        variable = Param(np.array(defaultControlAllocation), aliases='allocation', getter=_output_state_variable_getter)
-        value = Param(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'])
-        allocation_samples = Param(np.arange(0.1, 1.01, 0.3), modulable=True)
+        variable = Parameter(np.array(defaultControlAllocation), aliases='allocation', getter=_output_state_variable_getter)
+        value = Parameter(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'])
+        allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
         cost_options = ControlSignalCosts.DEFAULTS
 
         intensity_cost = None
@@ -770,7 +770,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Params.allocation_samples.default_value,
+                 allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Parameters.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,

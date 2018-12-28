@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR, kwPreferenceSetName, MIN_VAL, \
     MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
@@ -211,7 +211,7 @@ class OneHot(SelectionFunction):
         PARAMETER_STATE_PARAMS: None
     })
 
-    class Params(SelectionFunction.Params):
+    class Parameters(SelectionFunction.Parameters):
         """
             Attributes
             ----------
@@ -223,7 +223,7 @@ class OneHot(SelectionFunction):
                     :type: str
 
         """
-        mode = Param(MAX_VAL, stateful=False)
+        mode = Parameter(MAX_VAL, stateful=False)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,

@@ -753,7 +753,7 @@ def run(obj,
         a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
         phase of execution <System_Execution_Learning>`
 
-    runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
+    runtime_params : Dict[Mechanism: Dict[Parameter: Tuple(Value, Condition)]]
         nested dictionary of (value, `Condition`) tuples for parameters of Mechanisms of the Composition; specifies
         alternate parameter values to be used only during this `Run` when the specified `Condition` is met.
 

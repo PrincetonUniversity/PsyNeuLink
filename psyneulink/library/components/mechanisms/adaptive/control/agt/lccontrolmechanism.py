@@ -280,7 +280,7 @@ from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, PROJECTIONS
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -652,7 +652,7 @@ class LCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(ControlMechanism.Params):
+    class Parameters(ControlMechanism.Parameters):
         """
             Attributes
             ----------
@@ -676,10 +676,10 @@ class LCControlMechanism(ControlMechanism):
                     :type: float
 
         """
-        function = Param(FitzHughNagumoIntegrator, stateful=False, loggable=False)
+        function = Parameter(FitzHughNagumoIntegrator, stateful=False, loggable=False)
 
-        base_level_gain = Param(0.5, modulable=True)
-        scaling_factor_gain = Param(3.0, modulable=True)
+        base_level_gain = Parameter(0.5, modulable=True)
+        scaling_factor_gain = Parameter(3.0, modulable=True)
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:FitzHughNagumoIntegrator,

@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, \
     TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -189,7 +189,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     componentType = INTEGRATOR_FUNCTION_TYPE
     componentName = INTEGRATOR_FUNCTION
 
-    class Params(StatefulFunction.Params):
+    class Parameters(StatefulFunction.Parameters):
         """
             Attributes
             ----------
@@ -207,8 +207,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True)
-        noise = Param(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True)
+        noise = Parameter(0.0, modulable=True)
         previous_value = np.array([0])
         initializer = np.array([0])
 
@@ -415,7 +415,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -433,8 +433,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                     :type:
 
         """
-        rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        increment = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        increment = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -716,7 +716,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -734,8 +734,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -942,7 +942,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         OFFSET: None
     })
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -960,8 +960,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -1388,7 +1388,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
     # multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -1484,17 +1484,17 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     :type: float
 
         """
-        rate = Param(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         initial_short_term_avg = 0.0
         initial_long_term_avg = 0.0
-        short_term_gain = Param(1.0, modulable=True)
-        long_term_gain = Param(1.0, modulable=True)
-        short_term_bias = Param(0.0, modulable=True)
-        long_term_bias = Param(0.0, modulable=True)
-        short_term_rate = Param(0.9, modulable=True)
-        long_term_rate = Param(0.1, modulable=True)
+        short_term_gain = Parameter(1.0, modulable=True)
+        long_term_gain = Parameter(1.0, modulable=True)
+        short_term_bias = Parameter(0.0, modulable=True)
+        long_term_bias = Parameter(0.0, modulable=True)
+        short_term_rate = Parameter(0.9, modulable=True)
+        long_term_rate = Parameter(0.1, modulable=True)
         operation = PRODUCT
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         previous_short_term_avg = None
         previous_long_term_avg = None
         short_term_logistic = None
@@ -1941,7 +1941,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     multiplicative_param = RATE
     # additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -1977,11 +1977,11 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        decay = Param(1.0, modulable=True)
-        rest = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        max_val = Param(1.0)
-        min_val = Param(1.0)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        decay = Parameter(1.0, modulable=True)
+        rest = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        max_val = Parameter(1.0)
+        min_val = Parameter(1.0)
 
     @tc.typecheck
     def __init__(self,
@@ -2315,7 +2315,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -2357,11 +2357,11 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         starting_point = 0.0
-        threshold = Param(100.0, modulable=True)
-        time_step_size = Param(1.0, modulable=True)
+        threshold = Parameter(100.0, modulable=True)
+        time_step_size = Parameter(1.0, modulable=True)
         previous_time = None
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -2666,7 +2666,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -2708,10 +2708,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        decay = Param(1.0, modulable=True)
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Param(1.0, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        decay = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = 0.0
 
@@ -2967,7 +2967,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     componentName = LEAKY_COMPETING_INTEGRATOR_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -2991,9 +2991,9 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Param(0.1, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Parameter(0.1, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -3463,7 +3463,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
     componentName = FITZHUGHNAGUMO_INTEGRATOR_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -3608,25 +3608,25 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        variable = Param(np.array([1.0]), read_only=True)
-        time_step_size = Param(0.05, modulable=True)
-        a_v = Param(1.0 / 3, modulable=True)
-        b_v = Param(0.0, modulable=True)
-        c_v = Param(1.0, modulable=True)
-        d_v = Param(0.0, modulable=True)
-        e_v = Param(-1.0, modulable=True)
-        f_v = Param(1.0, modulable=True)
-        time_constant_v = Param(1.0, modulable=True)
-        a_w = Param(1.0, modulable=True)
-        b_w = Param(-0.8, modulable=True)
-        c_w = Param(0.7, modulable=True)
-        threshold = Param(-1.0, modulable=True)
-        time_constant_w = Param(12.5, modulable=True)
-        mode = Param(1.0, modulable=True)
-        uncorrelated_activity = Param(0.0, modulable=True)
+        variable = Parameter(np.array([1.0]), read_only=True)
+        time_step_size = Parameter(0.05, modulable=True)
+        a_v = Parameter(1.0 / 3, modulable=True)
+        b_v = Parameter(0.0, modulable=True)
+        c_v = Parameter(1.0, modulable=True)
+        d_v = Parameter(0.0, modulable=True)
+        e_v = Parameter(-1.0, modulable=True)
+        f_v = Parameter(1.0, modulable=True)
+        time_constant_v = Parameter(1.0, modulable=True)
+        a_w = Parameter(1.0, modulable=True)
+        b_w = Parameter(-0.8, modulable=True)
+        c_w = Parameter(0.7, modulable=True)
+        threshold = Parameter(-1.0, modulable=True)
+        time_constant_w = Parameter(12.5, modulable=True)
+        mode = Parameter(1.0, modulable=True)
+        uncorrelated_activity = Parameter(0.0, modulable=True)
 
         # FIX: make an integration_method enum class for RK4/EULER
-        integration_method = Param("RK4", stateful=False)
+        integration_method = Parameter("RK4", stateful=False)
 
         initial_w = np.array([1.0])
         initial_v = np.array([1.0])

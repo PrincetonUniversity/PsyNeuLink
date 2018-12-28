@@ -140,7 +140,7 @@ from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, 
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
@@ -311,7 +311,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class Params(ObjectiveMechanism.Params):
+    class Parameters(ObjectiveMechanism.Parameters):
         """
             Attributes
             ----------
@@ -343,8 +343,8 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         """
         # By default, ComparatorMechanism compares two 1D np.array input_states
-        variable = Param(np.array([[0], [0]]), read_only=True)
-        function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
+        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
         sample = None
         target = None
 

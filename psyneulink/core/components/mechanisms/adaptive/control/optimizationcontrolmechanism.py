@@ -415,7 +415,7 @@ from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -624,8 +624,8 @@ class OptimizationControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # FIX: ADD OTHER Params() HERE??
-    class Params(ControlMechanism.Params):
+    # FIX: ADD OTHER Parameters() HERE??
+    class Parameters(ControlMechanism.Parameters):
         """
             Attributes
             ----------
@@ -679,14 +679,14 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
 
         """
-        function = Param(None, stateful=False, loggable=False)
-        feature_function = Param(None, stateful=False, loggable=False)
-        search_function = Param(None, stateful=False, loggable=False)
-        search_termination_function = Param(None, stateful=False, loggable=False)
+        function = Parameter(None, stateful=False, loggable=False)
+        feature_function = Parameter(None, stateful=False, loggable=False)
+        search_function = Parameter(None, stateful=False, loggable=False)
+        search_termination_function = Parameter(None, stateful=False, loggable=False)
 
-        agent_rep = Param(None, stateful=False, loggable=False)
+        agent_rep = Parameter(None, stateful=False, loggable=False)
 
-        feature_values = Param(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
+        feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
 
         features = None
         num_estimates = 1

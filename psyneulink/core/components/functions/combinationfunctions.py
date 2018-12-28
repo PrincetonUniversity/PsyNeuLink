@@ -42,7 +42,7 @@ from psyneulink.core.globals.keywords import PREDICTION_ERROR_DELTA_FUNCTION, CO
     COMBINE_MEANS_FUNCTION, kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
 
@@ -59,7 +59,7 @@ class CombinationFunction(Function_Base):
     """
     componentType = COMBINATION_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -73,7 +73,7 @@ class CombinationFunction(Function_Base):
 
         """
         # variable = np.array([0, 0])
-        variable = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -223,7 +223,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -262,8 +262,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         weights = None
         exponents = None
         operation = SUM
-        scale = Param(1.0, modulable=True)
-        offset = Param(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -607,7 +607,7 @@ class LinearCombination(
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -645,10 +645,10 @@ class LinearCombination(
         """
         operation = SUM
 
-        weights = Param(None, modulable=True)
-        exponents = Param(None, modulable=True)
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        weights = Parameter(None, modulable=True)
+        exponents = Parameter(None, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -1191,7 +1191,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -1230,8 +1230,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         weights = None
         exponents = None
         operation = SUM
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1480,7 +1480,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -1499,7 +1499,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
         """
         variable = np.array([[1], [1]])
-        gamma = Param(1.0, modulable=True)
+        gamma = Parameter(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     multiplicative_param = None

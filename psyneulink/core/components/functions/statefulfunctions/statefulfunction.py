@@ -28,7 +28,7 @@ from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags
@@ -161,7 +161,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     componentType = STATEFUL_FUNCTION_TYPE
     componentName = STATEFUL_FUNCTION
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -191,8 +191,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     :type: float
 
         """
-        noise = Param(0.0, modulable=True)
-        rate = Param(1.0, modulable=True)
+        noise = Parameter(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True)
         previous_value = np.array([0])
         initializer = np.array([0])
 

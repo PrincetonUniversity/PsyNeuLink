@@ -91,7 +91,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -101,7 +101,7 @@ __all__ = [
     'input_state_names', 'output_state_names',
 ]
 
-# Params:
+# Parameters:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
@@ -285,7 +285,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     className = componentType
     suffix = " " + className
 
-    class Params(LearningMechanism.Params):
+    class Parameters(LearningMechanism.Parameters):
         """
             Attributes
             ----------
@@ -309,7 +309,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                     :type: `ModulationParam`
 
         """
-        learning_rate = Param(None, modulable=True)
+        learning_rate = Parameter(None, modulable=True)
         learning_signals = None
         modulation = ModulationParam.ADDITIVE
 

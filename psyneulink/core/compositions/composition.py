@@ -72,7 +72,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
-from psyneulink.core.globals.parameters import Defaults, Param, Parameters
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, CNodeRole, call_with_pruned_args
 from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
@@ -415,7 +415,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
 
-    class Params(Parameters):
+    class Parameters(ParametersBase):
         """
             Attributes
             ----------
@@ -433,10 +433,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :type: list
 
         """
-        results = Param([], loggable=False)
-        simulation_results = Param([], loggable=False)
+        results = Parameter([], loggable=False)
+        simulation_results = Parameter([], loggable=False)
 
-    class _CompilationData(Parameters):
+    class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         context_struct = None
@@ -505,7 +505,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
         self._initialize_parameters()
 
@@ -3288,7 +3288,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sets the values of nodes before the start of the run. This is useful in cases where a node's value is
                 used before that node executes for the first time (usually due to recurrence or control).
 
-            runtime_params : Dict[Node: Dict[Param: Tuple(Value, Condition)]]
+            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
                 `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
                 during this `Run` when the specified `Condition` is met.

@@ -180,10 +180,10 @@ user once the component is constructed, with the one exception of `prefs <Compon
 .. _Component_Parameters:
 
 A Component defines its `parameters <Parameters>` in its *parameters* attribute, which contains a collection of
-`Param` objects, each of which stores a Param's values, `default values <Component.defaults>`, and various
-`properties <Param_Attributes_Table>` of the parameter.
+`Parameter` objects, each of which stores a Parameter's values, `default values <Component.defaults>`, and various
+`properties <Parameter_Attributes_Table>` of the parameter.
 
-* `Params <Component.Params>` - a `Parameters class <Parameters>` defining parameters and their default values that
+* `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values that
     are used for all Components, unless overridden.
 
 * `user_params <Component.user_params>` - a dictionary that provides reference to all of the user-modifiable parameters
@@ -417,7 +417,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
 from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import Defaults, Param, ParamAlias, Parameters
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
@@ -611,7 +611,7 @@ def make_parameter_property(name):
 
     def getter(self):
         if not _parameters_belongs_to_obj(self):
-            # would refer to class parameters before an instance of Params is created for self
+            # would refer to class parameters before an instance of Parameters is created for self
             return getattr(self, backing_field)
         else:
             return getattr(self.parameters, name).get(self.most_recent_execution_context)
@@ -653,7 +653,7 @@ class ComponentsMeta(ABCMeta):
             parent = self.__mro__[1].parameters
         except AttributeError:
             parent = None
-        self.parameters = self.Params(owner=self, parent=parent)
+        self.parameters = self.Parameters(owner=self, parent=parent)
 
         for param in self.parameters:
             if not hasattr(self, param.name):
@@ -853,7 +853,7 @@ class Component(object, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    class Params(Parameters):
+    class Parameters(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
 
@@ -875,10 +875,10 @@ class Component(object, metaclass=ComponentsMeta):
                     :read only: True
 
         """
-        variable = Param(np.array([0]), read_only=True)
-        value = Param(np.array([0]), read_only=True)
-        context = Param(None, user=False)
-        has_initializers = Param(False, setter=_has_initializers_setter)
+        variable = Parameter(np.array([0]), read_only=True)
+        value = Parameter(np.array([0]), read_only=True)
+        context = Parameter(None, user=False)
+        has_initializers = Parameter(False, setter=_has_initializers_setter)
 
         def _parse_variable(self, variable):
             return variable
@@ -922,7 +922,7 @@ class Component(object, metaclass=ComponentsMeta):
         'init_args'
     ])
 
-    class _CompilationData(Parameters):
+    class _CompilationData(ParametersBase):
         parameter_struct = None
         context_struct = None
 
@@ -956,7 +956,7 @@ class Component(object, metaclass=ComponentsMeta):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
         context = ContextFlags.COMPONENT
 
@@ -1065,7 +1065,7 @@ class Component(object, metaclass=ComponentsMeta):
                    type(Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
-                raise ComponentError("Param \'{}\' must be in paramClassDefaults for {}".
+                raise ComponentError("Parameter \'{}\' must be in paramClassDefaults for {}".
                                     format(required_param, self.name))
 
             # If the param does not match any of the types specified for it in type_requirements
@@ -2270,7 +2270,7 @@ class Component(object, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._initialize_from_context(execution_context, base_execution_context, override)
 
-        for param in [p for p in self.stateful_parameters if p.setter is None and not isinstance(p, ParamAlias)]:
+        for param in [p for p in self.stateful_parameters if p.setter is None and not isinstance(p, ParameterAlias)]:
             param._initialize_from_context(execution_context, base_execution_context, override)
 
         # attempt to initialize any params with setters (some params with setters may depend on the
@@ -2278,7 +2278,7 @@ class Component(object, metaclass=ComponentsMeta):
         # this pushes the problem down one level so that if there are two such that they depend on each other,
         # it will still fail. in this case, it is best to resolve the problem in the setter with a default
         # initialization value
-        for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParamAlias)]:
+        for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParameterAlias)]:
             param._initialize_from_context(execution_context, base_execution_context, override)
 
     def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
@@ -2360,7 +2360,7 @@ class Component(object, metaclass=ComponentsMeta):
         # it's beyond the scope of the current changes however
 
         # # currently allows chance to validate anything in constructor defaults
-        # # when fleshed out, this should go over the new Params structure
+        # # when fleshed out, this should go over the new Parameters structure
         # for param, _ in self.get_param_class_defaults().items():
         #     try:
         #         # automatically call methods of the form _validate_<param name> with the attribute

@@ -472,7 +472,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
-from psyneulink.core.globals.parameters import Defaults, Param
+from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -823,7 +823,7 @@ class Process(Process_Base):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
-    class Params(Process_Base.Params):
+    class Parameters(Process_Base.Parameters):
         """
             Attributes
             ----------
@@ -2685,7 +2685,7 @@ class ProcessInputState(OutputState):
     COMMENT
 
     """
-    class Params(OutputState.Params):
+    class Parameters(OutputState.Parameters):
         """
             Attributes
             ----------
@@ -2706,8 +2706,8 @@ class ProcessInputState(OutputState):
 
         """
         # just grabs input from the process
-        variable = Param(np.array([0]), read_only=True)
-        value = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
+        value = Parameter(np.array([0]), read_only=True)
 
     def __init__(self, owner=None, variable=None, name=None, prefs=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
@@ -2722,7 +2722,7 @@ class ProcessInputState(OutputState):
         self.efferents = []
         self.owner = owner
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
         self.parameters.value.set(variable, override=True)

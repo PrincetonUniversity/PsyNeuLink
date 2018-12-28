@@ -68,7 +68,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION_PARAMS, MASKED_MAPPING_PROJECTION, MATRIX
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -182,7 +182,7 @@ class MaskedMappingProjection(MappingProjection):
     className = componentType
     suffix = " " + className
 
-    class Params(MappingProjection.Params):
+    class Parameters(MappingProjection.Parameters):
         """
             Attributes
             ----------

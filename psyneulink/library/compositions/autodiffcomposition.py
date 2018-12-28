@@ -344,7 +344,7 @@ class AutodiffComposition(Composition):
     instance of AutodiffComposition : AutodiffComposition
     """
 
-    class Params(Composition.Params):
+    class Parameters(Composition.Parameters):
         """
             Attributes
             ----------

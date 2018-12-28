@@ -201,7 +201,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -809,7 +809,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
-    class Params(TransferMechanism.Params):
+    class Parameters(TransferMechanism.Parameters):
         """
             Attributes
             ----------
@@ -887,18 +887,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :type: float
 
         """
-        matrix = Param(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
-        auto = Param(1, modulable=True)
-        hetero = Param(0, modulable=True)
+        matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
+        auto = Parameter(1, modulable=True)
+        hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
-        integration_rate = Param(0.5, modulable=True)
+        integration_rate = Parameter(0.5, modulable=True)
         convergence_function = Distance(metric=MAX_ABS_DIFF)
-        noise = Param(0.0, modulable=True)
-        smoothing_factor = Param(0.5, modulable=True)
+        noise = Parameter(0.0, modulable=True)
+        smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
-        learning_function = Param(Hebbian, stateful=False, loggable=False)
-        learning_rate = Param(None, modulable=True)
-        learning_condition = Param(None, stateful=False, loggable=False)
+        learning_function = Parameter(Hebbian, stateful=False, loggable=False)
+        learning_rate = Parameter(None, modulable=True)
+        learning_condition = Parameter(None, stateful=False, loggable=False)
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 

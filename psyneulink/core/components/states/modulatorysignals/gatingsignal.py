@@ -238,7 +238,7 @@ from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -405,7 +405,7 @@ class GatingSignal(ModulatorySignal):
     #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(ModulatorySignal.Params):
+    class Parameters(ModulatorySignal.Parameters):
         """
             Attributes
             ----------
@@ -418,7 +418,7 @@ class GatingSignal(ModulatorySignal):
                     :read only: True
 
         """
-        value = Param(np.array([0]), read_only=True, aliases=['gating_signal'])
+        value = Parameter(np.array([0]), read_only=True, aliases=['gating_signal'])
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

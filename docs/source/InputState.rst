@@ -3,4 +3,4 @@ InputState
 
 .. automodule:: psyneulink.core.components.states.inputstate
    :members:
-   :exclude-members: Linear, random, Params
+   :exclude-members: Linear, random, Parameters

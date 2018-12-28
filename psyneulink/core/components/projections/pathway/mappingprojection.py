@@ -270,7 +270,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -454,7 +454,7 @@ class MappingProjection(PathwayProjection_Base):
     className = componentType
     suffix = " " + className
 
-    class Params(PathwayProjection_Base.Params):
+    class Parameters(PathwayProjection_Base.Parameters):
         """
             Attributes
             ----------
@@ -472,8 +472,8 @@ class MappingProjection(PathwayProjection_Base):
                     :type: str
 
         """
-        function = Param(LinearMatrix, stateful=False, loggable=False)
-        matrix = Param(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
+        function = Parameter(LinearMatrix, stateful=False, loggable=False)
+        matrix = Parameter(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 

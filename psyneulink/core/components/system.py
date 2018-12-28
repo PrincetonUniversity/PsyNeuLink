@@ -458,7 +458,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.core.globals.log import Log
-from psyneulink.core.globals.parameters import Defaults, Param
+from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.core.globals.registry import register_category
@@ -854,7 +854,7 @@ class System(System_Base):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
-    class Params(System_Base.Params):
+    class Parameters(System_Base.Parameters):
         """
             Attributes
             ----------
@@ -5023,7 +5023,7 @@ class SystemInputState(OutputState):
     <System.terminal_mechanisms>`.  See `System_Mechanisms` and `System_Execution` for additional details.
 
     """
-    class Params(OutputState.Params):
+    class Parameters(OutputState.Parameters):
         """
             Attributes
             ----------
@@ -5044,8 +5044,8 @@ class SystemInputState(OutputState):
 
         """
         # just grabs input from the process
-        variable = Param(np.array([0]), read_only=True)
-        value = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
+        value = Parameter(np.array([0]), read_only=True)
 
     def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
@@ -5063,7 +5063,7 @@ class SystemInputState(OutputState):
         self.efferents = []
         self.owner = owner
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
         self.parameters.value.set(variable, override=True)

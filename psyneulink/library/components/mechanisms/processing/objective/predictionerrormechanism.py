@@ -159,7 +159,7 @@ from psyneulink.core.components.functions.combinationfunctions import Prediction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.keywords import INITIALIZING, OUTCOME, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric
@@ -258,7 +258,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    class Params(ComparatorMechanism.Params):
+    class Parameters(ComparatorMechanism.Parameters):
         """
             Attributes
             ----------
@@ -283,8 +283,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
                     :type: float
 
         """
-        variable = Param(None, read_only=True)
-        learning_rate = Param(0.3, modulable=True)
+        variable = Parameter(None, read_only=True)
+        learning_rate = Parameter(0.3, modulable=True)
         function = PredictionErrorDeltaFunction
         sample = None
         target = None

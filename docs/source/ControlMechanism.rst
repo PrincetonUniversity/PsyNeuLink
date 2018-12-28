@@ -10,4 +10,4 @@ Control Mechanisms
 
 .. automodule:: psyneulink.core.components.mechanisms.adaptive.control.controlmechanism
    :members:
-   :exclude-members: Linear, random, Params
+   :exclude-members: Linear, random, Parameters

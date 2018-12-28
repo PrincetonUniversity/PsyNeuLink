@@ -75,7 +75,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -184,7 +184,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -196,7 +196,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                     :type: `Function`
 
         """
-        function = Param(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
+        function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({

@@ -372,7 +372,7 @@ from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, 
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import all_within_range, append_type_to_name, iscompatible
@@ -827,7 +827,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -901,18 +901,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :read only: True
 
         """
-        integrator_mode = Param(False, setter=_integrator_mode_setter)
-        integration_rate = Param(0.5, modulable=True)
+        integrator_mode = Parameter(False, setter=_integrator_mode_setter)
+        integration_rate = Parameter(0.5, modulable=True)
         initial_value = None
-        previous_value = Param(None, read_only=True)
-        integrator_function_value = Param([[0]], read_only=True)
-        has_integrated = Param(False, user=False)
-        on_resume_integrator_mode = Param(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
+        previous_value = Parameter(None, read_only=True)
+        integrator_function_value = Parameter([[0]], read_only=True)
+        has_integrated = Parameter(False, user=False)
+        on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
-        noise = Param(0.0, modulable=True)
-        convergence_criterion = Param(0.01, modulable=True)
-        convergence_function = Param(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
-        max_passes = Param(1000, stateful=False)
+        noise = Parameter(0.0, modulable=True)
+        convergence_criterion = Parameter(0.01, modulable=True)
+        convergence_function = Parameter(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
+        max_passes = Parameter(1000, stateful=False)
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
@@ -1359,7 +1359,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
 
-        # Params and context for both integrator and main function
+        # Parameters and context for both integrator and main function
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 

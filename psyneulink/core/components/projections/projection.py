@@ -396,7 +396,7 @@ from psyneulink.core.components.states.modulatorysignals.modulatorysignal import
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -583,7 +583,7 @@ class Projection_Base(Projection):
     className = componentCategory
     suffix = " " + className
 
-    class Params(Projection.Params):
+    class Parameters(Projection.Parameters):
         """
             Attributes
             ----------
@@ -607,9 +607,9 @@ class Projection_Base(Projection):
                     :type:
 
         """
-        weight = Param(None, modulable=True)
-        exponent = Param(None, modulable=True)
-        function = Param(LinearMatrix, stateful=False, loggable=False)
+        weight = Parameter(None, modulable=True)
+        exponent = Parameter(None, modulable=True)
+        function = Parameter(LinearMatrix, stateful=False, loggable=False)
 
     registry = ProjectionRegistry
 

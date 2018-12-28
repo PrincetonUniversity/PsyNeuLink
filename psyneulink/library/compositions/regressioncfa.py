@@ -49,7 +49,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared, powerset, tensor_power
 
 __all__ = ['PREDICTION_TERMS', 'PV', 'RegressionCFA']
@@ -143,7 +143,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     '''
 
-    class Params(CompositionFunctionApproximator.Params):
+    class Parameters(CompositionFunctionApproximator.Parameters):
         """
             Attributes
             ----------
@@ -173,7 +173,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     :type: `Function`
 
         """
-        update_weights = Param(BayesGLM, stateful=False, loggable=False)
+        update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
         prediction_vector = None
         previous_state = None
         regression_weights = None
