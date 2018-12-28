@@ -310,7 +310,7 @@ def parse_execution_context(execution_context):
         return execution_context
 
 
-class ParamsTemplate:
+class ParametersTemplate:
     _deepcopy_shared_keys = ['_parent', '_params', '_owner', '_children']
     _values_default_excluded_attrs = {'user': False}
 
@@ -318,7 +318,7 @@ class ParamsTemplate:
         # using weakref to allow garbage collection of unused objects of this type
         self._owner = weakref.proxy(owner)
         self._parent = parent
-        if isinstance(self._parent, ParamsTemplate):
+        if isinstance(self._parent, ParametersTemplate):
             # using weakref to allow garbage collection of unused children
             self._parent._children.add(weakref.ref(self))
 
@@ -384,7 +384,7 @@ class ParamsTemplate:
             if show_all:
                 result[k] = val
             else:
-                # exclude any values that have an attribute/value pair listed in ParamsTemplate._values_default_excluded_attrs
+                # exclude any values that have an attribute/value pair listed in ParametersTemplate._values_default_excluded_attrs
                 for excluded_key, excluded_val in self._values_default_excluded_attrs.items():
                     try:
                         if getattr(val, excluded_key) == excluded_val:
@@ -404,7 +404,7 @@ class ParamsTemplate:
         return sorted([p for p in self.values(show_all)])
 
 
-class Defaults(ParamsTemplate):
+class Defaults(ParametersTemplate):
     """
         A class to simplify display and management of default values associated with the `Parameter`\\ s
         in a :class:`Parameters` class.
@@ -1061,7 +1061,7 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
 #
 # only current candidate for separation seems to be on stateful
 # for now, leave everything together. separate later if necessary
-class ParametersBase(ParamsTemplate):
+class ParametersBase(ParametersTemplate):
     """
         Base class for inner `Parameters` classes on Components (see `Component.Parameters` for example)
     """
