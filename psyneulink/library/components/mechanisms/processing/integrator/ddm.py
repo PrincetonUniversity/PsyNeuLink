@@ -364,7 +364,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param, parse_execution_context
+from psyneulink.core.globals.parameters import Parameter, parse_execution_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
@@ -781,7 +781,7 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -805,7 +805,7 @@ class DDM(ProcessingMechanism_Base):
                     :type: str
 
         """
-        function = Param(
+        function = Parameter(
             DriftDiffusionAnalytical(
                 drift_rate=1.0,
                 starting_point=0.0,
@@ -816,7 +816,7 @@ class DDM(ProcessingMechanism_Base):
             stateful=False,
             loggable=False
         )
-        input_format = Param(SCALAR, stateful=False, loggable=False)
+        input_format = Parameter(SCALAR, stateful=False, loggable=False)
 
         initializer = np.array([[0]])
 

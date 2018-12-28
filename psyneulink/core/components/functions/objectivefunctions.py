@@ -29,7 +29,7 @@ from psyneulink.core.components.functions.function import EPSILON, FunctionError
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.utilities import is_iterable
@@ -44,7 +44,7 @@ class ObjectiveFunction(Function_Base):
 
     componentType = OBJECTIVE_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -63,7 +63,7 @@ class ObjectiveFunction(Function_Base):
 
         """
         normalize = False
-        metric = Param(None, stateful=False)
+        metric = Parameter(None, stateful=False)
 
 
 class Stability(ObjectiveFunction):
@@ -190,7 +190,7 @@ COMMENT
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(ObjectiveFunction.Params):
+    class Parameters(ObjectiveFunction.Parameters):
         """
             Attributes
             ----------
@@ -215,7 +215,7 @@ COMMENT
 
         """
         matrix = HOLLOW_MATRIX
-        metric = Param(ENERGY, stateful=False)
+        metric = Parameter(ENERGY, stateful=False)
         transfer_fct = None
         normalize = False
 
@@ -534,7 +534,7 @@ class Distance(ObjectiveFunction):
 
     componentName = DISTANCE_FUNCTION
 
-    class Params(ObjectiveFunction.Params):
+    class Parameters(ObjectiveFunction.Parameters):
         """
             Attributes
             ----------
@@ -553,8 +553,8 @@ class Distance(ObjectiveFunction):
                     :type: str
 
         """
-        variable = Param(np.array([[0], [0]]), read_only=True)
-        metric = Param(DIFFERENCE, stateful=False)
+        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        metric = Parameter(DIFFERENCE, stateful=False)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 

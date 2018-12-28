@@ -97,7 +97,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import PROCESSING_MECHANISM, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -251,7 +251,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
 
     componentType = PROCESSING_MECHANISM
 
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -266,7 +266,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         """
         # not stateful because this really is just a global counter, for accurate counts
         # should use schedulers which store this info
-        execution_count = Param(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
+        execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences

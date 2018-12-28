@@ -3,4 +3,4 @@ System
 
 .. automodule:: psyneulink.core.components.system
    :members:
-   :exclude-members: random, MonitoredOutputStateTuple, Params
+   :exclude-members: random, MonitoredOutputStateTuple, Parameters

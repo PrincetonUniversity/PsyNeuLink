@@ -6,4 +6,4 @@ ObjectiveFunctions
 
 .. automodule:: psyneulink.core.components.functions.objectivefunctions
    :members:
-   :exclude-members: Params
+   :exclude-members: Parameters

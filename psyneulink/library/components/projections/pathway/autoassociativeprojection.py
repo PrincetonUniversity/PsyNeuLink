@@ -94,7 +94,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -245,7 +245,7 @@ class AutoAssociativeProjection(MappingProjection):
     className = componentType
     suffix = " " + className
 
-    class Params(MappingProjection.Params):
+    class Parameters(MappingProjection.Parameters):
         """
             Attributes
             ----------
@@ -282,13 +282,13 @@ class AutoAssociativeProjection(MappingProjection):
                     :type: str
 
         """
-        variable = Param(np.array([[0]]), read_only=True)
+        variable = Parameter(np.array([[0]]), read_only=True)
         # function is always LinearMatrix that requires 1D input
         function = LinearMatrix
 
-        auto = Param(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
-        hetero = Param(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)
-        matrix = Param(DEFAULT_MATRIX, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
+        auto = Parameter(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
+        hetero = Parameter(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)
+        matrix = Parameter(DEFAULT_MATRIX, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 

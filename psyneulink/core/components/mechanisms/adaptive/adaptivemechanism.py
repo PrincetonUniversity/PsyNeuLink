@@ -132,7 +132,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
 
     componentType = ADAPTIVE_MECHANISM
 
-    class Params(Mechanism_Base.Params):
+    class Parameters(Mechanism_Base.Parameters):
         """
             Attributes
             ----------

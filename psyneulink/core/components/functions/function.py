@@ -147,7 +147,7 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param, ParamAlias
+from psyneulink.core.globals.parameters import Parameter, ParamAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -430,11 +430,11 @@ def get_param_value_for_function(owner, function):
 # Parameter Mixins *****************************************************************************************************
 
 # KDM 6/21/18: Below is left in for consideration; doesn't really gain much to justify relaxing the assumption
-# that every Params class has a single parent
+# that every Parameters class has a single parent
 
 # class ScaleOffsetParamMixin:
-#     scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-#     offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+#     scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+#     offset = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
 
 # Function Definitions *************************************************************************************************
@@ -600,7 +600,7 @@ class Function_Base(Function):
 
     variableClassDefault_locked = False
 
-    class Params(Function.Params):
+    class Parameters(Function.Parameters):
         """
             Attributes
             ----------
@@ -613,7 +613,7 @@ class Function_Base(Function):
                     :read only: True
 
         """
-        variable = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
@@ -947,7 +947,7 @@ class ArgumentTherapy(Function_Base):
         OBSEQUIOUS = 0
         CONTRARIAN = 1
 
-    # Param class defaults
+    # Parameter class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
@@ -1098,7 +1098,7 @@ class EVCAuxiliaryFunction(Function_Base):
     """
     componentType = kwEVCAuxFunctionType
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------

@@ -5,4 +5,4 @@ Defaults
    :members: defaultControlAllocation include-private
    :exclude-members: random
 
-   :autodata: defaultControlAllocation, Params
+   :autodata: defaultControlAllocation, Parameters

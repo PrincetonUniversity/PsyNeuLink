@@ -2,4 +2,4 @@ DefaultControlMechanism
 =======================
 
 .. automodule:: psyneulink.core.components.mechanisms.adaptive.control.defaultcontrolmechanism
-   :exclude-members: random, Params
+   :exclude-members: random, Parameters

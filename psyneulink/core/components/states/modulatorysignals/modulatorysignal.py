@@ -374,7 +374,7 @@ class ModulatorySignal(OutputState):
     componentType = MODULATORY_SIGNAL
     # paramsType = OUTPUT_STATE_PARAMS
 
-    class Params(OutputState.Params):
+    class Parameters(OutputState.Parameters):
         """
             Attributes
             ----------

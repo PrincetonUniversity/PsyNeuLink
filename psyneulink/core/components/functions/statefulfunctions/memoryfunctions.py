@@ -36,7 +36,7 @@ from psyneulink.core.globals.keywords import \
     BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 __all__ = ['MemoryFunction', 'Buffer', 'DND']
@@ -159,9 +159,9 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
     componentName = BUFFER_FUNCTION
 
-    class Params(StatefulFunction.Params):
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+    class Parameters(StatefulFunction.Parameters):
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -485,14 +485,14 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     componentName = DND_FUNCTION
 
-    class Params(StatefulFunction.Params):
-        variable = Param([[0],[0]])
-        retrieval_prob = Param(1.0, modulable=True)
-        storage_prob = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        key_size = Param(1, stateful=True)
-        rate = Param(1.0, modulable=True)
-        noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        max_entries = Param(1000)
+    class Parameters(StatefulFunction.Parameters):
+        variable = Parameter([[0],[0]])
+        retrieval_prob = Parameter(1.0, modulable=True)
+        storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        key_size = Parameter(1, stateful=True)
+        rate = Parameter(1.0, modulable=True)
+        noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        max_entries = Parameter(1000)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

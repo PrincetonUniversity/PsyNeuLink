@@ -59,7 +59,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX_KEYWORD_NAMES, AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX, kwPreferenceSetName, \
     GAUSSIAN_FUNCTION, STANDARD_DEVIATION
 
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
@@ -88,7 +88,7 @@ class TransferFunction(Function_Base):
     """
     componentType = TRANSFER_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -257,7 +257,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -275,8 +275,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     :type: float
 
         """
-        slope = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        intercept = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -498,7 +498,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -528,10 +528,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Param(1.0, modulable=True)
-        offset = Param(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -761,7 +761,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -797,11 +797,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
                     :type: float
 
         """
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        x_0 = Param(0.0, modulable=True)
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Param(0.0, modulable=True)
-        scale = Param(1.0, modulable=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        x_0 = Parameter(0.0, modulable=True)
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1062,7 +1062,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1098,11 +1098,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                     :type: float
 
         """
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        x_0 = Param(0.0, modulable=True)
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Param(0.0, modulable=True)
-        scale = Param(1.0, modulable=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        x_0 = Parameter(0.0, modulable=True)
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1309,7 +1309,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     multiplicative_param = GAIN
     additive_param = BIAS
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1333,9 +1333,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                     :type: float
 
         """
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        leak = Param(0.0, modulable=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        leak = Parameter(0.0, modulable=True)
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -1548,7 +1548,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1578,10 +1578,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :type: float
 
         """
-        standard_deviation = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Param(0.0, modulable=True)
-        offset = Param(0.0, modulable=True)
+        standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(0.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1806,7 +1806,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 #
 #     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 #
-#     class Params(TransferFunction.Params):
+#     class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1843,10 +1843,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :type: bool
 
         """
-#         variance = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-#         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-#         scale = Param(0.0, modulable=True)
-#         offset = Param(0.0, modulable=True)
+#         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+#         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+#         scale = Parameter(0.0, modulable=True)
+#         offset = Parameter(0.0, modulable=True)
 #
 #     @tc.typecheck
 #     def __init__(self,
@@ -2074,7 +2074,7 @@ class SoftMax(TransferFunction):
     multiplicative_param = GAIN
     additive_param = None
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -2111,8 +2111,8 @@ class SoftMax(TransferFunction):
                     :type: bool
 
         """
-        variable = Param(np.array(0.0), read_only=True)
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        variable = Parameter(np.array(0.0), read_only=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
         per_item = True
@@ -2488,7 +2488,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -2500,7 +2500,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     :type:
 
         """
-        matrix = Param(None, modulable=True)
+        matrix = Parameter(None, modulable=True)
         bounds = None
 
     # def is_matrix_spec(m):

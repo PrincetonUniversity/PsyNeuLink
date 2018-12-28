@@ -181,7 +181,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
@@ -189,7 +189,7 @@ from psyneulink.core.globals.utilities import iscompatible, parameter_spec
 __all__ = [
     'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
 ]
-# Params:
+# Parameters:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
@@ -417,7 +417,7 @@ class LearningProjection(ModulatoryProjection_Base):
         sender=[LEARNING_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class Params(ModulatoryProjection_Base.Params):
+    class Parameters(ModulatoryProjection_Base.Parameters):
         """
             Attributes
             ----------
@@ -461,12 +461,12 @@ class LearningProjection(ModulatoryProjection_Base):
                     :read only: True
 
         """
-        value = Param(np.array([0]), read_only=True, aliases=['weight_change_matrix'])
-        function = Param(Linear, stateful=False, loggable=False)
-        error_function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
-        learning_function = Param(BackPropagation, stateful=False, loggable=False)
-        learning_rate = Param(None, modulable=True)
-        learning_signal = Param(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
+        value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'])
+        function = Parameter(Linear, stateful=False, loggable=False)
+        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
+        learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
+        learning_rate = Parameter(None, modulable=True)
+        learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,

@@ -173,7 +173,7 @@ from psyneulink.core.components.states.state import State_Base, _parse_state_spe
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingPolicy
 from psyneulink.core.globals.keywords import GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -366,7 +366,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(AdaptiveMechanism_Base.Params):
+    class Parameters(AdaptiveMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -380,7 +380,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = np.array(defaultGatingPolicy)
-        value = Param(AdaptiveMechanism_Base.Params.value.default_value, aliases=['gating_policy'])
+        value = Parameter(AdaptiveMechanism_Base.Parameters.value.default_value, aliases=['gating_policy'])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({GATING_PROJECTIONS: None})

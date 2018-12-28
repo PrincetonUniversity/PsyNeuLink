@@ -957,7 +957,7 @@ from psyneulink.core.globals.keywords import \
     INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
     OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
-from psyneulink.core.globals.parameters import Param, parse_execution_context
+from psyneulink.core.globals.parameters import Parameter, parse_execution_context
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -1307,7 +1307,7 @@ class Mechanism_Base(Mechanism):
     className = componentCategory
     suffix = " " + className
 
-    class Params(Mechanism.Params):
+    class Parameters(Mechanism.Parameters):
         """
             Attributes
             ----------
@@ -1346,12 +1346,12 @@ class Mechanism_Base(Mechanism):
                     :read only: True
 
         """
-        variable = Param(np.array([[0]]), read_only=True)
-        value = Param(np.array([[0]]), read_only=True)
-        previous_value = Param(None, read_only=True)
+        variable = Parameter(np.array([[0]]), read_only=True)
+        value = Parameter(np.array([[0]]), read_only=True)
+        previous_value = Parameter(None, read_only=True)
         function = Linear
 
-        input_state_variables = Param(None, read_only=True, user=False, getter=_input_state_variables_getter)
+        input_state_variables = Parameter(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
     registry = MechanismRegistry
 
@@ -2708,7 +2708,7 @@ class Mechanism_Base(Mechanism):
 
             ps_function = ctx.get_llvm_function(state)
 
-            # Param states are in the 4th block (idx 3).
+            # Parameter states are in the 4th block (idx 3).
             # After input, function,  and output
             ps_idx = ctx.int32_ty(3)
             ps_params = builder.gep(params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])

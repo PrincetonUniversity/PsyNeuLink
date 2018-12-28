@@ -358,7 +358,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import CNodeRole, ContentAddressableList, is_iterable
@@ -663,7 +663,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(AdaptiveMechanism_Base.Params):
+    class Parameters(AdaptiveMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -708,15 +708,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([defaultControlAllocation])
-        value = Param(np.array(defaultControlAllocation), aliases='control_allocation')
+        value = Parameter(np.array(defaultControlAllocation), aliases='control_allocation')
 
-        combine_costs = Param(np.sum, stateful=False, loggable=False)
-        compute_net_outcome = Param(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
+        combine_costs = Parameter(np.sum, stateful=False, loggable=False)
+        compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
 
-        costs = Param(None, read_only=True, getter=_control_mechanism_costs_getter)
-        control_signal_costs = Param(None, read_only=True)
+        costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
+        control_signal_costs = Parameter(None, read_only=True)
 
-        simulation_ids = Param([], user=False)
+        simulation_ids = Parameter([], user=False)
 
         modulation = ModulationParam.MULTIPLICATIVE
 

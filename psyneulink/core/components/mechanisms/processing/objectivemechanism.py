@@ -340,7 +340,7 @@ from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, 
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -545,7 +545,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
     # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
     #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -557,7 +557,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     :type: `Function`
 
         """
-        function = Param(LinearCombination, stateful=False, loggable=False)
+        function = Parameter(LinearCombination, stateful=False, loggable=False)
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

@@ -143,8 +143,8 @@ def test_delta_fail():
 
 def test_validation():
     class NewTM(pnl.TransferMechanism):
-        class Params(pnl.TransferMechanism.Params):
-            variable = pnl.Param(np.array([[0], [0], [0]]), read_only=True)
+        class Parameters(pnl.TransferMechanism.Parameters):
+            variable = pnl.Parameter(np.array([[0], [0], [0]]), read_only=True)
 
             def _validate_variable(self, variable):
                 if not isinstance(variable, np.ndarray) or not variable.shape == np.array([[0], [0], [0]]).shape:

@@ -86,7 +86,7 @@ from psyneulink.core.components.functions.statefulfunctions.memoryfunctions impo
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import all_within_range
 
@@ -183,8 +183,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     """
 
-    class Params(ProcessingMechanism_Base.Params):
-        variable = Param([[0],[0]])
+    class Parameters(ProcessingMechanism_Base.Parameters):
+        variable = Parameter([[0],[0]])
 
     def __init__(self,
                  cue_size:int=1,

@@ -178,7 +178,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.globals.keywords import INITIALIZING, KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -498,7 +498,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
     componentType = KWTA_MECHANISM
 
-    class Params(RecurrentTransferMechanism.Params):
+    class Parameters(RecurrentTransferMechanism.Parameters):
         """
             Attributes
             ----------
@@ -540,10 +540,10 @@ class KWTAMechanism(RecurrentTransferMechanism):
                     :type: float
 
         """
-        function = Param(Logistic, stateful=False, loggable=False)
-        k_value = Param(0.5, modulable=True)
-        threshold = Param(0.0, modulable=True)
-        ratio = Param(0.5, modulable=True)
+        function = Parameter(Logistic, stateful=False, loggable=False)
+        k_value = Parameter(0.5, modulable=True)
+        threshold = Parameter(0.0, modulable=True)
+        ratio = Parameter(0.5, modulable=True)
 
         average_based = False
         inhibition_only = True

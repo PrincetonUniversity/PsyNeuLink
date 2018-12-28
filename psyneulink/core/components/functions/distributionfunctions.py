@@ -36,7 +36,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 
 __all__ = ['DistributionFunction', 'NormalDist', 'UniformDist', 'UniformToNormalDist', 'ExponentialDist',
            'GammaDist', 'WaldDist', 'DriftDiffusionAnalytical']
@@ -112,7 +112,7 @@ class NormalDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(DistributionFunction.Params):
+    class Parameters(DistributionFunction.Parameters):
         """
             Attributes
             ----------
@@ -130,8 +130,8 @@ class NormalDist(DistributionFunction):
                     :type: float
 
         """
-        mean = Param(0.0, modulable=True)
-        standard_deviation = Param(1.0, modulable=True)
+        mean = Parameter(0.0, modulable=True)
+        standard_deviation = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -253,7 +253,7 @@ class UniformToNormalDist(DistributionFunction):
 
     componentName = NORMAL_DIST_FUNCTION
 
-    class Params(DistributionFunction.Params):
+    class Parameters(DistributionFunction.Parameters):
         """
             Attributes
             ----------
@@ -278,9 +278,9 @@ class UniformToNormalDist(DistributionFunction):
                     :type: float
 
         """
-        variable = Param(np.array([0]), read_only=True)
-        mean = Param(0.0, modulable=True)
-        standard_deviation = Param(1.0, modulable=True)
+        variable = Parameter(np.array([0]), read_only=True)
+        mean = Parameter(0.0, modulable=True)
+        standard_deviation = Parameter(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -385,7 +385,7 @@ class ExponentialDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(DistributionFunction.Params):
+    class Parameters(DistributionFunction.Parameters):
         """
             Attributes
             ----------
@@ -397,7 +397,7 @@ class ExponentialDist(DistributionFunction):
                     :type: float
 
         """
-        beta = Param(1.0, modulable=True)
+        beta = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -496,7 +496,7 @@ class UniformDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(DistributionFunction.Params):
+    class Parameters(DistributionFunction.Parameters):
         """
             Attributes
             ----------
@@ -514,8 +514,8 @@ class UniformDist(DistributionFunction):
                     :type: float
 
         """
-        low = Param(0.0, modulable=True)
-        high = Param(1.0, modulable=True)
+        low = Parameter(0.0, modulable=True)
+        high = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -618,7 +618,7 @@ class GammaDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(DistributionFunction.Params):
+    class Parameters(DistributionFunction.Parameters):
         """
             Attributes
             ----------
@@ -636,8 +636,8 @@ class GammaDist(DistributionFunction):
                     :type: float
 
         """
-        scale = Param(1.0, modulable=True)
-        dist_shape = Param(1.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
+        dist_shape = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -739,7 +739,7 @@ class WaldDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(DistributionFunction.Params):
+    class Parameters(DistributionFunction.Parameters):
         """
             Attributes
             ----------
@@ -757,8 +757,8 @@ class WaldDist(DistributionFunction):
                     :type: float
 
         """
-        scale = Param(1.0, modulable=True)
-        mean = Param(1.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
+        mean = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -932,7 +932,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(DistributionFunction.Params):
+    class Parameters(DistributionFunction.Parameters):
         """
             Attributes
             ----------
@@ -975,12 +975,12 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     :type: float
 
         """
-        drift_rate = Param(1.0, modulable=True)
-        starting_point = Param(0.0, modulable=True)
-        threshold = Param(1.0, modulable=True)
-        noise = Param(0.5, modulable=True)
+        drift_rate = Parameter(1.0, modulable=True)
+        starting_point = Parameter(0.0, modulable=True)
+        threshold = Parameter(1.0, modulable=True)
+        noise = Parameter(0.5, modulable=True)
         t0 = .200
-        bias = Param(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
+        bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
 
     @tc.typecheck
     def __init__(self,
