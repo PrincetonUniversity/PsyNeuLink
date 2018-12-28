@@ -1205,8 +1205,12 @@ class Component(object, metaclass=ComponentsMeta):
         newone = fun(self, memo)
         newone.__dict__['_Component__llvm_function_name'] = None
         newone.__dict__['_Component__llvm_bin_function'] = None
-        newone.parameters._owner = newone
-        newone.instance_defaults._owner = newone
+
+        if newone.parameters is not newone.class_parameters:
+            # may be in DEFERRED INIT, so parameters/defaults belongs to class
+            newone.parameters._owner = newone
+            newone.instance_defaults._owner = newone
+
         return newone
 
     # ------------------------------------------------------------------------------------------------------------------
