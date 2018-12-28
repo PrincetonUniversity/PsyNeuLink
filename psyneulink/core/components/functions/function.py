@@ -147,7 +147,7 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Parameter, ParamAlias
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -824,7 +824,7 @@ class Function_Base(Function):
         # Filter out known unused/invalid params
         black_list = {'function', 'variable', 'value', 'context'}
         def _is_compilation_param(p):
-            if p.name not in black_list and not isinstance(p, ParamAlias):
+            if p.name not in black_list and not isinstance(p, ParameterAlias):
                 val = p.get(execution_id)
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, str)

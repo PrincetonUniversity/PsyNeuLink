@@ -246,7 +246,7 @@ from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
-    'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParamAlias', 'ParameterError',
+    'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParameterAlias', 'ParameterError',
     'ParametersBase', 'parse_execution_context',
 ]
 
@@ -1009,7 +1009,7 @@ class Parameter(types.SimpleNamespace):
         super().__setattr__('log_condition', value)
 
 
-class _ParamAliasMeta(type):
+class _ParameterAliasMeta(type):
     # these will not be taken from the source
     _unshared_attrs = ['name', 'aliases']
 
@@ -1028,7 +1028,7 @@ class _ParamAliasMeta(type):
 
 
 # TODO: may not completely work with history/history_max_length
-class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
+class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
     """
         A counterpart to `Parameter` that represents a pseudo-Parameter alias that
         refers to another `Parameter`, but has a different name
@@ -1038,7 +1038,7 @@ class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
         try:
             self.source = weakref.proxy(source)
         except TypeError:
-            # source is already a weakref proxy, coming from another ParamAlias
+            # source is already a weakref proxy, coming from another ParameterAlias
             self.source = source
 
         try:
@@ -1080,11 +1080,11 @@ class ParametersBase(ParamsTemplate):
                     or self._parent.__class__.__dict__[param_name] is not self.__class__.__dict__[param_name]
                 )
             ):
-                # KDM 6/25/18: NOTE: this may need special handling if you're creating a ParamAlias directly
+                # KDM 6/25/18: NOTE: this may need special handling if you're creating a ParameterAlias directly
                 # in a class's Parameters class
                 setattr(self, param_name, param_value)
             else:
-                if isinstance(getattr(self._parent, param_name), ParamAlias):
+                if isinstance(getattr(self._parent, param_name), ParameterAlias):
                     # store aliases we need to create here and then create them later, because
                     # the param that the alias is going to refer to may not have been created yet
                     # (the alias then may refer to the parent Parameter instead of the Parameter associated with this
@@ -1097,7 +1097,7 @@ class ParametersBase(ParamsTemplate):
                     setattr(self, param_name, new_param)
 
         for alias_name in aliases_to_create:
-            setattr(self, alias_name, ParamAlias(name=alias_name, source=getattr(self, alias_name).source))
+            setattr(self, alias_name, ParameterAlias(name=alias_name, source=getattr(self, alias_name).source))
 
         for param, value in self.values(show_all=True).items():
             self._validate(param, value.default_value)
@@ -1114,7 +1114,7 @@ class ParametersBase(ParamsTemplate):
             raise AttributeError("No attribute '{0}' exists in the parameter hierarchy{1}".format(attr, owner_string)) from None
 
     def __setattr__(self, attr, value):
-        # handles parsing: Parameter or ParamAlias housekeeping if assigned, or creation of a Parameter
+        # handles parsing: Parameter or ParameterAlias housekeeping if assigned, or creation of a Parameter
         # if just a value is assigned
         if not self._is_parameter(attr):
             super().__setattr__(attr, value)
@@ -1131,10 +1131,10 @@ class ParametersBase(ParamsTemplate):
                 if value.aliases is not None:
                     for alias in value.aliases:
                         if not hasattr(self, alias) or unproxy_weakproxy(getattr(self, alias)._owner) is not self:
-                            super().__setattr__(alias, ParamAlias(source=getattr(self, attr), name=alias))
+                            super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
                             self._register_parameter(alias)
 
-            elif isinstance(value, ParamAlias):
+            elif isinstance(value, ParameterAlias):
                 if value.name is None:
                     value.name = attr
                 if isinstance(value.source, str):

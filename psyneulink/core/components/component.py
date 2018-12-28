@@ -181,7 +181,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 A Component defines its `parameters <Parameters>` in its *parameters* attribute, which contains a collection of
 `Parameter` objects, each of which stores a Parameter's values, `default values <Component.defaults>`, and various
-`properties <Param_Attributes_Table>` of the parameter.
+`properties <Parameter_Attributes_Table>` of the parameter.
 
 * `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values that
     are used for all Components, unless overridden.
@@ -417,7 +417,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
 from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParamAlias, ParametersBase
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
@@ -2270,7 +2270,7 @@ class Component(object, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._initialize_from_context(execution_context, base_execution_context, override)
 
-        for param in [p for p in self.stateful_parameters if p.setter is None and not isinstance(p, ParamAlias)]:
+        for param in [p for p in self.stateful_parameters if p.setter is None and not isinstance(p, ParameterAlias)]:
             param._initialize_from_context(execution_context, base_execution_context, override)
 
         # attempt to initialize any params with setters (some params with setters may depend on the
@@ -2278,7 +2278,7 @@ class Component(object, metaclass=ComponentsMeta):
         # this pushes the problem down one level so that if there are two such that they depend on each other,
         # it will still fail. in this case, it is best to resolve the problem in the setter with a default
         # initialization value
-        for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParamAlias)]:
+        for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParameterAlias)]:
             param._initialize_from_context(execution_context, base_execution_context, override)
 
     def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
