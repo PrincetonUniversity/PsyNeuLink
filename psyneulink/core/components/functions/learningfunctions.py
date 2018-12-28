@@ -527,7 +527,7 @@ class BayesGLM(LearningFunction):
         Arguments
         ---------
 
-        variable : 2d or 3d array : default ClassDefaults.variable
+        variable : 2d or 3d array : default class_defaults.variable
            if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
            be a 1d array containing the dependent variable to be predicted by the predictors;
            if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
@@ -641,7 +641,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable: List[array(float64), array(float64), 2d array[[float64]]] : default ClassDefaults.variable
+    variable: List[array(float64), array(float64), 2d array[[float64]]] : default class_defaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
     learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
@@ -830,7 +830,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : array or List[1d array, 1d array, 2d array] : default ClassDefaults.variable
+        variable : array or List[1d array, 1d array, 2d array] : default class_defaults.variable
            input pattern, array of activation values, and matrix used to calculate the weights changes.
 
         params : Dict[param keyword: param value] : default None
@@ -917,7 +917,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default class_defaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -1058,7 +1058,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : List[number] or 1d array : default ClassDefaults.variable
+        variable : List[number] or 1d array : default class_defaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
@@ -1148,7 +1148,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default class_defaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -1290,7 +1290,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         Arguments
         ---------
 
-        variable : List[number] or 1d np.array : default ClassDefaults.variable
+        variable : List[number] or 1d np.array : default class_defaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
@@ -1407,7 +1407,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     Arguments
     ---------
 
-    default_variable : List or 2d array : default ClassDefaults.variable
+    default_variable : List or 2d array : default class_defaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
 
@@ -1595,7 +1595,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+        variable : List or 2d np.array [length 3 in axis 0] : default class_defaults.variable
            must have three items that are (in order):
 
                * `activation_input <Reinforcement.activation_input>` (not used);
@@ -1722,7 +1722,7 @@ class BackPropagation(LearningFunction):
     Arguments
     ---------
 
-    variable : List or 2d array [length 3 in axis 0] : default ClassDefaults.variable
+    variable : List or 2d array [length 3 in axis 0] : default class_defaults.variable
        specifies a template for the three items provided as the variable in the call to the
        `function <BackPropagation.function>` (in order):
        `activation_input <BackPropagation.activation_input>` (1d array),

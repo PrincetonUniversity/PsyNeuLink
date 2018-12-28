@@ -64,7 +64,7 @@ class Identity(InterfaceFunction):  # ------------------------------------------
     Arguments
     ---------
 
-    variable : number or np.array : default ClassDefaults.variable
+    variable : number or np.array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     params : Dict[param keyword: param value] : default None
@@ -143,7 +143,7 @@ class Identity(InterfaceFunction):  # ------------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or np.array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -209,7 +209,7 @@ class InterfaceStateMap(InterfaceFunction):
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or np.array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     params : Dict[param keyword: param value] : default None
@@ -293,7 +293,7 @@ class InterfaceStateMap(InterfaceFunction):
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or np.array : default class_defaults.variable
            a single value or array to be transformed.
 
         corresponding_input_state : InputState : default None

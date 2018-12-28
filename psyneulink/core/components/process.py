@@ -560,7 +560,7 @@ class Process(Process_Base):
         registry : dict : default ProcessRegistry
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
+        + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PATHWAY: []}
 
         Class methods

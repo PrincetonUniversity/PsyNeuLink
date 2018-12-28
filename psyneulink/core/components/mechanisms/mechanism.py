@@ -1052,7 +1052,7 @@ class Mechanism_Base(Mechanism):
             + registry (dict): MechanismRegistry
             + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + ClassDefaults.variable (list)
+            + class_defaults.variable (list)
             + paramClassDefaults (dict):
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
                     specifies order in which types of States are executed;  used by self.execute]
@@ -1611,7 +1611,7 @@ class Mechanism_Base(Mechanism):
                                                             context='_handle_arg_input_states')
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
-                    default_variable_from_input_states.append(InputState.ClassDefaults.variable)
+                    default_variable_from_input_states.append(InputState.defaults.variable)
                     continue
                 else:
                     raise MechanismError("PROGRAM ERROR: Problem parsing {} specification ({}) for {}".
@@ -1644,7 +1644,7 @@ class Mechanism_Base(Mechanism):
                 mech_variable_item = parsed_input_state_spec.instance_defaults.mech_variable_item
 
             if mech_variable_item is None:
-                mech_variable_item = InputState.ClassDefaults.variable
+                mech_variable_item = InputState.defaults.variable
             elif input_state_variable_was_specified is None and not InputState._state_spec_allows_override_variable(s):
                 input_state_variable_was_specified = True
 

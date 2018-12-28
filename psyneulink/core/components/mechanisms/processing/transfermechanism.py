@@ -527,7 +527,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             + componentType (str): TransferMechanism
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + ClassDefaults.variable (value):  Transfer_DEFAULT_BIAS
+            + class_defaults.variable (value):  Transfer_DEFAULT_BIAS
 
         Class methods
         -------------

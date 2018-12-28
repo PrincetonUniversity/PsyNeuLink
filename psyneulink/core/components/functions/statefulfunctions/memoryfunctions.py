@@ -83,7 +83,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -141,7 +141,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if the **new_previous_value** argument is not specified in the call to `reinitialize
         <StatefulFUnction.reinitialize>`.
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         state of the deque prior to appending `variable <Buffer.variable>` in the current call.
 
     owner : Component
@@ -275,7 +275,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -370,7 +370,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
     Arguments
     ---------
 
-    default_variable : list or 2d array : default ClassDefaults.variable
+    default_variable : list or 2d array : default class_defaults.variable
         specifies a template for the key and value entries of the dictionary;  list must have two entries, each
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
@@ -665,7 +665,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         Arguments
         ---------
 
-        variable : list or 2d array : default ClassDefaults.variable
+        variable : list or 2d array : default class_defaults.variable
            first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
            with key, is added to `dict <DND.dict>`.
 

@@ -1304,7 +1304,7 @@ class InputState(State_Base):
             variable = [variable]
 
         # if function is None, use State's default function
-        function = function or InputState.ClassDefaults.function
+        function = function or InputState.defaults.function
 
         return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 

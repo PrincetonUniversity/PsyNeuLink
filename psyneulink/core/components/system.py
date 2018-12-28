@@ -624,7 +624,7 @@ class System(System_Base):
         + registry (dict): ProcessRegistry
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
+        + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
                                 CONTROLLER: None}
        Class methods

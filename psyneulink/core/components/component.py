@@ -659,12 +659,6 @@ class ComponentsMeta(ABCMeta):
             if not hasattr(self, param.name):
                 setattr(self, param.name, make_parameter_property(param.name))
 
-    # left in for backwards compatibility
-    # DEPRECATED
-    @property
-    def ClassDefaults(self):
-        return self.defaults
-
     # consider removing this for explicitness
     # but can be useful for simplicity
     @property
@@ -777,7 +771,7 @@ class Component(object, metaclass=ComponentsMeta):
     Instance attributes:
         + name
         + componentName - name of particular Function (linear, exponential, integral, etc.)
-        + ClassDefaults.variable (value)
+        + class_defaults.variable (value)
         + variableClassDefault_np_info (ndArrayInfo)
         + instance_defaults.variable (value)
         + _default_variable_flexibility
@@ -895,7 +889,7 @@ class Component(object, metaclass=ComponentsMeta):
     #     kwPreferenceSetName: 'ComponentCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # Determines whether ClassDefaults.variable can be changed (to match an variable in __init__ method)
+    # Determines whether class_defaults.variable can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
@@ -961,7 +955,7 @@ class Component(object, metaclass=ComponentsMeta):
         context = ContextFlags.COMPONENT
 
         # assign defaults based on pass in params and class defaults
-        defaults = self.ClassDefaults.values(show_all=True).copy()
+        defaults = self.class_defaults.values(show_all=True).copy()
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
@@ -1089,7 +1083,7 @@ class Component(object, metaclass=ComponentsMeta):
                 function = param_defaults[FUNCTION]
             else:
                 try:
-                    function = self.ClassDefaults.function
+                    function = self.class_defaults.function
                 except AttributeError:
                     # assume function is a method on self
                     pass
@@ -1263,7 +1257,7 @@ class Component(object, metaclass=ComponentsMeta):
             self._default_variable_flexibility = DefaultsFlexibility.RIGID
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
-            #     variable = self.ClassDefaults.variable
+            #     variable = self.class_defaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
             # expected behavior when variable is None and size is None.
 
@@ -1589,7 +1583,7 @@ class Component(object, metaclass=ComponentsMeta):
                                           "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:
                         try:
-                            params[FUNCTION] = self.ClassDefaults.function
+                            params[FUNCTION] = self.class_defaults.function
                         except AttributeError:
                             raise ComponentError("Unrecognized object ({}) specified as function for {}".
                                                  format(function, self.name))
@@ -1816,7 +1810,7 @@ class Component(object, metaclass=ComponentsMeta):
                 # assigned by the Function class init when initializing
                 variable = self.instance_defaults.variable
             except AttributeError:
-                variable = self.ClassDefaults.variable
+                variable = self.class_defaults.variable
 
         # If the variable is a function, call it
         if callable(variable):
@@ -2377,14 +2371,14 @@ class Component(object, metaclass=ComponentsMeta):
     def _validate_variable(self, variable, context=None):
         """Validate variable and return validated variable
 
-        Convert self.ClassDefaults.variable specification and variable (if specified) to list of 1D np.ndarrays:
+        Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:
 
         VARIABLE SPECIFICATION:                                        ENCODING:
         Simple value variable:                                         0 -> [array([0])]
         Single state array (vector) variable:                         [0, 1] -> [array([0, 1])]
         Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
-        Perform top-level type validation of variable against the self.ClassDefaults.variable;
+        Perform top-level type validation of variable against the self.class_defaults.variable;
             if the type is OK, the value is returned (which should be used by the function)
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
         It is called only if the parameter_validation attribute is `True` (which it is by default)
@@ -2403,14 +2397,14 @@ class Component(object, metaclass=ComponentsMeta):
                                  format(variable.__name__, self.name))
 
         # If variable is not specified, then:
-        #    - assign to (??now np-converted version of) self.ClassDefaults.variable
+        #    - assign to (??now np-converted version of) self.class_defaults.variable
         #    - mark as not having been specified
         #    - return
         if variable is None:
             try:
                 return self.instance_defaults.variable
             except AttributeError:
-                return self.ClassDefaults.variable
+                return self.class_defaults.variable
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
@@ -2426,11 +2420,11 @@ class Component(object, metaclass=ComponentsMeta):
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
         variable = convert_to_np_array(variable, 1)
 
-        # If self.ClassDefaults.variable is locked, then check that variable matches it
+        # If self.class_defaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
-            if not variable.dtype is self.ClassDefaults.variable.dtype:
+            if not variable.dtype is self.class_defaults.variable.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
-                    format(self.componentName, context, self.ClassDefaults.variable.__class__.__name__)
+                    format(self.componentName, context, self.class_defaults.variable.__class__.__name__)
                 raise ComponentError(message)
 
         return variable
@@ -2827,7 +2821,7 @@ class Component(object, metaclass=ComponentsMeta):
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
             # the default
-            if function.owner is None and function is not self.ClassDefaults.function:
+            if function.owner is None and function is not self.class_defaults.function:
                 self.function = function
             else:
                 self.function = copy.deepcopy(function)
@@ -2843,7 +2837,7 @@ class Component(object, metaclass=ComponentsMeta):
 
             self.function.context.initialization_status = ContextFlags.INITIALIZED
         elif inspect.isclass(function) and issubclass(function, Function):
-            kwargs_to_instantiate = function.ClassDefaults.values().copy()
+            kwargs_to_instantiate = function.class_defaults.values().copy()
             if function_params is not None:
                 kwargs_to_instantiate.update(**function_params)
                 # default_variable should not be in any function_params but sometimes it is
@@ -3367,12 +3361,6 @@ class Component(object, metaclass=ComponentsMeta):
             Refers to the defaults of this object's class
         """
         return self.__class__.defaults
-
-    # left in for backwards compatibility
-    # DEPRECATED
-    @property
-    def ClassDefaults(self):
-        return self.class_defaults
 
     # left in for backwards compatibility
     # DEPRECATED

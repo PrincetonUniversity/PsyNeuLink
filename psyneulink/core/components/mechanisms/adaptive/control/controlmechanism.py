@@ -1038,7 +1038,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             variable=defaultControlAllocation,
-                                            reference_value=ControlSignal.ClassDefaults.allocation,
+                                            reference_value=ControlSignal.defaults.allocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal,
                                             context=context)
@@ -1066,7 +1066,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._output_states.append(control_signal)
 
         # since output_states is exactly control_signals is exactly the shape of value, we can just construct it here
-        self.instance_defaults.value = np.array([[ControlSignal.ClassDefaults.allocation]
+        self.instance_defaults.value = np.array([[ControlSignal.defaults.allocation]
                                                  for i in range(len(self._output_states))])
         self.parameters.value.set(copy.deepcopy(self.defaults.value))
 

@@ -119,7 +119,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
     Reduce(                                       \
-         default_variable=ClassDefaults.variable, \
+         default_variable=class_defaults.variable, \
          weights=None,                            \
          exponents=None,                          \
          operation=SUM,                           \
@@ -144,7 +144,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     Arguments
     ---------
 
-    default_variable : list or np.array : default ClassDefaults.variable
+    default_variable : list or np.array : default class_defaults.variable
         specifies a template for the value to be transformed and its default value;  all entries must be numeric.
 
     weights : 1d or 2d np.array : default None
@@ -359,7 +359,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         Arguments
         ---------
 
-        variable : list or np.array : default ClassDefaults.variable
+        variable : list or np.array : default class_defaults.variable
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
@@ -485,7 +485,7 @@ class LinearCombination(
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default ClassDefaults.variable
+    variable : 1d or 2d np.array : default class_defaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
     weights : scalar or 1d or 2d np.array : default None
@@ -802,7 +802,7 @@ class LinearCombination(
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default ClassDefaults.variable
+        variable : 1d or 2d np.array : default class_defaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
@@ -1073,7 +1073,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default ClassDefaults.variable
+    variable : 1d or 2d np.array : default class_defaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
     weights : 1d or 2d np.array : default None
@@ -1361,7 +1361,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default ClassDefaults.variable
+        variable : 1d or 2d np.array : default class_defaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
@@ -1608,7 +1608,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
         Arguments
         ----------
-        variable : 2d np.array : default ClassDefaults.variable
+        variable : 2d np.array : default class_defaults.variable
             a 2d array representing the sample and target values to be used to
             calculate the temporal difference delta values. Both arrays must
             have the same length

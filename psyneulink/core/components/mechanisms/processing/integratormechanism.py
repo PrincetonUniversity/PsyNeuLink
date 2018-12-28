@@ -114,7 +114,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             + componentType (str): SigmoidLayer
             + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + ClassDefaults.variable (value):  SigmoidLayer_DEFAULT_BIAS
+            + class_defaults.variable (value):  SigmoidLayer_DEFAULT_BIAS
             + paramClassDefaults (dict): {FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                      kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                      kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}

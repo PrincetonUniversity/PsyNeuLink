@@ -95,7 +95,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -327,7 +327,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -396,7 +396,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <AccumulatorIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
 
@@ -623,7 +623,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -688,7 +688,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         determines the starting value(s) for integration (i.e., the value to which `previous_value
         <SimpleIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
     owner : Component
@@ -773,7 +773,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -844,7 +844,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -914,7 +914,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <AdaptiveIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
     owner : Component
@@ -999,12 +999,12 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             if isinstance(rate, (list, np.ndarray)):
                 if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
+                    #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       AdaptiveIntegrator's constructor, where that is used as a specification for a function
                     #       parameter (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]])
+                    #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]])
                     #       before the object itself, thus does not see the array specification for the input.
                     if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -1135,7 +1135,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -1571,12 +1571,12 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             if isinstance(rate, (list, np.ndarray)):
                 if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
+                    #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       DualAdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
                     if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -1653,7 +1653,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -1803,7 +1803,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -1912,7 +1912,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         <InteractiveActivationIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>`
         for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <InteractiveActivationIntegrator.variable>` is integrated.
 
     owner : Component
@@ -2062,7 +2062,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -2167,7 +2167,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
     rate : float, list or 1d array : default 1.0
@@ -2294,7 +2294,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <DriftDiffusionIntegrator.default_time_step_size>`.
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
     owner : Component
@@ -2437,7 +2437,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated (can be thought of as the stimulus component of
            the drift rate).
 
@@ -2527,7 +2527,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for  the stimulus component of drift rate -- the drift rate is the product of variable and
         rate
 
@@ -2641,7 +2641,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <OrnsteinUhlenbeckIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
 
     previous_time : float
@@ -2792,7 +2792,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -2873,7 +2873,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -2949,7 +2949,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <LeakyCompetingIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <LeakyCompetingIntegrator.variable>` is integrated.
 
     owner : Component
@@ -3045,7 +3045,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -3290,7 +3290,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the external stimulus
 
     initial_w : float, list or 1d array : default 0.0
@@ -3375,10 +3375,10 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     variable : number or array
         External stimulus
 
-    previous_v : 1d array : default ClassDefaults.variable
+    previous_v : 1d array : default class_defaults.variable
         stores accumulated value of v during integration
 
-    previous_w : 1d array : default ClassDefaults.variable
+    previous_w : 1d array : default class_defaults.variable
         stores accumulated value of w during integration
 
     previous_t : float

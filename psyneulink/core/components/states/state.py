@@ -881,7 +881,7 @@ class State_Base(State):
             + suffix
             + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + ClassDefaults.variable (value): [0]
+            + class_defaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
                                                PROJECTION_TYPE: [str, Projection]})   # Default projection type
             + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to States
@@ -2989,7 +2989,7 @@ def _parse_state_spec(state_type=None,
                              format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
-        spec_function = state_type.ClassDefaults.function
+        spec_function = state_type.class_defaults.function
 
 
     # Assign value based on variable if not specified

@@ -431,7 +431,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 else:
                     state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
                     v = state_spec_dict[VARIABLE]
-                    v = v or ControlSignal.class_defaults.variable
+                    v = v or ControlSignal.defaults.variable
                 control_allocation.append(v)
             self.control_signal_functions = [c.function for c in control_signals]
             self._compute_costs = [c.compute_costs for c in control_signals]

@@ -495,7 +495,7 @@ class Projection_Base(Projection):
             + registry (dict): ProjectionRegistry
             + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + ClassDefaults.variable (value): [0]
+            + class_defaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
             + FUNCTION (Function class or object, or method)
@@ -725,7 +725,7 @@ class Projection_Base(Projection):
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                              format(self.sender, self.name, self.ClassDefaults.variable))
+                              format(self.sender, self.name, self.class_defaults.variable))
             variable = None
 
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState

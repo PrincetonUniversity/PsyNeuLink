@@ -121,7 +121,7 @@ COMMENT
     Arguments
     ---------
 
-    variable : list of numbers or 1d np.array : Default ClassDefaults.variable
+    variable : list of numbers or 1d np.array : Default class_defaults.variable
         the array for which stability is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
@@ -484,7 +484,7 @@ class Distance(ObjectiveFunction):
     Arguments
     ---------
 
-    variable : 2d np.array with two items : Default ClassDefaults.variable
+    variable : 2d np.array with two items : Default class_defaults.variable
         the arrays between which the distance is calculated.
 
     metric : keyword in DistancesMetrics : Default EUCLIDEAN

@@ -461,7 +461,7 @@ class TestInputStateSpec:
     def test_inputstate_class(self):
         T = TransferMechanism(input_states=[InputState])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, [InputState.ClassDefaults.variable])
+        np.testing.assert_array_equal(T.instance_defaults.variable, [InputState.defaults.variable])
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------

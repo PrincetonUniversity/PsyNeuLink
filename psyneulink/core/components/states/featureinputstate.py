@@ -1074,7 +1074,7 @@ class FeatureInputState(InputState):
             variable = [variable]
 
         # if function is None, use State's default function
-        function = function or FeatureInputState.ClassDefaults.function
+        function = function or FeatureInputState.defaults.function
 
         return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 

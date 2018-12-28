@@ -415,7 +415,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + componentType (str): ObjectiveMechanism
             + classPreference (PreferenceSet): ObjectiveMechanism_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + ClassDefaults.variable (value):  None (must be specified using **input_states** and/or
+            + class_defaults.variable (value):  None (must be specified using **input_states** and/or
                                                **monitored_output_states**)
             + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
@@ -542,8 +542,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
-    # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
+    # class_defaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
+    # kmantel: above needs to be clarified - can class_defaults.variable truly be anything? or should there be some format?
     #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
     class Parameters(ProcessingMechanism_Base.Parameters):
         """

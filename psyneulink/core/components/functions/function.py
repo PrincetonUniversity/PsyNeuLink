@@ -538,7 +538,7 @@ class Function_Base(Function):
     Arguments
     ---------
 
-    variable : value : default ClassDefaults.variable
+    variable : value : default class_defaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Dict[param keyword: param value] : default None
@@ -561,7 +561,7 @@ class Function_Base(Function):
 
     variable: value
         format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
-        they are specified by the Function's :keyword:`ClassDefaults.variable`.
+        they are specified by the Function's :keyword:`class_defaults.variable`.
 
     function : function
         called by the Function's `owner <Function_Base.owner>` when it is executed.
@@ -878,7 +878,7 @@ class ArgumentTherapy(Function_Base):
     Arguments
     ---------
 
-    variable : boolean or statement that resolves to one : default ClassDefaults.variable
+    variable : boolean or statement that resolves to one : default class_defaults.variable
         assertion for which a therapeutic response will be offered.
 
     propensity : Manner value : default Manner.CONTRARIAN
@@ -995,11 +995,11 @@ class ArgumentTherapy(Function_Base):
         :return variable: - validated
         """
 
-        if type(variable) == type(self.ClassDefaults.variable) or \
-                (isinstance(variable, numbers.Number) and isinstance(self.ClassDefaults.variable, numbers.Number)):
+        if type(variable) == type(self.class_defaults.variable) or \
+                (isinstance(variable, numbers.Number) and isinstance(self.class_defaults.variable, numbers.Number)):
             return variable
         else:
-            raise FunctionError("Variable must be {0}".format(type(self.ClassDefaults.variable)))
+            raise FunctionError("Variable must be {0}".format(type(self.class_defaults.variable)))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validates variable and /or params and assigns to targets
@@ -1051,7 +1051,7 @@ class ArgumentTherapy(Function_Base):
         Arguments
         ---------
 
-        variable : boolean : default ClassDefaults.variable
+        variable : boolean : default class_defaults.variable
            an assertion to which a therapeutic response is made.
 
         params : Dict[param keyword: param value] : default None

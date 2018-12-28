@@ -144,7 +144,7 @@ class OneHot(SelectionFunction):
     Arguments
     ---------
 
-    variable : 2d np.array : default ClassDefaults.variable
+    variable : 2d np.array : default class_defaults.variable
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
@@ -299,7 +299,7 @@ class OneHot(SelectionFunction):
         Arguments
         ---------
 
-        variable : 2d np.array : default ClassDefaults.variable
+        variable : 2d np.array : default class_defaults.variable
            1st item is an array to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item must be an array of
            probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.
 

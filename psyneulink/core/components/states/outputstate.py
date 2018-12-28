@@ -1673,7 +1673,7 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
     """
     if function is None:
-        function = OutputState.ClassDefaults.function
+        function = OutputState.defaults.function
 
     if isinstance(function, (function_type, method_type)):
         return function
