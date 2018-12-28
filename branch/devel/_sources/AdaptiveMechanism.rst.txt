@@ -12,4 +12,4 @@ Adaptive Mechanisms
 
 .. automodule:: psyneulink.core.components.mechanisms.adaptive.adaptivemechanism
    :members:
-   :exclude-members: Linear, random, Params
+   :exclude-members: Linear, random, Parameters

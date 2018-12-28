@@ -6,5 +6,5 @@ CombinationFunctions
 
 .. automodule:: psyneulink.core.components.functions.combinationfunctions
    :members: Reduce, LinearCombination, CombineMeans, PredictionErrorDeltaFunction
-   :exclude-members: Params
+   :exclude-members: Parameters
 

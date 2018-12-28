@@ -6,4 +6,4 @@ InterfaceFunctions
 
 .. automodule:: psyneulink.core.components.functions.interfacefunctions
    :members:
-   :exclude-members: Params
+   :exclude-members: Parameters

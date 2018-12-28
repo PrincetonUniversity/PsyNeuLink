@@ -12,4 +12,4 @@ Modulatory Projections
 
 .. automodule:: psyneulink.core.components.projections.modulatory.modulatoryprojection
    :members:
-   :exclude-members: ModulatoryProjection_Base, Linear, random, Params
+   :exclude-members: ModulatoryProjection_Base, Linear, random, Parameters
