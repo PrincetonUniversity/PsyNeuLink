@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.4.8.0+1112.gc73ac81 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.4.8.0+1114.gc7210a7 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1112.gc73ac81 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1114.gc7210a7 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1112
+                0.4.8.0+1114
               </div>
             
           
@@ -193,7 +193,7 @@ It defines a common set of attributes possessed, and methods used by all Compone
 <p>A Component is never created by calling the constructor for the Component base class.  However, its <code class="docutils literal"><span class="pre">__init__()</span></code>
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed <a class="reference internal" href="#component-methods"><span class="std std-ref">below</span></a>) as part of the initialization procedure.  Every Component has a core set of
-<code class="xref any docutils literal"><span class="pre">configurable</span> <span class="pre">parameters</span></code> that can be specified in the arguments of the constructor, as well
+<a class="reference internal" href="Parameters.html"><span class="doc">configurable parameters</span></a> that can be specified in the arguments of the constructor, as well
 as additional parameters and attributes that may be specific to particular Components, many of which can be modified
 by the user, and some of which provide useful information about the Component (see <a class="reference internal" href="#user-modifiable-parameters"><span class="std std-ref">Parameters</span></a>
 and <code class="xref any docutils literal"><span class="pre">Informational</span> <span class="pre">Attributes</span></code> below).</p>
@@ -271,7 +271,7 @@ following examples:</p>
 </pre></div>
 </div>
 <p>The specified Function will be used as a template to create a new Function object that is assigned to the
-<a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.function" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of the Component.</p>
+<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of the Component.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">In the current implementation of PsyNeuLink, if a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (or the constructor for one) is
@@ -330,12 +330,12 @@ Components do not reinitialize.</p>
 </div>
 <div class="section" id="parameters">
 <span id="user-modifiable-parameters"></span><h3><em>Parameters</em><a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
-<p id="component-parameters">A Component defines its <code class="xref any docutils literal"><span class="pre">parameters</span></code> in its <em>parameters</em> attribute, which contains a collection of
-<code class="xref any docutils literal"><span class="pre">Param</span></code> objects, each of which stores a Param’s values, <a class="reference internal" href="#psyneulink.core.components.component.Component.defaults" title="psyneulink.core.components.component.Component.defaults"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">values</span></code></a>, and various
-<code class="xref any docutils literal"><span class="pre">properties</span></code> of the parameter.</p>
+<p id="component-parameters">A Component defines its <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> in its <em>parameters</em> attribute, which contains a collection of
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Param" title="psyneulink.core.globals.parameters.Param"><code class="xref any py py-class docutils literal"><span class="pre">Param</span></code></a> objects, each of which stores a Param’s values, <a class="reference internal" href="#psyneulink.core.components.component.Component.defaults" title="psyneulink.core.components.component.Component.defaults"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">values</span></code></a>, and various
+<a class="reference internal" href="Parameters.html#param-attributes-table"><span class="std std-ref">properties</span></a> of the parameter.</p>
 <ul>
 <li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">Params</span></code> - a <code class="xref any docutils literal"><span class="pre">Parameters</span> <span class="pre">class</span></code> defining parameters and their default values that</dt>
+<dt><code class="xref any docutils literal"><span class="pre">Params</span></code> - a <a class="reference internal" href="Parameters.html"><span class="doc">Parameters class</span></a> defining parameters and their default values that</dt>
 <dd><p class="first last">are used for all Components, unless overridden.</p>
 </dd>
 </dl>
@@ -353,7 +353,7 @@ general, only parameters that take numerical values and/or do not affect the str
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>,
-<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.output_states" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
+<a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
 but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a>, as well as the parameters of the TransferMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (listed in the <em>function_params</em> subdictionary) can all be subject to modulation.
 Parameters that are subject to modulation are associated with a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which the ControlSignals
 can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
@@ -679,14 +679,14 @@ This is a convenience method that calls the <a class="reference internal" href="
 <dl class="attribute">
 <dt id="psyneulink.core.components.component.Component.stateful_parameters">
 <code class="descname">stateful_parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.stateful_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>A list of all of this object’s <code class="xref any docutils literal"><span class="pre">parameters</span></code> whose values
+<dd><p>A list of all of this object’s <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> whose values
 may change during runtime</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.component.Component.function_parameters">
 <code class="descname">function_parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.function_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <code class="xref any docutils literal"><span class="pre">parameters</span></code> object of this object’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></p>
+<dd><p>The <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> object of this object’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></p>
 </dd></dl>
 
 </dd></dl>
@@ -738,7 +738,7 @@ may change during runtime</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1112.gc73ac81',
+            VERSION:'0.4.8.0+1114.gc7210a7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
