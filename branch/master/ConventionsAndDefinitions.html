@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.4.8.0+3.gf7820d9 documentation</title>
+  <title>Conventions and Definitions &mdash; PsyNeuLink 0.4.8.0+1130.ga267e1e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+3.gf7820d9 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1130.ga267e1e documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+3
+                0.4.8.0+1130
               </div>
             
           
@@ -178,7 +178,7 @@
 <p>The following conventions are used for the names of PsyNeuLink objects and their documentation:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="Component.html"><span class="doc">Components</span></a> (class): names use CamelCase (with initial capitalization);
+<li><a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (class): names use CamelCase (with initial capitalization);
 the initial mention in a section of documentation is formatted as a link (in colored text)
 to the documentation for that Component;</li>
 </ul>
@@ -209,12 +209,12 @@ and Compositions (combinations of Components that implement a model).</p>
 <span id="definitions-components"></span><h3><a class="reference internal" href="Component.html"><span class="doc">Components</span></a><a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
 <p>Components are objects that perform a specific function. Every Component has a:</p>
 <ul class="simple">
-<li><a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> - performs the core computation of the Component;</li>
-<li><a class="reference internal" href="Component.html#psyneulink.components.component.Component.variable" title="psyneulink.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> - the input to the Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
-<li><em>parameter(s)</em> - determine how a Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> operates
-(listed in its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.user_params" title="psyneulink.components.component.Component.user_params"><code class="xref any py py-attr docutils literal"><span class="pre">user_params</span></code></a> dictionary);</li>
-<li><a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> - represents the result of the Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
-<li><code class="xref any docutils literal"><span class="pre">name</span></code> - string label that uniquely identifies the Component.</li>
+<li><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> - performs the core computation of the Component;</li>
+<li><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> - the input to the Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
+<li><em>parameter(s)</em> - determine how a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> operates
+(listed in its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.user_params" title="psyneulink.core.components.component.Component.user_params"><code class="xref any py py-attr docutils literal"><span class="pre">user_params</span></code></a> dictionary);</li>
+<li><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> - represents the result of the Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
+<li><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.name" title="psyneulink.core.components.component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> - string label that uniquely identifies the Component.</li>
 </ul>
 <p>Two types of Components are the basic building blocks of PsyNeuLink models, Mechanisms and Projections:</p>
 <ul class="simple">
@@ -238,7 +238,7 @@ PsyNeuLink Components.  There are three primary types:<ul class="last">
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
 <dd>Modifies one or more parameters of other Mechanisms.</dd>
 </dl>
 </li>
@@ -280,7 +280,7 @@ MappingProjection.</dd>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd>Takes a ControlSignal from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> and uses it to modify the parameter of a
+<dd>Takes a ControlSignal from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> and uses it to modify the parameter of a
 ProcessingMechanism.</dd>
 </dl>
 </li>
@@ -328,7 +328,7 @@ that modify the parameter(s) of the State’s function, and thereby the value of
 <dt><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></dt>
 <dd>Represents an output of the Mechanism.
 Takes an item of the Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the State’s
-<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the State’s <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and provides that
+<code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the State’s <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and provides that
 to one or more efferent PathwayProjections.  It can also receive one or more modulatory
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify the parameter(s) of the State’s function, and thereby the
 State’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</dd>
@@ -338,7 +338,7 @@ State’s <code class="xref any docutils literal"><span class="pre">value</span>
 </dd>
 </dl>
 </li>
-<li><a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> - the most fundamental unit of computation in PsyNeuLink.  Every <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> has a Function
+<li><a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> - the most fundamental unit of computation in PsyNeuLink.  Every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> has a Function
 object, that wraps an executable function together with a definition of its parameters, and modularizes it so that
 it can be swapped out for another (compatible) one, or replaced with a customized one.  PsyNeuLink provides a
 library of standard Functions (e.g. for linear, non-linear, and matrix transformation; integration, and evaluation and
@@ -419,7 +419,7 @@ another in a single system.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+3.gf7820d9',
+            VERSION:'0.4.8.0+1130.ga267e1e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

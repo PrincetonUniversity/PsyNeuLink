@@ -1,5 +1,5 @@
-Components
-==========
+Component
+=========
 
 .. toctree::
    :maxdepth: 1
@@ -7,8 +7,8 @@ Components
    Mechanisms <Mechanism>
    Projections <Projection>
    States <State>
-   Functions <Function>
+   Functions <Functions>
 
-.. automodule:: psyneulink.components.component
+.. automodule:: psyneulink.core.components.component
    :members:
-   :exclude-members: ParamsDict, ComponentLog, COMPONENT_BASE_CLASS, LogLevel
+   :exclude-members: Parameters, ParamsDict, ComponentLog, COMPONENT_BASE_CLASS, LogLevel

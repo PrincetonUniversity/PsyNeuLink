@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.4.8.0+1130.ga267e1e documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1130.ga267e1e documentation" href="index.html"/>
+        <link rel="up" title="Functions" href="Functions.html"/>
+        <link rel="next" title="OptimizationFunctions" href="OptimizationFunctions.html"/>
+        <link rel="prev" title="MemoryFunctions" href="MemoryFunctions.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.8.0+1130
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Core.html">Core</a> &raquo;</li>
+        
+          <li><a href="Component.html">Component</a> &raquo;</li>
+        
+          <li><a href="Functions.html">Functions</a> &raquo;</li>
+        
+      <li>ObjectiveFunctions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ObjectiveFunctions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="objectivefunctions">
+<h1>ObjectiveFunctions<a class="headerlink" href="#objectivefunctions" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-psyneulink.core.components.functions.objectivefunctions"></span><ul class="simple">
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal"><span class="pre">Distance</span></code></a></li>
+</ul>
+<p>Functions that return a scalar evaluation of their input.</p>
+<dl class="class">
+<dt id="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="descname">ObjectiveFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>function=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> used for evaluating states.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Stability">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x107484ba8&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x107484c88&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x104ddb730&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Stability(                                          default_variable=None,                          matrix=HOLLOW_MATRIX,                           metric=ENERGY                                   transfer_fct=None                               normalize=False,                                params=None,                                    owner=None,                                     prefs=None                                      )</p>
+<p id="stability">Return the stability of <code class="xref any docutils literal"><span class="pre">variable</span></code> based on a state transformation matrix.</p>
+<p>The value of <code class="xref any docutils literal"><span class="pre">variable</span></code> is passed through the <code class="xref any docutils literal"><span class="pre">matrix</span></code>,
+transformed using the <code class="xref any docutils literal"><span class="pre">transfer_fct</span></code> (if specified), and then compared with its initial
+value using the <code class="xref any docutils literal"><span class="pre">distance</span> <span class="pre">metric</span></code> specified by <code class="xref any docutils literal"><span class="pre">metric</span></code>.  If <code class="xref any docutils literal"><span class="pre">normalize</span></code> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is normalized by the length of (number of elements in) <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<dl class="docutils">
+<dt>variable <span class="classifier-delimiter">:</span> <span class="classifier">list of numbers or 1d np.array</span> <span class="classifier-delimiter">:</span> <span class="classifier">Default class_defaults.variable</span></dt>
+<dd>the array for which stability is calculated.</dd>
+<dt>matrix <span class="classifier-delimiter">:</span> <span class="classifier">list, np.ndarray, np.matrix, function keyword, or MappingProjection</span> <span class="classifier-delimiter">:</span> <span class="classifier">default HOLLOW_MATRIX</span></dt>
+<dd>specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+length of <code class="xref any docutils literal"><span class="pre">variable</span></code>.</dd>
+<dt>metric <span class="classifier-delimiter">:</span> <span class="classifier">keyword in DistanceMetrics</span> <span class="classifier-delimiter">:</span> <span class="classifier">Default ENERGY</span></dt>
+<dd>specifies a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">metric</span></code></a> from <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">DistanceMetrics</span></code></a> used to compute stability.</dd>
+<dt>transfer_fct <span class="classifier-delimiter">:</span> <span class="classifier">function or method</span> <span class="classifier-delimiter">:</span> <span class="classifier">Default None</span></dt>
+<dd>specifies the function used to transform output of weight <code class="xref any docutils literal"><span class="pre">matrix</span></code>.</dd>
+<dt>normalize <span class="classifier-delimiter">:</span> <span class="classifier">bool</span> <span class="classifier-delimiter">:</span> <span class="classifier">Default False</span></dt>
+<dd>specifies whether to normalize the stability value by the length of <code class="xref any docutils literal"><span class="pre">variable</span></code>.</dd>
+<dt>params <span class="classifier-delimiter">:</span> <span class="classifier">Dict[param keyword: param value]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
+<dd>a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</dd>
+<dt>owner <span class="classifier-delimiter">:</span> <span class="classifier">Component</span></dt>
+<dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</dd>
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default see <code class="xref any docutils literal"><span class="pre">name</span></code></span></dt>
+<dd>specifies the name of the Function.</dd>
+<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">default Function.classPreferences</span></dt>
+<dd>specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</dd>
+</dl>
+<dl class="docutils">
+<dt>variable <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
+<dd>array for which stability is calculated.</dd>
+<dt>matrix <span class="classifier-delimiter">:</span> <span class="classifier">list, np.ndarray, np.matrix, function keyword, or MappingProjection</span> <span class="classifier-delimiter">:</span> <span class="classifier">default HOLLOW_MATRIX</span></dt>
+<dd>weight matrix from each element of <code class="xref any docutils literal"><span class="pre">variable</span></code> to each other;  if a matrix other
+than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
+stability calculation.</dd>
+<dt>metric <span class="classifier-delimiter">:</span> <span class="classifier">keyword in DistanceMetrics</span></dt>
+<dd>metric used to compute stability; must be a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">DistanceMetrics</span></code></a> keyword. The <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal"><span class="pre">Distance</span></code></a> Function is used to
+compute the stability of <code class="xref any docutils literal"><span class="pre">variable</span></code> with respect to its value after its transformation
+by <code class="xref any docutils literal"><span class="pre">matrix</span></code> and <code class="xref any docutils literal"><span class="pre">transfer_fct</span></code>.</dd>
+<dt>transfer_fct <span class="classifier-delimiter">:</span> <span class="classifier">function or method</span></dt>
+<dd>function used to transform output of weight <code class="xref any docutils literal"><span class="pre">matrix</span></code> prior to computing stability.</dd>
+<dt>normalize <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>if <code class="xref any docutils literal"><span class="pre">True</span></code>, result of stability calculation is normalized by the length of <code class="xref any docutils literal"><span class="pre">variable</span></code>.</dd>
+<dt>params <span class="classifier-delimiter">:</span> <span class="classifier">Dict[param keyword: param value]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
+<dd>a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</dd>
+<dt>owner <span class="classifier-delimiter">:</span> <span class="classifier">Component</span></dt>
+<dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</dd>
+<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">default Function.classPreferences</span></dt>
+<dd>specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the stability of <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<p>Compare the value of <code class="xref any docutils literal"><span class="pre">variable</span></code> with its value after transformation by
+<code class="xref any docutils literal"><span class="pre">matrix</span></code> and <code class="xref any docutils literal"><span class="pre">transfer_fct</span></code> (if specified), using the specified
+<code class="xref any docutils literal"><span class="pre">metric</span></code>.  If <code class="xref any docutils literal"><span class="pre">normalize</span></code> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is divided
+by the length of <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>stability</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">scalar</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="descname">Distance</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>metric=EUCLIDEAN                                 normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="Permalink to this definition">¶</a></dt>
+<dd><p id="distance">Return the distance between the vectors in the two items of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> using the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">distance</span>
+<span class="pre">metric</span></code></a> specified in the <code class="xref any docutils literal"><span class="pre">metric</span></code> attribute.  If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is normalized by the length of (number of elements in) <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>2d np.array with two items : Default class_defaults.variable</em>) – the arrays between which the distance is calculated.</li>
+<li><strong>metric</strong> (<em>keyword in DistancesMetrics : Default EUCLIDEAN</em>) – specifies a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">distance</span> <span class="pre">metric</span></code></a> used to compute the distance between the two items in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>normalize</strong> (<em>bool : Default False</em>) – specifies whether to normalize the distance by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array with two items</em> – contains the arrays between which the distance is calculated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.metric">
+<code class="descname">metric</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>keyword in DistanceMetrics</em> – determines the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">metric</span></code></a> used to compute the distance between the two items in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.normalize">
+<code class="descname">normalize</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – determines whether the distance is normalized by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.params">
+<code class="descname">params</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[param keyword: param value] : default None</em> – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distance between the two vectors in <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<p>Use the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">distance</span> <span class="pre">metric</span></code></a> specified in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="psyneulink.core.components.functions.objectivefunctions.Distance.metric"><code class="xref any py py-attr docutils literal"><span class="pre">metric</span></code></a> to calculate the distance.
+If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is divided by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>distance</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">scalar</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="OptimizationFunctions.html" class="btn btn-neutral float-right" title="OptimizationFunctions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="MemoryFunctions.html" class="btn btn-neutral" title="MemoryFunctions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.4.8.0+1130.ga267e1e',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

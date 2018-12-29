@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.4.8.0+3.gf7820d9 documentation</title>
+  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.4.8.0+1130.ga267e1e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+3.gf7820d9 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1130.ga267e1e documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+3
+                0.4.8.0+1130
               </div>
             
           
@@ -162,8 +162,7 @@
 <p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488380">“Conflict Monitoring and Cognitive Control”</a></p>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>This implements a model concerning the role of the anterior cingulate cortex (ACC)
-<a class="reference external" href="https://en.wikipedia.org/wiki/Anterior_cingulate_cortex">https://en.wikipedia.org/wiki/Anterior_cingulate_cortex</a> in situations calling for their
+<p>This implements a model concerning the role of the <a class="reference external" href="https://en.wikipedia.org/wiki/Anterior_cingulate_cortex">anterior cingulate cortex (ACC)</a> in situations calling for their
 involvement. The demand for control is evaluated by monitoring for conflicts in information processing.
 The model is supported by data concerning the anterior cingulate cortex, a brain area involved in cognitive control,
 which also appears to respond to the occurrence of conflict.
@@ -183,27 +182,27 @@ bidirectional way. The response layer receives inputs from both hidden layers. A
 <div class="section" id="network-system">
 <h3>Network System<a class="headerlink" href="#network-system" title="Permalink to this headline">¶</a></h3>
 <p><strong>COLOR INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 3 (one unit for the input of one color, respectively
-here blue &amp; green), and assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
+here blue &amp; green), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
 <p><strong>WORD INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 3 (one unit for the input of one word, respectively,
-here blue &amp; green), and assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
+here blue &amp; green), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
 <p><strong>TASK INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 2 (one unit specified with a task
-value of one, the other element set to zero), and assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
+value of one, the other element set to zero), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
 <p><strong>COLOR HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 3 (one element for each of the two colors, one
-element for the neutral color and assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 4.0 and <strong>bias</strong> = 1.0.
+element for the neutral color and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 4.0 and <strong>bias</strong> = 1.0.
 The <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code> and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights
 (<strong>hetero</strong> = -2).</p>
 <p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 3 (one element for each of the two colors, one
-element for the neutral color and assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 4.0 and <strong>bias</strong> = 1.0.
+element for the neutral color and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 4.0 and <strong>bias</strong> = 1.0.
 The <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code> and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights
 (<strong>hetero</strong> = -2).</p>
 <p><strong>TASK DEMAND LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 2 (one element for each of the two tasks, and
-assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 1.0 and <strong>bias</strong> = 0.0. The <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code>
+assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 1.0 and <strong>bias</strong> = 0.0. The <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights (<strong>hetero</strong> = -2).</p>
 <p><strong>RESPONSE LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 2 (one element for each of the two responses, and
-assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 1.0 and <strong>bias</strong> = 0.0. The <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code>
+assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 1.0 and <strong>bias</strong> = 0.0. The <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights (<strong>hetero</strong> = -2).</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the  network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
-The <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter from the <em>COLOR INPUT_LAYER</em>, the <em>WORD INPUT_LAYER</em>, and the
+The <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter from the <em>COLOR INPUT_LAYER</em>, the <em>WORD INPUT_LAYER</em>, and the
 <em>BIAS INPUT_LAYER</em> to the <em>COLOR HIDDEN LAYER</em> and <em>WORD HIDDEN LAYER</em> are all set with a numpy array with a value of
 1.0 for the diagonal elements and all off-diagonal elements are set to 0.
 The color hidden layer projects to the <em>TASK LAYER</em> with a numpy array with a value of 4.0 on the the first column, and
@@ -223,9 +222,9 @@ elements.</p>
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>All units are set to zero at the beginning of the simulation. Each simulation run starts with a settling
 period of 500 time steps. Then the stimulus is presented for 1000 time steps and is presented by setting the input
-units to 1.0 for a given trial. Conflict is computed on the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a> of the <em>RESPONSE LAYER</em>. The figure plots
+units to 1.0 for a given trial. Conflict is computed on the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_state" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a> of the <em>RESPONSE LAYER</em>. The figure plots
 conflict over one trial for each of the three conditions.
-The <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function is used to record the output values of <em>RESPONSE LAYER</em>. These values are used to produce
+The <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.log" title="psyneulink.core.globals.parameters.Parameter.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function is used to record the output values of <em>RESPONSE LAYER</em>. These values are used to produce
 the plot of the Figure.</p>
 </div>
 <div class="section" id="please-note">
@@ -233,7 +232,7 @@ the plot of the Figure.</p>
 <p>Note that this script implements a slightly different Figure than in the original Figure in the paper.
 However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 conflict monitoring simulations.</p>
-<p>Script: <a class="reference download internal" href="_downloads/Botvinick_conflict_monitoring_Figure1.py" download=""><code class="xref download docutils literal"><span class="pre">Botvinick_conflict_monitoring_Figure1.py</span></code></a></p>
+<p>Script: <a class="reference download internal" href="_downloads/Botvinick_conflict_monitoring_model.py" download=""><code class="xref download docutils literal"><span class="pre">Botvinick_conflict_monitoring_model.py</span></code></a></p>
 </div>
 </div>
 
@@ -272,7 +271,7 @@ conflict monitoring simulations.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+3.gf7820d9',
+            VERSION:'0.4.8.0+1130.ga267e1e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

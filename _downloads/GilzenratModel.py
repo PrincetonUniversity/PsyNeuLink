@@ -13,6 +13,9 @@ from matplotlib import pyplot as plt
 # Define Variables ----------------------------------------------------------------------------------------------------
 
 # Weights & Biases:
+import psyneulink.core.components.functions.distributionfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 b_decision = 0.00   # Bias on decision units (not biased)
 b_response = 2.00   # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
@@ -57,7 +60,7 @@ input_layer = pnl.TransferMechanism(
 
 # Create Decision Layer  --- [ Target, Distractor ]
 
-decision_layer = pnl.LCA(
+decision_layer = pnl.LCAMechanism(
     size=2,
     time_step_size=dt,
     leak=-1.0,
@@ -65,23 +68,23 @@ decision_layer = pnl.LCA(
     competition=w_XiXj,
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
     #                    [ -w_XiXj    w_XiXi ]
-    function=pnl.Logistic(bias=b_decision),
-    noise=pnl.NormalDist(standard_dev=SD).function,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_decision),
+    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='DECISION LAYER'
 )
 
 # Create Response Layer  --- [ Target ]
 
-response_layer = pnl.LCA(
+response_layer = pnl.LCAMechanism(
     size=1,
     time_step_size=dt,
     leak=-1.0,
     self_excitation=w_X3X3,
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit
-    function=pnl.Logistic(bias=b_response),
-    noise=pnl.NormalDist(standard_dev=SD).function,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_response),
+    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='RESPONSE'
 )
@@ -115,28 +118,28 @@ decision_process = pnl.Process(
 
 LC = pnl.LCControlMechanism(
         integration_method="EULER",
-        threshold_FHN=a,
-        uncorrelated_activity_FHN=d,
+        threshold_FitzHughNagumo=a,
+        uncorrelated_activity_FitzHughNagumo=d,
         base_level_gain=G,
         scaling_factor_gain=k,
-        time_step_size_FHN=dt,
-        mode_FHN=C,
-        time_constant_v_FHN=tau_v,
-        time_constant_w_FHN=tau_u,
-        a_v_FHN=-1.0,
-        b_v_FHN=1.0,
-        c_v_FHN=1.0,
-        d_v_FHN=0.0,
-        e_v_FHN=-1.0,
-        f_v_FHN=1.0,
-        a_w_FHN=1.0,
-        b_w_FHN=-1.0,
-        c_w_FHN=0.0,
-        t_0_FHN=0.0,
-        initial_v_FHN=initial_v,
-        initial_w_FHN=initial_u,
+        time_step_size_FitzHughNagumo=dt,
+        mode_FitzHughNagumo=C,
+        time_constant_v_FitzHughNagumo=tau_v,
+        time_constant_w_FitzHughNagumo=tau_u,
+        a_v_FitzHughNagumo=-1.0,
+        b_v_FitzHughNagumo=1.0,
+        c_v_FitzHughNagumo=1.0,
+        d_v_FitzHughNagumo=0.0,
+        e_v_FitzHughNagumo=-1.0,
+        f_v_FitzHughNagumo=1.0,
+        a_w_FitzHughNagumo=1.0,
+        b_w_FitzHughNagumo=-1.0,
+        c_w_FitzHughNagumo=0.0,
+        t_0_FitzHughNagumo=0.0,
+        initial_v_FitzHughNagumo=initial_v,
+        initial_w_FitzHughNagumo=initial_u,
         objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 monitored_output_states=[(
                     decision_layer,
                     None,
@@ -187,13 +190,13 @@ decision_layer_distractor_values = [0.0]
 response_layer_values = [0.0]
 
 
-def record_trial():
+def record_trial(execution_context):
     # After each trial, store all of the following values:
-    LC_results_h_of_v.append(h_v(LC.value[1][0], C, d))
-    LC_results_u.append(LC.value[2][0])
-    decision_layer_target_values.append(decision_layer.value[0][0])
-    decision_layer_distractor_values.append(decision_layer.value[0][1])
-    response_layer_values.append(response_layer.value[0][0])
+    LC_results_h_of_v.append(h_v(LC.parameters.value.get(execution_context)[1][0], C, d))
+    LC_results_u.append(LC.parameters.value.get(execution_context)[2][0])
+    decision_layer_target_values.append(decision_layer.parameters.value.get(execution_context)[0][0])
+    decision_layer_distractor_values.append(decision_layer.parameters.value.get(execution_context)[0][1])
+    response_layer_values.append(response_layer.parameters.value.get(execution_context)[0][0])
 
     # Progress bar
     current_trial_num = len(LC_results_h_of_v)
@@ -208,11 +211,13 @@ sys.stdout.write("\r0% complete")
 sys.stdout.flush()
 
 # Run the model
+print('\nRunning model...')
 task.run(
     inputs=stimulus_dictionary,
     num_trials=trials,
     call_after_trial=record_trial
 )
+print('\nModel run, generating plots...')
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
 
@@ -265,3 +270,4 @@ plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 plt.show()
 
 task.show()
+print('\nPlots generated')

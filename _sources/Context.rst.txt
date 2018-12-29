@@ -1,5 +1,6 @@
 Context
 =======
 
-.. automodule:: psyneulink.globals.context
+.. automodule:: psyneulink.core.globals.context
    :members:
+   :exclude-members: Parameters
