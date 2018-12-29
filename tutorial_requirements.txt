@@ -1,4 +1,4 @@
 jupyter
 matplotlib
 graphviz
-ipython==6.5.0
+ipython
