@@ -16,17 +16,17 @@ class TestMechanism:
     def test_transfer_mech_instantiation(self, mechanism, default_variable, result_variable):
         T = mechanism(default_variable=default_variable)
 
-        assert T.instance_defaults.variable == result_variable
-        assert T.instance_defaults.value == result_variable
+        assert T.defaults.variable == result_variable
+        assert T.defaults.value == result_variable
 
-        assert T.function.instance_defaults.variable == result_variable
-        assert T.function.instance_defaults.value == result_variable
+        assert T.function.defaults.variable == result_variable
+        assert T.function.defaults.value == result_variable
 
-        assert T.input_state.instance_defaults.variable == result_variable[0]
-        assert T.input_state.instance_defaults.value == result_variable[0]
+        assert T.input_state.defaults.variable == result_variable[0]
+        assert T.input_state.defaults.value == result_variable[0]
 
-        assert T.input_state.function.instance_defaults.variable == result_variable[0]
-        assert T.input_state.function.instance_defaults.value == result_variable[0]
+        assert T.input_state.function.defaults.variable == result_variable[0]
+        assert T.input_state.function.defaults.value == result_variable[0]
 
     @pytest.mark.mechanism
     @pytest.mark.parametrize(
@@ -38,8 +38,8 @@ class TestMechanism:
     def test_value_shapes(self, mechanism_type, default_variable, mechanism_value, function_value):
         M = mechanism_type(default_variable=default_variable)
 
-        assert M.instance_defaults.value.shape == mechanism_value.shape
-        assert M.function.instance_defaults.value.shape == function_value.shape
+        assert M.defaults.value.shape == mechanism_value.shape
+        assert M.function.defaults.value.shape == function_value.shape
 
 
 

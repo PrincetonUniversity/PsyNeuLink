@@ -1004,7 +1004,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if self.control_signals:
             self._output_states = []
-            self.instance_defaults.value = None
+            self.defaults.value = None
 
             for control_signal in self.control_signals:
                 self._instantiate_control_signal(control_signal, context=context)
@@ -1066,12 +1066,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._output_states.append(control_signal)
 
         # since output_states is exactly control_signals is exactly the shape of value, we can just construct it here
-        self.instance_defaults.value = np.array([[ControlSignal.defaults.allocation]
+        self.defaults.value = np.array([[ControlSignal.defaults.allocation]
                                                  for i in range(len(self._output_states))])
         self.parameters.value.set(copy.deepcopy(self.defaults.value))
 
         # Assign ControlSignal's variable to index of owner's value
-        control_signal._variable_spec = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
+        control_signal._variable_spec = [(OWNER_VALUE, len(self.defaults.value) - 1)]
         if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
                     "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."

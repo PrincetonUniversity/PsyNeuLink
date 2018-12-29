@@ -966,7 +966,7 @@ class DDM(ProcessingMechanism_Base):
 
         # set initial values and threshold
         time_step = [0]
-        position = [float(self.instance_defaults.variable)]
+        position = [float(self.defaults.variable)]
         variable = stimulus
 
         # execute the mechanism once to begin the loop
@@ -1118,7 +1118,7 @@ class DDM(ProcessingMechanism_Base):
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self.instance_defaults.variable
+            variable = self.defaults.variable
 
         variable = self._validate_variable(variable)
 

@@ -780,11 +780,11 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #
         # # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # # Use self.instance_defaults.variable to initialize state of input
+        # # Use self.defaults.variable to initialize state of input
         #
         #
         # if INITIALIZING in context:
-        #     self.previous_input = self.instance_defaults.variable
+        #     self.previous_input = self.defaults.variable
         #
         # if self.decay is not None and self.decay != 1.0:
         #     self.previous_input *= self.decay
@@ -811,7 +811,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #     if not self.integrator_function:
         #
         #         self.integrator_function = AdaptiveIntegrator(
-        #                                     self.instance_defaults.variable,
+        #                                     self.defaults.variable,
         #                                     initializer = self.initial_value,
         #                                     noise = self.noise,
         #                                     rate = self.integration_rate
@@ -878,7 +878,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
     #     """
     #
     #     if isinstance(matrix, str):
-    #         size = len(mech.instance_defaults.variable[0])
+    #         size = len(mech.defaults.variable[0])
     #         matrix = get_matrix(matrix, size, size)
     #
     #     return AutoAssociativeProjection(sender=mech,

@@ -1016,11 +1016,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # FUNCTION is a function or method, so test that shape of output = shape of input
             if isinstance(transfer_function, (function_type, method_type, UserDefinedFunction)):
-                var_shape = self.instance_defaults.variable.shape
+                var_shape = self.defaults.variable.shape
                 if isinstance(transfer_function, UserDefinedFunction):
-                    val_shape = transfer_function._execute(self.instance_defaults.variable).shape
+                    val_shape = transfer_function._execute(self.defaults.variable).shape
                 else:
-                    val_shape = np.array(transfer_function(self.instance_defaults.variable)).shape
+                    val_shape = np.array(transfer_function(self.defaults.variable)).shape
 
                 if val_shape != var_shape:
                     raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
@@ -1033,10 +1033,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Need to compare with variable, since default for initial_value on Class is None
             if initial_value.dtype != object:
                 initial_value = np.atleast_2d(initial_value)
-            if not iscompatible(initial_value, self.instance_defaults.variable):
+            if not iscompatible(initial_value, self.defaults.variable):
                 raise TransferError(
                         "The format of the initial_value parameter for {} ({}) must match its variable ({})".
-                        format(append_type_to_name(self), initial_value, self.instance_defaults.variable,
+                        format(append_type_to_name(self), initial_value, self.defaults.variable,
                     )
                 )
 
@@ -1066,11 +1066,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("Value(s) in {} arg for {} ({}) must be an int or float in the interval [0,1]".
                                     format(repr(INTEGRATION_RATE), self.name, integration_rate, ))
             if (not np.isscalar(integration_rate.tolist())
-                    and integration_rate.shape != self.instance_defaults.variable.squeeze().shape):
+                    and integration_rate.shape != self.defaults.variable.squeeze().shape):
                 raise TransferError("{} arg for {} ({}) must be either an int or float, "
                                     "or have the same shape as its {} ({})".
                                     format(repr(INTEGRATION_RATE), self.name, integration_rate,
-                                           VARIABLE, self.instance_defaults.variable))
+                                           VARIABLE, self.defaults.variable))
 
         # Validate CLIP:
         if CLIP in target_set and target_set[CLIP] is not None:
@@ -1092,11 +1092,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable) and len(noise) > 1:
+            elif not iscompatible(np.atleast_2d(noise), self.defaults.variable) and len(noise) > 1:
                 raise MechanismError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified"
                     " as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
+                    .format(noise, self.defaults.variable, self.name, np.shape(np.array(self.defaults.variable))))
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -1156,7 +1156,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
-            self.initial_value = self.instance_defaults.variable
+            self.initial_value = self.defaults.variable
 
     def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
                                          execution_id, context=None):
@@ -1218,7 +1218,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             if hasattr(self.integrator_function, INITIALIZER):
                 fct_intlzr = np.array(self.integrator_function.initializer)
                 # Check against variable, as class.default is None, but initial_value assigned to variable before here
-                mech_specified = not np.array_equal(mech_init_val, np.array(self.instance_defaults.variable))
+                mech_specified = not np.array_equal(mech_init_val, np.array(self.defaults.variable))
                 fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
                                                    np.array(self.integrator_function.class_defaults.initializer))
 
@@ -1273,9 +1273,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
         # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.instance_defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
+        if len(self.defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
-            for i, item in enumerate(self.instance_defaults.variable):
+            for i, item in enumerate(self.defaults.variable):
                 self.output_states.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_states(context=context)
 
@@ -1452,7 +1452,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # Use self.instance_defaults.variable to initialize state of input
+        # Use self.defaults.variable to initialize state of input
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 

@@ -691,7 +691,7 @@ class Component(object, metaclass=ComponentsMeta):
             the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
-            the latter is used for typing and/or templating other variables (e.g., self.instance_defaults.variable):
+            the latter is used for typing and/or templating other variables (e.g., self.defaults.variable):
                 type checking is generally done using Utilities.iscompatible(); for iterables (lists, tuples, dicts):
                     if the template (the "reference" arg) has entries (e.g., [1, 2, 3]), comparisons will include length
                     if the template is empty (e.g., [], {}, or ()), length will not be checked
@@ -730,9 +730,9 @@ class Component(object, metaclass=ComponentsMeta):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
-                            it is instantiated using self.instance_defaults.variable and FUNCTION_PARAMS (if they are there too)
+                            it is instantiated using self.defaults.variable and FUNCTION_PARAMS (if they are there too)
                             this works, since _validate_params is always called after _validate_variable
-                            so self.instance_defaults.variable can be used to initialize function
+                            so self.defaults.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
                     if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
@@ -773,7 +773,7 @@ class Component(object, metaclass=ComponentsMeta):
         + componentName - name of particular Function (linear, exponential, integral, etc.)
         + class_defaults.variable (value)
         + variableClassDefault_np_info (ndArrayInfo)
-        + instance_defaults.variable (value)
+        + defaults.variable (value)
         + _default_variable_flexibility
         + variable (value)
         + variable_np_info (ndArrayInfo)
@@ -1203,7 +1203,7 @@ class Component(object, metaclass=ComponentsMeta):
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
             newone.parameters._owner = newone
-            newone.instance_defaults._owner = newone
+            newone.defaults._owner = newone
 
         return newone
 
@@ -1808,7 +1808,7 @@ class Component(object, metaclass=ComponentsMeta):
         if variable is None:
             try:
                 # assigned by the Function class init when initializing
-                variable = self.instance_defaults.variable
+                variable = self.defaults.variable
             except AttributeError:
                 variable = self.class_defaults.variable
 
@@ -1901,7 +1901,7 @@ class Component(object, metaclass=ComponentsMeta):
           If not context:  instantiates function and any states specified in request set
                            (if they have changed from the previous value(s))
 
-        :param variable: (anything but a dict (variable) - value to assign as instance_defaults.variable
+        :param variable: (anything but a dict (variable) - value to assign as defaults.variable
         :param request_set: (dict) - params to be assigned
         :param assign_missing: (bool) - controls whether missing params are set to default_set values (default: False)
         :param target_set: (dict) - param set to which assignments should be made
@@ -1950,7 +1950,7 @@ class Component(object, metaclass=ComponentsMeta):
         # VALIDATE VARIABLE (if not called from assign_params)
 
         if not (context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY)):
-            # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
+            # if variable has been passed then validate and, if OK, assign as self.defaults.variable
             variable = self._validate_variable(variable, context=context)
 
         # If no params were passed, then done
@@ -2402,7 +2402,7 @@ class Component(object, metaclass=ComponentsMeta):
         #    - return
         if variable is None:
             try:
-                return self.instance_defaults.variable
+                return self.defaults.variable
             except AttributeError:
                 return self.class_defaults.variable
 
@@ -2754,7 +2754,7 @@ class Component(object, metaclass=ComponentsMeta):
         If FUNCTION IS in params:
             - if it is a Function object, it is simply assigned to self.function;
             - if it is a Function class reference:
-                it is instantiated using self.instance_defaults.variable and, if present, params[FUNCTION_PARAMS]
+                it is instantiated using self.defaults.variable and, if present, params[FUNCTION_PARAMS]
         If FUNCTION IS NOT in params:
             - if self.function IS implemented, it is assigned to params[FUNCTION]
             - if self.function IS NOT implemented: program error (should have been caught in _validate_function)
@@ -2771,7 +2771,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         function_variable = copy.deepcopy(
             self._parse_function_variable(
-                self.instance_defaults.variable,
+                self.defaults.variable,
                 context=ContextFlags.INSTANTIATE
             )
         )
@@ -2794,24 +2794,24 @@ class Component(object, metaclass=ComponentsMeta):
             )
             self.function_params = dict(self.function.cust_fct_params)
         elif isinstance(function, Function):
-            if not iscompatible(function_variable, function.instance_defaults.variable):
+            if not iscompatible(function_variable, function.defaults.variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
                     raise ComponentError(
                         'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
                         ' of the component {3} to which it is being assigned'.format(
-                            function.instance_defaults.variable,
+                            function.defaults.variable,
                             function,
                             function_variable,
                             self
                         )
                     )
                 elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
-                    function_increased_dim = np.asarray([function.instance_defaults.variable])
+                    function_increased_dim = np.asarray([function.defaults.variable])
                     if not iscompatible(function_variable, function_increased_dim):
                         raise ComponentError(
                             'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
                             ' of the component {3} to which it is being assigned'.format(
-                                function.instance_defaults.variable,
+                                function.defaults.variable,
                                 function,
                                 function_variable,
                                 self
@@ -2832,7 +2832,7 @@ class Component(object, metaclass=ComponentsMeta):
             # during initialization
             self.function.context.initialization_status = ContextFlags.INITIALIZING
 
-            self.function.instance_defaults.variable = function_variable
+            self.function.defaults.variable = function_variable
             self.function._instantiate_value(context)
 
             self.function.context.initialization_status = ContextFlags.INITIALIZED
@@ -2853,7 +2853,7 @@ class Component(object, metaclass=ComponentsMeta):
                 # update it here if needed
                 if MATRIX in kwargs_to_instantiate:
                     try:
-                        kwargs_to_instantiate[MATRIX] = self.parameter_states[MATRIX].instance_defaults.value
+                        kwargs_to_instantiate[MATRIX] = self.parameter_states[MATRIX].defaults.value
                     except (AttributeError, KeyError, TypeError):
                         pass
 
@@ -2882,10 +2882,10 @@ class Component(object, metaclass=ComponentsMeta):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
         try:
-            value = self.execute(variable=self.instance_defaults.variable, context=context)
+            value = self.execute(variable=self.defaults.variable, context=context)
         except TypeError:
             try:
-                value = self.execute(input=self.instance_defaults.variable, context=context)
+                value = self.execute(input=self.defaults.variable, context=context)
             except TypeError:
                 value = self.execute(context=context)
         if value is None:
@@ -2894,10 +2894,10 @@ class Component(object, metaclass=ComponentsMeta):
         self.parameters.value.set(value, override=True, skip_history=True)
         try:
             # Could be mutable, so assign copy
-            self.instance_defaults.value = value.copy()
+            self.defaults.value = value.copy()
         except AttributeError:
             # Immutable, so just assign value
-            self.instance_defaults.value = value
+            self.defaults.value = value
 
     def initialize(self, execution_context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
@@ -3063,7 +3063,7 @@ class Component(object, metaclass=ComponentsMeta):
         s = []
 
         try:
-            v = np.atleast_2d(self.instance_defaults.variable)
+            v = np.atleast_2d(self.defaults.variable)
         except AttributeError:
             return None
 
@@ -3362,10 +3362,10 @@ class Component(object, metaclass=ComponentsMeta):
         """
         return self.__class__.defaults
 
-    # left in for backwards compatibility
+    # left in for compatibility with llvm, see note in builder_context.py (search for <_instance_defaults_note>)
     # DEPRECATED
     @property
-    def instance_defaults(self):
+    def _instance_defaults(self):
         return self.defaults
 
     @property

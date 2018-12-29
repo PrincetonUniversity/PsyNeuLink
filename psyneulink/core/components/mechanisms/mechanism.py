@@ -1077,7 +1077,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : at least ndarray : default self.instance_defaults.variable
+    variable : at least ndarray : default self.defaults.variable
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputState.value>` of one of the Mechanism's `InputStates
         <InputState>` (in the order they are listed in its `input_states <Mechanism_Base.input_states>` attribute), and
@@ -1098,7 +1098,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary InputState <InputState_Primary>` (i.e., the one in the its `input_state
         <Mechanism_Base.input_state>` attribute).
 
-    input_values : List[List or 1d np.array] : default self.instance_defaults.variable
+    input_values : List[List or 1d np.array] : default self.defaults.variable
         each item in the list corresponds to the `value <InputState.value>` of one of the Mechanism's `InputStates
         <Mechanism_InputStates>` listed in its `input_states <Mechanism_Base.input_states>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
@@ -1579,13 +1579,13 @@ class Mechanism_Base(Mechanism):
 
     def _handle_arg_input_states(self, input_states):
         '''
-        Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
+        Takes user-inputted argument **input_states** and returns an defaults.variable-like
         object that it represents
 
         Returns
         -------
             A, B where
-            A is an instance_defaults.variable-like object
+            A is an defaults.variable-like object
             B is True if **input_states** contained an explicit variable specification, False otherwise
         '''
 
@@ -1639,9 +1639,9 @@ class Mechanism_Base(Mechanism):
                     try:
                         mech_variable_item = parsed_input_state_spec.value
                     except AttributeError:
-                        mech_variable_item = parsed_input_state_spec.instance_defaults.mech_variable_item
+                        mech_variable_item = parsed_input_state_spec.defaults.mech_variable_item
             else:
-                mech_variable_item = parsed_input_state_spec.instance_defaults.mech_variable_item
+                mech_variable_item = parsed_input_state_spec.defaults.mech_variable_item
 
             if mech_variable_item is None:
                 mech_variable_item = InputState.defaults.variable
@@ -1776,7 +1776,7 @@ class Mechanism_Base(Mechanism):
             + INPUT_STATES:
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, 2-item tuple, or numeric value(s)>;
-                if it is missing or not one of the above types, it is set to self.instance_defaults.variable
+                if it is missing or not one of the above types, it is set to self.defaults.variable
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
                 ParameterState or Projection object or class, specification dict for one, 2-item tuple, or numeric
                 value(s);
@@ -1819,7 +1819,7 @@ class Mechanism_Base(Mechanism):
                     pass
         # INPUT_STATES is not specified and call is from constructor (i.e., not assign_params):
         elif context & ContextFlags.CONSTRUCTOR:
-            # - set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
+            # - set to None, so it is set to default (self.defaults.variable) in instantiate_inputState
             # - warning (if in VERBOSE mode) will be issued in instantiate_inputState, where default value is known
             params[INPUT_STATES] = None
 
@@ -1840,7 +1840,7 @@ class Mechanism_Base(Mechanism):
             from psyneulink.core.components.states.parameterstate import ParameterState
             for param_name, param_value in function_param_specs.items():
                 try:
-                    self.instance_defaults.value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
+                    self.defaults.value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
                 except KeyError:
                     raise MechanismError("{0} not recognized as a param of execute method for {1}".
                                          format(param_name, self.__class__.__name__))
@@ -1850,8 +1850,8 @@ class Mechanism_Base(Mechanism):
                         isinstance(param_value, ParameterState) or
                         isinstance(param_value, Projection) or
                         isinstance(param_value, dict) or
-                        iscompatible(param_value, self.instance_defaults.value)):
-                    params[FUNCTION_PARAMS][param_name] = self.instance_defaults.value
+                        iscompatible(param_value, self.defaults.value)):
+                    params[FUNCTION_PARAMS][param_name] = self.defaults.value
                     if self.prefs.verbosePref:
                         print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
                               "projection, tuple, or value; default value ({4}) will be used".
@@ -1859,7 +1859,7 @@ class Mechanism_Base(Mechanism):
                                      param_value,
                                      self.execute.__self__.componentName,
                                      self.__class__.__name__,
-                                     self.instance_defaults.value))
+                                     self.defaults.value))
 
         # VALIDATE OUTPUT STATE(S)
 
@@ -2172,7 +2172,7 @@ class Mechanism_Base(Mechanism):
         if param_name == "variable":
             raise MechanismError("The method 'get_current_mechanism_param' is intended for retrieving the current "
                                  "value of a mechanism parameter. 'variable' is not a mechanism parameter. If looking "
-                                 "for {}'s default variable, try {}.instance_defaults.variable."
+                                 "for {}'s default variable, try {}.defaults.variable."
                                  .format(self.name, self.name))
         try:
             return self._parameter_states[param_name].parameters.value.get(execution_id)
@@ -2211,7 +2211,7 @@ class Mechanism_Base(Mechanism):
         Arguments
         ---------
 
-        input : List[value] or ndarray : default self.instance_defaults.variable
+        input : List[value] or ndarray : default self.defaults.variable
             input to use for execution of the Mechanism.
             This must be consistent with the format of the Mechanism's `InputState(s) <Mechanism_InputStates>`:
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
@@ -2264,7 +2264,7 @@ class Mechanism_Base(Mechanism):
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT_EXECUTE_METHOD_ONLY:
                 return_value =  self._execute(
-                    variable=self.instance_defaults.variable,
+                    variable=self.defaults.variable,
                     execution_id=execution_id,
                     runtime_params=runtime_params,
                     context=context,
@@ -2294,7 +2294,7 @@ class Mechanism_Base(Mechanism):
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
                 return_value = super()._execute(
-                    variable=self.instance_defaults.variable,
+                    variable=self.defaults.variable,
                     execution_id=execution_id,
                     runtime_params=runtime_params,
                     context=context,
@@ -2327,7 +2327,7 @@ class Mechanism_Base(Mechanism):
             if context & ContextFlags.COMMAND_LINE:
                 self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
             if input is None:
-                input = self.instance_defaults.variable
+                input = self.defaults.variable
             #     FIX:  this input value is sent to input CIMs when compositions are nested
             #           variable should be based on afferent projections
             variable = self._get_variable_from_input(input, execution_id)
@@ -2451,7 +2451,7 @@ class Mechanism_Base(Mechanism):
                     "required length ({}) for input to {} of {}".format(
                         len(input_item),
                         input_item,
-                        len(input_state.instance_defaults.variable),
+                        len(input_state.defaults.variable),
                         input_state.name,
                         self.name
                     )
@@ -3164,12 +3164,12 @@ class Mechanism_Base(Mechanism):
             # FIX: 11/9/17
             added_variable, added_input_state = self._handle_arg_input_states(input_states)
             if added_input_state:
-                if not isinstance(self.instance_defaults.variable, list):
-                    old_variable = self.instance_defaults.variable.tolist()
+                if not isinstance(self.defaults.variable, list):
+                    old_variable = self.defaults.variable.tolist()
                 else:
-                    old_variable = self.instance_defaults.variable
+                    old_variable = self.defaults.variable
                 old_variable.extend(added_variable)
-                self.instance_defaults.variable = np.array(old_variable)
+                self.defaults.variable = np.array(old_variable)
             instantiated_input_states = _instantiate_input_states(self,
                                                                   input_states,
                                                                   added_variable,
@@ -3181,7 +3181,7 @@ class Mechanism_Base(Mechanism):
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 
-        self.instance_defaults.variable = self.input_values
+        self.defaults.variable = self.input_values
 
         return {INPUT_STATES: instantiated_input_states,
                 OUTPUT_STATES: instantiated_output_states}
@@ -3229,9 +3229,9 @@ class Mechanism_Base(Mechanism):
                 remove_instance_from_registry(registry=self._stateRegistry,
                                               category=INPUT_STATE,
                                               component=state)
-                old_variable = self.instance_defaults.variable
+                old_variable = self.defaults.variable
                 old_variable = np.delete(old_variable,index,0)
-                self.instance_defaults.variable = old_variable
+                self.defaults.variable = old_variable
 
             elif state in self.output_states:
                 if isinstance(state, OutputState):
@@ -3244,7 +3244,7 @@ class Mechanism_Base(Mechanism):
                                               category=OUTPUT_STATE,
                                               component=state)
 
-        self.instance_defaults.variable = self.input_values
+        self.defaults.variable = self.input_values
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
@@ -3333,7 +3333,7 @@ class Mechanism_Base(Mechanism):
     @property
     def default_external_input_values(self):
         try:
-            return [input_state.instance_defaults.value for input_state in self.input_states if not input_state.internal_only]
+            return [input_state.defaults.value for input_state in self.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
 

@@ -598,7 +598,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                           format(self.name, self.sender.owner.name))
 
         # This assigns LearningProjection as an outgoing projection from the LearningMechanism's LearningSignal
-        #    OutputState and formats the LearningProjection's instance_defaults.variable to be compatible with
+        #    OutputState and formats the LearningProjection's defaults.variable to be compatible with
         #    the LearningSignal's value
         super()._instantiate_sender(self.sender, context=context)
 
@@ -617,7 +617,7 @@ class LearningProjection(ModulatoryProjection_Base):
         super()._instantiate_receiver(context=context)
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
-        if not iscompatible(self.defaults.value, self.receiver.instance_defaults.variable):
+        if not iscompatible(self.defaults.value, self.receiver.defaults.variable):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,

@@ -566,7 +566,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         if (not self.owner
                 and self.context.initialization_status != ContextFlags.INITIALIZING
                 and variable is not None
-                and variable is not self.instance_defaults.variable):
+                and variable is not self.defaults.variable):
             warnings.warn("{} does not use its variable;  value passed ({}) will be ignored".
                           format(self.__class__.__name__, variable))
 
@@ -997,7 +997,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -1014,7 +1014,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                 "must match the length ({}) of the default input ({});  "
                                 "the default input has been updated to match".
                                     format(len(rate), repr(RATE), rate, self.name,
-                                    np.array(self.instance_defaults.variable).size, self.instance_defaults.variable))
+                                    np.array(self.defaults.variable).size, self.defaults.variable))
                     else:
                         raise FunctionError(
                             "The length ({}) of the array specified for the rate parameter ({}) of {} "
@@ -1022,8 +1022,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                 len(rate),
                                 rate,
                                 self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                self.defaults.variable,
                             )
                         )
                         # OLD:
@@ -1569,7 +1569,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -1588,9 +1588,9 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                     len(rate),
                                     rate,
                                     self.name,
-                                    np.array(self.instance_defaults.variable).size
+                                    np.array(self.defaults.variable).size
                                 ),
-                                self.instance_defaults.variable
+                                self.defaults.variable
                             )
                     else:
                         raise FunctionError(
@@ -1599,8 +1599,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                 len(rate),
                                 rate,
                                 self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                self.defaults.variable,
                             )
                         )
                         # OLD:

@@ -2151,7 +2151,7 @@ class SoftMax(TransferFunction):
     def _validate_variable(self, variable, context=None):
         if variable is None:
             try:
-                return self.instance_defaults.variable
+                return self.defaults.variable
             except AttributeError:
                 return self.class_defaults.variable
 
@@ -2572,7 +2572,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         param_set = target_set
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
-            sender = self.instance_defaults.variable
+            sender = self.defaults.variable
             # Note: this assumes variable is a 1D array, as enforced by _validate_variable
             sender_len = sender.size
 
@@ -2744,8 +2744,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
                     param_size = np.size(np.atleast_2d(param_value), 0)
                     param_shape = np.shape(np.atleast_2d(param_value))
-                    variable_size = np.size(np.atleast_2d(self.instance_defaults.variable),1)
-                    variable_shape = np.shape(np.atleast_2d(self.instance_defaults.variable))
+                    variable_size = np.size(np.atleast_2d(self.defaults.variable),1)
+                    variable_shape = np.shape(np.atleast_2d(self.defaults.variable))
                     if param_size != variable_size:
                         raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
                                             "shapes of variable {} and matrix {} are not compatible for multiplication".
@@ -2772,7 +2772,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if self.matrix is None and not hasattr(self.owner, "receiver"):
-            variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
+            variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             self.matrix = np.identity(variable_length)
         self.matrix = self.instantiate_matrix(self.matrix)
 
@@ -2794,7 +2794,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(specification, np.matrix):
                 return np.array(specification)
 
-            sender = self.instance_defaults.variable
+            sender = self.defaults.variable
             sender_len = sender.shape[0]
             try:
                 receiver = self.receiver
@@ -2819,7 +2819,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
-        assert self.instance_defaults.variable.ndim == 1
+        assert self.defaults.variable.ndim == 1
 
         matrix, builder = ctx.get_param_ptr(self, builder, params, MATRIX)
 
@@ -2877,7 +2877,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 rows = 1
             else:
                 rows = len(obj.sender.defaults.value)
-            if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
+            if isinstance(obj.receiver.defaults.variable, numbers.Number):
                 cols = 1
             else:
                 cols = obj.receiver.socket_width
@@ -2891,7 +2891,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def param_function(owner, function):
         sender_len = len(owner.sender.defaults.value)
-        receiver_len = len(owner.receiver.instance_defaults.variable)
+        receiver_len = len(owner.receiver.defaults.variable)
         return function(sender_len, receiver_len)
 
 

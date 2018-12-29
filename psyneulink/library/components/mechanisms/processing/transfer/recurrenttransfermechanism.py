@@ -1071,7 +1071,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
                                format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size,
-                                      self.instance_defaults.variable))
+                                      self.defaults.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
                                format(MATRIX, self.name, rows, self.recurrent_size))
@@ -1208,12 +1208,12 @@ class RecurrentTransferMechanism(TransferMechanism):
             # If combination_function is a method of a subclass, let it pass
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
-                    self.combination_function = comb_fct(default_variable=self.instance_defaults.variable)
+                    self.combination_function = comb_fct(default_variable=self.defaults.variable)
                 elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
                     pass
                 else:
                     self.combination_function = UserDefinedFunction(custom_function=comb_fct,
-                                                                     default_variable=self.instance_defaults.variable)
+                                                                     default_variable=self.defaults.variable)
             else:
                 self.combination_function = comb_fct
 
@@ -1246,7 +1246,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.configure_learning(context=context)
 
         if ENERGY in self.output_states.names:
-            energy = Stability(self.instance_defaults.variable[0],
+            energy = Stability(self.defaults.variable[0],
                                metric=ENERGY,
                                transfer_fct=self.function,
                                matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -1254,7 +1254,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if ENTROPY in self.output_states.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
-                entropy = Stability(self.instance_defaults.variable[0],
+                entropy = Stability(self.defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
                                     matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -1393,7 +1393,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
-            size = len(mech.instance_defaults.variable[0])
+            size = len(mech.defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
@@ -1588,7 +1588,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Initialize to output state defaults. That is what the recurrent
         # projection finds.
-        retval_init = (tuple(os.instance_defaults.value) if not np.isscalar(os.instance_defaults.value) else os.instance_defaults.value for os in self.output_states)
+        retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_states)
         return tuple((transfer_init, projection_init, tuple(retval_init)))
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

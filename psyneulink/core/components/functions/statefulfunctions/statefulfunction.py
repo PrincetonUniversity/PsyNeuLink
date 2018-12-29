@@ -250,8 +250,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         self.has_initializers = True
 
     def _validate(self):
-        self._validate_rate(self.instance_defaults.rate)
-        self._validate_initializers(self.instance_defaults.variable)
+        self._validate_rate(self.defaults.rate)
+        self._validate_initializers(self.defaults.variable)
         super()._validate()
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -260,8 +260,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if RATE in request_set:
             rate = request_set[RATE]
 
-            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -280,9 +280,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                     len(rate),
                                     rate,
                                     self.name,
-                                    np.array(self.instance_defaults.variable).size
+                                    np.array(self.defaults.variable).size
                                 ),
-                                self.instance_defaults.variable,
+                                self.defaults.variable,
                             )
                     else:
                         raise FunctionError(
@@ -291,8 +291,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 self.name,
                                 # rate,
                                 len(rate),
-                                np.array(self.instance_defaults.variable).size,
-                                # self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                # self.defaults.variable,
                             )
                         )
                         # OLD:
@@ -346,10 +346,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             elif not isinstance(rate, numbers.Number):
                 raise FunctionError(rate_type_msg.format(self.name, rate))
 
-            if isinstance(rate, np.ndarray) and not iscompatible(rate, self.instance_defaults.variable):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+            if isinstance(rate, np.ndarray) and not iscompatible(rate, self.defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-                        self.instance_defaults.variable = np.zeros_like(np.array(rate))
+                        self.defaults.variable = np.zeros_like(np.array(rate))
                         if self.verbosePref:
                             warnings.warn(
                                 "The length ({}) of the array specified for the rate parameter ({}) of {} "
@@ -358,9 +358,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                     len(rate),
                                     rate,
                                     self.name,
-                                    np.array(self.instance_defaults.variable).size
+                                    np.array(self.defaults.variable).size
                                 ),
-                                self.instance_defaults.variable,
+                                self.defaults.variable,
                             )
                         self._instantiate_value()
                         self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
@@ -371,8 +371,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 len(rate),
                                 # rate,
                                 self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                # self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                # self.defaults.variable,
                             )
                         )
 
@@ -384,13 +384,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif (not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable)
-                  and not iscompatible(np.atleast_1d(noise), self.instance_defaults.variable) and len(noise) > 1):
+            elif (not iscompatible(np.atleast_2d(noise), self.defaults.variable)
+                  and not iscompatible(np.atleast_1d(noise), self.defaults.variable) and len(noise) > 1):
                 raise FunctionError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
                     "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                        .format(noise, self.instance_defaults.variable, self.name,
-                                np.shape(np.array(self.instance_defaults.variable))))
+                        .format(noise, self.defaults.variable, self.name,
+                                np.shape(np.array(self.defaults.variable))))
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -448,9 +448,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
-        if not np.isscalar(self.instance_defaults.variable):
+        if not np.isscalar(self.defaults.variable):
             for attr in self.initializers:
-                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.instance_defaults.variable.shape).copy())
+                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.defaults.variable.shape).copy())
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes

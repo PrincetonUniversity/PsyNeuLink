@@ -1286,16 +1286,16 @@ class State_Base(State):
                 (inspect.isclass(function) and issubclass(function, LinearCombination))
                 or isinstance(function, LinearCombination)
             )
-            and isinstance(self.instance_defaults.variable, np.matrix)
+            and isinstance(self.defaults.variable, np.matrix)
         ):
-            self.instance_defaults.variable = [self.instance_defaults.variable]
+            self.defaults.variable = [self.defaults.variable]
             var_is_matrix = True
 
         super()._instantiate_function(function=function, function_params=function_params, context=context)
 
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
         if var_is_matrix:
-            self.instance_defaults.variable = self.instance_defaults.variable[0]
+            self.defaults.variable = self.defaults.variable[0]
 
     # FIX: PROJECTION_REFACTOR
     #      - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
@@ -1488,8 +1488,8 @@ class State_Base(State):
                 # PathwayProjection:
                 #    - check that projection's value is compatible with the State's variable
                 if isinstance(projection, PathwayProjection_Base):
-                    if not iscompatible(projection.defaults.value, self.instance_defaults.variable[0]):
-                    # if len(projection.value) != self.instance_defaults.variable.shape[-1]:
+                    if not iscompatible(projection.defaults.value, self.defaults.variable[0]):
+                    # if len(projection.value) != self.defaults.variable.shape[-1]:
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                          format(projection.name, projection.value, self.name, self.defaults.value))
 
@@ -1523,7 +1523,7 @@ class State_Base(State):
             # reassign default variable shape to this state and its function
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
                 projs = self.path_afferents
-                variable = self.instance_defaults.variable
+                variable = self.defaults.variable
                 projs.append(projection)
                 new_projections.append(projection)
                 if len(projs) > 1:
@@ -1534,19 +1534,19 @@ class State_Base(State):
                     # creates a projection with value length 2, so variable becomes [0, 0, 0, 0]
                     if variable.ndim == 1:
                         variable = np.atleast_2d(variable)
-                    self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.instance_defaults.value), axis=0)
+                    self.defaults.variable = np.append(variable, np.atleast_2d(projection.defaults.value), axis=0)
 
                 # assign identical default variable to function if it can be modified
                 if self.function._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-                    self.function.instance_defaults.variable = self.instance_defaults.variable.copy()
+                    self.function.defaults.variable = self.defaults.variable.copy()
                 elif (
                     self.function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
-                    and np.array([self.function.instance_defaults.variable]).shape == self.instance_defaults.variable.shape
+                    and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape
                 ):
-                    self.function.instance_defaults.variable = np.array([self.instance_defaults.variable])
+                    self.function.defaults.variable = np.array([self.defaults.variable])
                 else:
                     warnings.warn(
-                        'Adding a projection to {0}, but its function {1} instance_defaults.variable '
+                        'Adding a projection to {0}, but its function {1} defaults.variable '
                         'cannot be modified to accomodate the new projection'.format(
                             self,
                             self.function
@@ -1804,10 +1804,10 @@ class State_Base(State):
                 else:
                     # Validate variable
                     #    - check that input to Projection is compatible with self.value
-                    if not iscompatible(self.defaults.value, projection.instance_defaults.variable):
+                    if not iscompatible(self.defaults.value, projection.defaults.variable):
                         raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
                                          "the State from which it is supposed to project ({})".
-                                         format(projection.name, projection.instance_defaults.variable, self.defaults.value, self.name))
+                                         format(projection.name, projection.defaults.variable, self.defaults.value, self.name))
 
                     # Validate value:
                     #    - check that output of projection's function (projection_spec.value) is compatible with
@@ -1823,7 +1823,7 @@ class State_Base(State):
                             raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
                                              "the State to which it is supposed to project ({}).".
                                              format(projection.name, projection.value,
-                                                    receiver.instance_defaults.variable, receiver.name, ))
+                                                    receiver.defaults.variable, receiver.name, ))
 
                     # ModualatoryProjection:
                     #    - check that projection's value is compatible with value of the function param being modulated
@@ -2194,7 +2194,7 @@ def _instantiate_state_list(owner,
         - OUTPUT_STATE
     - reference_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of State(s):
-        - INPUT_STATE: self.instance_defaults.variable
+        - INPUT_STATE: self.defaults.variable
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
@@ -2395,18 +2395,18 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
             if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
-                state.init_args[VARIABLE] = owner.instance_defaults.variable[0]
+                state.init_args[VARIABLE] = owner.defaults.variable[0]
             if not hasattr(state, REFERENCE_VALUE):
                 if REFERENCE_VALUE in state.init_args and state.init_args[REFERENCE_VALUE] is not None:
                     state.reference_value = state.init_args[REFERENCE_VALUE]
                 else:
-                    # state.reference_value = owner.instance_defaults.variable[0]
+                    # state.reference_value = owner.defaults.variable[0]
                     state.reference_value = state.init_args[VARIABLE]
             state.init_args[CONTEXT]=context
             state._deferred_init()
 
         if variable:
-                state.instance_defaults.variable = variable
+                state.defaults.variable = variable
 
         # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
         # # FIX: DO THIS IN _parse_connection_specs?

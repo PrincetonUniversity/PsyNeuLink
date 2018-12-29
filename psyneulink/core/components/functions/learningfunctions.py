@@ -146,17 +146,17 @@ class LearningFunction(Function_Base):
 
         if type is AUTOASSOCIATIVE:
 
-            if learning_rate_dim == 1 and len(learning_rate) != len(self.instance_defaults.variable):
+            if learning_rate_dim == 1 and len(learning_rate) != len(self.defaults.variable):
                 raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
                                     format(LEARNING_RATE, self.name, len(learning_rate),
-                                           len(self.instance_defaults.variable)))
+                                           len(self.defaults.variable)))
 
             if learning_rate_dim == 2:
                 shape = learning_rate.shape
-                if shape[0] != shape[1] or shape[0] != len(self.instance_defaults.variable):
+                if shape[0] != shape[1] or shape[0] != len(self.defaults.variable):
                     raise FunctionError("Shape of {} arg for {} ({}) must be square and "
                                         "of the same width as the length of its variable ({})".
-                                        format(LEARNING_RATE, self.name, shape, len(self.instance_defaults.variable)))
+                                        format(LEARNING_RATE, self.name, shape, len(self.defaults.variable)))
 
             if learning_rate_dim > 2:
                 raise FunctionError("{} arg for {} ({}) must be a single value of a 1d or 2d array".
@@ -478,8 +478,8 @@ class BayesGLM(LearningFunction):
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
         to their initial (_0) values, and assign current (_n) values to the priors'''
 
-        variable = np.array(self.instance_defaults.variable)
-        variable = self.instance_defaults.variable
+        variable = np.array(self.defaults.variable)
+        variable = self.defaults.variable
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
@@ -512,7 +512,7 @@ class BayesGLM(LearningFunction):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         if DEFAULT_VARIABLE in args[0]:
-            self.instance_defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
+            self.defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
             self.initialize_priors()
 
@@ -553,8 +553,8 @@ class BayesGLM(LearningFunction):
         # # MODIFIED 10/26/18 OLD:
         # # If variable passed during execution does not match default assigned during initialization,
         # #    reassign default and re-initialize priors
-        # elif np.array(variable).shape != self.instance_defaults.variable.shape:
-        #     self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
+        # elif np.array(variable).shape != self.defaults.variable.shape:
+        #     self.defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
         #     self.initialize_priors()
         # MODIFIED 10/26/18 END
 

@@ -639,7 +639,7 @@ class Function_Base(Function):
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
-        :param default_variable: (anything but a dict) - value to assign as self.instance_defaults.variable
+        :param default_variable: (anything but a dict) - value to assign as self.defaults.variable
         :param params: (dict) - params to be assigned to paramInstanceDefaults
         :param log: (ComponentLog enum) - log entry types set in self.componentLog
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
@@ -692,7 +692,7 @@ class Function_Base(Function):
         if param_name == "variable":
             raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
                                 "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
-                                "default variable, try {}.instance_defaults.variable.".format(self.name, self.name))
+                                "default variable, try {}.defaults.variable.".format(self.name, self.name))
         try:
             return self.owner._parameter_states[param_name].parameters.value.get(execution_context)
         except (AttributeError, TypeError):
@@ -775,8 +775,8 @@ class Function_Base(Function):
 
         # Can't convert from arrays of length > 1 to number
         if (
-            self.instance_defaults.variable is not None
-            and safe_len(self.instance_defaults.variable) > 1
+            self.defaults.variable is not None
+            and safe_len(self.defaults.variable) > 1
             and self.output_type is FunctionOutputType.RAW_NUMBER
         ):
             raise FunctionError(
@@ -939,7 +939,7 @@ class ArgumentTherapy(Function_Base):
     }
 
     # Variable class default
-    # This is used both to type-cast the variable, and to initialize instance_defaults.variable
+    # This is used both to type-cast the variable, and to initialize defaults.variable
     variableClassDefault_locked = False
 
     # Mode indicators

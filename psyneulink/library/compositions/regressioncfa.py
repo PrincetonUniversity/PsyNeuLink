@@ -421,7 +421,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     try:
                         v = c.variable
                     except:
-                        v = c.instance_defaults.variable
+                        v = c.defaults.variable
                 elif isinstance(c, type):
                     if issubclass(c, ControlSignal):
                         v = c.class_defaults.variable
