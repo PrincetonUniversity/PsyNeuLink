@@ -94,7 +94,7 @@ class TestTransferMechanismInputs:
     #         default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
     #         integrator_mode=True
     #     )
-    #     np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
+    #     np.testing.assert_array_equal(T.defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -103,7 +103,7 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T'
         )
-        assert len(T.instance_defaults.variable) == 1 and T.instance_defaults.variable[0] == 0
+        assert len(T.defaults.variable) == 1 and T.defaults.variable[0] == 0
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -900,7 +900,7 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
                                       pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda, pytest.mark.skip])])
-    # FIXME: Incorrect T.integrator_function.instance_defaults.variable reported
+    # FIXME: Incorrect T.integrator_function.defaults.variable reported
     def test_transfer_mech_array_assignments_fct_noise(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -930,7 +930,7 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
                                       pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda, pytest.mark.skip])])
-    # FIXME: Incorrect T.integrator_function.instance_defaults.variable reported
+    # FIXME: Incorrect T.integrator_function.defaults.variable reported
     def test_transfer_mech_array_assignments_fct_over_mech_noise(self, benchmark, mode):
 
         T = TransferMechanism(
@@ -1158,7 +1158,7 @@ class TestTransferMechanismSize:
             name='T',
             size=4
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [0., 0., 0., 0.]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [0., 0., 0., 0.]).all()
         assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
 
 
@@ -1212,7 +1212,7 @@ class TestTransferMechanismSize:
             name='T',
             size=4.0,
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [0., 0., 0., 0.]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [0., 0., 0., 0.]).all()
         assert len(T.size == 1) and T.size[0] == 4.0 and isinstance(T.size[0], np.integer)
 
     # ------------------------------------------------------------------------------------------------
@@ -1269,7 +1269,7 @@ class TestTransferMechanismSize:
             name='T',
             size=[2, 3, 4]
         )
-        assert len(T.instance_defaults.variable) == 3 and len(T.instance_defaults.variable[0]) == 2 and len(T.instance_defaults.variable[1]) == 3 and len(T.instance_defaults.variable[2]) == 4
+        assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
@@ -1282,7 +1282,7 @@ class TestTransferMechanismSize:
             name='T',
             size=[2., 3., 4.]
         )
-        assert len(T.instance_defaults.variable) == 3 and len(T.instance_defaults.variable[0]) == 2 and len(T.instance_defaults.variable[1]) == 3 and len(T.instance_defaults.variable[2]) == 4
+        assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
 
     # note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
     # is for possible user-defined functions that do use unusual shapes.
@@ -1295,7 +1295,7 @@ class TestTransferMechanismSize:
             size=[2., 3.],
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert len(T.instance_defaults.variable) == 2 and (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4, 5]).all()
+        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all()
 
     # ------------------------------------------------------------------------------------------------
     # TEST 12
@@ -1309,7 +1309,7 @@ class TestTransferMechanismSize:
             size=2,
             default_variable=[[1, 2], [3, 4]]
         )
-        assert len(T.instance_defaults.variable) == 2 and (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4]).all()
+        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4]).all()
         assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
 
     # ------------------------------------------------------------------------------------------------
@@ -1323,7 +1323,7 @@ class TestTransferMechanismSize:
             name='T',
             default_variable=[[1, 2], [3, 4]]
         )
-        assert len(T.instance_defaults.variable) == 2 and (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4]).all()
+        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4]).all()
 
     # ------------------------------------------------------------------------------------------------
     # TEST 14
@@ -1337,7 +1337,7 @@ class TestTransferMechanismSize:
             default_variable=[1, 2, 3, 4],
             size=2
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [1, 2, 3, 4]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
         val = T.execute([10.0, 10.0, 10.0, 10.0])
         assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
@@ -1353,7 +1353,7 @@ class TestTransferMechanismSize:
             default_variable=[1, 2, 3, 4],
             size=[2, 3, 4]
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [1, 2, 3, 4]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
         val = T.execute([10.0, 10.0, 10.0, 10.0])
         assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
@@ -1369,7 +1369,7 @@ class TestTransferMechanismSize:
             size=2,
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4, 5]).all() and len(T.instance_defaults.variable) == 2
+        assert (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all() and len(T.defaults.variable) == 2
 
     # ------------------------------------------------------------------------------------------------
     # TEST 17
@@ -1383,7 +1383,7 @@ class TestTransferMechanismSize:
             size=[2, 2],
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4, 5]).all() and len(T.instance_defaults.variable) == 2
+        assert (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all() and len(T.defaults.variable) == 2
 
     # ------------------------------------------------------------------------------------------------
 
@@ -1455,7 +1455,7 @@ class TestTransferMechanismSize:
             name='T',
             size=[[2]],
         )
-        assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 2
+        assert len(T.defaults.variable) == 1 and len(T.defaults.variable[0]) == 2
         assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
 
 

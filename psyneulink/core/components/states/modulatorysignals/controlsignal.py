@@ -419,7 +419,7 @@ class ControlSignal(ModulatorySignal):
         adjustment_cost_function=Linear,                          \
         duration_cost_function=IntegratorFunction,                        \
         combine_costs_function=Reduce(operation=SUM),             \
-        allocation_samples=self.ClassDefaults.allocation_samples, \
+        allocation_samples=self.class_defaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
         projections=None                                          \
         params=None,                                              \
@@ -890,7 +890,7 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
         # Validate allocation samples list:
-        # - default is 1D np.array (defined by self.ClassDefaults.allocation_samples)
+        # - default is 1D np.array (defined by self.class_defaults.allocation_samples)
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
         if ALLOCATION_SAMPLES in request_set:
@@ -950,9 +950,9 @@ class ControlSignal(ModulatorySignal):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -992,9 +992,9 @@ class ControlSignal(ModulatorySignal):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -1144,7 +1144,7 @@ class ControlSignal(ModulatorySignal):
     #         raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
     #                                  format(ALLOCATION_SAMPLES))
     #     else:
-    #         sample_range = self.ClassDefaults.allocation_samples
+    #         sample_range = self.class_defaults.allocation_samples
     #     self._allocation_samples = []
     #     i = sample_range[0]
     #     while i < sample_range[1]:

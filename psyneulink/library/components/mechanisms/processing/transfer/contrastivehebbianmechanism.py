@@ -1264,7 +1264,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
-            size = len(mech.instance_defaults.variable[0])
+            size = len(mech.defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
 
         return AutoAssociativeProjection(owner=mech,

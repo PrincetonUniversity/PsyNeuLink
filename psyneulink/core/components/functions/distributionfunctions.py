@@ -841,7 +841,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
         independently for each element.
 

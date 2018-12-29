@@ -146,17 +146,17 @@ class LearningFunction(Function_Base):
 
         if type is AUTOASSOCIATIVE:
 
-            if learning_rate_dim == 1 and len(learning_rate) != len(self.instance_defaults.variable):
+            if learning_rate_dim == 1 and len(learning_rate) != len(self.defaults.variable):
                 raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
                                     format(LEARNING_RATE, self.name, len(learning_rate),
-                                           len(self.instance_defaults.variable)))
+                                           len(self.defaults.variable)))
 
             if learning_rate_dim == 2:
                 shape = learning_rate.shape
-                if shape[0] != shape[1] or shape[0] != len(self.instance_defaults.variable):
+                if shape[0] != shape[1] or shape[0] != len(self.defaults.variable):
                     raise FunctionError("Shape of {} arg for {} ({}) must be square and "
                                         "of the same width as the length of its variable ({})".
-                                        format(LEARNING_RATE, self.name, shape, len(self.instance_defaults.variable)))
+                                        format(LEARNING_RATE, self.name, shape, len(self.defaults.variable)))
 
             if learning_rate_dim > 2:
                 raise FunctionError("{} arg for {} ({}) must be a single value of a 1d or 2d array".
@@ -478,8 +478,8 @@ class BayesGLM(LearningFunction):
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
         to their initial (_0) values, and assign current (_n) values to the priors'''
 
-        variable = np.array(self.instance_defaults.variable)
-        variable = self.instance_defaults.variable
+        variable = np.array(self.defaults.variable)
+        variable = self.defaults.variable
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
@@ -512,7 +512,7 @@ class BayesGLM(LearningFunction):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         if DEFAULT_VARIABLE in args[0]:
-            self.instance_defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
+            self.defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
             self.initialize_priors()
 
@@ -527,7 +527,7 @@ class BayesGLM(LearningFunction):
         Arguments
         ---------
 
-        variable : 2d or 3d array : default ClassDefaults.variable
+        variable : 2d or 3d array : default class_defaults.variable
            if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
            be a 1d array containing the dependent variable to be predicted by the predictors;
            if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
@@ -553,8 +553,8 @@ class BayesGLM(LearningFunction):
         # # MODIFIED 10/26/18 OLD:
         # # If variable passed during execution does not match default assigned during initialization,
         # #    reassign default and re-initialize priors
-        # elif np.array(variable).shape != self.instance_defaults.variable.shape:
-        #     self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
+        # elif np.array(variable).shape != self.defaults.variable.shape:
+        #     self.defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
         #     self.initialize_priors()
         # MODIFIED 10/26/18 END
 
@@ -641,7 +641,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable: List[array(float64), array(float64), 2d array[[float64]]] : default ClassDefaults.variable
+    variable: List[array(float64), array(float64), 2d array[[float64]]] : default class_defaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
     learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
@@ -830,7 +830,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : array or List[1d array, 1d array, 2d array] : default ClassDefaults.variable
+        variable : array or List[1d array, 1d array, 2d array] : default class_defaults.variable
            input pattern, array of activation values, and matrix used to calculate the weights changes.
 
         params : Dict[param keyword: param value] : default None
@@ -917,7 +917,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default class_defaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -1058,7 +1058,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : List[number] or 1d array : default ClassDefaults.variable
+        variable : List[number] or 1d array : default class_defaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
@@ -1148,7 +1148,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default class_defaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -1290,7 +1290,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         Arguments
         ---------
 
-        variable : List[number] or 1d np.array : default ClassDefaults.variable
+        variable : List[number] or 1d np.array : default class_defaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
@@ -1407,7 +1407,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     Arguments
     ---------
 
-    default_variable : List or 2d array : default ClassDefaults.variable
+    default_variable : List or 2d array : default class_defaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
 
@@ -1595,7 +1595,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+        variable : List or 2d np.array [length 3 in axis 0] : default class_defaults.variable
            must have three items that are (in order):
 
                * `activation_input <Reinforcement.activation_input>` (not used);
@@ -1722,7 +1722,7 @@ class BackPropagation(LearningFunction):
     Arguments
     ---------
 
-    variable : List or 2d array [length 3 in axis 0] : default ClassDefaults.variable
+    variable : List or 2d array [length 3 in axis 0] : default class_defaults.variable
        specifies a template for the three items provided as the variable in the call to the
        `function <BackPropagation.function>` (in order):
        `activation_input <BackPropagation.activation_input>` (1d array),

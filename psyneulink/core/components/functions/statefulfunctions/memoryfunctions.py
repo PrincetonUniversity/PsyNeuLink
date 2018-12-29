@@ -83,7 +83,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -141,7 +141,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if the **new_previous_value** argument is not specified in the call to `reinitialize
         <StatefulFUnction.reinitialize>`.
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         state of the deque prior to appending `variable <Buffer.variable>` in the current call.
 
     owner : Component
@@ -275,7 +275,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -370,7 +370,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
     Arguments
     ---------
 
-    default_variable : list or 2d array : default ClassDefaults.variable
+    default_variable : list or 2d array : default class_defaults.variable
         specifies a template for the key and value entries of the dictionary;  list must have two entries, each
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
@@ -665,7 +665,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         Arguments
         ---------
 
-        variable : list or 2d array : default ClassDefaults.variable
+        variable : list or 2d array : default class_defaults.variable
            first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
            with key, is added to `dict <DND.dict>`.
 
@@ -706,9 +706,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            ret_val = np.zeros_like(self.instance_defaults.variable)
+            ret_val = np.zeros_like(self.defaults.variable)
             # if self.context.initialization_status == ContextFlags.INITIALIZING:
-            #     ret_val = np.zeros_like(self.instance_defaults.variable)
+            #     ret_val = np.zeros_like(self.defaults.variable)
             # else:
             #     ret_val = None
 
@@ -762,7 +762,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # if no memory, return the zero vector
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
         if len(self.dict) == 0:
-            return np.zeros_like(self.instance_defaults.variable)
+            return np.zeros_like(self.defaults.variable)
         # compute similarity(query_key, memory m ) for all m
         memory_dict = self.get_previous_value(execution_id)
         distances = [self.distance_function([query_key, list(m)]) for m in memory_dict.keys()]

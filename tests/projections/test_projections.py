@@ -14,5 +14,5 @@ def test_value_shapes_with_matrix(projection_type, sender_variable, receiver_var
     B = pnl.TransferMechanism(default_variable=receiver_variable)
     P = projection_type(sender=A, receiver=B)
 
-    assert P.instance_defaults.value.shape == projection_value.shape
-    assert P.function.instance_defaults.value.shape == function_value.shape
+    assert P.defaults.value.shape == projection_value.shape
+    assert P.function.defaults.value.shape == function_value.shape

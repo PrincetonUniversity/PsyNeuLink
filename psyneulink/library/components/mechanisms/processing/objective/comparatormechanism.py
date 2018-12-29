@@ -210,7 +210,7 @@ class ComparatorMechanism(ObjectiveMechanism):
             + componentType (str): ComparatorMechanism
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
+            + class_defaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
         Class methods:

@@ -1256,7 +1256,7 @@ class InputState(State_Base):
 
     @property
     def socket_width(self):
-        return self.instance_defaults.variable.shape[-1]
+        return self.defaults.variable.shape[-1]
 
     @property
     def socket_template(self):
@@ -1304,7 +1304,7 @@ class InputState(State_Base):
             variable = [variable]
 
         # if function is None, use State's default function
-        function = function or InputState.ClassDefaults.function
+        function = function or InputState.defaults.function
 
         return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 
@@ -1316,7 +1316,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     If input_states is not specified:
         - use owner.input_states as list of InputState specifications
-        - if owner.input_states is empty, user owner.instance_defaults.variable to create a default InputState
+        - if owner.input_states is empty, user owner.defaults.variable to create a default InputState
 
     When completed:
         - self.input_states contains a ContentAddressableList of one or more input_states
@@ -1327,7 +1327,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
         - if there is only one InputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
-              parses self.instance_defaults.variable (2D np.array, passed in reference_value)
+              parses self.defaults.variable (2D np.array, passed in reference_value)
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
@@ -1344,7 +1344,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
-                                                                         else owner.instance_defaults.variable,
+                                                                         else owner.defaults.variable,
                                          # reference_value=reference_value,
                                          reference_value_name=VALUE,
                                          context=context)
@@ -1355,12 +1355,12 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     else:
         owner._input_states = state_list
 
-    # Check that number of input_states and their variables are consistent with owner.instance_defaults.variable,
+    # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not
     variable_item_is_OK = False
     for i, input_state in enumerate(owner.input_states):
         try:
-            variable_item_is_OK = iscompatible(owner.instance_defaults.variable[i], input_state.value)
+            variable_item_is_OK = iscompatible(owner.defaults.variable[i], input_state.value)
             if not variable_item_is_OK:
                 break
         except IndexError:
@@ -1368,15 +1368,15 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             break
 
     if not variable_item_is_OK:
-        old_variable = owner.instance_defaults.variable
-        owner.instance_defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_states])
+        old_variable = owner.defaults.variable
+        owner.defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_states])
 
         if owner.verbosePref:
             warnings.warn(
                 "Variable for {} ({}) has been adjusted to match number and format of its input_states: ({})".format(
                     old_variable,
                     append_type_to_name(owner),
-                    owner.instance_defaults.variable,
+                    owner.defaults.variable,
                 )
             )
 

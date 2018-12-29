@@ -4303,7 +4303,7 @@ class TestCompositionInterface:
 
         out = comp.output_CIM
 
-        assert np.allclose(np.shape(out.instance_defaults.variable), (2,1))
+        assert np.allclose(np.shape(out.defaults.variable), (2,1))
         assert np.allclose(out.parameters.variable.get(comp), [[1.0], [2.0]])
 
         C = ProcessingMechanism(name='C')
@@ -4315,7 +4315,7 @@ class TestCompositionInterface:
 
         out = comp.output_CIM
 
-        assert np.allclose(np.shape(out.instance_defaults.variable), (3, 1))
+        assert np.allclose(np.shape(out.defaults.variable), (3, 1))
         assert np.allclose(out.parameters.variable.get(comp), [[1.0], [2.0], [3.0]])
 
         T = ProcessingMechanism(name='T')
@@ -4330,8 +4330,8 @@ class TestCompositionInterface:
         out = comp.output_CIM
         print(out.input_values)
         print(out.variable)
-        print(out.instance_defaults.variable)
-        assert np.allclose(np.shape(out.instance_defaults.variable), (1, 1))
+        print(out.defaults.variable)
+        assert np.allclose(np.shape(out.defaults.variable), (1, 1))
         assert np.allclose(out.parameters.variable.get(comp), [[6.0]])
 
 

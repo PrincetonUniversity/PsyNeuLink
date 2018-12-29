@@ -76,7 +76,7 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_empty_spec(self):
         R = RecurrentTransferMechanism(auto=1.0)
         np.testing.assert_allclose(R.value, R.defaults.value)
-        np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
+        np.testing.assert_allclose(R.defaults.variable, [[0]])
         np.testing.assert_allclose(R.matrix, [[1]])
 
     def test_recurrent_mech_check_attrs(self):
@@ -86,7 +86,7 @@ class TestRecurrentTransferMechanismInputs:
             auto=1.0
         )
         np.testing.assert_allclose(R.value, R.defaults.value)
-        np.testing.assert_allclose(R.instance_defaults.variable, [[0., 0., 0.]])
+        np.testing.assert_allclose(R.defaults.variable, [[0., 0., 0.]])
         np.testing.assert_allclose(R.matrix, [[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]])
 
     def test_recurrent_mech_check_proj_attrs(self):
@@ -205,7 +205,7 @@ class TestRecurrentTransferMechanismInputs:
         R = RecurrentTransferMechanism(
             name='R'
         )
-        np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
+        np.testing.assert_allclose(R.defaults.variable, [[0]])
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':

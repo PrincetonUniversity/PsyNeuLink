@@ -1585,7 +1585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #             # Then, check that each input_state is receiving the right size of input
     #             for i, value in enumerate(timestep):
     #                 val_length = len(value)
-    #                 state_length = len(mech.input_state.instance_defaults.variable)
+    #                 state_length = len(mech.input_state.defaults.variable)
     #                 if val_length != state_length:
     #                     raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
     #                                      "{!s} where the InputState takes values of length {!s}".
@@ -1614,7 +1614,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Then, check that each input_state is receiving the right size of input
                 for i, value in enumerate(timestep):
                     val_length = len(value)
-                    state_length = len(mech.input_state.instance_defaults.value)
+                    state_length = len(mech.input_state.defaults.value)
                     if val_length != state_length:
                         raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
                                          "{!s} where the InputState takes values of length {!s}".
@@ -1859,15 +1859,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if output_state not in set(self.output_CIM_states.keys()):
 
                     interface_input_state = InputState(owner=self.output_CIM,
-                                                       variable=output_state.instance_defaults.value,
-                                                       reference_value=output_state.instance_defaults.value,
+                                                       variable=output_state.defaults.value,
+                                                       reference_value=output_state.defaults.value,
                                                        name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
                         function=InterfaceStateMap(corresponding_input_state=interface_input_state),
-                        reference_value=output_state.instance_defaults.value,
+                        reference_value=output_state.defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
@@ -1921,7 +1921,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         value = inputs[origin_node][index]
 
                     else:
-                        value = origin_node.instance_defaults.variable[index]
+                        value = origin_node.defaults.variable[index]
 
             build_CIM_input.append(value)
 
@@ -4306,7 +4306,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def default_external_input_values(self):
         """Returns the default values of all external InputStates that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_state.instance_defaults.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
+            return [input_state.defaults.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
 

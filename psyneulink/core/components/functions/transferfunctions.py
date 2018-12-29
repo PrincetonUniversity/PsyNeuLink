@@ -192,7 +192,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     slope : float : default 1.0
@@ -328,7 +328,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -424,7 +424,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     rate : float : default 1.0
@@ -590,7 +590,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be exponentiated.
 
         params : Dict[param keyword: param value] : default None
@@ -677,7 +677,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -867,7 +867,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -978,7 +978,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies template for the value to be transformed.
 
     gain : float : default 1.0
@@ -1168,7 +1168,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1254,7 +1254,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     Arguments
     ---------
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
@@ -1369,7 +1369,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1479,7 +1479,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value used as the mean for the Guassian transform.
 
     standard_deviation : float : default 1.0
@@ -1656,7 +1656,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1737,7 +1737,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 #     Arguments
 #     ---------
 #
-#     default_variable : number or array : default ClassDefaults.variable
+#     default_variable : number or array : default class_defaults.variable
 #         specifies a template for the value used as the mean for the Guassian transform.
 #
 #     variance : float : default 1.0
@@ -1906,7 +1906,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -2001,7 +2001,7 @@ class SoftMax(TransferFunction):
     Arguments
     ---------
 
-    default_variable : 1d array : default ClassDefaults.variable
+    default_variable : 1d array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -2151,9 +2151,9 @@ class SoftMax(TransferFunction):
     def _validate_variable(self, variable, context=None):
         if variable is None:
             try:
-                return self.instance_defaults.variable
+                return self.defaults.variable
             except AttributeError:
-                return self.ClassDefaults.variable
+                return self.class_defaults.variable
 
         return np.asarray(variable)
 
@@ -2285,7 +2285,7 @@ class SoftMax(TransferFunction):
         Arguments
         ---------
 
-        variable : 1d array : default ClassDefaults.variable
+        variable : 1d array : default class_defaults.variable
            an array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -2410,7 +2410,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Arguments
     ---------
 
-    variable : list or 1d array : default ClassDefaults.variable
+    variable : list or 1d array : default class_defaults.variable
         specifies a template for the value to be transformed; length must equal the number of rows of `matrix
         <LinearMatrix.matrix>`.
 
@@ -2572,7 +2572,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         param_set = target_set
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
-            sender = self.instance_defaults.variable
+            sender = self.defaults.variable
             # Note: this assumes variable is a 1D array, as enforced by _validate_variable
             sender_len = sender.size
 
@@ -2744,8 +2744,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
                     param_size = np.size(np.atleast_2d(param_value), 0)
                     param_shape = np.shape(np.atleast_2d(param_value))
-                    variable_size = np.size(np.atleast_2d(self.instance_defaults.variable),1)
-                    variable_shape = np.shape(np.atleast_2d(self.instance_defaults.variable))
+                    variable_size = np.size(np.atleast_2d(self.defaults.variable),1)
+                    variable_shape = np.shape(np.atleast_2d(self.defaults.variable))
                     if param_size != variable_size:
                         raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
                                             "shapes of variable {} and matrix {} are not compatible for multiplication".
@@ -2772,7 +2772,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if self.matrix is None and not hasattr(self.owner, "receiver"):
-            variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
+            variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             self.matrix = np.identity(variable_length)
         self.matrix = self.instantiate_matrix(self.matrix)
 
@@ -2794,7 +2794,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(specification, np.matrix):
                 return np.array(specification)
 
-            sender = self.instance_defaults.variable
+            sender = self.defaults.variable
             sender_len = sender.shape[0]
             try:
                 receiver = self.receiver
@@ -2819,7 +2819,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
-        assert self.instance_defaults.variable.ndim == 1
+        assert self.defaults.variable.ndim == 1
 
         matrix, builder = ctx.get_param_ptr(self, builder, params, MATRIX)
 
@@ -2877,7 +2877,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 rows = 1
             else:
                 rows = len(obj.sender.defaults.value)
-            if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
+            if isinstance(obj.receiver.defaults.variable, numbers.Number):
                 cols = 1
             else:
                 cols = obj.receiver.socket_width
@@ -2891,7 +2891,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def param_function(owner, function):
         sender_len = len(owner.sender.defaults.value)
-        receiver_len = len(owner.receiver.instance_defaults.variable)
+        receiver_len = len(owner.receiver.defaults.variable)
         return function(sender_len, receiver_len)
 
 

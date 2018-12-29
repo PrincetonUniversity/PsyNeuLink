@@ -918,7 +918,7 @@ class PredictionMechanism(IntegratorMechanism):
 
             elif function is TIME_AVERAGE_INPUT:
                 # Use default for IntegratorMechanism: AdaptiveIntegrator
-                function = self.ClassDefaults.function
+                function = self.class_defaults.function
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
 

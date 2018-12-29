@@ -1004,7 +1004,7 @@ class EVCControlMechanism(ControlMechanism):
             variable = []
             for state_name in origin_mech.input_states.names:
                 state_names.append(state_name)
-                # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
+                # variable.append(origin_mech.input_states[state_name].defaults.variable)
                 variable.append(origin_mech.input_states[state_name].value)
 
             # Instantiate PredictionMechanism
@@ -1065,7 +1065,7 @@ class EVCControlMechanism(ControlMechanism):
         #    the variable of the ORIGIN Mechanism for each Process in the system
         predicted_input = {}
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
-            predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
+            predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].defaults.variable
         self.parameters.predicted_input.set(predicted_input, override=True)
 
     def _instantiate_attributes_after_function(self, context=None):

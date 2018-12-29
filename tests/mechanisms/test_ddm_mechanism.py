@@ -569,7 +569,7 @@ def test_DDM_size_int_check_var():
             time_step_size=1.0
         ),
     )
-    assert len(T.instance_defaults.variable) == 1 and T.instance_defaults.variable[0][0] == 0
+    assert len(T.defaults.variable) == 1 and T.defaults.variable[0][0] == 0
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2

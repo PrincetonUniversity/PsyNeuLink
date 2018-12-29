@@ -733,7 +733,7 @@ class OptimizationFunction(Function_Base):
         self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
-            self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
+            self.defaults.variable = args[0][DEFAULT_VARIABLE]
         if OBJECTIVE_FUNCTION in args[0] and args[0][OBJECTIVE_FUNCTION] is not None:
             self.objective_function = args[0][OBJECTIVE_FUNCTION]
             if OBJECTIVE_FUNCTION in self._unspecified_args:
@@ -1851,10 +1851,10 @@ class GaussianProcess(OptimizationFunction):
         #         raise OptimizationFunctionError("The specification for the {} arg of {} must be a list or array".
         #                                         format(repr(SEARCH_SPACE), self.__class__.__name__))
         #     # must have same number of items as variable
-        #     if len(search_space) != len(self.instance_defaults.variable):
+        #     if len(search_space) != len(self.defaults.variable):
         #         raise OptimizationFunctionError("The number of items in {} for {} ([]) must equal that of its {} ({})".
         #                                         format(repr(SEARCH_SPACE), self.__class__.__name__, len(search_space),
-        #                                                repr(VARIABLE), len(self.instance_defaults.variable)))
+        #                                                repr(VARIABLE), len(self.defaults.variable)))
         #     # every item must be a tuple with two elements, both of which are scalars, and first must be <= second
         #     for i in search_space:
         #         if not isinstance(i, tuple) or len(i) != 2:

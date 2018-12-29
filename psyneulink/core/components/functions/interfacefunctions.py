@@ -64,7 +64,7 @@ class Identity(InterfaceFunction):  # ------------------------------------------
     Arguments
     ---------
 
-    variable : number or np.array : default ClassDefaults.variable
+    variable : number or np.array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     params : Dict[param keyword: param value] : default None
@@ -143,7 +143,7 @@ class Identity(InterfaceFunction):  # ------------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or np.array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -166,10 +166,10 @@ class Identity(InterfaceFunction):  # ------------------------------------------
 
     def _get_input_struct_type(self,ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its instance_defaults shape
+        #       does not udpate its defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
-            variable = [state.instance_defaults.value for state in self.owner.input_states]
+            variable = [state.defaults.value for state in self.owner.input_states]
             # Python list does not care about ndarrays of different lengths
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
@@ -180,7 +180,7 @@ class Identity(InterfaceFunction):  # ------------------------------------------
 
     def _get_output_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its instance_defaults shape
+        #       does not udpate its defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
             return ctx.get_input_struct_type(self)
@@ -209,7 +209,7 @@ class InterfaceStateMap(InterfaceFunction):
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or np.array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     params : Dict[param keyword: param value] : default None
@@ -293,7 +293,7 @@ class InterfaceStateMap(InterfaceFunction):
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or np.array : default class_defaults.variable
            a single value or array to be transformed.
 
         corresponding_input_state : InputState : default None
@@ -321,7 +321,7 @@ class InterfaceStateMap(InterfaceFunction):
 
             # If CIM's variable does not match its value, then a new pair of states was added since the last execution
             if not np.shape(self.corresponding_input_state.owner.get_input_values(execution_id)) == np.shape(self.corresponding_input_state.owner.parameters.value.get(execution_id)):
-                return self.corresponding_input_state.owner.instance_defaults.variable[index]
+                return self.corresponding_input_state.owner.defaults.variable[index]
 
             # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and the index is 0, then return whole variable
             # np.atleast_2d fails in cases like var = [[0., 0.], [0.]] (transforms it to [[[0., 0.], [0.]]])
@@ -330,11 +330,11 @@ class InterfaceStateMap(InterfaceFunction):
                     return variable
             return variable[index]
         # CIM value = None, use CIM's default variable instead
-        return self.corresponding_input_state.owner.instance_defaults.variable[index]
+        return self.corresponding_input_state.owner.defaults.variable[index]
 
     def _get_input_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not update its instance_defaults shape
+        #       does not update its defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
             return ctx.get_output_struct_type(self.owner.owner.function)

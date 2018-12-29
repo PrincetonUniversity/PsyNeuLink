@@ -77,8 +77,8 @@ class TestInputStates:
 
         pnl.MappingProjection(sender=a, receiver=b)
 
-        assert b.input_state.instance_defaults.variable.shape == np.array([0]).shape
-        assert b.input_state.function.instance_defaults.variable.shape == np.array([0]).shape
+        assert b.input_state.defaults.variable.shape == np.array([0]).shape
+        assert b.input_state.function.defaults.variable.shape == np.array([0]).shape
 
     @pytest.mark.parametrize('num_incoming_projections', [2, 3, 4])
     def test_adding_projections_modifies_variable(self, num_incoming_projections):
@@ -87,17 +87,17 @@ class TestInputStates:
 
         receiver_input_state_variable = np.array([[0] for _ in range(num_incoming_projections)])
 
-        assert mechs[-1].input_state.instance_defaults.variable.shape == receiver_input_state_variable.shape
-        assert mechs[-1].input_state.function.instance_defaults.variable.shape == receiver_input_state_variable.shape
+        assert mechs[-1].input_state.defaults.variable.shape == receiver_input_state_variable.shape
+        assert mechs[-1].input_state.function.defaults.variable.shape == receiver_input_state_variable.shape
 
     def test_input_state_variable_shapes(self):
         t = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [[0], [0]]}])
 
-        assert t.input_state.instance_defaults.variable.shape == np.array([[0], [0]]).shape
-        assert t.input_state.instance_defaults.value.shape == np.array([0]).shape
+        assert t.input_state.defaults.variable.shape == np.array([[0], [0]]).shape
+        assert t.input_state.defaults.value.shape == np.array([0]).shape
 
-        assert t.input_state.function.instance_defaults.variable.shape == np.array([[0], [0]]).shape
-        assert t.input_state.function.instance_defaults.value.shape == np.array([0]).shape
+        assert t.input_state.function.defaults.variable.shape == np.array([[0], [0]]).shape
+        assert t.input_state.function.defaults.value.shape == np.array([0]).shape
 
     def test_internal_only(self):
         m = pnl.TransferMechanism(input_states=['EXTERNAL', pnl.InputState(name='INTERNAL_ONLY', internal_only=True)])

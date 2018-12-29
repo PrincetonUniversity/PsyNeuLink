@@ -121,7 +121,7 @@ COMMENT
     Arguments
     ---------
 
-    variable : list of numbers or 1d np.array : Default ClassDefaults.variable
+    variable : list of numbers or 1d np.array : Default class_defaults.variable
         the array for which stability is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
@@ -303,9 +303,9 @@ COMMENT
             rows = matrix.shape[0]
             cols = matrix.shape[1]
             # MODIFIED 11/25/17 OLD:
-            # size = len(np.squeeze(self.instance_defaults.variable))
+            # size = len(np.squeeze(self.defaults.variable))
             # MODIFIED 11/25/17 NEW:
-            size = len(self.instance_defaults.variable)
+            size = len(self.defaults.variable)
             # MODIFIED 11/25/17 END
 
             if rows != size:
@@ -333,7 +333,7 @@ COMMENT
 
         """
 
-        size = len(self.instance_defaults.variable)
+        size = len(self.defaults.variable)
 
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
@@ -351,8 +351,8 @@ COMMENT
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
-        default_variable = [self.instance_defaults.variable,
-                            self.instance_defaults.variable]
+        default_variable = [self.defaults.variable,
+                            self.defaults.variable]
 
         if self.metric is ENTROPY:
             self._metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
@@ -484,7 +484,7 @@ class Distance(ObjectiveFunction):
     Arguments
     ---------
 
-    variable : 2d np.array with two items : Default ClassDefaults.variable
+    variable : 2d np.array with two items : Default class_defaults.variable
         the arrays between which the distance is calculated.
 
     metric : keyword in DistancesMetrics : Default EUCLIDEAN

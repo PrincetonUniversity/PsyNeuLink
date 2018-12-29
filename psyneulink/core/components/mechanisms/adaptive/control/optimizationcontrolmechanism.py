@@ -776,7 +776,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.input_states = [outcome_input_state]
 
         # Configure default_variable to comport with full set of input_states
-        self.instance_defaults.variable, _ = self._handle_arg_input_states(self.input_states)
+        self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
 
@@ -850,7 +850,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation.get(execution_id)
         if control_allocation is None:
-            control_allocation = [c.instance_defaults.variable for c in self.control_signals]
+            control_allocation = [c.defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
         # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
@@ -950,7 +950,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         value = self.parameters.value.get(execution_id)
         if value is None:
-            value = copy.deepcopy(self.instance_defaults.value)
+            value = copy.deepcopy(self.defaults.value)
 
         for i in range(len(control_allocation)):
             value[i] = np.atleast_1d(control_allocation[i])
@@ -1086,7 +1086,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct control_allocation_search_space from their allocation_samples attributes
         # - compute their values and costs for samples of control_allocations from control_allocation_search_space
-        self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
+        self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals)
 
     @property

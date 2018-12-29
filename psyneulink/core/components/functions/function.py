@@ -538,7 +538,7 @@ class Function_Base(Function):
     Arguments
     ---------
 
-    variable : value : default ClassDefaults.variable
+    variable : value : default class_defaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Dict[param keyword: param value] : default None
@@ -561,7 +561,7 @@ class Function_Base(Function):
 
     variable: value
         format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
-        they are specified by the Function's :keyword:`ClassDefaults.variable`.
+        they are specified by the Function's :keyword:`class_defaults.variable`.
 
     function : function
         called by the Function's `owner <Function_Base.owner>` when it is executed.
@@ -639,7 +639,7 @@ class Function_Base(Function):
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
-        :param default_variable: (anything but a dict) - value to assign as self.instance_defaults.variable
+        :param default_variable: (anything but a dict) - value to assign as self.defaults.variable
         :param params: (dict) - params to be assigned to paramInstanceDefaults
         :param log: (ComponentLog enum) - log entry types set in self.componentLog
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
@@ -692,7 +692,7 @@ class Function_Base(Function):
         if param_name == "variable":
             raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
                                 "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
-                                "default variable, try {}.instance_defaults.variable.".format(self.name, self.name))
+                                "default variable, try {}.defaults.variable.".format(self.name, self.name))
         try:
             return self.owner._parameter_states[param_name].parameters.value.get(execution_context)
         except (AttributeError, TypeError):
@@ -775,8 +775,8 @@ class Function_Base(Function):
 
         # Can't convert from arrays of length > 1 to number
         if (
-            self.instance_defaults.variable is not None
-            and safe_len(self.instance_defaults.variable) > 1
+            self.defaults.variable is not None
+            and safe_len(self.defaults.variable) > 1
             and self.output_type is FunctionOutputType.RAW_NUMBER
         ):
             raise FunctionError(
@@ -878,7 +878,7 @@ class ArgumentTherapy(Function_Base):
     Arguments
     ---------
 
-    variable : boolean or statement that resolves to one : default ClassDefaults.variable
+    variable : boolean or statement that resolves to one : default class_defaults.variable
         assertion for which a therapeutic response will be offered.
 
     propensity : Manner value : default Manner.CONTRARIAN
@@ -939,7 +939,7 @@ class ArgumentTherapy(Function_Base):
     }
 
     # Variable class default
-    # This is used both to type-cast the variable, and to initialize instance_defaults.variable
+    # This is used both to type-cast the variable, and to initialize defaults.variable
     variableClassDefault_locked = False
 
     # Mode indicators
@@ -995,11 +995,11 @@ class ArgumentTherapy(Function_Base):
         :return variable: - validated
         """
 
-        if type(variable) == type(self.ClassDefaults.variable) or \
-                (isinstance(variable, numbers.Number) and isinstance(self.ClassDefaults.variable, numbers.Number)):
+        if type(variable) == type(self.class_defaults.variable) or \
+                (isinstance(variable, numbers.Number) and isinstance(self.class_defaults.variable, numbers.Number)):
             return variable
         else:
-            raise FunctionError("Variable must be {0}".format(type(self.ClassDefaults.variable)))
+            raise FunctionError("Variable must be {0}".format(type(self.class_defaults.variable)))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validates variable and /or params and assigns to targets
@@ -1051,7 +1051,7 @@ class ArgumentTherapy(Function_Base):
         Arguments
         ---------
 
-        variable : boolean : default ClassDefaults.variable
+        variable : boolean : default class_defaults.variable
            an assertion to which a therapeutic response is made.
 
         params : Dict[param keyword: param value] : default None

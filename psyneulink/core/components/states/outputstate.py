@@ -1019,7 +1019,7 @@ class OutputState(State_Base):
         # FIX: PUT THIS IN DEDICATED OVERRIDE OF COMPONENT VARIABLE-SETTING METHOD??
         if variable is None:
             if reference_value is None:
-                # variable = owner.instance_defaults.value[0]
+                # variable = owner.defaults.value[0]
                 # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
                 variable = DEFAULT_VARIABLE_SPEC
             else:
@@ -1263,10 +1263,10 @@ class OutputState(State_Base):
         if fct_variable is None:
             try:
                 if owner.value is not None:
-                    fct_variable = owner.instance_defaults.value[0]
+                    fct_variable = owner.defaults.value[0]
                 # Get owner's value by calling its function
                 else:
-                    fct_variable = owner.function(owner.instance_defaults.variable)[0]
+                    fct_variable = owner.function(owner.defaults.variable)[0]
             except AttributeError:
                 fct_variable = None
 
@@ -1380,7 +1380,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
-    owner_value = owner.instance_defaults.value
+    owner_value = owner.defaults.value
 
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -1396,7 +1396,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         converted_to_2d = np.atleast_2d(owner.value)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
-            owner_value = owner.instance_defaults.value
+            owner_value = owner.defaults.value
         # Otherwise, use value converted to 2d np.array
         else:
             owner_value = converted_to_2d
@@ -1673,7 +1673,7 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
     """
     if function is None:
-        function = OutputState.ClassDefaults.function
+        function = OutputState.defaults.function
 
     if isinstance(function, (function_type, method_type)):
         return function
