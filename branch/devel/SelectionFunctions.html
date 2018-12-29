@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.4.8.0+1120.gfe5da6c documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.4.8.0+1125.g372e72b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1120.gfe5da6c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1125.g372e72b documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="DistributionFunctions" href="DistributionFunctions.html"/>
         <link rel="prev" title="CombinationFunctions" href="CombinationFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1120
+                0.4.8.0+1125
               </div>
             
           
@@ -91,35 +91,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="Functions.html">Functions</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="UserDefinedFunction.html">UserDefinedFunction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="TransferFunctions.html">TransferFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="CombinationFunctions.html">CombinationFunctions</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">SelectionFunctions</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="DistributionFunctions.html">DistributionFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="StatefulFunctions.html">StatefulFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ObjectiveFunctions.html">ObjectiveFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="OptimizationFunctions.html">OptimizationFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningFunctions.html">LearningFunctions</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -247,7 +223,7 @@ with all of its values zeroed except one as specified by <a class="reference int
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>2d np.array : default ClassDefaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> is
+<li><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> is
 <em>PROB</em> then a 2nd item must be included that is a probability distribution with same length as 1st item.</li>
 <li><strong>mode</strong> (<em>MAX_VAL</em><em>, </em><em>MAX_ABS_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, </em><em>MAX_ABS_INDICATOR</em><em>, </em><em>MIN_VAL</em><em>, </em><em>MIN_ABS_VAL</em><em>, </em><em>MIN_INDICATOR</em><em>,</em>) – </li>
 <li><strong>PROB</strong><strong> or </strong><strong>PROB_INDICATOR</strong> (<em>MIN_ABS_INDICATOR</em><em>,</em>) – specifies the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
@@ -313,7 +289,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>2d np.array : default ClassDefaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
+<li><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
 probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -379,7 +355,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1120.gfe5da6c',
+            VERSION:'0.4.8.0+1125.g372e72b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

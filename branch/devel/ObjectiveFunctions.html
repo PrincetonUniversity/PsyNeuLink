@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.4.8.0+1120.gfe5da6c documentation</title>
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.4.8.0+1125.g372e72b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1120.gfe5da6c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+1125.g372e72b documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="OptimizationFunctions" href="OptimizationFunctions.html"/>
         <link rel="prev" title="MemoryFunctions" href="MemoryFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1120
+                0.4.8.0+1125
               </div>
             
           
@@ -91,35 +91,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="Functions.html">Functions</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="UserDefinedFunction.html">UserDefinedFunction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="TransferFunctions.html">TransferFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="CombinationFunctions.html">CombinationFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SelectionFunctions.html">SelectionFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="DistributionFunctions.html">DistributionFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="StatefulFunctions.html">StatefulFunctions</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">ObjectiveFunctions</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="OptimizationFunctions.html">OptimizationFunctions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningFunctions.html">LearningFunctions</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -207,7 +183,7 @@
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.objectivefunctions.Stability">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x1074e4cf8&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x1074e4dd8&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x105341598&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x1075d2ba8&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x1075d2c88&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x104806620&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>Stability(                                          default_variable=None,                          matrix=HOLLOW_MATRIX,                           metric=ENERGY                                   transfer_fct=None                               normalize=False,                                params=None,                                    owner=None,                                     prefs=None                                      )</p>
 <p id="stability">Return the stability of <code class="xref any docutils literal"><span class="pre">variable</span></code> based on a state transformation matrix.</p>
@@ -215,7 +191,7 @@
 transformed using the <code class="xref any docutils literal"><span class="pre">transfer_fct</span></code> (if specified), and then compared with its initial
 value using the <code class="xref any docutils literal"><span class="pre">distance</span> <span class="pre">metric</span></code> specified by <code class="xref any docutils literal"><span class="pre">metric</span></code>.  If <code class="xref any docutils literal"><span class="pre">normalize</span></code> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is normalized by the length of (number of elements in) <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <dl class="docutils">
-<dt>variable <span class="classifier-delimiter">:</span> <span class="classifier">list of numbers or 1d np.array</span> <span class="classifier-delimiter">:</span> <span class="classifier">Default ClassDefaults.variable</span></dt>
+<dt>variable <span class="classifier-delimiter">:</span> <span class="classifier">list of numbers or 1d np.array</span> <span class="classifier-delimiter">:</span> <span class="classifier">Default class_defaults.variable</span></dt>
 <dd>the array for which stability is calculated.</dd>
 <dt>matrix <span class="classifier-delimiter">:</span> <span class="classifier">list, np.ndarray, np.matrix, function keyword, or MappingProjection</span> <span class="classifier-delimiter">:</span> <span class="classifier">default HOLLOW_MATRIX</span></dt>
 <dd>specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
@@ -294,7 +270,7 @@ by the length of <code class="xref any docutils literal"><span class="pre">varia
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>2d np.array with two items : Default ClassDefaults.variable</em>) – the arrays between which the distance is calculated.</li>
+<li><strong>variable</strong> (<em>2d np.array with two items : Default class_defaults.variable</em>) – the arrays between which the distance is calculated.</li>
 <li><strong>metric</strong> (<em>keyword in DistancesMetrics : Default EUCLIDEAN</em>) – specifies a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">distance</span> <span class="pre">metric</span></code></a> used to compute the distance between the two items in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>normalize</strong> (<em>bool : Default False</em>) – specifies whether to normalize the distance by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -412,7 +388,7 @@ If <a class="reference internal" href="#psyneulink.core.components.functions.obj
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1120.gfe5da6c',
+            VERSION:'0.4.8.0+1125.g372e72b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
