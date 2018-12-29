@@ -1,15 +1,16 @@
 import pytest
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 
 def test_control_mechanism_assignment():
     '''ControlMechanism assignment/replacement,  monitor_for_control, and control_signal specifications'''
 
     T1 = pnl.TransferMechanism(size=3, name='T-1')
-    T2 = pnl.TransferMechanism(function=pnl.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T-2')
-    T3 = pnl.TransferMechanism(function=pnl.Logistic, name='T-3')
-    T4 = pnl.TransferMechanism(function=pnl.Logistic, name='T-4')
+    T2 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T-2')
+    T3 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, name='T-3')
+    T4 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, name='T-4')
     P = pnl.Process(pathway=[T1, T2, T3, T4])
     S = pnl.System(processes=P,
                    # controller=pnl.EVCControlMechanism,
@@ -92,6 +93,7 @@ def test_prediction_mechanism_assignment():
     T3 = pnl.TransferMechanism(name='T3')
 
     S = pnl.sys([T1, T2, T3],
+                # controller=pnl.EVCControlMechanism(name='EVC',
                 controller=pnl.EVCControlMechanism(name='EVC',
                                                    prediction_mechanisms=(pnl.PredictionMechanism,
                                                                           {pnl.FUNCTION: pnl.INPUT_SEQUENCE,

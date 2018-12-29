@@ -23,25 +23,21 @@ import logging as _logging
 
 import numpy as _numpy
 
-from psyneulink.compositions import composition
-from psyneulink.compositions.composition import *
 # starred imports to allow user imports from top level
-from . import components
-from . import globals
+from . import core
 from . import library
-from . import scheduling
+
 from ._version import get_versions
-from .components import *
-from .globals import *
+from .core import *
 from .library import *
-from .scheduling import *
 
-__all__ = list(components.__all__)
-__all__.extend(composition.__all__)
-__all__.extend(globals.__all__)
+_pnl_global_names = [
+    'primary_registries',
+]
+
+__all__ = list(_pnl_global_names)
+__all__.extend(core.__all__)
 __all__.extend(library.__all__)
-__all__.extend(scheduling.__all__)
-
 
 # set __version__ based on versioneer
 __version__ = get_versions()['version']
@@ -49,6 +45,7 @@ del get_versions
 
 # suppress numpy overflow and underflow errors
 _numpy.seterr(over='ignore', under='ignore')
+
 
 # https://stackoverflow.com/a/17276457/3131666
 class _Whitelist(_logging.Filter):
@@ -70,6 +67,19 @@ _logging.basicConfig(
 )
 for handler in _logging.root.handlers:
     handler.addFilter(_Blacklist(
-        'psyneulink.scheduling.scheduler',
-        'psyneulink.scheduling.condition',
+        'psyneulink.core.scheduling.scheduler',
+        'psyneulink.core.scheduling.condition',
     ))
+
+primary_registries = [
+    FunctionRegistry, ControlMechanismRegistry, GatingMechanismRegistry, MechanismRegistry,
+    ProjectionRegistry, StateRegistry, SystemRegistry, DeferredInitRegistry, ProcessRegistry,
+    PreferenceSetRegistry, CompositionRegistry
+]
+
+for reg in primary_registries:
+    def func(name, obj):
+        if isinstance(obj, Component):
+            obj._is_pnl_inherent = True
+
+    process_registry_object_instances(reg, func)

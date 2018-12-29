@@ -1,13 +1,16 @@
 import numpy as np
+import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
-from psyneulink.components.functions.function import ConstantIntegrator, Logistic
-from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
+from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
+from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
 
 def test_gating():
@@ -70,7 +73,7 @@ def test_gating():
         receiver=Hidden_Layer_2,
         matrix={
             VALUE: Middle_Weights_matrix,
-            FUNCTION: ConstantIntegrator,
+            FUNCTION: AccumulatorIntegrator,
             FUNCTION_PARAMS: {
                 DEFAULT_VARIABLE: Middle_Weights_matrix,
                 INITIALIZER: Middle_Weights_matrix,
@@ -161,3 +164,128 @@ def test_gating():
         call_before_trial=print_header,
         call_after_trial=show_target,
     )
+
+
+def test_gating_with_UDF():
+    def my_linear_fct(
+        x,
+        m=2.0,
+        b=0.0,
+        params={
+            pnl.ADDITIVE_PARAM: 'b',
+            pnl.MULTIPLICATIVE_PARAM: 'm'
+        }
+    ):
+        return m * x + b
+
+    def my_simple_linear_fct(
+        x,
+        m=1.0,
+        b=0.0
+    ):
+        return m * x + b
+
+    def my_exp_fct(
+        x,
+        r=1.0,
+        # b=pnl.CONTROL,
+        b=0.0,
+        params={
+            pnl.ADDITIVE_PARAM: 'b',
+            pnl.MULTIPLICATIVE_PARAM: 'r'
+        }
+    ):
+        return x**r + b
+
+    def my_sinusoidal_fct(
+        input,
+        phase=0,
+        amplitude=1,
+        params={
+            pnl.ADDITIVE_PARAM: 'phase',
+            pnl.MULTIPLICATIVE_PARAM: 'amplitude'
+        }
+    ):
+        frequency = input[0]
+        t = input[1]
+        return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+
+    Input_Layer = pnl.TransferMechanism(
+        name='Input_Layer',
+        default_variable=np.zeros((2,)),
+        function=psyneulink.core.components.functions.transferfunctions.Logistic
+    )
+
+    Output_Layer = pnl.TransferMechanism(
+        name='Output_Layer',
+        default_variable=[0, 0, 0],
+        function=psyneulink.core.components.functions.transferfunctions.Linear,
+        # function=pnl.Logistic,
+        # output_states={pnl.NAME: 'RESULTS USING UDF',
+        #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
+        #                pnl.FUNCTION: my_sinusoidal_fct}
+        output_states={
+            pnl.NAME: 'RESULTS USING UDF',
+            # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
+            pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(slope=pnl.GATING)
+            # pnl.FUNCTION: pnl.Logistic(gain=pnl.GATING)
+            # pnl.FUNCTION: my_linear_fct
+            # pnl.FUNCTION: my_exp_fct
+            # pnl.FUNCTION:pnl.UserDefinedFunction(custom_function=my_simple_linear_fct,
+            #                                      params={pnl.ADDITIVE_PARAM:'b',
+            #                                              pnl.MULTIPLICATIVE_PARAM:'m',
+            #                                              },
+            # m=pnl.GATING,
+            # b=2.0
+            # )
+        }
+    )
+
+    Gating_Mechanism = pnl.GatingMechanism(
+        # default_gating_policy=0.0,
+        size=[1],
+        gating_signals=[
+            # Output_Layer
+            Output_Layer.output_state,
+        ]
+    )
+
+    p = pnl.Process(
+        size=2,
+        pathway=[
+            Input_Layer,
+            Output_Layer
+        ],
+        prefs={
+            pnl.VERBOSE_PREF: False,
+            pnl.REPORT_OUTPUT_PREF: False
+        }
+    )
+
+    g = pnl.Process(
+        default_variable=[1.0],
+        pathway=[Gating_Mechanism]
+    )
+
+    stim_list = {
+        Input_Layer: [[-1, 30], [-1, 30], [-1, 30], [-1, 30]],
+        Gating_Mechanism: [[0.0], [0.5], [1.0], [2.0]]
+    }
+
+    mySystem = pnl.System(processes=[p, g])
+
+    mySystem.reportOutputPref = False
+
+    results = mySystem.run(
+        num_trials=4,
+        inputs=stim_list,
+    )
+
+    expected_results = [
+        [np.array([0., 0., 0.])],
+        [np.array([0.63447071, 0.63447071, 0.63447071])],
+        [np.array([1.26894142, 1.26894142, 1.26894142])],
+        [np.array([2.53788284, 2.53788284, 2.53788284])]
+    ]
+
+    np.testing.assert_allclose(results, expected_results)

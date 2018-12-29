@@ -3,6 +3,9 @@ import psyneulink as pnl
 
 
 # Preferences:
+import psyneulink.core.components.functions.distributionfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 mechanism_prefs = pnl.ComponentPreferenceSet(
     prefs={
         pnl.VERBOSE_PREF: pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
@@ -19,17 +22,18 @@ process_prefs = pnl.ComponentPreferenceSet(
 signalSearchRange = np.arange(0.8, 2.0, 0.2)
 
 # Stimulus Mechanisms
-Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=pnl.Linear(slope=0.3324))
-Flanker_Stim = pnl.TransferMechanism(name='Flanker Stimulus', function=pnl.Linear(slope=0.3545221843))
+Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=psyneulink.core.components.functions
+                                    .transferfunctions.Linear(slope=0.3324))
+Flanker_Stim = pnl.TransferMechanism(name='Flanker Stimulus', function=psyneulink.core.components.functions.transferfunctions.Linear(slope=0.3545221843))
 
 # Processing Mechanisms (Control)
 Target_Rep = pnl.TransferMechanism(
     name='Target Representation',
-    function=pnl.Linear(
+    function=psyneulink.core.components.functions.transferfunctions.Linear(
         slope=(
             1.0,
             pnl.ControlProjection(
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 control_signal_params={pnl.ALLOCATION_SAMPLES: signalSearchRange}
             )
         )
@@ -38,11 +42,11 @@ Target_Rep = pnl.TransferMechanism(
 )
 Flanker_Rep = pnl.TransferMechanism(
     name='Flanker Representation',
-    function=pnl.Linear(
+    function=psyneulink.core.components.functions.transferfunctions.Linear(
         slope=(
             1.0,
             pnl.ControlProjection(
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 control_signal_params={pnl.ALLOCATION_SAMPLES: signalSearchRange}
             )
         )
@@ -53,13 +57,13 @@ Flanker_Rep = pnl.TransferMechanism(
 # Processing Mechanism (Automatic)
 Automatic_Component = pnl.TransferMechanism(
     name='Automatic Component',
-    function=pnl.Linear(slope=(1.0)),
+    function=psyneulink.core.components.functions.transferfunctions.Linear(slope=(1.0)),
     prefs=mechanism_prefs
 )
 
 # Decision Mechanisms
 Decision = pnl.DDM(
-    function=pnl.BogaczEtAl(
+    function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
         drift_rate=(1.0),
         threshold=(0.2645),
         noise=(0.5),
@@ -75,7 +79,7 @@ Decision = pnl.DDM(
         {
             pnl.NAME: 'OFFSET RT',
             pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
-            pnl.FUNCTION: pnl.Linear(0, slope=0.3, intercept=1)
+            pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(0, slope=0.3, intercept=1)
         }
     ],
 )
@@ -128,7 +132,7 @@ mySystem = pnl.System(
         FlankerAutomaticProcess,
         RewardProcess
     ],
-    controller=pnl.EVCControlMechanism,
+    controller=pnl.EVCControlMechanism(name='Task Controller', ),
     enable_controller=True,
     monitor_for_control=[
         Reward,
@@ -144,32 +148,33 @@ mySystem.show()
 mySystem.controller.show()
 
 # Show graph of system (with control components)
+# mySystem.show_graph()
 # mySystem.show_graph(show_dimensions=pnl.ALL, show_projection_labels=True)
-mySystem.show_graph(show_control=True, show_projection_labels=False)
+# mySystem.show_graph(show_control=True, show_projection_labels=False)
 # mySystem.show_graph(show_control=True, show_processes=True, show_headers=False)
 # mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False)
 # mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False, show_processes=True)
 
 # configure EVC components
-mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
-mySystem.controller.control_signals[1].intensity_cost_function = pnl.Exponential(rate=0.8046).function
+mySystem.controller.control_signals[0].intensity_cost_function = psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.8046).function
+mySystem.controller.control_signals[1].intensity_cost_function = psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.8046).function
 
 for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
         # when you find a key mechanism (transfer mechanism) with the correct name, print its name
         print(mech.name)
-        mech.function_object.rate = 1.0
+        mech.function.rate = 1.0
 
     if 'Reward' in mech.name:
         print(mech.name)
-        mech.function_object.rate = 0.8
+        mech.function.rate = 0.8
         # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
 print('new rate of integration mechanisms before System execution:')
 # for mech in mySystem.controller.prediction_mechanisms.keys():
 for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     print(mech.name)
-    print(mech.function_object.rate)
+    print(mech.function.rate)
     print('----')
 
 # generate stimulus environment
@@ -195,12 +200,14 @@ stim_list_dict = {
 
 mySystem.controller.reportOutputPref = True
 
-Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.ContextFlags.CONTROL))
+Flanker_Rep.set_log_conditions(('mod_slope', pnl.ContextFlags.CONTROL))
 
 mySystem.run(
-    num_trials=nTrials,
-    inputs=stim_list_dict,
+        num_trials=nTrials,
+        inputs=stim_list_dict,
+        animate={'show_control':pnl.ALL, pnl.UNIT: pnl.EXECUTION_SET}
 )
 
-Flanker_Rep.log.print_entries()
+
+Flanker_Rep.log.print_entries(execution_ids=mySystem)
 

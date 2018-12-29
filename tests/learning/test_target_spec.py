@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import ENABLED
-from psyneulink.globals.environment import RunError
-from psyneulink.components.functions.function import NormalDist
+
+from psyneulink.core.components.functions.distributionfunctions import NormalDist
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.environment import RunError
+from psyneulink.core.globals.keywords import ENABLED
 
 class TestSimpleLearningPathway:
 
@@ -111,8 +112,8 @@ class TestSimpleLearningPathway:
                    processes=[LP])
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
-            val_2 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
+            val_2 = NormalDist(mean=3.0)()
             target_value = np.array([val_1, val_2])
             return target_value
 
@@ -172,7 +173,7 @@ class TestMultilayerLearning:
                    processes=[P])
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
             return val_1
 
         S.run(inputs={A: 1.0},
@@ -257,7 +258,7 @@ class TestDivergingLearningPathways:
                    )
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
             return val_1
 
         S.run(inputs={A: 1.0},
@@ -433,8 +434,8 @@ class TestInvalidTargetSpecs:
                    )
 
         def target_function():
-            val_1 = NormalDist(mean=3.0).function()
-            val_2 = NormalDist(mean=3.0).function()
+            val_1 = NormalDist(mean=3.0)()
+            val_2 = NormalDist(mean=3.0)()
             return [val_1, val_2]
 
         with pytest.raises(RunError) as error_text:

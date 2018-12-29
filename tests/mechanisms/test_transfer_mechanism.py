@@ -1,16 +1,26 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, ReLU, SoftMax, UserDefinedFunction
-from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
-from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.scheduling.condition import Never
+import psyneulink.core.llvm as pnlvm
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
+from psyneulink.core.components.functions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, UniformToNormalDist, \
+    ExponentialDist, \
+    UniformDist, GammaDist, WaldDist
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE
+from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.scheduling.condition import Never
 
 VECTOR_SIZE=4
 
@@ -37,7 +47,10 @@ class TestTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
-    def test_transfer_mech_inputs_list_of_floats(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_inputs_list_of_floats(self, benchmark, mode):
 
         T = TransferMechanism(
             name='T',
@@ -46,7 +59,18 @@ class TestTransferMechanismInputs:
             integrator_mode=True
         )
         T.reinitialize_when = Never()
-        val = benchmark(T.execute, [10.0 for i in range(VECTOR_SIZE)])
+        var = [10.0 for i in range(VECTOR_SIZE)]
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        val = EX(var)
+        benchmark(EX, var)
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
     #@pytest.mark.mechanism
@@ -70,7 +94,7 @@ class TestTransferMechanismInputs:
     #         default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
     #         integrator_mode=True
     #     )
-    #     np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
+    #     np.testing.assert_array_equal(T.defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -79,7 +103,7 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T'
         )
-        assert len(T.instance_defaults.variable) == 1 and T.instance_defaults.variable[0] == 0
+        assert len(T.defaults.variable) == 1 and T.defaults.variable[0] == 0
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -123,7 +147,10 @@ class TestTransferMechanismNoise:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise")
-    def test_transfer_mech_array_var_float_noise(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_var_float_noise(self, benchmark, mode):
 
         T = TransferMechanism(
             name='T',
@@ -134,7 +161,18 @@ class TestTransferMechanismNoise:
             integrator_mode=True
         )
         T.reinitialize_when = Never()
-        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [0 for i in range(VECTOR_SIZE)]
+        val = EX(var)
+        benchmark(EX, var)
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -167,14 +205,18 @@ class TestTransferMechanismNoise:
         )
         T.reinitialize_when = Never()
         val = T.execute([0, 0, 0, 0])
-        expected = [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]
+        expected = [-0.10321885179355784, 0.41059850193837233, 0.144043571160878, 1.454273506962975]
+        # expected = [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]
         for i in range(len(val[0])):
             assert val[0][i] ==  expected[i]
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise2")
-    def test_transfer_mech_array_var_normal_array_noise2(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_var_normal_array_noise2(self, benchmark, mode):
 
         T = TransferMechanism(
             name='T',
@@ -185,7 +227,18 @@ class TestTransferMechanismNoise:
             integrator_mode=True
         )
         T.reinitialize_when = Never()
-        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [0 for i in range(VECTOR_SIZE)]
+        val = EX(var)
+        benchmark(EX, var)
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -241,19 +294,19 @@ class TestDistributionFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_normal_noise_standard_dev_error(self):
+    def test_transfer_mech_normal_noise_standard_deviation_error(self):
         with pytest.raises(FunctionError) as error_text:
             standard_deviation = -2.0
             T = TransferMechanism(
                 name="T",
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
-                noise=NormalDist(standard_dev=standard_deviation),
+                noise=NormalDist(standard_deviation=standard_deviation),
                 integration_rate=1.0,
                 integrator_mode=True
             )
 
-        assert "The standard_dev parameter" in str(error_text) and "must be greater than zero" in str(error_text)
+        assert "The standard_deviation parameter" in str(error_text) and "must be greater than zero" in str(error_text)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -285,6 +338,7 @@ class TestDistributionFunctions:
             np.random.seed(22)
             val = T.execute([0, 0, 0, 0])
             assert np.allclose(val, [[-0.81177443, -0.04593492, -0.20051725, 1.07665147]])
+
         except:
             with pytest.raises(FunctionError) as error_text:
                 T = TransferMechanism(
@@ -380,7 +434,10 @@ class TestTransferMechanismFunctions:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Logistic")
-    def test_transfer_mech_logistic_fun(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_logistic_fun(self, benchmark, mode):
 
         T = TransferMechanism(
             name='T',
@@ -389,12 +446,27 @@ class TestTransferMechanismFunctions:
             integration_rate=1.0,
             integrator_mode=True
         )
-        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [0 for i in range(VECTOR_SIZE)]
+        val = EX(var)
+        benchmark(EX, var)
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
-    
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_relu_fun(self):
+    @pytest.mark.benchmark(group="TransferMechanism ReLU")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_relu_fun(self, benchmark, mode):
 
         T = TransferMechanism(
             name='T',
@@ -403,15 +475,20 @@ class TestTransferMechanismFunctions:
             integration_rate=1.0,
             integrator_mode=True
         )
-        # val1 = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
-        # val2 = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
-        # val3 = benchmark(T.execute, [-1 for i in range(VECTOR_SIZE)])
-        # assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
-        # assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
-        # assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
-        val1 = T.execute([0 for i in range(VECTOR_SIZE)])
-        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
-        val3 = T.execute([-1 for i in range(VECTOR_SIZE)])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        val1 = EX([0 for i in range(VECTOR_SIZE)])
+        val2 = EX([1 for i in range(VECTOR_SIZE)])
+        val3 = EX([-1 for i in range(VECTOR_SIZE)])
+        benchmark(EX, [0 for i in range(VECTOR_SIZE)])
+
         assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
@@ -419,7 +496,10 @@ class TestTransferMechanismFunctions:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Exponential")
-    def test_transfer_mech_exponential_fun(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_exponential_fun(self, benchmark, mode):
 
         T = TransferMechanism(
             name='T',
@@ -428,13 +508,27 @@ class TestTransferMechanismFunctions:
             integration_rate=1.0,
             integrator_mode=True
         )
-        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [0 for i in range(VECTOR_SIZE)]
+        val = EX(var)
+        benchmark(EX, var)
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism SoftMax")
-    def test_transfer_mech_softmax_fun(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_softmax_fun(self, benchmark, mode):
 
         T = TransferMechanism(
             name='T',
@@ -443,7 +537,18 @@ class TestTransferMechanismFunctions:
             integration_rate=1.0,
             integrator_mode=True
         )
-        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [0 for i in range(VECTOR_SIZE)]
+        val = EX(var)
+        benchmark(EX, var)
         assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -481,7 +586,7 @@ class TestTransferMechanismFunctions:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
-                function=ConstantIntegrator(),
+                function=AccumulatorIntegrator(),
                 integration_rate=1.0,
                 integrator_mode=True
             )
@@ -503,11 +608,395 @@ class TestTransferMechanismFunctions:
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
 
+class TestTransferMechanismIntegratorFunctionParams:
+
+    # integration_rate array on mech: assigned to mech value
+    # integration_rate array on fct: assigned to fct value
+    # integration_rate array on both: assinged to fct value
+    # integration_rate array wrong array size error
+
+
+    # RATE TESTS ---------------------------------------------------------------------------
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_assignments_mech_rate(self, benchmark, mode):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator,
+            integration_rate=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_assignments_fct_rate(self, benchmark, mode):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator(rate=[i / 10 for i in range(VECTOR_SIZE)])
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_assignments_fct_over_mech_rate(self, benchmark, mode):
+
+        T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
+                integration_rate=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
+
+    def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integration_rate=[i/10 for i in range(VECTOR_SIZE+1)]
+            )
+        assert (
+            "integration_rate' arg for" in str(error_text.value)
+            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+        )
+
+    def test_transfer_mech_array_assignments_wrong_size_fct_rate(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(rate=[i / 10 for i in range(VECTOR_SIZE + 1)])
+            )
+        assert (
+            "integration_rate' arg for" in str(error_text.value)
+            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+        )
+
+    # INITIAL_VALUE / INITALIZER TESTS -------------------------------------------------------
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_assignments_mech_init_val(self, benchmark, mode):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            initial_value=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_assignments_fct_initzr(self, benchmark, mode):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator(
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    initializer=[i/10 for i in range(VECTOR_SIZE)]
+            ),
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_assignments_fct_initlzr_over_mech_init_val(self, benchmark, mode):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator(
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    initializer=[i/10 for i in range(VECTOR_SIZE)]
+            ),
+            initial_value=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+
+    # def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    initial_value=[i/10 for i in range(VECTOR_SIZE+1)]
+            )
+        assert (
+            "The format of the initial_value parameter" in str(error_text.value)
+            and "must match its variable" in str(error_text.value)
+        )
+
+    # FIX: CAN'T RUN THIS YET:  CRASHES W/O ERROR MESSAGE SINCE DEFAULT_VARIABLE OF FCT DOESN'T MATCH ITS INITIALIZER
+    # # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self, benchmark, mode):
+    # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self):
+    #
+    #     with pytest.raises(TransferError) as error_text:
+    #         T = TransferMechanism(
+    #                 name='T',
+    #                 default_variable=[0 for i in range(VECTOR_SIZE)],
+    #                 integrator_mode=True,
+    #                 integrator_function=AdaptiveIntegrator(initializer=[i/10 for i in range(VECTOR_SIZE+1)])
+    #         )
+    #     assert (
+    #         "initializer' arg for" in str(error_text.value)
+    #         and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+    #     )
+
+
+    # NOISE TESTS ---------------------------------------------------------------------------
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_array_assignments_mech_noise(self, benchmark, mode):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator,
+            noise=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda, pytest.mark.skip])])
+    # FIXME: Incorrect T.integrator_function.defaults.variable reported
+    def test_transfer_mech_array_assignments_fct_noise(self, benchmark, mode):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integrator_mode=True,
+            integrator_function=AdaptiveIntegrator(noise=[i / 10 for i in range(VECTOR_SIZE)])
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip]),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda, pytest.mark.skip])])
+    # FIXME: Incorrect T.integrator_function.defaults.variable reported
+    def test_transfer_mech_array_assignments_fct_over_mech_noise(self, benchmark, mode):
+
+        T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
+                noise=[i/10 for i in range(VECTOR_SIZE)]
+        )
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            EX = e.cuda_execute
+
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = EX(var)
+        benchmark(EX, var)
+        assert np.allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
+
+    # def test_transfer_mech_array_assignments_wrong_size_mech_noise(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_wrong_size_mech_noise(self):
+
+        with pytest.raises(MechanismError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    noise=[i/10 for i in range(VECTOR_SIZE+1)]
+            )
+        assert (
+            "Noise parameter ([0.0, 0.1, 0.2, 0.3, 0.4])" in str(error_text.value) and
+            "does not match default variable ([[0 0 0 0]])." in str(error_text.value) and
+            "must be specified as a float, a function, or an array of the appropriate shape ((1, 4))." in str(error_text.value)
+        )
+
+    # def test_transfer_mech_array_assignments_wrong_size_fct_noise(self, benchmark, mode):
+    def test_transfer_mech_array_assignments_wrong_size_fct_noise(self):
+
+        with pytest.raises(MechanismError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_function=AdaptiveIntegrator(noise=[i / 10 for i in range(VECTOR_SIZE + 1)]),
+                    integrator_mode=True
+            )
+        assert (
+            "Noise parameter" in str(error_text.value) and
+            "does not match default variable" in str(error_text.value) and
+            "must be specified as a float, a function, or an array of the appropriate shape ((1, 4))" in str(error_text.value)
+        )
+
+
 class TestTransferMechanismTimeConstant:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_integration_rate_0_8(self):
+    @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_integration_rate_0_8(self, benchmark, mode):
         T = TransferMechanism(
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
@@ -515,16 +1004,31 @@ class TestTransferMechanismTimeConstant:
             integration_rate=0.8,
             integrator_mode=True
         )
-        val = T.execute([1 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[0.8 for i in range(VECTOR_SIZE)]])
-        val = T.execute([1 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[0.96 for i in range(VECTOR_SIZE)]])
+        if mode == 'Python':
+            val1 = T.execute([1 for i in range(VECTOR_SIZE)])
+            val2 = T.execute([1 for i in range(VECTOR_SIZE)])
+            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            val1 = e.execute([1 for i in range(VECTOR_SIZE)])
+            val2 = e.execute([1 for i in range(VECTOR_SIZE)])
+            benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            val1 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
+            val2 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
+            benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
 
+        assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
-    def test_transfer_mech_smoothin_factor_1_0(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_smoothin_factor_1_0(self, benchmark, mode):
         T = TransferMechanism(
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
@@ -532,14 +1036,24 @@ class TestTransferMechanismTimeConstant:
             integration_rate=1.0,
             integrator_mode=True
         )
-        val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
+        if mode == 'Python':
+            val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
 
+        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=0")
-    def test_transfer_mech_integration_rate_0_0(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_integration_rate_0_0(self, benchmark, mode):
         T = TransferMechanism(
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
@@ -547,13 +1061,21 @@ class TestTransferMechanismTimeConstant:
             integration_rate=0.0,
             integrator_mode=True
         )
-        val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        if mode == 'Python':
+            val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.execute, [1 for i in range(VECTOR_SIZE)])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.cuda_execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
-
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_integration_rate_0_8_initial_0_5(self):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip])])
+    def test_transfer_mech_integration_rate_0_8_initial_0_5(self, mode):
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
@@ -562,29 +1084,51 @@ class TestTransferMechanismTimeConstant:
             initial_value=np.array([[.5, .5, .5, .5]]),
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1])
+        if mode == 'Python':
+            val = T.execute([1, 1, 1, 1])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            val = e.execute([1, 1, 1, 1])
         assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
+
         T.noise = 10
-        val = T.execute([1, 2, -3, 0])
+
+        if mode == 'Python':
+            val = T.execute([1, 2, -3, 0])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            val = e.execute([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
-
+    # @pytest.mark.mechanism
+    # @pytest.mark.transfer_mechanism
+    # def test_transfer_mech_integration_rate_0_8_list(self):
+    #     with pytest.raises(TransferError) as error_text:
+    #         T = TransferMechanism(
+    #             name='T',
+    #             default_variable=[0, 0, 0, 0],
+    #             function=Linear(),
+    #             integration_rate=[0.8, 0.8, 0.8, 0.8],
+    #             integrator_mode=True
+    #         )
+    #         T.execute([1, 1, 1, 1])
+    #     assert (
+    #         "integration_rate parameter" in str(error_text.value)
+    #         and "must be a float" in str(error_text.value)
+    #     )
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_0_8_list(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=Linear(),
-                integration_rate=[0.8, 0.8, 0.8, 0.8],
-                integrator_mode=True
-            )
-            T.execute([1, 1, 1, 1])
-        assert (
-            "integration_rate parameter" in str(error_text.value)
-            and "must be a float" in str(error_text.value)
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            integration_rate=[0.8, 0.8, 0.8, 0.8],
+            integrator_mode=True
         )
+        T.execute([1, 1, 1, 1])
+        val = T.execute([1, 1, 1, 1])
+        assert np.allclose(val, [[ 0.96,  0.96,  0.96,  0.96]])
 
 
     @pytest.mark.mechanism
@@ -600,8 +1144,8 @@ class TestTransferMechanismTimeConstant:
             )
             T.execute([1, 1, 1, 1])
         assert (
-            "integration_rate parameter" in str(error_text.value)
-            and "must be a float between 0 and 1" in str(error_text.value)
+            "Value(s) in \'integration_rate\' arg for" in str(error_text.value)
+            and "must be an int or float in the interval [0,1]" in str(error_text.value)
         )
 
 
@@ -614,7 +1158,7 @@ class TestTransferMechanismSize:
             name='T',
             size=4
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [0., 0., 0., 0.]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [0., 0., 0., 0.]).all()
         assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
 
 
@@ -668,7 +1212,7 @@ class TestTransferMechanismSize:
             name='T',
             size=4.0,
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [0., 0., 0., 0.]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [0., 0., 0., 0.]).all()
         assert len(T.size == 1) and T.size[0] == 4.0 and isinstance(T.size[0], np.integer)
 
     # ------------------------------------------------------------------------------------------------
@@ -725,7 +1269,7 @@ class TestTransferMechanismSize:
             name='T',
             size=[2, 3, 4]
         )
-        assert len(T.instance_defaults.variable) == 3 and len(T.instance_defaults.variable[0]) == 2 and len(T.instance_defaults.variable[1]) == 3 and len(T.instance_defaults.variable[2]) == 4
+        assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
@@ -738,7 +1282,7 @@ class TestTransferMechanismSize:
             name='T',
             size=[2., 3., 4.]
         )
-        assert len(T.instance_defaults.variable) == 3 and len(T.instance_defaults.variable[0]) == 2 and len(T.instance_defaults.variable[1]) == 3 and len(T.instance_defaults.variable[2]) == 4
+        assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
 
     # note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
     # is for possible user-defined functions that do use unusual shapes.
@@ -751,7 +1295,7 @@ class TestTransferMechanismSize:
             size=[2., 3.],
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert len(T.instance_defaults.variable) == 2 and (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4, 5]).all()
+        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all()
 
     # ------------------------------------------------------------------------------------------------
     # TEST 12
@@ -765,7 +1309,7 @@ class TestTransferMechanismSize:
             size=2,
             default_variable=[[1, 2], [3, 4]]
         )
-        assert len(T.instance_defaults.variable) == 2 and (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4]).all()
+        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4]).all()
         assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
 
     # ------------------------------------------------------------------------------------------------
@@ -779,7 +1323,7 @@ class TestTransferMechanismSize:
             name='T',
             default_variable=[[1, 2], [3, 4]]
         )
-        assert len(T.instance_defaults.variable) == 2 and (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4]).all()
+        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4]).all()
 
     # ------------------------------------------------------------------------------------------------
     # TEST 14
@@ -793,7 +1337,7 @@ class TestTransferMechanismSize:
             default_variable=[1, 2, 3, 4],
             size=2
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [1, 2, 3, 4]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
         val = T.execute([10.0, 10.0, 10.0, 10.0])
         assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
@@ -809,7 +1353,7 @@ class TestTransferMechanismSize:
             default_variable=[1, 2, 3, 4],
             size=[2, 3, 4]
         )
-        assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [1, 2, 3, 4]).all()
+        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
         val = T.execute([10.0, 10.0, 10.0, 10.0])
         assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
@@ -825,7 +1369,7 @@ class TestTransferMechanismSize:
             size=2,
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4, 5]).all() and len(T.instance_defaults.variable) == 2
+        assert (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all() and len(T.defaults.variable) == 2
 
     # ------------------------------------------------------------------------------------------------
     # TEST 17
@@ -839,7 +1383,7 @@ class TestTransferMechanismSize:
             size=[2, 2],
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert (T.instance_defaults.variable[0] == [1, 2]).all() and (T.instance_defaults.variable[1] == [3, 4, 5]).all() and len(T.instance_defaults.variable) == 2
+        assert (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all() and len(T.defaults.variable) == 2
 
     # ------------------------------------------------------------------------------------------------
 
@@ -911,23 +1455,47 @@ class TestTransferMechanismSize:
             name='T',
             size=[[2]],
         )
-        assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 2
+        assert len(T.defaults.variable) == 1 and len(T.defaults.variable[0]) == 2
         assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
+
 
 class TestTransferMechanismMultipleInputStates:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
-    def test_transfer_mech_2d_variable(self):
-        from psyneulink.globals.keywords import MEAN
+    def test_transfer_mech_2d_variable_mean(self):
+        from psyneulink.core.globals.keywords import OUTPUT_MEAN
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[0.0, 0.0], [0.0, 0.0]],
-            output_states=[MEAN]
+            output_states=[OUTPUT_MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.mimo
+    @pytest.mark.benchmark(group="MIMO")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_mech_2d_variable(self, benchmark, mode):
+        T = TransferMechanism(
+            name='T',
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[0.0, 0.0], [0.0, 0.0]],
+        )
+        if mode == 'Python':
+            val = benchmark(T.execute, [[1.0, 2.0], [3.0, 4.0]])
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.execute, [[1.0, 2.0], [3.0, 4.0]])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.cuda_execute, [[1.0, 2.0], [3.0, 4.0]])
+        assert np.allclose(val, [[3., 5.], [7., 9.]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -943,19 +1511,31 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
-    def test_multiple_output_states_for_multiple_input_states(self):
+    @pytest.mark.benchmark(group="MIMO")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_multiple_output_states_for_multiple_input_states(self, benchmark, mode):
         T = TransferMechanism(input_states=['a','b','c'])
-        val = T.execute([[1],[2],[3]])
+        if mode == 'Python':
+            val = benchmark(T.execute, [[1], [2], [3]])
+            assert all(a==b for a,b in zip(T.output_values,val))
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.execute, [[1], [2], [3]])
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            val = benchmark(e.execute, [[1], [2], [3]])
+
         assert len(T.variable)==3
         assert all(a==b for a,b in zip(val, [[ 1.],[ 2.],[ 3.]]))
         assert len(T.output_states)==3
-        assert all(a==b for a,b in zip(T.output_values,val))
 
     # @pytest.mark.mechanism
     # @pytest.mark.transfer_mechanism
     # @pytest.mark.mimo
     # def test_OWNER_VALUE_standard_output_state(self):
-    #     from psyneulink.globals.keywords import OWNER_VALUE
+    #     from psyneulink.core.globals.keywords import OWNER_VALUE
     #     T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
     #                               output_states=OWNER_VALUE)
     #     print(T.value)
@@ -964,6 +1544,7 @@ class TestTransferMechanismMultipleInputStates:
     #     assert len(T.output_states)==1
     #     assert len(T.output_states[OWNER_VALUE].value)==3
     #     assert all(all(a==b for a,b in zip(x,y)) for x,y in zip(val, expected_val))
+
 
 class TestIntegratorMode:
     def test_previous_value_persistence_execute(self):
@@ -1006,7 +1587,7 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.595)
 
         S.run(inputs={T: 2.0}, num_trials=2)
         # Trial 3
@@ -1016,7 +1597,7 @@ class TestIntegratorMode:
         # integration: 0.9*0.7355 + 0.1*2.0 + 0.0 = 0.86195  --->  previous value = 0.86195
         # linear fn: 0.86195*1.0 = 0.86195
 
-        assert np.allclose(T.integrator_function.previous_value, 0.86195)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.86195)
 
     def test_previous_value_reinitialize_execute(self):
         T = TransferMechanism(name="T",
@@ -1077,17 +1658,17 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.595)
 
-        T.integrator_function.reinitialize(0.9)
+        T.integrator_function.reinitialize(0.9, execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, 0.9)
-        assert np.allclose(T.value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.9)
+        assert np.allclose(T.parameters.value.get(S), 0.595)
 
-        T.reinitialize(0.5)
+        T.reinitialize(0.5, execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, 0.5)
-        assert np.allclose(T.value, 0.5)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.5)
+        assert np.allclose(T.parameters.value.get(S), 0.5)
 
         S.run(inputs={T: 1.0}, num_trials=2)
         # Trial 3
@@ -1096,7 +1677,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.595)
 
     def test_reinitialize_run_array(self):
         T = TransferMechanism(name="T",
@@ -1120,17 +1701,17 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9])
+        T.integrator_function.reinitialize([0.9, 0.9, 0.9], execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, [0.9, 0.9, 0.9])
-        assert np.allclose(T.value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.9, 0.9, 0.9])
+        assert np.allclose(T.parameters.value.get(S), [0.595, 0.595, 0.595])
 
-        T.reinitialize([0.5, 0.5, 0.5])
+        T.reinitialize([0.5, 0.5, 0.5], execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, [0.5, 0.5, 0.5])
-        assert np.allclose(T.value, [0.5, 0.5, 0.5])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.5, 0.5, 0.5])
+        assert np.allclose(T.parameters.value.get(S), [0.5, 0.5, 0.5])
 
         S.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 3
@@ -1139,7 +1720,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
     def test_reinitialize_run_2darray(self):
 
@@ -1165,17 +1746,17 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9])
+        T.integrator_function.reinitialize([0.9, 0.9, 0.9], execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, [0.9, 0.9, 0.9])
-        assert np.allclose(T.value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.9, 0.9, 0.9])
+        assert np.allclose(T.parameters.value.get(S), [0.595, 0.595, 0.595])
 
-        T.reinitialize(initial_val)
+        T.reinitialize(initial_val, execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, initial_val)
-        assert np.allclose(T.value, initial_val)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), initial_val)
+        assert np.allclose(T.parameters.value.get(S), initial_val)
 
         S.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 3
@@ -1184,7 +1765,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
     def test_reinitialize_not_integrator(self):
 
@@ -1196,35 +1777,36 @@ class TestIntegratorMode:
                and "try setting the integrator_mode argument to True." in str(err_txt)
 
     def test_switch_mode(self):
-        T = TransferMechanism(integrator_mode=True)
+        T = TransferMechanism(integrator_mode=True,
+                              on_resume_integrator_mode=INTEGRATOR_MODE_VALUE)
         P = Process(pathway=[T])
         S = System(processes=[P])
         integrator_function = T.integrator_function
         T.reinitialize_when = Never()
         # T starts with integrator_mode = True; confirm that T behaves correctly
         S.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.value, [[0.875]])
+        assert np.allclose(T.parameters.value.get(S), [[0.875]])
 
-        assert T.integrator_mode is True
+        assert T.parameters.integrator_mode.get(S) is True
         assert T.integrator_function is integrator_function
 
         # Switch integrator_mode to False; confirm that T behaves correctly
-        T.integrator_mode = False
+        T.parameters.integrator_mode.set(False, execution_context=S)
 
-        assert T.integrator_mode is False
-        assert T.integrator_function is None
+        assert T.parameters.integrator_mode.get(S) is False
 
         S.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.value, [[1.0]])
+        assert np.allclose(T.parameters.value.get(S), [[1.0]])
 
         # Switch integrator_mode BACK to True; confirm that T picks up where it left off
-        T.integrator_mode = True
+        T.parameters.integrator_mode.set(True, execution_context=S)
 
-        assert T.integrator_mode is True
+        assert T.parameters.integrator_mode.get(S) is True
+        assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         S.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.value, [[0.984375]])
+        assert np.allclose(T.parameters.value.get(S), [[0.984375]])
 
     def test_initial_values_softmax(self):
         T = TransferMechanism(default_variable=[[0.0, 0.0], [0.0, 0.0]],
@@ -1238,25 +1820,106 @@ class TestIntegratorMode:
 
         S.run(inputs={T: [[1.5, 2.5], [3.5, 4.5]]})
 
-        result = T.value
+        result = T.parameters.value.get(S)
         # Expected results
         # integrator function:
         # input = [[1.5, 2.5], [3.5, 4.5]]  |  output = [[1.25, 2.25]], [3.25, 4.25]]
         integrator_fn = AdaptiveIntegrator(rate=0.5,
                                            default_variable=[[0.0, 0.0], [0.0, 0.0]],
                                            initializer=[[1.0, 2.0], [3.0, 4.0]])
-        expected_result_integrator = integrator_fn.function([[1.5, 2.5], [3.5, 4.5]])
+        expected_result_integrator = integrator_fn([[1.5, 2.5], [3.5, 4.5]])
 
         S1 = SoftMax()
-        expected_result_s1 = S1.function([[1.25, 2.25]])
+        expected_result_s1 = S1([[1.25, 2.25]])
 
         S2 = SoftMax()
-        expected_result_s2 = S2.function([[3.25, 4.25]])
+        expected_result_s2 = S2([[3.25, 4.25]])
 
-        assert np.allclose(expected_result_integrator, T.integrator_function_value)
+        assert np.allclose(expected_result_integrator, T.parameters.integrator_function_value.get(S))
         assert np.allclose(expected_result_s1, result[0])
         assert np.allclose(expected_result_s2, result[1])
 
+
+class TestOnResumeIntegratorMode:
+    def test_integrator_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INTEGRATOR_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+
+        T.parameters.integrator_mode.set(False, execution_context=C)    # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.parameters.value.get(C), [[2.0]])
+
+        T.parameters.integrator_mode.set(True, execution_context=C)     # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "integrator mode" and pick up at 1.25
+        # Trial 0: 0.5*1.25 + 0.5*1.0 = 1.125 * 1.0 = 1.125
+        # Trial 1: 0.5*1.125 + 0.5*2.0 = 1.5625 * 1.0 = 1.5625
+        assert np.allclose(T.parameters.value.get(C), [[1.5625]])
+
+    def test_instantaneous_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+
+        T.parameters.integrator_mode.set(False, execution_context=C)     # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.parameters.value.get(C), [[2.0]])
+
+        T.parameters.integrator_mode.set(True, execution_context=C)      # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "integrator mode" and pick up at 2.0
+        # Trial 0: 0.5*2.0 + 0.5*1.0 = 1.5 * 1.0 = 1.5
+        # Trial 1: 0.5*1.5 + 0.5*2.0 = 1.75 * 1.0 = 1.75
+        assert np.allclose(T.parameters.value.get(C), [[1.75]])
+
+    def test_reinitialize_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=REINITIALIZE,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                        # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+
+        T.parameters.integrator_mode.set(False, execution_context=C)                               # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.parameters.value.get(C), [[2.0]])
+
+        T.parameters.integrator_mode.set(True, execution_context=C)                                # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "integrator mode", pick up at 0.0
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
 
 class TestClip:
@@ -1276,3 +1939,39 @@ class TestClip:
         assert np.allclose(T.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
+
+class TestOutputStates:
+    def test_output_states_match_input_states(self):
+        T = TransferMechanism(default_variable=[[0], [0], [0]])
+        assert len(T.input_states) == 3
+        assert len(T.output_states) == 3
+
+        T.execute(input=[[1.0], [2.0], [3.0]])
+
+        assert np.allclose(T.value, [[1.0], [2.0], [3.0]])
+        assert np.allclose(T.output_states[0].value, [1.0])
+        assert np.allclose(T.output_states[1].value, [2.0])
+        assert np.allclose(T.output_states[2].value, [3.0])
+
+    def test_add_input_states(self):
+        T = TransferMechanism(default_variable=[[0], [0], [0]])
+        I = InputState(owner=T,
+                       variable=[4.0],
+                       reference_value=[4.0],
+                       name="extra input state")
+        T.add_states([I])
+        print("Number of input states: ", len(T.input_states))
+        print(T.input_states, "\n\n")
+        print("Number of output states: ", len(T.output_states))
+        print(T.output_states)
+
+        # assert len(T.input_states) == 4
+        # assert len(T.output_states) == 4
+        #
+        # T.execute(input=[[1.0], [2.0], [3.0], [4.0]])
+        #
+        # assert np.allclose(T.value, [[1.0], [2.0], [3.0], [4.0]])
+        # assert np.allclose(T.output_states[0].value, [1.0])
+        # assert np.allclose(T.output_states[1].value, [2.0])
+        # assert np.allclose(T.output_states[2].value, [3.0])
+        # assert np.allclose(T.output_states[3].value, [4.0])

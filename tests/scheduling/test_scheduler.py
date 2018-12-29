@@ -3,17 +3,19 @@ import numpy as np
 import pytest
 import uuid
 
-from psyneulink.components.functions.function import Linear, DriftDiffusionIntegrator
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.compositions.composition import Composition
-from psyneulink.components.system import System
-from psyneulink.components.process import Process
-from psyneulink.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, ConditionSet, EveryNCalls, EveryNPasses, JustRan, Never, WhenFinished
-from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.keywords import VALUE
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import VALUE
+from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, \
+    EveryNCalls, EveryNPasses, JustRan, WhenFinished
+from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ class TestScheduler:
     def test_create_multiple_contexts(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        comp.add_mechanism(A)
+        comp.add_c_node(A)
 
         comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
 
@@ -51,8 +53,8 @@ class TestScheduler:
         comp1 = Composition()
         comp2 = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        comp1.add_mechanism(A)
-        comp2.add_mechanism(A)
+        comp1.add_c_node(A)
+        comp2.add_c_node(A)
 
         sched = Scheduler(composition=comp1)
 
@@ -66,7 +68,7 @@ class TestScheduler:
             scheduler_processing=sched,
             termination_processing=termination_conds
         )
-        output = sched.execution_list[comp1._execution_id]
+        output = sched.execution_list[comp1.default_execution_id]
 
         expected_output = [
             A, A, A, A, A, set()
@@ -79,7 +81,7 @@ class TestScheduler:
             scheduler_processing=sched,
             termination_processing=termination_conds
         )
-        output = sched.execution_list[comp2._execution_id]
+        output = sched.execution_list[comp2.default_execution_id]
 
         expected_output = [
             A, A, A, A, A, set()
@@ -90,7 +92,7 @@ class TestScheduler:
     def test_one_composition_two_contexts(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        comp.add_mechanism(A)
+        comp.add_c_node(A)
 
         sched = Scheduler(composition=comp)
 
@@ -188,9 +190,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -213,9 +215,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -243,9 +245,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -273,9 +275,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -297,9 +299,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -324,9 +326,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -351,9 +353,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -369,7 +371,7 @@ class TestLinear:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
         )
-        output = sched.execution_list[comp._execution_id]
+        output = sched.execution_list[comp.default_execution_id]
 
         expected_output = [
             A, A, A, A, A, B, C, B, C, B, C,
@@ -383,8 +385,8 @@ class TestLinear:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -404,8 +406,8 @@ class TestLinear:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -425,8 +427,8 @@ class TestLinear:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -441,7 +443,7 @@ class TestLinear:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A.is_finished = True
+                A._is_finished = True
             output.append(step)
             i += 1
 
@@ -451,11 +453,11 @@ class TestLinear:
     def test_9b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -473,12 +475,12 @@ class TestLinear:
     def test_10(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = True
+        A._is_finished = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -496,12 +498,12 @@ class TestLinear:
     def test_10b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -519,12 +521,12 @@ class TestLinear:
     def test_10c(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = True
+        A._is_finished = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -542,12 +544,12 @@ class TestLinear:
     def test_10d(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -570,8 +572,8 @@ class TestLinear:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -591,8 +593,8 @@ class TestLinear:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 
@@ -613,9 +615,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -637,9 +639,9 @@ class TestLinear:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -671,9 +673,9 @@ class TestBranching:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(A, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), A, C)
 
         sched = Scheduler(composition=comp)
 
@@ -700,9 +702,9 @@ class TestBranching:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(A, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), A, C)
 
         sched = Scheduler(composition=comp)
 
@@ -732,9 +734,9 @@ class TestBranching:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(A, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), A, C)
 
         sched = Scheduler(composition=comp)
 
@@ -761,9 +763,9 @@ class TestBranching:
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
 
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(A, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), A, C)
 
         sched = Scheduler(composition=comp)
 
@@ -778,7 +780,7 @@ class TestBranching:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A.is_finished = True
+                A._is_finished = True
             output.append(step)
             i += 1
 
@@ -793,9 +795,9 @@ class TestBranching:
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
 
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(A, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), A, C)
 
         sched = Scheduler(composition=comp)
 
@@ -810,7 +812,7 @@ class TestBranching:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 10:
-                A.is_finished = True
+                A._is_finished = True
             output.append(step)
             i += 1
 
@@ -830,9 +832,9 @@ class TestBranching:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -859,9 +861,9 @@ class TestBranching:
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
 
         sched = Scheduler(composition=comp)
 
@@ -893,10 +895,10 @@ class TestBranching:
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         D = TransferMechanism(function=Linear(intercept=.5), name='scheduler-pytests-D')
         for m in [A, B, C, D]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), D)
-        comp.add_projection(C, MappingProjection(), D)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, D)
+        comp.add_projection(MappingProjection(), C, D)
 
         sched = Scheduler(composition=comp)
 
@@ -922,10 +924,10 @@ class TestBranching:
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         D = TransferMechanism(function=Linear(intercept=.5), name='scheduler-pytests-D')
         for m in [A, B, C, D]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), D)
-        comp.add_projection(C, MappingProjection(), D)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, D)
+        comp.add_projection(MappingProjection(), C, D)
 
         sched = Scheduler(composition=comp)
 
@@ -951,11 +953,11 @@ class TestBranching:
         C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         D = TransferMechanism(function=Linear(intercept=.5), name='scheduler-pytests-D')
         for m in [A, B, C, D]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(A, MappingProjection(), D)
-        comp.add_projection(B, MappingProjection(), D)
-        comp.add_projection(C, MappingProjection(), D)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), A, D)
+        comp.add_projection(MappingProjection(), B, D)
+        comp.add_projection(MappingProjection(), C, D)
 
         sched = Scheduler(composition=comp)
 
@@ -972,6 +974,7 @@ class TestBranching:
         expected_output = [
             A, set([A, C]), B, A, set([A, C]), B, D
         ]
+
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
     #   multi source:                   A1    A2
@@ -989,20 +992,20 @@ class TestBranching:
         C1 = TransferMechanism(function=Linear(intercept=1.5), name='C1')
         C2 = TransferMechanism(function=Linear(intercept=.5), name='C2')
         for m in [A1, A2, B1, B2, B3, C1, C2]:
-            comp.add_mechanism(m)
-        comp.add_projection(A1, MappingProjection(), B1)
-        comp.add_projection(A1, MappingProjection(), B2)
-        comp.add_projection(A2, MappingProjection(), B1)
-        comp.add_projection(A2, MappingProjection(), B2)
-        comp.add_projection(A2, MappingProjection(), B3)
-        comp.add_projection(B1, MappingProjection(), C1)
-        comp.add_projection(B2, MappingProjection(), C1)
-        comp.add_projection(B1, MappingProjection(), C2)
-        comp.add_projection(B3, MappingProjection(), C2)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A1, B1)
+        comp.add_projection(MappingProjection(), A1, B2)
+        comp.add_projection(MappingProjection(), A2, B1)
+        comp.add_projection(MappingProjection(), A2, B2)
+        comp.add_projection(MappingProjection(), A2, B3)
+        comp.add_projection(MappingProjection(), B1, C1)
+        comp.add_projection(MappingProjection(), B2, C1)
+        comp.add_projection(MappingProjection(), B1, C2)
+        comp.add_projection(MappingProjection(), B3, C2)
 
         sched = Scheduler(composition=comp)
 
-        for m in comp.mechanisms:
+        for m in comp.c_nodes:
             sched.add_condition(m, Always())
 
         termination_conds = {}
@@ -1025,16 +1028,16 @@ class TestBranching:
         C1 = TransferMechanism(function=Linear(intercept=1.5), name='C1')
         C2 = TransferMechanism(function=Linear(intercept=.5), name='C2')
         for m in [A1, A2, B1, B2, B3, C1, C2]:
-            comp.add_mechanism(m)
-        comp.add_projection(A1, MappingProjection(), B1)
-        comp.add_projection(A1, MappingProjection(), B2)
-        comp.add_projection(A2, MappingProjection(), B1)
-        comp.add_projection(A2, MappingProjection(), B2)
-        comp.add_projection(A2, MappingProjection(), B3)
-        comp.add_projection(B1, MappingProjection(), C1)
-        comp.add_projection(B2, MappingProjection(), C1)
-        comp.add_projection(B1, MappingProjection(), C2)
-        comp.add_projection(B3, MappingProjection(), C2)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A1, B1)
+        comp.add_projection(MappingProjection(), A1, B2)
+        comp.add_projection(MappingProjection(), A2, B1)
+        comp.add_projection(MappingProjection(), A2, B2)
+        comp.add_projection(MappingProjection(), A2, B3)
+        comp.add_projection(MappingProjection(), B1, C1)
+        comp.add_projection(MappingProjection(), B2, C1)
+        comp.add_projection(MappingProjection(), B1, C2)
+        comp.add_projection(MappingProjection(), B3, C2)
 
         sched = Scheduler(composition=comp)
 
@@ -1066,8 +1069,8 @@ class TestTermination:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
 
         sched = Scheduler(composition=comp)
 

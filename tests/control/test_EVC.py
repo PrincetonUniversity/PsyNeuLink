@@ -1,18 +1,18 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import BogaczEtAl, DRIFT_RATE, Exponential, Linear, THRESHOLD
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE, SLOPE, CONTROL
-from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
-from psyneulink.globals.preferences.systempreferenceset import RECORD_SIMULATION_PREF
-from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
-from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.functions.distributionfunctions import DRIFT_RATE, DriftDiffusionAnalytical, THRESHOLD
+from psyneulink.core.components.functions.transferfunctions import Exponential, Linear
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, OUTPUT_MEAN, RESULT, OUTPUT_VARIANCE
+from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
+from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core.scheduling.condition import Never
+from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 
 
 def test_EVC():
@@ -21,11 +21,11 @@ def test_EVC():
         name='Input',
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, MEAN, VARIANCE],
+        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(
                 1.0,
                 ControlProjection(
@@ -56,18 +56,18 @@ def test_EVC():
         name='Decision',
     )
 
-    # Input.prefs.paramValidationPref = False
-    # Reward.prefs.paramValidationPref = False
-    # Decision.prefs.paramValidationPref = False
-    # Decision.input_state.prefs.paramValidationPref = False
-    # for mech in [Input, Reward, Decision]:
-    #     mech.function_object.prefs.paramValidationPref = False
-    #     for os in mech.output_states:
-    #         os.prefs.paramValidationPref = False
-    #     for instate in mech.input_states:
-    #         instate.prefs.paramValidationPref = False
-    #     for pstate in mech._parameter_states:
-    #         pstate.prefs.paramValidationPref = False
+    Input.prefs.paramValidationPref = False
+    Reward.prefs.paramValidationPref = False
+    Decision.prefs.paramValidationPref = False
+    Decision.input_state.prefs.paramValidationPref = False
+    for mech in [Input, Reward, Decision]:
+        mech.function.prefs.paramValidationPref = False
+        for os in mech.output_states:
+            os.prefs.paramValidationPref = False
+        for instate in mech.input_states:
+            instate.prefs.paramValidationPref = False
+        for pstate in mech._parameter_states:
+            pstate.prefs.paramValidationPref = False
 
     # Processes:
     TaskExecutionProcess = Process(
@@ -97,10 +97,9 @@ def test_EVC():
         name='EVC Test System',
         # prefs={RECORD_SIMULATION_PREF:True}
     )
-
-    # TaskExecutionProcess.prefs.paramValidationPref = False
-    # RewardProcess.prefs.paramValidationPref = False
-    # mySystem.prefs.paramValidationPref = False
+    TaskExecutionProcess.prefs.paramValidationPref = False
+    RewardProcess.prefs.paramValidationPref = False
+    mySystem.prefs.paramValidationPref = False
     mySystem.recordSimulationPref = True
 
     # Stimuli
@@ -112,9 +111,6 @@ def test_EVC():
     mySystem.run(
         inputs=stim_list_dict,
     )
-
-    RewardPrediction = mySystem.execution_list[3]
-    InputPrediction = mySystem.execution_list[4]
 
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []
@@ -173,43 +169,13 @@ def test_EVC():
     ]
 
     expected_output = [
-        # Decision Output | Second Trial
-        (Decision.output_states[0].value, np.array(1.0)),
-
-        # Input Prediction Output | Second Trial
-        (InputPrediction.output_states[0].value, np.array(0.1865)),
-
-        # RewardPrediction Output | Second Trial
-        (RewardPrediction.output_states[0].value, np.array(15.0)),
-
-        # --- Decision Mechanism ---
-        #    Output State Values
-        #       decision variable
-        (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
-        #       response time
-        (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
-        #       upper bound
-        (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
-        #       lower bound
-        # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
-
-        # --- Reward Mechanism ---
-        #    Output State Values
-        #       transfer mean
-        (Reward.output_states[RESULT].value, np.array([15.])),
-        #       transfer_result
-        (Reward.output_states[MEAN].value, np.array(15.0)),
-        #       transfer variance
-        (Reward.output_states[VARIANCE].value, np.array(0.0)),
-
         # System Results Array
-        #   (all intermediate output values of system)
+        #   (all intermediate output.parameters.value.get(mySystem)s of system)
         (results_array, expected_results_array),
 
         # System Simulation Results Array
-        #   (all simulation output values of system)
+        #   (all simulation output.parameters.value.get(mySystem)s of system)
         (sim_results_array, expected_sim_results_array),
-
     ]
 
     for i in range(len(expected_output)):
@@ -284,7 +250,7 @@ def test_EVC_gratton():
 
     # Decision Mechanisms
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(1.0),
             threshold=(0.2645),
             noise=(0.5),
@@ -374,18 +340,18 @@ def test_EVC_gratton():
         if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
             # when you find a key mechanism (transfer mechanism) with the correct name, print its name
             print(mech.name)
-            mech.function_object.rate = 1.0
+            mech.function.rate = 1.0
 
         if 'Reward' in mech.name:
             print(mech.name)
-            mech.function_object.rate = 1.0
+            mech.function.rate = 1.0
             # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
     print('new rate of integration mechanisms before System execution:')
     # for mech in mySystem.controller.prediction_mechanisms.keys():
     for mech in mySystem.controller.prediction_mechanisms.mechanisms:
         print(mech.name)
-        print(mech.function_object.rate)
+        print(mech.function.rate)
         print('----')
 
     # generate stimulus environment
@@ -491,8 +457,6 @@ def test_EVC_gratton():
         0.2645,  0.28289958,  0.98320731, 100.,
     ]
 
-    Flanker_Rep.set_log_conditions((SLOPE, CONTROL))
-
     mySystem.run(
         num_trials=nTrials,
         inputs=stim_list_dict,
@@ -512,40 +476,6 @@ def test_EVC_gratton():
         verbose=True,
     )
 
-    # log_val = Flanker_Rep.log.nparray(SLOPE, header=False)
-    # trial_vals = [[1], [2], [3], [4], [5],
-    #               [6], [7], [8], [9], [10],
-    #               [11], [12], [13], [14], [15],
-    #               [16], [17], [18], [19], [20],
-    #               [21], [22], [23], [24], [25],
-    #               [27], [28], [29], [30], [31],
-    #               [32], [33], [34], [35], [36],
-    #               [37], [38], [39], [40], [41],
-    #               [42], [43], [44], [45], [46],
-    #               [47], [48], [49], [50], [51],
-    #               [53], [54], [55], [56], [57],
-    #               [58], [59], [60], [61], [62],
-    #               [63], [64], [65], [66], [67],
-    #               [68], [69], [70], [71], [72],
-    #               [73], [74], [75], [76], [77]]
-    # slope_vals = [[1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8],
-    #               [1.0], [1.2], [1.4], [1.6], [1.8]]
-    # np.testing.assert_allclose(pytest.helpers.expand_np_nd(log_val[1][0:]), trial_vals, atol=1e-08, verbose=True)
-    # np.testing.assert_allclose(pytest.helpers.expand_np_nd(log_val[3][0:]), slope_vals, atol=1e-08, verbose=True)
-
 
 def test_laming_validation_specify_control_signals():
     # Mechanisms:
@@ -554,10 +484,10 @@ def test_laming_validation_specify_control_signals():
     )
     Reward = TransferMechanism(
         name='Reward',
-        output_states=[RESULT, MEAN, VARIANCE]
+        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE]
     )
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=1.0,
             threshold=1.0,
             noise=0.5,
@@ -614,9 +544,6 @@ def test_laming_validation_specify_control_signals():
         inputs=stim_list_dict
     )
 
-    RewardPrediction = mySystem.execution_list[3]
-    InputPrediction = mySystem.execution_list[4]
-
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []
     for elem in mySystem.results:
@@ -637,7 +564,6 @@ def test_laming_validation_specify_control_signals():
         for inner_elem in elem:
             elem_array.append(float(inner_elem))
         sim_results_array.append(elem_array)
-
 
     # # mySystem.simulation_results expected output properly formatted
     expected_sim_results_array = [
@@ -675,68 +601,19 @@ def test_laming_validation_specify_control_signals():
         [15., 15.0, 0.0, 1., 3.84279648, 0.81637827],
     ]
 
-
     expected_output = [
-        # Decision Output | Second Trial
-        (Decision.output_states[0].value, np.array(1.0)),
-
-        # Input Prediction Output | Second Trial
-        (InputPrediction.output_states[0].value, np.array(0.1865)),
-
-        # RewardPrediction Output | Second Trial
-        (RewardPrediction.output_states[0].value, np.array(15.0)),
-
-        # --- Decision Mechanism ---
-
-        #   ControlSignal Values
-        #       drift rate
-        # ALT: float(Decision._parameter_states[DRIFT_RATE].value
-        # (mySystem.controller.control_signals[0].value, np.array(1.0)),
-        # #       threshold
-        #
-        # # ALT: float(Decision._parameter_states[THRESHOLD].value
-        # (mySystem.controller.control_signals[1].value, np.array(1.0)),
-
-        #    Output State Values
-        #       decision variable
-        (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
-        #       response time
-        (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
-        #       upper bound
-        (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
-        #       lower bound
-        # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
-
-        # --- Reward Mechanism ---
-        #    Output State Values
-        #       transfer mean
-        (Reward.output_states[RESULT].value, np.array([15.])),
-        #       transfer_result
-        (Reward.output_states[MEAN].value, np.array(15.0)),
-        #       transfer variance
-        (Reward.output_states[VARIANCE].value, np.array(0.0)),
-
         # System Results Array
-        #   (all intermediate output values of system)
+        #   (all intermediate output.parameters.value.get(mySystem)s of system)
         (results_array, expected_results_array),
 
         # System Simulation Results Array
-        #   (all simulation output values of system)
+        #   (all simulation output.parameters.value.get(mySystem)s of system)
         (sim_results_array, expected_sim_results_array),
     ]
 
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
-
-    np.testing.assert_almost_equal(
-        Decision._parameter_states[DRIFT_RATE].value,
-        Decision._parameter_states[DRIFT_RATE].mod_afferents[0].value * Decision._parameter_states[DRIFT_RATE].function_object.value
-    )
-    np.testing.assert_almost_equal(
-        Decision._parameter_states[THRESHOLD].value,
-        Decision._parameter_states[THRESHOLD].mod_afferents[0].value * Decision._parameter_states[THRESHOLD].function_object.value
-    )
 
 
 def test_stateful_mechanism_in_simulation():
@@ -748,11 +625,11 @@ def test_stateful_mechanism_in_simulation():
         integrator_mode=True,
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, MEAN, VARIANCE],
+        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(
                 1.0,
                 ControlProjection(
@@ -825,9 +702,6 @@ def test_stateful_mechanism_in_simulation():
         inputs=stim_list_dict,
     )
 
-    RewardPrediction = mySystem.execution_list[3]
-    InputPrediction = mySystem.execution_list[4]
-
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []
     for elem in mySystem.results:
@@ -886,45 +760,15 @@ def test_stateful_mechanism_in_simulation():
     ]
 
     expected_output = [
-        # Decision Output | Second Trial
-        (Decision.output_states[0].value, np.array(1.0)),
-
-        # Input Prediction Output | Second Trial
-        (InputPrediction.output_states[0].value, np.array(0.1865)),
-
-        # RewardPrediction Output | Second Trial
-        (RewardPrediction.output_states[0].value, np.array(15.0)),
-
-        # --- Decision Mechanism ---
-        #    Output State Values
-        #       decision variable
-        (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
-        #       response time
-        (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
-        #       upper bound
-        (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
-        #       lower bound
-        # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
-
-        # --- Reward Mechanism ---
-        #    Output State Values
-        #       transfer mean
-        (Reward.output_states[RESULT].value, np.array([15.])),
-        #       transfer_result
-        (Reward.output_states[MEAN].value, np.array(15.0)),
-        #       transfer variance
-        (Reward.output_states[VARIANCE].value, np.array(0.0)),
-
         # System Results Array
-        #   (all intermediate output values of system)
+        #   (all intermediate output.parameters.value.get(mySystem)s of system)
         (results_array, expected_results_array),
 
         # System Simulation Results Array
-        #   (all simulation output values of system)
+        #   (all simulation output.parameters.value.get(mySystem)s of system)
         (sim_results_array, expected_sim_results_array)
     ]
 
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
-

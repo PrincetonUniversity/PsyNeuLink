@@ -4,12 +4,15 @@ import psyneulink as pnl
 
 # SET UP MECHANISMS
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.objectivefunctions
+import psyneulink.core.components.functions.transferfunctions
+
 colors_input_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Linear,
+                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
 words_input_layer = pnl.TransferMechanism(size=2,
-                                          function=pnl.Linear,
+                                          function=psyneulink.core.components.functions.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 # Specify signalSearchRange for control_signal_params (not sure if needed)
@@ -17,10 +20,11 @@ words_input_layer = pnl.TransferMechanism(size=2,
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
-                                   function=pnl.Logistic(gain=(1.0, pnl.ControlProjection(#receiver= response_layer.output_states[1],
-#'DECISION_ENERGY'
-                                       #modulation=pnl.ModulationParam.OVERRIDE,#what to implement here
-                                           ))),
+                                   function=psyneulink.core.components.functions.transferfunctions.Logistic(
+                                       gain=(1.0, pnl.ControlProjection(  # receiver= response_layer.output_states[1],
+                                           # 'DECISION_ENERGY'
+                                           # modulation=pnl.ModulationParam.OVERRIDE,#what to implement here
+                                       ))),
                                    name='TASK')
 task_layer.set_log_conditions('gain')
 task_layer.set_log_conditions('value')
@@ -32,16 +36,16 @@ task_layer.loggable_items
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, bias=4.0),
+                                            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                             integrator_mode=True,
-                                          #  noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
+                                            #  noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, bias=4.0),
+                                           function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
-                                       #    noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
+                                           #    noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
@@ -63,17 +67,18 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 
 # Now a RecurrentTransferMechanism compared to Lauda's Stroop model!
 response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
-                         function=pnl.Logistic,#pnl.Stability(matrix=np.matrix([[0.0, -1.0], [-1.0, 0.0]])),
-                         name='RESPONSE',
-                         output_states = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                function=psyneulink.core.components.functions.transferfunctions.Logistic,  #pnl.Stability(matrix=np.matrix([[0.0, -1.0], [-1.0, 0.0]])),
+                                                name='RESPONSE',
+                                                output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                           {pnl.NAME: 'DECISION_ENERGY',
                                           pnl.VARIABLE: (pnl.OWNER_VALUE,0),
-                                           pnl.FUNCTION: pnl.Stability(default_variable=np.array([0.0, -1.0]),
-                                                                       metric=pnl.ENERGY,
-                                                                       matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
-                         integrator_mode=True,#)
-                        # noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function)
-                         integration_rate=0.1)
+                                           pnl.FUNCTION: psyneulink.core.components.functions.objectivefunctions
+                                                .Stability(default_variable=np.array([0.0, -1.0]),
+                                                                                                                           metric=pnl.ENERGY,
+                                                                                                                           matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
+                                                integrator_mode=True,  #)
+                                                # noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function)
+                                                integration_rate=0.1)
 
 #response_layer.set_log_conditions('value')
 #response_layer.set_log_conditions('gain')
@@ -194,7 +199,7 @@ accumulator_threshold = 0.8
 #}
 
 # my_Stroop.show_graph(show_mechanism_structure=pnl.VALUES)
-my_Stroop.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
+# my_Stroop.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 
 
@@ -249,9 +254,9 @@ CN_trial_initialize_input = trial_dict(0, 0, 0, 0, 1, 0)
 #         colors_hidden_layer.integrator_mode = True
 #         words_hidden_layer.integrator_mode = True
 #         response_layer.integrator_mode = True
-#         #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-#         #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-#         #response_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
+#         #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+#         #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+#         #response_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
 #         # run system with test pattern
 #         my_Stroop.run(inputs=test_trial_input) #termination_processing=terminate_trial)
 #
@@ -283,9 +288,9 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):#, plot_tit
         colors_hidden_layer.integrator_mode = True
         words_hidden_layer.integrator_mode = True
         response_layer.integrator_mode = True
-        #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-        #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-        #response_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
+        #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+        #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+        #response_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
 
         # run system with test pattern
         my_Stroop.run(inputs=test_trial_input)
@@ -306,7 +311,7 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):#, plot_tit
 
 
 # trial_test_counter = 1
-#test WR control trial
+# #test WR control trial
 # ntrials = 50
 # WR_control_trial_title = 'RED word (control) WR trial where Red correct'
 # WR_control_trial_input = trial_dict(0, 0, 1, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR

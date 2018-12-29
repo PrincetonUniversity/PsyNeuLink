@@ -5,7 +5,6 @@
 
 
 import numpy as np
-import matplotlib.pyplot as plt
 import psyneulink as pnl
 
 
@@ -14,12 +13,14 @@ import psyneulink as pnl
 
 # SET UP MECHANISMS
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.transferfunctions
+
 colors_input_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Linear,
+                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
 words_input_layer = pnl.TransferMechanism(size=2,
-                                          function=pnl.Linear,
+                                          function=psyneulink.core.components.functions.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
@@ -28,19 +29,19 @@ words_input_layer = pnl.TransferMechanism(size=2,
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, bias=4.0),
+                                            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                             # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                             integrator_mode=False,
-                                            noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
+                                            noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0.0, standard_deviation=.01).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, bias=4.0),
+                                           function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                            # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                            integrator_mode=False,
-                                           noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
+                                           noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0.0, standard_deviation=.01).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
@@ -53,17 +54,17 @@ words_hidden_layer.set_log_conditions('RESULTS')
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
-                                   function=pnl.Linear,
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear,
                                    name='TASK')
 
 #   Response layer, responses: ('red', 'green')
 #tau = 0.1 (here, smoothing factor)
 #should be randomly distributed noise to the net input of each unit (except input unit)
 response_layer = pnl.TransferMechanism(size=2,
-                                       function=pnl.Logistic,
+                                       function=psyneulink.core.components.functions.transferfunctions.Logistic,
                                        name='RESPONSE',
                                        integrator_mode=True,
-                                       noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
+                                       noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0.0, standard_deviation=.01).function,
                                        integration_rate=0.1)
 #   Respond red accumulator
 #parameters from paper
@@ -71,12 +72,13 @@ response_layer = pnl.TransferMechanism(size=2,
 #sigma = noise = 0.1
 #noise will be
 # squareroot(time_step_size * noise) * a random sample from a normal distribution
-respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=0.1,
-                                                                               rate=0.1),
+respond_red_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions
+                                                  .SimpleIntegrator(noise=0.1,
+                                                                    rate=0.1),
                                                   name='respond_red_accumulator')
 #   Respond green accumulator
-respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=0.1,
-                                                                               rate=0.1),
+respond_green_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator(noise=0.1,
+                                                                                                                                                         rate=0.1),
                                                     name='respond_green_accumulator')
 
 #   add logging

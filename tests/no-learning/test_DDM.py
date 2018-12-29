@@ -1,15 +1,15 @@
 import numpy as np
 
-from psyneulink.components.functions.function import BogaczEtAl
-from psyneulink.components.process import Process
-from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, IDENTITY_MATRIX
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
+from psyneulink.core.components.process import Process
+from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, IDENTITY_MATRIX
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 
 # does not run a system, can be used to ensure that running processes alone still works
 def test_DDM():
     myMechanism = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=(1.0),
             threshold=(10.0),
             starting_point=0.0,
@@ -18,14 +18,14 @@ def test_DDM():
     )
 
     myMechanism_2 = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=2.0,
             threshold=20.0),
         name='My_DDM_2'
     )
 
     myMechanism_3 = DDM(
-        function=BogaczEtAl(
+        function=DriftDiffusionAnalytical(
             drift_rate=3.0,
             threshold=30.0
         ),
@@ -46,12 +46,12 @@ def test_DDM():
     result = z.execute([[30], [10]])
 
     expected_output = [
-        (myMechanism.input_states[0].value, np.array([40.])),
-        (myMechanism.output_states[0].value, np.array([10.])),
-        (myMechanism_2.input_states[0].value, np.array([10.])),
-        (myMechanism_2.output_states[0].value, np.array([20.])),
-        (myMechanism_3.input_states[0].value, np.array([20.])),
-        (myMechanism_3.output_states[0].value, np.array([30.])),
+        (myMechanism.input_states[0].parameters.value.get(z), np.array([40.])),
+        (myMechanism.output_states[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.input_states[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.output_states[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.input_states[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.output_states[0].parameters.value.get(z), np.array([30.])),
         (result, np.array([30.])),
     ]
 

@@ -3,10 +3,13 @@ pytest-benchmark
 pytest-cov
 pytest-profiling
 pytest-helpers-namespace
+pytest-xdist
 jupyter
 sphinx
 sphinx_rtd_theme
 matplotlib
 ipykernel
 graphviz
+pillow
+torch
 ipython

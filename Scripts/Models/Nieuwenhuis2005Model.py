@@ -10,7 +10,7 @@ import psyneulink as pnl
 # Now, we set the global variables, weights and initial values as in the paper.
 # WATCH OUT !!! In the paper the weight "Mutual inhibition among response units" is not defined, but needs to be set to
 # 0 in order to reproduce the paper.
-
+import psyneulink.core.components.functions.transferfunctions
 
 SD = 0.15       # noise determined by standard deviation (SD)
 a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
@@ -57,15 +57,15 @@ input_layer = pnl.TransferMechanism(
 )                 # but will help you to overview your model later on
 
 # Create Decision Layer  --- [ Target 1, Target 2, Distractor ]
-decision_layer = pnl.LCA(
+decision_layer = pnl.LCAMechanism(
     size=3,                            # Number of units in input layer
     initial_value=[[0.0, 0.0, 0.0]],    # Initial input values
     time_step_size=dt,                 # Integration step size
     leak=-1.0,                         # Sets off diagonals to negative values
     self_excitation=selfdwt,           # Set diagonals to self excitate
     competition=inhwt,                 # Set off diagonals to inhibit
-    function=pnl.Logistic(bias=decbias),   # Set the Logistic function with bias = decbias
-    # noise=pnl.UniformToNormalDist(standard_dev = SD).function, # The UniformToNormalDist function will
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=decbias),   # Set the Logistic function with bias = decbias
+    # noise=pnl.UniformToNormalDist(standard_deviation = SD).function, # The UniformToNormalDist function will
     integrator_mode=True,               # set the noise with a seed generator that is compatible with
     name='DECISION LAYER'               # MATLAB random seed generator 22 (rsg=22)
 )
@@ -77,15 +77,15 @@ for output_state in decision_layer.output_states:
     output_state.value *= 0.0                                       # Set initial output values for decision layer to 0
 
 # Create Response Layer  --- [ Target1, Target2 ]
-response_layer = pnl.LCA(
+response_layer = pnl.LCAMechanism(
     size=2,                                        # Number of units in input layer
     initial_value=[[0.0, 0.0]],                    # Initial input values
     time_step_size=dt,                             # Integration step size
     leak=-1.0,                                     # Sets off diagonals to negative values
     self_excitation=selfrwt,                       # Set diagonals to self excitate
     competition=respinhwt,                         # Set off diagonals to inhibit
-    function=pnl.Logistic(bias=respbias),          # Set the Logistic function with bias = decbias
-    # noise=pnl.UniformToNormalDist(standard_dev = SD).function,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=respbias),          # Set the Logistic function with bias = decbias
+    # noise=pnl.UniformToNormalDist(standard_deviation = SD).function,
     integrator_mode=True,
     name='RESPONSE LAYER'
 )
@@ -125,28 +125,28 @@ decision_process = pnl.Process(
 # This LCControlMechanism modulates gain.
 LC = pnl.LCControlMechanism(
     integration_method="EULER",       # We set the integration method to Euler like in the paper
-    threshold_FHN=a,                  # Here we use the Euler method for integration and we want to set the parameters,
-    uncorrelated_activity_FHN=d,      # for the FitzHugh–Nagumo system.
-    time_step_size_FHN=dt,
-    mode_FHN=C,
-    time_constant_v_FHN=tau_v,
-    time_constant_w_FHN=tau_u,
-    a_v_FHN=-1.0,
-    b_v_FHN=1.0,
-    c_v_FHN=1.0,
-    d_v_FHN=0.0,
-    e_v_FHN=-1.0,
-    f_v_FHN=1.0,
-    a_w_FHN=1.0,
-    b_w_FHN=-1.0,
-    c_w_FHN=0.0,
-    t_0_FHN=0.0,
+    threshold_FitzHughNagumo=a,                  # Here we use the Euler method for integration and we want to set the parameters,
+    uncorrelated_activity_FitzHughNagumo=d,      # for the FitzHugh–Nagumo system.
+    time_step_size_FitzHughNagumo=dt,
+    mode_FitzHughNagumo=C,
+    time_constant_v_FitzHughNagumo=tau_v,
+    time_constant_w_FitzHughNagumo=tau_u,
+    a_v_FitzHughNagumo=-1.0,
+    b_v_FitzHughNagumo=1.0,
+    c_v_FitzHughNagumo=1.0,
+    d_v_FitzHughNagumo=0.0,
+    e_v_FitzHughNagumo=-1.0,
+    f_v_FitzHughNagumo=1.0,
+    a_w_FitzHughNagumo=1.0,
+    b_w_FitzHughNagumo=-1.0,
+    c_w_FitzHughNagumo=0.0,
+    t_0_FitzHughNagumo=0.0,
     base_level_gain=G,                # Additionally, we set the parameters k and G to compute the gain equation
     scaling_factor_gain=k,
-    initial_v_FHN=initial_v,          # Initialize v
-    initial_w_FHN=initial_w,          # Initialize w
+    initial_v_FitzHughNagumo=initial_v,          # Initialize v
+    initial_w_FitzHughNagumo=initial_w,          # Initialize w
     objective_mechanism=pnl.ObjectiveMechanism(
-        function=pnl.Linear,
+        function=psyneulink.core.components.functions.transferfunctions.Linear,
         monitored_output_states=[(
             decision_layer,  # Project output of T1 and T2 but not distractor from decision layer to LC
             np.array([[lcwt], [lcwt], [0.0]])
@@ -209,13 +209,13 @@ task.run(stim_list_dict, num_trials=trials)
 # This displays a diagram of the System
 # task.show_graph()
 
-LC_results = LC.log.nparray()        # get logged results
-LC_results_w = np.zeros([trials])    # get LC_results_w
+LC_results = LC.log.nparray()[1][1]        # get logged results
+LC_results_w = np.zeros([trials])          # get LC_results_w
 for i in range(trials):
-    LC_results_w[i] = LC_results[4][i + 1][3][0]
-LC_results_v = np.zeros([trials])    # get LC_results_v
+    LC_results_w[i] = LC_results[4][i + 1][3][0][0]
+LC_results_v = np.zeros([trials])          # get LC_results_v
 for i in range(trials):
-    LC_results_v[i] = LC_results[4][i + 1][2][0]
+    LC_results_v[i] = LC_results[4][i + 1][2][0][0]
 
 
 def h_v(v, C, d):                   # Compute h(v)

@@ -3,5 +3,6 @@ Preferences
 
 [DOCUMENTATION COMING...]
 
-.. automodule:: psyneulink.globals.preferences
-	:members:
+.. automodule:: psyneulink.core.globals.preferences
+   :members:
+   :exclude-members: Parameters

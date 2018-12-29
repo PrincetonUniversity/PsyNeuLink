@@ -2,7 +2,7 @@ import collections
 import numpy as np
 import pytest
 
-from psyneulink.globals.utilities import convert_all_elements_to_np_array, prune_unused_args
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, prune_unused_args
 
 
 @pytest.mark.parametrize(
