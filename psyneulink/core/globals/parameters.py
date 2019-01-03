@@ -603,7 +603,8 @@ class Parameter(types.SimpleNamespace):
         history_max_length=1,
         fallback_default=False,
         _owner=None,
-        _inherited=False
+        _inherited=False,
+        _user_specified=False,
     ):
         if isinstance(aliases, str):
             aliases = [aliases]
@@ -634,7 +635,8 @@ class Parameter(types.SimpleNamespace):
             history=history,
             history_max_length=history_max_length,
             fallback_default=fallback_default,
-            _inherited=_inherited
+            _inherited=_inherited,
+            _user_specified=_user_specified,
         )
 
         if _owner is None:

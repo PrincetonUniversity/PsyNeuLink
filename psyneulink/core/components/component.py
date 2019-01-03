@@ -976,6 +976,11 @@ class Component(object, metaclass=ComponentsMeta):
                     )
                 )
             }
+            for p in d:
+                try:
+                    getattr(self.parameters, p)._user_specified = True
+                except AttributeError:
+                    pass
             defaults.update(d)
 
         v = self._handle_default_variable(default_variable, size)
