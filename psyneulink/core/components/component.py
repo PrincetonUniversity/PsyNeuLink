@@ -620,9 +620,9 @@ def make_parameter_property(name):
         if not _parameters_belongs_to_obj(self):
             # set to backing field, which is what gets looked for and discarded when creating an object's parameters
             setattr(self, backing_field, value)
-
-        # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-        getattr(self.parameters, name).set(value, self.most_recent_execution_context, _ro_warning_stacklevel=3)
+        else:
+            # stack level 3 instead of normal 2 to properly show source when setting using dot notation
+            getattr(self.parameters, name).set(value, self.most_recent_execution_context, _ro_warning_stacklevel=3)
 
     return property(getter).setter(setter)
 
