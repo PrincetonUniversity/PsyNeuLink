@@ -2127,6 +2127,9 @@ class Component(object, metaclass=ComponentsMeta):
                 try:
                     attr_name = '_{0}'.format(p.name)
                     attr_value = getattr(self, attr_name)
+                    if attr_value is None:
+                        attr_value = p.default_value
+
                     p.set(attr_value, override=True, skip_history=True)
                     delattr(self, attr_name)
                 except AttributeError:
