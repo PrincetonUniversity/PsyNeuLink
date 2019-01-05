@@ -559,7 +559,10 @@ class ParamsDict(UserDict):
         if key is not FUNCTION and key is not FUNCTION_PARAMS:
             # function is not stored as an attribute!
             # 7/14/18 - JDC BUG:  ISN'T SETTING VALUE OF AUTOASSOCIATIVEPROJECTION.MATRIX
-            setattr(self.owner, key, item)
+            # suppresses read-only warnings because this is internal
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+                setattr(self.owner, key, item)
 
 parameter_keywords = set()
 
@@ -2310,7 +2313,7 @@ class Component(object, metaclass=ComponentsMeta):
             For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for execution_id
         """
         for (k, v) in kwargs.items():
-            getattr(self.parameters, k).set(v, execution_id, override=override)
+            getattr(self.parameters, k).set(v, execution_id, _ro_warning_stacklevel=3, override=override)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
