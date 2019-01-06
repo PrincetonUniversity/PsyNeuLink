@@ -54,7 +54,7 @@ from psyneulink.core.globals.keywords import \
     PER_ITEM, TRANSFER_FUNCTION_TYPE, \
     LINEAR_FUNCTION, SLOPE, INTERCEPT, PARAMETER_STATE_PARAMS, \
     VARIABLE, EXPONENTIAL_FUNCTION, RATE, BIAS, SCALE, OFFSET, \
-    LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, NORMAL_FUNCTION, VARIANCE, \
+    LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, VARIANCE, \
     SOFTMAX_FUNCTION, ALL, MAX_VAL, MAX_INDICATOR, PROB, OUTPUT_TYPE, PROB_INDICATOR, LINEAR_MATRIX_FUNCTION, MATRIX, \
     RECEIVER, HAS_INITIALIZERS, MATRIX_KEYWORD_VALUES, IDENTITY_MATRIX, HOLLOW_MATRIX, \
     MATRIX_KEYWORD_NAMES, AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX, kwPreferenceSetName, \
@@ -1459,7 +1459,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     .. _Gaussian_Function:
 
-    `function <Gaussian.function>` returns Gaussian transform of `variable <Logistic.variable>`:
+    `function <Gaussian.function>` returns Gaussian transform of `variable <Gaussian.variable>`:
 
     .. math::
       scale*\\frac{e^{-\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
@@ -1468,10 +1468,9 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     .. note::
         the value returned is deterministic (i.e., the value of the probability density function at variable),
-        not a randomly chosen sample from the Gaussian distribution; for the latter, use `NormalDist` and set
-        `mean <NormalDist.mean>` equal to variable.
+        not a randomly chosen sample from the Gaussian distribution; for the latter, use `GaussianDistort`.
 
-    `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Logistic.variable>`:
+    `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Gaussian.variable>`:
 
     .. math::
 
@@ -1487,7 +1486,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         specifies "width" of the Gaussian transform applied to each element of `variable <Gaussian.variable>`.
 
     bias : float : default 0.0
-        value to add to each element after applying height and before applying Gaussian transform.
+        value to add to each element of `variable <Gaussian.variable>` before applying Gaussian transform.
 
     offset : float : default 0.0
         value to add to each element after applying Gaussian transform and `scale <Gaussian.scale>`.
@@ -1519,7 +1518,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         standard_deviation used for Gaussian transform.
 
     bias : float : default 0.0
-        value added to each element after applying height and before applying the Gaussian transform.
+        value added to each element of `variable <Gaussian.variable>` before applying the Gaussian transform.
 
     scale : float : default 0.0
         value by which each element is multiplied after applying the Gaussian transform.
@@ -1729,28 +1728,42 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
          prefs=None        \
          )
 
-    .. _Normal_Function:
+    .. _GaussianDistort_Function:
 
-    Sample from the normal distribution for each element of `variable <Normal.variable>`, centered on each
-    element's value.
+    `function <GaussianDistort.function>` returns random value from a Gaussian distribution with
+     mean = `variable <GaussianDistort.variable>` and variance = `variance <GaussianDistort.variance>`
+
+    .. note::
+        if the Gaussian transform of `variable <GaussianDistort.variable>` is desired (i.e., the value of the
+        probability density function at `variable <GaussianDistort.variable>`, not a randomly chosen sample from the
+        Gaussian distribution, then use `Gaussian`.
+
+    COMMENT:
+    `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Logistic.variable>`:
+
+    .. math::
+
+       \\frac{-(variable-bias)*e^{-\\frac{(variable-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma^{3}}
+    COMMENT
 
     Arguments
     ---------
 
     default_variable : number or array : default class_defaults.variable
-        specifies a template for the value used as the mean for the Guassian transform.
+        specifies a template for the value used as the mean of the Guassian distribution from which the sample is drawn.
 
     variance : float : default 1.0
-        specifies "width" of the Normal transform applied to each element of `variable <Normal.variable>`.
+        specifies "width" of the Gaussian distribution around `variable <GaussianDistort.variable>` from which
+        sample is drawn.
 
     bias : float : default 0.0
-        value to add to each element after applying height and before applying Normal transform.
+        specifies value to add to each element of `variable <GaussianDistort.variable>` before drawing sample.
 
     scale : float : default 1.0
-        value by which to multiply each element after applying Normal transform.
+        specifies value by which to multiply each sample.
 
     offset : float : default 0.0
-        value to add to each element after applying Normal transform and `scale <Normal.scale>`.
+        specifies value to add to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1770,19 +1783,19 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     ----------
 
     variable : number or array
-        value used as the mean of the Normal transform.
+        determines mean of the Gaussian distribution from which sample is drawn.
 
-    variance : float : default 1.0
-        variance used for Normal transform.
+    variance : float
+        determines variance of Gaussian distribution from which sample is drawn.
 
-    bias : float : default 0.0
-        value added to each element after applying height and before applying the Normal transform.
+    bias : float
+        determines value added to each element of `variable <GaussianDistort.variable>` before drawing sample.
 
-    scale : float : default 0.0
-        value by which each element is multiplied after applying the Normal transform.
+    scale : float
+        determines value by which each sample is multiplied after it is drawn.
 
-    offset : float : default 0.0
-        value added to each element after applying the Normal transform and scale.
+    offset : float
+        determines value added to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1918,7 +1931,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Returns
         -------
 
-        Samples from normal distribution for each element of variable : number or array
+        Sample from Gaussian distribution for each element of variable : number or array
 
         """
 
