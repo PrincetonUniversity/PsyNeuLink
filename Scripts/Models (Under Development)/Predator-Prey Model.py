@@ -55,15 +55,16 @@ def dist_diff_fct(variable):
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
 
 agent_comp.add_c_node(player_obs)
-agent_comp.add_c_node(prey_obs)
 agent_comp.add_c_node(predator_obs)
-# agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_c_node(prey_obs)
+agent_comp.add_c_node(greedy_action_mech)
 # agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
 # agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
 # agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
-agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
+# agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
 
-ocm = OptimizationControlMechanism(features=[prey_obs, predator_obs],
+ocm = OptimizationControlMechanism(# features=[prey_obs, predator_obs],
+                                   features={SHADOW_EXTERNAL_INPUTS: [prey_obs, predator_obs]},
                                    agent_rep=agent_comp,
                                    function=GridSearch,
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
@@ -79,8 +80,9 @@ ocm = OptimizationControlMechanism(features=[prey_obs, predator_obs],
 
                                                     ]
                                    )
-
 agent_comp.add_model_based_optimizer(ocm)
+agent_comp.enable_model_based_optimizer = True
+
 
 # Projections to greedy_action_mech were created by assignments of sample and target args in its constructor,
 #  so just add them to the Composition).
@@ -88,23 +90,25 @@ for projection in greedy_action_mech.projections:
     agent_comp.add_projection(projection)
 
 # agent_comp.show_graph(show_mechanism_structure='ALL')
-agent_comp.show_graph()
+# agent_comp.show_graph()
 
-# def main():
-#     for _ in range(num_trials):
-#         observation = env.reset()
-#         while True:
-#             run_results = agent_comp.run(inputs={
-#                 player_obs:[observation[player_coord_slice]],
-#                 predator_obs:[observation[predator_coord_slice]],
-#                 prey_obs:[observation[prey_coord_slice]],
-#                 # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
-#                 # reward:[reward],
-#             })
-#             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
-#             observation, reward, done, _ = env.step(action)
-#             if done:
-#                 break
-#
-# if __name__ == "__main__":
-#     main()
+def main():
+    for _ in range(num_trials):
+        observation = env.reset()
+        while True:
+            run_results = agent_comp.run(inputs={
+                player_obs:[observation[player_coord_slice]],
+                predator_obs:[observation[predator_coord_slice]],
+                prey_obs:[observation[prey_coord_slice]],
+                # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
+                # reward:[reward],
+            })
+            # action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            action = np.squeeze(np.where(greedy_action_mech.value==0,0,
+                                         greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
+            observation, reward, done, _ = env.step(action)
+            if done:
+                break
+
+if __name__ == "__main__":
+    main()
