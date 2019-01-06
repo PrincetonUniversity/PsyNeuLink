@@ -50,7 +50,7 @@ matrix:
     python: 3.6
     language: minimal
     env:
-        - PYTHON=3.6.7
+        - PYTHON=3.6.8
         - PYTHON_PKG_VERSION=macosx10.9
     # Cache installed python virtual env and homebrew downloads
     cache:
@@ -62,7 +62,7 @@ matrix:
     python: 3.7
     language: minimal
     env:
-        - PYTHON=3.7.1
+        - PYTHON=3.7.2
         - PYTHON_PKG_VERSION=macosx10.9
         - PYTHONWARNINGS="ignore::DeprecationWarning"
     # Cache installed python virtual env and homebrew downloads
