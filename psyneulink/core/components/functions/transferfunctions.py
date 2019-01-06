@@ -1750,11 +1750,12 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     ---------
 
     default_variable : number or array : default class_defaults.variable
-        specifies a template for the value used as the mean of the Guassian distribution from which the sample is drawn.
+        specifies a template for the value(s) used as the mean of the Guassian distribution from which each sample is
+        drawn.
 
     variance : float : default 1.0
-        specifies "width" of the Gaussian distribution around `variable <GaussianDistort.variable>` from which
-        sample is drawn.
+        specifies "width" of the Gaussian distribution around each element of `variable <GaussianDistort.variable>`
+        from which sample is drawn.
 
     bias : float : default 0.0
         specifies value to add to each element of `variable <GaussianDistort.variable>` before drawing sample.
@@ -1783,10 +1784,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     ----------
 
     variable : number or array
-        determines mean of the Gaussian distribution from which sample is drawn.
+        each element determines mean of the Gaussian distribution from which each sample is drawn.
 
     variance : float
-        determines variance of Gaussian distribution from which sample is drawn.
+        determines variance of Gaussian distribution from which each sample is drawn.
 
     bias : float
         determines value added to each element of `variable <GaussianDistort.variable>` before drawing sample.
