@@ -28,7 +28,8 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import Function_Base, FunctionError
+from psyneulink.core.components.functions.function import \
+    Function_Base, FunctionError, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.globals.keywords import \
     DIST_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, STANDARD_DEVIATION, DIST_MEAN, EXPONENTIAL_DIST_FUNCTION, \
     BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE
@@ -130,8 +131,9 @@ class NormalDist(DistributionFunction):
                     :type: float
 
         """
-        mean = Parameter(0.0, modulable=True)
-        standard_deviation = Parameter(1.0, modulable=True)
+        mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+
 
     @tc.typecheck
     def __init__(self,

@@ -590,6 +590,7 @@ LOGISTIC_FUNCTION = "Logistic Function"
 RELU_FUNCTION = "ReLU Function"
 ONE_HOT_FUNCTION = "OneHot Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
+GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
 NORMAL_FUNCTION = 'Normal Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "IntegratorFunction Function"
