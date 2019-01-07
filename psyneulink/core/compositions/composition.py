@@ -1393,7 +1393,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.c_nodes:
             # KAM added len(node.path_afferents) check 1/7/19 in order to
             # include nodes that receive mod projections as ORIGIN
-            if graph.get_parents_from_component(node) == [] or len(node.path_afferents) == 0:
+            mod_only = False
+            if hasattr(node, "path_afferents"):
+                if len(node.path_afferents) == 0:
+                    mod_only = True
+            if graph.get_parents_from_component(node) == [] or mod_only:
                 if not isinstance(node, ObjectiveMechanism):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
             # Identify Terminal nodes
