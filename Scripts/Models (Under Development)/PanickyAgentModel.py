@@ -40,7 +40,7 @@ dist = Distance(metric=EUCLIDEAN)
 PREDATOR = 0
 PREY = 1
 ATTEND = 0
-DISATTEND = 1000
+DISATTEND = 500
 UNDECIDED = 1
 
 def choose_closer_agent_function(variable):
@@ -62,8 +62,10 @@ def choose_closer_agent_function(variable):
     return [-1]
 
 def control_allocation_function(variable):
-    # HACK DO DEAL WITH ADD_Control_Mech ASSIGNED AS ORIGIN:
+
+    # HACK DO DEAL WITH BUG IN WHICH PROJECTION TO Panicky_Control_Mech CAN'T BE SUPPRESSED BY ASSIGNING AS INTERNAL:
     closest_agent = variable[0]-1
+
     if closest_agent == PREDATOR:
         return [[ATTEND],[DISATTEND]]
     elif closest_agent == PREY:
@@ -75,7 +77,7 @@ def control_allocation_function(variable):
 # note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
 greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
 
-ADD_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
+Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
                                                                            monitored_output_states=[player_obs,
                                                                                                     predator_obs,
                                                                                                     prey_obs]),
@@ -83,18 +85,12 @@ ADD_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(funct
                                     control_signals=[(VARIANCE,predator_obs), (VARIANCE,prey_obs)]
 )
 
-agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
+agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
 agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
-agent_comp.add_c_node(ADD_control_mech)
-# agent_comp.add_c_node(ADD_control_mech, required_roles=CNodeRole.INTERNAL)
-
-# Projections to greedy_action_mech were created by assignments of sample and target args in its constructor,
-#  so just add them to the Composition).
-for projection in greedy_action_mech.projections:
-    agent_comp.add_projection(projection)
+agent_comp.add_c_node(Panicky_control_mech, required_roles=CNodeRole.INTERNAL)
 
 # agent_comp.show_graph()
 
