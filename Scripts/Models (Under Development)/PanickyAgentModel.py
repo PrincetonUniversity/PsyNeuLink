@@ -63,7 +63,7 @@ def choose_closer_agent_function(variable):
 
 def control_allocation_function(variable):
 
-    # HACK DO DEAL WITH BUG IN WHICH PROJECTION TO Panicky_Control_Mech CAN'T BE SUPPRESSED BY ASSIGNING AS INTERNAL:
+    # FIX: HACK DO DEAL WITH BUG IN WHICH PROJECTION TO Panicky_Control_Mech CAN'T BE SUPPRESSED BY ASSIGNING AS INTERNAL:
     closest_agent = variable[0]-1
 
     if closest_agent == PREDATOR:
@@ -78,11 +78,11 @@ def control_allocation_function(variable):
 greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
 
 Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
-                                                                           monitored_output_states=[player_obs,
-                                                                                                    predator_obs,
-                                                                                                    prey_obs]),
-                                    function = control_allocation_function,
-                                    control_signals=[(VARIANCE,predator_obs), (VARIANCE,prey_obs)]
+                                                                               monitored_output_states=[player_obs,
+                                                                                                        predator_obs,
+                                                                                                        prey_obs]),
+                                        function = control_allocation_function,
+                                        control_signals=[(VARIANCE,predator_obs), (VARIANCE,prey_obs)]
 )
 
 agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
@@ -90,9 +90,17 @@ agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
+
+# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ORIGIN ROLE:
 agent_comp.add_c_node(Panicky_control_mech, required_roles=CNodeRole.INTERNAL)
 
-# agent_comp.show_graph()
+# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ROLES:
+agent_comp._analyze_graph()
+agent_comp._remove_c_node_role(Panicky_control_mech, CNodeRole.ORIGIN)
+agent_comp._remove_c_node_role(Panicky_control_mech.objective_mechanism, CNodeRole.TERMINAL)
+agent_comp._analyze_graph()
+
+agent_comp.show_graph()
 
 def main():
     for _ in range(num_trials):
