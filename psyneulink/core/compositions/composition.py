@@ -1391,7 +1391,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
-            if graph.get_parents_from_component(node) == []:
+            # KAM added len(node.path_afferents) check 1/7/19 in order to
+            # include nodes that receive mod projections as ORIGIN
+            if graph.get_parents_from_component(node) == [] or len(node.path_afferents) == 0:
                 if not isinstance(node, ObjectiveMechanism):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
             # Identify Terminal nodes

@@ -86,19 +86,12 @@ Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(f
 )
 
 agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
-agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
-agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
-agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
-agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
+agent_comp.add_c_node(player_obs)
+agent_comp.add_c_node(prey_obs)
+agent_comp.add_c_node(predator_obs)
+agent_comp.add_c_node(greedy_action_mech)
 
-# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ORIGIN ROLE:
-agent_comp.add_c_node(Panicky_control_mech, required_roles=CNodeRole.INTERNAL)
-
-# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ROLES:
-agent_comp._analyze_graph()
-agent_comp._remove_c_node_role(Panicky_control_mech, CNodeRole.ORIGIN)
-agent_comp._remove_c_node_role(Panicky_control_mech.objective_mechanism, CNodeRole.TERMINAL)
-agent_comp._analyze_graph()
+agent_comp.add_c_node(Panicky_control_mech)
 
 agent_comp.show_graph()
 

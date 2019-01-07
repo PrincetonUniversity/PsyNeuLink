@@ -41,6 +41,7 @@ agent_comp.add_c_node(greedy_action_mech)
 for projection in greedy_action_mech.projections:
     agent_comp.add_projection(projection)
 
+agent_comp.show_graph()
 def main():
     for _ in range(num_trials):
         observation = env.reset()
