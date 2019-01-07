@@ -20,8 +20,8 @@ prey_value_idx = 8
 
 player_len = prey_len = predator_len = obs_len
 
-player = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=1000), name="PLAYER OBS")
-prey = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=1000), name="PREY OBS")
+player = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=0), name="PLAYER OBS")
+prey = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=0), name="PREY OBS")
 
 # For future use:
 values = TransferMechanism(size=3, name="AGENT VALUES")

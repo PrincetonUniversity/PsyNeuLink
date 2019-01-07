@@ -37,49 +37,66 @@ reward = TransferMechanism(name="REWARD")
 
 dist = Distance(metric=EUCLIDEAN)
 
-def dist_diff_fct(variable):
+PREDATOR = 0
+PREY = 1
+ATTEND = 0
+DISATTEND = 1000
+UNDECIDED = 1
+
+def choose_closer_agent_function(variable):
+    if variable is None:
+        return [0,0]
     player_coord = variable[0]
     predator_coord = variable[1]
     prey_coord = variable[2]
-    dist_to_predator = dist(player_coord, predator_coord)
-    dist_to_prey = dist(player_coord, prey_coord)
-    return dist_to_predator - dist_to_prey
+    dist_to_predator = dist([player_coord, predator_coord])
+    dist_to_prey = dist([player_coord, prey_coord])
+    denom = dist_to_predator + dist_to_prey
+    if denom != 0:
+        normalized_dist_to_predator = dist_to_predator/denom
+        normalized_dist_to_prey = dist_to_prey/denom
+        if normalized_dist_to_predator < normalized_dist_to_prey:
+            return [PREDATOR]
+        else:
+            return [PREY]
+    return [-1]
+
+def control_allocation_function(variable):
+    # HACK DO DEAL WITH ADD_Control_Mech ASSIGNED AS ORIGIN:
+    closest_agent = variable[0]-1
+    if closest_agent == PREDATOR:
+        return [[ATTEND],[DISATTEND]]
+    elif closest_agent == PREY:
+        return [[DISATTEND],[ATTEND]]
+    else:
+        return [[UNDECIDED],[UNDECIDED]]
 
 # Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
 # note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
-greedy_action_mech = ProcessingMechanism(name='ACTION',
-                                         function=dist_diff_fct,
-                                         input_states=[player_obs, predator_obs, prey_obs])
+greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
 
-# ocm = OptimizationControlMechanism(features=[prey_obs, predator_obs],
-#                                    agent_rep=XXX,
-#                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
-#                                                                           monitored_output_states=[player_obs,
-#                                                                                                    predator_obs,
-#                                                                                                    prey_obs]),
-#                                    control_signals=[ControlSignal(projection=(VARIANCE,player_obs),
-#                                                                   allocation_samples=XXX),
-#                                                     ControlSignal(projection=(VARIANCE,predator_obs),
-#                                                                   allocation_samples=XXX),
-#                                                     ControlSignal(projection=(VARIANCE,prey_obs),
-#                                                                   allocation_samples=XXX),
-#
-#                                                     ]
-#                                    )
+ADD_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
+                                                                           monitored_output_states=[player_obs,
+                                                                                                    predator_obs,
+                                                                                                    prey_obs]),
+                                    function = control_allocation_function,
+                                    control_signals=[(VARIANCE,predator_obs), (VARIANCE,prey_obs)]
+)
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_c_node(player_obs)
-agent_comp.add_c_node(prey_obs)
-agent_comp.add_c_node(predator_obs)
-agent_comp.add_c_node(greedy_action_mech)
-# agent_comp.add_c_node(ocm)
+agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
+agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
+agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
+agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
+agent_comp.add_c_node(ADD_control_mech)
+# agent_comp.add_c_node(ADD_control_mech, required_roles=CNodeRole.INTERNAL)
 
 # Projections to greedy_action_mech were created by assignments of sample and target args in its constructor,
 #  so just add them to the Composition).
 for projection in greedy_action_mech.projections:
     agent_comp.add_projection(projection)
 
-# agent_comp.show_graph(show_mechanism_structure='ALL')
+# agent_comp.show_graph()
 
 def main():
     for _ in range(num_trials):
@@ -92,8 +109,7 @@ def main():
                 # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
                 # reward:[reward],
             })
-            # action=run_results[0]/np.abs(run_results[0])
-            action= np.where(run_results[1]==0,0,run_results[1]/np.abs(run_results[1]))
+            action= np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             observation, reward, done, _ = env.step(action)
             if done:
                 break

@@ -77,7 +77,6 @@ ocm = OptimizationControlMechanism(# features=[prey_obs, predator_obs],
                                                                   allocation_samples=[0, 1, 10, 100]),
                                                     ControlSignal(projections=(VARIANCE,prey_obs),
                                                                   allocation_samples=[0, 1, 10, 100]),
-
                                                     ]
                                    )
 agent_comp.add_model_based_optimizer(ocm)
@@ -103,9 +102,9 @@ def main():
                 # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
                 # reward:[reward],
             })
-            # action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
-            action = np.squeeze(np.where(greedy_action_mech.value==0,0,
-                                         greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
+            action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
+            #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
             observation, reward, done, _ = env.step(action)
             if done:
                 break
