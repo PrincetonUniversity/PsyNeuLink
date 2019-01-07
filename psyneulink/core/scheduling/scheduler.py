@@ -304,6 +304,7 @@ import copy
 import datetime
 import logging
 import uuid
+import collections
 
 from toposort import toposort
 
@@ -474,20 +475,23 @@ class Scheduler(object):
         dependencies = {}                   # stores  a modified version of the graph in which cycles are "flattened"
         removed_dependencies = {}           # stores dependencies that were removed in order to flatten cycles
         flattened_cycles = {}               # flattened_cycles[node] = [all cycles to which node belongs]
+        visual_graph = collections.OrderedDict()
 
         # Loop through the existing composition graph, considering "forward" projections only
         # If a cycle is found, "flatten" it by bringing all nodes into the same execution set
         for vert in graph.vertices:
+
             if vert.component not in dependencies:
                 dependencies[vert.component] = set()
+                visual_graph[vert.component] = set()
 
             # use "get_forward_children_from_component" to ignore any projections that were marked as "feedback"
             # "feedback" projections, we've already determined, happen after all forward projections, but when "forward"
             # projections cause cycles, we need to execute them all at once
-
             for child in graph.get_forward_children_from_component(vert.component):
                 if child.component not in dependencies:
                     dependencies[child.component] = set()
+                    visual_graph[child.component] = set()
                 dependencies[child.component].add(vert.component)
 
                 # loop_start_set contains the current starting point and any cycles it is already connected to
@@ -529,8 +533,13 @@ class Scheduler(object):
                     # (otherwise, the order in which a user adds components to a composition would affect the graph)
                     for cycle_node in connected_cycles:
                         dependencies[cycle_node].add(vert.component)
+                visual_graph[child.component].add(vert.component)
+            for child in graph.get_backward_children_from_component(vert.component):
+                if child.component not in dependencies:
+                    visual_graph[child.component] = set()
+                visual_graph[child.component].add(vert.component)
             self.dependency_sets = dependencies
-        return list(toposort(dependencies)), removed_dependencies
+        return list(toposort(dependencies)), removed_dependencies, visual_graph
 
     def _get_all_connected_cycles(self, connected_cycles, original_key, visited_keys, flattened_cycles):
         if original_key in flattened_cycles:
@@ -544,7 +553,7 @@ class Scheduler(object):
                     self._get_all_connected_cycles(connected_cycles, cycle_node, visited_keys, flattened_cycles)
 
     def _init_consideration_queue_from_graph(self, graph):
-        self.consideration_queue, self.removed_dependencies = self._call_toposort(graph)
+        self.consideration_queue, self.removed_dependencies, self.visual_graph = self._call_toposort(graph)
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         '''

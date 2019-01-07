@@ -2753,7 +2753,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
         # G.attr(compound = 'True')
 
-        processing_graph = self.scheduler_processing.dependency_sets
+        processing_graph = self.scheduler_processing.visual_graph
         # get System's ProcessingMechanisms
         rcvrs = list(processing_graph.keys())
 
