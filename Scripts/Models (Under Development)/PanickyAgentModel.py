@@ -41,7 +41,7 @@ PREDATOR = 0
 PREY = 1
 ATTEND = 0
 DISATTEND = 500
-UNDECIDED = 1
+UNDECIDED = 0
 
 def choose_closer_agent_function(variable):
     if variable is None:

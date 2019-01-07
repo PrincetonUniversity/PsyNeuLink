@@ -36,10 +36,7 @@ agent_comp.add_c_node(player)
 agent_comp.add_c_node(prey)
 agent_comp.add_c_node(greedy_action_mech)
 
-# Projections to greedy_action_mech were created by assignments of sample and target args in its constructor,
-#  so just add them to the Composition).
-for projection in greedy_action_mech.projections:
-    agent_comp.add_projection(projection)
+# agent_comp.show_graph()
 
 def main():
     for _ in range(num_trials):
