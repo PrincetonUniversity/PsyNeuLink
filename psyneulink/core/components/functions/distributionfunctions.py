@@ -131,8 +131,8 @@ class NormalDist(DistributionFunction):
                     :type: float
 
         """
-        mean = Parameter(0.0, modulable=True)
-        standard_deviation = Parameter(1.0, modulable=True)
+        mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
