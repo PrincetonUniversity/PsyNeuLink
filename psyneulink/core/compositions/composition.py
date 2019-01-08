@@ -1375,22 +1375,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
-        # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
-
             for node in self.scheduler_processing.consideration_queue[0]:
+                self._add_c_node_role(node, CNodeRole.ORIGIN)
 
-                if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
-                    self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
-
-                if self.model_based_optimizer:
-                    if node == self.model_based_optimizer.objective_mechanism:
-                        for vertex in graph.get_parents_from_component(node):
-                            self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
-                else:
-                    self._add_c_node_role(node, CNodeRole.TERMINAL)
+                # if self.model_based_optimizer:
+                #
+                #     if node == self.model_based_optimizer.objective_mechanism:
+                #         for vertex in graph.get_parents_from_component(node):
+                #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                # else:
+                self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
             # KAM added len(node.path_afferents) check 1/7/19 in order to
@@ -1408,17 +1405,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if all_input:
                         mod_only = True
             if graph.get_parents_from_component(node) == [] or mod_only:
-                if not isinstance(node, ObjectiveMechanism):
-                    self._add_c_node_role(node, CNodeRole.ORIGIN)
+                # if not isinstance(node, ObjectiveMechanism):
+                self._add_c_node_role(node, CNodeRole.ORIGIN)
             # Identify Terminal nodes
             if graph.get_children_from_component(node) == []:
 
-                if self.model_based_optimizer:
-                    if node == self.model_based_optimizer.objective_mechanism:
-                        for vertex in graph.get_parents_from_component(node):
-                            self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
-                else:
-                    self._add_c_node_role(node, CNodeRole.TERMINAL)
+                # if self.model_based_optimizer:
+                #     if node == self.model_based_optimizer.objective_mechanism:
+                #         for vertex in graph.get_parents_from_component(node):
+                #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                # else:
+                self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Recurrent_init and Cycle nodes
         visited = []  # Keep track of all nodes that have been visited
         for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
