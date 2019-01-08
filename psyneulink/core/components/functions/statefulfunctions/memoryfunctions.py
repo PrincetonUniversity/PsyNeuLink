@@ -198,7 +198,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -524,7 +524,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         self.distance_function = distance_function
         self.selection_function = selection_function
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,

@@ -155,7 +155,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         self.composition = composition
         self.connected_to_composition = False
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
                                                   params=params)

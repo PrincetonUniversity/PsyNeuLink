@@ -990,7 +990,7 @@ class OutputState(State_Base):
         if params:
             _maintain_backward_compatibility(params, name, owner)
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(
                 function=function,
                 params=params)
