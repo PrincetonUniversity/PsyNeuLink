@@ -26,23 +26,22 @@ prey_value_idx = prey_idx * obs_len + obs_coords
 prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
+dist = Distance(metric=EUCLIDEAN)
+PREDATOR = 0
+PREY = 1
+ATTEND = 0
+DISATTEND = 200
+UNDECIDED = 0
 
 player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
 prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
 predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
-
 # For future use:
 values = TransferMechanism(size=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
 
-dist = Distance(metric=EUCLIDEAN)
 
-PREDATOR = 0
-PREY = 1
-ATTEND = 0
-DISATTEND = 500
-UNDECIDED = 0
-
+# Sample function (that takes the place of eventual OCM evaluate method)
 def choose_closer_agent_function(variable):
     if variable is None:
         return [0,0]
@@ -61,10 +60,10 @@ def choose_closer_agent_function(variable):
             return [PREY]
     return [-1]
 
+# Sample function (that takes the place of eventual OCM function)
 def control_allocation_function(variable):
 
-    # FIX: HACK DO DEAL WITH BUG IN WHICH PROJECTION TO Panicky_Control_Mech CAN'T BE SUPPRESSED BY ASSIGNING AS INTERNAL:
-    closest_agent = variable[0]-1
+    closest_agent = variable[0]
 
     if closest_agent == PREDATOR:
         return [[ATTEND],[DISATTEND]]
@@ -86,21 +85,14 @@ Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(f
 )
 
 agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
+# NOTE: THE ASSIGNMENT OF required_roles BELOW SHOULD NOT BE NEEDED;
+#       CIRCUMVENTS A BUG IN ROLE ASSIGNMENTS CURRENTLY BEING FIXED
 agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
 agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
+agent_comp.add_c_node((Panicky_control_mech))
 
-# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ORIGIN ROLE:
-agent_comp.add_c_node(Panicky_control_mech, required_roles=CNodeRole.INTERNAL)
-
-# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ROLES:
-agent_comp._analyze_graph()
-agent_comp._remove_c_node_role(Panicky_control_mech, CNodeRole.ORIGIN)
-agent_comp._remove_c_node_role(Panicky_control_mech.objective_mechanism, CNodeRole.TERMINAL)
-agent_comp._analyze_graph()
-
-agent_comp.show_graph()
 
 def main():
     for _ in range(num_trials):
@@ -110,8 +102,9 @@ def main():
                 player_obs:[observation[player_coord_slice]],
                 predator_obs:[observation[predator_coord_slice]],
                 prey_obs:[observation[prey_coord_slice]],
-                # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
-                # reward:[reward],
+                # NOTE: ASSIGNMENT OF INPUT TO Panicky_control_mech IS TO CIRCUMVENT A BUG IN ROLE ASSIGNMENTS
+                #       (INCLUDING MISASSIGNMENT OF ControlMechanism AS ORIGIN MECH) THAT IS CURRENTLY BEING FIXED
+                Panicky_control_mech:[0]
             })
             action= np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             observation, reward, done, _ = env.step(action)

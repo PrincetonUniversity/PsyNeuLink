@@ -3,7 +3,7 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
-num_trials = 4
+num_trials = 6
 env = ForagerEnv()
 reward = 0
 done = False
