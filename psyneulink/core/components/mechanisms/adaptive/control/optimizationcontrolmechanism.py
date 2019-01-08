@@ -745,7 +745,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.composition import Composition
         if self.agent_rep is None:
-            raise OptimizationControlMechanismError("The {} arg of an {} must specify a {}".
+            raise OptimizationControlMechanismError("The {} arg of an {} must be specified and be a {}".
                                                     format(repr(AGENT_REP), self.__class__.__name__,
                                                            Composition.__name__))
 

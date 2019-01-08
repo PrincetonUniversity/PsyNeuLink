@@ -2744,7 +2744,7 @@ class Component(object, metaclass=ComponentsMeta):
             return
         # self.function is NOT OK, so raise exception
         else:
-            raise ComponentError("{0} not specified and {1}.function is not a Function object or class"
+            raise ComponentError("{0} not specified and {1}.function is not a Function object or class "
                                 "or valid method in {2}".
                                 format(FUNCTION, self.__class__.__name__, self.name))
 
