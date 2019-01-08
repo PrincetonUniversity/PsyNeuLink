@@ -169,7 +169,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
         if not hasattr(self, 'system'):
             self.system = None
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params,
                                                   modulation=modulation)
 

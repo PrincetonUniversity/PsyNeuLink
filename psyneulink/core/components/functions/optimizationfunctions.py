@@ -669,7 +669,7 @@ class OptimizationFunction(Function_Base):
         else:
             self.search_space = search_space
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(save_samples=save_samples,
                                                   save_values=save_values,
                                                   max_iterations=max_iterations,
@@ -1146,7 +1146,7 @@ class GradientOptimization(OptimizationFunction):
             self.direction = -1
         self.annealing_function = annealing_function
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(step=step,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
@@ -1430,7 +1430,7 @@ class GridSearch(OptimizationFunction):
         self.num_iterations = 1
         self.direction = direction
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
@@ -1823,7 +1823,7 @@ class GaussianProcess(OptimizationFunction):
 
         self.direction = direction
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,

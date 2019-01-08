@@ -292,7 +292,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(slope=slope,
                                                   intercept=intercept,
                                                   params=params)
@@ -543,7 +543,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   bias=bias,
                                                   scale=scale,
@@ -814,7 +814,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   x_0=x_0,
                                                   bias=bias,
@@ -1115,7 +1115,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   x_0=x_0,
                                                   bias=bias,
@@ -1347,7 +1347,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
                                                   leak=leak,
@@ -1593,7 +1593,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(standard_deviation=standard_deviation,
                                                   bias=bias,
                                                   scale=scale,
@@ -1858,7 +1858,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 #                  params=None,
 #                  owner=None,
 #                  prefs: is_pref_set = None):
-#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+#         # Assign args to params and functionParams dicts 
 #         params = self._assign_args_to_param_dicts(variance=variance,
 #                                                   bias=bias,
 #                                                   scale=scale,
@@ -2136,7 +2136,7 @@ class SoftMax(TransferFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   per_item=per_item,
                                                   output=output,
@@ -2520,7 +2520,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   params=params)
 

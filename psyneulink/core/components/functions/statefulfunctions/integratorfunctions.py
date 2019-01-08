@@ -225,7 +225,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
-      # Assign args to params and functionParams dicts (kwConstants must == arg names)
+      # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
 
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
@@ -458,7 +458,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   increment=increment,
                                                   noise=noise,
@@ -748,7 +748,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -2015,7 +2015,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         if default_variable is None:
             default_variable = initializer
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   rest=rest,
@@ -2390,7 +2390,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
                                                   starting_point=starting_point,
@@ -2741,7 +2741,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   noise=noise,
@@ -3017,7 +3017,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -3686,7 +3686,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,
