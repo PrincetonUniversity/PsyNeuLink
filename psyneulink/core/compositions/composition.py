@@ -1377,7 +1377,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
+
             for node in self.scheduler_processing.consideration_queue[0]:
+
                 if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
@@ -1397,6 +1399,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(node, "path_afferents"):
                 if len(node.path_afferents) == 0:
                     mod_only = True
+                else:
+                    all_input = True
+                    for proj in node.path_afferents:
+                        if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                            all_input = False
+                            break
+                    if all_input:
+                        mod_only = True
             if graph.get_parents_from_component(node) == [] or mod_only:
                 if not isinstance(node, ObjectiveMechanism):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
