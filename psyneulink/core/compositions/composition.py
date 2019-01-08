@@ -1402,7 +1402,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     all_input = True
                     for proj in node.path_afferents:
-                        if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                        if not proj.sender.owner is self.input_CIM:
                             all_input = False
                             break
                     if all_input:
