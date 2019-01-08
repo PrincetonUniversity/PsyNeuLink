@@ -749,7 +749,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,

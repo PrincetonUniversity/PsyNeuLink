@@ -31,7 +31,8 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
     DIST_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, STANDARD_DEVIATION, DIST_MEAN, EXPONENTIAL_DIST_FUNCTION, \
-    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE
+    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE, \
+    DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -141,7 +142,7 @@ class NormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mean=mean,
                                                   standard_deviation=standard_deviation,
                                                   params=params)
@@ -292,7 +293,7 @@ class UniformToNormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mean=mean,
                                                   standard_deviation=standard_deviation,
                                                   params=params)
@@ -406,7 +407,7 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(beta=beta,
                                                   params=params)
 
@@ -525,7 +526,7 @@ class UniformDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(low=low,
                                                   high=high,
                                                   params=params)
@@ -647,7 +648,7 @@ class GammaDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(scale=scale,
                                                   dist_shape=dist_shape,
                                                   params=params)
@@ -768,7 +769,7 @@ class WaldDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(scale=scale,
                                                   mean=mean,
                                                   params=params)
@@ -804,9 +805,6 @@ THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 NON_DECISION_TIME = 't0'
-
-# DDM solution options:
-kwDriftDiffusionAnalytical = "DriftDiffusionAnalytical"
 
 
 def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=None):
@@ -928,7 +926,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     """
 
-    componentName = kwDriftDiffusionAnalytical
+    componentName = DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -997,7 +995,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
                                                   starting_point=starting_point,
                                                   threshold=threshold,

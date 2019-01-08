@@ -585,7 +585,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is OUTCOME:
             output_states = [OUTCOME]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   output_states=output_states,
                                                   function=function,

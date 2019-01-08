@@ -426,7 +426,7 @@ class ModulatorySignal(OutputState):
 
         # Standard initialization
         else:
-            # Assign args to params and functionParams dicts (kwConstants must == arg names)
+            # Assign args to params and functionParams dicts 
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
 
