@@ -10,14 +10,13 @@ class TestControlMechanisms:
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
-        c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
-        c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
+        c.add_c_node(m1, required_roles=pnl.CNodeRole.INPUT)
+        c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitored_output_states=[m1, m2]),
-                                                terminal_objective_mechanism=True,
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
@@ -31,14 +30,13 @@ class TestControlMechanisms:
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
-        c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
-        c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
+        c.add_c_node(m1, required_roles=pnl.CNodeRole.INPUT)
+        c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitored_output_states=[m1, m2]),
-                                                terminal_objective_mechanism=True,
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
@@ -53,15 +51,14 @@ class TestControlMechanisms:
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
-        c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
-        c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
+        c.add_c_node(m1, required_roles=pnl.CNodeRole.INPUT)
+        c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                                 feature_function=pnl.LinearCombination(offset=10.0),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitored_output_states=[m1, m2]),
-                                                terminal_objective_mechanism=True,
                                                 function=pnl.GradientOptimization(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
@@ -99,9 +96,9 @@ class TestControlMechanisms:
 
         path = [A, B, LC]
         S = pnl.Composition()
-        S.add_c_node(A, required_roles=pnl.CNodeRole.ORIGIN)
+        S.add_c_node(A, required_roles=pnl.CNodeRole.INPUT)
         S.add_linear_processing_pathway(pathway=path)
-        S.add_c_node(LC, required_roles=pnl.CNodeRole.TERMINAL)
+        S.add_c_node(LC, required_roles=pnl.CNodeRole.OUTPUT)
         LC.reinitialize_when = pnl.Never()
 
         gain_created_by_LC_output_state_1 = []
@@ -186,157 +183,6 @@ class TestControlMechanisms:
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
 
-# KAM will reintroduce objective mechanism role tests after INPUT and OUTPUT roles are implemented
-# class TestObjectiveMechanismRoles:
-#
-#     def test_origin_objective_mechanism_false(self):
-#         #  When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
-#         #  ObjectiveMechanism is not marked as origin
-#         #  If the ObjectiveMechanism was the only origin node, then the user must use required_roles to assign the
-#         #  origin role to another node.
-#
-#         c = pnl.Composition()
-#
-#         A = pnl.TransferMechanism()
-#         B = pnl.TransferMechanism()
-#         lvoc = pnl.ControlMechanism()
-#
-#         c.add_linear_processing_pathway([lvoc, A])
-#
-#         c.show_graph()
-#
-#         assert lvoc.objective_mechanism not in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
-#
-#     def test_origin_objective_mechanism_true_origin(self):
-#         # When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
-#         # normally.
-#         c = pnl.Composition()
-#
-#         A = pnl.TransferMechanism()
-#         lvoc = pnl.ControlMechanism(
-#                                         origin_objective_mechanism=True)
-#         B = pnl.TransferMechanism()
-#
-#         c.add_linear_processing_pathway([lvoc, A])
-#         c.add_c_node(B)
-#
-#         c._analyze_graph()
-#
-#         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN) and \
-#                B in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
-#
-#     def test_origin_objective_mechanism_true_not_origin(self):
-#         # If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
-#         # takes on origin as a required role.
-#         c = pnl.Composition()
-#
-#         A = pnl.TransferMechanism()
-#         lvoc = pnl.ControlMechanism(
-#                                         origin_objective_mechanism=True)
-#         B = pnl.TransferMechanism()
-#
-#         c.add_linear_processing_pathway([lvoc, A])
-#         c.add_linear_processing_pathway([B, lvoc.objective_mechanism])
-#
-#         c._analyze_graph()
-#
-#         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN) and \
-#                B in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
-
-#     def test_evc(self):
-#         # Mechanisms
-#         Input = TransferMechanism(
-#             name='Input',
-#         )
-#         reward = TransferMechanism(
-#             output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
-#             name='reward'
-#         )
-#         Decision = DDM(
-#             function=DriftDiffusionAnalytical(
-#                 drift_rate=(
-#                     1.0,
-#                     ControlProjection(
-#                         function=Linear,
-#                         control_signal_params={
-#                             ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
-#                         },
-#                     ),
-#                 ),
-#                 threshold=(
-#                     1.0,
-#                     ControlProjection(
-#                         function=Linear,
-#                         control_signal_params={
-#                             ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
-#                         },
-#                     ),
-#                 ),
-#                 noise=(0.5),
-#                 starting_point=(0),
-#                 t0=0.45
-#             ),
-#             output_states=[
-#                 DECISION_VARIABLE,
-#                 RESPONSE_TIME,
-#                 PROBABILITY_UPPER_THRESHOLD
-#             ],
-#             name='Decision',
-#         )
-#
-#     def test_terminal_objective_mechanism_false(self):
-#         # When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
-#         # ObjectiveMechanism is not marked as terminal. If the ObjectiveMechanism was the only terminal node, then the
-#         # user must use required_roles to assign the terminal role to another node.
-#
-#         c = pnl.Composition()
-#
-#         A = pnl.TransferMechanism()
-#         lvoc = pnl.ControlMechanism()
-#         B = pnl.TransferMechanism()
-#
-#         c.add_linear_processing_pathway([lvoc, A])
-#         c.add_linear_processing_pathway([B, lvoc.objective_mechanism])
-#
-#         c._analyze_graph()
-#         assert lvoc.objective_mechanism not in c.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL)
-#
-#     def test_terminal_objective_mechanism_true_terminal(self):
-#         # When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
-#         # normally.
-#
-#         c = pnl.Composition()
-#
-#         A = pnl.TransferMechanism()
-#         lvoc = pnl.ControlMechanism(
-#                                         terminal_objective_mechanism=True)
-#         B = pnl.TransferMechanism()
-#
-#         c.add_linear_processing_pathway([lvoc, A])
-#         c.add_linear_processing_pathway([B, lvoc.objective_mechanism])
-#
-#         c._analyze_graph()
-#         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL)
-#
-#     def test_terminal_objective_mechanism_true_not_terminal(self):
-#         # If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
-#         # takes on terminal as a required role.
-#         c = pnl.Composition()
-#
-#         A = pnl.TransferMechanism()
-#         lvoc = pnl.ControlMechanism(
-#                                         terminal_objective_mechanism=True
-#                                         )
-#         B = pnl.TransferMechanism()
-#         C = pnl.TransferMechanism()
-#
-#         c.add_linear_processing_pathway([lvoc, A])
-#         c.add_linear_processing_pathway([B, lvoc.objective_mechanism, C])
-#
-#         c._analyze_graph()
-#
-#         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL)
-
 class TestModelBasedOptimizationControlMechanisms:
 
     def test_evc(self):
@@ -359,8 +205,8 @@ class TestModelBasedOptimizationControlMechanisms:
                            name='Decision')
 
         comp = pnl.Composition(name="evc")
-        comp.add_c_node(reward, required_roles=[pnl.CNodeRole.TERMINAL])
-        comp.add_c_node(Decision, required_roles=[pnl.CNodeRole.TERMINAL])
+        comp.add_c_node(reward, required_roles=[pnl.CNodeRole.OUTPUT])
+        comp.add_c_node(Decision, required_roles=[pnl.CNodeRole.OUTPUT])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
@@ -475,10 +321,10 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # Composition
         evc_gratton = pnl.Composition(name="EVCGratton")
-        evc_gratton.add_c_node(Decision, required_roles=pnl.CNodeRole.TERMINAL)
+        evc_gratton.add_c_node(Decision, required_roles=pnl.CNodeRole.OUTPUT)
         for path in pathways:
             evc_gratton.add_linear_processing_pathway(path)
-        evc_gratton.add_c_node(reward, required_roles=pnl.CNodeRole.TERMINAL)
+        evc_gratton.add_c_node(reward, required_roles=pnl.CNodeRole.OUTPUT)
 
         # Control Signals
         signalSearchRange = pnl.SampleSpec(start=1.0, stop=1.8, step=0.2)
