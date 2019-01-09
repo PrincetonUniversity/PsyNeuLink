@@ -1004,7 +1004,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(error_sources=error_sources,
                                                   function=function,
                                                   learning_signals=learning_signals,

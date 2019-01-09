@@ -191,21 +191,22 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
 |                  |               |values based on a supplied method           |execution_id will be passed in if your   |
-|                  |               |(e.g. _output_state_variable_getter)        |method uses them. self - the Parameter       |
+|                  |               |(e.g. _output_state_variable_getter)        |method uses them. self - the Parameter   |
 |                  |               |                                            |calling the setter; owning_component -   |
-|                  |               |                                            |the Component to which the Parameter belongs;|
-|                  |               |                                            |execution_id - the execution_id the      |
-|                  |               |                                            |setter is called with; should return the |
-|                  |               |                                            |value                                    |
+|                  |               |                                            |the Component to which the Parameter     |
+|                  |               |                                            |belongs; execution_id - the execution_id |
+|                  |               |                                            |the setter is called with; should return |
+|                  |               |                                            |the value                                |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      setter      |     None      |hook that allows overriding the setting of  |should take a positional argument; kwargs|
 |                  |               |values based on a supplied method (e.g.     |self, owning_component, and execution_id |
 |                  |               |_recurrent_transfer_mechanism_matrix_setter)|will be passed in if your method uses    |
-|                  |               |                                            |them. self - the Parameter calling the       |
+|                  |               |                                            |them. self - the Parameter calling the   |
 |                  |               |                                            |setter; owning_component - the Component |
-|                  |               |                                            |to which the Parameter belongs; execution_id |
-|                  |               |                                            |- the execution_id the setter is called  |
-|                  |               |                                            |with; should return the value to be set  |
+|                  |               |                                            |to which the Parameter belongs;          |
+|                  |               |                                            |execution_id - the execution_id the      |
+|                  |               |                                            |setter is called with; should return the |
+|                  |               |                                            |value to be set                          |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |     loggable     |     True      |whether the parameter can be logged         |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
@@ -225,6 +226,7 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |                  |               |execution context; if True, the Parameter's |                                         |
 |                  |               |default_value will be returned instead      |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
+
 
 
 
@@ -601,7 +603,8 @@ class Parameter(types.SimpleNamespace):
         history_max_length=1,
         fallback_default=False,
         _owner=None,
-        _inherited=False
+        _inherited=False,
+        _user_specified=False,
     ):
         if isinstance(aliases, str):
             aliases = [aliases]
@@ -632,7 +635,8 @@ class Parameter(types.SimpleNamespace):
             history=history,
             history_max_length=history_max_length,
             fallback_default=fallback_default,
-            _inherited=_inherited
+            _inherited=_inherited,
+            _user_specified=_user_specified,
         )
 
         if _owner is None:

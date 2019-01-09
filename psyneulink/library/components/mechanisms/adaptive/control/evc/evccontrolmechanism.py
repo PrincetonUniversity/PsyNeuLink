@@ -377,6 +377,7 @@ Class Reference
 import itertools
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.core.components.component import function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -881,7 +882,7 @@ class EVCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
                                                   origin_objective_mechanism=origin_objective_mechanism,
@@ -960,7 +961,9 @@ class EVCControlMechanism(ControlMechanism):
         if hasattr(system, CONTROLLER) and hasattr(system.controller, PREDICTION_MECHANISMS):
             self.prediction_mechanisms = system.controller.prediction_mechanisms
             self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
-            self.predicted_input = system.controller.predicted_input
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                self.predicted_input = system.controller.predicted_input
             return
 
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond

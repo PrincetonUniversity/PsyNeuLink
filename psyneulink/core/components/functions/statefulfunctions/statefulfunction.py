@@ -231,7 +231,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         previous_value = self._initialize_previous_value(initializer)
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   previous_value=previous_value,
@@ -464,12 +464,17 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _initialize_previous_value(self, initializer, execution_context=None):
+        val = np.atleast_1d(initializer)
         if execution_context is None:
-            # if this is run during initialization, self.parameters will refer to self.class_parameters
+            # Since this is run during initialization, self.parameters will refer to self.class_parameters
             # because self.parameters has not been created yet
-            self.parameters.previous_value.set(np.atleast_1d(initializer), override=True)
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+                self.previous_value = val
         else:
-            self.parameters.previous_value.set(np.atleast_1d(initializer), execution_context)
+            self.parameters.previous_value.set(val, execution_context)
+
+        return val
 
     def reinitialize(self, *args, execution_context=None):
         """

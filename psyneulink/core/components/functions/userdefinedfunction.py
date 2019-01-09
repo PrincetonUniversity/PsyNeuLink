@@ -437,7 +437,7 @@ class UserDefinedFunction(Function_Base):
                                 format(self.__class__.__name__, custom_function.__name__,
                                        owner.name, default_variable, custom_function.__name__, cust_fct_variable))
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(custom_function=custom_function,
                                                   params=params,
                                                   defaults=defaults,

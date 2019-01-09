@@ -794,7 +794,7 @@ class InputState(State_Base):
         if combine:
             self.combine_function_args = (combine, function)
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
                                                   exponent=exponent,

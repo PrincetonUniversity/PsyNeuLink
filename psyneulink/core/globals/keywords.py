@@ -590,6 +590,7 @@ LOGISTIC_FUNCTION = "Logistic Function"
 RELU_FUNCTION = "ReLU Function"
 ONE_HOT_FUNCTION = "OneHot Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
+GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
 NORMAL_FUNCTION = 'Normal Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "IntegratorFunction Function"
@@ -626,6 +627,7 @@ UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
 EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution Function"
 GAMMA_DIST_FUNCTION = "Gamma Distribution Function"
 WALD_DIST_FUNCTION = "Wald Distribution Function"
+DRIFT_DIFFUSION_ANALYTICAL_FUNCTION = "Drift Diffusion Analytical Function"
 
 # Objective functions
 STABILITY_FUNCTION = 'Stability Function'

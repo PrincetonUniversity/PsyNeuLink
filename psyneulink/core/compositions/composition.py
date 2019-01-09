@@ -1377,7 +1377,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
+
             for node in self.scheduler_processing.consideration_queue[0]:
+
                 if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
@@ -1391,7 +1393,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
-            if graph.get_parents_from_component(node) == []:
+            # KAM added len(node.path_afferents) check 1/7/19 in order to
+            # include nodes that receive mod projections as ORIGIN
+            mod_only = False
+            if hasattr(node, "path_afferents"):
+                if len(node.path_afferents) == 0:
+                    mod_only = True
+                else:
+                    all_input = True
+                    for proj in node.path_afferents:
+                        if not proj.sender.owner is self.input_CIM:
+                            all_input = False
+                            break
+                    if all_input:
+                        mod_only = True
+            if graph.get_parents_from_component(node) == [] or mod_only:
                 if not isinstance(node, ObjectiveMechanism):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
             # Identify Terminal nodes
@@ -2753,7 +2769,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
         # G.attr(compound = 'True')
 
-        processing_graph = self.scheduler_processing.dependency_sets
+        processing_graph = self.scheduler_processing.visual_graph
         # get System's ProcessingMechanisms
         rcvrs = list(processing_graph.keys())
 

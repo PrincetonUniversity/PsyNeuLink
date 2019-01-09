@@ -1188,7 +1188,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             else:
                 output_states.append(additional_output_states)
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   minus_phase_termination_condition=minus_phase_termination_condition,
                                                   minus_phase_termination_criterion=minus_phase_termination_criterion,
@@ -1299,10 +1299,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 current_activity=self.input_states[RECURRENT].socket_template,
                 minus_phase_activity=self.input_states[RECURRENT].socket_template,
                 plus_phase_activity=self.input_states[RECURRENT].socket_template,
-                execution_phase=None
+                execution_phase=None,
+                override=True
             )
             if self._target_included:
-                self.parameters.output_activity.set(self.input_states[TARGET].socket_template)
+                self.parameters.output_activity.set(self.input_states[TARGET].socket_template, override=True)
 
         # Initialize execution_phase as minus_phase
         if self.parameters.execution_phase.get(execution_id) is None:

@@ -559,7 +559,10 @@ class ParamsDict(UserDict):
         if key is not FUNCTION and key is not FUNCTION_PARAMS:
             # function is not stored as an attribute!
             # 7/14/18 - JDC BUG:  ISN'T SETTING VALUE OF AUTOASSOCIATIVEPROJECTION.MATRIX
-            setattr(self.owner, key, item)
+            # suppresses read-only warnings because this is internal
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+                setattr(self.owner, key, item)
 
 parameter_keywords = set()
 
@@ -620,9 +623,9 @@ def make_parameter_property(name):
         if not _parameters_belongs_to_obj(self):
             # set to backing field, which is what gets looked for and discarded when creating an object's parameters
             setattr(self, backing_field, value)
-
-        # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-        getattr(self.parameters, name).set(value, self.most_recent_execution_context, _ro_warning_stacklevel=3)
+        else:
+            # stack level 3 instead of normal 2 to properly show source when setting using dot notation
+            getattr(self.parameters, name).set(value, self.most_recent_execution_context, _ro_warning_stacklevel=3)
 
     return property(getter).setter(setter)
 
@@ -976,6 +979,11 @@ class Component(object, metaclass=ComponentsMeta):
                     )
                 )
             }
+            for p in d:
+                try:
+                    getattr(self.parameters, p)._user_specified = True
+                except AttributeError:
+                    pass
             defaults.update(d)
 
         v = self._handle_default_variable(default_variable, size)
@@ -2122,6 +2130,9 @@ class Component(object, metaclass=ComponentsMeta):
                 try:
                     attr_name = '_{0}'.format(p.name)
                     attr_value = getattr(self, attr_name)
+                    if attr_value is None:
+                        attr_value = p.default_value
+
                     p.set(attr_value, override=True, skip_history=True)
                     delattr(self, attr_name)
                 except AttributeError:
@@ -2302,7 +2313,7 @@ class Component(object, metaclass=ComponentsMeta):
             For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for execution_id
         """
         for (k, v) in kwargs.items():
-            getattr(self.parameters, k).set(v, execution_id, override=override)
+            getattr(self.parameters, k).set(v, execution_id, _ro_warning_stacklevel=3, override=override)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2733,7 +2744,7 @@ class Component(object, metaclass=ComponentsMeta):
             return
         # self.function is NOT OK, so raise exception
         else:
-            raise ComponentError("{0} not specified and {1}.function is not a Function object or class"
+            raise ComponentError("{0} not specified and {1}.function is not a Function object or class "
                                 "or valid method in {2}".
                                 format(FUNCTION, self.__class__.__name__, self.name))
 
