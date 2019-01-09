@@ -627,6 +627,7 @@ UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
 EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution Function"
 GAMMA_DIST_FUNCTION = "Gamma Distribution Function"
 WALD_DIST_FUNCTION = "Wald Distribution Function"
+DRIFT_DIFFUSION_ANALYTICAL_FUNCTION = "Drift Diffusion Analytical Function"
 
 # Objective functions
 STABILITY_FUNCTION = 'Stability Function'

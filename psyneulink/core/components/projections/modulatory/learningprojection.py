@@ -499,7 +499,7 @@ class LearningProjection(ModulatoryProjection_Base):
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(error_function=error_function,
                                                   learning_function=learning_function,
                                                   learning_rate=learning_rate,

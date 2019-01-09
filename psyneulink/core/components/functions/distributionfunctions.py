@@ -32,7 +32,8 @@ from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.globals.keywords import \
     DIST_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, STANDARD_DEVIATION, DIST_MEAN, EXPONENTIAL_DIST_FUNCTION, \
-    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE
+    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE, \
+    DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -60,6 +61,12 @@ class NormalDist(DistributionFunction):
     .. _NormalDist:
 
     Return a random sample from a normal distribution using numpy.random.normal;
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `standard_deviation <NormalDist.standard_deviation>`
+    | *ADDITIVE_PARAM:* `mean <NormalDist.mean>`
+    |
 
     Arguments
     ---------
@@ -134,7 +141,6 @@ class NormalDist(DistributionFunction):
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -143,7 +149,7 @@ class NormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mean=mean,
                                                   standard_deviation=standard_deviation,
                                                   params=params)
@@ -204,6 +210,12 @@ class UniformToNormalDist(DistributionFunction):
         This function requires `SciPy <https://pypi.python.org/pypi/scipy>`_.
 
     (https://github.com/jonasrauber/randn-matlab-python)
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `standard_deviation <UniformToNormalDist.standard_deviation>`
+    | *ADDITIVE_PARAM:* `mean <UniformToNormalDist.mean>`
+    |
 
     Arguments
     ---------
@@ -281,8 +293,8 @@ class UniformToNormalDist(DistributionFunction):
 
         """
         variable = Parameter(np.array([0]), read_only=True)
-        mean = Parameter(0.0, modulable=True)
-        standard_deviation = Parameter(1.0, modulable=True)
+        mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -294,7 +306,7 @@ class UniformToNormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mean=mean,
                                                   standard_deviation=standard_deviation,
                                                   params=params)
@@ -341,6 +353,11 @@ class ExponentialDist(DistributionFunction):
     .. _ExponentialDist:
 
     Return a random sample from a exponential distribution using numpy.random.exponential
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `beta <ExponentialDist.beta>`
+    |
 
     Arguments
     ---------
@@ -399,7 +416,7 @@ class ExponentialDist(DistributionFunction):
                     :type: float
 
         """
-        beta = Parameter(1.0, modulable=True)
+        beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -408,7 +425,7 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(beta=beta,
                                                   params=params)
 
@@ -527,7 +544,7 @@ class UniformDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(low=low,
                                                   high=high,
                                                   params=params)
@@ -568,6 +585,12 @@ class GammaDist(DistributionFunction):
 
     Return a random sample from a gamma distribution using numpy.random.gamma
 
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `scale <GammaDist.scale>`
+    | *ADDITIVE_PARAM:* `dist_shape <GammaDist.dist_shape>`
+    |
+
     Arguments
     ---------
 
@@ -595,10 +618,10 @@ class GammaDist(DistributionFunction):
     ----------
 
     scale : float : default 1.0
-        The dist_shape of the gamma distribution. Should be greater than zero.
+        The scale of the gamma distribution. Should be greater than zero.
 
     dist_shape : float : default 1.0
-        The scale of the gamma distribution. Should be greater than zero.
+        The shape of the gamma distribution. Should be greater than zero.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -638,8 +661,8 @@ class GammaDist(DistributionFunction):
                     :type: float
 
         """
-        scale = Parameter(1.0, modulable=True)
-        dist_shape = Parameter(1.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -649,7 +672,7 @@ class GammaDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(scale=scale,
                                                   dist_shape=dist_shape,
                                                   params=params)
@@ -690,6 +713,12 @@ class WaldDist(DistributionFunction):
      .. _WaldDist:
 
      Return a random sample from a Wald distribution using numpy.random.wald
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `scale <WaldDist.scale>`
+    | *ADDITIVE_PARAM:* `mean <WaldDist.mean>`
+    |
 
      Arguments
      ---------
@@ -759,8 +788,8 @@ class WaldDist(DistributionFunction):
                     :type: float
 
         """
-        scale = Parameter(1.0, modulable=True)
-        mean = Parameter(1.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -770,7 +799,7 @@ class WaldDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(scale=scale,
                                                   mean=mean,
                                                   params=params)
@@ -807,9 +836,6 @@ STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 NON_DECISION_TIME = 't0'
 
-# DDM solution options:
-kwDriftDiffusionAnalytical = "DriftDiffusionAnalytical"
-
 
 def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=None):
     starting_point = owning_component.parameters.starting_point.get(execution_id)
@@ -839,6 +865,12 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
     drift diffusion process as described in `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_.
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `drift_rate <DriftDiffusionAnalytical.drift_rate>`
+    | *ADDITIVE_PARAM:* `starting_point <DriftDiffusionAnalytical.starting_point>`
+    |
 
     Arguments
     ---------
@@ -930,7 +962,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     """
 
-    componentName = kwDriftDiffusionAnalytical
+    componentName = DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -977,8 +1009,8 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     :type: float
 
         """
-        drift_rate = Parameter(1.0, modulable=True)
-        starting_point = Parameter(0.0, modulable=True)
+        drift_rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        starting_point = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         threshold = Parameter(1.0, modulable=True)
         noise = Parameter(0.5, modulable=True)
         t0 = .200
@@ -999,7 +1031,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
                                                   starting_point=starting_point,
                                                   threshold=threshold,

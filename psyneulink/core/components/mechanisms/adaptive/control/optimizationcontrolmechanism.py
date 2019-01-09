@@ -720,7 +720,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.search_function = search_function
         self.search_termination_function = search_termination_function
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(input_states=features,
                                                   feature_function=feature_function,
                                                   origin_objective_mechanism=origin_objective_mechanism,
