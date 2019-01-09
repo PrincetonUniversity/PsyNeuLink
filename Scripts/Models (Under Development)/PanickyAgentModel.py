@@ -1,9 +1,10 @@
+import timeit
 import numpy as np
 from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
-num_trials = 4
+num_trials = 5
 env = ForagerEnv()
 reward = 0
 done = False
@@ -100,9 +101,12 @@ agent_comp._remove_c_node_role(Panicky_control_mech, CNodeRole.ORIGIN)
 agent_comp._remove_c_node_role(Panicky_control_mech.objective_mechanism, CNodeRole.TERMINAL)
 agent_comp._analyze_graph()
 
-agent_comp.show_graph()
+# agent_comp.show_graph()
 
 def main():
+
+    steps = 0
+    start_time = timeit.default_timer()
     for _ in range(num_trials):
         observation = env.reset()
         while True:
@@ -115,8 +119,12 @@ def main():
             })
             action= np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             observation, reward, done, _ = env.step(action)
+            steps +=1
             if done:
                 break
+    stop_time = timeit.default_timer()
+    print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
+          f'{stop_time - start_time:.2f} seconds')
 
 if __name__ == "__main__":
     main()
