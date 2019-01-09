@@ -4,6 +4,10 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
+# *********************************************************************************************************************
+# *********************************************** CONSTANTS ***********************************************************
+# *********************************************************************************************************************
+
 num_trials = 5
 env = ForagerEnv()
 reward = 0
@@ -27,22 +31,18 @@ prey_value_idx = prey_idx * obs_len + obs_coords
 prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
-
-player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
-predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
-
-# For future use:
-values = TransferMechanism(size=3, name="AGENT VALUES")
-reward = TransferMechanism(name="REWARD")
-
 dist = Distance(metric=EUCLIDEAN)
-
 PREDATOR = 0
 PREY = 1
 ATTEND = 0
 DISATTEND = 500
 UNDECIDED = 0
+
+
+# *********************************************************************************************************************
+# *********************************  SAPMLE FUNCTIONS USED FOR CONTROL  ***********************************************
+# *********************************************************************************************************************
+# NOTE:  THESE WILL BE REPLACED BY OCM-SPECIFIC FUNCTIONS (AS DECRIBED BELOW) WHEN THAT IS IMPLEMENTED
 
 def choose_closer_agent_function(variable):
     if variable is None:
@@ -74,10 +74,26 @@ def control_allocation_function(variable):
     else:
         return [[UNDECIDED],[UNDECIDED]]
 
-# Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
-# note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
+
+# *********************************************************************************************************************
+# **************************************  MECHANISMS AND COMPOSITION  *************************************************
+# *********************************************************************************************************************
+
+# Perceptual Mechanisms
+player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
+prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
+predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
+
+# Value and Reward Mechanisms (not yet used;  for future use)
+values = TransferMechanism(size=3, name="AGENT VALUES")
+reward = TransferMechanism(name="REWARD")
+
+# Action Mechanism
+#    Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
+#    note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
 greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
 
+# ControlMechanism
 Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
                                                                                monitored_output_states=[player_obs,
                                                                                                         predator_obs,
@@ -86,22 +102,20 @@ Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(f
                                         control_signals=[(VARIANCE,predator_obs), (VARIANCE,prey_obs)]
 )
 
+# Create Composition
 agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
-agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
-agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
-agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
-agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
-
-# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ORIGIN ROLE:
-agent_comp.add_c_node(Panicky_control_mech, required_roles=CNodeRole.INTERNAL)
-
-# FIX: THIS DOESN'T SUCCEED IN REMOVING THE ROLES:
-agent_comp._analyze_graph()
-agent_comp._remove_c_node_role(Panicky_control_mech, CNodeRole.ORIGIN)
-agent_comp._remove_c_node_role(Panicky_control_mech.objective_mechanism, CNodeRole.TERMINAL)
-agent_comp._analyze_graph()
+agent_comp.add_c_node(player_obs)
+agent_comp.add_c_node(prey_obs)
+agent_comp.add_c_node(predator_obs)
+agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_c_node((Panicky_control_mech))
 
 # agent_comp.show_graph()
+
+
+# *********************************************************************************************************************
+# ******************************************   RUN SIMULATION  ********************************************************
+# *********************************************************************************************************************
 
 def main():
 
