@@ -3,6 +3,10 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
+# *********************************************************************************************************************
+# ******************   Constants **************** *********************************************************************
+# *********************************************************************************************************************
+
 num_trials = 4
 env = ForagerEnv()
 reward = 0
@@ -26,23 +30,18 @@ prey_value_idx = prey_idx * obs_len + obs_coords
 prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
-
-player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
-predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
-
-# For future use:
-values = TransferMechanism(size=3, name="AGENT VALUES")
-reward = TransferMechanism(name="REWARD")
-
 dist = Distance(metric=EUCLIDEAN)
-
 PREDATOR = 0
 PREY = 1
-ATTEND = 0
-DISATTEND = 500
-UNDECIDED = 1
+ATTEND = INF
+DISATTEND = 1/500
+UNDECIDED = 0
 
+# *********************************************************************************************************************
+# ******************    Sample functions used for Control *************************************************************
+# *********************************************************************************************************************
+
+# Used by ObjectiveMechanism (takes the place of eventual OCM evaluate method)
 def choose_closer_agent_function(variable):
     if variable is None:
         return [0,0]
@@ -61,10 +60,10 @@ def choose_closer_agent_function(variable):
             return [PREY]
     return [-1]
 
+# Used by ControlMechanism (takes the place of eventual OCM function)
 def control_allocation_function(variable):
 
-    # FIX: HACK DO DEAL WITH BUG IN WHICH PROJECTION TO Panicky_Control_Mech CAN'T BE SUPPRESSED BY ASSIGNING AS INTERNAL:
-    closest_agent = variable[0]-1
+    closest_agent = variable[0]
 
     if closest_agent == PREDATOR:
         return [[ATTEND],[DISATTEND]]
@@ -73,10 +72,25 @@ def control_allocation_function(variable):
     else:
         return [[UNDECIDED],[UNDECIDED]]
 
-# Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
-# note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
+# *********************************************************************************************************************
+# ******************   Mechanisms and Composition *********************************************************************
+# *********************************************************************************************************************
+
+# Perceptual Mechanisms
+player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
+prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
+predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
+
+# Value and Reward Mechanisms (not yet used;  for future use)
+values = TransferMechanism(size=3, name="AGENT VALUES")
+reward = TransferMechanism(name="REWARD")
+
+# Action Mechanism
+#    Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
+#    note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
 greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
 
+# ControlMechanism
 Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
                                                                                monitored_output_states=[player_obs,
                                                                                                         predator_obs,
@@ -85,13 +99,17 @@ Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(f
                                         control_signals=[(VARIANCE,predator_obs), (VARIANCE,prey_obs)]
 )
 
+# Create Composition
 agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
 agent_comp.add_c_node(player_obs)
 agent_comp.add_c_node(prey_obs)
 agent_comp.add_c_node(predator_obs)
 agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_c_node((Panicky_control_mech))
 
-agent_comp.add_c_node(Panicky_control_mech)
+# *********************************************************************************************************************
+# ******************   Run Simulation  ********** *********************************************************************
+# *********************************************************************************************************************
 
 agent_comp.show_graph()
 
@@ -103,8 +121,9 @@ def main():
                 player_obs:[observation[player_coord_slice]],
                 predator_obs:[observation[predator_coord_slice]],
                 prey_obs:[observation[prey_coord_slice]],
-                # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
-                # reward:[reward],
+                # NOTE: ASSIGNMENT OF INPUT TO Panicky_control_mech IS TO CIRCUMVENT A BUG IN ROLE ASSIGNMENTS
+                #       (INCLUDING MISASSIGNMENT OF ControlMechanism AS ORIGIN MECH) THAT IS CURRENTLY BEING FIXED
+                Panicky_control_mech:[0]
             })
             action= np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             observation, reward, done, _ = env.step(action)
