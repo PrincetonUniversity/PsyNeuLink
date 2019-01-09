@@ -3,10 +3,10 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
-num_trials = 4
-env = ForagerEnv()
-reward = 0
-done = False
+# *********************************************************************************************************************
+# *********************************************** CONSTANTS ***********************************************************
+# *********************************************************************************************************************
+
 
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 3
@@ -58,9 +58,13 @@ agent_comp.add_c_node(player_obs)
 agent_comp.add_c_node(predator_obs)
 agent_comp.add_c_node(prey_obs)
 agent_comp.add_c_node(greedy_action_mech)
+# agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
+# agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
+# agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
+# agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
 
 ocm = OptimizationControlMechanism(# features=[prey_obs, predator_obs],
-                                   features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
+                                   features={SHADOW_EXTERNAL_INPUTS: [prey_obs, predator_obs]},
                                    agent_rep=agent_comp,
                                    function=GridSearch,
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
@@ -83,7 +87,9 @@ agent_comp.enable_model_based_optimizer = True
 #  so just add them to the Composition).
 for projection in greedy_action_mech.projections:
     agent_comp.add_projection(projection)
-agent_comp.show_graph()
+
+# agent_comp.show_graph(show_mechanism_structure='ALL')
+# agent_comp.show_graph()
 
 def main():
     for _ in range(num_trials):
