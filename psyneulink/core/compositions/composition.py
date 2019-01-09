@@ -1452,6 +1452,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
+        # Assign input/output roles:
+        if not self.get_c_nodes_by_role(CNodeRole.INPUT):
+            origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+            for node in origin_nodes:
+                self._add_c_node_role(node, CNodeRole.INPUT)
+
+        if not self.get_c_nodes_by_role(CNodeRole.OUTPUT):
+            terminal_nodes = self.get_c_nodes_by_role(CNodeRole.TERMINAL)
+            if not terminal_nodes:
+                terminal_nodes = self.c_nodes[-1]
+            for node in terminal_nodes:
+                self._add_c_node_role(node, CNodeRole.OUTPUT)
+
         self._create_CIM_states()
 
         self.needs_update_graph = False
@@ -1640,34 +1653,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
 
-            - for each origin node:
-                - if the origin node's external_input_sources specification is True or not listed, create a corresponding
+            - for each INPUT node:
+                - if the INPUT node's external_input_sources specification is True or not listed, create a corresponding
                   InputState and OutputState on the Input CompositionInterfaceMechanism for each "external" InputState
-                  of each origin node, and a Projection between the newly created InputCIM OutputState and the origin
+                  of each INPUT node, and a Projection between the newly created InputCIM OutputState and the INPUT
                   InputState
-                - if the origin node's external_input_sources specification is another origin node, create projections
-                  from that other origin node's corresponding InputCIM OutputStates to the current origin node's
+                - if the INPUT node's external_input_sources specification is another INPUT node, create projections
+                  from that other INPUT node's corresponding InputCIM OutputStates to the current INPUT node's
                   InputStates. The two nodes must have the same shape.
-                - if the origin node's external_input_sources specification is a list, the list must contain only origin
-                  nodes and/or InputStates of origin nodes. In this case, an origin node is shorthand for all of the
-                  InputStates of that origin node. The concatenation of the values of all of the origin nodes specified
+                - if the INPUT node's external_input_sources specification is a list, the list must contain only INPUT
+                  nodes and/or InputStates of INPUT nodes. In this case, an INPUT node is shorthand for all of the
+                  InputStates of that INPUT node. The concatenation of the values of all of the INPUT nodes specified
                   in the list must match the shape of the node whose external_input_sources is being specified.
 
             - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
-              OutputState of each terminal node, and a Projection between the terminal OutputState and the newly created
+              OutputState of each OUTPUT node, and a Projection between the OUTPUT OutputState and the newly created
               OutputCIM InputState
 
             - build two dictionaries:
 
-                (1) input_CIM_states = { Origin Node InputState: (InputCIM InputState, InputCIM OutputState) }
+                (1) input_CIM_states = { INPUT Node InputState: (InputCIM InputState, InputCIM OutputState) }
 
-                (2) output_CIM_states = { Terminal Node OutputState: (OutputCIM InputState, OutputCIM OutputState) }
+                (2) output_CIM_states = { OUTPUT Node OutputState: (OutputCIM InputState, OutputCIM OutputState) }
 
             - delete all of the above for any node States which were previously, but are no longer, classified as
-              Origin/Terminal
+              INPUT/OUTPUT
 
         '''
-        origins_changed = False
 
         if not self.input_CIM.connected_to_composition:
             self.input_CIM.input_states.remove(self.input_CIM.input_state)
@@ -1679,33 +1691,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.output_states.remove(self.output_CIM.output_state)
             self.output_CIM.connected_to_composition = True
 
-        current_origin_input_states = set()
+        current_input_node_input_states = set()
 
         #  INPUT CIMS
-        # loop over all origin nodes
-        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        # loop over all INPUT nodes
+        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
 
         redirected_inputs = set()
-        origin_node_pairs = {}
-        for node in origin_nodes:
-
+        for node in input_nodes:
             if node in self.external_input_sources:
                 if self.external_input_sources[node] == True:
                     pass
-                elif self.external_input_sources[node] in origin_nodes:
+                elif self.external_input_sources[node] in input_nodes:
                     redirected_inputs.add(node)
                     continue
                 elif isinstance(self.external_input_sources[node], list):
                     valid_spec = True
                     for source in self.external_input_sources[node]:
                         if isinstance(source, (Composition, Mechanism)):
-                            if source not in origin_nodes:
+                            if source not in input_nodes:
                                 valid_spec = False
                             elif source in self.external_input_sources:
                                 if self.external_input_sources[source] != True:
                                     valid_spec = False
                         elif isinstance(source, InputState):
-                            if source.owner not in origin_nodes:
+                            if source.owner not in input_nodes:
                                 valid_spec = False
                             elif source.owner in self.external_input_sources:
                                 if self.external_input_sources[source.owner] != True:
@@ -1714,9 +1724,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         redirected_inputs.add(node)
                         continue
                     raise CompositionError("External input source ({0}) specified for {1} is not valid. It contains "
-                                           "either (1) a source which is not an origin node or an InputState of an "
-                                           "origin node, or (2) source which is an origin node (or origin node "
-                                           "InputState), but is already borrowing input from yet another origin node."
+                                           "either (1) a source which is not an INPUT node or an InputState of an "
+                                           "INPUT node, or (2) source which is an INPUT node (or INPUT node "
+                                           "InputState), but is already borrowing input from yet another INPUT node."
                                            .format(self.external_input_sources[node], node.name))
 
                 elif self.external_input_sources[node] == ALL:
@@ -1725,19 +1735,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError("External input source ({0}) specified for {1} is not valid. Must be (1) True "
                                            "[the key node is represented on the input_CIM by one or more pairs of "
-                                           "states that pass its input value], (2) another origin node [the key node "
-                                           "gets its input from another origin node's input_CIM representation], or (3)"
-                                           " a list of origin nodes and/or origin node InputStates [the key node gets "
-                                           "its input from a mix of other origin nodes' input_CIM representations."
+                                           "states that pass its input value], (2) another INPUT node [the key node "
+                                           "gets its input from another INPUT node's input_CIM representation], or (3)"
+                                           " a list of INPUT nodes and/or INPUT node InputStates [the key node gets "
+                                           "its input from a mix of other INPUT nodes' input_CIM representations."
                                            .format(self.external_input_sources[node], node.name))
 
             for input_state in node.external_input_states:
                 # add it to our set of current input states
-                current_origin_input_states.add(input_state)
+                current_input_node_input_states.add(input_state)
 
                 # if there is not a corresponding CIM output state, add one
                 if input_state not in set(self.input_CIM_states.keys()):
-                    origins_changed = True
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        variable=input_state.defaults.value,
                                                        reference_value=input_state.defaults.value,
@@ -1764,7 +1773,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # allow projections from CIM to ANY node listed in external_input_sources
         for node in self.external_input_sources:
 
-            if node not in origin_nodes or node in redirected_inputs:
+            if node not in input_nodes or node in redirected_inputs:
 
                 cim_rep = self.external_input_sources[node]
                 expanded_cim_rep = []
@@ -1786,9 +1795,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "items in list must be a Mechanism, Composition, InputStates, or "
                                                    "None.".format(rep, node.name, cim_rep))
                 elif cim_rep is ALL:
-                    for origin_node in origin_nodes:
-                        if origin_node not in redirected_inputs:
-                            for state in origin_node.external_input_states:
+                    for node in input_nodes:
+                        if node not in redirected_inputs:
+                            for state in node.external_input_states:
                                 expanded_cim_rep.append(state)
                 else:
                     raise CompositionError("Invalid external_input_sources specified for {}: {}. Must be a Mechanism, "
@@ -1798,9 +1807,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node in redirected_inputs:
                     # each node in redirected inputs requires an input for each of its input states
                     if len(node.external_input_states) != len(expanded_cim_rep) and len(expanded_cim_rep) > 0:
-                        raise CompositionError("The origin source specification of {0} ({1}) has an "
+                        raise CompositionError("The input source specification of {0} ({1}) has an "
                                                "incompatible number of external input states. {0} has {2} external "
-                                               "input states while the origin source specification has a total of {3}."
+                                               "InputStates while the input source specification has a total of {3}."
                                                .format(node.name,
                                                        cim_rep,
                                                            len(node.external_input_states),
@@ -1808,9 +1817,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # for non-origin nodes, too few origin sources specified is ok, but too many is not
                 if len(expanded_cim_rep) > len(node.external_input_states):
-                    raise CompositionError("The origin source specification of {0} ({1}) has too many external input "
-                                           "states. {0} has {2} external input states while the origin source "
-                                           "specification has a total of {3}."
+                    raise CompositionError("The input source specification of {0} ({1}) has too many external "
+                                           "InputStates states. {0} has {2} external InputStates while the input source"
+                                           " specification has a total of {3}."
                                            .format(node.name,
                                                    cim_rep,
                                                    len(node.external_input_states),
@@ -1843,18 +1852,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
-        # For any states still registered on the CIM that does not map to a corresponding ORIGIN node I.S.:
-        for input_state in sends_to_input_states.difference(current_origin_input_states):
-            origins_changed = True
+        # For any states still registered on the CIM that does not map to a corresponding INPUT node I.S.:
+        for input_state in sends_to_input_states.difference(current_input_node_input_states):
             for projection in input_state.path_afferents:
                 if projection.sender == self.input_CIM_states[input_state][1]:
-                    # remove the corresponding projection from the ORIGIN node's path afferents
+                    # remove the corresponding projection from the INPUT node's path afferents
                     input_state.path_afferents.remove(projection)
 
                     # projection.receiver.efferents.remove(projection)
                     # Bug? ^^ projection is not in receiver.efferents??
 
-            # remove the CIM input and output states associated with this Origin node input state
+            # remove the CIM input and output states associated with this INPUT node input state
             self.input_CIM.input_states.remove(self.input_CIM_states[input_state][0])
             self.input_CIM.output_states.remove(self.input_CIM_states[input_state][1])
 
@@ -1862,12 +1870,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del self.input_CIM_states[input_state]
 
         # OUTPUT CIMS
-        # loop over all terminal nodes
-
-        current_terminal_output_states = set()
-        for node in self.get_c_nodes_by_role(CNodeRole.TERMINAL):
+        # loop over all OUTPUT nodes
+        current_output_node_output_states = set()
+        for node in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
             for output_state in node.output_states:
-                current_terminal_output_states.add(output_state)
+                current_output_node_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_states.keys()):
 
@@ -1898,15 +1905,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
-        previous_terminal_output_states = set(self.output_CIM_states.keys())
-        for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
+        previous_output_node_output_states = set(self.output_CIM_states.keys())
+        for output_state in previous_output_node_output_states.difference(current_output_node_output_states):
             # remove the CIM input and output states associated with this Terminal Node output state
             self.output_CIM.remove_states(self.output_CIM_states[output_state][0])
             self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
-
-        # if origins_changed:     # only update prediction mechanisms if the origin node(s) changed
-        #     self._instantiate_prediction_mechanisms(context=context)
 
     def _assign_values_to_input_CIM(self, inputs, execution_id=None):
         """

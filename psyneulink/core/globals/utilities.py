@@ -1569,8 +1569,7 @@ COMMENT
     OBJECTIVE = 10
     INPUT = 11
     OUTPUT = 12
-    TARGET = 13
-    RESULT = 14
+    RESULT = 13
 
 
 def unproxy_weakproxy(proxy):
