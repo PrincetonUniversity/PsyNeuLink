@@ -3,10 +3,10 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
-num_trials = 4
-env = ForagerEnv()
-reward = 0
-done = False
+# *********************************************************************************************************************
+# *********************************************** CONSTANTS ***********************************************************
+# *********************************************************************************************************************
+
 
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 3

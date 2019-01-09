@@ -4,7 +4,6 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
-
 # Runtime Switches:
 PNL=True
 RENDER = True
@@ -27,6 +26,11 @@ prey_value_idx = 8
 
 player_len = prey_len = predator_len = obs_len
 
+
+# *********************************************************************************************************************
+# **************************************  MECHANISMS AND COMPOSITION  *************************************************
+# *********************************************************************************************************************
+
 if PERCEPT_DISTORT:
     player = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=0), name="PLAYER OBS")
     prey = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=0), name="PREY OBS")
@@ -48,6 +52,16 @@ agent_comp.add_c_node(prey)
 agent_comp.add_c_node(greedy_action_mech)
 
 # agent_comp.show_graph()
+
+
+# *********************************************************************************************************************
+# ******************************************   RUN SIMULATION  ********************************************************
+# *********************************************************************************************************************
+
+num_trials = 4
+env = ForagerEnv()
+reward = 0
+done = False
 
 def main():
     num_trials = 4
