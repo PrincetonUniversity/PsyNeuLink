@@ -59,8 +59,7 @@ def choose_closer_agent_function(variable):
 
 def control_allocation_function(variable):
 
-    # FIX: HACK DO DEAL WITH BUG IN WHICH PROJECTION TO Panicky_Control_Mech CAN'T BE SUPPRESSED BY ASSIGNING AS INTERNAL:
-    closest_agent = variable[0]-1
+    closest_agent = variable[0]
 
     if closest_agent == PREDATOR:
         return [[ATTEND],[DISATTEND]]
@@ -128,6 +127,7 @@ def main():
                 player_obs:[observation[player_coord_slice]],
                 predator_obs:[observation[predator_coord_slice]],
                 prey_obs:[observation[prey_coord_slice]],
+                Panicky_control_mech:[0]
                 # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
                 # reward:[reward],
             })
