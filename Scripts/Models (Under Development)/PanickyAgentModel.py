@@ -4,6 +4,9 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
+# Runtime Switches:
+RENDER = False
+
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
@@ -111,13 +114,17 @@ agent_comp.add_c_node((Panicky_control_mech))
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_trials = 5
-env = ForagerEnv()
-reward = 0
-done = False
+num_trials = 4
 
 def main():
 
+    env = ForagerEnv()
+    reward = 0
+    done = False
+    if RENDER:
+        env.render()  # If visualization is desired
+    else:
+        print("Running simulation...")
     steps = 0
     start_time = timeit.default_timer()
     for _ in range(num_trials):
@@ -139,6 +146,9 @@ def main():
     stop_time = timeit.default_timer()
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
           f'{stop_time - start_time:.2f} seconds')
+    if RENDER:
+        env.render()  # If visualization is desired
+
 
 if __name__ == "__main__":
     main()

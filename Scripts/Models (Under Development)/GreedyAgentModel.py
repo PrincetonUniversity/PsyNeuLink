@@ -6,7 +6,7 @@ from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime Switches:
 PNL=True
-RENDER = True
+RENDER = False
 PERCEPT_DISTORT = False
 PNL_COMPILE = False
 
@@ -59,17 +59,15 @@ agent_comp.add_c_node(greedy_action_mech)
 # *********************************************************************************************************************
 
 num_trials = 4
-env = ForagerEnv()
-reward = 0
-done = False
 
 def main():
-    num_trials = 4
     env = ForagerEnv()
     reward = 0
     done = False
     if RENDER:
         env.render()  # If visualization is desired
+    else:
+        print("Running simulation...")
     steps = 0
     start_time = timeit.default_timer()
     for _ in range(num_trials):
