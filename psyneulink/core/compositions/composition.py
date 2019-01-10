@@ -3011,7 +3011,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         __execution.cuda_execute(inputs)
                         return __execution.extract_node_output(self.output_CIM)
 
-                # Filter out mechanisms. Nested nodes are not executed in this mode
+                # Filter out mechanisms. Nested compositions are not executed in this mode
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
