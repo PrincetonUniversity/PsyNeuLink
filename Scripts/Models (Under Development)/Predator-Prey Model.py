@@ -73,7 +73,7 @@ def dist_diff_fct(variable):
     dist_to_prey = dist([player_coord, prey_coord])
     return dist_to_predator - dist_to_prey
 
-ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [prey_obs, predator_obs]},
+ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
                                    agent_rep=agent_comp,
                                    function=GridSearch,
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
