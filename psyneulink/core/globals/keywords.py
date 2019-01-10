@@ -469,13 +469,13 @@ COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_ASSIGNMENT = 'Deferred Assignment'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
-USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
-FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
-FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
+USER_PARAMS = 'user_params' # Parameters available to user for inspection in user_params dict
+FUNCTION = "function" # Parameter name for function, method, or type to instantiate and assign to self.execute
+FUNCTION_PARAMS  = "function_params" # Parameters used to instantiate or assign to a FUNCTION
 
 PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
-PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
-PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
+PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Parameters used to instantiate a Function; supercede paramClassDefaults
+PARAMS_CURRENT = "paramsCurrent"                  # Parameters currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
@@ -590,6 +590,7 @@ LOGISTIC_FUNCTION = "Logistic Function"
 RELU_FUNCTION = "ReLU Function"
 ONE_HOT_FUNCTION = "OneHot Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
+GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
 NORMAL_FUNCTION = 'Normal Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "IntegratorFunction Function"
@@ -626,6 +627,7 @@ UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
 EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution Function"
 GAMMA_DIST_FUNCTION = "Gamma Distribution Function"
 WALD_DIST_FUNCTION = "Wald Distribution Function"
+DRIFT_DIFFUSION_ANALYTICAL_FUNCTION = "Drift Diffusion Analytical Function"
 
 # Objective functions
 STABILITY_FUNCTION = 'Stability Function'
@@ -681,8 +683,8 @@ DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
-kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
-kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
+kwMechanismParamValue = "Mechanism Parameter Value"                 # Used to specify mechanism param value
+kwMechanismDefaultParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
 CONDITION = 'condition'
 
 # Keywords for OUTPUT_STATE_VARIABLE dict:
@@ -849,7 +851,7 @@ CALCULATE = 'assign'  # For backward compatibility with CALCULATE
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
 
-# Attributes / KVO keypaths / Params
+# Attributes / KVO keypaths / Parameters
 PROJECTION = "Projection"
 PROJECTION_TYPE = "PROJECTION_TYPE"
 PROJECTION_PARAMS = "ProjectionParams"

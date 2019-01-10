@@ -306,15 +306,15 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.functions.learningfunctions import Hebbian, ContrastiveHebbian
+from psyneulink.core.components.functions.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
@@ -879,7 +879,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     """
     componentType = CONTRASTIVE_HEBBIAN_MECHANISM
 
-    class Params(RecurrentTransferMechanism.Params):
+    class Parameters(RecurrentTransferMechanism.Parameters):
         """
             Attributes
             ----------
@@ -1054,7 +1054,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         """
         variable = np.array([[0, 0]])
-        current_activity = Param(None, aliases=['recurrent_activity'])
+        current_activity = Parameter(None, aliases=['recurrent_activity'])
         plus_phase_activity = None
         minus_phase_activity = None
         current_termination_condition = None
@@ -1062,28 +1062,28 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         phase_execution_count = 0
         phase_terminated = False
 
-        input_size = Param(None, stateful=False, loggable=False)
-        hidden_size = Param(None, stateful=False, loggable=False)
-        target_size = Param(None, stateful=False, loggable=False)
-        separated = Param(True, stateful=False, loggable=False)
-        mode = Param(None, stateful=False, loggable=False)
-        continuous = Param(True, stateful=False, loggable=False)
-        clamp = Param(HARD_CLAMP, stateful=False, loggable=False)
-        combination_function = Param(None, stateful=False, loggable=False)
-        minus_phase_termination_condition = Param(CONVERGENCE, stateful=False, loggable=False)
-        plus_phase_termination_condition = Param(CONVERGENCE, stateful=False, loggable=False)
-        learning_function = Param(ContrastiveHebbian, stateful=False, loggable=False)
+        input_size = Parameter(None, stateful=False, loggable=False)
+        hidden_size = Parameter(None, stateful=False, loggable=False)
+        target_size = Parameter(None, stateful=False, loggable=False)
+        separated = Parameter(True, stateful=False, loggable=False)
+        mode = Parameter(None, stateful=False, loggable=False)
+        continuous = Parameter(True, stateful=False, loggable=False)
+        clamp = Parameter(HARD_CLAMP, stateful=False, loggable=False)
+        combination_function = Parameter(None, stateful=False, loggable=False)
+        minus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
+        plus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
+        learning_function = Parameter(ContrastiveHebbian, stateful=False, loggable=False)
 
-        output_activity = Param(None, read_only=True, getter=_CHM_output_activity_getter)
-        input_activity = Param(None, read_only=True, getter=_CHM_input_activity_getter)
-        hidden_activity = Param(None, read_only=True, getter=_CHM_hidden_activity_getter)
-        target_activity = Param(None, read_only=True, getter=_CHM_target_activity_getter)
+        output_activity = Parameter(None, read_only=True, getter=_CHM_output_activity_getter)
+        input_activity = Parameter(None, read_only=True, getter=_CHM_input_activity_getter)
+        hidden_activity = Parameter(None, read_only=True, getter=_CHM_hidden_activity_getter)
+        target_activity = Parameter(None, read_only=True, getter=_CHM_target_activity_getter)
 
-        execution_phase = Param(None, read_only=True)
-        is_finished_ = Param(False, read_only=True)
+        execution_phase = Parameter(None, read_only=True)
+        is_finished_ = Parameter(False, read_only=True)
 
-        minus_phase_termination_criterion = Param(0.01, modulable=True)
-        plus_phase_termination_criterion = Param(0.01, modulable=True)
+        minus_phase_termination_criterion = Parameter(0.01, modulable=True)
+        plus_phase_termination_criterion = Parameter(0.01, modulable=True)
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
@@ -1188,7 +1188,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             else:
                 output_states.append(additional_output_states)
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   minus_phase_termination_condition=minus_phase_termination_condition,
                                                   minus_phase_termination_criterion=minus_phase_termination_criterion,
@@ -1264,7 +1264,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
-            size = len(mech.instance_defaults.variable[0])
+            size = len(mech.defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
 
         return AutoAssociativeProjection(owner=mech,
@@ -1293,11 +1293,17 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Set minus_phase activity, plus_phase, current_activity and initial_value
             #    all  to zeros with size of Mechanism's array
             # Should be OK to use attributes here because initialization should only occur during None context
-            self._initial_value = self.current_activity = self.minus_phase_activity = self.plus_phase_activity = \
-                self.input_states[RECURRENT].socket_template
+            self._set_multiple_parameter_values(
+                None,
+                initial_value=self.input_states[RECURRENT].socket_template,
+                current_activity=self.input_states[RECURRENT].socket_template,
+                minus_phase_activity=self.input_states[RECURRENT].socket_template,
+                plus_phase_activity=self.input_states[RECURRENT].socket_template,
+                execution_phase=None,
+                override=True
+            )
             if self._target_included:
-                self.output_activity = self.input_states[TARGET].socket_template
-            self.execution_phase = None
+                self.parameters.output_activity.set(self.input_states[TARGET].socket_template, override=True)
 
         # Initialize execution_phase as minus_phase
         if self.parameters.execution_phase.get(execution_id) is None:

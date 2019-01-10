@@ -72,7 +72,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
-from psyneulink.core.globals.parameters import Defaults, Param, Parameters
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, CNodeRole, call_with_pruned_args
 from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
@@ -415,7 +415,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
 
-    class Params(Parameters):
+    class Parameters(ParametersBase):
         """
             Attributes
             ----------
@@ -433,10 +433,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :type: list
 
         """
-        results = Param([], loggable=False)
-        simulation_results = Param([], loggable=False)
+        results = Parameter([], loggable=False)
+        simulation_results = Parameter([], loggable=False)
 
-    class _CompilationData(Parameters):
+    class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         context_struct = None
@@ -505,8 +505,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
+        self._initialize_parameters()
+
         # Compiled resources
         self.__generated_wrappers = {}
         self.__compiled_mech = {}
@@ -1375,7 +1377,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
+
             for node in self.scheduler_processing.consideration_queue[0]:
+
                 if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
@@ -1389,7 +1393,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
-            if graph.get_parents_from_component(node) == []:
+            # KAM added len(node.path_afferents) check 1/7/19 in order to
+            # include nodes that receive mod projections as ORIGIN
+            mod_only = False
+            if hasattr(node, "path_afferents"):
+                if len(node.path_afferents) == 0:
+                    mod_only = True
+                else:
+                    all_input = True
+                    for proj in node.path_afferents:
+                        if not proj.sender.owner is self.input_CIM:
+                            all_input = False
+                            break
+                    if all_input:
+                        mod_only = True
+            if graph.get_parents_from_component(node) == [] or mod_only:
                 if not isinstance(node, ObjectiveMechanism):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
             # Identify Terminal nodes
@@ -1583,7 +1601,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #             # Then, check that each input_state is receiving the right size of input
     #             for i, value in enumerate(timestep):
     #                 val_length = len(value)
-    #                 state_length = len(mech.input_state.instance_defaults.variable)
+    #                 state_length = len(mech.input_state.defaults.variable)
     #                 if val_length != state_length:
     #                     raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
     #                                      "{!s} where the InputState takes values of length {!s}".
@@ -1612,7 +1630,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Then, check that each input_state is receiving the right size of input
                 for i, value in enumerate(timestep):
                     val_length = len(value)
-                    state_length = len(mech.input_state.instance_defaults.value)
+                    state_length = len(mech.input_state.defaults.value)
                     if val_length != state_length:
                         raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
                                          "{!s} where the InputState takes values of length {!s}".
@@ -1730,7 +1748,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
-                                                         default_variable=self.input_CIM.variable,
+                                                         default_variable=self.input_CIM.defaults.variable,
                                                          function=InterfaceStateMap(corresponding_input_state=interface_input_state),
                                                          name="INPUT_CIM_" + node.name + "_" + OutputState.__name__)
 
@@ -1857,15 +1875,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if output_state not in set(self.output_CIM_states.keys()):
 
                     interface_input_state = InputState(owner=self.output_CIM,
-                                                       variable=output_state.instance_defaults.value,
-                                                       reference_value=output_state.instance_defaults.value,
+                                                       variable=output_state.defaults.value,
+                                                       reference_value=output_state.defaults.value,
                                                        name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
                         function=InterfaceStateMap(corresponding_input_state=interface_input_state),
-                        reference_value=output_state.instance_defaults.value,
+                        reference_value=output_state.defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
@@ -1919,7 +1937,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         value = inputs[origin_node][index]
 
                     else:
-                        value = origin_node.instance_defaults.variable[index]
+                        value = origin_node.defaults.variable[index]
 
             build_CIM_input.append(value)
 
@@ -2751,7 +2769,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
         # G.attr(compound = 'True')
 
-        processing_graph = self.scheduler_processing.dependency_sets
+        processing_graph = self.scheduler_processing.visual_graph
         # get System's ProcessingMechanisms
         rcvrs = list(processing_graph.keys())
 
@@ -3198,6 +3216,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
+
         return output_values
 
     def reinitialize(self, values, execution_context=NotImplemented):
@@ -3285,7 +3304,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sets the values of nodes before the start of the run. This is useful in cases where a node's value is
                 used before that node executes for the first time (usually due to recurrence or control).
 
-            runtime_params : Dict[Node: Dict[Param: Tuple(Value, Condition)]]
+            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
                 `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
                 during this `Run` when the specified `Condition` is met.
@@ -3398,6 +3417,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.parameters.results.set(full_results, execution_id)
             # KAM added the [-1] index after changing Composition run()
             # behavior to return only last trial of run (11/7/18)
+            self.most_recent_execution_context = execution_id
             return full_results[-1]
 
         # --- RESET FOR NEXT TRIAL ---
@@ -3492,6 +3512,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             full_results.extend(results)
 
         self.parameters.results.set(full_results, execution_id)
+
+        self.most_recent_execution_context = execution_id
         return trial_output
 
     # def save_state(self):
@@ -4096,7 +4118,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-            # need to update input states in order to get correct value for "outcome" (from objective mech) 
+            # need to update input states in order to get correct value for "outcome" (from objective mech)
             self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
 
             outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
@@ -4170,7 +4192,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def default_external_input_values(self):
         """Returns the default values of all external InputStates that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_state.instance_defaults.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
+            return [input_state.defaults.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
 
@@ -4201,10 +4223,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def output_state(self):
         """Returns the index 0 OutputState that belongs to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_states[0]
-
-    @property
-    def results(self):
-        return self.parameters.results.get(self.default_execution_id)
 
     @property
     def class_parameters(self):

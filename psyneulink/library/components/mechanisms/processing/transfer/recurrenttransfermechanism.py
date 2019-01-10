@@ -201,7 +201,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -809,7 +809,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
-    class Params(TransferMechanism.Params):
+    class Parameters(TransferMechanism.Parameters):
         """
             Attributes
             ----------
@@ -887,18 +887,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :type: float
 
         """
-        matrix = Param(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
-        auto = Param(1, modulable=True)
-        hetero = Param(0, modulable=True)
+        matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
+        auto = Parameter(1, modulable=True)
+        hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
-        integration_rate = Param(0.5, modulable=True)
+        integration_rate = Parameter(0.5, modulable=True)
         convergence_function = Distance(metric=MAX_ABS_DIFF)
-        noise = Param(0.0, modulable=True)
-        smoothing_factor = Param(0.5, modulable=True)
+        noise = Parameter(0.0, modulable=True)
+        smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
-        learning_function = Param(Hebbian, stateful=False, loggable=False)
-        learning_rate = Param(None, modulable=True)
-        learning_condition = Param(None, stateful=False, loggable=False)
+        learning_function = Parameter(Hebbian, stateful=False, loggable=False)
+        learning_rate = Parameter(None, modulable=True)
+        learning_condition = Parameter(None, stateful=False, loggable=False)
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
@@ -954,7 +954,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = enable_learning
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
@@ -976,7 +976,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         try:
             if auto is None and hetero is None:
                 if isinstance(self.matrix, list):
-                    self._matrix = np.asarray(self.matrix)
+                    self.matrix = np.asarray(self.matrix)
                 temp_matrix = self.matrix.copy()
                 self._auto = np.diag(temp_matrix).copy()
                 np.fill_diagonal(temp_matrix, 0)
@@ -1071,7 +1071,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
                                format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size,
-                                      self.instance_defaults.variable))
+                                      self.defaults.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
                                format(MATRIX, self.name, rows, self.recurrent_size))
@@ -1116,7 +1116,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.previous_value = None
+        self.parameters.previous_value.set(None, override=True)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1208,17 +1208,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             # If combination_function is a method of a subclass, let it pass
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
-                    self._combination_function = comb_fct(default_variable=self.instance_defaults.variable)
+                    self.combination_function = comb_fct(default_variable=self.defaults.variable)
                 elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
                     pass
                 else:
-                    self._combination_function = UserDefinedFunction(custom_function=comb_fct,
-                                                                     default_variable=self.instance_defaults.variable)
+                    self.combination_function = UserDefinedFunction(custom_function=comb_fct,
+                                                                     default_variable=self.defaults.variable)
             else:
-                self._combination_function = comb_fct
+                self.combination_function = comb_fct
 
         else:
-            self._combination_function = None
+            self.combination_function = None
 
         if self.auto is None and self.hetero is None:
             self.matrix = specified_matrix
@@ -1246,7 +1246,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.configure_learning(context=context)
 
         if ENERGY in self.output_states.names:
-            energy = Stability(self.instance_defaults.variable[0],
+            energy = Stability(self.defaults.variable[0],
                                metric=ENERGY,
                                transfer_fct=self.function,
                                matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -1254,7 +1254,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if ENTROPY in self.output_states.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
-                entropy = Stability(self.instance_defaults.variable[0],
+                entropy = Stability(self.defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
                                     matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -1393,7 +1393,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
-            size = len(mech.instance_defaults.variable[0])
+            size = len(mech.defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
@@ -1482,13 +1482,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
         if learning_condition:
-            self._learning_condition = learning_condition
+            self.learning_condition = learning_condition
 
         if not isinstance(self.learning_condition, Condition):
             if self.learning_condition is CONVERGENCE:
-                self._learning_condition = WhenFinished(self)
+                self.learning_condition = WhenFinished(self)
             elif self.learning_condition is UPDATE:
-                self._learning_condition = None
+                self.learning_condition = None
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
@@ -1508,7 +1508,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     # def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
     #
     #     if self.context.initialization_status != ContextFlags.INITIALIZING:
-    #         self.previous_value = self.value
+    #         self.parameters.previous_value.set(self.value, override=True)
     #     self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
     #     return self._output
     #     # return super()._execute(variable, runtime_params, context)
@@ -1588,7 +1588,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Initialize to output state defaults. That is what the recurrent
         # projection finds.
-        retval_init = (tuple(os.instance_defaults.value) if not np.isscalar(os.instance_defaults.value) else os.instance_defaults.value for os in self.output_states)
+        retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_states)
         return tuple((transfer_init, projection_init, tuple(retval_init)))
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

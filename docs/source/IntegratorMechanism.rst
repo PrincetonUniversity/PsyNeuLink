@@ -3,4 +3,4 @@ IntegratorMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.processing.integratormechanism
    :members:
-   :exclude-members: random, Params
+   :exclude-members: random, Parameters

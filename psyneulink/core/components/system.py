@@ -458,7 +458,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.core.globals.log import Log
-from psyneulink.core.globals.parameters import Defaults, Param
+from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.core.globals.registry import register_category
@@ -624,7 +624,7 @@ class System(System_Base):
         + registry (dict): ProcessRegistry
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
+        + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
                                 CONTROLLER: None}
        Class methods
@@ -637,7 +637,7 @@ class System(System_Base):
         - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, context):  executes Mechanisms in order specified by execution_list
-        - instance_defaults.variable(value):  setter for instance_defaults.variable;  does some kind of error checking??
+        - defaults.variable(value):  setter for defaults.variable;  does some kind of error checking??
 
        SystemRegistry
        --------------
@@ -854,7 +854,7 @@ class System(System_Base):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
-    class Params(System_Base.Params):
+    class Parameters(System_Base.Parameters):
         """
             Attributes
             ----------
@@ -926,7 +926,7 @@ class System(System_Base):
 
         self.projections = []
 
-        # fAssign args to params and functionParams dicts (kwConstants must == arg names)
+        # fAssign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(processes=processes,
                                                   initial_values=initial_values,
                                                   # controller=controller,
@@ -1033,7 +1033,7 @@ class System(System_Base):
         These calls must be made before _instantiate_function as the latter may be called during init for validation
         :param function:
         """
-        self._instantiate_processes(input=self.instance_defaults.variable, context=context)
+        self._instantiate_processes(input=self.defaults.variable, context=context)
         self._instantiate_graph(context=context)
         self._instantiate_learning_graph(context=context)
 
@@ -1060,10 +1060,10 @@ class System(System_Base):
             value = self.processes[-1].output_state.value
             try:
                 # Could be mutable, so assign copy
-                self.instance_defaults.value = value.copy()
+                self.defaults.value = value.copy()
             except AttributeError:
                 # Immutable, so just assign value
-                self.instance_defaults.value = value
+                self.defaults.value = value
 
     def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
@@ -1631,18 +1631,18 @@ class System(System_Base):
         # Create instance of sequential (execution) list:
         self.execution_list = self._toposort_with_ordered_mechs(self.execution_graph)
 
-        # Construct self.instance_defaults.variable from inputs to ORIGIN mechanisms
-        self.instance_defaults.variable = []
+        # Construct self.defaults.variable from inputs to ORIGIN mechanisms
+        self.defaults.variable = []
         for mech in self.origin_mechanisms:
             orig_mech_input = []
             for input_state in mech.input_states:
                 orig_mech_input.append(input_state.value)
-            self.instance_defaults.variable.append(orig_mech_input)
-        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
+            self.defaults.variable.append(orig_mech_input)
+        self.defaults.variable = convert_to_np_array(self.defaults.variable, 2)
         # should add Utility to allow conversion to 3D array
-        # An example: when input state values are vectors, then self.instance_defaults.variable is a 3D array because
+        # An example: when input state values are vectors, then self.defaults.variable is a 3D array because
         # an origin mechanism could have multiple input states if there is a recurrent input state. However,
-        # if input state values are all non-vector objects, such as strings, then self.instance_defaults.variable
+        # if input state values are all non-vector objects, such as strings, then self.defaults.variable
         # would be a 2D array. so we should convert that to a 3D array
 
         # Instantiate StimulusInputStates
@@ -1650,14 +1650,14 @@ class System(System_Base):
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
-        # FIX: ONLY CHECKS FIRST ITEM OF self.instance_defaults.value (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
+        # FIX: ONLY CHECKS FIRST ITEM OF self.defaults.value (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         if self.initial_values is not None:
             for mech, value in self.initial_values.items():
                 if not mech in self.execution_graph:
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                       format(mech.name, self.name))
-                if not iscompatible(value, mech.instance_defaults.value[0]):
+                if not iscompatible(value, mech.defaults.value[0]):
                     raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                       format(value, self.name, append_type_to_name(self)))
 
@@ -1676,16 +1676,16 @@ class System(System_Base):
                 continue
             # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
             # origin mechanism (useful only if origin mechanism is a KWTAMechanism) Check, for each ORIGIN mechanism,
-            # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
-            #  ORIGIN inputState's instance_defaults.variable attribute
+            # that the length of the corresponding item of self.defaults.variable matches the length of the
+            #  ORIGIN inputState's defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
                 if origin_mech.input_states[j].internal_only:
                     continue
-                if len(self.instance_defaults.variable[i][j]) != origin_mech.input_states[j].socket_width:
+                if len(self.defaults.variable[i][j]) != origin_mech.input_states[j].socket_width:
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".
                                       format(i,
-                                             len(self.instance_defaults.variable[i][j]),
+                                             len(self.defaults.variable[i][j]),
                                              origin_mech.input_states[j].socket_width,
                                              origin_mech.name))
                 stimulus_input_state = SystemInputState(owner=self,
@@ -2039,7 +2039,7 @@ class System(System_Base):
                                                       target_mech.name))
 
                 system_target_input_state = SystemInputState(owner=self,
-                                                        variable=TARGET_input_state.instance_defaults.variable,
+                                                        variable=TARGET_input_state.defaults.variable,
                                                         prefs=self.prefs,
                                                         name="System Target for {}".format(target_mech.name),
                                                         context=context)
@@ -2080,7 +2080,7 @@ class System(System_Base):
                 target_mech_TARGET_input_state = target_mech.input_states[TARGET]
 
                 # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
-                #    of the TARGET (ComparatorMechanism) target inputState's instance_defaults.variable attribute
+                #    of the TARGET (ComparatorMechanism) target inputState's defaults.variable attribute
                 if len(self.targets[i]) != len(target_mech_TARGET_input_state.value):
                     raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
                                       "expected for its TARGET Mechanism {}".
@@ -2737,9 +2737,9 @@ class System(System_Base):
             if (self.prefs.verbosePref and not (self.parameters.context.get(execution_id).source == ContextFlags.COMMAND_LINE or
                                                 self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
-            input = np.zeros_like(self.instance_defaults.variable)
+            input = np.zeros_like(self.defaults.variable)
             for i in range(num_origin_mechs):
-                input[i] = self.origin_mechanisms[i].instance_defaults.variable
+                input[i] = self.origin_mechanisms[i].defaults.variable
 
         else:
             num_inputs = len(input)
@@ -3227,9 +3227,8 @@ class System(System_Base):
         if execution_id is None:
             execution_id = self.default_execution_id
 
-        self._assign_context_values(execution_id)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if not (ContextFlags.SIMULATION & self.parameters.context.get(execution_id).flags):
+        if self.parameters.context.get(execution_id) is None or not (ContextFlags.SIMULATION & self.parameters.context.get(execution_id).flags):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         for mechanism in reinitialize_values:
@@ -5011,7 +5010,7 @@ class SystemInputState(OutputState):
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
            in Projection_Base._instantiate_sender()
 
-           self.value is used to represent the item of the targets arg to system.execute or system.run
+           value is used to represent the item of the targets arg to system.execute or system.run
     COMMENT
 
     A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
@@ -5024,7 +5023,7 @@ class SystemInputState(OutputState):
     <System.terminal_mechanisms>`.  See `System_Mechanisms` and `System_Execution` for additional details.
 
     """
-    class Params(OutputState.Params):
+    class Parameters(OutputState.Parameters):
         """
             Attributes
             ----------
@@ -5045,8 +5044,8 @@ class SystemInputState(OutputState):
 
         """
         # just grabs input from the process
-        variable = Param(np.array([0]), read_only=True)
-        value = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
+        value = Parameter(np.array([0]), read_only=True)
 
     def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
@@ -5064,7 +5063,7 @@ class SystemInputState(OutputState):
         self.efferents = []
         self.owner = owner
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
         self.parameters.value.set(variable, override=True)

@@ -321,7 +321,7 @@ from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
-from psyneulink.core.globals.parameters import Param, get_validator_by_function, get_validator_by_type_only
+from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
@@ -419,7 +419,7 @@ class ControlSignal(ModulatorySignal):
         adjustment_cost_function=Linear,                          \
         duration_cost_function=IntegratorFunction,                        \
         combine_costs_function=Reduce(operation=SUM),             \
-        allocation_samples=self.ClassDefaults.allocation_samples, \
+        allocation_samples=self.class_defaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
         projections=None                                          \
         params=None,                                              \
@@ -620,7 +620,7 @@ class ControlSignal(ModulatorySignal):
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
-    class Params(ModulatorySignal.Params):
+    class Parameters(ModulatorySignal.Parameters):
         """
             Attributes
             ----------
@@ -700,11 +700,11 @@ class ControlSignal(ModulatorySignal):
 
         """
         # NOTE: if the specification of this getter is happening in several other classes, should consider
-        # refactoring Param to allow individual attributes to be inherited, othwerise, leaving this is an
+        # refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an
         # isolated case
-        variable = Param(np.array(defaultControlAllocation), aliases='allocation', getter=_output_state_variable_getter)
-        value = Param(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'])
-        allocation_samples = Param(np.arange(0.1, 1.01, 0.3), modulable=True)
+        variable = Parameter(np.array(defaultControlAllocation), aliases='allocation', getter=_output_state_variable_getter)
+        value = Parameter(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'])
+        allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
         cost_options = ControlSignalCosts.DEFAULTS
 
         intensity_cost = None
@@ -770,7 +770,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Params.allocation_samples.default_value,
+                 allocation_samples:tc.any(list, range, np.ndarray, SampleSpec)=Parameters.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,
@@ -794,7 +794,7 @@ class ControlSignal(ModulatorySignal):
         # If index has not been specified, but the owner has, control_allocation has been determined, so use that
         index = index or SEQUENTIAL
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(function=function,
                                                   cost_options=cost_options,
                                                   intensity_cost_function=intensity_cost_function,
@@ -890,7 +890,7 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
         # Validate allocation samples list:
-        # - default is 1D np.array (defined by self.ClassDefaults.allocation_samples)
+        # - default is 1D np.array (defined by self.class_defaults.allocation_samples)
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
         if ALLOCATION_SAMPLES in request_set:
@@ -950,9 +950,9 @@ class ControlSignal(ModulatorySignal):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -992,9 +992,9 @@ class ControlSignal(ModulatorySignal):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -1144,7 +1144,7 @@ class ControlSignal(ModulatorySignal):
     #         raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
     #                                  format(ALLOCATION_SAMPLES))
     #     else:
-    #         sample_range = self.ClassDefaults.allocation_samples
+    #         sample_range = self.class_defaults.allocation_samples
     #     self._allocation_samples = []
     #     i = sample_range[0]
     #     while i < sample_range[1]:
@@ -1158,10 +1158,6 @@ class ControlSignal(ModulatorySignal):
     @intensity.setter
     def intensity(self, new_value):
         self._intensity = new_value
-
-    @property
-    def control_signal(self):
-        return self.value
 
     @tc.typecheck
     def assign_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
@@ -1278,23 +1274,6 @@ class ControlSignal(ModulatorySignal):
             self.parameters.adjustment_cost.get(execution_context),
             self.parameters.duration_cost.get(execution_context)
         ]
-
-    @property
-    def value(self):
-        # In case the ControlSignal has not yet been assigned (and its value is INITIALIZING or DEFERRED_INITIALIZATION
-        if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
-            return None
-        else:
-            return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.log._log_value(assignment)
-
-    @property
-    def intensity(self):
-        return self.value
 
     @property
     def cost(self):

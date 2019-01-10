@@ -49,7 +49,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared, powerset, tensor_power
 
 __all__ = ['PREDICTION_TERMS', 'PV', 'RegressionCFA']
@@ -143,7 +143,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     '''
 
-    class Params(CompositionFunctionApproximator.Params):
+    class Parameters(CompositionFunctionApproximator.Parameters):
         """
             Attributes
             ----------
@@ -173,7 +173,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     :type: `Function`
 
         """
-        update_weights = Param(BayesGLM, stateful=False, loggable=False)
+        update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
         prediction_vector = None
         previous_state = None
         regression_weights = None
@@ -421,7 +421,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     try:
                         v = c.variable
                     except:
-                        v = c.instance_defaults.variable
+                        v = c.defaults.variable
                 elif isinstance(c, type):
                     if issubclass(c, ControlSignal):
                         v = c.class_defaults.variable
@@ -431,7 +431,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 else:
                     state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
                     v = state_spec_dict[VARIABLE]
-                    v = v or ControlSignal.class_defaults.variable
+                    v = v or ControlSignal.defaults.variable
                 control_allocation.append(v)
             self.control_signal_functions = [c.function for c in control_signals]
             self._compute_costs = [c.compute_costs for c in control_signals]

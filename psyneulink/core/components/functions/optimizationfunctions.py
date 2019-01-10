@@ -36,7 +36,7 @@ from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import call_with_pruned_args
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
@@ -543,7 +543,7 @@ class OptimizationFunction(Function_Base):
 
     componentType = OPTIMIZATION_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -612,21 +612,21 @@ class OptimizationFunction(Function_Base):
                     :type: <class 'function'>
 
         """
-        variable = Param(np.array([0, 0, 0]), read_only=True)
+        variable = Parameter(np.array([0, 0, 0]), read_only=True)
 
-        objective_function = Param(lambda x: 0, stateful=False, loggable=False)
-        search_function = Param(lambda x: x, stateful=False, loggable=False)
-        search_termination_function = Param(lambda x, y, z: True, stateful=False, loggable=False)
-        search_space = Param([SampleIterator([0])], stateful=False, loggable=False)
+        objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
+        search_function = Parameter(lambda x: x, stateful=False, loggable=False)
+        search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
+        search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
 
         save_samples = False
         save_values = False
 
         # these are created as parameter states, but should they be?
-        max_iterations = Param(None, modulable=True)
+        max_iterations = Parameter(None, modulable=True)
 
-        saved_samples = Param([], read_only=True)
-        saved_values = Param([], read_only=True)
+        saved_samples = Parameter([], read_only=True)
+        saved_values = Parameter([], read_only=True)
 
     @tc.typecheck
     def __init__(self,
@@ -669,7 +669,7 @@ class OptimizationFunction(Function_Base):
         else:
             self.search_space = search_space
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(save_samples=save_samples,
                                                   save_values=save_values,
                                                   max_iterations=max_iterations,
@@ -733,7 +733,7 @@ class OptimizationFunction(Function_Base):
         self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
-            self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
+            self.defaults.variable = args[0][DEFAULT_VARIABLE]
         if OBJECTIVE_FUNCTION in args[0] and args[0][OBJECTIVE_FUNCTION] is not None:
             self.objective_function = args[0][OBJECTIVE_FUNCTION]
             if OBJECTIVE_FUNCTION in self._unspecified_args:
@@ -1039,7 +1039,7 @@ class GradientOptimization(OptimizationFunction):
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
 
-    class Params(OptimizationFunction.Params):
+    class Parameters(OptimizationFunction.Parameters):
         """
             Attributes
             ----------
@@ -1102,17 +1102,17 @@ class GradientOptimization(OptimizationFunction):
                     :type: float
 
         """
-        variable = Param([[0], [0]], read_only=True)
+        variable = Parameter([[0], [0]], read_only=True)
 
         # these should be removed and use switched to .get_previous()
-        previous_variable = Param([[0], [0]], read_only=True)
-        previous_value = Param([[0], [0]], read_only=True)
+        previous_variable = Parameter([[0], [0]], read_only=True)
+        previous_value = Parameter([[0], [0]], read_only=True)
 
-        annealing_function = Param(None, stateful=False, loggable=False)
+        annealing_function = Parameter(None, stateful=False, loggable=False)
 
-        step = Param(1.0, modulable=True)
-        convergence_threshold = Param(.001, modulable=True)
-        max_iterations = Param(1000, modulable=True)
+        step = Parameter(1.0, modulable=True)
+        convergence_threshold = Parameter(.001, modulable=True)
+        max_iterations = Parameter(1000, modulable=True)
 
         direction = ASCENT
         convergence_criterion = VALUE
@@ -1146,7 +1146,7 @@ class GradientOptimization(OptimizationFunction):
             self.direction = -1
         self.annealing_function = annealing_function
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(step=step,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
@@ -1374,7 +1374,7 @@ class GridSearch(OptimizationFunction):
 
     componentName = GRID_SEARCH_FUNCTION
 
-    class Params(OptimizationFunction.Params):
+    class Parameters(OptimizationFunction.Parameters):
         """
             Attributes
             ----------
@@ -1404,7 +1404,7 @@ class GridSearch(OptimizationFunction):
                     :type: bool
 
         """
-        grid = Param(None)
+        grid = Parameter(None)
         save_samples = True
         save_values = True
 
@@ -1430,7 +1430,7 @@ class GridSearch(OptimizationFunction):
         self.num_iterations = 1
         self.direction = direction
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
@@ -1765,7 +1765,7 @@ class GaussianProcess(OptimizationFunction):
 
     componentName = GAUSSIAN_PROCESS_FUNCTION
 
-    class Params(OptimizationFunction.Params):
+    class Parameters(OptimizationFunction.Parameters):
         """
             Attributes
             ----------
@@ -1796,7 +1796,7 @@ class GaussianProcess(OptimizationFunction):
                     :type: bool
 
         """
-        variable = Param([[0], [0]], read_only=True)
+        variable = Parameter([[0], [0]], read_only=True)
 
         save_samples = True
         save_values = True
@@ -1823,7 +1823,7 @@ class GaussianProcess(OptimizationFunction):
 
         self.direction = direction
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
@@ -1851,10 +1851,10 @@ class GaussianProcess(OptimizationFunction):
         #         raise OptimizationFunctionError("The specification for the {} arg of {} must be a list or array".
         #                                         format(repr(SEARCH_SPACE), self.__class__.__name__))
         #     # must have same number of items as variable
-        #     if len(search_space) != len(self.instance_defaults.variable):
+        #     if len(search_space) != len(self.defaults.variable):
         #         raise OptimizationFunctionError("The number of items in {} for {} ([]) must equal that of its {} ({})".
         #                                         format(repr(SEARCH_SPACE), self.__class__.__name__, len(search_space),
-        #                                                repr(VARIABLE), len(self.instance_defaults.variable)))
+        #                                                repr(VARIABLE), len(self.defaults.variable)))
         #     # every item must be a tuple with two elements, both of which are scalars, and first must be <= second
         #     for i in search_space:
         #         if not isinstance(i, tuple) or len(i) != 2:

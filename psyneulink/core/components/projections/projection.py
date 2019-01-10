@@ -396,7 +396,7 @@ from psyneulink.core.components.states.modulatorysignals.modulatorysignal import
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -495,7 +495,7 @@ class Projection_Base(Projection):
             + registry (dict): ProjectionRegistry
             + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + ClassDefaults.variable (value): [0]
+            + class_defaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
             + FUNCTION (Function class or object, or method)
@@ -583,7 +583,7 @@ class Projection_Base(Projection):
     className = componentCategory
     suffix = " " + className
 
-    class Params(Projection.Params):
+    class Parameters(Projection.Parameters):
         """
             Attributes
             ----------
@@ -607,9 +607,9 @@ class Projection_Base(Projection):
                     :type:
 
         """
-        weight = Param(None, modulable=True)
-        exponent = Param(None, modulable=True)
-        function = Param(LinearMatrix, stateful=False, loggable=False)
+        weight = Parameter(None, modulable=True)
+        exponent = Parameter(None, modulable=True)
+        function = Parameter(LinearMatrix, stateful=False, loggable=False)
 
     registry = ProjectionRegistry
 
@@ -662,7 +662,7 @@ class Projection_Base(Projection):
                             that is a ParameterState;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before _instantiate_sender, as it validates PROJECTION_SENDER
-            - instantatiate_sender may alter self.instance_defaults.variable, so it must be called before _validate_function
+            - instantatiate_sender may alter self.defaults.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (_instantiate_sender)
@@ -725,7 +725,7 @@ class Projection_Base(Projection):
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                              format(self.sender, self.name, self.ClassDefaults.variable))
+                              format(self.sender, self.name, self.class_defaults.variable))
             variable = None
 
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState

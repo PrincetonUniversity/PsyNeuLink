@@ -151,11 +151,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None):
 
         if default_variable is None and size is None:
-            default_variable = self.ClassDefaults.variable
+            default_variable = self.class_defaults.variable
         self.composition = composition
         self.connected_to_composition = False
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
                                                   params=params)

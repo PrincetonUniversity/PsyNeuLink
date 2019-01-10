@@ -6,4 +6,4 @@ MemoryFunctions
 
 .. automodule:: psyneulink.core.components.functions.statefulfunctions.memoryfunctions
    :members:
-   :exclude-members: Params
+   :exclude-members: Parameters

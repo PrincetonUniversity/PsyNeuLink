@@ -109,7 +109,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -286,7 +286,7 @@ class ControlProjection(ModulatoryProjection_Base):
         sender=[CONTROL_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class Params(ModulatoryProjection_Base.Params):
+    class Parameters(ModulatoryProjection_Base.Parameters):
         """
             Attributes
             ----------
@@ -305,8 +305,8 @@ class ControlProjection(ModulatoryProjection_Base):
                     :type: `Function`
 
         """
-        function = Param(Linear, stateful=False, loggable=False)
-        control_signal = Param(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter)
+        function = Parameter(Linear, stateful=False, loggable=False)
+        control_signal = Parameter(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -325,7 +325,7 @@ class ControlProjection(ModulatoryProjection_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(function=function,
                                                   control_signal_params=control_signal_params,
                                                   params=params)
@@ -354,7 +354,7 @@ class ControlProjection(ModulatoryProjection_Base):
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
-        Insure that sender.value = self.instance_defaults.variable
+        Insure that sender.value = self.defaults.variable
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultController is being assigned as sender and, if so:

@@ -98,7 +98,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -273,7 +273,7 @@ class GatingProjection(ModulatoryProjection_Base):
         sender=[GATING_SIGNAL]
         receiver=[INPUT_STATE, OUTPUT_STATE]
 
-    class Params(ModulatoryProjection_Base.Params):
+    class Parameters(ModulatoryProjection_Base.Parameters):
         """
             Attributes
             ----------
@@ -292,8 +292,8 @@ class GatingProjection(ModulatoryProjection_Base):
                     :read only: True
 
         """
-        function = Param(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
-        gating_signal = Param(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter)
+        function = Parameter(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
+        gating_signal = Parameter(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -312,7 +312,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(function=function,
                                                   gating_signal_params=gating_signal_params,
                                                   params=params)

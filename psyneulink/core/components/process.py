@@ -472,7 +472,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
-from psyneulink.core.globals.parameters import Defaults, Param
+from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -560,7 +560,7 @@ class Process(Process_Base):
         registry : dict : default ProcessRegistry
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
+        + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PATHWAY: []}
 
         Class methods
@@ -620,7 +620,7 @@ class Process(Process_Base):
             attribute.
 
     COMMENT
-        input_value :  2d np.array : default ``instance_defaults.variable``
+        input_value :  2d np.array : default ``defaults.variable``
             same as the `variable <Process.variable>` attribute of the Process; contains the `value
             <InputState.value>` of each ProcessInputState in its `process_input_states` attribute.
     COMMENT
@@ -823,7 +823,7 @@ class Process(Process_Base):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
-    class Params(Process_Base.Params):
+    class Parameters(Process_Base.Parameters):
         """
             Attributes
             ----------
@@ -876,7 +876,7 @@ class Process(Process_Base):
         pathway = pathway or []
         self.projections = []
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(pathway=pathway,
                                                   initial_values=initial_values,
                                                   clamp_input=clamp_input,
@@ -897,7 +897,7 @@ class Process(Process_Base):
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
-            default_variable = pathway[0].instance_defaults.variable
+            default_variable = pathway[0].defaults.variable
 
         self.default_execution_id = self.name
 
@@ -995,7 +995,7 @@ class Process(Process_Base):
                 - if Projection is NOT explicitly specified,
                     but the next Mechanism already has a Projection from the previous one, use that;
                 - otherwise, instantiate a default MappingProjection from previous Mechanism to next:
-                    use kwIdentity (identity matrix) if len(sender.value) == len(receiver.instance_defaults.variable)
+                    use kwIdentity (identity matrix) if len(sender.value) == len(receiver.defaults.variable)
                     use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if the lengths are not equal
                     use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if LEARNING has been set
 
@@ -1077,10 +1077,10 @@ class Process(Process_Base):
             # MODIFIED 6/24/18 END
             try:
                 # Could be mutable, so assign copy
-                self.instance_defaults.value = value.copy()
+                self.defaults.value = value.copy()
             except AttributeError:
                 # Immutable, so just assign value
-                self.instance_defaults.value = value
+                self.defaults.value = value
 
     def _parse_and_instantiate_mechanism_entries(self, pathway, context=None):
 
@@ -1169,7 +1169,7 @@ class Process(Process_Base):
                 if not mech in self.mechanisms:
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in pathway for \'{}\'".
                                       format(mech.name, self.name))
-                if not iscompatible(value, mech.instance_defaults.variable):
+                if not iscompatible(value, mech.defaults.variable):
                     raise SystemError("{} (in initial_values arg for {}) is not a valid value for {}".
                                       format(value,
                                              append_type_to_name(self),
@@ -1722,13 +1722,13 @@ class Process(Process_Base):
         - create process_input_state, as sender for MappingProjection to the ORIGIN Mechanism.input_state
         - create the MappingProjection (with process_input_state as sender, and ORIGIN Mechanism as receiver)
 
-        If number of Process inputs == len(ORIGIN Mechanism.instance_defaults.variable):
+        If number of Process inputs == len(ORIGIN Mechanism.defaults.variable):
             - create one Projection for each of the ORIGIN Mechanism.input_state(s)
-        If number of Process inputs == 1 but len(ORIGIN Mechanism.instance_defaults.variable) > 1:
+        If number of Process inputs == 1 but len(ORIGIN Mechanism.defaults.variable) > 1:
             - create a Projection for each of the ORIGIN Mechanism.input_states, and provide Process' input to each
-        If number of Process inputs > 1 but len(ORIGIN Mechanism.instance_defaults.variable) == 1:
+        If number of Process inputs > 1 but len(ORIGIN Mechanism.defaults.variable) == 1:
             - create one Projection for each Process input and assign all to ORIGIN Mechanism.input_state
-        Otherwise,  if number of Process inputs != len(ORIGIN Mechanism.instance_defaults.) and both > 1:
+        Otherwise,  if number of Process inputs != len(ORIGIN Mechanism.defaults.) and both > 1:
             - raise exception:  ambiguous mapping from Process input values to ORIGIN Mechanism's input_states
 
         :param Mechanism:
@@ -1737,15 +1737,15 @@ class Process(Process_Base):
 
         # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
 
-        process_input = self.instance_defaults.variable
+        process_input = self.defaults.variable
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)
 
         # Get number of mechanism.input_states
-        #    - assume mechanism.instance_defaults.variable is a 2D np.array, and that
-        #    - there is one inputState for each item (1D array) in mechanism.instance_defaults.variable
-        num_mechanism_input_states = len(mechanism.instance_defaults.variable)
+        #    - assume mechanism.defaults.variable is a 2D np.array, and that
+        #    - there is one inputState for each item (1D array) in mechanism.defaults.variable
+        num_mechanism_input_states = len(mechanism.defaults.variable)
 
         # There is a mismatch between number of Process inputs and number of mechanism.input_states:
         if num_process_inputs > 1 and num_mechanism_input_states > 1 and num_process_inputs != num_mechanism_input_states:
@@ -1794,11 +1794,11 @@ class Process(Process_Base):
                 if mechanism.input_states[i].internal_only:
                     continue
                 for j in range(num_process_inputs):
-                    if not iscompatible(process_input[j], mechanism.instance_defaults.variable[i]):
+                    if not iscompatible(process_input[j], mechanism.defaults.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                            "variable ({3}) for inputState {4} of {5}".
                                            format(j, process_input[j], self.name,
-                                                  mechanism.instance_defaults.variable[i], i, mechanism.name))
+                                                  mechanism.defaults.variable[i], i, mechanism.name))
                     # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.input_state
                     proj = MappingProjection(sender=self.process_input_states[j],
                             receiver=mechanism.input_states[i],
@@ -1826,7 +1826,7 @@ class Process(Process_Base):
             input = list(input.values())[0]
         # Validate input
         if input is None:
-            input = self.first_mechanism.instance_defaults.variable
+            input = self.first_mechanism.defaults.variable
             if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
                                                 self.parameters.context.get(execution_id).initializaton_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
@@ -2681,11 +2681,11 @@ class ProcessInputState(OutputState):
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection_Base._instantiate_sender()
 
-       self.value is used to represent the corresponding item of the input arg to process.execute or process.run
+       value is used to represent the corresponding item of the input arg to process.execute or process.run
     COMMENT
 
     """
-    class Params(OutputState.Params):
+    class Parameters(OutputState.Parameters):
         """
             Attributes
             ----------
@@ -2706,8 +2706,8 @@ class ProcessInputState(OutputState):
 
         """
         # just grabs input from the process
-        variable = Param(np.array([0]), read_only=True)
-        value = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
+        value = Parameter(np.array([0]), read_only=True)
 
     def __init__(self, owner=None, variable=None, name=None, prefs=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
@@ -2722,26 +2722,14 @@ class ProcessInputState(OutputState):
         self.efferents = []
         self.owner = owner
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
         self.parameters.value.set(variable, override=True)
 
-        # MODIFIED 2/17/17 NEW:
-        # self.owner.input = self.value
-        # MODIFIED 2/17/17 END
         # self.path_afferents = []
         # self.index = PRIMARY
         # self.assign = None
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.owner._update_input()
 
     @property
     def _dependent_components(self):

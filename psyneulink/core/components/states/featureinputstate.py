@@ -466,7 +466,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import EXPONENT, FEATURE_INPUT_STATE, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SIZE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible
@@ -675,7 +675,7 @@ class FeatureInputState(InputState):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
-    class Params(State_Base.Params):
+    class Parameters(State_Base.Parameters):
         """
             Attributes
             ----------
@@ -705,11 +705,11 @@ class FeatureInputState(InputState):
                     :type:
 
         """
-        function = Param(LinearCombination(operation=SUM), stateful=False, loggable=False)
-        weight = Param(None, modulable=True)
-        exponent = Param(None, modulable=True)
+        function = Parameter(LinearCombination(operation=SUM), stateful=False, loggable=False)
+        weight = Parameter(None, modulable=True)
+        exponent = Parameter(None, modulable=True)
         combine = None
-        internal_only = Param(False, stateful=False, loggable=False)
+        internal_only = Parameter(False, stateful=False, loggable=False)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -929,7 +929,7 @@ class FeatureInputState(InputState):
                     if not variable:
                         # Try to assign number of items = number of projections, each with default variable length
                         try:
-                            state_dict[VARIABLE] = np.zeros_like(self.instance_defaults.variable) * \
+                            state_dict[VARIABLE] = np.zeros_like(self.defaults.variable) * \
                                                    len(params_dict[PROJECTIONS])
                         # FeatureInputState's default variable has not yet been defined
                         except AttributeError:
@@ -1026,7 +1026,7 @@ class FeatureInputState(InputState):
 
     @property
     def socket_width(self):
-        return self.instance_defaults.variable.shape[-1]
+        return self.defaults.variable.shape[-1]
 
     @property
     def socket_template(self):
@@ -1074,7 +1074,7 @@ class FeatureInputState(InputState):
             variable = [variable]
 
         # if function is None, use State's default function
-        function = function or FeatureInputState.ClassDefaults.function
+        function = function or FeatureInputState.defaults.function
 
         return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 
@@ -1086,7 +1086,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     If input_states is not specified:
         - use owner.input_states as list of FeatureInputState specifications
-        - if owner.input_states is empty, user owner.instance_defaults.variable to create a default FeatureInputState
+        - if owner.input_states is empty, user owner.defaults.variable to create a default FeatureInputState
 
     When completed:
         - self.input_states contains a ContentAddressableList of one or more input_states
@@ -1097,7 +1097,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
         - if there is only one FeatureInputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
-              parses self.instance_defaults.variable (2D np.array, passed in reference_value)
+              parses self.defaults.variable (2D np.array, passed in reference_value)
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
@@ -1114,7 +1114,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_type=FeatureInputState,
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
-                                                                         else owner.instance_defaults.variable,
+                                                                         else owner.defaults.variable,
                                          # reference_value=reference_value,
                                          reference_value_name=VALUE,
                                          context=context)
@@ -1125,12 +1125,12 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     else:
         owner._input_states = state_list
 
-    # Check that number of input_states and their variables are consistent with owner.instance_defaults.variable,
+    # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not
     variable_item_is_OK = False
     for i, input_state in enumerate(owner.input_states):
         try:
-            variable_item_is_OK = iscompatible(owner.instance_defaults.variable[i], input_state.value)
+            variable_item_is_OK = iscompatible(owner.defaults.variable[i], input_state.value)
             if not variable_item_is_OK:
                 break
         except IndexError:
@@ -1138,15 +1138,15 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             break
 
     if not variable_item_is_OK:
-        old_variable = owner.instance_defaults.variable
-        owner.instance_defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_states])
+        old_variable = owner.defaults.variable
+        owner.defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_states])
 
         if owner.verbosePref:
             warnings.warn(
                 "Variable for {} ({}) has been adjusted to match number and format of its input_states: ({})".format(
                     old_variable,
                     append_type_to_name(owner),
-                    owner.instance_defaults.variable,
+                    owner.defaults.variable,
                 )
             )
 

@@ -42,7 +42,7 @@ from psyneulink.core.globals.keywords import PREDICTION_ERROR_DELTA_FUNCTION, CO
     COMBINE_MEANS_FUNCTION, kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
 
@@ -59,7 +59,7 @@ class CombinationFunction(Function_Base):
     """
     componentType = COMBINATION_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -73,7 +73,7 @@ class CombinationFunction(Function_Base):
 
         """
         # variable = np.array([0, 0])
-        variable = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -119,7 +119,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
     Reduce(                                       \
-         default_variable=ClassDefaults.variable, \
+         default_variable=class_defaults.variable, \
          weights=None,                            \
          exponents=None,                          \
          operation=SUM,                           \
@@ -144,7 +144,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     Arguments
     ---------
 
-    default_variable : list or np.array : default ClassDefaults.variable
+    default_variable : list or np.array : default class_defaults.variable
         specifies a template for the value to be transformed and its default value;  all entries must be numeric.
 
     weights : 1d or 2d np.array : default None
@@ -223,7 +223,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -262,8 +262,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         weights = None
         exponents = None
         operation = SUM
-        scale = Param(1.0, modulable=True)
-        offset = Param(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -281,7 +281,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -327,17 +327,17 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_1d(target_set[WEIGHTS])
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                if len(target_set[WEIGHTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of elements in variable ({1})".
-                                        format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
+                                        format(len(target_set[WEIGHTS]), len(self.defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_1d(target_set[EXPONENTS])
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
+                if len(target_set[EXPONENTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of elements in variable ({1})".
-                                        format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
+                                        format(len(target_set[EXPONENTS]), len(self.defaults.variable)))
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
@@ -359,7 +359,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         Arguments
         ---------
 
-        variable : list or np.array : default ClassDefaults.variable
+        variable : list or np.array : default class_defaults.variable
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
@@ -485,7 +485,7 @@ class LinearCombination(
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default ClassDefaults.variable
+    variable : 1d or 2d np.array : default class_defaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
     weights : scalar or 1d or 2d np.array : default None
@@ -607,7 +607,7 @@ class LinearCombination(
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -645,10 +645,10 @@ class LinearCombination(
         """
         operation = SUM
 
-        weights = Param(None, modulable=True)
-        exponents = Param(None, modulable=True)
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        weights = Parameter(None, modulable=True)
+        exponents = Parameter(None, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -664,7 +664,7 @@ class LinearCombination(
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -729,16 +729,16 @@ class LinearCombination(
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if np.array(target_set[WEIGHTS]).shape != self.instance_defaults.variable.shape:
+                if np.array(target_set[WEIGHTS]).shape != self.defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
-                                        format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
+                                        format(len(target_set[WEIGHTS]), len(self.defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if np.array(target_set[EXPONENTS]).shape != self.instance_defaults.variable.shape:
+                if np.array(target_set[EXPONENTS]).shape != self.defaults.variable.shape:
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
-                                        format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
+                                        format(len(target_set[EXPONENTS]), len(self.defaults.variable)))
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
@@ -755,12 +755,12 @@ class LinearCombination(
                 if not scale_is_a_scalar:
                     err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
-                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
-                               self.instance_defaults.variable.size)
-                    if len(self.instance_defaults.variable.shape) == 0:
+                        format(scale.shape, scale.size, self.defaults.variable.shape,
+                               self.defaults.variable.size)
+                    if len(self.defaults.variable.shape) == 0:
                         raise FunctionError(err_msg)
-                    if (scale.shape != self.instance_defaults.variable.shape) and \
-                            (scale.shape != self.instance_defaults.variable.shape[1:]):
+                    if (scale.shape != self.defaults.variable.shape) and \
+                            (scale.shape != self.defaults.variable.shape[1:]):
                         raise FunctionError(err_msg)
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
@@ -778,12 +778,12 @@ class LinearCombination(
                 if not offset_is_a_scalar:
                     err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
-                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
-                               self.instance_defaults.variable.size)
-                    if len(self.instance_defaults.variable.shape) == 0:
+                        format(offset.shape, offset.size, self.defaults.variable.shape,
+                               self.defaults.variable.size)
+                    if len(self.defaults.variable.shape) == 0:
                         raise FunctionError(err_msg)
-                    if (offset.shape != self.instance_defaults.variable.shape) and \
-                            (offset.shape != self.instance_defaults.variable.shape[1:]):
+                    if (offset.shape != self.defaults.variable.shape) and \
+                            (offset.shape != self.defaults.variable.shape[1:]):
                         raise FunctionError(err_msg)
 
                         # if not operation:
@@ -802,7 +802,7 @@ class LinearCombination(
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default ClassDefaults.variable
+        variable : 1d or 2d np.array : default class_defaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
@@ -906,7 +906,7 @@ class LinearCombination(
         # FIXME: Workaround a special case of simple array.
         #        It should just pass through to modifiers, which matches what
         #        single element 2d array does
-        default_var = np.atleast_2d(self.instance_defaults.variable)
+        default_var = np.atleast_2d(self.defaults.variable)
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
@@ -1073,7 +1073,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default ClassDefaults.variable
+    variable : 1d or 2d np.array : default class_defaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
     weights : 1d or 2d np.array : default None
@@ -1191,7 +1191,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -1230,8 +1230,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         weights = None
         exponents = None
         operation = SUM
-        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1249,7 +1249,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -1296,16 +1296,16 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                if len(target_set[WEIGHTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
-                                        format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
+                                        format(len(target_set[WEIGHTS]), len(self.defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
+                if len(target_set[EXPONENTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
-                                        format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable.shape)))
+                                        format(len(target_set[EXPONENTS]), len(self.defaults.variable.shape)))
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
@@ -1318,13 +1318,13 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                                     format(SCALE, self.name, scale))
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(scale, np.ndarray) and
-                        (scale.size != self.instance_defaults.variable.size or
-                                 scale.shape != self.instance_defaults.variable.shape)):
+                        (scale.size != self.defaults.variable.size or
+                                 scale.shape != self.defaults.variable.shape)):
                     raise FunctionError("Scale is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                                        format(scale.shape, scale.size, self.defaults.variable.shape,
+                                               self.defaults.variable.size))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -1337,13 +1337,13 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                                     format(OFFSET, self.name, offset))
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(offset, np.ndarray) and
-                        (offset.size != self.instance_defaults.variable.size or
-                                 offset.shape != self.instance_defaults.variable.shape)):
+                        (offset.size != self.defaults.variable.size or
+                                 offset.shape != self.defaults.variable.shape)):
                     raise FunctionError("Offset is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                                        format(offset.shape, offset.size, self.defaults.variable.shape,
+                                               self.defaults.variable.size))
 
                     # if not operation:
                     #     raise FunctionError("Operation param missing")
@@ -1361,7 +1361,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default ClassDefaults.variable
+        variable : 1d or 2d np.array : default class_defaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
@@ -1480,7 +1480,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Params(CombinationFunction.Params):
+    class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
@@ -1499,7 +1499,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
         """
         variable = np.array([[1], [1]])
-        gamma = Param(1.0, modulable=True)
+        gamma = Parameter(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     multiplicative_param = None
@@ -1513,7 +1513,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts
-        # (kwConstants must == arg names)
+        # 
         params = self._assign_args_to_param_dicts(gamma=gamma,
                                                   params=params)
 
@@ -1593,11 +1593,11 @@ class PredictionErrorDeltaFunction(CombinationFunction):
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.EXECUTING):
                 if len(target_set[WEIGHTS]) != len(
-                        self.instance_defaults.variable):
+                        self.defaults.variable):
                     raise FunctionError("Number of weights {} is not equal to "
                                         "number of items in variable {}".format(
                         len(target_set[WEIGHTS]),
-                        len(self.instance_defaults.variable.shape)))
+                        len(self.defaults.variable.shape)))
 
     def function(self,
                  variable=None,
@@ -1608,7 +1608,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
         Arguments
         ----------
-        variable : 2d np.array : default ClassDefaults.variable
+        variable : 2d np.array : default class_defaults.variable
             a 2d array representing the sample and target values to be used to
             calculate the temporal difference delta values. Both arrays must
             have the same length

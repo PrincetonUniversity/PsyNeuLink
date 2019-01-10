@@ -28,7 +28,7 @@ from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags
@@ -64,7 +64,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for `variable <StatefulFunction.variable>`.
 
     initializer : float, list or 1d array : default 0.0
@@ -161,7 +161,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     componentType = STATEFUL_FUNCTION_TYPE
     componentName = STATEFUL_FUNCTION
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -191,8 +191,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     :type: float
 
         """
-        noise = Param(0.0, modulable=True)
-        rate = Param(1.0, modulable=True)
+        noise = Parameter(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True)
         previous_value = np.array([0])
         initializer = np.array([0])
 
@@ -227,11 +227,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 initializer = params[INITIALIZER]
 
             else:
-                initializer = self.ClassDefaults.variable
+                initializer = self.class_defaults.variable
 
         previous_value = self._initialize_previous_value(initializer)
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   previous_value=previous_value,
@@ -250,8 +250,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         self.has_initializers = True
 
     def _validate(self):
-        self._validate_rate(self.instance_defaults.rate)
-        self._validate_initializers(self.instance_defaults.variable)
+        self._validate_rate(self.defaults.rate)
+        self._validate_initializers(self.defaults.variable)
         super()._validate()
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -260,15 +260,15 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if RATE in request_set:
             rate = request_set[RATE]
 
-            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
+                    #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       StatefulFunction's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
-                    #       case, the StatefulFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       case, the StatefulFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
                     if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -280,9 +280,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                     len(rate),
                                     rate,
                                     self.name,
-                                    np.array(self.instance_defaults.variable).size
+                                    np.array(self.defaults.variable).size
                                 ),
-                                self.instance_defaults.variable,
+                                self.defaults.variable,
                             )
                     else:
                         raise FunctionError(
@@ -291,8 +291,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 self.name,
                                 # rate,
                                 len(rate),
-                                np.array(self.instance_defaults.variable).size,
-                                # self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                # self.defaults.variable,
                             )
                         )
                         # OLD:
@@ -346,10 +346,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             elif not isinstance(rate, numbers.Number):
                 raise FunctionError(rate_type_msg.format(self.name, rate))
 
-            if isinstance(rate, np.ndarray) and not iscompatible(rate, self.instance_defaults.variable):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+            if isinstance(rate, np.ndarray) and not iscompatible(rate, self.defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
-                        self.instance_defaults.variable = np.zeros_like(np.array(rate))
+                        self.defaults.variable = np.zeros_like(np.array(rate))
                         if self.verbosePref:
                             warnings.warn(
                                 "The length ({}) of the array specified for the rate parameter ({}) of {} "
@@ -358,9 +358,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                     len(rate),
                                     rate,
                                     self.name,
-                                    np.array(self.instance_defaults.variable).size
+                                    np.array(self.defaults.variable).size
                                 ),
-                                self.instance_defaults.variable,
+                                self.defaults.variable,
                             )
                         self._instantiate_value()
                         self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
@@ -371,8 +371,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 len(rate),
                                 # rate,
                                 self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                # self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                # self.defaults.variable,
                             )
                         )
 
@@ -384,13 +384,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif (not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable)
-                  and not iscompatible(np.atleast_1d(noise), self.instance_defaults.variable) and len(noise) > 1):
+            elif (not iscompatible(np.atleast_2d(noise), self.defaults.variable)
+                  and not iscompatible(np.atleast_1d(noise), self.defaults.variable) and len(noise) > 1):
                 raise FunctionError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
                     "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                        .format(noise, self.instance_defaults.variable, self.name,
-                                np.shape(np.array(self.instance_defaults.variable))))
+                        .format(noise, self.defaults.variable, self.name,
+                                np.shape(np.array(self.defaults.variable))))
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -448,9 +448,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
-        if not np.isscalar(self.instance_defaults.variable):
+        if not np.isscalar(self.defaults.variable):
             for attr in self.initializers:
-                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.instance_defaults.variable.shape).copy())
+                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.defaults.variable.shape).copy())
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
@@ -464,12 +464,17 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _initialize_previous_value(self, initializer, execution_context=None):
+        val = np.atleast_1d(initializer)
         if execution_context is None:
-            # if this is run during initialization, self.parameters will refer to self.class_parameters
+            # Since this is run during initialization, self.parameters will refer to self.class_parameters
             # because self.parameters has not been created yet
-            self.previous_value = np.atleast_1d(initializer)
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+                self.previous_value = val
         else:
-            self.parameters.previous_value.set(np.atleast_1d(initializer), execution_context)
+            self.parameters.previous_value.set(val, execution_context)
+
+        return val
 
     def reinitialize(self, *args, execution_context=None):
         """
@@ -544,7 +549,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                         self.name,
                                         initializers_string))
 
-        # rebuilding self.value rather than simply returning reinitialization_values in case any of the stateful
+        # rebuilding value rather than simply returning reinitialization_values in case any of the stateful
         # attrs are modified during assignment
         value = []
         for i in range(len(self.stateful_attributes)):

@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR, kwPreferenceSetName, MIN_VAL, \
     MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
@@ -144,7 +144,7 @@ class OneHot(SelectionFunction):
     Arguments
     ---------
 
-    variable : 2d np.array : default ClassDefaults.variable
+    variable : 2d np.array : default class_defaults.variable
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
@@ -211,7 +211,7 @@ class OneHot(SelectionFunction):
         PARAMETER_STATE_PARAMS: None
     })
 
-    class Params(SelectionFunction.Params):
+    class Parameters(SelectionFunction.Parameters):
         """
             Attributes
             ----------
@@ -223,7 +223,7 @@ class OneHot(SelectionFunction):
                     :type: str
 
         """
-        mode = Param(MAX_VAL, stateful=False)
+        mode = Parameter(MAX_VAL, stateful=False)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -246,7 +246,7 @@ class OneHot(SelectionFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   params=params)
 
@@ -268,11 +268,11 @@ class OneHot(SelectionFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         if request_set[MODE] in {PROB, PROB_INDICATOR}:
-            if not self.instance_defaults.variable.ndim == 2:
+            if not self.defaults.variable.ndim == 2:
                 raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB))
-            values = self.instance_defaults.variable[0]
-            prob_dist = self.instance_defaults.variable[1]
+            values = self.defaults.variable[0]
+            prob_dist = self.defaults.variable[1]
             if len(values)!=len(prob_dist):
                 raise FunctionError("If {} for {} {} is set to {}, the two items of its variable must be of equal "
                                     "length (len item 1 = {}; len item 2 = {}".
@@ -299,7 +299,7 @@ class OneHot(SelectionFunction):
         Arguments
         ---------
 
-        variable : 2d np.array : default ClassDefaults.variable
+        variable : 2d np.array : default class_defaults.variable
            1st item is an array to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item must be an array of
            probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.
 

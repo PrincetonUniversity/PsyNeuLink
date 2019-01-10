@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, \
     TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -95,7 +95,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -189,7 +189,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     componentType = INTEGRATOR_FUNCTION_TYPE
     componentName = INTEGRATOR_FUNCTION
 
-    class Params(StatefulFunction.Params):
+    class Parameters(StatefulFunction.Parameters):
         """
             Attributes
             ----------
@@ -207,8 +207,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True)
-        noise = Param(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True)
+        noise = Parameter(0.0, modulable=True)
         previous_value = np.array([0])
         initializer = np.array([0])
 
@@ -225,7 +225,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
-      # Assign args to params and functionParams dicts (kwConstants must == arg names)
+      # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
 
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
@@ -327,7 +327,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -396,7 +396,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <AccumulatorIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
 
@@ -415,7 +415,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -433,8 +433,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                     :type:
 
         """
-        rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        increment = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        increment = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -458,7 +458,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   increment=increment,
                                                   noise=noise,
@@ -566,7 +566,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         if (not self.owner
                 and self.context.initialization_status != ContextFlags.INITIALIZING
                 and variable is not None
-                and variable is not self.instance_defaults.variable):
+                and variable is not self.defaults.variable):
             warnings.warn("{} does not use its variable;  value passed ({}) will be ignored".
                           format(self.__class__.__name__, variable))
 
@@ -623,7 +623,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -688,7 +688,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         determines the starting value(s) for integration (i.e., the value to which `previous_value
         <SimpleIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
     owner : Component
@@ -716,7 +716,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -734,8 +734,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -748,7 +748,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -773,7 +773,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -844,7 +844,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -914,7 +914,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <AdaptiveIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
     owner : Component
@@ -942,7 +942,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         OFFSET: None
     })
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -960,8 +960,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -997,14 +997,14 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
+                    #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       AdaptiveIntegrator's constructor, where that is used as a specification for a function
                     #       parameter (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]])
+                    #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]])
                     #       before the object itself, thus does not see the array specification for the input.
                     if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -1014,7 +1014,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                 "must match the length ({}) of the default input ({});  "
                                 "the default input has been updated to match".
                                     format(len(rate), repr(RATE), rate, self.name,
-                                    np.array(self.instance_defaults.variable).size, self.instance_defaults.variable))
+                                    np.array(self.defaults.variable).size, self.defaults.variable))
                     else:
                         raise FunctionError(
                             "The length ({}) of the array specified for the rate parameter ({}) of {} "
@@ -1022,8 +1022,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                 len(rate),
                                 rate,
                                 self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                self.defaults.variable,
                             )
                         )
                         # OLD:
@@ -1135,7 +1135,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -1388,7 +1388,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
     # multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -1484,17 +1484,17 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     :type: float
 
         """
-        rate = Param(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         initial_short_term_avg = 0.0
         initial_long_term_avg = 0.0
-        short_term_gain = Param(1.0, modulable=True)
-        long_term_gain = Param(1.0, modulable=True)
-        short_term_bias = Param(0.0, modulable=True)
-        long_term_bias = Param(0.0, modulable=True)
-        short_term_rate = Param(0.9, modulable=True)
-        long_term_rate = Param(0.1, modulable=True)
+        short_term_gain = Parameter(1.0, modulable=True)
+        long_term_gain = Parameter(1.0, modulable=True)
+        short_term_bias = Parameter(0.0, modulable=True)
+        long_term_bias = Parameter(0.0, modulable=True)
+        short_term_rate = Parameter(0.9, modulable=True)
+        long_term_rate = Parameter(0.1, modulable=True)
         operation = PRODUCT
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         previous_short_term_avg = None
         previous_long_term_avg = None
         short_term_logistic = None
@@ -1569,14 +1569,14 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign ClassDefaults.variable accordingly
+                    #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       DualAdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the IntegratorFunction gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
                     if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -1588,9 +1588,9 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                     len(rate),
                                     rate,
                                     self.name,
-                                    np.array(self.instance_defaults.variable).size
+                                    np.array(self.defaults.variable).size
                                 ),
-                                self.instance_defaults.variable
+                                self.defaults.variable
                             )
                     else:
                         raise FunctionError(
@@ -1599,8 +1599,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                 len(rate),
                                 rate,
                                 self.name,
-                                np.array(self.instance_defaults.variable).size,
-                                self.instance_defaults.variable,
+                                np.array(self.defaults.variable).size,
+                                self.defaults.variable,
                             )
                         )
                         # OLD:
@@ -1653,7 +1653,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -1803,7 +1803,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -1912,7 +1912,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         <InteractiveActivationIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>`
         for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <InteractiveActivationIntegrator.variable>` is integrated.
 
     owner : Component
@@ -1941,7 +1941,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     multiplicative_param = RATE
     # additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -1977,11 +1977,11 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        decay = Param(1.0, modulable=True)
-        rest = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        max_val = Param(1.0)
-        min_val = Param(1.0)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        decay = Parameter(1.0, modulable=True)
+        rest = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        max_val = Parameter(1.0)
+        min_val = Parameter(1.0)
 
     @tc.typecheck
     def __init__(self,
@@ -2015,7 +2015,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         if default_variable is None:
             default_variable = initializer
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   rest=rest,
@@ -2062,7 +2062,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -2167,7 +2167,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
     rate : float, list or 1d array : default 1.0
@@ -2294,7 +2294,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <DriftDiffusionIntegrator.default_time_step_size>`.
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
     owner : Component
@@ -2315,7 +2315,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -2357,11 +2357,11 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         starting_point = 0.0
-        threshold = Param(100.0, modulable=True)
-        time_step_size = Param(1.0, modulable=True)
+        threshold = Parameter(100.0, modulable=True)
+        time_step_size = Parameter(1.0, modulable=True)
         previous_time = None
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -2390,7 +2390,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
                                                   starting_point=starting_point,
@@ -2437,7 +2437,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated (can be thought of as the stimulus component of
            the drift rate).
 
@@ -2527,7 +2527,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for  the stimulus component of drift rate -- the drift rate is the product of variable and
         rate
 
@@ -2641,7 +2641,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <OrnsteinUhlenbeckIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
 
     previous_time : float
@@ -2666,7 +2666,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -2708,10 +2708,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        decay = Param(1.0, modulable=True)
-        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Param(1.0, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        decay = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = 0.0
 
@@ -2741,7 +2741,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   noise=noise,
@@ -2752,7 +2752,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
+        self.parameters.previous_value.set(initializer, override=True)
         self.previous_time = starting_point
 
         super().__init__(
@@ -2792,7 +2792,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -2873,7 +2873,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -2949,7 +2949,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
         <LeakyCompetingIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <LeakyCompetingIntegrator.variable>` is integrated.
 
     owner : Component
@@ -2967,7 +2967,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     componentName = LEAKY_COMPETING_INTEGRATOR_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -2991,9 +2991,9 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Param(0.1, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Parameter(0.1, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -3017,7 +3017,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -3045,7 +3045,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -3290,7 +3290,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the external stimulus
 
     initial_w : float, list or 1d array : default 0.0
@@ -3375,10 +3375,10 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     variable : number or array
         External stimulus
 
-    previous_v : 1d array : default ClassDefaults.variable
+    previous_v : 1d array : default class_defaults.variable
         stores accumulated value of v during integration
 
-    previous_w : 1d array : default ClassDefaults.variable
+    previous_w : 1d array : default class_defaults.variable
         stores accumulated value of w during integration
 
     previous_t : float
@@ -3463,7 +3463,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
     componentName = FITZHUGHNAGUMO_INTEGRATOR_FUNCTION
 
-    class Params(IntegratorFunction.Params):
+    class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
@@ -3608,25 +3608,25 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        variable = Param(np.array([1.0]), read_only=True)
-        time_step_size = Param(0.05, modulable=True)
-        a_v = Param(1.0 / 3, modulable=True)
-        b_v = Param(0.0, modulable=True)
-        c_v = Param(1.0, modulable=True)
-        d_v = Param(0.0, modulable=True)
-        e_v = Param(-1.0, modulable=True)
-        f_v = Param(1.0, modulable=True)
-        time_constant_v = Param(1.0, modulable=True)
-        a_w = Param(1.0, modulable=True)
-        b_w = Param(-0.8, modulable=True)
-        c_w = Param(0.7, modulable=True)
-        threshold = Param(-1.0, modulable=True)
-        time_constant_w = Param(12.5, modulable=True)
-        mode = Param(1.0, modulable=True)
-        uncorrelated_activity = Param(0.0, modulable=True)
+        variable = Parameter(np.array([1.0]), read_only=True)
+        time_step_size = Parameter(0.05, modulable=True)
+        a_v = Parameter(1.0 / 3, modulable=True)
+        b_v = Parameter(0.0, modulable=True)
+        c_v = Parameter(1.0, modulable=True)
+        d_v = Parameter(0.0, modulable=True)
+        e_v = Parameter(-1.0, modulable=True)
+        f_v = Parameter(1.0, modulable=True)
+        time_constant_v = Parameter(1.0, modulable=True)
+        a_w = Parameter(1.0, modulable=True)
+        b_w = Parameter(-0.8, modulable=True)
+        c_w = Parameter(0.7, modulable=True)
+        threshold = Parameter(-1.0, modulable=True)
+        time_constant_w = Parameter(12.5, modulable=True)
+        mode = Parameter(1.0, modulable=True)
+        uncorrelated_activity = Parameter(0.0, modulable=True)
 
         # FIX: make an integration_method enum class for RK4/EULER
-        integration_method = Param("RK4", stateful=False)
+        integration_method = Parameter("RK4", stateful=False)
 
         initial_w = np.array([1.0])
         initial_v = np.array([1.0])
@@ -3686,7 +3686,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,

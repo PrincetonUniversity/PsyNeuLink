@@ -25,15 +25,13 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.function import Function_Base, FunctionError, EPSILON
+from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
-from psyneulink.core.globals.keywords import \
-    DistanceMetrics, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION, HOLLOW_MATRIX, ENERGY, ENTROPY, MATRIX, COSINE, \
-    CROSS_ENTROPY, DISTANCE_METRICS, DISTANCE_FUNCTION, DIFFERENCE, EUCLIDEAN, MAX_ABS_DIFF, CORRELATION, METRIC
-from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import is_distance_metric
+from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -46,7 +44,7 @@ class ObjectiveFunction(Function_Base):
 
     componentType = OBJECTIVE_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -65,7 +63,7 @@ class ObjectiveFunction(Function_Base):
 
         """
         normalize = False
-        metric = Param(None, stateful=False)
+        metric = Parameter(None, stateful=False)
 
 
 class Stability(ObjectiveFunction):
@@ -123,7 +121,7 @@ COMMENT
     Arguments
     ---------
 
-    variable : list of numbers or 1d np.array : Default ClassDefaults.variable
+    variable : list of numbers or 1d np.array : Default class_defaults.variable
         the array for which stability is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
@@ -192,7 +190,7 @@ COMMENT
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(ObjectiveFunction.Params):
+    class Parameters(ObjectiveFunction.Parameters):
         """
             Attributes
             ----------
@@ -217,7 +215,7 @@ COMMENT
 
         """
         matrix = HOLLOW_MATRIX
-        metric = Param(ENERGY, stateful=False)
+        metric = Parameter(ENERGY, stateful=False)
         transfer_fct = None
         normalize = False
 
@@ -232,7 +230,7 @@ COMMENT
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
                                                   transfer_fct=transfer_fct,
@@ -305,9 +303,9 @@ COMMENT
             rows = matrix.shape[0]
             cols = matrix.shape[1]
             # MODIFIED 11/25/17 OLD:
-            # size = len(np.squeeze(self.instance_defaults.variable))
+            # size = len(np.squeeze(self.defaults.variable))
             # MODIFIED 11/25/17 NEW:
-            size = len(self.instance_defaults.variable)
+            size = len(self.defaults.variable)
             # MODIFIED 11/25/17 END
 
             if rows != size:
@@ -335,21 +333,26 @@ COMMENT
 
         """
 
-        size = len(self.instance_defaults.variable)
+        size = len(self.defaults.variable)
 
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
-        if isinstance(self.matrix, MappingProjection):
-            self._matrix = self.matrix._parameter_states[MATRIX]
-        elif isinstance(self.matrix, ParameterState):
+
+        matrix = self.parameters.matrix.get()
+
+        if isinstance(matrix, MappingProjection):
+            matrix = matrix._parameter_states[MATRIX]
+        elif isinstance(matrix, ParameterState):
             pass
         else:
-            self._matrix = get_matrix(self.matrix, size, size)
+            matrix = get_matrix(matrix, size, size)
+
+        self.parameters.matrix.set(matrix)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
-        default_variable = [self.instance_defaults.variable,
-                            self.instance_defaults.variable]
+        default_variable = [self.defaults.variable,
+                            self.defaults.variable]
 
         if self.metric is ENTROPY:
             self._metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
@@ -481,7 +484,7 @@ class Distance(ObjectiveFunction):
     Arguments
     ---------
 
-    variable : 2d np.array with two items : Default ClassDefaults.variable
+    variable : 2d np.array with two items : Default class_defaults.variable
         the arrays between which the distance is calculated.
 
     metric : keyword in DistancesMetrics : Default EUCLIDEAN
@@ -531,7 +534,7 @@ class Distance(ObjectiveFunction):
 
     componentName = DISTANCE_FUNCTION
 
-    class Params(ObjectiveFunction.Params):
+    class Parameters(ObjectiveFunction.Parameters):
         """
             Attributes
             ----------
@@ -550,8 +553,8 @@ class Distance(ObjectiveFunction):
                     :type: str
 
         """
-        variable = Param(np.array([[0], [0]]), read_only=True)
-        metric = Param(DIFFERENCE, stateful=False)
+        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        metric = Parameter(DIFFERENCE, stateful=False)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -563,7 +566,7 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
                                                   params=params)

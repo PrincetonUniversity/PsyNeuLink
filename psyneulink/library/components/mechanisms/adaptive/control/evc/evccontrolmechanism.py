@@ -377,6 +377,7 @@ Class Reference
 import itertools
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.core.components.component import function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -391,7 +392,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PARAMS, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -750,7 +751,7 @@ class EVCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(ControlMechanism.Params):
+    class Parameters(ControlMechanism.Parameters):
         """
             Attributes
             ----------
@@ -842,22 +843,21 @@ class EVCControlMechanism(ControlMechanism):
                     :type: `Function`
 
         """
-        function = Param(ControlSignalGridSearch, stateful=False, loggable=False)
-        value_function = Param(ValueFunction, stateful=False, loggable=False)
-        cost_function = Param(LinearCombination, stateful=False, loggable=False)
-        combine_outcome_and_cost_function = Param(LinearCombination, stateful=False, loggable=False)
-        save_all_values_and_policies = Param(False, stateful=False, loggable=False)
+        function = Parameter(ControlSignalGridSearch, stateful=False, loggable=False)
+        value_function = Parameter(ValueFunction, stateful=False, loggable=False)
+        cost_function = Parameter(LinearCombination, stateful=False, loggable=False)
+        combine_outcome_and_cost_function = Parameter(LinearCombination, stateful=False, loggable=False)
+        save_all_values_and_policies = Parameter(False, stateful=False, loggable=False)
 
         modulation = ModulationParam.MULTIPLICATIVE
 
-        EVC_max = Param(None, read_only=True)
-        EVC_values = Param([], read_only=True)
-        EVC_policies = Param([], read_only=True)
-        EVC_max_state_values = Param(None, read_only=True)
-        EVC_max_policy = Param(None, read_only=True)
-        control_signal_costs = Param(None, read_only=True)
-        control_signal_search_space = Param(None, read_only=True)
-        predicted_input = Param(None, read_only=True)
+        EVC_max = Parameter(None, read_only=True)
+        EVC_values = Parameter([], read_only=True)
+        EVC_policies = Parameter([], read_only=True)
+        EVC_max_state_values = Parameter(None, read_only=True)
+        EVC_max_policy = Parameter(None, read_only=True)
+        control_signal_search_space = Parameter(None, read_only=True)
+        predicted_input = Parameter(None, read_only=True)
 
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -882,7 +882,7 @@ class EVCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
                                                   origin_objective_mechanism=origin_objective_mechanism,
@@ -961,7 +961,9 @@ class EVCControlMechanism(ControlMechanism):
         if hasattr(system, CONTROLLER) and hasattr(system.controller, PREDICTION_MECHANISMS):
             self.prediction_mechanisms = system.controller.prediction_mechanisms
             self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
-            self.predicted_input = system.controller.predicted_input
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                self.predicted_input = system.controller.predicted_input
             return
 
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
@@ -1005,7 +1007,7 @@ class EVCControlMechanism(ControlMechanism):
             variable = []
             for state_name in origin_mech.input_states.names:
                 state_names.append(state_name)
-                # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
+                # variable.append(origin_mech.input_states[state_name].defaults.variable)
                 variable.append(origin_mech.input_states[state_name].value)
 
             # Instantiate PredictionMechanism
@@ -1064,9 +1066,10 @@ class EVCControlMechanism(ControlMechanism):
 
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN Mechanism for each Process in the system
-        self.predicted_input = {}
+        predicted_input = {}
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
-            self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
+            predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].defaults.variable
+        self.parameters.predicted_input.set(predicted_input, override=True)
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Validate cost function'''

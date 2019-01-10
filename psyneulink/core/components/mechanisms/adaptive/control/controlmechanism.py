@@ -340,6 +340,7 @@ Class Reference
 
 """
 
+import copy
 import itertools
 import numpy as np
 import threading
@@ -357,7 +358,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import CNodeRole, ContentAddressableList, is_iterable
@@ -662,7 +663,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(AdaptiveMechanism_Base.Params):
+    class Parameters(AdaptiveMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -707,14 +708,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([defaultControlAllocation])
-        value = Param(np.array(defaultControlAllocation), aliases='control_allocation')
+        value = Parameter(np.array(defaultControlAllocation), aliases='control_allocation')
 
-        combine_costs = Param(np.sum, stateful=False, loggable=False)
-        compute_net_outcome = Param(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
+        combine_costs = Parameter(np.sum, stateful=False, loggable=False)
+        compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
 
-        costs = Param(None, read_only=True, getter=_control_mechanism_costs_getter)
+        costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
+        control_signal_costs = Parameter(None, read_only=True)
 
-        simulation_ids = Param(list, user=False)
+        simulation_ids = Parameter([], user=False)
 
         modulation = ModulationParam.MULTIPLICATIVE
 
@@ -747,7 +749,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
@@ -1002,7 +1004,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if self.control_signals:
             self._output_states = []
-            self.instance_defaults.value = None
+            self.defaults.value = None
 
             for control_signal in self.control_signals:
                 self._instantiate_control_signal(control_signal, context=context)
@@ -1015,18 +1017,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, ControlSignal)])
 
-        if self.value is None:
-            self.value = self.instance_defaults.value
-
         # If the ControlMechanism's control_allocation has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
         #    (note:  there must be fewer ControlSignals than items in control_allocation,
         #            as the reverse is an error that is checked for in _instantiate_control_signal)
-        if len(self.value) > 1 and len(self.control_signals) != len(self.value):
+        if len(self.defaults.value) > 1 and len(self.control_signals) != len(self.defaults.value):
             if self.verbosePref:
                 warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
                                  format(ControlSignal.__name__, self.name, len(self.control_signals),
-                                        CONTROL_ALLOCATION, len(self.value)))
+                                        CONTROL_ALLOCATION, len(self.defaults.value)))
 
     def _instantiate_control_signal(self, control_signal, context=None):
         from psyneulink.core.components.states.state import _instantiate_state
@@ -1039,7 +1038,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             variable=defaultControlAllocation,
-                                            reference_value=ControlSignal.ClassDefaults.allocation,
+                                            reference_value=ControlSignal.defaults.allocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal,
                                             context=context)
@@ -1047,10 +1046,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Update control_signal_costs to accommodate instantiated Projection
         # MODIFIED 11/2/18 OLD:
+        control_signal_costs = self.parameters.control_signal_costs.get()
         try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.zeros((1, 1)), axis=0)
-        except AttributeError:
-            self.control_signal_costs = np.zeros((1, 1))
+            control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
+        except (AttributeError, ValueError):
+            control_signal_costs = np.zeros((1, 1))
+        self.parameters.control_signal_costs.set(control_signal_costs, override=True)
 
         # MODIFIED 11/2/18 END
 
@@ -1065,24 +1066,24 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._output_states.append(control_signal)
 
         # since output_states is exactly control_signals is exactly the shape of value, we can just construct it here
-        self.instance_defaults.value = np.array([[ControlSignal.ClassDefaults.allocation]
+        self.defaults.value = np.array([[ControlSignal.defaults.allocation]
                                                  for i in range(len(self._output_states))])
-        self.value = self.instance_defaults.value
+        self.parameters.value.set(copy.deepcopy(self.defaults.value))
 
         # Assign ControlSignal's variable to index of owner's value
-        control_signal._variable_spec = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
+        control_signal._variable_spec = [(OWNER_VALUE, len(self.defaults.value) - 1)]
         if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
                     "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
                         .format(control_signal.name, self.name, control_signal.owner_value_index))
         # Validate index
         try:
-            self.value[control_signal.owner_value_index]
+            self.defaults.value[control_signal.owner_value_index]
         except IndexError:
             raise ControlMechanismError(
                 "Index specified for {} of {} ({}) exceeds the number of items of its {} ({})".
                     format(ControlSignal.__name__, self.name, control_signal.owner_value_index,
-                           CONTROL_ALLOCATION, len(self.value)
+                           CONTROL_ALLOCATION, len(self.defaults.value)
                 )
             )
 
@@ -1231,7 +1232,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 and not self.control_signals[0].efferents):
             del self._output_states[0]
             del self.control_signals[0]
-            self.value = None
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
@@ -1301,10 +1301,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     # @property
     # def outcome(self):
     #     return self.variable[0]
-
-    @property
-    def control_allocation(self):
-        return self.value
 
     # @property
     # def costs(self):

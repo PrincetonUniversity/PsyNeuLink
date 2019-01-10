@@ -178,7 +178,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.globals.keywords import INITIALIZING, KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -498,7 +498,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
     componentType = KWTA_MECHANISM
 
-    class Params(RecurrentTransferMechanism.Params):
+    class Parameters(RecurrentTransferMechanism.Parameters):
         """
             Attributes
             ----------
@@ -540,10 +540,10 @@ class KWTAMechanism(RecurrentTransferMechanism):
                     :type: float
 
         """
-        function = Param(Logistic, stateful=False, loggable=False)
-        k_value = Param(0.5, modulable=True)
-        threshold = Param(0.0, modulable=True)
-        ratio = Param(0.5, modulable=True)
+        function = Parameter(Logistic, stateful=False, loggable=False)
+        k_value = Parameter(0.5, modulable=True)
+        threshold = Parameter(0.0, modulable=True)
+        ratio = Parameter(0.5, modulable=True)
 
         average_based = False
         inhibition_only = True
@@ -780,11 +780,11 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #
         # # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # # Use self.instance_defaults.variable to initialize state of input
+        # # Use self.defaults.variable to initialize state of input
         #
         #
         # if INITIALIZING in context:
-        #     self.previous_input = self.instance_defaults.variable
+        #     self.previous_input = self.defaults.variable
         #
         # if self.decay is not None and self.decay != 1.0:
         #     self.previous_input *= self.decay
@@ -811,7 +811,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #     if not self.integrator_function:
         #
         #         self.integrator_function = AdaptiveIntegrator(
-        #                                     self.instance_defaults.variable,
+        #                                     self.defaults.variable,
         #                                     initializer = self.initial_value,
         #                                     noise = self.noise,
         #                                     rate = self.integration_rate
@@ -878,7 +878,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
     #     """
     #
     #     if isinstance(matrix, str):
-    #         size = len(mech.instance_defaults.variable[0])
+    #         size = len(mech.defaults.variable[0])
     #         matrix = get_matrix(matrix, size, size)
     #
     #     return AutoAssociativeProjection(sender=mech,

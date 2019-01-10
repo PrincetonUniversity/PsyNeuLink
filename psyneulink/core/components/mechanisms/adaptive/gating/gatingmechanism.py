@@ -173,6 +173,7 @@ from psyneulink.core.components.states.state import State_Base, _parse_state_spe
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingPolicy
 from psyneulink.core.globals.keywords import GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -365,7 +366,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(AdaptiveMechanism_Base.Params):
+    class Parameters(AdaptiveMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -379,6 +380,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = np.array(defaultGatingPolicy)
+        value = Parameter(AdaptiveMechanism_Base.Parameters.value.default_value, aliases=['gating_policy'])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({GATING_PROJECTIONS: None})
@@ -396,7 +398,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # self.system = None
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gating_signals=gating_signals,
                                                   function=function,
                                                   params=params)
@@ -589,10 +591,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for projection in self.output_states[state_name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         print ("\n---------------------------------------------------------")
-
-    @property
-    def gating_policy(self):
-        return self.value
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED

@@ -16,6 +16,7 @@
 * `Tanh`
 * `ReLU`
 * `Gaussian`
+* `GaussianDistor`
 * `SoftMax`
 * `LinearMatrix`
 
@@ -53,20 +54,20 @@ from psyneulink.core.globals.keywords import \
     PER_ITEM, TRANSFER_FUNCTION_TYPE, \
     LINEAR_FUNCTION, SLOPE, INTERCEPT, PARAMETER_STATE_PARAMS, \
     VARIABLE, EXPONENTIAL_FUNCTION, RATE, BIAS, SCALE, OFFSET, \
-    LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, NORMAL_FUNCTION, VARIANCE, \
+    LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, VARIANCE, \
     SOFTMAX_FUNCTION, ALL, MAX_VAL, MAX_INDICATOR, PROB, OUTPUT_TYPE, PROB_INDICATOR, LINEAR_MATRIX_FUNCTION, MATRIX, \
     RECEIVER, HAS_INITIALIZERS, MATRIX_KEYWORD_VALUES, IDENTITY_MATRIX, HOLLOW_MATRIX, \
     MATRIX_KEYWORD_NAMES, AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX, kwPreferenceSetName, \
-    GAUSSIAN_FUNCTION, STANDARD_DEVIATION
+    GAUSSIAN_FUNCTION, STANDARD_DEVIATION, GAUSSIAN_DISTORT_FUNCTION
 
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 
 __all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
-           'Gaussian', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
+           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
 
 BOUNDS = 'bounds'
 MODE = 'mode'
@@ -88,7 +89,7 @@ class TransferFunction(Function_Base):
     """
     componentType = TRANSFER_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -192,7 +193,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     slope : float : default 1.0
@@ -257,7 +258,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -275,8 +276,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     :type: float
 
         """
-        slope = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        intercept = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -292,7 +293,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(slope=slope,
                                                   intercept=intercept,
                                                   params=params)
@@ -328,7 +329,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -424,7 +425,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     rate : float : default 1.0
@@ -498,7 +499,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -528,10 +529,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
                     :type: float
 
         """
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Param(1.0, modulable=True)
-        offset = Param(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -543,7 +544,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   bias=bias,
                                                   scale=scale,
@@ -590,7 +591,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be exponentiated.
 
         params : Dict[param keyword: param value] : default None
@@ -677,7 +678,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -761,7 +762,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -797,11 +798,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
                     :type: float
 
         """
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        x_0 = Param(0.0, modulable=True)
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Param(0.0, modulable=True)
-        scale = Param(1.0, modulable=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        x_0 = Parameter(0.0, modulable=True)
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -814,7 +815,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   x_0=x_0,
                                                   bias=bias,
@@ -867,7 +868,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -978,7 +979,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies template for the value to be transformed.
 
     gain : float : default 1.0
@@ -1062,7 +1063,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1098,11 +1099,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                     :type: float
 
         """
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        x_0 = Param(0.0, modulable=True)
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Param(0.0, modulable=True)
-        scale = Param(1.0, modulable=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        x_0 = Parameter(0.0, modulable=True)
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1115,7 +1116,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   x_0=x_0,
                                                   bias=bias,
@@ -1168,7 +1169,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1254,7 +1255,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     Arguments
     ---------
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
@@ -1309,7 +1310,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     multiplicative_param = GAIN
     additive_param = BIAS
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1333,9 +1334,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                     :type: float
 
         """
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        leak = Param(0.0, modulable=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        leak = Parameter(0.0, modulable=True)
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -1347,7 +1348,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
                                                   leak=leak,
@@ -1369,7 +1370,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1458,7 +1459,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     .. _Gaussian_Function:
 
-    `function <Gaussian.function>` returns Gaussian transform of `variable <Logistic.variable>`:
+    `function <Gaussian.function>` returns Gaussian transform of `variable <Gaussian.variable>`:
 
     .. math::
       scale*\\frac{e^{-\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
@@ -1467,10 +1468,9 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     .. note::
         the value returned is deterministic (i.e., the value of the probability density function at variable),
-        not a randomly chosen sample from the Gaussian distribution; for the latter, use `NormalDist` and set
-        `mean <NormalDist.mean>` equal to variable.
+        not a randomly chosen sample from the Gaussian distribution; for the latter, use `GaussianDistort`.
 
-    `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Logistic.variable>`:
+    `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Gaussian.variable>`:
 
     .. math::
 
@@ -1479,14 +1479,14 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default ClassDefaults.variable
+    default_variable : number or array : default class_defaults.variable
         specifies a template for the value used as the mean for the Guassian transform.
 
     standard_deviation : float : default 1.0
         specifies "width" of the Gaussian transform applied to each element of `variable <Gaussian.variable>`.
 
     bias : float : default 0.0
-        value to add to each element after applying height and before applying Gaussian transform.
+        value to add to each element of `variable <Gaussian.variable>` before applying Gaussian transform.
 
     offset : float : default 0.0
         value to add to each element after applying Gaussian transform and `scale <Gaussian.scale>`.
@@ -1518,7 +1518,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         standard_deviation used for Gaussian transform.
 
     bias : float : default 0.0
-        value added to each element after applying height and before applying the Gaussian transform.
+        value added to each element of `variable <Gaussian.variable>` before applying the Gaussian transform.
 
     scale : float : default 0.0
         value by which each element is multiplied after applying the Gaussian transform.
@@ -1548,7 +1548,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1578,10 +1578,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :type: float
 
         """
-        standard_deviation = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Param(0.0, modulable=True)
-        offset = Param(0.0, modulable=True)
+        standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(0.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1593,7 +1593,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(standard_deviation=standard_deviation,
                                                   bias=bias,
                                                   scale=scale,
@@ -1656,7 +1656,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1714,99 +1714,113 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         return self.convert_output_type(result)
 
 
-# Another TransferFunction (e.g. Linear or Logistic) with noise=NormalDist should be used in place of this:
-# class Normal(TransferFunction):  # -----------------------------------------------------------------------------------
-#     """
-#     Normal(              \
-#          default_variable, \
-#          variance=1.0,     \
-#          bias=0.0,         \
-#          scale=1.0,        \
-#          offset=0.0,       \
-#          params=None,      \
-#          owner=None,       \
-#          name=None,        \
-#          prefs=None        \
-#          )
-#
-#     .. _Normal_Function:
-#
-#     Sample from the normal distribution for each element of `variable <Normal.variable>`, centered on each
-#     element's value.
-#
-#     Arguments
-#     ---------
-#
-#     default_variable : number or array : default ClassDefaults.variable
-#         specifies a template for the value used as the mean for the Guassian transform.
-#
-#     variance : float : default 1.0
-#         specifies "width" of the Normal transform applied to each element of `variable <Normal.variable>`.
-#
-#     bias : float : default 0.0
-#         value to add to each element after applying height and before applying Normal transform.
-#
-#     scale : float : default 1.0
-#         value by which to multiply each element after applying Normal transform.
-#
-#     offset : float : default 0.0
-#         value to add to each element after applying Normal transform and `scale <Normal.scale>`.
-#
-#     params : Dict[param keyword: param value] : default None
-#         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-#         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-#         arguments of the constructor.
-#
-#     owner : Component
-#         `component <Component>` to which to assign the Function.
-#
-#     name : str : default see `name <Function.name>`
-#         specifies the name of the Function.
-#
-#     prefs : PreferenceSet or specification dict : default Function.classPreferences
-#         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-#
-#     Attributes
-#     ----------
-#
-#     variable : number or array
-#         value used as the mean of the Normal transform.
-#
-#     variance : float : default 1.0
-#         variance used for Normal transform.
-#
-#     bias : float : default 0.0
-#         value added to each element after applying height and before applying the Normal transform.
-#
-#     scale : float : default 0.0
-#         value by which each element is multiplied after applying the Normal transform.
-#
-#     offset : float : default 0.0
-#         value added to each element after applying the Normal transform and scale.
-#
-#     owner : Component
-#         `component <Component>` to which the Function has been assigned.
-#
-#     name : str
-#         the name of the Function; if it is not specified in the **name** argument of the constructor, a
-#         default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-#
-#     prefs : PreferenceSet or specification dict : Function.classPreferences
-#         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-#         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-#         <LINK>` for details).
-#     """
-#
-#     componentName = NORMAL_FUNCTION
-#     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
-#
-#     bounds = (None,None)
-#     multiplicative_param = VARIANCE
-#     additive_param = BIAS
-#
-#     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-#
-#     class Params(TransferFunction.Params):
+class GaussianDistort(TransferFunction):  #-----------------------------------------------------------------------------
+    """
+    GaussianDistort(       \
+         default_variable, \
+         variance=1.0,     \
+         bias=0.0,         \
+         scale=1.0,        \
+         offset=0.0,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _GaussianDistort_Function:
+
+    `function <GaussianDistort.function>` returns random value from a Gaussian distribution with
+     mean = `variable <GaussianDistort.variable>` and variance = `variance <GaussianDistort.variance>`
+
+    .. note::
+        if the Gaussian transform of `variable <GaussianDistort.variable>` is desired (i.e., the value of the
+        probability density function at `variable <GaussianDistort.variable>`, not a randomly chosen sample from the
+        Gaussian distribution, then use `Gaussian`.
+
+    COMMENT:
+    `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Logistic.variable>`:
+
+    .. math::
+
+       \\frac{-(variable-bias)*e^{-\\frac{(variable-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma^{3}}
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value(s) used as the mean of the Guassian distribution from which each sample is
+        drawn.
+
+    variance : float : default 1.0
+        specifies "width" of the Gaussian distribution around each element of `variable <GaussianDistort.variable>`
+        from which sample is drawn.
+
+    bias : float : default 0.0
+        specifies value to add to each element of `variable <GaussianDistort.variable>` before drawing sample.
+
+    scale : float : default 1.0
+        specifies value by which to multiply each sample.
+
+    offset : float : default 0.0
+        specifies value to add to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        each element determines mean of the Gaussian distribution from which each sample is drawn.
+
+    variance : float
+        determines variance of Gaussian distribution from which each sample is drawn.
+
+    bias : float
+        determines value added to each element of `variable <GaussianDistort.variable>` before drawing sample.
+
+    scale : float
+        determines value by which each sample is multiplied after it is drawn.
+
+    offset : float
+        determines value added to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = GAUSSIAN_DISTORT_FUNCTION
+    # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
+
+    bounds = (None,None)
+    multiplicative_param = VARIANCE
+    additive_param = BIAS
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1843,58 +1857,58 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :type: bool
 
         """
-#         variance = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-#         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-#         scale = Param(0.0, modulable=True)
-#         offset = Param(0.0, modulable=True)
-#
-#     @tc.typecheck
-#     def __init__(self,
-#                  default_variable=None,
-#                  variance: parameter_spec = 1.0,
-#                  bias: parameter_spec = 0.0,
-#                  scale: parameter_spec = 1.0,
-#                  offset: parameter_spec = 0.0,
-#                  params=None,
-#                  owner=None,
-#                  prefs: is_pref_set = None):
-#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-#         params = self._assign_args_to_param_dicts(variance=variance,
-#                                                   bias=bias,
-#                                                   scale=scale,
-#                                                   offset=offset,
-#                                                   params=params)
-#
-#         super().__init__(default_variable=default_variable,
-#                          params=params,
-#                          owner=owner,
-#                          prefs=prefs,
-#                          context=ContextFlags.CONSTRUCTOR)
+        variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(0.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
-    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #
-    #     variance_ptr, builder = ctx.get_param_ptr(self, builder, params, VARIANCE)
-    #     bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-    #     scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-    #     offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-    #
-    #     variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
-    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-    #
-    #     exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-    #     val = builder.load(ptri)
-    #     val = builder.fadd(val, bias)
-    #     val = builder.fmul(val, variance)
-    #     val = builder.fsub(offset, val)
-    #     val = builder.call(exp_f, [val])
-    #     val = builder.fadd(ctx.float_ty(1), val)
-    #     val = builder.fdiv(ctx.float_ty(1), val)
-    #
-    #     builder.store(val, ptro)
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 variance: parameter_spec = 1.0,
+                 bias: parameter_spec = 0.0,
+                 scale: parameter_spec = 1.0,
+                 offset: parameter_spec = 0.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(variance=variance,
+                                                  bias=bias,
+                                                  scale=scale,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        variance_ptr, builder = ctx.get_param_ptr(self, builder, params, VARIANCE)
+        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+
+        variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fadd(val, bias)
+        val = builder.fmul(val, variance)
+        val = builder.fsub(offset, val)
+        val = builder.call(exp_f, [val])
+        val = builder.fadd(ctx.float_ty(1), val)
+        val = builder.fdiv(ctx.float_ty(1), val)
+
+        builder.store(val, ptro)
 
     def function(self,
                  variable=None,
@@ -1906,7 +1920,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default ClassDefaults.variable
+        variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1918,7 +1932,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Returns
         -------
 
-        Samples from normal distribution for each element of variable : number or array
+        Sample from Gaussian distribution for each element of variable : number or array
 
         """
 
@@ -2001,7 +2015,7 @@ class SoftMax(TransferFunction):
     Arguments
     ---------
 
-    default_variable : 1d array : default ClassDefaults.variable
+    default_variable : 1d array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -2074,7 +2088,7 @@ class SoftMax(TransferFunction):
     multiplicative_param = GAIN
     additive_param = None
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -2111,8 +2125,8 @@ class SoftMax(TransferFunction):
                     :type: bool
 
         """
-        variable = Param(np.array(0.0), read_only=True)
-        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        variable = Parameter(np.array(0.0), read_only=True)
+        gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
         per_item = True
@@ -2136,7 +2150,7 @@ class SoftMax(TransferFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   per_item=per_item,
                                                   output=output,
@@ -2151,9 +2165,9 @@ class SoftMax(TransferFunction):
     def _validate_variable(self, variable, context=None):
         if variable is None:
             try:
-                return self.instance_defaults.variable
+                return self.defaults.variable
             except AttributeError:
-                return self.ClassDefaults.variable
+                return self.class_defaults.variable
 
         return np.asarray(variable)
 
@@ -2285,7 +2299,7 @@ class SoftMax(TransferFunction):
         Arguments
         ---------
 
-        variable : 1d array : default ClassDefaults.variable
+        variable : 1d array : default class_defaults.variable
            an array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -2410,7 +2424,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Arguments
     ---------
 
-    variable : list or 1d array : default ClassDefaults.variable
+    variable : list or 1d array : default class_defaults.variable
         specifies a template for the value to be transformed; length must equal the number of rows of `matrix
         <LinearMatrix.matrix>`.
 
@@ -2488,7 +2502,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(TransferFunction.Params):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -2500,7 +2514,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     :type:
 
         """
-        matrix = Param(None, modulable=True)
+        matrix = Parameter(None, modulable=True)
         bounds = None
 
     # def is_matrix_spec(m):
@@ -2520,7 +2534,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   params=params)
 
@@ -2533,7 +2547,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
+        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D array
@@ -2572,7 +2586,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         param_set = target_set
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
-            sender = self.instance_defaults.variable
+            sender = self.defaults.variable
             # Note: this assumes variable is a 1D array, as enforced by _validate_variable
             sender_len = sender.size
 
@@ -2744,8 +2758,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
                     param_size = np.size(np.atleast_2d(param_value), 0)
                     param_shape = np.shape(np.atleast_2d(param_value))
-                    variable_size = np.size(np.atleast_2d(self.instance_defaults.variable),1)
-                    variable_shape = np.shape(np.atleast_2d(self.instance_defaults.variable))
+                    variable_size = np.size(np.atleast_2d(self.defaults.variable),1)
+                    variable_shape = np.shape(np.atleast_2d(self.defaults.variable))
                     if param_size != variable_size:
                         raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
                                             "shapes of variable {} and matrix {} are not compatible for multiplication".
@@ -2772,7 +2786,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if self.matrix is None and not hasattr(self.owner, "receiver"):
-            variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
+            variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             self.matrix = np.identity(variable_length)
         self.matrix = self.instantiate_matrix(self.matrix)
 
@@ -2794,7 +2808,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(specification, np.matrix):
                 return np.array(specification)
 
-            sender = self.instance_defaults.variable
+            sender = self.defaults.variable
             sender_len = sender.shape[0]
             try:
                 receiver = self.receiver
@@ -2819,7 +2833,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
-        assert self.instance_defaults.variable.ndim == 1
+        assert self.defaults.variable.ndim == 1
 
         matrix, builder = ctx.get_param_ptr(self, builder, params, MATRIX)
 
@@ -2877,7 +2891,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 rows = 1
             else:
                 rows = len(obj.sender.defaults.value)
-            if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
+            if isinstance(obj.receiver.defaults.variable, numbers.Number):
                 cols = 1
             else:
                 cols = obj.receiver.socket_width
@@ -2891,7 +2905,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def param_function(owner, function):
         sender_len = len(owner.sender.defaults.value)
-        receiver_len = len(owner.receiver.instance_defaults.variable)
+        receiver_len = len(owner.receiver.defaults.variable)
         return function(sender_len, receiver_len)
 
 

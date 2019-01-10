@@ -143,8 +143,8 @@ def test_delta_fail():
 
 def test_validation():
     class NewTM(pnl.TransferMechanism):
-        class Params(pnl.TransferMechanism.Params):
-            variable = pnl.Param(np.array([[0], [0], [0]]), read_only=True)
+        class Parameters(pnl.TransferMechanism.Parameters):
+            variable = pnl.Parameter(np.array([[0], [0], [0]]), read_only=True)
 
             def _validate_variable(self, variable):
                 if not isinstance(variable, np.ndarray) or not variable.shape == np.array([[0], [0], [0]]).shape:
@@ -166,3 +166,26 @@ def test_validation():
 
     with pytest.raises(pnl.ParameterError):
         t.parameters.variable.default_value = np.array([[0]])
+
+
+def test_dot_notation():
+    c = pnl.Composition()
+    d = pnl.Composition()
+    t = pnl.TransferMechanism()
+    c.add_c_node(t)
+    d.add_c_node(t)
+
+    t.execute(1)
+    assert t.value == 1
+    c.run({t: 5})
+    assert t.value == 5
+    d.run({t: 10})
+    assert t.value == 10
+    c.run({t: 20}, execution_id='custom execution id')
+    assert t.value == 20
+
+    # context None
+    assert t.parameters.value.get() == 1
+    assert t.parameters.value.get(c) == 5
+    assert t.parameters.value.get(d) == 10
+    assert t.parameters.value.get('custom execution id') == 20

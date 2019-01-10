@@ -145,7 +145,7 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -500,7 +500,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         BETA: None
     })
 
-    class Params(RecurrentTransferMechanism.Params):
+    class Parameters(RecurrentTransferMechanism.Parameters):
         """
             Attributes
             ----------
@@ -554,16 +554,16 @@ class LCAMechanism(RecurrentTransferMechanism):
                     :type: float
 
         """
-        function = Param(Logistic, stateful=False, loggable=False)
+        function = Parameter(Logistic, stateful=False, loggable=False)
 
-        matrix = Param(None, modulable=True)
-        leak = Param(0.5, modulable=True)
-        competition = Param(1.0, modulable=True)
-        self_excitation = Param(0.0, modulable=True)
-        time_step_size = Param(0.1, modulable=True)
+        matrix = Parameter(None, modulable=True)
+        leak = Parameter(0.5, modulable=True)
+        competition = Parameter(1.0, modulable=True)
+        self_excitation = Parameter(0.0, modulable=True)
+        time_step_size = Parameter(0.1, modulable=True)
 
         initial_value = None
-        integrator_mode = Param(True, setter=_integrator_mode_setter)
+        integrator_mode = Parameter(True, setter=_integrator_mode_setter)
 
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
@@ -609,7 +609,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         integrator_function = LeakyCompetingIntegrator
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   leak=leak,
                                                   self_excitation=self_excitation,

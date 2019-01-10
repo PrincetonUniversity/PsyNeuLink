@@ -73,7 +73,7 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.adaptive.learning.kohonenlearningmechanism import KohonenLearningMechanism
@@ -362,7 +362,7 @@ class KohonenMechanism(TransferMechanism):
 
     componentType = KOHONEN_MECHANISM
 
-    class Params(TransferMechanism.Params):
+    class Parameters(TransferMechanism.Parameters):
         """
             Attributes
             ----------
@@ -392,9 +392,9 @@ class KohonenMechanism(TransferMechanism):
                     :type: str
 
         """
-        learning_function = Param(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
+        learning_function = Parameter(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
 
-        learning_rate = Param(None, modulable=True)
+        learning_rate = Parameter(None, modulable=True)
 
         enable_learning = True
         matrix = DEFAULT_MATRIX

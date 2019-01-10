@@ -415,7 +415,7 @@ from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -624,8 +624,8 @@ class OptimizationControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # FIX: ADD OTHER Params() HERE??
-    class Params(ControlMechanism.Params):
+    # FIX: ADD OTHER Parameters() HERE??
+    class Parameters(ControlMechanism.Parameters):
         """
             Attributes
             ----------
@@ -679,14 +679,14 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
 
         """
-        function = Param(None, stateful=False, loggable=False)
-        feature_function = Param(None, stateful=False, loggable=False)
-        search_function = Param(None, stateful=False, loggable=False)
-        search_termination_function = Param(None, stateful=False, loggable=False)
+        function = Parameter(None, stateful=False, loggable=False)
+        feature_function = Parameter(None, stateful=False, loggable=False)
+        search_function = Parameter(None, stateful=False, loggable=False)
+        search_termination_function = Parameter(None, stateful=False, loggable=False)
 
-        agent_rep = Param(None, stateful=False, loggable=False)
+        agent_rep = Parameter(None, stateful=False, loggable=False)
 
-        feature_values = Param(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
+        feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
 
         features = None
         num_estimates = 1
@@ -720,7 +720,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.search_function = search_function
         self.search_termination_function = search_termination_function
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(input_states=features,
                                                   feature_function=feature_function,
                                                   origin_objective_mechanism=origin_objective_mechanism,
@@ -745,7 +745,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.composition import Composition
         if self.agent_rep is None:
-            raise OptimizationControlMechanismError("The {} arg of an {} must specify a {}".
+            raise OptimizationControlMechanismError("The {} arg of an {} must be specified and be a {}".
                                                     format(repr(AGENT_REP), self.__class__.__name__,
                                                            Composition.__name__))
 
@@ -776,7 +776,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.input_states = [outcome_input_state]
 
         # Configure default_variable to comport with full set of input_states
-        self.instance_defaults.variable, _ = self._handle_arg_input_states(self.input_states)
+        self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
 
@@ -850,7 +850,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation.get(execution_id)
         if control_allocation is None:
-            control_allocation = [c.instance_defaults.variable for c in self.control_signals]
+            control_allocation = [c.defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
         # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
@@ -881,7 +881,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       runtime_params=runtime_params,
                                                                                       context=context)
 
-        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.value),1))
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
 
         # Give agent_rep a chance to clean up
         try:
@@ -950,7 +950,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         value = self.parameters.value.get(execution_id)
         if value is None:
-            value = copy.deepcopy(self.instance_defaults.value)
+            value = copy.deepcopy(self.defaults.value)
 
         for i in range(len(control_allocation)):
             value[i] = np.atleast_1d(control_allocation[i])
@@ -1086,7 +1086,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct control_allocation_search_space from their allocation_samples attributes
         # - compute their values and costs for samples of control_allocations from control_allocation_search_space
-        self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
+        self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals)
 
     @property

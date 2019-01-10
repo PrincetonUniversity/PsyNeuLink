@@ -94,7 +94,7 @@ from psyneulink.core.components.projections.projection import Projection_Base, p
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL_PROJECTIONS, INPUT_STATES, KOHONEN_LEARNING_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -103,7 +103,7 @@ __all__ = [
     'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'input_state_names', 'output_state_names',
 ]
 
-# Params:
+# Parameters:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
@@ -285,7 +285,7 @@ class KohonenLearningMechanism(LearningMechanism):
     learning_type = LearningType.UNSUPERVISED
     learning_timing = LearningTiming.EXECUTION_PHASE
 
-    class Params(LearningMechanism.Params):
+    class Parameters(LearningMechanism.Parameters):
         """
             Attributes
             ----------
@@ -327,10 +327,10 @@ class KohonenLearningMechanism(LearningMechanism):
                     :type: `ModulationParam`
 
         """
-        function = Param(Hebbian, stateful=False, loggable=False)
+        function = Parameter(Hebbian, stateful=False, loggable=False)
 
-        matrix = Param(None, modulable=True)
-        learning_rate = Param(None, modulable=True)
+        matrix = Parameter(None, modulable=True)
+        learning_rate = Parameter(None, modulable=True)
 
         learning_type = LearningType.UNSUPERVISED
         learning_timing = LearningTiming.EXECUTION_PHASE
@@ -357,7 +357,7 @@ class KohonenLearningMechanism(LearningMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   function=function,
                                                   learning_signals=learning_signals,

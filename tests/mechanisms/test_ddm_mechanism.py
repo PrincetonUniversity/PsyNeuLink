@@ -3,8 +3,8 @@ import pytest
 import typecheck
 
 from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical, NormalDist
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.distributionfunctions import NormalDist, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
@@ -87,7 +87,7 @@ class TestThreshold:
         assert D.function.threshold == 10.0
 
         D.function.threshold = 5.0
-        assert D.function._threshold == 5.0
+        assert D.function.threshold == 5.0
 
     def test_threshold_sets_is_finished(self):
         D = DDM(name='DDM',
@@ -569,7 +569,7 @@ def test_DDM_size_int_check_var():
             time_step_size=1.0
         ),
     )
-    assert len(T.instance_defaults.variable) == 1 and T.instance_defaults.variable[0][0] == 0
+    assert len(T.defaults.variable) == 1 and T.defaults.variable[0][0] == 0
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2

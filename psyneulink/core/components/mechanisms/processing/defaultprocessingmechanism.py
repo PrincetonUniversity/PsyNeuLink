@@ -56,7 +56,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'DefaultProcessingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(Mechanism_Base.Params):
+    class Parameters(Mechanism_Base.Parameters):
         variable = np.array([SystemDefaultInputValue])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

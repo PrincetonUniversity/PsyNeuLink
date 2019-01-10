@@ -15,9 +15,9 @@ import os, re
 
 from psyneulink.core.scheduling.time import TimeScale
 
-from llvmlite import ir
 from .debug import debug_env
 from .helpers import ConditionGenerator
+from llvmlite import ir
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_llvm_ir_to_ctype']
 
@@ -86,14 +86,19 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_input_struct_type'):
             return component._get_input_struct_type(self)
 
-        default_var = component.instance_defaults.variable
+        # KDM 12/28/18: <_instance_defaults_note> left _instance_defaults in place so that this code could use it.
+        # Ideally this would be simply .defaults. After going through the special handler above, component becomes a
+        # super() object, which seems to return the .defaults attr of the class associated with the super() object,
+        # whereas _instance_defaults retuns the .defaults attr of the instance associated. I don't know whether
+        # is a design or a convenience measure for workarounds, so I left this in place.
+        default_var = component._instance_defaults.variable
         return self.convert_python_struct_to_llvm_ir(default_var)
 
     def get_output_struct_type(self, component):
         if hasattr(component, '_get_output_struct_type'):
             return component._get_output_struct_type(self)
 
-        default_val = component.instance_defaults.value
+        default_val = component._instance_defaults.value
         return self.convert_python_struct_to_llvm_ir(default_val)
 
     def get_param_struct_type(self, component):

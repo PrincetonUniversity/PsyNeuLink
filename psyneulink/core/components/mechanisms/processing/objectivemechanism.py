@@ -340,7 +340,7 @@ from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, 
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -415,7 +415,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + componentType (str): ObjectiveMechanism
             + classPreference (PreferenceSet): ObjectiveMechanism_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + ClassDefaults.variable (value):  None (must be specified using **input_states** and/or
+            + class_defaults.variable (value):  None (must be specified using **input_states** and/or
                                                **monitored_output_states**)
             + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
@@ -542,10 +542,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
-    # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
+    # class_defaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
+    # kmantel: above needs to be clarified - can class_defaults.variable truly be anything? or should there be some format?
     #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -557,7 +557,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     :type: `Function`
 
         """
-        function = Param(LinearCombination, stateful=False, loggable=False)
+        function = Parameter(LinearCombination, stateful=False, loggable=False)
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -585,7 +585,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is OUTCOME:
             output_states = [OUTCOME]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   output_states=output_states,
                                                   function=function,
@@ -701,7 +701,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #    delete it and first item of variable
         if len(self.input_states)==1 and self.input_state.name=='InputState-0' and not self.input_state.path_afferents:
             del self.input_states[0]
-            self.instance_defaults.variable = []
+            self.defaults.variable = []
 
         # Get reference value
         reference_value = []

@@ -374,7 +374,7 @@ class ModulatorySignal(OutputState):
     componentType = MODULATORY_SIGNAL
     # paramsType = OUTPUT_STATE_PARAMS
 
-    class Params(OutputState.Params):
+    class Parameters(OutputState.Parameters):
         """
             Attributes
             ----------
@@ -426,7 +426,7 @@ class ModulatorySignal(OutputState):
 
         # Standard initialization
         else:
-            # Assign args to params and functionParams dicts (kwConstants must == arg names)
+            # Assign args to params and functionParams dicts 
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
 
@@ -451,8 +451,8 @@ class ModulatorySignal(OutputState):
         # If owner is specified but modulation has not been specified, assign to owner's value
 
         super()._instantiate_attributes_after_function(context=context)
-        if self.owner and self._modulation is None:
-            self._modulation = self.modulation or self.owner.modulation
+        if self.owner and self.modulation is None:
+            self.modulation = self.owner.modulation
 
 
     def _instantiate_projections(self, projections, context=None):

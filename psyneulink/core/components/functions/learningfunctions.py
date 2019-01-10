@@ -34,7 +34,7 @@ from psyneulink.core.components.component import ComponentError, function_type, 
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, DEFAULT_VARIABLE, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -115,7 +115,7 @@ class LearningFunction(Function_Base):
 
     componentType = LEARNING_FUNCTION_TYPE
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -134,8 +134,8 @@ class LearningFunction(Function_Base):
                     :type: float
 
         """
-        variable = Param(np.array([0, 0, 0]), read_only=True)
-        learning_rate = Param(0.05, modulable=True)
+        variable = Parameter(np.array([0, 0, 0]), read_only=True)
+        learning_rate = Parameter(0.05, modulable=True)
 
     def _validate_learning_rate(self, learning_rate, type=None):
 
@@ -146,17 +146,17 @@ class LearningFunction(Function_Base):
 
         if type is AUTOASSOCIATIVE:
 
-            if learning_rate_dim == 1 and len(learning_rate) != len(self.instance_defaults.variable):
+            if learning_rate_dim == 1 and len(learning_rate) != len(self.defaults.variable):
                 raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
                                     format(LEARNING_RATE, self.name, len(learning_rate),
-                                           len(self.instance_defaults.variable)))
+                                           len(self.defaults.variable)))
 
             if learning_rate_dim == 2:
                 shape = learning_rate.shape
-                if shape[0] != shape[1] or shape[0] != len(self.instance_defaults.variable):
+                if shape[0] != shape[1] or shape[0] != len(self.defaults.variable):
                     raise FunctionError("Shape of {} arg for {} ({}) must be square and "
                                         "of the same width as the length of its variable ({})".
-                                        format(LEARNING_RATE, self.name, shape, len(self.instance_defaults.variable)))
+                                        format(LEARNING_RATE, self.name, shape, len(self.defaults.variable)))
 
             if learning_rate_dim > 2:
                 raise FunctionError("{} arg for {} ({}) must be a single value of a 1d or 2d array".
@@ -307,7 +307,7 @@ class BayesGLM(LearningFunction):
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
-    class Params(LearningFunction.Params):
+    class Parameters(LearningFunction.Parameters):
         """
             Attributes
             ----------
@@ -405,8 +405,8 @@ class BayesGLM(LearningFunction):
                     :type: int
 
         """
-        variable = Param([np.array([0, 0, 0]), np.array([0])], read_only=True)
-        value = Param(np.array([0]), read_only=True, aliases=['sample_weights'])
+        variable = Parameter([np.array([0, 0, 0]), np.array([0])], read_only=True)
+        value = Parameter(np.array([0]), read_only=True, aliases=['sample_weights'])
 
         Lambda_0 = 0
         Lambda_prior = 0
@@ -438,7 +438,7 @@ class BayesGLM(LearningFunction):
 
         self.user_specified_default_variable = default_variable
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(mu_0=mu_0,
                                                   sigma_0=sigma_0,
                                                   gamma_shape_0=gamma_shape_0,
@@ -478,8 +478,8 @@ class BayesGLM(LearningFunction):
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
         to their initial (_0) values, and assign current (_n) values to the priors'''
 
-        variable = np.array(self.instance_defaults.variable)
-        variable = self.instance_defaults.variable
+        variable = np.array(self.defaults.variable)
+        variable = self.defaults.variable
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
@@ -512,7 +512,7 @@ class BayesGLM(LearningFunction):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         if DEFAULT_VARIABLE in args[0]:
-            self.instance_defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
+            self.defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
             self.initialize_priors()
 
@@ -527,7 +527,7 @@ class BayesGLM(LearningFunction):
         Arguments
         ---------
 
-        variable : 2d or 3d array : default ClassDefaults.variable
+        variable : 2d or 3d array : default class_defaults.variable
            if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
            be a 1d array containing the dependent variable to be predicted by the predictors;
            if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
@@ -553,8 +553,8 @@ class BayesGLM(LearningFunction):
         # # MODIFIED 10/26/18 OLD:
         # # If variable passed during execution does not match default assigned during initialization,
         # #    reassign default and re-initialize priors
-        # elif np.array(variable).shape != self.instance_defaults.variable.shape:
-        #     self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
+        # elif np.array(variable).shape != self.defaults.variable.shape:
+        #     self.defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
         #     self.initialize_priors()
         # MODIFIED 10/26/18 END
 
@@ -641,7 +641,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable: List[array(float64), array(float64), 2d array[[float64]]] : default ClassDefaults.variable
+    variable: List[array(float64), array(float64), 2d array[[float64]]] : default class_defaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
     learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
@@ -704,7 +704,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     componentName = KOHONEN_FUNCTION
 
-    class Params(LearningFunction.Params):
+    class Parameters(LearningFunction.Parameters):
         """
             Attributes
             ----------
@@ -723,8 +723,8 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                     :type: str
 
         """
-        variable = Param([[0, 0], [0, 0], [[0, 0], [0, 0]]], read_only=True)
-        distance_function = Param(GAUSSIAN, stateful=False)
+        variable = Parameter([[0, 0], [0, 0], [[0, 0], [0, 0]]], read_only=True)
+        distance_function = Parameter(GAUSSIAN, stateful=False)
 
         def _validate_distance_function(self, distance_function):
             options = {GAUSSIAN, LINEAR, EXPONENTIAL}
@@ -748,7 +748,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(distance_function=distance_function,
                                                   learning_rate=learning_rate,
                                                   params=params)
@@ -830,7 +830,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : array or List[1d array, 1d array, 2d array] : default ClassDefaults.variable
+        variable : array or List[1d array, 1d array, 2d array] : default class_defaults.variable
            input pattern, array of activation values, and matrix used to calculate the weights changes.
 
         params : Dict[param keyword: param value] : default None
@@ -917,7 +917,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default class_defaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -985,7 +985,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     componentName = HEBBIAN_FUNCTION
 
-    class Params(LearningFunction.Params):
+    class Parameters(LearningFunction.Parameters):
         """
             Attributes
             ----------
@@ -998,7 +998,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     :read only: True
 
         """
-        variable = Param(np.array([0, 0]), read_only=True)
+        variable = Parameter(np.array([0, 0]), read_only=True)
 
     default_learning_rate = 0.05
 
@@ -1011,7 +1011,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(
             # activation_function=activation_function,
             learning_rate=learning_rate,
@@ -1058,7 +1058,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         Arguments
         ---------
 
-        variable : List[number] or 1d array : default ClassDefaults.variable
+        variable : List[number] or 1d array : default class_defaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
@@ -1148,7 +1148,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     Arguments
     ---------
 
-    variable : List[number] or 1d array : default ClassDefaults.variable
+    variable : List[number] or 1d array : default class_defaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     COMMENT:
@@ -1216,7 +1216,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     componentName = CONTRASTIVE_HEBBIAN_FUNCTION
 
-    class Params(LearningFunction.Params):
+    class Parameters(LearningFunction.Parameters):
         """
             Attributes
             ----------
@@ -1229,7 +1229,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                     :read only: True
 
         """
-        variable = Param(np.array([0, 0]), read_only=True)
+        variable = Parameter(np.array([0, 0]), read_only=True)
 
     default_learning_rate = 0.05
 
@@ -1243,7 +1243,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(
             # activation_function=activation_function,
             learning_rate=learning_rate,
@@ -1290,7 +1290,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         Arguments
         ---------
 
-        variable : List[number] or 1d np.array : default ClassDefaults.variable
+        variable : List[number] or 1d np.array : default class_defaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
         params : Dict[param keyword: param value] : default None
@@ -1407,7 +1407,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     Arguments
     ---------
 
-    default_variable : List or 2d array : default ClassDefaults.variable
+    default_variable : List or 2d array : default class_defaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
 
@@ -1482,7 +1482,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     componentName = RL_FUNCTION
 
-    class Params(LearningFunction.Params):
+    class Parameters(LearningFunction.Parameters):
         """
             Attributes
             ----------
@@ -1516,10 +1516,10 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                     :read only: True
 
         """
-        variable = Param(np.array([[0], [0], [0]]), read_only=True)
-        activation_input = Param([0], read_only=True, getter=_activation_input_getter)
-        activation_output = Param([0], read_only=True, getter=_activation_output_getter)
-        error_signal = Param([0], read_only=True, getter=_error_signal_getter)
+        variable = Parameter(np.array([[0], [0], [0]]), read_only=True)
+        activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
+        activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
+        error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
 
     default_learning_rate = 0.05
 
@@ -1533,7 +1533,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(  # activation_function=activation_function,
             learning_rate=learning_rate,
             params=params)
@@ -1595,7 +1595,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+        variable : List or 2d np.array [length 3 in axis 0] : default class_defaults.variable
            must have three items that are (in order):
 
                * `activation_input <Reinforcement.activation_input>` (not used);
@@ -1722,7 +1722,7 @@ class BackPropagation(LearningFunction):
     Arguments
     ---------
 
-    variable : List or 2d array [length 3 in axis 0] : default ClassDefaults.variable
+    variable : List or 2d array [length 3 in axis 0] : default class_defaults.variable
        specifies a template for the three items provided as the variable in the call to the
        `function <BackPropagation.function>` (in order):
        `activation_input <BackPropagation.activation_input>` (1d array),
@@ -1815,7 +1815,7 @@ class BackPropagation(LearningFunction):
 
     componentName = BACKPROPAGATION_FUNCTION
 
-    class Params(LearningFunction.Params):
+    class Parameters(LearningFunction.Parameters):
         """
             Attributes
             ----------
@@ -1862,14 +1862,14 @@ class BackPropagation(LearningFunction):
                     :type: float
 
         """
-        variable = Param(np.array([[0], [0], [0]]), read_only=True)
-        learning_rate = Param(1.0, modulable=True)
+        variable = Parameter(np.array([[0], [0], [0]]), read_only=True)
+        learning_rate = Parameter(1.0, modulable=True)
 
-        activation_input = Param([0], read_only=True, getter=_activation_input_getter)
-        activation_output = Param([0], read_only=True, getter=_activation_output_getter)
-        error_signal = Param([0], read_only=True, getter=_error_signal_getter)
+        activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
+        activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
+        error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
 
-        error_matrix = Param(None, read_only=True)
+        error_matrix = Parameter(None, read_only=True)
 
     default_learning_rate = 1.0
 
@@ -1888,7 +1888,7 @@ class BackPropagation(LearningFunction):
         error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                  len(default_variable[LEARNING_ERROR_OUTPUT])))
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
                                                   error_matrix=error_matrix,
                                                   learning_rate=learning_rate,

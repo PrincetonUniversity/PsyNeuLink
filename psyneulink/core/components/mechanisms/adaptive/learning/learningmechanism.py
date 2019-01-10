@@ -553,7 +553,7 @@ from psyneulink.core.components.states.modulatorysignals.learningsignal import L
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
@@ -624,7 +624,7 @@ class LearningTiming(Enum):
     LEARNING_PHASE = 1
 
 
-# Params:
+# Parameters:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 
@@ -922,7 +922,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    class Params(AdaptiveMechanism_Base.Params):
+    class Parameters(AdaptiveMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -960,11 +960,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     :read only: True
 
         """
-        function = Param(BackPropagation, stateful=False, loggable=False)
-        error_matrix = Param(None, modulable=True)
+        function = Parameter(BackPropagation, stateful=False, loggable=False)
+        error_matrix = Parameter(None, modulable=True)
 
-        learning_signal = Param(None, read_only=True, getter=_learning_signal_getter)
-        error_signal = Param(None, read_only=True, getter=_error_signal_getter)
+        learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
+        error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
 
         learning_enabled = True
 
@@ -1004,7 +1004,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(error_sources=error_sources,
                                                   function=function,
                                                   learning_signals=learning_signals,
@@ -1167,13 +1167,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     #     This assumes that error_source has only one LearningSignal or,
                     #     if it has more, that they are all equivalent
                     self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
-
-    def _instantiate_attributes_after_function(self, context=None):
-
-        if self._learning_rate is not None:
-            self.learning_rate = self._learning_rate
-
-        super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_output_states(self, context=None):
 

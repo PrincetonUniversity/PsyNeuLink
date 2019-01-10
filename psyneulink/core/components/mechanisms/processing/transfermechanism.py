@@ -372,7 +372,7 @@ from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, 
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import all_within_range, append_type_to_name, iscompatible
@@ -527,7 +527,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             + componentType (str): TransferMechanism
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + ClassDefaults.variable (value):  Transfer_DEFAULT_BIAS
+            + class_defaults.variable (value):  Transfer_DEFAULT_BIAS
 
         Class methods
         -------------
@@ -827,7 +827,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -901,18 +901,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :read only: True
 
         """
-        integrator_mode = Param(False, setter=_integrator_mode_setter)
-        integration_rate = Param(0.5, modulable=True)
+        integrator_mode = Parameter(False, setter=_integrator_mode_setter)
+        integration_rate = Parameter(0.5, modulable=True)
         initial_value = None
-        previous_value = Param(None, read_only=True)
-        integrator_function_value = Param([[0]], read_only=True)
-        has_integrated = Param(False, user=False)
-        on_resume_integrator_mode = Param(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
+        previous_value = Parameter(None, read_only=True)
+        integrator_function_value = Parameter([[0]], read_only=True)
+        has_integrated = Parameter(False, user=False)
+        on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
-        noise = Param(0.0, modulable=True)
-        convergence_criterion = Param(0.01, modulable=True)
-        convergence_function = Param(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
-        max_passes = Param(1000, stateful=False)
+        noise = Parameter(0.0, modulable=True)
+        convergence_criterion = Parameter(0.01, modulable=True)
+        convergence_function = Parameter(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
+        max_passes = Parameter(1000, stateful=False)
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
@@ -966,7 +966,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # self.integrator_function = None
         self.has_integrated = False
         self._current_variable_index = 0
-        self.integrator_function_value = None
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -1017,11 +1016,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # FUNCTION is a function or method, so test that shape of output = shape of input
             if isinstance(transfer_function, (function_type, method_type, UserDefinedFunction)):
-                var_shape = self.instance_defaults.variable.shape
+                var_shape = self.defaults.variable.shape
                 if isinstance(transfer_function, UserDefinedFunction):
-                    val_shape = transfer_function._execute(self.instance_defaults.variable).shape
+                    val_shape = transfer_function._execute(self.defaults.variable).shape
                 else:
-                    val_shape = np.array(transfer_function(self.instance_defaults.variable)).shape
+                    val_shape = np.array(transfer_function(self.defaults.variable)).shape
 
                 if val_shape != var_shape:
                     raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
@@ -1034,10 +1033,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Need to compare with variable, since default for initial_value on Class is None
             if initial_value.dtype != object:
                 initial_value = np.atleast_2d(initial_value)
-            if not iscompatible(initial_value, self.instance_defaults.variable):
+            if not iscompatible(initial_value, self.defaults.variable):
                 raise TransferError(
                         "The format of the initial_value parameter for {} ({}) must match its variable ({})".
-                        format(append_type_to_name(self), initial_value, self.instance_defaults.variable,
+                        format(append_type_to_name(self), initial_value, self.defaults.variable,
                     )
                 )
 
@@ -1067,11 +1066,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("Value(s) in {} arg for {} ({}) must be an int or float in the interval [0,1]".
                                     format(repr(INTEGRATION_RATE), self.name, integration_rate, ))
             if (not np.isscalar(integration_rate.tolist())
-                    and integration_rate.shape != self.instance_defaults.variable.squeeze().shape):
+                    and integration_rate.shape != self.defaults.variable.squeeze().shape):
                 raise TransferError("{} arg for {} ({}) must be either an int or float, "
                                     "or have the same shape as its {} ({})".
                                     format(repr(INTEGRATION_RATE), self.name, integration_rate,
-                                           VARIABLE, self.instance_defaults.variable))
+                                           VARIABLE, self.defaults.variable))
 
         # Validate CLIP:
         if CLIP in target_set and target_set[CLIP] is not None:
@@ -1093,11 +1092,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable) and len(noise) > 1:
+            elif not iscompatible(np.atleast_2d(noise), self.defaults.variable) and len(noise) > 1:
                 raise MechanismError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified"
                     " as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
+                    .format(noise, self.defaults.variable, self.name, np.shape(np.array(self.defaults.variable))))
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -1152,12 +1151,12 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         # if self.integrator_mode:
-        # self.previous_value = None
+        # self.parameters.previous_value.set(None, override=True)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
-            self.initial_value = self.instance_defaults.variable
+            self.initial_value = self.defaults.variable
 
     def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
                                          execution_id, context=None):
@@ -1209,10 +1208,17 @@ class TransferMechanism(ProcessingMechanism_Base):
                         # Assign funciton's noise to Mechanism
                         self.parameters.noise.set(self.integrator_function.noise, execution_id)
 
+                        # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
+                        self._validate_params(
+                            request_set={'noise': self.integrator_function.noise},
+                            target_set={'noise': self.integrator_function.noise},
+                            context=context
+                        )
+
             if hasattr(self.integrator_function, INITIALIZER):
                 fct_intlzr = np.array(self.integrator_function.initializer)
                 # Check against variable, as class.default is None, but initial_value assigned to variable before here
-                mech_specified = not np.array_equal(mech_init_val, np.array(self.instance_defaults.variable))
+                mech_specified = not np.array_equal(mech_init_val, np.array(self.defaults.variable))
                 fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
                                                    np.array(self.integrator_function.class_defaults.initializer))
 
@@ -1255,14 +1261,21 @@ class TransferMechanism(ProcessingMechanism_Base):
                         # Assign function's rate to Mechanism
                         self.parameters.integration_rate.set(self.integrator_function.rate, execution_id)
 
+                        # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
+                        self._validate_params(
+                            request_set={'integration_rate': self.integrator_function.rate},
+                            target_set={'integration_rate': self.integrator_function.rate},
+                            context=context
+                        )
+
         self.has_integrated = True
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
         # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.instance_defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
+        if len(self.defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
-            for i, item in enumerate(self.instance_defaults.variable):
+            for i, item in enumerate(self.defaults.variable):
                 self.output_states.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_states(context=context)
 
@@ -1346,7 +1359,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
 
-        # Params and context for both integrator and main function
+        # Parameters and context for both integrator and main function
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
@@ -1439,7 +1452,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # Use self.instance_defaults.variable to initialize state of input
+        # Use self.defaults.variable to initialize state of input
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
@@ -1509,55 +1522,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params)
 
-    @property
-    def clip(self):
-        return self._clip
-
-    @clip.setter
-    def clip(self, value):
-        self._clip = value
-
     def delta(self, value=NotImplemented, execution_id=None):
         if value is NotImplemented:
             value = self.parameters.value.get(execution_id)
         return self.convergence_function([value[0], self.parameters.previous_value.get(execution_id)[0]])
-
-    @property
-    def integrator_mode(self):
-        return self._integrator_mode
-
-    @integrator_mode.setter
-    def integrator_mode(self, val):
-        if val is True:
-            if not self.integrator_mode and self.has_integrated:
-                self._integrator_mode = True
-                if self.integrator_function is not None:
-                    if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                        self.reinitialize(self.value)
-                    elif self.on_resume_integrator_mode == REINITIALIZE:
-                        self.reinitialize()
-            if not hasattr(self, PREVIOUS_VALUE):
-                self.previous_value = None
-            self.has_initializers = True
-
-            # # MODIFIED 12/14/18 NEW: [JDC]
-            # self._integrator_mode = True
-            # if self.integrator_function is not None:
-            #     if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-            #         self.reinitialize(self.value)
-            #         if self.parameters.previous_value.get() is None:
-            #             self.parameters.previous_value.set(self.parameters.initial_value.get())
-            #     elif self.on_resume_integrator_mode == REINITIALIZE:
-            #         self.reinitialize()
-            # MODIFIED 12/14/18 END
-
-        elif val is False:
-            self._integrator_mode = False
-            self.has_initializers = False
-            if not hasattr(self, "reinitialize_when"):
-                self.reinitialize_when = Never()
-        else:
-            raise MechanismError("{}'s integrator_mode attribute may only be True or False.".format(self.name))
 
     def is_converged(self, value=NotImplemented, execution_id=None):
         # Check for convergence

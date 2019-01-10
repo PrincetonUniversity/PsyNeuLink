@@ -27,7 +27,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
     kwPreferenceSetName, kwProgressBarChar
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -67,7 +67,7 @@ class EVCAuxiliaryFunction(Function_Base):
     """
     componentType = kwEVCAuxFunctionType
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -91,7 +91,7 @@ class EVCAuxiliaryFunction(Function_Base):
                     :type: int
 
         """
-        variable = Param(None, read_only=True)
+        variable = Parameter(None, read_only=True)
 
     classPreferences = {
         kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
@@ -107,7 +107,7 @@ class EVCAuxiliaryFunction(Function_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 
@@ -846,7 +846,7 @@ class PredictionMechanism(IntegratorMechanism):
 
     componentType = PREDICTION_MECHANISM
 
-    class Params(IntegratorMechanism.Params):
+    class Parameters(IntegratorMechanism.Parameters):
         """
             Attributes
             ----------
@@ -870,10 +870,10 @@ class PredictionMechanism(IntegratorMechanism):
                     :type: int
 
         """
-        window_size = Param(1, stateful=False, loggable=False)
-        filter_function = Param(None, stateful=False, loggable=False)
+        window_size = Parameter(1, stateful=False, loggable=False)
+        filter_function = Parameter(None, stateful=False, loggable=False)
 
-        rate = Param(1.0, modulable=True)
+        rate = Parameter(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -918,7 +918,7 @@ class PredictionMechanism(IntegratorMechanism):
 
             elif function is TIME_AVERAGE_INPUT:
                 # Use default for IntegratorMechanism: AdaptiveIntegrator
-                function = self.ClassDefaults.function
+                function = self.class_defaults.function
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
 

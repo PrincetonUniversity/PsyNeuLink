@@ -36,7 +36,7 @@ from psyneulink.core.globals.keywords import \
     BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 __all__ = ['MemoryFunction', 'Buffer', 'DND']
@@ -83,7 +83,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default ClassDefaults.variable
+    default_variable : number, list or array : default class_defaults.variable
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
@@ -141,7 +141,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if the **new_previous_value** argument is not specified in the call to `reinitialize
         <StatefulFUnction.reinitialize>`.
 
-    previous_value : 1d array : default ClassDefaults.variable
+    previous_value : 1d array : default class_defaults.variable
         state of the deque prior to appending `variable <Buffer.variable>` in the current call.
 
     owner : Component
@@ -159,9 +159,9 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
     componentName = BUFFER_FUNCTION
 
-    class Params(StatefulFunction.Params):
-        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+    class Parameters(StatefulFunction.Parameters):
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -198,7 +198,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -275,7 +275,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default ClassDefaults.variable
+        variable : number, list or array : default class_defaults.variable
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
@@ -370,7 +370,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
     Arguments
     ---------
 
-    default_variable : list or 2d array : default ClassDefaults.variable
+    default_variable : list or 2d array : default class_defaults.variable
         specifies a template for the key and value entries of the dictionary;  list must have two entries, each
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
@@ -485,14 +485,14 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     componentName = DND_FUNCTION
 
-    class Params(StatefulFunction.Params):
-        variable = Param([[0],[0]])
-        retrieval_prob = Param(1.0, modulable=True)
-        storage_prob = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        key_size = Param(1, stateful=True)
-        rate = Param(1.0, modulable=True)
-        noise = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        max_entries = Param(1000)
+    class Parameters(StatefulFunction.Parameters):
+        variable = Parameter([[0],[0]])
+        retrieval_prob = Parameter(1.0, modulable=True)
+        storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        key_size = Parameter(1, stateful=True)
+        rate = Parameter(1.0, modulable=True)
+        noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        max_entries = Parameter(1000)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -524,7 +524,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         self.distance_function = distance_function
         self.selection_function = selection_function
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
@@ -665,7 +665,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         Arguments
         ---------
 
-        variable : list or 2d array : default ClassDefaults.variable
+        variable : list or 2d array : default class_defaults.variable
            first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
            with key, is added to `dict <DND.dict>`.
 
@@ -706,9 +706,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            ret_val = np.zeros_like(self.instance_defaults.variable)
+            ret_val = np.zeros_like(self.defaults.variable)
             # if self.context.initialization_status == ContextFlags.INITIALIZING:
-            #     ret_val = np.zeros_like(self.instance_defaults.variable)
+            #     ret_val = np.zeros_like(self.defaults.variable)
             # else:
             #     ret_val = None
 
@@ -762,7 +762,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # if no memory, return the zero vector
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
         if len(self.dict) == 0:
-            return np.zeros_like(self.instance_defaults.variable)
+            return np.zeros_like(self.defaults.variable)
         # compute similarity(query_key, memory m ) for all m
         memory_dict = self.get_previous_value(execution_id)
         distances = [self.distance_function([query_key, list(m)]) for m in memory_dict.keys()]

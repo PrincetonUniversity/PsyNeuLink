@@ -613,7 +613,7 @@ def _get_time(component, context_flags, execution_id=None):
             context_flags = component.prev_context.flags
             execution_context = component.prev_context.string
         else:
-            context_flags = ContextFlags.UNINITIALIZED
+            context_flags = ContextFlags.UNSET
     else:
         execution_context = component.context.string
 

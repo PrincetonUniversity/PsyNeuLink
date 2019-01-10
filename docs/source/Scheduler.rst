@@ -3,4 +3,4 @@ Scheduler
 
 .. automodule:: psyneulink.core.scheduling.scheduler
    :members:
-   :exclude-members: random, Params
+   :exclude-members: random, Parameters

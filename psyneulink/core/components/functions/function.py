@@ -147,7 +147,7 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param, ParamAlias
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -430,11 +430,11 @@ def get_param_value_for_function(owner, function):
 # Parameter Mixins *****************************************************************************************************
 
 # KDM 6/21/18: Below is left in for consideration; doesn't really gain much to justify relaxing the assumption
-# that every Params class has a single parent
+# that every Parameters class has a single parent
 
 # class ScaleOffsetParamMixin:
-#     scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-#     offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+#     scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+#     offset = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
 
 # Function Definitions *************************************************************************************************
@@ -538,7 +538,7 @@ class Function_Base(Function):
     Arguments
     ---------
 
-    variable : value : default ClassDefaults.variable
+    variable : value : default class_defaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Dict[param keyword: param value] : default None
@@ -561,7 +561,7 @@ class Function_Base(Function):
 
     variable: value
         format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
-        they are specified by the Function's :keyword:`ClassDefaults.variable`.
+        they are specified by the Function's :keyword:`class_defaults.variable`.
 
     function : function
         called by the Function's `owner <Function_Base.owner>` when it is executed.
@@ -600,7 +600,7 @@ class Function_Base(Function):
 
     variableClassDefault_locked = False
 
-    class Params(Function.Params):
+    class Parameters(Function.Parameters):
         """
             Attributes
             ----------
@@ -613,7 +613,7 @@ class Function_Base(Function):
                     :read only: True
 
         """
-        variable = Param(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True)
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
@@ -639,7 +639,7 @@ class Function_Base(Function):
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
-        :param default_variable: (anything but a dict) - value to assign as self.instance_defaults.variable
+        :param default_variable: (anything but a dict) - value to assign as self.defaults.variable
         :param params: (dict) - params to be assigned to paramInstanceDefaults
         :param log: (ComponentLog enum) - log entry types set in self.componentLog
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
@@ -692,7 +692,7 @@ class Function_Base(Function):
         if param_name == "variable":
             raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
                                 "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
-                                "default variable, try {}.instance_defaults.variable.".format(self.name, self.name))
+                                "default variable, try {}.defaults.variable.".format(self.name, self.name))
         try:
             return self.owner._parameter_states[param_name].parameters.value.get(execution_context)
         except (AttributeError, TypeError):
@@ -775,8 +775,8 @@ class Function_Base(Function):
 
         # Can't convert from arrays of length > 1 to number
         if (
-            self.instance_defaults.variable is not None
-            and safe_len(self.instance_defaults.variable) > 1
+            self.defaults.variable is not None
+            and safe_len(self.defaults.variable) > 1
             and self.output_type is FunctionOutputType.RAW_NUMBER
         ):
             raise FunctionError(
@@ -824,7 +824,7 @@ class Function_Base(Function):
         # Filter out known unused/invalid params
         black_list = {'function', 'variable', 'value', 'context'}
         def _is_compilation_param(p):
-            if p.name not in black_list and not isinstance(p, ParamAlias):
+            if p.name not in black_list and not isinstance(p, ParameterAlias):
                 val = p.get(execution_id)
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, str)
@@ -878,7 +878,7 @@ class ArgumentTherapy(Function_Base):
     Arguments
     ---------
 
-    variable : boolean or statement that resolves to one : default ClassDefaults.variable
+    variable : boolean or statement that resolves to one : default class_defaults.variable
         assertion for which a therapeutic response will be offered.
 
     propensity : Manner value : default Manner.CONTRARIAN
@@ -939,7 +939,7 @@ class ArgumentTherapy(Function_Base):
     }
 
     # Variable class default
-    # This is used both to type-cast the variable, and to initialize instance_defaults.variable
+    # This is used both to type-cast the variable, and to initialize defaults.variable
     variableClassDefault_locked = False
 
     # Mode indicators
@@ -947,7 +947,7 @@ class ArgumentTherapy(Function_Base):
         OBSEQUIOUS = 0
         CONTRARIAN = 1
 
-    # Param class defaults
+    # Parameter class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
@@ -966,7 +966,7 @@ class ArgumentTherapy(Function_Base):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(propensity=propensity,
                                                   pertinacity=pertincacity,
                                                   params=params)
@@ -995,11 +995,11 @@ class ArgumentTherapy(Function_Base):
         :return variable: - validated
         """
 
-        if type(variable) == type(self.ClassDefaults.variable) or \
-                (isinstance(variable, numbers.Number) and isinstance(self.ClassDefaults.variable, numbers.Number)):
+        if type(variable) == type(self.class_defaults.variable) or \
+                (isinstance(variable, numbers.Number) and isinstance(self.class_defaults.variable, numbers.Number)):
             return variable
         else:
-            raise FunctionError("Variable must be {0}".format(type(self.ClassDefaults.variable)))
+            raise FunctionError("Variable must be {0}".format(type(self.class_defaults.variable)))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validates variable and /or params and assigns to targets
@@ -1051,7 +1051,7 @@ class ArgumentTherapy(Function_Base):
         Arguments
         ---------
 
-        variable : boolean : default ClassDefaults.variable
+        variable : boolean : default class_defaults.variable
            an assertion to which a therapeutic response is made.
 
         params : Dict[param keyword: param value] : default None
@@ -1098,7 +1098,7 @@ class EVCAuxiliaryFunction(Function_Base):
     """
     componentType = kwEVCAuxFunctionType
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -1127,7 +1127,7 @@ class EVCAuxiliaryFunction(Function_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 

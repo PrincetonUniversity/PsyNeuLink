@@ -593,7 +593,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, output_state_spec_to_parameter_name
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, iscompatible, make_readonly_property, recursive_update
@@ -768,7 +768,7 @@ class OutputState(State_Base):
             The OutputState class is a type in the State category of Component,
             It is used primarily as the sender for MappingProjections
             Its FUNCTION updates its value:
-                note:  currently, this is the identity function, that simply maps variable to self.value
+                note:  currently, this is the identity function, that simply maps variable to value
 
         Class attributes:
             + componentType (str) = OUTPUT_STATES
@@ -941,7 +941,7 @@ class OutputState(State_Base):
     #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Params(State_Base.Params):
+    class Parameters(State_Base.Parameters):
         """
             Attributes
             ----------
@@ -954,7 +954,7 @@ class OutputState(State_Base):
                     :read only: True
 
         """
-        variable = Param(np.array([0]), read_only=True, getter=_output_state_variable_getter)
+        variable = Parameter(np.array([0]), read_only=True, getter=_output_state_variable_getter)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -990,7 +990,7 @@ class OutputState(State_Base):
         if params:
             _maintain_backward_compatibility(params, name, owner)
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(
                 function=function,
                 params=params)
@@ -1019,7 +1019,7 @@ class OutputState(State_Base):
         # FIX: PUT THIS IN DEDICATED OVERRIDE OF COMPONENT VARIABLE-SETTING METHOD??
         if variable is None:
             if reference_value is None:
-                # variable = owner.instance_defaults.value[0]
+                # variable = owner.defaults.value[0]
                 # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
                 variable = DEFAULT_VARIABLE_SPEC
             else:
@@ -1263,10 +1263,10 @@ class OutputState(State_Base):
         if fct_variable is None:
             try:
                 if owner.value is not None:
-                    fct_variable = owner.instance_defaults.value[0]
+                    fct_variable = owner.defaults.value[0]
                 # Get owner's value by calling its function
                 else:
-                    fct_variable = owner.function(owner.instance_defaults.variable)[0]
+                    fct_variable = owner.function(owner.defaults.variable)[0]
             except AttributeError:
                 fct_variable = None
 
@@ -1370,7 +1370,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     (See State._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) are assigned here
+        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.defaults.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
 
     Returns list of instantiated OutputStates
@@ -1380,7 +1380,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
-    owner_value = owner.instance_defaults.value
+    owner_value = owner.defaults.value
 
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -1396,7 +1396,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         converted_to_2d = np.atleast_2d(owner.value)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
-            owner_value = owner.instance_defaults.value
+            owner_value = owner.defaults.value
         # Otherwise, use value converted to 2d np.array
         else:
             owner_value = converted_to_2d
@@ -1673,7 +1673,7 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
     """
     if function is None:
-        function = OutputState.ClassDefaults.function
+        function = OutputState.defaults.function
 
     if isinstance(function, (function_type, method_type)):
         return function

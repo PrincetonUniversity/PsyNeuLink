@@ -697,7 +697,7 @@ def run(obj,
         Return ``obj.results``.
 
         The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
-            * the inner-most dimension must equal the length of obj.instance_defaults.variable (i.e., the input to the obj);
+            * the inner-most dimension must equal the length of obj.defaults.variable (i.e., the input to the obj);
             * for Mechanism format, the length of the value of all entries must be equal (== number of executions);
             * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
                 Note: num_input_sets need not equal num_trials (the number of executions to actually run)
@@ -753,7 +753,7 @@ def run(obj,
         a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
         phase of execution <System_Execution_Learning>`
 
-    runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
+    runtime_params : Dict[Mechanism: Dict[Parameter: Tuple(Value, Condition)]]
         nested dictionary of (value, `Condition`) tuples for parameters of Mechanisms of the Composition; specifies
         alternate parameter values to be used only during this `Run` when the specified `Condition` is met.
 
@@ -1033,7 +1033,7 @@ def _adjust_stimulus_dict(obj, stimuli):
     # If not, assign their default variable to the dict
     for mech in obj.origin_mechanisms:
         if not mech in stimuli:
-            stimuli[mech] = mech.instance_defaults.variable.copy()
+            stimuli[mech] = mech.defaults.variable.copy()
 
     # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 

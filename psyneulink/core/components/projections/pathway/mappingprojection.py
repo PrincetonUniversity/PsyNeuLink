@@ -270,7 +270,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -454,7 +454,7 @@ class MappingProjection(PathwayProjection_Base):
     className = componentType
     suffix = " " + className
 
-    class Params(PathwayProjection_Base.Params):
+    class Parameters(PathwayProjection_Base.Parameters):
         """
             Attributes
             ----------
@@ -472,8 +472,8 @@ class MappingProjection(PathwayProjection_Base):
                     :type: str
 
         """
-        function = Param(LinearMatrix, stateful=False, loggable=False)
-        matrix = Param(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
+        function = Parameter(LinearMatrix, stateful=False, loggable=False)
+        matrix = Parameter(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -508,7 +508,7 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
@@ -569,7 +569,7 @@ class MappingProjection(PathwayProjection_Base):
         # Get sender and receiver lengths
         # Note: if either is a scalar, manually set length to 1 to avoid TypeError in call to len()
         try:
-            mapping_input_len = len(self.instance_defaults.variable)
+            mapping_input_len = len(self.defaults.variable)
         except TypeError:
             mapping_input_len = 1
         try:
@@ -646,9 +646,9 @@ class MappingProjection(PathwayProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self._matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
+                self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
-                # Since matrix shape has changed, output of self.function may have changed, so update self.value
+                # Since matrix shape has changed, output of self.function may have changed, so update value
                 self._instantiate_value(context=context)
 
         super()._instantiate_receiver(context=context)

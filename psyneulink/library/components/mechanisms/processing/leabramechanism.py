@@ -105,7 +105,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Param
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.time import TimeScale
@@ -199,7 +199,7 @@ class LeabraFunction(Function_Base):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Params(Function_Base.Params):
+    class Parameters(Function_Base.Parameters):
         """
             Attributes
             ----------
@@ -218,7 +218,7 @@ class LeabraFunction(Function_Base):
                     :type:
 
         """
-        variable = Param(np.array([[0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0]]), read_only=True)
         network = None
 
     def __init__(self,
@@ -235,7 +235,7 @@ class LeabraFunction(Function_Base):
         if network is None:
             raise LeabraError('network was None. Cannot create function for Leabra Mechanism if network is not specified.')
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(network=network,
                                                   params=params)
 
@@ -314,7 +314,10 @@ class LeabraFunction(Function_Base):
 
 
 def _network_getter(owning_component=None, execution_id=None):
-    return owning_component.function.parameters.network.get(execution_id)
+    try:
+        return owning_component.function.parameters.network.get(execution_id)
+    except AttributeError:
+        return None
 
 
 def _network_setter(value, owning_component=None, execution_id=None):
@@ -324,7 +327,10 @@ def _network_setter(value, owning_component=None, execution_id=None):
 
 def _training_flag_setter(value, self=None, owning_component=None, execution_id=None):
     if value is not self.get(execution_id):
-        set_training(owning_component.parameters.network.get(execution_id), value)
+        try:
+            set_training(owning_component.parameters.network.get(execution_id), value)
+        except AttributeError:
+            return None
 
     return value
 
@@ -490,7 +496,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    class Params(ProcessingMechanism_Base.Params):
+    class Parameters(ProcessingMechanism_Base.Parameters):
         """
             Attributes
             ----------
@@ -544,8 +550,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
         hidden_sizes = None
         quarter_size = 50
 
-        network = Param(None, getter=_network_getter, setter=_network_setter)
-        training_flag = Param(None, setter=_training_flag_setter)
+        network = Parameter(None, getter=_network_getter, setter=_network_setter)
+        training_flag = Parameter(None, setter=_training_flag_setter)
 
     def __init__(self,
                  leabra_net=None,
@@ -620,25 +626,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
             runtime_params=runtime_params,
             context=context
         )
-
-    @property
-    def training_flag(self):
-        return self._training_flag
-
-    @training_flag.setter
-    def training_flag(self, value):
-        if self._training_flag is value:
-            return
-        set_training(self.function.network, value)
-        self._training_flag = value
-
-    @property
-    def network(self):
-        return self.function.network
-
-    @network.setter
-    def network(self, value):
-        self.function.network = value
 
 
 def convert_to_2d_input(array_like):
