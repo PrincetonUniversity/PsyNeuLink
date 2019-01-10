@@ -877,15 +877,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       context=context)
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
-            if self.saved_samples is None:
-                self.saved_samples = []
-            else:
-                self.saved_samples.append(saved_samples)
+            self.saved_samples = saved_samples
         if self.function.save_values:
-            if self.saved_values is None:
-                self.saved_values = []
-            else:
-                self.saved_values.append(saved_values)
+            self.saved_values = saved_values
 
         # Give agent_rep a chance to clean up
         try:
