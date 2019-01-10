@@ -714,6 +714,8 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep = agent_rep
         self.search_function = search_function
         self.search_termination_function = search_termination_function
+        self.saved_samples = None
+        self.saved_values = None
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(input_states=features,
@@ -873,8 +875,17 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       execution_id=execution_id,
                                                                                       runtime_params=runtime_params,
                                                                                       context=context)
-
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
+        if self.function.save_samples:
+            if self.saved_samples is None:
+                self.saved_samples = []
+            else:
+                self.saved_samples.append(saved_samples)
+        if self.function.save_values:
+            if self.saved_values is None:
+                self.saved_values = []
+            else:
+                self.saved_values.append(saved_values)
 
         # Give agent_rep a chance to clean up
         try:

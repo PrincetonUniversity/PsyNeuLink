@@ -5,7 +5,7 @@ from psyneulink import *
 from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime Switches:
-RENDER = True
+RENDER = False
 PNL_COMPILE = False
 
 # *********************************************************************************************************************
@@ -75,18 +75,28 @@ def dist_diff_fct(variable):
 
 ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
                                    agent_rep=agent_comp,
-                                   function=GridSearch,
+                                   function=GridSearch(direction=MINIMIZE,
+                                                       save_values=True),
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
                                                                           monitored_output_states=[player_obs,
                                                                                                    predator_obs,
                                                                                                    prey_obs]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_obs),
-                                                                  allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 10, 100]),
+                                                                  # allocation_samples=[10, 1]),
+                                                                  allocation_samples=[0, 10]),
                                                     ControlSignal(projections=(VARIANCE,predator_obs),
-                                                                  allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 10, 100]),
+                                                                  # allocation_samples=[10, 1]),
+                                                                  allocation_samples=[0, 10]),
                                                     ControlSignal(projections=(VARIANCE,prey_obs),
-                                                                  allocation_samples=[0, 1, 10, 100]),
-                                                    ]
+                                                                  # allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 10, 100]),
+                                                                  # allocation_samples=[10, 1]),
+                                                                  allocation_samples=[0, 10]),
+                                                    ],
                                    )
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
@@ -128,6 +138,19 @@ def main():
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
             observation, reward, done, _ = env.step(action)
+            print('OCM ControlSignals:')
+            print('\n\tOutcome: {}\n\tPlayer OBS: {}\n\tPredator OBS: {}\n\tPrey OBS: {}'.
+                  format(ocm._objective_mechanism.value,
+                         ocm.control_signals[0].value,
+                         ocm.control_signals[1].value,
+                         ocm.control_signals[2].value))
+            for sample, value in zip(ocm.saved_samples, ocm.saved_values):
+                print('\n\t\tSample: {} Value: {}'.format(sample, value))
+            print('\n\tOutcome: {}\n\tPlayer OBS: {}\n\tPredator OBS: {}\n\tPrey OBS: {}'.
+                  format(ocm._objective_mechanism.value,
+                         ocm.control_signals[0].value,
+                         ocm.control_signals[1].value,
+                         ocm.control_signals[2].value))
             if done:
                 break
     stop_time = timeit.default_timer()

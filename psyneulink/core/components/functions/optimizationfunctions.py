@@ -196,7 +196,7 @@ class SampleIterator(Iterator):
     specification                 \
     )
 
-    Creates an iterator which returns the next sample from a sequence on each call to `next <SampleIterator.__next__>`.
+    Creates an iterator that returns the next sample from a sequence on each call to `next <SampleIterator.__next__>`.
 
     The pattern of the sequence depends on the **specification**, which may be a list, nparray, or SampleSpec. Most of
     the patterns depend on the "current_step," which is incremented on each iteration, and set to zero when the
