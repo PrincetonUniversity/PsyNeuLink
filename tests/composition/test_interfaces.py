@@ -331,7 +331,7 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
 
-        # FIX: order of input states on inner composition 1 is not stable
+        # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 # inner_composition_1: [[2.0], [1.0]],
@@ -417,7 +417,7 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
 
-        # FIX: order of input states on inner composition 1 is not stable
+        # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 inner_composition_1: {A: [[2.0], [1.5], [2.5]],
@@ -494,7 +494,7 @@ class TestConnectCompositionsViaCIMS:
 
         sched = Scheduler(composition=level_2)
 
-        # FIX: order of input states in each inner composition (level_0 and level_1)
+        # FIX: order of InputStates in each inner composition (level_0 and level_1)
         level_2.run(inputs={A2: [[1.0, 2.0]],
                             level_1: {A1: [[1.0]],
                                       level_0: {A0: [[1.0], [2.0]]}}},
@@ -635,7 +635,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         with pytest.raises(CompositionError) as error_text:
             comp.run(inputs=input_dict)
-        assert "has an incompatible number of external input states" in str(error_text.value)
+        assert "has an incompatible number of external InputStates" in str(error_text.value)
 
     def test_mix_and_match_input_sources_invalid_source(self):
         A = ProcessingMechanism(name='A')

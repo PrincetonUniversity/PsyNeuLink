@@ -570,5 +570,5 @@ class TestSampleIterator:
         assert next(sample_iterator, None) is None
 
         assert sample_iterator.start == 1
-        assert sample_iterator.stop == 7.8
+        assert sample_iterator.stop is None
         assert sample_iterator.num == len(sample_list)
