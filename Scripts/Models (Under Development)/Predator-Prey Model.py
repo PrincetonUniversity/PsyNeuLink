@@ -59,9 +59,11 @@ agent_comp.add_c_node(prey_obs)
 agent_comp.add_c_node(greedy_action_mech)
 
 # ControlMechanism
+
 #   function for ObjectiveMechanism
 dist = Distance(metric=EUCLIDEAN)
 def dist_diff_fct(variable):
+    # Get difference in distance of player to predator vs. prey
     if variable is None:
         return 0
     player_coord = variable[0]
@@ -70,8 +72,8 @@ def dist_diff_fct(variable):
     dist_to_predator = dist([player_coord, predator_coord])
     dist_to_prey = dist([player_coord, prey_coord])
     return dist_to_predator - dist_to_prey
-ocm = OptimizationControlMechanism(# features=[prey_obs, predator_obs],
-                                   features={SHADOW_EXTERNAL_INPUTS: [prey_obs, predator_obs]},
+
+ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [prey_obs, predator_obs]},
                                    agent_rep=agent_comp,
                                    function=GridSearch,
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
