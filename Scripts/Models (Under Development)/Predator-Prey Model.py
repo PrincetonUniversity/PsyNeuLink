@@ -5,9 +5,7 @@ from psyneulink import *
 from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime Switches:
-PNL=True
 RENDER = True
-PERCEPT_DISTORT = False
 PNL_COMPILE = False
 
 # *********************************************************************************************************************
@@ -34,33 +32,27 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
 
+
+# *********************************************************************************************************************
+# **************************************  MECHANISMS AND COMPOSITION  *************************************************
+# *********************************************************************************************************************
+
+# Perceptual Mechanisms
 player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
 prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
 predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
 
-# For future use:
+# Value and Reward Mechanisms (not yet used;  for future use)
 values = TransferMechanism(size=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
 
-# Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
-# note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
+# Action Mechanism
+#    Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
+#    note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
 greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
 
-dist = Distance(metric=EUCLIDEAN)
-
-def dist_diff_fct(variable):
-    if variable is None:
-        return 0
-    player_coord = variable[0]
-    predator_coord = variable[1]
-    prey_coord = variable[2]
-    dist_to_predator = dist([player_coord, predator_coord])
-    dist_to_prey = dist([player_coord, prey_coord])
-    return dist_to_predator - dist_to_prey
-
-
+# Create Composition
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-
 agent_comp.add_c_node(player_obs)
 agent_comp.add_c_node(predator_obs)
 agent_comp.add_c_node(prey_obs)
@@ -70,6 +62,18 @@ agent_comp.add_c_node(greedy_action_mech)
 # agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
 # agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
 
+# ControlMechanism
+#   function for ObjectiveMechanism
+dist = Distance(metric=EUCLIDEAN)
+def dist_diff_fct(variable):
+    if variable is None:
+        return 0
+    player_coord = variable[0]
+    predator_coord = variable[1]
+    prey_coord = variable[2]
+    dist_to_predator = dist([player_coord, predator_coord])
+    dist_to_prey = dist([player_coord, prey_coord])
+    return dist_to_predator - dist_to_prey
 ocm = OptimizationControlMechanism(# features=[prey_obs, predator_obs],
                                    features={SHADOW_EXTERNAL_INPUTS: [prey_obs, predator_obs]},
                                    agent_rep=agent_comp,
@@ -89,9 +93,13 @@ ocm = OptimizationControlMechanism(# features=[prey_obs, predator_obs],
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
 
-
 # agent_comp.show_graph(show_mechanism_structure='ALL')
 # agent_comp.show_graph()
+
+
+# *********************************************************************************************************************
+# ******************************************   RUN SIMULATION  ********************************************************
+# *********************************************************************************************************************
 
 num_trials = 4
 
@@ -108,13 +116,16 @@ def main():
     for _ in range(num_trials):
         observation = env.reset()
         while True:
-            run_results = agent_comp.run(inputs={
-                player_obs:[observation[player_coord_slice]],
-                predator_obs:[observation[predator_coord_slice]],
-                prey_obs:[observation[prey_coord_slice]],
-                # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
-                # reward:[reward],
-            })
+            if PNL_COMPILE:
+                BIN_EXECUTE = 'LLVM'
+            else:
+                BIN_EXECUTE = 'Python'
+            run_results = agent_comp.run(inputs={player_obs:[observation[player_coord_slice]],
+                                                 predator_obs:[observation[predator_coord_slice]],
+                                                 prey_obs:[observation[prey_coord_slice]],
+                                                 },
+                                         bin_execute=BIN_EXECUTE
+                                         )
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
