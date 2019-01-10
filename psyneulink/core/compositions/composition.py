@@ -4220,7 +4220,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 context=context)
 
         net_control_allocation_outcomes = []
-
+        # FIX: the indexing below for predicted_input is not correct 
         for i in range(num_trials):
             inputs = {}
             for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
