@@ -3095,7 +3095,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     if bin_execute:
                         _comp_ex.execute_node(node)
-                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
                     else:
                         if node is not self.model_based_optimizer:
                             node.execute(
@@ -3117,7 +3116,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     execution_id
                                 )
                         node.function._runtime_params_reset[execution_id] = {}
-                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+
+                    node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
                     if bin_execute:
