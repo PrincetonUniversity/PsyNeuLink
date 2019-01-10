@@ -155,6 +155,10 @@ class LLVMBuilderContext:
         entry_block = llvm_func.append_basic_block(name="entry")
         builder = ir.IRBuilder(entry_block)
 
+        if 'const_params' in debug_env:
+            const_params = params.type.pointee(composition._get_param_initializer(None))
+            builder.store(const_params, params)
+
         # Call input CIM
         input_cim_name = composition._get_node_wrapper(composition.input_CIM);
         input_cim_f = self.get_llvm_function(input_cim_name)
