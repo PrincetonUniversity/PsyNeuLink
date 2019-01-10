@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.0.0+12.gbbb616e documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.0.0+13.g0d0d37d documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+12.gbbb616e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+13.g0d0d37d documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+12
+                0.5.0.0+13
               </div>
             
           
@@ -359,7 +359,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="LCAMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – if False, any cycles containing this projection will be</li>
 </ul>
@@ -405,7 +405,7 @@ value(s).</li>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_processes=False</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>show_roles=False</em>, <em>show_dimensions=False</em>, <em>show_mechanism_structure=False</em>, <em>show_headers=True</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>origin_color='green'</em>, <em>terminal_color='red'</em>, <em>origin_and_terminal_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_processes=False</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>show_roles=False</em>, <em>show_dimensions=False</em>, <em>show_mechanism_structure=False</em>, <em>show_headers=True</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a display of the graph structure of Mechanisms and Projections in the System.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -424,7 +424,7 @@ System’s <a class="reference internal" href="System.html#system-control"><span
 <p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are always displayed as nodes.  If <strong>show_mechanism_structure</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>,
 Mechanism nodes are subdivided into sections for its States with information about each determined by the
 <strong>show_values</strong> and <strong>show_functions</strong> specifications.  Otherwise, Mechanism nodes are simple ovals.
-<code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> and  <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanisms of the System are displayed with thicker borders in a colors specified
+<code class="xref any docutils literal"><span class="pre">INPUT</span></code> and  <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> Mechanisms of the System are displayed with thicker borders in colors specified
 for each. <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> are displayed as labelled arrows, unless <strong>show_learning</strong> is specified,
 in which case <code class="xref any docutils literal"><span class="pre">MappingProjections</span></code> as labelled arrows that point to them.</p>
 <div class="admonition note" id="system-projection-arrow-corruption">
@@ -460,8 +460,8 @@ show_graph method:</p>
 <a class="reference internal image-reference" href="_images/show_graph_figure.svg"><img alt="System graph examples" src="_images/show_graph_figure.svg" /></a>
 <p class="caption"><span class="caption-text">Examples of renderings generated by the show_graph method with different options specified, and the call
 to the show_graph method used to generate each rendering shown below each example. <strong>Panel A</strong> shows the
-simplest rendering, with just Processing Components displayed; <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanisms are shown in red,
-and the <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanism in green.  <strong>Panel B</strong> shows the same graph with <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> names
+simplest rendering, with just Processing Components displayed; <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Mechanisms are shown in red,
+and the <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> Mechanism in green.  <strong>Panel B</strong> shows the same graph with <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> names
 and Component dimensions displayed.  <strong>Panel C</strong> shows the learning Components of the System displayed (in
 orange).  <strong>Panel D</strong> shows the control Components of the System displayed (in blue).  <strong>Panel E</strong> shows
 both learning and control Components;  the learning components are shown with all <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> shown (by specifying show_learning=pnl.ALL).  <strong>Panel F</strong> shows a detailed view of
@@ -507,8 +507,8 @@ that convey error and activation information;  if set to <code class="xref any d
 <li><strong>show_control</strong> (<em>bool : default False</em>) – specifies whether or not to show the control components of the system;
 they will all be displayed in the color specified for <strong>control_color</strong>.</li>
 <li><strong>show_roles</strong> (<em>bool : default False</em>) – specifies whether or not to include the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> that each Mechanism plays in the System
-(enclosed by square brackets); ‘ORIGIN’ and ‘TERMINAL’ Mechanisms are also displayed in a color specified
-by the <strong>origin_color</strong>, <strong>terminal_color</strong> and <strong>origin_and_terminal_color</strong> arguments (see below).</li>
+(enclosed by square brackets); ‘INPUT’ and ‘OUTPUT’ Mechanisms are also displayed in a color specified
+by the <strong>input_color</strong>, <strong>output_color</strong> and <strong>input_and_output_color</strong> arguments (see below).</li>
 <li><strong>show_dimensions</strong> (<em>bool</em><em>, </em><em>MECHANISMS</em><em>, </em><em>PROJECTIONS</em><em> or </em><em>ALL : default False</em>) – <p>specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
 is <code class="xref any docutils literal"><span class="pre">True</span></code>);  can have the following settings:</p>
 <ul>
@@ -527,18 +527,17 @@ formats).</li>
 <li><strong>active_items</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>] </em><em>: default None</em>) – specifies one or more items in the graph to display in the color specified by <em>active_color*</em>.</li>
 <li><strong>active_color</strong> (<em>keyword : default 'yellow'</em>) – specifies how to highlight the item(s) specified in <em>active_items*</em>:  either a color recognized
 by GraphViz, or the keyword <em>BOLD</em>.</li>
-<li><strong>origin_color</strong> (<em>keyword : default 'green'</em><em>,</em>) – specifies the color in which the <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanisms of the System are displayed.</li>
-<li><strong>terminal_color</strong> (<em>keyword : default 'red'</em><em>,</em>) – specifies the color in which the <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanisms of the System are displayed.</li>
-<li><strong>origin_and_terminal_color</strong> (<em>keyword : default 'brown'</em>) – specifies the color in which Mechanisms that are both
-an <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> and a <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> of the System are displayed.</li>
+<li><strong>input_color</strong> (<em>keyword : default 'green'</em><em>,</em>) – specifies the color in which the <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Mechanisms of the System are displayed.</li>
+<li><strong>output_color</strong> (<em>keyword : default 'red'</em><em>,</em>) – specifies the color in which the <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> Mechanisms of the System are displayed.</li>
+<li><strong>input_and_output_color</strong> (<em>keyword : default 'brown'</em>) – specifies the color in which Mechanisms that are both
+an <code class="xref any docutils literal"><span class="pre">INPUT</span></code> and a <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> of the System are displayed.</li>
 <li><strong>learning_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">green</span></code>) – specifies the color in which the learning components are displayed.</li>
 <li><strong>control_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – specifies the color in which the learning components are displayed (note: if the System’s
 <code class="xref any docutils literal"><span class="pre">model_based_optimizer</span></code> is an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>, then a link is shown in pink from the
 <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-prediction-mechanisms"><span class="std std-ref">prediction Mechanisms</span></a> it creates to the corresponding
-<code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanisms of the System, to indicate that although no projection are created for these,
-the prediction Mechanisms determine the input to the <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanisms when the EVCControlMechanism
+<code class="xref any docutils literal"><span class="pre">INPUT</span></code> Mechanisms of the System, to indicate that although no projection are created for these,
+the prediction Mechanisms determine the input to the <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Mechanisms when the EVCControlMechanism
 <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-execution"><span class="std std-ref">simulates execution</span></a> of the System).</li>
-<li><strong>prediction_mechanism_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">pink</span></code>) – specifies the color in which the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.prediction_mechanisms" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.prediction_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_mechanisms</span></code></a> are displayed for a System using an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a></li>
 <li><strong>system_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">purple</span></code>) – specifies the color in which the node representing input from the System is displayed.</li>
 <li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – ‘pdf’: generate and open a pdf with the visualization;
 ‘jupyter’: return the object (ideal for working in jupyter/ipython notebooks).</li>
@@ -608,7 +607,7 @@ to receive and execute sets of nodes that are eligible to run until termination 
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list } or { <a class="reference internal" href="#"><span class="doc">Composition</span></a> : list }) – a dictionary containing a key-value pair for each Node in the composition that receives inputs from
 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-list corresponds to a certain <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
+list corresponds to a certain <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
 <li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of
 this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
 <li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the Learning execution of
@@ -623,8 +622,8 @@ or use default inputs, and select a number of trials with num_trials.</li>
 <li><strong>call_after_time_step</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
 <li><strong>call_before_pass</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
 <li><strong>call_after_pass</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
-<li><strong>call_before_trial</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
-<li><strong>call_after_trial</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
+<li><strong>call_before_trial</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
+<li><strong>call_after_trial</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
 <li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Node: Node Value</em><em>]</em>) – sets the values of nodes before the start of the run. This is useful in cases where a node’s value is
 used before that node executes for the first time (usually due to recurrence or control).</li>
 <li><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>]</em>) – <p>nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
@@ -791,7 +790,7 @@ by checking whether the</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+12.gbbb616e',
+            VERSION:'0.5.0.0+13.g0d0d37d',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
