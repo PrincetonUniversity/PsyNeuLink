@@ -267,7 +267,7 @@ class SampleIterator(Iterator):
 
         if isinstance(specification, list):
             self.start = specification[0]
-            self.stop = specification[-1]
+            self.stop = None
             self.step = None
             self.num = len(specification)
             self.generator = specification                       # the list
@@ -320,7 +320,14 @@ class SampleIterator(Iterator):
         Sample value for the current iteration.
         """
         if self.num is None:
-            return self.generate_current_value()
+            current_value = self.generate_current_value()
+            if hasattr(self, 'stop'):
+                if self.stop is not None:
+                    if current_value <= self.stop:
+                        return current_value
+                    else:
+                        raise StopIteration
+            return current_value
         if self.current_step < self.num:
             current_value = self.generate_current_value()
             self.current_step += 1
