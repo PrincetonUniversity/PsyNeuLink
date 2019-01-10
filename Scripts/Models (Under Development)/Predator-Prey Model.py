@@ -1,7 +1,14 @@
+import timeit
 import numpy as np
 from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
+
+# Runtime Switches:
+PNL=True
+RENDER = True
+PERCEPT_DISTORT = False
+PNL_COMPILE = False
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -83,15 +90,21 @@ agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
 
 
-# Projections to greedy_action_mech were created by assignments of sample and target args in its constructor,
-#  so just add them to the Composition).
-for projection in greedy_action_mech.projections:
-    agent_comp.add_projection(projection)
-
 # agent_comp.show_graph(show_mechanism_structure='ALL')
 # agent_comp.show_graph()
 
+num_trials = 4
+
 def main():
+    env = ForagerEnv()
+    reward = 0
+    done = False
+    if RENDER:
+        env.render()  # If visualization is desired
+    else:
+        print("Running simulation...")
+    steps = 0
+    start_time = timeit.default_timer()
     for _ in range(num_trials):
         observation = env.reset()
         while True:
@@ -108,6 +121,11 @@ def main():
             observation, reward, done, _ = env.step(action)
             if done:
                 break
+    stop_time = timeit.default_timer()
+    print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
+          f'{stop_time - start_time:.2f} seconds')
+    if RENDER:
+        env.render()  # If visualization is desired
 
 if __name__ == "__main__":
     main()
