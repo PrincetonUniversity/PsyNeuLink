@@ -57,10 +57,6 @@ agent_comp.add_c_node(player_obs)
 agent_comp.add_c_node(predator_obs)
 agent_comp.add_c_node(prey_obs)
 agent_comp.add_c_node(greedy_action_mech)
-# agent_comp.add_c_node(player_obs, required_roles=CNodeRole.ORIGIN)
-# agent_comp.add_c_node(prey_obs, required_roles=CNodeRole.ORIGIN)
-# agent_comp.add_c_node(predator_obs, required_roles=CNodeRole.ORIGIN)
-# agent_comp.add_c_node(greedy_action_mech, required_roles=CNodeRole.TERMINAL)
 
 # ControlMechanism
 #   function for ObjectiveMechanism
