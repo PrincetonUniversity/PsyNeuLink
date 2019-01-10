@@ -4224,11 +4224,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i in range(num_trials):
             inputs = {}
             for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
-                # # MODIFIED 1/9/18 OLD:
-                # inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j][i]
-                # MODIFIED 1/9/18 NEW: [JDC]
                 inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j]
-                # MODIFIED 1/9/18 END
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
             for output_state in self.output_states:
