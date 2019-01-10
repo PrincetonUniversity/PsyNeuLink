@@ -196,7 +196,7 @@ class SampleIterator(Iterator):
     specification                 \
     )
 
-    Creates an iterator which returns the next sample from a sequence on each call to `next <SampleIterator.__next__>`.
+    Creates an iterator that returns the next sample from a sequence on each call to `next <SampleIterator.__next__>`.
 
     The pattern of the sequence depends on the **specification**, which may be a list, nparray, or SampleSpec. Most of
     the patterns depend on the "current_step," which is incremented on each iteration, and set to zero when the
@@ -267,7 +267,7 @@ class SampleIterator(Iterator):
 
         if isinstance(specification, list):
             self.start = specification[0]
-            self.stop = specification[-1]
+            self.stop = None
             self.step = None
             self.num = len(specification)
             self.generator = specification                       # the list
@@ -320,7 +320,14 @@ class SampleIterator(Iterator):
         Sample value for the current iteration.
         """
         if self.num is None:
-            return self.generate_current_value()
+            current_value = self.generate_current_value()
+            if hasattr(self, 'stop'):
+                if self.stop is not None:
+                    if current_value <= self.stop:
+                        return current_value
+                    else:
+                        raise StopIteration
+            return current_value
         if self.current_step < self.num:
             current_value = self.generate_current_value()
             self.current_step += 1
@@ -1427,6 +1434,7 @@ class GridSearch(OptimizationFunction):
         search_function = self._traverse_grid
         search_termination_function = self._grid_complete
         self._return_values = save_values
+        self._return_samples = save_values
         self.num_iterations = 1
         self.direction = direction
 
@@ -1605,8 +1613,8 @@ class GridSearch(OptimizationFunction):
             return_optimal_sample = max_value_of_max_tuples[0]
             return_optimal_value = max_value_of_max_tuples[1]
 
-            # if self._return_samples:
-            #     return_all_samples = np.concatenate(Comm.allgather(samples), axis=0)
+            if self._return_samples:
+                return_all_samples = np.concatenate(Comm.allgather(samples), axis=0)
             if self._return_values:
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
@@ -1617,14 +1625,26 @@ class GridSearch(OptimizationFunction):
                 params=params,
                 context=context
             )
-            return_optimal_value = max(all_values)
-            return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
-            # if self._return_samples:
-            #     return_all_samples = all_samples
+            # return_optimal_value = max(all_values)
+            # return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
+
+            # Evaluate objective_function for current sample
+
+            # Evaluate for optimal value
+            if self.direction is MAXIMIZE:
+                value_optimal = max(all_values)
+            elif self.direction is MINIMIZE:
+                value_optimal = min(all_values)
+            else:
+                assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
+                    format(repr(DIRECTION),self.name,self.direction)
+            sample_optimal = all_samples[all_values.index(value_optimal)]
+            if self._return_samples:
+                return_all_samples = all_samples
             if self._return_values:
                 return_all_values = all_values
 
-        return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
+        return sample_optimal, value_optimal, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
         '''Get next sample from grid.
@@ -1639,7 +1659,6 @@ class GridSearch(OptimizationFunction):
                                             "(current_execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
                        self.owner.current_execution_count, self.num_iterations))
-
         return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
@@ -1820,7 +1839,7 @@ class GaussianProcess(OptimizationFunction):
         search_function = self._gaussian_process_sample
         search_termination_function = self._gaussian_process_satisfied
         self._return_values = save_values
-
+        self._return_samples = save_values
         self.direction = direction
 
         # Assign args to params and functionParams dicts 
@@ -1912,8 +1931,8 @@ class GaussianProcess(OptimizationFunction):
 
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
-            # if self._return_samples:
-            #     return_all_samples = all_samples
+            if self._return_samples:
+                return_all_samples = all_samples
             if self._return_values:
                 return_all_values = all_values
 

@@ -110,7 +110,7 @@ The following arguments of its constructor are specific to the OptimizationContr
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  Features can be
   specified using any of the following, singly or combined in a list:
 
-  * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
+  * {*SHADOW_EXTERNAL_INPUTS*: <`INPUT` Mechanism, InputState for one, or list with either or both>} --
     InputStates of the same shapes as those listed are created on the ModelFreeOptimizationControlMechanism,
     and are connected to the corresponding input_CIM OutputStates by projections. The external input values
     that are passed through the input_CIM are used as the `features <ModelFreeOptimizationControlMechanism_Feature>`.
@@ -202,12 +202,12 @@ it is executed to evaluate the `net_outcome <ControlMechanism.net_outcome>` for 
 
 Features can be of two types:
 
-* *Input Features* -- these are values received as input by `ORIGIN` Mechanisms of the `Composition`.
+* *Input Features* -- these are values received as input by `INPUT` Mechanisms of the `Composition`.
   They are specified in the **features** argument of the OptimizationControlMechanism's constructor (see
   `OptimizationControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry,
-  the value of which is one or more `ORIGIN` Mechanisms and/or their `InputStates
+  the value of which is one or more `INPUT` Mechanisms and/or their `InputStates
   <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
-  Projection from the Composition's `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of
+  Projection from the Composition's `InputCIM` to the `INPUT` Mechanism, projecting from the same `OutputState` of
   the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
 ..
 * *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in the
@@ -461,10 +461,6 @@ class OptimizationControlMechanism(ControlMechanism):
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
     performance of the `Composition` to which it belongs
 
-    .. note::
-       OptimizationControlMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
-       It should be instantiated using the constructor for a subclass.
-
     Arguments
     ---------
 
@@ -480,7 +476,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.feature_values>` and used to predict `net_outcome <ControlMechanism.net_outcome>`.
         Any `InputState specification <InputState_Specification>` can be used that resolves to an `OutputState` that
         projects to the InputState. In addition, a dictionary with a *SHADOW_EXTERNAL_INPUTS* entry can be used to
-        shadow inputs to the Composition's `ORIGIN` Mechanism(s) (see `above <OptimizationControlMechanism_Creation>`
+        shadow inputs to the Composition's `INPUT` Node(s) (see `above <OptimizationControlMechanism_Creation>`
         for details).
 
     feature_function : Function or function : default None
@@ -703,7 +699,6 @@ class OptimizationControlMechanism(ControlMechanism):
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
                  objective_mechanism: tc.optional(tc.any(ObjectiveMechanism, list)) = None,
-                 origin_objective_mechanism=False, terminal_objective_mechanism=False,
                  function: tc.optional(tc.any(is_function_type)) = None, num_estimates: int = 1,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
@@ -719,12 +714,12 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep = agent_rep
         self.search_function = search_function
         self.search_termination_function = search_termination_function
+        self.saved_samples = None
+        self.saved_values = None
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(input_states=features,
                                                   feature_function=feature_function,
-                                                  origin_objective_mechanism=origin_objective_mechanism,
-                                                  terminal_objective_mechanism=terminal_objective_mechanism,
                                                   num_estimates=num_estimates,
                                                   params=params)
 
@@ -880,8 +875,11 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       execution_id=execution_id,
                                                                                       runtime_params=runtime_params,
                                                                                       context=context)
-
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
+        if self.function.save_samples:
+            self.saved_samples = saved_samples
+        if self.function.save_values:
+            self.saved_values = saved_values
 
         # Give agent_rep a chance to clean up
         try:
@@ -976,7 +974,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         **features** argument can use any of the forms of specification allowed for InputState(s),
         as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
-        list of `ORIGIN` Mechanisms and/or their InputStates as its value.
+        list of `INPUT` Mechanisms and/or their InputStates as its value.
         '''
 
         if features:
@@ -988,7 +986,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _parse_feature_specs(self, features, feature_function, context=None):
         """Parse entries of features into InputState spec dictionaries
 
-        For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an Origin InputState):
+        For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an INPUT node InputState):
             - Call _parse_shadow_input_spec
 
         For standard InputState specs:
@@ -1010,7 +1008,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
             if isinstance(spec, dict):
                 if SHADOW_EXTERNAL_INPUTS in spec:
-                    #  composition looks for node.shadow_external_inputs and uses it to set external_origin_sources
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
                     spec = self._parse_shadow_inputs_spec(spec, feature_function)
                 else:

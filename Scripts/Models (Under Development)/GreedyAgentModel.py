@@ -6,7 +6,7 @@ from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime Switches:
 PNL=True
-RENDER = False
+RENDER = True
 PERCEPT_DISTORT = False
 PNL_COMPILE = False
 
