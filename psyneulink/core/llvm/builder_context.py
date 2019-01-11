@@ -13,7 +13,10 @@ import ctypes
 import numpy as np
 import os, re
 
+from psyneulink.core.scheduling.time import TimeScale
+
 from .debug import debug_env
+from .helpers import ConditionGenerator
 from llvmlite import ir
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_llvm_ir_to_ctype']
@@ -131,6 +134,143 @@ class LLVMBuilderContext:
             assert(element.type.pointee.count == 1)
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
+
+    def _gen_composition_exec(self, composition):
+        func_name = None
+        llvm_func = None
+
+        # Create condition generator
+        cond_gen = ConditionGenerator(self, composition)
+
+        func_name = self.get_unique_name('exec_wrap_' + composition.name)
+        func_ty = ir.FunctionType(ir.VoidType(), (
+            self.get_context_struct_type(composition).as_pointer(),
+            self.get_param_struct_type(composition).as_pointer(),
+            self.get_input_struct_type(composition).as_pointer(),
+            self.get_data_struct_type(composition).as_pointer(),
+            cond_gen.get_condition_struct_type().as_pointer()))
+        llvm_func = ir.Function(self.module, func_ty, name=func_name)
+        llvm_func.attributes.add('argmemonly')
+        context, params, comp_in, data, cond = llvm_func.args
+        for a in llvm_func.args:
+            a.attributes.add('nonnull')
+            a.attributes.add('noalias')
+
+        # Create entry block
+        entry_block = llvm_func.append_basic_block(name="entry")
+        builder = ir.IRBuilder(entry_block)
+
+        if 'const_params' in debug_env:
+            const_params = params.type.pointee(composition._get_param_initializer(None))
+            builder.store(const_params, params)
+
+        # Call input CIM
+        input_cim_name = composition._get_node_wrapper(composition.input_CIM);
+        input_cim_f = self.get_llvm_function(input_cim_name)
+        builder.call(input_cim_f, [context, params, comp_in, data, data])
+
+        # Allocate run set structure
+        run_set_type = ir.ArrayType(ir.IntType(1), len(composition.c_nodes))
+        run_set_ptr = builder.alloca(run_set_type, name="run_set")
+
+        # Allocate temporary output storage
+        output_storage = builder.alloca(data.type.pointee, name="output_storage")
+
+        iter_ptr = builder.alloca(self.int32_ty, name="iter_counter")
+        builder.store(self.int32_ty(0), iter_ptr)
+
+        loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
+        builder.branch(loop_condition)
+
+        # Generate a while not 'end condition' loop
+        builder.position_at_end(loop_condition)
+        run_cond = cond_gen.generate_sched_condition(builder,
+                        composition.termination_processing[TimeScale.TRIAL],
+                        cond, None)
+        run_cond = builder.not_(run_cond, name="not_run_cond")
+
+        loop_body = builder.append_basic_block(name="scheduling_loop_body")
+        exit_block = builder.append_basic_block(name="exit")
+        builder.cbranch(run_cond, loop_body, exit_block)
+
+
+        # Generate loop body
+        builder.position_at_end(loop_body)
+
+        zero = self.int32_ty(0)
+        any_cond = ir.IntType(1)(0)
+
+        # Calculate execution set before running the mechanisms
+        for idx, mech in enumerate(composition.c_nodes):
+            run_set_mech_ptr = builder.gep(run_set_ptr,
+                                           [zero, self.int32_ty(idx)],
+                                           name="run_cond_ptr_" + mech.name)
+            mech_cond = cond_gen.generate_sched_condition(builder,
+                            composition._get_processing_condition_set(mech),
+                            cond, mech)
+            ran = cond_gen.generate_ran_this_pass(builder, cond, mech)
+            mech_cond = builder.and_(mech_cond, builder.not_(ran),
+                                     name="run_cond_" + mech.name)
+            any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
+            builder.store(mech_cond, run_set_mech_ptr)
+
+        for idx, mech in enumerate(composition.c_nodes):
+            run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
+            mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
+            with builder.if_then(mech_cond):
+                mech_name = composition._get_node_wrapper(mech);
+                mech_f = self.get_llvm_function(mech_name)
+                # Wrappers do proper indexing of all strctures
+                if len(mech_f.args) == 5: # Mechanism wrappers have 5 inputs
+                    builder.call(mech_f, [context, params, comp_in, data, output_storage])
+                else:
+                    builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
+
+                cond_gen.generate_update_after_run(builder, cond, mech)
+
+        # Writeback results
+        for idx, mech in enumerate(composition.c_nodes):
+            run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
+            mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
+            with builder.if_then(mech_cond):
+                out_ptr = builder.gep(output_storage, [zero, zero, self.int32_ty(idx)], name="result_ptr_" + mech.name)
+                data_ptr = builder.gep(data, [zero, zero, self.int32_ty(idx)],
+                                       name="data_result_" + mech.name)
+                builder.store(builder.load(out_ptr), data_ptr)
+
+        # Update step counter
+        with builder.if_then(any_cond):
+            cond_gen.bump_ts(builder, cond)
+
+        # Increment number of iterations
+        iters = builder.load(iter_ptr, name="iterw")
+        iters = builder.add(iters, self.int32_ty(1), name="iterw_inc")
+        builder.store(iters, iter_ptr)
+
+        max_iters = len(composition.scheduler_processing.consideration_queue)
+        completed_pass = builder.icmp_unsigned("==", iters,
+                                               self.int32_ty(max_iters),
+                                               name="completed_pass")
+        # Increment pass and reset time step
+        with builder.if_then(completed_pass):
+            builder.store(zero, iter_ptr)
+            # Bumping automatically zeros lower elements
+            cond_gen.bump_ts(builder, cond, (0, 1, 0))
+
+        builder.branch(loop_condition)
+
+        builder.position_at_end(exit_block)
+        # Call output CIM
+        output_cim_name = composition._get_node_wrapper(composition.output_CIM);
+        output_cim_f = self.get_llvm_function(output_cim_name)
+        builder.call(output_cim_f, [context, params, comp_in, data, data])
+
+        # Bump run counter
+        cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
+        builder.ret_void()
+
+        return func_name
 
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:

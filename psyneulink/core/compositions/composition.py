@@ -3029,7 +3029,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         __execution.cuda_execute(inputs)
                         return __execution.extract_node_output(self.output_CIM)
 
-                # Filter out mechanisms. Nested nodes are not executed in this mode
+                # Filter out mechanisms. Nested compositions are not executed in this mode
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
@@ -3113,7 +3113,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     if bin_execute:
                         _comp_ex.execute_node(node)
-                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
                     else:
                         if node is not self.model_based_optimizer:
                             node.execute(
@@ -3135,7 +3134,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     execution_id
                                 )
                         node.function._runtime_params_reset[execution_id] = {}
-                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+
+                    node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
                     if bin_execute:
@@ -3635,7 +3635,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_execution_wrapper(self):
         if self.__generated_execution is None:
-            self.__generated_execution = self.__gen_exec_wrapper()
+            with pnlvm.LLVMBuilderContext() as ctx:
+                self.__generated_execution = ctx._gen_composition_exec(self)
 
         return self.__generated_execution
 
@@ -3805,7 +3806,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return func_name
 
-    def __get_processing_condition_set(self, node):
+    def _get_processing_condition_set(self, node):
         dep_group = []
         for group in self.scheduler_processing.consideration_queue:
             if node in group:
@@ -3821,137 +3822,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             cond += self.scheduler_processing.condition_set.conditions[node]
 
         return All(*cond)
-
-    def __gen_exec_wrapper(self):
-        func_name = None
-        llvm_func = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            # Create condition generator
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-
-            func_name = ctx.get_unique_name('exec_wrap_' + self.name)
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), (
-                ctx.get_context_struct_type(self).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                ctx.get_data_struct_type(self).as_pointer(),
-                cond_gen.get_condition_struct_type().as_pointer()))
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            context, params, comp_in, data, cond = llvm_func.args
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            entry_block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(entry_block)
-
-            # Call input CIM
-            input_cim_name = self._get_node_wrapper(self.input_CIM);
-            input_cim_f = ctx.get_llvm_function(input_cim_name)
-            builder.call(input_cim_f, [context, params, comp_in, data, data])
-
-            # Allocate run set structure
-            run_set_type = pnlvm.ir.ArrayType(pnlvm.ir.IntType(1), len(self.c_nodes))
-            run_set_ptr = builder.alloca(run_set_type, name="run_set")
-
-            # Allocate temporary output storage
-            output_storage = builder.alloca(data.type.pointee, name="output_storage")
-
-            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
-            builder.store(ctx.int32_ty(0), iter_ptr)
-
-            loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
-            builder.branch(loop_condition)
-
-            # Generate a while not 'end condition' loop
-            builder.position_at_end(loop_condition)
-            run_cond = cond_gen.generate_sched_condition(builder,
-                            self.termination_processing[TimeScale.TRIAL],
-                            cond, None)
-            run_cond = builder.not_(run_cond, name="not_run_cond")
-
-            loop_body = builder.append_basic_block(name="scheduling_loop_body")
-            exit_block = builder.append_basic_block(name="exit")
-            builder.cbranch(run_cond, loop_body, exit_block)
-
-
-            # Generate loop body
-            builder.position_at_end(loop_body)
-
-            zero = ctx.int32_ty(0)
-            any_cond = pnlvm.ir.IntType(1)(0)
-
-            # Calculate execution set before running the mechanisms
-            for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr,
-                                               [zero, ctx.int32_ty(idx)],
-                                               name="run_cond_ptr_" + mech.name)
-                mech_cond = cond_gen.generate_sched_condition(builder,
-                                self.__get_processing_condition_set(mech),
-                                cond, mech)
-                ran = cond_gen.generate_ran_this_pass(builder, cond, mech)
-                mech_cond = builder.and_(mech_cond, builder.not_(ran),
-                                         name="run_cond_" + mech.name)
-                any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
-                builder.store(mech_cond, run_set_mech_ptr)
-
-            for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
-                with builder.if_then(mech_cond):
-                    mech_name = self._get_node_wrapper(mech);
-                    mech_f = ctx.get_llvm_function(mech_name)
-                    if isinstance(mech, Mechanism):
-                        builder.call(mech_f, [context, params, comp_in, data, output_storage])
-                    else:
-                        builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
-
-                    cond_gen.generate_update_after_run(builder, cond, mech)
-
-            # Writeback results
-            for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
-                with builder.if_then(mech_cond):
-                    out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + mech.name)
-                    data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)],
-                                           name="data_result_" + mech.name)
-                    builder.store(builder.load(out_ptr), data_ptr)
-
-            # Update step counter
-            with builder.if_then(any_cond):
-                cond_gen.bump_ts(builder, cond)
-
-            # Increment number of iterations
-            iters = builder.load(iter_ptr, name="iterw")
-            iters = builder.add(iters, ctx.int32_ty(1), name="iterw_inc")
-            builder.store(iters, iter_ptr)
-
-            max_iters = len(self.scheduler_processing.consideration_queue)
-            completed_pass = builder.icmp_unsigned("==", iters,
-                                                   ctx.int32_ty(max_iters),
-                                                   name="completed_pass")
-            # Increment pass and reset time step
-            with builder.if_then(completed_pass):
-                builder.store(zero, iter_ptr)
-                # Bumping automatically zeros lower elements
-                cond_gen.bump_ts(builder, cond, (0, 1, 0))
-
-            builder.branch(loop_condition)
-
-            builder.position_at_end(exit_block)
-            # Call output CIM
-            output_cim_name = self._get_node_wrapper(self.output_CIM);
-            output_cim_f = ctx.get_llvm_function(output_cim_name)
-            builder.call(output_cim_f, [context, params, comp_in, data, data])
-
-            # Bump run counter
-            cond_gen.bump_ts(builder, cond, (1, 0, 0))
-
-            builder.ret_void()
-        return func_name
 
     def __gen_run_wrapper(self):
         func_name = None
