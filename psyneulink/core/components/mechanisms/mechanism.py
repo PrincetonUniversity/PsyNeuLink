@@ -2709,7 +2709,7 @@ class Mechanism_Base(Mechanism):
             ps_function = ctx.get_llvm_function(state)
 
             # Parameter states are in the 4th block (idx 3).
-            # After input, function,  and output
+            # After input, function, and output.
             ps_idx = ctx.int32_ty(3)
             ps_params = builder.gep(params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
@@ -2774,8 +2774,8 @@ class Mechanism_Base(Mechanism):
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_states(self.function, mf_params_ptr, ctx, builder, params, context, arg_in)
 
-        mf_state = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
+        mf_ctx = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_ctx, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
