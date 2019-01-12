@@ -189,6 +189,7 @@ class CompExecution(CUDAExecution):
         self.__frozen_vals = None
         self._execution_ids = execution_ids
         self._bin_func = None
+        self._debug_env = debug_env
 
         # At least the input_CIM wrapper should be generated
         with LLVMBuilderContext() as ctx:
@@ -345,6 +346,9 @@ class CompExecution(CUDAExecution):
         self._bin_func = self._composition._get_bin_mechanism(node)
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
+
+        if 'comp_node_debug' in self._debug_env:
+            print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
     def execute(self, inputs):
         inputs = self._get_input_struct(inputs)
