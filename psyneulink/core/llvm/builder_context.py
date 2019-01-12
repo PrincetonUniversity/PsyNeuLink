@@ -135,7 +135,7 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
-    def _gen_composition_exec(self, composition):
+    def gen_composition_exec(self, composition):
         func_name = None
         llvm_func = None
 

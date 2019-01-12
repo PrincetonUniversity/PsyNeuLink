@@ -3636,7 +3636,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_execution_wrapper(self):
         if self.__generated_execution is None:
             with pnlvm.LLVMBuilderContext() as ctx:
-                self.__generated_execution = ctx._gen_composition_exec(self)
+                self.__generated_execution = ctx.gen_composition_exec(self)
 
         return self.__generated_execution
 
