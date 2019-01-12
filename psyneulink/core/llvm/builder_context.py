@@ -272,6 +272,86 @@ class LLVMBuilderContext:
 
         return func_name
 
+    def gen_composition_run(self, composition):
+        func_name = self.get_unique_name('run_wrap_' + composition.name)
+        func_ty = ir.FunctionType(ir.VoidType(), (
+            self.get_context_struct_type(composition).as_pointer(),
+            self.get_param_struct_type(composition).as_pointer(),
+            self.get_data_struct_type(composition).as_pointer(),
+            self.get_input_struct_type(composition).as_pointer(),
+            self.get_output_struct_type(composition).as_pointer(),
+            self.int32_ty.as_pointer(),
+            self.int32_ty.as_pointer()))
+        llvm_func = ir.Function(self.module, func_ty, name=func_name)
+        llvm_func.attributes.add('argmemonly')
+        context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+        for a in llvm_func.args:
+            a.attributes.add('nonnull')
+            a.attributes.add('noalias')
+
+        # Create entry block
+        entry_block = llvm_func.append_basic_block(name="entry")
+        builder = ir.IRBuilder(entry_block)
+
+        # Allocate and initialize condition structure
+        cond_gen = ConditionGenerator(self, composition)
+        cond_type = cond_gen.get_condition_struct_type()
+        cond = builder.alloca(cond_type)
+        cond_init = cond_type(cond_gen.get_condition_initializer())
+        builder.store(cond_init, cond)
+
+        iter_ptr = builder.alloca(self.int32_ty, name="iter_counter")
+        builder.store(self.int32_ty(0), iter_ptr)
+
+        loop_condition = builder.append_basic_block(name="run_loop_condition")
+        builder.branch(loop_condition)
+
+        # Generate a "while < count" loop
+        builder.position_at_end(loop_condition)
+        count = builder.load(iter_ptr)
+        runs = builder.load(runs_ptr)
+        run_cond = builder.icmp_unsigned('<', count, runs)
+
+        loop_body = builder.append_basic_block(name="run_loop_body")
+        exit_block = builder.append_basic_block(name="exit")
+        builder.cbranch(run_cond, loop_body, exit_block)
+
+        # Generate loop body
+        builder.position_at_end(loop_body)
+
+        # Current iteration
+        iters = builder.load(iter_ptr);
+
+        # Get the right input stimulus
+        input_idx = builder.urem(iters, builder.load(inputs_ptr))
+        data_in_ptr = builder.gep(data_in, [input_idx])
+
+        # Call execution
+        exec_f_name = composition._get_execution_wrapper()
+        exec_f = self.get_llvm_function(exec_f_name)
+        builder.call(exec_f, [context, params, data_in_ptr, data, cond])
+
+        # Extract output_CIM result
+        idx = composition._get_node_index(composition.output_CIM)
+        result_ptr = builder.gep(data, [self.int32_ty(0), self.int32_ty(0), self.int32_ty(idx)])
+        output_ptr = builder.gep(data_out, [iters])
+        result = builder.load(result_ptr)
+        builder.store(result, output_ptr)
+
+        # Increment counter
+        iters = builder.add(iters, self.int32_ty(1))
+        builder.store(iters, iter_ptr)
+        builder.branch(loop_condition)
+
+        builder.position_at_end(exit_block)
+
+        # Store the number of executed iterations
+        builder.store(builder.load(iter_ptr), runs_ptr)
+
+        builder.ret_void()
+
+        return func_name
+
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
             assert all(type(x) == type(t[0]) for x in t)
