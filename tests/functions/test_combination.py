@@ -89,17 +89,21 @@ RAND3_S = np.random.rand()
 @pytest.mark.parametrize("variable", [test_var, test_var2])
 @pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
 @pytest.mark.parametrize("exponents", [None, 2.0])
+@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
 @pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
 @pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
 @pytest.mark.parametrize("bin_execute", ['Python', 'LLVM', 'PTX'])
 @pytest.mark.benchmark
-def test_linear_combination_function(func, variable, operation, exponents, scale, offset, bin_execute, benchmark):
+def test_linear_combination_function(func, variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
     if bin_execute == 'PTX' and not pnlvm.ptx_enabled:
         benchmark(lambda _:0,0)
         benchmark.disabled = True
         pytest.skip("cuda not enabled/available")
 
-    f = func(default_variable=variable, operation=operation, exponents=exponents, scale=scale, offset=offset)
+    if weights is not None and not np.isscalar(weights) and  len(variable) != len(weights):
+        pytest.skip("variable/weights mismatch")
+
+    f = func(default_variable=variable, operation=operation, exponents=exponents, weights=weights, scale=scale, offset=offset)
     benchmark.group = "LinearCombinationFunction " + func.componentName;
     if (bin_execute == 'LLVM'):
         e = pnlvm.execution.FuncExecution(f)
@@ -113,10 +117,13 @@ def test_linear_combination_function(func, variable, operation, exponents, scale
     scale = 1.0 if scale is None else scale
     offset = 0.0 if offset is None else offset
     exponent = 1.0 if exponents is None else exponents
+    weights = 1.0 if weights is None else weights
+
+    tmp = (variable ** exponent) * weights
     if operation == pnl.SUM:
-        expected = np.sum(variable ** exponent, axis=0) * scale + offset
+        expected = np.sum(tmp, axis=0) * scale + offset
     if operation == pnl.PRODUCT:
-        expected = np.product(variable ** exponent, axis=0) * scale + offset
+        expected = np.product(tmp, axis=0) * scale + offset
 
     assert np.allclose(res, expected)
 
