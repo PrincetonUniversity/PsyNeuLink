@@ -3636,7 +3636,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_execution_wrapper(self):
         if self.__generated_execution is None:
             with pnlvm.LLVMBuilderContext() as ctx:
-                self.__generated_execution = ctx._gen_composition_exec(self)
+                self.__generated_execution = ctx.gen_composition_exec(self)
 
         return self.__generated_execution
 
@@ -3650,7 +3650,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_bin_run(self):
         if self.__compiled_run is None:
-            wrapper = self.__gen_run_wrapper()
+            with pnlvm.LLVMBuilderContext() as ctx:
+                wrapper = ctx.gen_composition_run(self)
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
             self.__compiled_run = bin_f
 
@@ -3822,87 +3823,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             cond += self.scheduler_processing.condition_set.conditions[node]
 
         return All(*cond)
-
-    def __gen_run_wrapper(self):
-        func_name = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.get_unique_name('run_wrap_' + self.name)
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), (
-                ctx.get_context_struct_type(self).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
-                ctx.get_data_struct_type(self).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                ctx.get_output_struct_type(self).as_pointer(),
-                ctx.int32_ty.as_pointer(),
-                ctx.int32_ty.as_pointer()))
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            entry_block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(entry_block)
-
-            # Allocate and initialize condition structure
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-            cond_type = cond_gen.get_condition_struct_type()
-            cond = builder.alloca(cond_type)
-            cond_init = cond_type(cond_gen.get_condition_initializer())
-            builder.store(cond_init, cond)
-
-            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
-            builder.store(ctx.int32_ty(0), iter_ptr)
-
-            loop_condition = builder.append_basic_block(name="run_loop_condition")
-            builder.branch(loop_condition)
-
-            # Generate a while not 'end condition' loop
-            builder.position_at_end(loop_condition)
-            count = builder.load(iter_ptr)
-            runs = builder.load(runs_ptr)
-            run_cond = builder.icmp_unsigned('<', count, runs)
-
-            loop_body = builder.append_basic_block(name="run_loop_body")
-            exit_block = builder.append_basic_block(name="exit")
-            builder.cbranch(run_cond, loop_body, exit_block)
-
-            # Generate loop body
-            builder.position_at_end(loop_body)
-
-            # Current iteration
-            iters = builder.load(iter_ptr);
-
-            # Get the right input stimulus
-            input_idx = builder.urem(iters, builder.load(inputs_ptr))
-            data_in_ptr = builder.gep(data_in, [input_idx])
-
-            # Call execution
-            exec_f_name = self._get_execution_wrapper()
-            exec_f = ctx.get_llvm_function(exec_f_name)
-            builder.call(exec_f, [context, params, data_in_ptr, data, cond])
-
-            # Extract output_CIM result
-            idx = self._get_node_index(self.output_CIM)
-            result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            output_ptr = builder.gep(data_out, [iters])
-            result = builder.load(result_ptr)
-            builder.store(result, output_ptr)
-
-            # increment counter
-            iters = builder.add(iters, ctx.int32_ty(1))
-            builder.store(iters, iter_ptr)
-            builder.branch(loop_condition)
-
-            builder.position_at_end(exit_block)
-
-            builder.store(builder.load(iter_ptr), runs_ptr)
-
-            builder.ret_void()
-
-        return func_name
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
