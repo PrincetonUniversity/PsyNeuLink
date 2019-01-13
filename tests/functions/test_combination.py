@@ -83,23 +83,7 @@ RAND1_S = np.random.rand()
 RAND2_S = np.random.rand()
 RAND3_S = np.random.rand()
 
-@pytest.mark.function
-@pytest.mark.combination_function
-@pytest.mark.parametrize("func", [pnl.core.components.functions.combinationfunctions.LinearCombination])
-@pytest.mark.parametrize("variable", [test_var, test_var2])
-@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("exponents", [None, 2.0])
-@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
-@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
-@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
-@pytest.mark.parametrize("bin_execute", ['Python', 'LLVM', 'PTX'])
-@pytest.mark.benchmark
-def test_linear_combination_function(func, variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
-    if bin_execute == 'PTX' and not pnlvm.ptx_enabled:
-        benchmark(lambda _:0,0)
-        benchmark.disabled = True
-        pytest.skip("cuda not enabled/available")
-
+def linear_combination_function(func, variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
     if weights is not None and not np.isscalar(weights) and  len(variable) != len(weights):
         pytest.skip("variable/weights mismatch")
 
@@ -127,6 +111,47 @@ def test_linear_combination_function(func, variable, operation, exponents, weigh
 
     assert np.allclose(res, expected)
 
+@pytest.mark.function
+@pytest.mark.combination_function
+@pytest.mark.parametrize("func", [pnl.core.components.functions.combinationfunctions.LinearCombination])
+@pytest.mark.parametrize("variable", [test_var, test_var2])
+@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
+@pytest.mark.parametrize("exponents", [None, 2.0])
+@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
+@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
+@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
+@pytest.mark.benchmark
+def test_linear_combination_function(func, variable, operation, exponents, weights, scale, offset, benchmark):
+    linear_combination_function(func, variable, operation, exponents, weights, scale, offset, 'Python', benchmark)
+
+@pytest.mark.function
+@pytest.mark.llvm
+@pytest.mark.combination_function
+@pytest.mark.parametrize("func", [pnl.core.components.functions.combinationfunctions.LinearCombination])
+@pytest.mark.parametrize("variable", [test_var, test_var2])
+@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
+@pytest.mark.parametrize("exponents", [None, 2.0])
+@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
+@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
+@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
+@pytest.mark.benchmark
+def test_linear_combination_function_llvm(func, variable, operation, exponents, weights, scale, offset, benchmark):
+    linear_combination_function(func, variable, operation, exponents, weights, scale, offset, 'LLVM', benchmark)
+
+@pytest.mark.function
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.combination_function
+@pytest.mark.parametrize("func", [pnl.core.components.functions.combinationfunctions.LinearCombination])
+@pytest.mark.parametrize("variable", [test_var, test_var2])
+@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
+@pytest.mark.parametrize("exponents", [None, 2.0])
+@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
+@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
+@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
+@pytest.mark.benchmark
+def test_linear_combination_function_ptx(func, variable, operation, exponents, weights, scale, offset, benchmark):
+    linear_combination_function(func, variable, operation, exponents, weights, scale, offset, 'PTX', benchmark)
 # ------------------------------------
 
 @pytest.mark.function
