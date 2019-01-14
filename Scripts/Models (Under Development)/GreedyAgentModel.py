@@ -6,9 +6,9 @@ from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime Switches:
 PNL=True
-RENDER = True
+RENDER = False
 PERCEPT_DISTORT = False
-PNL_COMPILE = False
+PNL_COMPILE = True
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -58,7 +58,7 @@ agent_comp.add_c_node(greedy_action_mech)
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_trials = 4
+num_trials = 100
 
 def main():
     env = ForagerEnv()
@@ -75,7 +75,7 @@ def main():
         while True:
             if PNL:
                 if PNL_COMPILE:
-                    BIN_EXECUTE = 'LLVM'
+                    BIN_EXECUTE = 'LLVMRun'
                 else:
                     BIN_EXECUTE = 'Python'
                 run_results = agent_comp.run(inputs={player:[observation[player_coord_idx]],
@@ -83,6 +83,7 @@ def main():
                                                      },
                                              bin_execute=BIN_EXECUTE
                                              )
+                run_results[0] = np.array(run_results[0])
                 action= np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             else:
                 run_results = observation[prey_coord_idx] - observation[player_coord_idx]
