@@ -331,7 +331,7 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
 
-        # FIX: order of input states on inner composition 1 is not stable
+        # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 # inner_composition_1: [[2.0], [1.0]],
@@ -417,7 +417,7 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
 
-        # FIX: order of input states on inner composition 1 is not stable
+        # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 inner_composition_1: {A: [[2.0], [1.5], [2.5]],
@@ -494,7 +494,7 @@ class TestConnectCompositionsViaCIMS:
 
         sched = Scheduler(composition=level_2)
 
-        # FIX: order of input states in each inner composition (level_0 and level_1)
+        # FIX: order of InputStates in each inner composition (level_0 and level_1)
         level_2.run(inputs={A2: [[1.0, 2.0]],
                             level_1: {A1: [[1.0]],
                                       level_0: {A0: [[1.0], [2.0]]}}},
@@ -635,7 +635,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         with pytest.raises(CompositionError) as error_text:
             comp.run(inputs=input_dict)
-        assert "has an incompatible number of external input states" in str(error_text.value)
+        assert "has an incompatible number of external InputStates" in str(error_text.value)
 
     def test_mix_and_match_input_sources_invalid_source(self):
         A = ProcessingMechanism(name='A')
@@ -662,7 +662,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         with pytest.raises(CompositionError) as error_text:
             comp.run(inputs=input_dict)
-        assert "source which is not an origin node or an InputState of an origin node" in str(error_text.value)
+        assert "source which is not an INPUT node or an InputState of an INPUT node" in str(error_text.value)
 
     def test_input_sources_invalid_origin_source(self):
         A = ProcessingMechanism(name='A')
@@ -691,7 +691,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         with pytest.raises(CompositionError) as error_text:
             comp.run(inputs=input_dict)
-        assert "already borrowing input from yet another origin node" in str(error_text.value)
+        assert "already borrowing input from yet another INPUT node" in str(error_text.value)
 
     def test_non_origin_partial_input_spec(self):
         A = ProcessingMechanism(name='A',
@@ -723,7 +723,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         with pytest.raises(CompositionError) as error_text:
             comp.run(inputs={A: [[1.23]],
                              C: [[4.0]]})
-        assert "too many external input states" in str(error_text.value)
+        assert "too many external InputStates" in str(error_text.value)
 
     def test_origin_partial_input_spec(self):
         A = ProcessingMechanism(name='A',
@@ -740,7 +740,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         with pytest.raises(CompositionError) as error_text:
             comp.run(inputs={A: [[1.23]]})
-        assert "incompatible number of external input states" in str(error_text.value)
+        assert "incompatible number of external InputStates" in str(error_text.value)
 
     def test_specify_external_input_sources_on_mechanism_nonorigin(self):
         A = ProcessingMechanism(name='A',
@@ -769,6 +769,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
     def test_external_input_sources_ALL(self):
         from psyneulink.core.globals.keywords import ALL
+        from psyneulink.core.globals.utilities import CNodeRole
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -781,6 +782,10 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp.add_c_node(C)
         comp.add_c_node(D, external_input_source=ALL)
         comp.add_linear_processing_pathway([C, D])
+        comp.show_graph()
+        print("origins = ", comp.get_c_nodes_by_role(CNodeRole.ORIGIN))
+
+        print("inputs = ", comp.get_c_nodes_by_role(CNodeRole.INPUT))
 
         comp.run(inputs={A: [[1.23]],
                          C: [[4.0]]})
@@ -822,7 +827,7 @@ class TestInputSpec:
 
     def test_valid_only_one_node_provides_input_spec(self):
         A = ProcessingMechanism(name="A",
-                                default_variable=[[1.5]])   # default variable will be used as input to this origin node
+                                default_variable=[[1.5]])   # default variable will be used as input to this INPUT node
         B = ProcessingMechanism(name="B")
         C = ProcessingMechanism(name="C")
 
