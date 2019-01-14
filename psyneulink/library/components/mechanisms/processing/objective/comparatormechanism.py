@@ -364,7 +364,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  target: tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(str, Iterable))=(OUTCOME, MSE),
+                 output_states:tc.optional(tc.any(str, Iterable))=(OUTCOME,),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

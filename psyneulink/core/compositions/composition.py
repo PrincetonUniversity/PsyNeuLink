@@ -1375,22 +1375,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
-        # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
-
             for node in self.scheduler_processing.consideration_queue[0]:
+                self._add_c_node_role(node, CNodeRole.ORIGIN)
 
-                if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
-                    self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
-
-                if self.model_based_optimizer:
-                    if node == self.model_based_optimizer.objective_mechanism:
-                        for vertex in graph.get_parents_from_component(node):
-                            self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
-                else:
-                    self._add_c_node_role(node, CNodeRole.TERMINAL)
+                # if self.model_based_optimizer:
+                #
+                #     if node == self.model_based_optimizer.objective_mechanism:
+                #         for vertex in graph.get_parents_from_component(node):
+                #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                # else:
+                self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
             # KAM added len(node.path_afferents) check 1/7/19 in order to
@@ -1408,17 +1405,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if all_input:
                         mod_only = True
             if graph.get_parents_from_component(node) == [] or mod_only:
-                if not isinstance(node, ObjectiveMechanism):
-                    self._add_c_node_role(node, CNodeRole.ORIGIN)
+                # if not isinstance(node, ObjectiveMechanism):
+                self._add_c_node_role(node, CNodeRole.ORIGIN)
             # Identify Terminal nodes
             if graph.get_children_from_component(node) == []:
 
-                if self.model_based_optimizer:
-                    if node == self.model_based_optimizer.objective_mechanism:
-                        for vertex in graph.get_parents_from_component(node):
-                            self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
-                else:
-                    self._add_c_node_role(node, CNodeRole.TERMINAL)
+                # if self.model_based_optimizer:
+                #     if node == self.model_based_optimizer.objective_mechanism:
+                #         for vertex in graph.get_parents_from_component(node):
+                #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                # else:
+                self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Recurrent_init and Cycle nodes
         visited = []  # Keep track of all nodes that have been visited
         for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
@@ -1454,6 +1451,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
+
+        # If INPUT nodes were not specified by user, ORIGIN nodes become INPUT nodes
+        if not self.get_c_nodes_by_role(CNodeRole.INPUT):
+            origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+            for node in origin_nodes:
+                self._add_c_node_role(node, CNodeRole.INPUT)
+
+        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes
+        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node
+        if not self.get_c_nodes_by_role(CNodeRole.OUTPUT):
+            terminal_nodes = self.get_c_nodes_by_role(CNodeRole.TERMINAL)
+            if not terminal_nodes:
+                try:
+                    terminal_nodes = self.c_nodes[-1]
+                except IndexError:
+                    terminal_nodes = []
+            for node in terminal_nodes:
+                self._add_c_node_role(node, CNodeRole.OUTPUT)
 
         self._create_CIM_states()
 
@@ -1636,41 +1651,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          "{!s} where the InputState takes values of length {!s}".
                                          format(i, mech.name, val_length, state_length))
 
-    # NOTE (CW 9/28): this is mirrored in autodiffcomposition.py, so any changes made here should also be made there
     def _create_CIM_states(self, context=None):
 
         '''
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
 
-            - for each origin node:
-                - if the origin node's external_input_sources specification is True or not listed, create a corresponding
+            - for each INPUT node:
+                - if the INPUT node's external_input_sources specification is True or not listed, create a corresponding
                   InputState and OutputState on the Input CompositionInterfaceMechanism for each "external" InputState
-                  of each origin node, and a Projection between the newly created InputCIM OutputState and the origin
+                  of each INPUT node, and a Projection between the newly created InputCIM OutputState and the INPUT
                   InputState
-                - if the origin node's external_input_sources specification is another origin node, create projections
-                  from that other origin node's corresponding InputCIM OutputStates to the current origin node's
+                - if the INPUT node's external_input_sources specification is another INPUT node, create projections
+                  from that other INPUT node's corresponding InputCIM OutputStates to the current INPUT node's
                   InputStates. The two nodes must have the same shape.
-                - if the origin node's external_input_sources specification is a list, the list must contain only origin
-                  nodes and/or InputStates of origin nodes. In this case, an origin node is shorthand for all of the
-                  InputStates of that origin node. The concatenation of the values of all of the origin nodes specified
+                - if the INPUT node's external_input_sources specification is a list, the list must contain only INPUT
+                  nodes and/or InputStates of INPUT nodes. In this case, an INPUT node is shorthand for all of the
+                  InputStates of that INPUT node. The concatenation of the values of all of the INPUT nodes specified
                   in the list must match the shape of the node whose external_input_sources is being specified.
 
             - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
-              OutputState of each terminal node, and a Projection between the terminal OutputState and the newly created
+              OutputState of each OUTPUT node, and a Projection between the OUTPUT OutputState and the newly created
               OutputCIM InputState
 
             - build two dictionaries:
 
-                (1) input_CIM_states = { Origin Node InputState: (InputCIM InputState, InputCIM OutputState) }
+                (1) input_CIM_states = { INPUT Node InputState: (InputCIM InputState, InputCIM OutputState) }
 
-                (2) output_CIM_states = { Terminal Node OutputState: (OutputCIM InputState, OutputCIM OutputState) }
+                (2) output_CIM_states = { OUTPUT Node OutputState: (OutputCIM InputState, OutputCIM OutputState) }
 
             - delete all of the above for any node States which were previously, but are no longer, classified as
-              Origin/Terminal
+              INPUT/OUTPUT
 
         '''
-        origins_changed = False
 
         if not self.input_CIM.connected_to_composition:
             self.input_CIM.input_states.remove(self.input_CIM.input_state)
@@ -1682,33 +1695,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.output_states.remove(self.output_CIM.output_state)
             self.output_CIM.connected_to_composition = True
 
-        current_origin_input_states = set()
+        current_input_node_input_states = set()
 
         #  INPUT CIMS
-        # loop over all origin nodes
-        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        # loop over all INPUT nodes
+        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
 
         redirected_inputs = set()
-        origin_node_pairs = {}
-        for node in origin_nodes:
-
+        for node in input_nodes:
             if node in self.external_input_sources:
                 if self.external_input_sources[node] == True:
                     pass
-                elif self.external_input_sources[node] in origin_nodes:
+                elif self.external_input_sources[node] in input_nodes:
                     redirected_inputs.add(node)
                     continue
                 elif isinstance(self.external_input_sources[node], list):
                     valid_spec = True
                     for source in self.external_input_sources[node]:
                         if isinstance(source, (Composition, Mechanism)):
-                            if source not in origin_nodes:
+                            if source not in input_nodes:
                                 valid_spec = False
                             elif source in self.external_input_sources:
                                 if self.external_input_sources[source] != True:
                                     valid_spec = False
                         elif isinstance(source, InputState):
-                            if source.owner not in origin_nodes:
+                            if source.owner not in input_nodes:
                                 valid_spec = False
                             elif source.owner in self.external_input_sources:
                                 if self.external_input_sources[source.owner] != True:
@@ -1717,9 +1728,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         redirected_inputs.add(node)
                         continue
                     raise CompositionError("External input source ({0}) specified for {1} is not valid. It contains "
-                                           "either (1) a source which is not an origin node or an InputState of an "
-                                           "origin node, or (2) source which is an origin node (or origin node "
-                                           "InputState), but is already borrowing input from yet another origin node."
+                                           "either (1) a source which is not an INPUT node or an InputState of an "
+                                           "INPUT node, or (2) source which is an INPUT node (or INPUT node "
+                                           "InputState), but is already borrowing input from yet another INPUT node."
                                            .format(self.external_input_sources[node], node.name))
 
                 elif self.external_input_sources[node] == ALL:
@@ -1728,19 +1739,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError("External input source ({0}) specified for {1} is not valid. Must be (1) True "
                                            "[the key node is represented on the input_CIM by one or more pairs of "
-                                           "states that pass its input value], (2) another origin node [the key node "
-                                           "gets its input from another origin node's input_CIM representation], or (3)"
-                                           " a list of origin nodes and/or origin node InputStates [the key node gets "
-                                           "its input from a mix of other origin nodes' input_CIM representations."
+                                           "states that pass its input value], (2) another INPUT node [the key node "
+                                           "gets its input from another INPUT node's input_CIM representation], or (3)"
+                                           " a list of INPUT nodes and/or INPUT node InputStates [the key node gets "
+                                           "its input from a mix of other INPUT nodes' input_CIM representations."
                                            .format(self.external_input_sources[node], node.name))
 
             for input_state in node.external_input_states:
                 # add it to our set of current input states
-                current_origin_input_states.add(input_state)
+                current_input_node_input_states.add(input_state)
 
                 # if there is not a corresponding CIM output state, add one
                 if input_state not in set(self.input_CIM_states.keys()):
-                    origins_changed = True
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        variable=input_state.defaults.value,
                                                        reference_value=input_state.defaults.value,
@@ -1766,8 +1776,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         new_shadow_projections = {}
         # allow projections from CIM to ANY node listed in external_input_sources
         for node in self.external_input_sources:
-
-            if node not in origin_nodes or node in redirected_inputs:
+            if node not in input_nodes or node in redirected_inputs:
 
                 cim_rep = self.external_input_sources[node]
                 expanded_cim_rep = []
@@ -1789,9 +1798,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "items in list must be a Mechanism, Composition, InputStates, or "
                                                    "None.".format(rep, node.name, cim_rep))
                 elif cim_rep is ALL:
-                    for origin_node in origin_nodes:
-                        if origin_node not in redirected_inputs:
-                            for state in origin_node.external_input_states:
+                    for input_node in input_nodes:
+                        if input_node not in redirected_inputs:
+                            for state in input_node.external_input_states:
                                 expanded_cim_rep.append(state)
                 else:
                     raise CompositionError("Invalid external_input_sources specified for {}: {}. Must be a Mechanism, "
@@ -1801,9 +1810,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node in redirected_inputs:
                     # each node in redirected inputs requires an input for each of its input states
                     if len(node.external_input_states) != len(expanded_cim_rep) and len(expanded_cim_rep) > 0:
-                        raise CompositionError("The origin source specification of {0} ({1}) has an "
-                                               "incompatible number of external input states. {0} has {2} external "
-                                               "input states while the origin source specification has a total of {3}."
+                        raise CompositionError("The input source specification of {0} ({1}) has an "
+                                               "incompatible number of external InputStates. {0} has {2} external "
+                                               "InputStates while the input source specification has a total of {3}."
                                                .format(node.name,
                                                        cim_rep,
                                                            len(node.external_input_states),
@@ -1811,9 +1820,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # for non-origin nodes, too few origin sources specified is ok, but too many is not
                 if len(expanded_cim_rep) > len(node.external_input_states):
-                    raise CompositionError("The origin source specification of {0} ({1}) has too many external input "
-                                           "states. {0} has {2} external input states while the origin source "
-                                           "specification has a total of {3}."
+                    raise CompositionError("The input source specification of {0} ({1}) has too many external "
+                                           "InputStates states. {0} has {2} external InputStates while the input source"
+                                           " specification has a total of {3}."
                                            .format(node.name,
                                                    cim_rep,
                                                    len(node.external_input_states),
@@ -1846,18 +1855,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
-        # For any states still registered on the CIM that does not map to a corresponding ORIGIN node I.S.:
-        for input_state in sends_to_input_states.difference(current_origin_input_states):
-            origins_changed = True
+        # For any states still registered on the CIM that does not map to a corresponding INPUT node I.S.:
+        for input_state in sends_to_input_states.difference(current_input_node_input_states):
             for projection in input_state.path_afferents:
                 if projection.sender == self.input_CIM_states[input_state][1]:
-                    # remove the corresponding projection from the ORIGIN node's path afferents
+                    # remove the corresponding projection from the INPUT node's path afferents
                     input_state.path_afferents.remove(projection)
 
                     # projection.receiver.efferents.remove(projection)
                     # Bug? ^^ projection is not in receiver.efferents??
 
-            # remove the CIM input and output states associated with this Origin node input state
+            # remove the CIM input and output states associated with this INPUT node input state
             self.input_CIM.input_states.remove(self.input_CIM_states[input_state][0])
             self.input_CIM.output_states.remove(self.input_CIM_states[input_state][1])
 
@@ -1865,12 +1873,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del self.input_CIM_states[input_state]
 
         # OUTPUT CIMS
-        # loop over all terminal nodes
-
-        current_terminal_output_states = set()
-        for node in self.get_c_nodes_by_role(CNodeRole.TERMINAL):
+        # loop over all OUTPUT nodes
+        current_output_node_output_states = set()
+        for node in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
             for output_state in node.output_states:
-                current_terminal_output_states.add(output_state)
+                current_output_node_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_states.keys()):
 
@@ -1901,15 +1908,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
-        previous_terminal_output_states = set(self.output_CIM_states.keys())
-        for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
+        previous_output_node_output_states = set(self.output_CIM_states.keys())
+        for output_state in previous_output_node_output_states.difference(current_output_node_output_states):
             # remove the CIM input and output states associated with this Terminal Node output state
             self.output_CIM.remove_states(self.output_CIM_states[output_state][0])
             self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
-
-        # if origins_changed:     # only update prediction mechanisms if the origin node(s) changed
-        #     self._instantiate_prediction_mechanisms(context=context)
 
     def _assign_values_to_input_CIM(self, inputs, execution_id=None):
         """
@@ -2049,9 +2053,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    direction = 'BT',
                    active_items = None,
                    active_color = BOLD,
-                   origin_color = 'green',
-                   terminal_color = 'red',
-                   origin_and_terminal_color = 'brown',
+                   input_color = 'green',
+                   output_color = 'red',
+                   input_and_output_color = 'brown',
                    learning_color = 'orange',
                    control_color='blue',
                    prediction_mechanism_color='pink',
@@ -2079,7 +2083,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_mechanism_structure** is `True`,
         Mechanism nodes are subdivided into sections for its States with information about each determined by the
         **show_values** and **show_functions** specifications.  Otherwise, Mechanism nodes are simple ovals.
-        `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with thicker borders in a colors specified
+        `INPUT` and  `OUTPUT` Mechanisms of the System are displayed with thicker borders in colors specified
         for each. `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is specified,
         in which case `MappingProjections <MappingProjection> are displayed as diamond-shaped nodes, and any
         `LearningProjections <LearningProjecction>` as labelled arrows that point to them.
@@ -2135,8 +2139,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
            Examples of renderings generated by the show_graph method with different options specified, and the call
            to the show_graph method used to generate each rendering shown below each example. **Panel A** shows the
-           simplest rendering, with just Processing Components displayed; `ORIGIN` Mechanisms are shown in red,
-           and the `TERMINAL` Mechanism in green.  **Panel B** shows the same graph with `MappingProjection` names
+           simplest rendering, with just Processing Components displayed; `INPUT` Mechanisms are shown in red,
+           and the `OUTPUT` Mechanism in green.  **Panel B** shows the same graph with `MappingProjection` names
            and Component dimensions displayed.  **Panel C** shows the learning Components of the System displayed (in
            orange).  **Panel D** shows the control Components of the System displayed (in blue).  **Panel E** shows
            both learning and control Components;  the learning components are shown with all `LearningProjections
@@ -2221,8 +2225,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_roles : bool : default False
             specifies whether or not to include the `role <System_Mechanisms>` that each Mechanism plays in the System
-            (enclosed by square brackets); 'ORIGIN' and 'TERMINAL' Mechanisms are also displayed in a color specified
-            by the **origin_color**, **terminal_color** and **origin_and_terminal_color** arguments (see below).
+            (enclosed by square brackets); 'INPUT' and 'OUTPUT' Mechanisms are also displayed in a color specified
+            by the **input_color**, **output_color** and **input_and_output_color** arguments (see below).
 
         show_dimensions : bool, MECHANISMS, PROJECTIONS or ALL : default False
             specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
@@ -2251,15 +2255,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies how to highlight the item(s) specified in *active_items**:  either a color recognized
             by GraphViz, or the keyword *BOLD*.
 
-        origin_color : keyword : default 'green',
-            specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.
+        input_color : keyword : default 'green',
+            specifies the color in which the `INPUT` Mechanisms of the System are displayed.
 
-        terminal_color : keyword : default 'red',
-            specifies the color in which the `TERMINAL` Mechanisms of the System are displayed.
+        output_color : keyword : default 'red',
+            specifies the color in which the `OUTPUT` Mechanisms of the System are displayed.
 
-        origin_and_terminal_color : keyword : default 'brown'
+        input_and_output_color : keyword : default 'brown'
             specifies the color in which Mechanisms that are both
-            an `ORIGIN` and a `TERMINAL` of the System are displayed.
+            an `INPUT` and a `OUTPUT` of the System are displayed.
 
         learning_color : keyword : default `green`
             specifies the color in which the learning components are displayed.
@@ -2268,13 +2272,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the color in which the learning components are displayed (note: if the System's
             `model_based_optimizer <System.model_based_optimizer>` is an `EVCControlMechanism`, then a link is shown in pink from the
             `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
-            `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
-            the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCControlMechanism
+            `INPUT` Mechanisms of the System, to indicate that although no projection are created for these,
+            the prediction Mechanisms determine the input to the `INPUT` Mechanisms when the EVCControlMechanism
             `simulates execution <EVCControlMechanism_Execution>` of the System).
-
-        prediction_mechanism_color : keyword : default `pink`
-            specifies the color in which the `prediction_mechanisms
-            <EVCControlMechanism.prediction_mechanisms>` are displayed for a System using an `EVCControlMechanism`
 
         system_color : keyword : default `purple`
             specifies the color in which the node representing input from the System is displayed.
@@ -2317,40 +2317,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
-            if rcvr in self.get_c_nodes_by_role(CNodeRole.ORIGIN) and \
-                    rcvr in self.get_c_nodes_by_role(CNodeRole.TERMINAL):
+            if rcvr in self.get_c_nodes_by_role(CNodeRole.INPUT) and \
+                    rcvr in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
                 if rcvr in active_items:
                     if active_color is BOLD:
-                        rcvr_color = origin_and_terminal_color
+                        rcvr_color = input_and_output_color
                     else:
                         rcvr_color = active_color
                     rcvr_penwidth = str(bold_width + active_thicker_by)
                     self.active_item_rendered = True
                 else:
-                    rcvr_color = origin_and_terminal_color
+                    rcvr_color = input_and_output_color
                     rcvr_penwidth = str(bold_width)
-            elif rcvr in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
+            elif rcvr in self.get_c_nodes_by_role(CNodeRole.INPUT):
                 if rcvr in active_items:
                     if active_color is BOLD:
-                        rcvr_color = origin_color
+                        rcvr_color = input_color
                     else:
                         rcvr_color = active_color
                     rcvr_penwidth = str(bold_width + active_thicker_by)
                     self.active_item_rendered = True
                 else:
-                    rcvr_color = origin_color
+                    rcvr_color = input_color
                     rcvr_penwidth = str(bold_width)
                 rcvr_rank = origin_rank
-            elif rcvr in self.get_c_nodes_by_role(CNodeRole.TERMINAL):
+            elif rcvr in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
                 if rcvr in active_items:
                     if active_color is BOLD:
-                        rcvr_color = terminal_color
+                        rcvr_color = output_color
                     else:
                         rcvr_color = active_color
                     rcvr_penwidth = str(bold_width + active_thicker_by)
                     self.active_item_rendered = True
                 else:
-                    rcvr_color = terminal_color
+                    rcvr_color = output_color
                     rcvr_penwidth = str(bold_width)
                 rcvr_rank = terminal_rank
             elif rcvr in active_items:
@@ -2975,7 +2975,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if targets is None:
             targets = {}
         execution_id = self._assign_execution_ids(execution_id)
-        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
@@ -3006,10 +3006,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
-            soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, origin_nodes)
-            hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, origin_nodes)
-            pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, origin_nodes)
-            no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, origin_nodes)
+            soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
+            hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
+            pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
+            no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
@@ -3029,7 +3029,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         __execution.cuda_execute(inputs)
                         return __execution.extract_node_output(self.output_CIM)
 
-                # Filter out mechanisms. Nested nodes are not executed in this mode
+                # Filter out mechanisms. Nested compositions are not executed in this mode
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
@@ -3078,7 +3078,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # execute each node with EXECUTING in context
             for node in next_execution_set:
                 frozen_values[node] = node.get_output_values(execution_id)
-                if node in origin_nodes:
+                if node in input_nodes:
                     # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle
                     # a recurrent projection on the first time step (meaning, before its node has executed)
                     # FIX: determine the correct behavior for this case & document it
@@ -3113,7 +3113,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     if bin_execute:
                         _comp_ex.execute_node(node)
-                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
                     else:
                         if node is not self.model_based_optimizer:
                             node.execute(
@@ -3135,7 +3134,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     execution_id
                                 )
                         node.function._runtime_params_reset[execution_id] = {}
-                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+
+                    node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
                     if bin_execute:
@@ -3170,7 +3170,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Set current output. This will be stored to "new_values" below
                             node.output_CIM.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
 
-                if node in origin_nodes:
+                if node in input_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
                             for input_state in node.input_states:
@@ -3365,23 +3365,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scheduler_processing.update_termination_conditions(termination_processing)
         # scheduler_learning.update_termination_conditions(termination_learning)
 
-        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
 
-        # if there is only one origin mechanism, allow inputs to be specified in a list
+        # if there is only one INPUT mechanism, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
-            if len(origin_nodes) == 1:
-                inputs = {next(iter(origin_nodes)): inputs}
+            if len(input_nodes) == 1:
+                inputs = {next(iter(input_nodes)): inputs}
             else:
-                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                               "nodes.".format(self.name, len(origin_nodes)))
+                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
+                               "nodes.".format(self.name, len(input_nodes)))
         elif not isinstance(inputs, dict):
-            if len(origin_nodes) == 1:
+            if len(input_nodes) == 1:
                 raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
-                    "as its only key".format(self.name, next(iter(origin_nodes)).name))
+                    "Inputs to {} must be specified in a list or in a dictionary with the INPUT mechanism({}) "
+                    "as its only key".format(self.name, next(iter(input_nodes)).name))
             else:
-                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                               "nodes.".format(self.name, len(origin_nodes)))
+                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
+                               "nodes.".format(self.name, len(input_nodes)))
 
         inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
 
@@ -3635,7 +3635,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_execution_wrapper(self):
         if self.__generated_execution is None:
-            self.__generated_execution = self.__gen_exec_wrapper()
+            with pnlvm.LLVMBuilderContext() as ctx:
+                self.__generated_execution = ctx.gen_composition_exec(self)
 
         return self.__generated_execution
 
@@ -3649,7 +3650,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_bin_run(self):
         if self.__compiled_run is None:
-            wrapper = self.__gen_run_wrapper()
+            with pnlvm.LLVMBuilderContext() as ctx:
+                wrapper = ctx.gen_composition_run(self)
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
             self.__compiled_run = bin_f
 
@@ -3805,7 +3807,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return func_name
 
-    def __get_processing_condition_set(self, node):
+    def _get_processing_condition_set(self, node):
         dep_group = []
         for group in self.scheduler_processing.consideration_queue:
             if node in group:
@@ -3821,218 +3823,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             cond += self.scheduler_processing.condition_set.conditions[node]
 
         return All(*cond)
-
-    def __gen_exec_wrapper(self):
-        func_name = None
-        llvm_func = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            # Create condition generator
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-
-            func_name = ctx.get_unique_name('exec_wrap_' + self.name)
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), (
-                ctx.get_context_struct_type(self).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                ctx.get_data_struct_type(self).as_pointer(),
-                cond_gen.get_condition_struct_type().as_pointer()))
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            context, params, comp_in, data, cond = llvm_func.args
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            entry_block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(entry_block)
-
-            # Call input CIM
-            input_cim_name = self._get_node_wrapper(self.input_CIM);
-            input_cim_f = ctx.get_llvm_function(input_cim_name)
-            builder.call(input_cim_f, [context, params, comp_in, data, data])
-
-            # Allocate run set structure
-            run_set_type = pnlvm.ir.ArrayType(pnlvm.ir.IntType(1), len(self.c_nodes))
-            run_set_ptr = builder.alloca(run_set_type, name="run_set")
-
-            # Allocate temporary output storage
-            output_storage = builder.alloca(data.type.pointee, name="output_storage")
-
-            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
-            builder.store(ctx.int32_ty(0), iter_ptr)
-
-            loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
-            builder.branch(loop_condition)
-
-            # Generate a while not 'end condition' loop
-            builder.position_at_end(loop_condition)
-            run_cond = cond_gen.generate_sched_condition(builder,
-                            self.termination_processing[TimeScale.TRIAL],
-                            cond, None)
-            run_cond = builder.not_(run_cond, name="not_run_cond")
-
-            loop_body = builder.append_basic_block(name="scheduling_loop_body")
-            exit_block = builder.append_basic_block(name="exit")
-            builder.cbranch(run_cond, loop_body, exit_block)
-
-
-            # Generate loop body
-            builder.position_at_end(loop_body)
-
-            zero = ctx.int32_ty(0)
-            any_cond = pnlvm.ir.IntType(1)(0)
-
-            # Calculate execution set before running the mechanisms
-            for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr,
-                                               [zero, ctx.int32_ty(idx)],
-                                               name="run_cond_ptr_" + mech.name)
-                mech_cond = cond_gen.generate_sched_condition(builder,
-                                self.__get_processing_condition_set(mech),
-                                cond, mech)
-                ran = cond_gen.generate_ran_this_pass(builder, cond, mech)
-                mech_cond = builder.and_(mech_cond, builder.not_(ran),
-                                         name="run_cond_" + mech.name)
-                any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
-                builder.store(mech_cond, run_set_mech_ptr)
-
-            for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
-                with builder.if_then(mech_cond):
-                    mech_name = self._get_node_wrapper(mech);
-                    mech_f = ctx.get_llvm_function(mech_name)
-                    if isinstance(mech, Mechanism):
-                        builder.call(mech_f, [context, params, comp_in, data, output_storage])
-                    else:
-                        builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
-
-                    cond_gen.generate_update_after_run(builder, cond, mech)
-
-            # Writeback results
-            for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
-                with builder.if_then(mech_cond):
-                    out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + mech.name)
-                    data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)],
-                                           name="data_result_" + mech.name)
-                    builder.store(builder.load(out_ptr), data_ptr)
-
-            # Update step counter
-            with builder.if_then(any_cond):
-                cond_gen.bump_ts(builder, cond)
-
-            # Increment number of iterations
-            iters = builder.load(iter_ptr, name="iterw")
-            iters = builder.add(iters, ctx.int32_ty(1), name="iterw_inc")
-            builder.store(iters, iter_ptr)
-
-            max_iters = len(self.scheduler_processing.consideration_queue)
-            completed_pass = builder.icmp_unsigned("==", iters,
-                                                   ctx.int32_ty(max_iters),
-                                                   name="completed_pass")
-            # Increment pass and reset time step
-            with builder.if_then(completed_pass):
-                builder.store(zero, iter_ptr)
-                # Bumping automatically zeros lower elements
-                cond_gen.bump_ts(builder, cond, (0, 1, 0))
-
-            builder.branch(loop_condition)
-
-            builder.position_at_end(exit_block)
-            # Call output CIM
-            output_cim_name = self._get_node_wrapper(self.output_CIM);
-            output_cim_f = ctx.get_llvm_function(output_cim_name)
-            builder.call(output_cim_f, [context, params, comp_in, data, data])
-
-            # Bump run counter
-            cond_gen.bump_ts(builder, cond, (1, 0, 0))
-
-            builder.ret_void()
-        return func_name
-
-    def __gen_run_wrapper(self):
-        func_name = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.get_unique_name('run_wrap_' + self.name)
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), (
-                ctx.get_context_struct_type(self).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
-                ctx.get_data_struct_type(self).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                ctx.get_output_struct_type(self).as_pointer(),
-                ctx.int32_ty.as_pointer(),
-                ctx.int32_ty.as_pointer()))
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            entry_block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(entry_block)
-
-            # Allocate and initialize condition structure
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-            cond_type = cond_gen.get_condition_struct_type()
-            cond = builder.alloca(cond_type)
-            cond_init = cond_type(cond_gen.get_condition_initializer())
-            builder.store(cond_init, cond)
-
-            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
-            builder.store(ctx.int32_ty(0), iter_ptr)
-
-            loop_condition = builder.append_basic_block(name="run_loop_condition")
-            builder.branch(loop_condition)
-
-            # Generate a while not 'end condition' loop
-            builder.position_at_end(loop_condition)
-            count = builder.load(iter_ptr)
-            runs = builder.load(runs_ptr)
-            run_cond = builder.icmp_unsigned('<', count, runs)
-
-            loop_body = builder.append_basic_block(name="run_loop_body")
-            exit_block = builder.append_basic_block(name="exit")
-            builder.cbranch(run_cond, loop_body, exit_block)
-
-            # Generate loop body
-            builder.position_at_end(loop_body)
-
-            # Current iteration
-            iters = builder.load(iter_ptr);
-
-            # Get the right input stimulus
-            input_idx = builder.urem(iters, builder.load(inputs_ptr))
-            data_in_ptr = builder.gep(data_in, [input_idx])
-
-            # Call execution
-            exec_f_name = self._get_execution_wrapper()
-            exec_f = ctx.get_llvm_function(exec_f_name)
-            builder.call(exec_f, [context, params, data_in_ptr, data, cond])
-
-            # Extract output_CIM result
-            idx = self._get_node_index(self.output_CIM)
-            result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            output_ptr = builder.gep(data_out, [iters])
-            result = builder.load(result_ptr)
-            builder.store(result, output_ptr)
-
-            # increment counter
-            iters = builder.add(iters, ctx.int32_ty(1))
-            builder.store(iters, iter_ptr)
-            builder.branch(loop_condition)
-
-            builder.position_at_end(exit_block)
-
-            builder.store(builder.load(iter_ptr), runs_ptr)
-
-            builder.ret_void()
-
-        return func_name
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
@@ -4056,25 +3846,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     autodiff_stimuli[node] = stimuli[node]
                     del stimuli[node]
 
-        # STEP 1A: Check that all of the nodes listed in the inputs dict are ORIGIN nodes in the self
-        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
+        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
         for node in stimuli.keys():
-            if not node in origin_nodes:
-                raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN nodes".
+            if not node in input_nodes:
+                raise CompositionError("{} in inputs dict for {} is not one of its INPUT nodes".
                                format(node.name, self.name))
 
-        # STEP 1B: Check that all of the ORIGIN nodes are represented - if not, use default_external_input_values
-        for node in origin_nodes:
+        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
+        for node in input_nodes:
             if not node in stimuli:
-                # Change error below to warning??
-                # raise RunError("Entry for ORIGIN Node {} is missing from the inputs dict for {}".
-                #                format(node.name, self.name))
                 stimuli[node] = node.default_external_input_values
 
         # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
         # (1) Replace any user provided convenience notations with values that match the following specs:
-        # a - all dictionary values are lists containing and input value on each trial (even if only one trial)
+        # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
         # b - each input value is a 2d array that matches variable
         # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
         #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
@@ -4091,10 +3878,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
                     # InputStates and the values are lists containing the first input value
-                    for nested_origin_node, values in adjusted_stimulus_dict.items():
+                    for nested_input_node, values in adjusted_stimulus_dict.items():
                         first_value = values[0]
                         for i in range(len(first_value)):
-                            input_state = nested_origin_node.external_input_states[i]
+                            input_state = nested_input_node.external_input_states[i]
                             input_cim_input_state = node.input_CIM_states[input_state][0]
                             translated_stimulus_dict[input_cim_input_state] = [first_value[i]]
                             # then loop through the stimulus dictionary again for each remaining trial
@@ -4223,11 +4010,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 context=context)
 
         net_control_allocation_outcomes = []
-
+        # FIX: the indexing below for predicted_input is not correct 
         for i in range(num_trials):
             inputs = {}
             for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
-                inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j][i]
+                inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j]
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
             for output_state in self.output_states:

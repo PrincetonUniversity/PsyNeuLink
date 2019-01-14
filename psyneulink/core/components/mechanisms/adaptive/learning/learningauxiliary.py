@@ -149,7 +149,10 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, OUTCOME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
+from psyneulink.core.globals.keywords import \
+    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    MATRIX, MONITOR_FOR_LEARNING, NAME, OUTCOME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, \
+    TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 
 __all__ = [
@@ -211,7 +214,8 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                      - WILL REQUIRE MORE EXTENSIVE CHECKING AND VALIDATION
     #                              (E.G., OF WHETHER ANY LearningMechanism IDENTIFIED HAVE A PROJECTION FROM AN
     #                               APPROPRIATE ObjectiveMechanism, etc.
-    from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+    from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import \
+        ComparatorMechanism, MSE
 
     # Call should generally be from LearningProjection._instantiate_sender,
     #    but may be used more generally in the future
@@ -529,6 +533,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                           target={NAME: TARGET,
                                                                   VARIABLE: target_input},
                                                           function=error_function,
+                                                          output_states=[OUTCOME, MSE],
                                                           name="{} {}".format(lc.activation_output_mech.name,
                                                                               COMPARATOR_MECHANISM))
                 # MODIFIED 10/10/17 END
