@@ -51,6 +51,9 @@ def pytest_runtest_teardown(item):
         # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
 
+    from psyneulink.core import llvm as pnlvm
+    pnlvm.cleanup()
+
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):
