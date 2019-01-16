@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.5.0.0+42.ga424bf6 documentation</title>
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.5.0.0+44.gae10728 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+42.ga424bf6 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+44.gae10728 documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="OptimizationFunctions" href="OptimizationFunctions.html"/>
         <link rel="prev" title="MemoryFunctions" href="MemoryFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+42
+                0.5.0.0+44
               </div>
             
           
@@ -91,11 +91,35 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="Functions.html">Functions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="UserDefinedFunction.html">UserDefinedFunction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="TransferFunctions.html">TransferFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="CombinationFunctions.html">CombinationFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SelectionFunctions.html">SelectionFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DistributionFunctions.html">DistributionFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="StatefulFunctions.html">StatefulFunctions</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ObjectiveFunctions</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="OptimizationFunctions.html">OptimizationFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="LearningFunctions.html">LearningFunctions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -183,7 +207,7 @@
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.objectivefunctions.Stability">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x107757d30&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x107757da0&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x104e28378&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x1074e1cc0&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x1074e1d30&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x105329378&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>Stability(                                          default_variable=None,                          matrix=HOLLOW_MATRIX,                           metric=ENERGY                                   transfer_fct=None                               normalize=False,                                params=None,                                    owner=None,                                     prefs=None                                      )</p>
 <p id="stability">Return the stability of <code class="xref any docutils literal"><span class="pre">variable</span></code> based on a state transformation matrix.</p>
@@ -388,7 +412,7 @@ If <a class="reference internal" href="#psyneulink.core.components.functions.obj
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+42.ga424bf6',
+            VERSION:'0.5.0.0+44.gae10728',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
