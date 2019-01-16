@@ -2279,16 +2279,19 @@ class Component(object, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._initialize_from_context(execution_context, base_execution_context, override)
 
-        for param in [p for p in self.stateful_parameters if p.setter is None and not isinstance(p, ParameterAlias)]:
-            param._initialize_from_context(execution_context, base_execution_context, override)
+        non_alias_params =  [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
+        for param in non_alias_params:
+            if param.setter is None:
+                param._initialize_from_context(execution_context, base_execution_context, override)
 
         # attempt to initialize any params with setters (some params with setters may depend on the
         # initialization of other params)
         # this pushes the problem down one level so that if there are two such that they depend on each other,
         # it will still fail. in this case, it is best to resolve the problem in the setter with a default
         # initialization value
-        for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParameterAlias)]:
-            param._initialize_from_context(execution_context, base_execution_context, override)
+        for param in non_alias_params:
+            if param.setter is not None:
+                param._initialize_from_context(execution_context, base_execution_context, override)
 
     def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
         context_param = self.parameters.context.get(execution_id)
