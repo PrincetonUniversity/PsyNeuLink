@@ -10,6 +10,7 @@
 
 import atexit
 import ctypes
+import inspect
 import numpy as np
 import os, re
 
@@ -81,6 +82,49 @@ class LLVMBuilderContext:
             assert decl_f.is_declaration
             return decl_f
         return f
+
+    def get_debug_location(self, func, component):
+        if 'debug_info' not in debug_env:
+            return
+        mod = func.module
+        path = inspect.getfile(component.__class__)
+        d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
+        di_version = mod.add_metadata([ir.IntType(32)(2), "Debug Info Version", ir.IntType(32)(3)])
+        flags = mod.add_named_metadata("llvm.module.flags")
+        if len(flags.operands) == 0:
+            flags.add(d_version)
+            flags.add(di_version)
+        cu = mod.add_named_metadata("llvm.dbg.cu")
+        di_file = mod.add_debug_info("DIFile", {
+            "filename": os.path.basename(path),
+            "directory": os.path.dirname(path),
+        })
+        di_func_type = mod.add_debug_info("DISubroutineType", {
+            # None as `null`
+            "types":           mod.add_metadata([None]),
+            })
+        di_compileunit = mod.add_debug_info("DICompileUnit", {
+            "language":        ir.DIToken("DW_LANG_Python"),
+            "file":            di_file,
+            "producer":        "PsyNeuLink",
+            "runtimeVersion":  0,
+            "isOptimized":     False,
+        }, is_distinct=True)
+        cu.add(di_compileunit)
+        di_func = mod.add_debug_info("DISubprogram", {
+            "name":            func.name,
+            "file":            di_file,
+            "line":            0,
+            "type":            di_func_type,
+            "isLocal":         False,
+            "unit":            di_compileunit,
+}, is_distinct=True)
+        di_loc = mod.add_debug_info("DILocation", {
+            "line":            0,
+            "column":          0,
+            "scope":           di_func,
+        })
+        return di_loc
 
     def get_input_struct_type(self, component):
         if hasattr(component, '_get_input_struct_type'):
