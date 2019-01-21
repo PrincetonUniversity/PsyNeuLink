@@ -466,6 +466,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.required_c_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
+        self.env = None
         self.external_input_sources = external_input_sources
         if external_input_sources is None:
             self.external_input_sources = {}
@@ -3376,7 +3377,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                "nodes.".format(self.name, len(input_nodes)))
         elif callable(inputs):
             num_inputs_sets = 1
-            autodiff_stimuli = inputs
+            autodiff_stimuli = {}
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
@@ -3439,7 +3440,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
                 # If 'inputs' argument is a function, call the function here with results from last trial
-                execution_stimuli = inputs(self.output_values)
+                execution_stimuli = inputs(self.env, self.output_values)
             else:
                 execution_stimuli = {}
                 stimulus_index = trial_num % num_inputs_sets
