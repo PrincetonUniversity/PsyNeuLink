@@ -167,7 +167,8 @@ class jit_engine:
         self.__opt_modules += 1
 
     def _remove_bin_module(self, module):
-        self._engine.remove_module(module)
+        if module is not None:
+            self._engine.remove_module(module)
 
     def opt_and_append_bin_module(self, module):
         mod_name = module.name
@@ -183,6 +184,10 @@ class jit_engine:
                 dump_file.write(str(self.__mod))
 
         self.opt_and_add_bin_module(self.__mod)
+
+    def clean_module(self):
+        self._remove_bin_module(self.__mod)
+        self.__mod = None
 
     @property
     def _engine(self):

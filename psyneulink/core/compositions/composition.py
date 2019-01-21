@@ -476,7 +476,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.enable_model_based_optimizer = enable_model_based_optimizer
         self.default_execution_id = self.name
-        self.execution_ids = [self.default_execution_id]
+        self.execution_ids = {self.default_execution_id}
         self.model_based_optimizer = model_based_optimizer
 
         self.projections = []
@@ -1959,7 +1959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id = self.default_execution_id
 
         if execution_id not in self.execution_ids:
-            self.execution_ids.append(execution_id)
+            self.execution_ids.add(execution_id)
 
         self._assign_context_values(execution_id=None, composition=self)
         return execution_id
