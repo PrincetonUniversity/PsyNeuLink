@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.0.0+44.gae10728 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.0.0+45.g8d634b4 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+44.gae10728 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+45.g8d634b4 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+44
+                0.5.0.0+45
               </div>
             
           
@@ -201,17 +201,32 @@ corresponding subclass.</p>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
 <em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>external_input_sources=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>str</em>) – </li>
+<li><strong>model_based_optimzer</strong> (<code class="xref any docutils literal"><span class="pre">OptimizationControlmechanism</span></code>) – must be specified if the <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> runs simulations of its own <a class="reference internal" href="#"><span class="doc">Composition</span></a></li>
+<li><strong>enable_model_based_optimizer</strong> (<em>bool</em>) – When set to True, executes the model_based_optimizer after each trial. When False, ignores the
+model_based_optimizer</li>
+<li><strong>external_input_sources</strong> (<em>'Dict`</em>) – See <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.external_input_sources" title="psyneulink.core.compositions.composition.Composition.external_input_sources"><code class="xref any py py-attr docutils literal"><span class="pre">external_input_sources</span></code></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
 <dt id="psyneulink.core.compositions.composition.Composition.graph">
 <code class="descname">graph</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.graph" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref any docutils literal"><span class="pre">Graph</span></code> – The full <code class="xref any docutils literal"><span class="pre">Graph</span></code> associated with this Composition. Contains both Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
-<a class="reference internal" href="#"><span class="doc">Compositions</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> used in processing or learning.</p>
+<a class="reference internal" href="#"><span class="doc">Compositions</span></a>) and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.compositions.composition.Composition.c_nodes">
 <code class="descname">c_nodes</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.c_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="xref any docutils literal"><span class="pre">list[Mechanisms</span> <span class="pre">and</span> <span class="pre">Compositions]</span></code> – A list of all Composition Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="#"><span class="doc">Compositions</span></a>) contained in
+<dd><p><code class="xref any docutils literal"><span class="pre">list[Mechanisms</span> <span class="pre">and</span> <span class="pre">Compositions]</span></code> – A list of all Composition Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and/or <a class="reference internal" href="#"><span class="doc">Compositions</span></a>) contained in
 this Composition</p>
 </dd></dl>
 
@@ -219,25 +234,25 @@ this Composition</p>
 <dt id="psyneulink.core.compositions.composition.Composition.external_input_sources">
 <code class="descname">external_input_sources</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.external_input_sources" title="Permalink to this definition">¶</a></dt>
 <dd><p>‘Dict` – A dictionary in which the keys are Composition Nodes and the values are specifications of the node’s
-external input source. Origin nodes are expected to receive an external input for each of their
-InputStates, via the input_CIM. If an origin node is specified as a key node in external_input_sources, it
-may borrow input_CIM output states from one or more other origin nodes, but still must receive an external
-input for each InputState. If a non-origin node is specified as a key node in external_input_sources, the
+external input source. INPUT nodes are expected to receive an external input for each of their
+InputStates, via the input_CIM. If an INPUT node is specified as a key node in external_input_sources, it
+may borrow input_CIM output states from one or more other INPUT nodes, but still must receive an external
+input for each InputState. If a non-INPUT node is specified as a key node in external_input_sources, the
 external inputs are in addition to any other inputs the key node may receive, so there is not a requirement
 that all key node InputStates receive an input.</p>
 <p>Below are the options for specifying an external input source:</p>
 <ul class="simple">
 <li><dl class="first docutils">
-<dt>an origin node</dt>
-<dd>projections are created from the origin node’s corresponding input_CIM OutputState(s) to the key node’s
+<dt>an INPUT node</dt>
+<dd>projections are created from the INPUT node’s corresponding input_CIM OutputState(s) to the key node’s
 InputState(s).</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>a list of origin nodes and origin node InputStates</dt>
-<dd>projections are created from each origin node InputState’s correpsonding input_CIM OutputState to the
-key node’s InputStates. If an origin node is included in the list, it is used as a short hand for all
-of its InputStates. If the key node is an origin node, then the number of InputStates represented in
+<dt>a list of INPUT nodes and INPUT node InputStates</dt>
+<dd>projections are created from each INPUT node InputState’s correpsonding input_CIM OutputState to the
+key node’s InputStates. If an INPUT node is included in the list, it is used as a short hand for all
+of its InputStates. If the key node is an INPUT node, then the number of InputStates represented in
 the list must exactly match the number of InputStates on the key node. Otherwise, the list may have the
 same number or fewer InputStates as the key node, and None may be used to “skip” over key node
 InputStates to which there should not be an external input.</dd>
@@ -245,8 +260,8 @@ InputStates to which there should not be an external input.</dd>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><code class="xref any py py-attr docutils literal"><span class="pre">ALL</span></code></a></dt>
-<dd>projections are created from each origin node’s corresponding input_CIM OutputState(s) to the key node’s
-InputState(s). (Excludes origin nodes that are already borrowing inputs from another origin node).</dd>
+<dd>projections are created from each INPUT node’s corresponding input_CIM OutputState(s) to the key node’s
+InputState(s). (Excludes INPUT nodes that are already borrowing inputs from another INPUT node).</dd>
 </dl>
 </li>
 </ul>
@@ -359,7 +374,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="MaskedMappingProjection.html#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – if False, any cycles containing this projection will be</li>
 </ul>
@@ -790,7 +805,7 @@ by checking whether the</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+44.gae10728',
+            VERSION:'0.5.0.0+45.g8d634b4',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
