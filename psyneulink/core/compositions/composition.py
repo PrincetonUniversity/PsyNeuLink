@@ -3374,6 +3374,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
                                "nodes.".format(self.name, len(input_nodes)))
+        elif callable(inputs):
+            num_inputs_sets = 1
+            autodiff_stimuli = inputs
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
@@ -3382,8 +3385,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
                                "nodes.".format(self.name, len(input_nodes)))
-
-        inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
+        if not callable(inputs):
+            # Currently, no validation if 'inputs' arg is a function
+            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -3433,13 +3437,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # PROCESSING ------------------------------------------------------------------------
 
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-            execution_stimuli = {}
-            stimulus_index = trial_num % num_inputs_sets
-            for node in inputs:
-                if len(inputs[node]) == 1:
-                    execution_stimuli[node] = inputs[node][0]
-                    continue
-                execution_stimuli[node] = inputs[node][stimulus_index]
+            if callable(inputs):
+                # If 'inputs' argument is a function, call the function here with results from last trial
+                execution_stimuli = inputs(self.output_values)
+            else:
+                execution_stimuli = {}
+                stimulus_index = trial_num % num_inputs_sets
+                for node in inputs:
+                    if len(inputs[node]) == 1:
+                        execution_stimuli[node] = inputs[node][0]
+                        continue
+                    execution_stimuli[node] = inputs[node][stimulus_index]
 
             execution_autodiff_stimuli = {}
             for node in autodiff_stimuli:
@@ -3447,6 +3455,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node][stimulus_index]
                 else:
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node]
+
+
 
             # execute processing
             # pass along the stimuli for this trial
