@@ -1191,10 +1191,12 @@ class Component(object, metaclass=ComponentsMeta):
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = pnlvm.ir.IRBuilder(block)
+            builder.debug_metadata = ctx.get_debug_location(llvm_func, self)
 
             builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
 
             builder.ret_void()
+
         return func_name
 
 
