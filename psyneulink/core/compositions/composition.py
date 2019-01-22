@@ -3673,7 +3673,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context, params, comp_in, data_in, data_out = llvm_func.args[:5]
             cond_ptr = llvm_func.args[-1]
 
-
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3681,6 +3680,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = pnlvm.ir.IRBuilder(block)
+            builder.debug_metadata = ctx.get_debug_location(llvm_func, self)
 
             if is_mech:
                 m_function = ctx.get_llvm_function(node)
