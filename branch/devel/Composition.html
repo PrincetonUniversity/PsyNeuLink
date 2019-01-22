@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.0.0+52.g9fc0ae6 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.0.0+53.g8dda736 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+52.g9fc0ae6 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+53.g8dda736 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+52
+                0.5.0.0+53
               </div>
             
           
@@ -374,7 +374,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – if False, any cycles containing this projection will be</li>
 </ul>
@@ -420,7 +420,7 @@ value(s).</li>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_processes=False</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>show_roles=False</em>, <em>show_dimensions=False</em>, <em>show_mechanism_structure=False</em>, <em>show_headers=True</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_processes=False</em>, <em>show_learning=False</em>, <em>show_controller=False</em>, <em>show_roles=False</em>, <em>show_dimensions=False</em>, <em>show_mechanism_structure=False</em>, <em>show_headers=True</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>learning_color='orange'</em>, <em>controller_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a display of the graph structure of Mechanisms and Projections in the System.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -433,7 +433,7 @@ However, the <strong>show_mechanism_structure</strong> argument can be used to d
 each Mechanism, including its States and, optionally, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States (using the <strong>show_functions</strong> and <strong>show_values</strong>
 arguments, respectively).  The <strong>show_dimension</strong> argument can be used to display the dimensions of each
 Mechanism and Projection.  The <strong>show_processes</strong> argument arranges Mechanisms and Projections into the
-Processes to which they belong. The <strong>show_learning</strong> and <strong>show_control</strong> arguments can be used to
+Processes to which they belong. The <strong>show_learning</strong> and <strong>show_controller</strong> arguments can be used to
 show the Components associated with <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and those associated with the
 System’s <a class="reference internal" href="System.html#system-control"><span class="std std-ref">model_based_optimizer</span></a>.</p>
 <p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are always displayed as nodes.  If <strong>show_mechanism_structure</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>,
@@ -448,7 +448,7 @@ in which case <code class="xref any docutils literal"><span class="pre">MappingP
 PsyNeuLink, Graphviz, or an interaction between the two):</p>
 <ol class="last arabic simple">
 <li>When both <strong>show_mechanism_structure</strong> and <strong>show_processes</strong> are specified together with
-<strong>show_learning</strong> and/or <strong>show_control</strong>, under some arcane conditions Projection arrows can be
+<strong>show_learning</strong> and/or <strong>show_controller</strong>, under some arcane conditions Projection arrows can be
 distorted and/or orphaned.  We have confirmed that this does not reflect a corruption of the underlying
 graph structure, and the System should execute normally.</li>
 <li>Specifying <strong>show_processes</strong> but not setting <strong>show_headers</strong> to <code class="xref any docutils literal"><span class="pre">False</span></code> raises a GraphViz exception;
@@ -482,7 +482,7 @@ orange).  <strong>Panel D</strong> shows the control Components of the System di
 both learning and control Components;  the learning components are shown with all <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> shown (by specifying show_learning=pnl.ALL).  <strong>Panel F</strong> shows a detailed view of
 the Processing Components, using the show_mechanism_structure option, that includes Component labels and
 values.  <strong>Panel G</strong> show a simpler rendering using the show_mechanism_structure, that only shows
-Component names, but includes the control Components (using the show_control option).</span></p>
+Component names, but includes the control Components (using the show_controller option).</span></p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -519,8 +519,8 @@ Projections that receive a <a class="reference internal" href="LearningProjectio
 if set to <em>ALL</em>, all Projections associated with learning will be shown:  the LearningProjections
 as well as from <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> to <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>
 that convey error and activation information;  if set to <code class="xref any docutils literal"><span class="pre">True</span></code>, only the LearningPojections are shown.</li>
-<li><strong>show_control</strong> (<em>bool : default False</em>) – specifies whether or not to show the control components of the system;
-they will all be displayed in the color specified for <strong>control_color</strong>.</li>
+<li><strong>show_controller</strong> (<em>bool : default False</em>) – specifies whether or not to show the controller components of the system;
+they will all be displayed in the color specified for <strong>controller_color</strong>.</li>
 <li><strong>show_roles</strong> (<em>bool : default False</em>) – specifies whether or not to include the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> that each Mechanism plays in the System
 (enclosed by square brackets); ‘INPUT’ and ‘OUTPUT’ Mechanisms are also displayed in a color specified
 by the <strong>input_color</strong>, <strong>output_color</strong> and <strong>input_and_output_color</strong> arguments (see below).</li>
@@ -547,7 +547,7 @@ by GraphViz, or the keyword <em>BOLD</em>.</li>
 <li><strong>input_and_output_color</strong> (<em>keyword : default 'brown'</em>) – specifies the color in which Mechanisms that are both
 an <code class="xref any docutils literal"><span class="pre">INPUT</span></code> and a <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> of the System are displayed.</li>
 <li><strong>learning_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">green</span></code>) – specifies the color in which the learning components are displayed.</li>
-<li><strong>control_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – specifies the color in which the learning components are displayed (note: if the System’s
+<li><strong>controller_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – specifies the color in which the learning components are displayed (note: if the System’s
 <code class="xref any docutils literal"><span class="pre">model_based_optimizer</span></code> is an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>, then a link is shown in pink from the
 <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-prediction-mechanisms"><span class="std std-ref">prediction Mechanisms</span></a> it creates to the corresponding
 <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Mechanisms of the System, to indicate that although no projection are created for these,
@@ -805,7 +805,7 @@ by checking whether the</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+52.g9fc0ae6',
+            VERSION:'0.5.0.0+53.g8dda736',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

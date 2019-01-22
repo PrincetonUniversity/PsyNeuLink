@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.0.0+52.g9fc0ae6 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.0.0+53.g8dda736 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+52.g9fc0ae6 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+53.g8dda736 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Compositions.html"/>
         <link rel="next" title="Subsystems" href="Subystems.html"/>
         <link rel="prev" title="Compositions" href="Compositions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+52
+                0.5.0.0+53
               </div>
             
           
@@ -241,7 +241,7 @@ default) or ‘adam’.</p>
 <p><strong>loss_type</strong> specifies the loss function for training. The current options are ‘mse’ (the default) and ‘crossentropy’.</p>
 <p><strong>randomize</strong> specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
 run, but if <strong>randomize</strong> is True then the order in which inputs are within an epoch is random.)</p>
-<p><strong>refresh_losses</strong> specifies whether the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute is refreshed for each call to <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run()</span></code></a>. If False, the losses
+<p><strong>refresh_losses</strong> specifies whether the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute is refreshed for each call to <a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.run" title="psyneulink.core.scheduling.scheduler.Scheduler.run"><code class="xref any py py-meth docutils literal"><span class="pre">run()</span></code></a>. If False, the losses
 of each run are appended to the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute. If True, the losses of each run overwrite <code class="xref any docutils literal"><span class="pre">losses</span></code> instead.</p>
 </div>
 <div class="section" id="structure">
@@ -261,7 +261,7 @@ at initialization by the <strong>loss_type</strong> arguments.</p>
 </div>
 <div class="section" id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as in a Composition. When
+<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.run" title="psyneulink.core.scheduling.scheduler.Scheduler.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as in a Composition. When
 <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is False, the arguments are the same, since in this
 case the AutodiffComposition executes like a Composition.</p>
 <p>However, if <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is True, the <strong>inputs</strong> argument
@@ -389,7 +389,7 @@ therefore be placed anywhere in a Composition.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+52.g9fc0ae6',
+            VERSION:'0.5.0.0+53.g8dda736',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
