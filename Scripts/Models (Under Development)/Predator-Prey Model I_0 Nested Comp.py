@@ -101,7 +101,7 @@ else:
     CTL_PARAM = SLOPE
 
 # ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
-ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_input, predator_input, prey_input]},
+ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MAXIMIZE,
                                                        save_values=True),
@@ -143,12 +143,9 @@ agent_comp.enable_model_based_optimizer = True
 agent_comp._analyze_graph()
 
 full_comp = Composition(name='FULL COMPOSITION')
-# full_comp.add_c_node(player_input)
-# full_comp.add_c_node(predator_input)
-# full_comp.add_c_node(prey_input)
-full_comp.add_linear_processing_pathway(player_input,agent_comp)
-full_comp.add_linear_processing_pathway(predator_input,agent_comp)
-full_comp.add_linear_processing_pathway(prey_input,agent_comp)
+full_comp.add_linear_processing_pathway(player_input,player_obs)
+full_comp.add_linear_processing_pathway(predator_input,predator_obs)
+full_comp.add_linear_processing_pathway(prey_input,prey_obs)
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
