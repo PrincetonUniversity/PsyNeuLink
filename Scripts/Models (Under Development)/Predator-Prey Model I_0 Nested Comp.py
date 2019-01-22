@@ -8,6 +8,9 @@ from gym_forager.envs.forager_env import ForagerEnv
 RENDER = False
 PNL_COMPILE = False
 PERCEPTUAL_DISTORT = True
+RUN = False
+SHOW_GRAPH = True
+
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -67,7 +70,7 @@ agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
 # agent_comp.add_c_node(player_obs)
 # agent_comp.add_c_node(predator_obs)
 # agent_comp.add_c_node(prey_obs)
-agent_comp.add_linear_processing_pathway([player_input, player_obs])
+# agent_comp.add_linear_processing_pathway([player_input, player_obs])
 agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
 agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
 agent_comp.add_c_node(greedy_action_mech)
@@ -138,9 +141,13 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_inp
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
 
+full_comp = Composition(name='FULL COMPOSITION')
+full_comp
+# full_comp.add_linear_processing_pathway([player_input, agent_comp])
 
-# agent_comp.show_graph(show_mechanism_structure='ALL')
-# agent_comp.show_graph()
+if SHOW_GRAPH:
+    # agent_comp.show_graph(show_mechanism_structure='ALL')
+    agent_comp.show_graph(show_controller=True)
 
 
 # *********************************************************************************************************************
@@ -200,5 +207,6 @@ def main():
     if RENDER:
         env.render()  # If visualization is desired
 
-if __name__ == "__main__":
-    main()
+if RUN:
+    if __name__ == "__main__":
+        main()

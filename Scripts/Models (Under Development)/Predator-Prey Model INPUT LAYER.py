@@ -8,6 +8,8 @@ from gym_forager.envs.forager_env import ForagerEnv
 RENDER = False
 PNL_COMPILE = False
 PERCEPTUAL_DISTORT = True
+RUN = False
+SHOW_GRAPH = True
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -138,8 +140,9 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_inp
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
 
-# agent_comp.show_graph(show_mechanism_structure='ALL')
-# agent_comp.show_graph()
+if SHOW_GRAPH:
+    # agent_comp.show_graph(show_mechanism_structure='ALL')
+    agent_comp.show_graph(show_controller=True)
 
 
 # *********************************************************************************************************************
@@ -199,5 +202,6 @@ def main():
     if RENDER:
         env.render()  # If visualization is desired
 
-if __name__ == "__main__":
-    main()
+if RUN:
+    if __name__ == "__main__":
+        main()

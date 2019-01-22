@@ -938,15 +938,14 @@ class Parameter(types.SimpleNamespace):
             Clears the log of this Parameter for every execution_id in **execution_ids**
         """
         if execution_ids is NotImplemented:
-            eids = list(self.log.keys())
-        elif not isinstance(execution_ids, list):
-            eids = [execution_ids]
-        else:
-            eids = execution_ids
+            self.log.clear()
+            return
 
-        for eid in eids:
-            if eid in self.log:
-                del self.log[eid]
+        try:
+            for eid in execution_ids:
+                self.log.pop(eid, None)
+        except TypeError:
+                self.log.pop(execution_ids, None)
 
     def _initialize_from_context(self, execution_context=None, base_execution_context=None, override=True):
         from psyneulink.core.components.component import Component

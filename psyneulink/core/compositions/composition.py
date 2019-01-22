@@ -285,12 +285,12 @@ class Graph(object):
             ---------
 
             component : Component
-                the Component whose children will be returned
+                the Component whose parents will be returned
 
             Returns
             -------
 
-            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
+            A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
         '''
         forward_children = []
         for child in self.comp_to_vertex[component].children:
@@ -304,12 +304,12 @@ class Graph(object):
             ---------
 
             component : Component
-                the Component whose children will be returned
+                the Component whose parents will be returned
 
             Returns
             -------
 
-            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
+            A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
         '''
         forward_parents = []
         for parent in self.comp_to_vertex[component].parents:
@@ -360,43 +360,62 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
+        name: str
+
+        model_based_optimzer:   `OptimizationControlmechanism`
+            must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`
+
+        enable_model_based_optimizer: bool
+            When set to True, executes the model_based_optimizer after each trial. When False, ignores the
+            model_based_optimizer
+
+        external_input_sources : 'Dict`
+            See `external_input_sources <Composition.external_input_sources>`
+
+
+
+
         Attributes
         ----------
 
         graph : `Graph`
             The full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
-            `Compositions <Composition>` and `Projections <Projection>` used in processing or learning.
+            `Compositions <Composition>`) and `Projections <Projection>`
+
+        COMMENT:
+            used in processing or learning.
+        COMMENT
 
         c_nodes : `list[Mechanisms and Compositions]`
-            A list of all Composition Nodes (`Mechanisms <Mechanism>` and `Compositions <Composition>`) contained in
+            A list of all Composition Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
             this Composition
 
         external_input_sources : 'Dict`
             A dictionary in which the keys are Composition Nodes and the values are specifications of the node's
-            external input source. Origin nodes are expected to receive an external input for each of their
-            InputStates, via the input_CIM. If an origin node is specified as a key node in external_input_sources, it
-            may borrow input_CIM output states from one or more other origin nodes, but still must receive an external
-            input for each InputState. If a non-origin node is specified as a key node in external_input_sources, the
+            external input source. INPUT nodes are expected to receive an external input for each of their
+            InputStates, via the input_CIM. If an INPUT node is specified as a key node in external_input_sources, it
+            may borrow input_CIM output states from one or more other INPUT nodes, but still must receive an external
+            input for each InputState. If a non-INPUT node is specified as a key node in external_input_sources, the
             external inputs are in addition to any other inputs the key node may receive, so there is not a requirement
             that all key node InputStates receive an input.
 
             Below are the options for specifying an external input source:
 
-            - an origin node
-                projections are created from the origin node's corresponding input_CIM OutputState(s) to the key node's
+            - an INPUT node
+                projections are created from the INPUT node's corresponding input_CIM OutputState(s) to the key node's
                 InputState(s).
 
-            - a list of origin nodes and origin node InputStates
-                projections are created from each origin node InputState's correpsonding input_CIM OutputState to the
-                key node's InputStates. If an origin node is included in the list, it is used as a short hand for all
-                of its InputStates. If the key node is an origin node, then the number of InputStates represented in
+            - a list of INPUT nodes and INPUT node InputStates
+                projections are created from each INPUT node InputState's correpsonding input_CIM OutputState to the
+                key node's InputStates. If an INPUT node is included in the list, it is used as a short hand for all
+                of its InputStates. If the key node is an INPUT node, then the number of InputStates represented in
                 the list must exactly match the number of InputStates on the key node. Otherwise, the list may have the
                 same number or fewer InputStates as the key node, and None may be used to "skip" over key node
                 InputStates to which there should not be an external input.
 
             - `ALL`
-                projections are created from each origin node's corresponding input_CIM OutputState(s) to the key node's
-                InputState(s). (Excludes origin nodes that are already borrowing inputs from another origin node).
+                projections are created from each INPUT node's corresponding input_CIM OutputState(s) to the key node's
+                InputState(s). (Excludes INPUT nodes that are already borrowing inputs from another INPUT node).
 
         default_execution_id
             if no *execution_id* is specified in a call to run, this *execution_id* will be used.
@@ -476,7 +495,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.enable_model_based_optimizer = enable_model_based_optimizer
         self.default_execution_id = self.name
-        self.execution_ids = [self.default_execution_id]
+        self.execution_ids = {self.default_execution_id}
         self.model_based_optimizer = model_based_optimizer
 
         self.projections = []
@@ -517,41 +536,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.__compiled_run = None
 
         self._compilation_data = self._CompilationData(owner=self)
-
-    # def _instantiate_prediction_mechanisms(self, context=None):
-    #
-    #     if self.model_based_optimizer:
-    #         if hasattr(self, "prediction_mechanisms"):
-    #             for mechanism in self.prediction_mechanisms:
-    #                 del mechanism
-    #         self.prediction_mechanisms = []
-    #         self.prediction_projections = {}
-    #         self.prediction_origin_pairs = {}
-    #         self.origin_prediction_pairs = {}
-    #         for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
-    #             new_prediction_mechanism = IntegratorMechanism(name=node.name + " " + PREDICTION_MECHANISM,
-    #                                                            default_variable=node.external_input_values)
-    #             self.prediction_mechanisms.append(new_prediction_mechanism)
-    #             self.prediction_origin_pairs[new_prediction_mechanism] = node
-    #             self.origin_prediction_pairs[node] = new_prediction_mechanism
-    #
-    #             for i in range(len(node.external_input_states)):
-    #                 input_state = node.external_input_states[i]
-    #                 input_cim_output_state = self.input_CIM_states[input_state][1]
-    #                 new_projection = MappingProjection(sender=input_cim_output_state,
-    #                                                    receiver=new_prediction_mechanism._input_states[i])
-    #
-    #                 self.prediction_projections[node] = new_projection
-
-    # def _execute_prediction_mechanisms(self, context=None):
-    #
-    #     for prediction_mechanism in self.prediction_mechanisms:
-    #         for proj in prediction_mechanism.path_afferents:
-    #             proj.context.execution_phase = ContextFlags.PROCESSING
-    #         prediction_mechanism.context.execution_phase = ContextFlags.PROCESSING
-    #         prediction_mechanism.execute(context=context)
-    #
-    #     self.__compiled_execution = None
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1341,31 +1325,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    "Components in the Composition.".format(projection, receiver))
 
     def _analyze_graph(self, graph=None, context=None):
-        ########
-        # Determines identity of significant nodes of the graph
-        # Each node falls into one or more of the following categories
-        # - Origin: Origin nodes are those which do not receive any projections.
-        # - Terminal: Terminal nodes provide the output of the composition. By
-        #   default, those which do not send any projections, but they may also be
-        #   specified explicitly.
-        # - Recurrent_init: Recurrent_init nodes send projections that close recurrent
-        #   loops in the composition (or projections that are explicitly specified as
-        #   recurrent). They need an initial value so that their receiving nodes
-        #   have input.
-        # - Cycle: Cycle nodes receive projections from Recurrent_init nodes. They
-        #   can be viewed as the starting points of recurrent loops.
-        # The following categories can be explicitly set by the user in which case their
-        # values are not changed based on the graph analysis. Additional nodes may
-        # be automatically added besides those specified by the user.
-        # - Input: Input nodes accept inputs from the input_dict of the composition.
-        #   All Origin nodes are added to this category automatically.
-        # - Output: Output nodes provide their values as outputs of the composition.
-        #   All Terminal nodes are added to this category automatically.
-        # - Target: Target nodes receive target values for the composition to be
-        #   used by learning and control. They are usually Comparator nodes that
-        #   compare the target value to the output of another node in the composition.
-        # - Monitored: Monitored nodes send projections to Target nodes.
-        ########
+        """
+        Assigns one or more `CNodeRole <CNodeRoles>` to each node based on the structure of the `Graph`.
+
+        By default, if _analyze_graph determines that a node is `ORIGIN <CNodeRole.ORIGIN>`, it is also given the role
+        `INPUT <CNodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        <CNodeRole.TERMINAL>`, it is also given the role `OUTPUT <CNodeRole.OUTPUT>`.
+
+        However, if the required_roles argument of `add_c_node <Composition.add_c_node>` is used to set any node in the
+        Composition to `INPUT <CNodeRole.INPUT>`, then the `ORIGIN <CNodeRole.ORIGIN>` nodes are not set to `INPUT
+        <CNodeRole.INPUT>` by deafult. If the required_roles argument of `add_c_node <Composition.add_c_node>` is used
+        to set any node in the Composition to `OUTPUT <CNodeRole.OUTPUT>`, then the `TERMINAL <CNodeRole.TERMINAL>`
+        nodes are not set to `OUTPUT <CNodeRole.OUTPUT>` by default.
+
+
+        :param graph:
+        :param context:
+        :return:
+        """
         if graph is None:
             graph = self.graph_processing
 
@@ -1959,7 +1936,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id = self.default_execution_id
 
         if execution_id not in self.execution_ids:
-            self.execution_ids.append(execution_id)
+            self.execution_ids.add(execution_id)
 
         self._assign_context_values(execution_id=None, composition=self)
         return execution_id
@@ -2044,7 +2021,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_processes = False,
                    show_learning = False,
-                   show_control = False,
+                   show_controller = False,
                    show_roles = False,
                    show_dimensions = False,
                    show_mechanism_structure=False,
@@ -2057,7 +2034,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_color = 'red',
                    input_and_output_color = 'brown',
                    learning_color = 'orange',
-                   control_color='blue',
+                   controller_color='blue',
                    prediction_mechanism_color='pink',
                    system_color = 'purple',
                    output_fmt='pdf',
@@ -2076,7 +2053,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
         arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
         Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
-        Processes to which they belong. The **show_learning** and **show_control** arguments can be used to
+        Processes to which they belong. The **show_learning** and **show_controller** arguments can be used to
         show the Components associated with `learning <LearningMechanism>` and those associated with the
         System's `model_based_optimizer <System_Control>`.
 
@@ -2101,7 +2078,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            PsyNeuLink, Graphviz, or an interaction between the two):
 
            1) When both **show_mechanism_structure** and **show_processes** are specified together with
-              **show_learning** and/or **show_control**, under some arcane conditions Projection arrows can be
+              **show_learning** and/or **show_controller**, under some arcane conditions Projection arrows can be
               distorted and/or orphaned.  We have confirmed that this does not reflect a corruption of the underlying
               graph structure, and the System should execute normally.
 
@@ -2147,7 +2124,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            <LearningProjection>` shown (by specifying show_learning=pnl.ALL).  **Panel F** shows a detailed view of
            the Processing Components, using the show_mechanism_structure option, that includes Component labels and
            values.  **Panel G** show a simpler rendering using the show_mechanism_structure, that only shows
-           Component names, but includes the control Components (using the show_control option).
+           Component names, but includes the control Components (using the show_controller option).
 
 
         Arguments
@@ -2219,9 +2196,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
             that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
 
-        show_control :  bool : default False
-            specifies whether or not to show the control components of the system;
-            they will all be displayed in the color specified for **control_color**.
+        show_controller :  bool : default False
+            specifies whether or not to show the controller components of the system;
+            they will all be displayed in the color specified for **controller_color**.
 
         show_roles : bool : default False
             specifies whether or not to include the `role <System_Mechanisms>` that each Mechanism plays in the System
@@ -2268,7 +2245,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_color : keyword : default `green`
             specifies the color in which the learning components are displayed.
 
-        control_color : keyword : default `blue`
+        controller_color : keyword : default `blue`
             specifies the color in which the learning components are displayed (note: if the System's
             `model_based_optimizer <System.model_based_optimizer>` is an `EVCControlMechanism`, then a link is shown in pink from the
             `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
@@ -2340,7 +2317,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     rcvr_color = input_color
                     rcvr_penwidth = str(bold_width)
-                rcvr_rank = origin_rank
+                rcvr_rank = input_rank
             elif rcvr in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
                 if rcvr in active_items:
                     if active_color is BOLD:
@@ -2352,7 +2329,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     rcvr_color = output_color
                     rcvr_penwidth = str(bold_width)
-                rcvr_rank = terminal_rank
+                rcvr_rank = output_rank
             elif rcvr in active_items:
                 if active_color is BOLD:
 
@@ -2420,8 +2397,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=proj_color, penwidth=proj_width)
 
             # # if recvr is ObjectiveMechanism for System's model_based_optimizer, break, as those handled below
-            # if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_model_based_optimizer is True:
-            #     return
+            if (isinstance(rcvr, ObjectiveMechanism)
+                    and self.model_based_optimizer
+                    and rcvr is self.model_based_optimizer.objective_mechanism):
+                return
 
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
@@ -2485,17 +2464,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             model_based_optimizer = self.model_based_optimizer
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    ctlr_color = control_color
+                    ctlr_color = controller_color
                 else:
                     ctlr_color = active_color
                 ctlr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                ctlr_color = control_color
+                ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print ("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_control\' option "
+                print ("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
                        "can't be used in its show_graph() method\n".format(self.name))
                 return
 
@@ -2503,26 +2482,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    objmech_ctlr_proj_color = control_color
+                    objmech_ctlr_proj_color = controller_color
                 else:
                     objmech_ctlr_proj_color = active_color
                 objmech_ctlr_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_ctlr_proj_color = control_color
+                objmech_ctlr_proj_color = controller_color
                 objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
                 if active_color is BOLD:
-                    objmech_color = control_color
+                    objmech_color = controller_color
                 else:
                     objmech_color = active_color
                 objmech_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_color = control_color
+                objmech_color = controller_color
                 objmech_width = str(default_width)
 
             ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions, show_roles)
@@ -2580,13 +2559,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
                     if model_based_optimizer in active_items:
                         if active_color is BOLD:
-                            ctl_proj_color = control_color
+                            ctl_proj_color = controller_color
                         else:
                             ctl_proj_color = active_color
                         ctl_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        ctl_proj_color = control_color
+                        ctl_proj_color = controller_color
                         ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
@@ -2611,13 +2590,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for projection in input_state.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
-                            proj_color = control_color
+                            proj_color = controller_color
                         else:
                             proj_color = active_color
                         proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        proj_color = control_color
+                        proj_color = controller_color
                         proj_width = str(default_width)
                     if show_mechanism_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions, show_roles) +\
@@ -2634,50 +2613,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=proj_color, penwidth=proj_width)
 
             # prediction mechanisms
-            for mech in self.execution_list:
-                if mech in active_items:
-                    if active_color is BOLD:
-                        pred_mech_color = prediction_mechanism_color
-                    else:
-                        pred_mech_color = active_color
-                    pred_mech_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
-                else:
-                    pred_mech_color = prediction_mechanism_color
-                    pred_mech_width = str(default_width)
-                if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    recvr = mech.origin_mech
-                    recvr_label = self._get_graph_node_label(recvr, show_dimensions, show_roles)
-                    # IMPLEMENTATION NOTE:
-                    #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
-                    if show_mechanism_structure and False:
-                        proj = mech.output_state.efferents[0]
-                        if proj in active_items:
-                            if active_color is BOLD:
-                                pred_proj_color = prediction_mechanism_color
-                            else:
-                                pred_proj_color = active_color
-                            pred_proj_width = str(default_width + active_thicker_by)
-                            self.active_item_rendered = True
-                        else:
-                            pred_proj_color = prediction_mechanism_color
-                            pred_proj_width = str(default_width)
-                        sg.node(mech.name,
-                                shape=mech.show_structure(**mech_struct_args),
-                                color=pred_mech_color,
-                                penwidth=pred_mech_width)
-
-                        G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
-                               recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                               label=' prediction assignment',
-                               color=pred_proj_color, penwidth=pred_proj_width)
-                    else:
-                        sg.node(self._get_graph_node_label(mech, show_dimensions, show_roles),
-                                color=pred_mech_color, shape=mechanism_shape, penwidth=pred_mech_width)
-                        G.edge(self._get_graph_node_label(mech, show_dimensions, show_roles),
-                               recvr_label,
-                               label=' prediction assignment',
-                               color=prediction_mechanism_color)
+            # for mech in self.execution_list:
+            #     if mech in active_items:
+            #         if active_color is BOLD:
+            #             pred_mech_color = prediction_mechanism_color
+            #         else:
+            #             pred_mech_color = active_color
+            #         pred_mech_width = str(default_width + active_thicker_by)
+            #         self.active_item_rendered = True
+            #     else:
+            #         pred_mech_color = prediction_mechanism_color
+            #         pred_mech_width = str(default_width)
+            #     if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
+            #         recvr = mech.origin_mech
+            #         recvr_label = self._get_graph_node_label(recvr, show_dimensions, show_roles)
+            #         # IMPLEMENTATION NOTE:
+            #         #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
+            #         if show_mechanism_structure and False:
+            #             proj = mech.output_state.efferents[0]
+            #             if proj in active_items:
+            #                 if active_color is BOLD:
+            #                     pred_proj_color = prediction_mechanism_color
+            #                 else:
+            #                     pred_proj_color = active_color
+            #                 pred_proj_width = str(default_width + active_thicker_by)
+            #                 self.active_item_rendered = True
+            #             else:
+            #                 pred_proj_color = prediction_mechanism_color
+            #                 pred_proj_width = str(default_width)
+            #             sg.node(mech.name,
+            #                     shape=mech.show_structure(**mech_struct_args),
+            #                     color=pred_mech_color,
+            #                     penwidth=pred_mech_width)
+            #
+            #             G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
+            #                    recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+            #                    label=' prediction assignment',
+            #                    color=pred_proj_color, penwidth=pred_proj_width)
+            #         else:
+            #             sg.node(self._get_graph_node_label(mech, show_dimensions, show_roles),
+            #                     color=pred_mech_color, shape=mechanism_shape, penwidth=pred_mech_width)
+            #             G.edge(self._get_graph_node_label(mech, show_dimensions, show_roles),
+            #                    recvr_label,
+            #                    label=' prediction assignment',
+            #                    color=prediction_mechanism_color)
 
         # MAIN BODY OF METHOD:
 
@@ -2736,10 +2715,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pos = None
 
-        origin_rank = 'source'
+        input_rank = 'source'
         control_rank = 'min'
         obj_mech_rank = 'sink'
-        terminal_rank = 'max'
+        output_rank = 'max'
         learning_rank = 'sink'
 
         # build graph and configure visualisation settings
@@ -2824,8 +2803,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for r in rcvrs:
                 _assign_processing_components(G, G, r)
 
-        # Add control-related Components to graph if show_control
-        if show_control:
+        # Add control-related Components to graph if show_controller
+        if show_controller:
             if show_processes:
                 with G.subgraph(name='cluster_MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM') as sg:
                     sg.attr(label='MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM')
@@ -3696,7 +3675,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context, params, comp_in, data_in, data_out = llvm_func.args[:5]
             cond_ptr = llvm_func.args[-1]
 
-
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3704,6 +3682,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = pnlvm.ir.IRBuilder(block)
+            builder.debug_metadata = ctx.get_debug_location(llvm_func, self)
 
             if is_mech:
                 m_function = ctx.get_llvm_function(node)
