@@ -7,6 +7,8 @@ from gym_forager.envs.forager_env import ForagerEnv
 # Runtime Switches:
 RENDER = False
 PNL_COMPILE = False
+RUN = False
+SHOW_GRAPH = True
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -58,6 +60,7 @@ agent_comp.add_c_node(predator_obs)
 agent_comp.add_c_node(prey_obs)
 agent_comp.add_c_node(greedy_action_mech)
 
+
 # ControlMechanism
 
 #   function for ObjectiveMechanism
@@ -101,8 +104,9 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
 
-# agent_comp.show_graph(show_mechanism_structure='ALL')
-# agent_comp.show_graph()
+if SHOW_GRAPH:
+    # agent_comp.show_graph(show_mechanism_structure='ALL')
+    agent_comp.show_graph(show_controller=True, show_mechanism_structure=True)
 
 
 # *********************************************************************************************************************
@@ -159,5 +163,6 @@ def main():
     if RENDER:
         env.render()  # If visualization is desired
 
-if __name__ == "__main__":
-    main()
+if RUN:
+    if __name__ == "__main__":
+        main()
