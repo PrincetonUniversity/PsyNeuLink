@@ -83,6 +83,17 @@ class LLVMBuilderContext:
             return decl_f
         return f
 
+    def _get_full_func_name(self, func, component):
+        name = func.name
+        try:
+            while component is not None:
+                name = str(component) + ":" + name
+                component = component.owner
+        except AttributeError:
+            pass
+
+        return name
+
     def get_debug_location(self, func, component):
         if 'debug_info' not in debug_env:
             return
@@ -112,7 +123,7 @@ class LLVMBuilderContext:
         }, is_distinct=True)
         cu.add(di_compileunit)
         di_func = mod.add_debug_info("DISubprogram", {
-            "name":            func.name,
+            "name":            self._get_full_func_name(func, component),
             "file":            di_file,
             "line":            0,
             "type":            di_func_type,
