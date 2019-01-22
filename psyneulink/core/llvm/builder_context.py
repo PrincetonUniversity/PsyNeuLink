@@ -214,6 +214,7 @@ class LLVMBuilderContext:
         # Create entry block
         entry_block = llvm_func.append_basic_block(name="entry")
         builder = ir.IRBuilder(entry_block)
+        builder.debug_metadata = self.get_debug_location(llvm_func, composition)
 
         if 'const_params' in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
@@ -347,6 +348,7 @@ class LLVMBuilderContext:
         # Create entry block
         entry_block = llvm_func.append_basic_block(name="entry")
         builder = ir.IRBuilder(entry_block)
+        builder.debug_metadata = self.get_debug_location(llvm_func, composition)
 
         # Allocate and initialize condition structure
         cond_gen = ConditionGenerator(self, composition)
