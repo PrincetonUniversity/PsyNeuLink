@@ -2984,11 +2984,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
-        # initialize from base context but don't overwrite any values already set for this execution_id
-        if not nested:
-            self._initialize_from_context(execution_id, base_execution_id, override=False)
+        if self.most_recent_execution_context != execution_id:
+            # initialize from base context but don't overwrite any values already set for this execution_id
+            if not nested:
+                self._initialize_from_context(execution_id, base_execution_id, override=False)
 
-        self._assign_context_values(execution_id, composition=self)
+            self._assign_context_values(execution_id, composition=self)
 
         if nested:
             self.input_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
