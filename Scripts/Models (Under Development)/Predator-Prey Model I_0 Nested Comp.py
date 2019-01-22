@@ -67,12 +67,12 @@ greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=
 
 # Create Composition
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-# agent_comp.add_c_node(player_obs)
-# agent_comp.add_c_node(predator_obs)
-# agent_comp.add_c_node(prey_obs)
+agent_comp.add_c_node(player_obs)
+agent_comp.add_c_node(predator_obs)
+agent_comp.add_c_node(prey_obs)
 # agent_comp.add_linear_processing_pathway([player_input, player_obs])
-agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
-agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
+# agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
+# agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
 agent_comp.add_c_node(greedy_action_mech)
 
 # ControlMechanism
@@ -140,10 +140,15 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_inp
                                    )
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
+agent_comp._analyze_graph()
 
 full_comp = Composition(name='FULL COMPOSITION')
-full_comp
-# full_comp.add_linear_processing_pathway([player_input, agent_comp])
+# full_comp.add_c_node(player_input)
+# full_comp.add_c_node(predator_input)
+# full_comp.add_c_node(prey_input)
+full_comp.add_linear_processing_pathway(player_input,agent_comp)
+full_comp.add_linear_processing_pathway(predator_input,agent_comp)
+full_comp.add_linear_processing_pathway(prey_input,agent_comp)
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')

@@ -241,7 +241,18 @@ class Graph(object):
             raise CompositionError('Vertex {1} not found in graph {2}: {0}'.format(e, vertex, self))
 
     def connect_components(self, parent, child):
-        self.connect_vertices(self.comp_to_vertex[parent], self.comp_to_vertex[child])
+        try:
+            self.connect_vertices(self.comp_to_vertex[parent], self.comp_to_vertex[child])
+        except KeyError as e:
+            if parent not in self.comp_to_vertex:
+                raise CompositionError("Sender ({}) of {} ({}) not (yet) assigned".
+                                       format(repr(parent.name), Projection.__name__, repr(child.name)))
+            elif child not in self.comp_to_vertex:
+                raise CompositionError("{} ({}) to {} not (yet) assigned".
+                                       format(Projection.__name__, repr(parent.name), repr(child.name)))
+            else:
+                raise KeyError(e)
+
 
     def connect_vertices(self, parent, child):
         if child not in parent.children:
@@ -1204,8 +1215,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection.name = '{0} to {1}'.format(sender, receiver)
             self.graph.add_component(projection, feedback=feedback)
 
-            self.graph.connect_components(graph_sender, projection)
-            self.graph.connect_components(projection, graph_receiver)
+            try:
+                self.graph.connect_components(graph_sender, projection)
+                self.graph.connect_components(projection, graph_receiver)
+            except CompositionError as c:
+                raise CompositionError("{} to {}".format(c.args[0], self.name))
             self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism)
 
             self.needs_update_graph = True
