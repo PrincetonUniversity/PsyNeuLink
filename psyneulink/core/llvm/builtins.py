@@ -10,6 +10,7 @@
 
 from llvmlite import ir
 from psyneulink.core.llvm import helpers
+from psyneulink.core.llvm.builder_context import LLVMBuilderContext
 
 
 def setup_vxm(ctx):
@@ -25,6 +26,7 @@ def setup_vxm(ctx):
 
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
     v, m, x, y, o = function.args
 
     # Add function arg attributes
@@ -128,6 +130,7 @@ def _generate_intrinsic_wrapper(module, name, ret, args):
     function.attributes.add('alwaysinline')
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
     builder.ret(builder.call(intrinsic, function.args))
 
 def _generate_cpu_builtins_module(_float_ty):

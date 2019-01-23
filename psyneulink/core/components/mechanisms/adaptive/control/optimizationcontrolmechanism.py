@@ -1035,9 +1035,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def _parse_shadow_inputs_spec(self, spec:dict, fct:tc.optional(Function)):
-        ''' Return a list of InputState specifications for the inputs specified in value of dict
+        ''' Return a list of InputState specifications for the inputs specified in value of each dict entry
 
-        For any other specification, specify an InputState with a Projection from the sender of any Projections
+        For any other specification, return an InputState with a Projection from the sender of any Projections
             that project to the specified item
         If FUNCTION entry, assign as Function for all InputStates specified in SHADOW_EXTERNAL_INPUTS
         '''
