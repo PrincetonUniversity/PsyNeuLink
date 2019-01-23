@@ -3428,7 +3428,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
+        if self.env:
+            trial_output = np.atleast_2d(self.env.reset())
         for trial_num in range(num_trials):
+
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_with_pruned_args(call_before_trial, execution_context=execution_id)
@@ -3437,11 +3440,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                   execution_context=execution_id):
                 break
         # PROCESSING ------------------------------------------------------------------------
-
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
                 # If 'inputs' argument is a function, call the function here with results from last trial
-                execution_stimuli = inputs(self.env, self.output_values)
+                execution_stimuli = inputs(self.env, trial_output)
+                if not isinstance(execution_stimuli, dict):
+                    return trial_output
             else:
                 execution_stimuli = {}
                 stimulus_index = trial_num % num_inputs_sets
