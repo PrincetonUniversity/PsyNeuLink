@@ -29,8 +29,7 @@ environment:
 install:
   - choco upgrade graphviz.portable -y
   - pip --version
-  - pip install --user -U certifi pip
-  - pip --version
+  - pip install --user -U certifi
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute packages over pypi. Install it directly.
