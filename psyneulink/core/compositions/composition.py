@@ -241,7 +241,18 @@ class Graph(object):
             raise CompositionError('Vertex {1} not found in graph {2}: {0}'.format(e, vertex, self))
 
     def connect_components(self, parent, child):
-        self.connect_vertices(self.comp_to_vertex[parent], self.comp_to_vertex[child])
+        try:
+            self.connect_vertices(self.comp_to_vertex[parent], self.comp_to_vertex[child])
+        except KeyError as e:
+            if parent not in self.comp_to_vertex:
+                raise CompositionError("Sender ({}) of {} ({}) not (yet) assigned".
+                                       format(repr(parent.name), Projection.__name__, repr(child.name)))
+            elif child not in self.comp_to_vertex:
+                raise CompositionError("{} ({}) to {} not (yet) assigned".
+                                       format(Projection.__name__, repr(parent.name), repr(child.name)))
+            else:
+                raise KeyError(e)
+
 
     def connect_vertices(self, parent, child):
         if child not in parent.children:
@@ -1204,8 +1215,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection.name = '{0} to {1}'.format(sender, receiver)
             self.graph.add_component(projection, feedback=feedback)
 
-            self.graph.connect_components(graph_sender, projection)
-            self.graph.connect_components(projection, graph_receiver)
+            try:
+                self.graph.connect_components(graph_sender, projection)
+                self.graph.connect_components(projection, graph_receiver)
+            except CompositionError as c:
+                raise CompositionError("{} to {}".format(c.args[0], self.name))
             self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism)
 
             self.needs_update_graph = True
@@ -2021,7 +2035,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_processes = False,
                    show_learning = False,
-                   show_control = False,
+                   show_controller = False,
                    show_roles = False,
                    show_dimensions = False,
                    show_mechanism_structure=False,
@@ -2034,7 +2048,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_color = 'red',
                    input_and_output_color = 'brown',
                    learning_color = 'orange',
-                   control_color='blue',
+                   controller_color='blue',
                    prediction_mechanism_color='pink',
                    system_color = 'purple',
                    output_fmt='pdf',
@@ -2053,7 +2067,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
         arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
         Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
-        Processes to which they belong. The **show_learning** and **show_control** arguments can be used to
+        Processes to which they belong. The **show_learning** and **show_controller** arguments can be used to
         show the Components associated with `learning <LearningMechanism>` and those associated with the
         System's `model_based_optimizer <System_Control>`.
 
@@ -2078,7 +2092,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            PsyNeuLink, Graphviz, or an interaction between the two):
 
            1) When both **show_mechanism_structure** and **show_processes** are specified together with
-              **show_learning** and/or **show_control**, under some arcane conditions Projection arrows can be
+              **show_learning** and/or **show_controller**, under some arcane conditions Projection arrows can be
               distorted and/or orphaned.  We have confirmed that this does not reflect a corruption of the underlying
               graph structure, and the System should execute normally.
 
@@ -2124,7 +2138,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            <LearningProjection>` shown (by specifying show_learning=pnl.ALL).  **Panel F** shows a detailed view of
            the Processing Components, using the show_mechanism_structure option, that includes Component labels and
            values.  **Panel G** show a simpler rendering using the show_mechanism_structure, that only shows
-           Component names, but includes the control Components (using the show_control option).
+           Component names, but includes the control Components (using the show_controller option).
 
 
         Arguments
@@ -2196,9 +2210,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
             that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
 
-        show_control :  bool : default False
-            specifies whether or not to show the control components of the system;
-            they will all be displayed in the color specified for **control_color**.
+        show_controller :  bool : default False
+            specifies whether or not to show the controller components of the system;
+            they will all be displayed in the color specified for **controller_color**.
 
         show_roles : bool : default False
             specifies whether or not to include the `role <System_Mechanisms>` that each Mechanism plays in the System
@@ -2245,7 +2259,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_color : keyword : default `green`
             specifies the color in which the learning components are displayed.
 
-        control_color : keyword : default `blue`
+        controller_color : keyword : default `blue`
             specifies the color in which the learning components are displayed (note: if the System's
             `model_based_optimizer <System.model_based_optimizer>` is an `EVCControlMechanism`, then a link is shown in pink from the
             `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
@@ -2397,8 +2411,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=proj_color, penwidth=proj_width)
 
             # # if recvr is ObjectiveMechanism for System's model_based_optimizer, break, as those handled below
-            # if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_model_based_optimizer is True:
-            #     return
+            if (isinstance(rcvr, ObjectiveMechanism)
+                    and self.model_based_optimizer
+                    and rcvr is self.model_based_optimizer.objective_mechanism):
+                return
 
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
@@ -2462,17 +2478,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             model_based_optimizer = self.model_based_optimizer
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    ctlr_color = control_color
+                    ctlr_color = controller_color
                 else:
                     ctlr_color = active_color
                 ctlr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                ctlr_color = control_color
+                ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print ("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_control\' option "
+                print ("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
                        "can't be used in its show_graph() method\n".format(self.name))
                 return
 
@@ -2480,26 +2496,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    objmech_ctlr_proj_color = control_color
+                    objmech_ctlr_proj_color = controller_color
                 else:
                     objmech_ctlr_proj_color = active_color
                 objmech_ctlr_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_ctlr_proj_color = control_color
+                objmech_ctlr_proj_color = controller_color
                 objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
                 if active_color is BOLD:
-                    objmech_color = control_color
+                    objmech_color = controller_color
                 else:
                     objmech_color = active_color
                 objmech_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_color = control_color
+                objmech_color = controller_color
                 objmech_width = str(default_width)
 
             ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions, show_roles)
@@ -2557,13 +2573,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
                     if model_based_optimizer in active_items:
                         if active_color is BOLD:
-                            ctl_proj_color = control_color
+                            ctl_proj_color = controller_color
                         else:
                             ctl_proj_color = active_color
                         ctl_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        ctl_proj_color = control_color
+                        ctl_proj_color = controller_color
                         ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
@@ -2588,13 +2604,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for projection in input_state.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
-                            proj_color = control_color
+                            proj_color = controller_color
                         else:
                             proj_color = active_color
                         proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        proj_color = control_color
+                        proj_color = controller_color
                         proj_width = str(default_width)
                     if show_mechanism_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions, show_roles) +\
@@ -2801,8 +2817,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for r in rcvrs:
                 _assign_processing_components(G, G, r)
 
-        # Add control-related Components to graph if show_control
-        if show_control:
+        # Add control-related Components to graph if show_controller
+        if show_controller:
             if show_processes:
                 with G.subgraph(name='cluster_MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM') as sg:
                     sg.attr(label='MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM')
