@@ -1174,6 +1174,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a sender specification. ".format(projection.name))
 
+        else:
+            # Check if sender is from a nested Composition and, if so, it is an OUTPUT Mechanism
+            #    - if so, then use self.output_CIM_states
+            #
+
+
         subcompositions = []
 
         sender_mechanism = sender
@@ -1198,6 +1204,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a receiver specification. ".format(projection.name))
+        elif receiver
 
         receiver_mechanism = receiver
         graph_receiver = receiver
