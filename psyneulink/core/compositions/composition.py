@@ -2984,7 +2984,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
-        if self.most_recent_execution_context != execution_id:
+        # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
+        # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
+        # for example:
+        # comp.run()
+        # comp.add_c_node(new_node)
+        # comp.run().
+        # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
+        if self.most_recent_execution_context != execution_id or self.env is None:
             # initialize from base context but don't overwrite any values already set for this execution_id
             if not nested:
                 self._initialize_from_context(execution_id, base_execution_id, override=False)
