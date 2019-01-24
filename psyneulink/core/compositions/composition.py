@@ -1198,7 +1198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
             # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS SENDER IN A NESTED COMPOSITION
-            nested_sender = None
+            nested_sender_output_state = None
             nested_comps = [c for c in self.c_nodes if isinstance(c, Composition)]
             for c in nested_comps:
                   if sender_mechanism in c.c_nodes:
@@ -1208,18 +1208,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  "is in a nested {} ({}) but is not assigend {} of {}".
                                                  format(repr(sender), self.name, Composition.__name__,
                                                         c.name, CNodeRole.__name__, repr(CNodeRole.OUTPUT)))
-                      if nested_sender:
+                      if nested_sender_output_state:
                           warnings.warn("Sender ({}) of {} ({}) is already specified "
                                         "for another {} ({}) nested in {};  it will be ignored".
                                         format(repr(sender), Projection.__name__, repr(projection),
-                                               Composition.__name__, comp, self.name))
+                                               Composition.__name__, graph_sender, self.name))
                           continue
-                      sender= c.output_CIM_states[sender_output_state][1]
-                      comp = c
-            if not nested_sender:
+                      nested_sender_output_state = c.output_CIM_states[sender_output_state][1]
+                      graph_sender = c
+            if not nested_sender_output_state:
                 raise CompositionError("sender arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
                                        format(repr(sender), self.name, Composition.__name__,))
+            sender = nested_sender_output_state
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
@@ -1256,7 +1257,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
             # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS RECEIVER IN A NESTED COMPOSITION
-            nested_receiver = None
+            nested_receiver_input_state = None
             nested_comps = [c for c in self.c_nodes if isinstance(c, Composition)]
             for c in nested_comps:
                   if receiver_mechanism in c.c_nodes:
@@ -1266,18 +1267,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  "is in a nested {} ({}) but is not assigend {} of {}".
                                                  format(repr(receiver), self.name, Composition.__name__,
                                                         c.name, CNodeRole.__name__, repr(CNodeRole.INPUT)))
-                      if nested_receiver:
-                          warnings.warn("Receiver ({}) of specified {} ({}) is already specified "
+                      if nested_receiver_input_state:
+                          warnings.warn("receiver ({}) of specified {} ({}) is already specified "
                                         "for another {} ({}) nested in {};  it will be ignored".
                                         format(repr(receiver), Projection.__name__, repr(projection),
-                                               Composition.__name__, first_nested_comp_found, self.name))
+                                               Composition.__name__, graph_receiver, self.name))
                           continue
-                      receiver= c.input_CIM_states[receiver_input_state][0]
-                      first_nested_comp_found = c
-            if not nested_receiver:
+                      nested_receiver_input_state = c.input_CIM_states[receiver_input_state][0]
+                      graph_receiver = c
+            if not nested_receiver_input_state:
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__,))
+            receiver = nested_receiver_input_state
 
 
         if projection not in [vertex.component for vertex in self.graph.vertices]:
