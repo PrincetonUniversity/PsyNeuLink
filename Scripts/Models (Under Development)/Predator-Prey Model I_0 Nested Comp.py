@@ -74,7 +74,6 @@ agent_comp.add_c_node(prey_obs)
 # agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
 # agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
 agent_comp.add_c_node(greedy_action_mech)
-agent_comp._analyze_graph()
 
 # ControlMechanism
 
@@ -160,7 +159,6 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs
                                    )
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
-agent_comp._analyze_graph()
 
 full_comp = Composition(name='FULL_COMPOSITION')
 full_comp.add_c_node(agent_comp)
