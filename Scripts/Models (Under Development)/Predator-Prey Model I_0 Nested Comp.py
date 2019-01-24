@@ -177,6 +177,8 @@ full_comp.add_projection(sender=prey_input, receiver=prey_obs)
 # full_comp.add_linear_processing_pathway([predator_input,predator_obs])
 # full_comp.add_linear_processing_pathway([prey_input,prey_obs])
 
+full_comp._analyze_graph()
+
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
     # agent_comp.show_graph(show_controller=True)
