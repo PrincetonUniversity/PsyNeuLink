@@ -74,6 +74,7 @@ agent_comp.add_c_node(prey_obs)
 # agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
 # agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
 agent_comp.add_c_node(greedy_action_mech)
+agent_comp._analyze_graph()
 
 # ControlMechanism
 
@@ -107,9 +108,19 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs
                                                        save_values=True),
                                    objective_mechanism=ObjectiveMechanism(
                                            function=diff_fct,
-                                           monitored_output_states=[player_input, player_obs,
-                                                                    predator_input, predator_obs,
-                                                                    prey_input, prey_obs
+                                           # monitored_output_states=[player_input, player_obs,
+                                           #                          predator_input, predator_obs,
+                                           #                          prey_input, prey_obs
+                                           #                          ]
+                                           monitored_output_states=[agent_comp.input_CIM_states[
+                                                                        player_obs.input_state][1],
+                                                                    player_obs,
+                                                                    agent_comp.input_CIM_states[
+                                                                        predator_obs.input_state][1],
+                                                                    predator_obs,
+                                                                    agent_comp.input_CIM_states[
+                                                                        prey_obs.input_state][1],
+                                                                    prey_obs
                                                                     ]
                                    ),
                                    control_signals=[ControlSignal(projections=(CTL_PARAM,player_obs),
