@@ -1,4 +1,4 @@
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+ # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -394,10 +394,24 @@ class ControlMechanismError(Exception):
 
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
     try:
-        return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
+        return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
+                for c in owning_component.control_signals]
     except TypeError:
         return None
 
+def _outcome_getter(owning_component=None, execution_id=None):
+    try:
+        return owning_component.parameters.variable.get(execution_id)[0]
+    except TypeError:
+        return None
+
+def _net_outcome_getter(owning_component=None, execution_id=None):
+    try:
+        c = owning_component
+        return c.compute_net_outcome(c.parameters.outcome.get(execution_id),
+                                     c.combine_costs(c.parameters.costs.get(execution_id)))
+    except TypeError:
+        return [0]
 
 # class ControlMechanism(Mechanism_Base):
 class ControlMechanism(AdaptiveMechanism_Base):
@@ -507,8 +521,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     compute_net_outcome : Function, function or method : default lambda outcome, cost: outcome-cost
         function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
-        <ControlMechanism.costs>` attributes;  must take two 1d arrays with scalar values as its arguments
-        and return an array with a single scalar value.
+        <ControlMechanism.costs>` attributes;  must take two 1d arrays (outcome and cost) with scalar values as its
+        arguments and return an array with a single scalar value.
 
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
@@ -674,6 +688,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: numpy.array([[1.]])
                     :type: numpy.ndarray
 
+                outcome
+                    see `outcome <ControlMechanism.outcome>
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 value
                     see `value <ControlMechanism.value>`
 
@@ -686,14 +707,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: numpy.core.fromnumeric.sum
                     :type: <class 'function'>
 
+                costs
+                    see `costs <ControlMechanism.costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 compute_net_outcome
                     see `compute_net_outcome <ControlMechanism.compute_net_outcome>`
 
                     :default value: lambda outcome, cost: outcome - cost
                     :type: <class 'function'>
 
-                costs
-                    see `costs <ControlMechanism.costs>`
+                net_outcome
+                    see `net_outcome <ControlMechanism.net_outcome>
 
                     :default value: None
                     :type:
@@ -709,12 +737,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([defaultControlAllocation])
         value = Parameter(np.array(defaultControlAllocation), aliases='control_allocation')
+        outcome = Parameter(None, read_only=True, getter=_outcome_getter)
 
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
-        compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
-
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True)
+
+        compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
+        net_outcome = Parameter(None, read_only=True, getter=_net_outcome_getter)
 
         simulation_ids = Parameter([], user=False)
 
