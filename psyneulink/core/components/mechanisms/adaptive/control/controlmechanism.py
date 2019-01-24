@@ -688,18 +688,18 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: numpy.array([[1.]])
                     :type: numpy.ndarray
 
+                value
+                    see `value <ControlMechanism.value>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
                 outcome
                     see `outcome <ControlMechanism.outcome>
 
                     :default value: None
                     :type:
                     :read only: True
-
-                value
-                    see `value <ControlMechanism.value>`
-
-                    :default value: numpy.array([1.])
-                    :type: numpy.ndarray
 
                 combine_costs
                     see `combine_costs <ControlMechanism.combine_costs>`
@@ -737,6 +737,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([defaultControlAllocation])
         value = Parameter(np.array(defaultControlAllocation), aliases='control_allocation')
+
         outcome = Parameter(None, read_only=True, getter=_outcome_getter)
 
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
