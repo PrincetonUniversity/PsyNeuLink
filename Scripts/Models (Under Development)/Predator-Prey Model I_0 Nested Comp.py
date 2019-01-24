@@ -162,12 +162,11 @@ agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
 agent_comp._analyze_graph()
 
-full_comp = Composition(name='FULL COMPOSITION')
+full_comp = Composition(name='FULL_COMPOSITION')
 full_comp.add_c_node(agent_comp)
 full_comp.add_c_node(player_input)
 full_comp.add_c_node(predator_input)
 full_comp.add_c_node(prey_input)
-full_comp._analyze_graph()
 
 full_comp.add_projection(sender=player_input, receiver=player_obs)
 full_comp.add_projection(sender=predator_input, receiver=predator_obs)
@@ -176,8 +175,6 @@ full_comp.add_projection(sender=prey_input, receiver=prey_obs)
 # full_comp.add_linear_processing_pathway([player_input,player_obs])
 # full_comp.add_linear_processing_pathway([predator_input,predator_obs])
 # full_comp.add_linear_processing_pathway([prey_input,prey_obs])
-
-full_comp._analyze_graph()
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
