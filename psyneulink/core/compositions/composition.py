@@ -496,6 +496,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.required_c_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
+        self.env = None
         self.external_input_sources = external_input_sources
         if external_input_sources is None:
             self.external_input_sources = {}
@@ -2976,11 +2977,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
-        # initialize from base context but don't overwrite any values already set for this execution_id
-        if not nested:
-            self._initialize_from_context(execution_id, base_execution_id, override=False)
+        # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
+        # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
+        # for example:
+        # comp.run()
+        # comp.add_c_node(new_node)
+        # comp.run().
+        # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
+        if self.most_recent_execution_context != execution_id or self.env is None:
+            # initialize from base context but don't overwrite any values already set for this execution_id
+            if not nested:
+                self._initialize_from_context(execution_id, base_execution_id, override=False)
 
-        self._assign_context_values(execution_id, composition=self)
+            self._assign_context_values(execution_id, composition=self)
 
         if nested:
             self.input_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -3367,6 +3376,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
                                "nodes.".format(self.name, len(input_nodes)))
+        elif callable(inputs):
+            num_inputs_sets = 1
+            autodiff_stimuli = {}
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
@@ -3375,8 +3387,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
                                "nodes.".format(self.name, len(input_nodes)))
-
-        inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
+        if not callable(inputs):
+            # Currently, no validation if 'inputs' arg is a function
+            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -3415,7 +3428,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
+        if self.env:
+            trial_output = np.atleast_2d(self.env.reset())
         for trial_num in range(num_trials):
+
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_with_pruned_args(call_before_trial, execution_context=execution_id)
@@ -3424,15 +3440,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                   execution_context=execution_id):
                 break
         # PROCESSING ------------------------------------------------------------------------
-
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-            execution_stimuli = {}
-            stimulus_index = trial_num % num_inputs_sets
-            for node in inputs:
-                if len(inputs[node]) == 1:
-                    execution_stimuli[node] = inputs[node][0]
-                    continue
-                execution_stimuli[node] = inputs[node][stimulus_index]
+            if callable(inputs):
+                # If 'inputs' argument is a function, call the function here with results from last trial
+                execution_stimuli = inputs(self.env, trial_output)
+                if not isinstance(execution_stimuli, dict):
+                    return trial_output
+            else:
+                execution_stimuli = {}
+                stimulus_index = trial_num % num_inputs_sets
+                for node in inputs:
+                    if len(inputs[node]) == 1:
+                        execution_stimuli[node] = inputs[node][0]
+                        continue
+                    execution_stimuli[node] = inputs[node][stimulus_index]
 
             execution_autodiff_stimuli = {}
             for node in autodiff_stimuli:
@@ -3440,6 +3461,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node][stimulus_index]
                 else:
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node]
+
+
 
             # execute processing
             # pass along the stimuli for this trial
