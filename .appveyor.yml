@@ -42,7 +42,7 @@ install:
   - pip install --user -e .[dev]
 
 cache:
-    - '%APPDATA%\Python\%PYTHON% -> .appveyor.yml'
+    - '%LOCALAPPDATA%\pip\Cache -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
 
