@@ -651,6 +651,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Add all "c_nodes" to the composition first (in case projections reference them)
             for component in node.aux_components:
                 if isinstance(component, (Mechanism, Composition)):
+                    if isinstance(component, Composition):
+                        component._analyze_graph()
                     self.add_c_node(component)
                 elif isinstance(component, Projection):
                     projections.append((component, False))
