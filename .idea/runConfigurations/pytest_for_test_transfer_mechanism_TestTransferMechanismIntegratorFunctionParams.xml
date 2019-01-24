@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="pytest for test_transfer_mechanism.TestTransferMechanismIntegratorFunctionParams" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
+  <configuration default="false" factoryName="py.test" name="pytest for test_transfer_mechanism.TestTransferMechanismIntegratorFunctionParams" nameIsGenerated="true" singleton="true" type="tests">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <option name="SDK_HOME" value="" />

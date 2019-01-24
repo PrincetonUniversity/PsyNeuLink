@@ -685,7 +685,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                " is specified, then the index 0 item must be a Projection, Mechanism, "
                                                "or Composition.".format(component, node.name))
                 else:
-                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                     raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
                                            "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
@@ -1193,7 +1193,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(sender, self.name,
                                           Mechanism.__name__, OutputState.__name__, Composition.__name__))
 
-        if not sender_mechanism is self.input_CIM and sender_mechanism not in self.c_nodes:
+        if not sender_mechanism is self.output_CIM and sender_mechanism not in self.c_nodes:
             # Check if sender is in a nested Composition and, if so, it is an OUTPUT Mechanism
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1251,7 +1251,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(receiver, self.name,
                                           Mechanism.__name__, InputState.__name__, Composition.__name__))
 
-        if receiver_mechanism is self.output_CIM and receiver not in self.c_nodes:
+        if not receiver_mechanism is self.input_CIM and receiver not in self.c_nodes:
             # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1270,10 +1270,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           warnings.warn("Receiver ({}) of specified {} ({}) is already specified "
                                         "for another {} ({}) nested in {};  it will be ignored".
                                         format(repr(receiver), Projection.__name__, repr(projection),
-                                               Composition.__name__, comp, self.name))
+                                               Composition.__name__, first_nested_comp_found, self.name))
                           continue
                       receiver= c.input_CIM_states[receiver_input_state][0]
-                      comp = c
+                      first_nested_comp_found = c
             if not nested_receiver:
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
