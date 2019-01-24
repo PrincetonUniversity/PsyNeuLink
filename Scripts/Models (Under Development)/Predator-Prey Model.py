@@ -7,8 +7,8 @@ from gym_forager.envs.forager_env import ForagerEnv
 # Runtime Switches:
 RENDER = False
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -119,6 +119,10 @@ def main():
     env = ForagerEnv()
     reward = 0
     done = False
+
+    def my_print():
+        print(ocm.net_outcome)
+
     if RENDER:
         env.render()  # If visualization is desired
     else:
@@ -136,6 +140,7 @@ def main():
                                                  predator_obs:[observation[predator_coord_slice]],
                                                  prey_obs:[observation[prey_coord_slice]],
                                                  },
+                                         call_after_trial=my_print,
                                          bin_execute=BIN_EXECUTE
                                          )
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
