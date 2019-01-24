@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.5.0.0+59.ge2fb65f documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.5.0.0+60.g399a297ec documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+59.ge2fb65f documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+60.g399a297ec documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+59
+                0.5.0.0+60
               </div>
             
           
@@ -271,7 +271,7 @@ following examples:</p>
 </pre></div>
 </div>
 <p>The specified Function will be used as a template to create a new Function object that is assigned to the
-<a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.function" title="psyneulink.core.components.functions.combinationfunctions.Reduce.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> attribute of the Component.</p>
+<a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of the Component.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">In the current implementation of PsyNeuLink, if a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (or the constructor for one) is
@@ -353,7 +353,7 @@ general, only parameters that take numerical values and/or do not affect the str
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>,
-<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.output_states" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
+<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.output_states" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
 but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a>, as well as the parameters of the TransferMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (listed in the <em>function_params</em> subdictionary) can all be subject to modulation.
 Parameters that are subject to modulation are associated with a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which the ControlSignals
 can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
@@ -744,7 +744,7 @@ may change during runtime</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+59.ge2fb65f',
+            VERSION:'0.5.0.0+60.g399a297ec',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
