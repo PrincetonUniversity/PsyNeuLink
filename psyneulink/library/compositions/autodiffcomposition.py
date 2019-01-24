@@ -393,7 +393,7 @@ class AutodiffComposition(Composition):
         min_delta = 0
         pytorch_representation = None
 
-    # TODO (CW 9/28): add compositions to registry so default arg for name is no longer needed
+    # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     def __init__(self,
                  param_init_from_pnl=True,
                  patience=None,
@@ -404,6 +404,8 @@ class AutodiffComposition(Composition):
                  loss_type='mse',
                  randomize=None,
                  refresh_losses=False,
+                 disable_cuda=False,
+                 cuda_index=None,
                  name="autodiff_composition"):
 
         self.learning_enabled = True
@@ -446,6 +448,13 @@ class AutodiffComposition(Composition):
 
         # CW 11/1/18: maybe we should make scheduler a property, like in Composition
         self.scheduler = None
+        if not disable_cuda and torch.cuda.is_available():
+            if cuda_index is None:
+                self.device = torch.device('cuda')
+            else:
+                self.device = torch.device('cuda:' + cuda_index)
+        else:
+            self.device = torch.device('cpu')
 
     # CLEANUP: move some of what's done in the method below to a "validate_params" type of method
     def _build_pytorch_representation(self, execution_id = None):
@@ -457,6 +466,7 @@ class AutodiffComposition(Composition):
             model = PytorchModelCreator(self.graph_processing,
                                         self.param_init_from_pnl,
                                         self.execution_sets,
+                                        self.device,
                                         execution_id)
             self.parameters.pytorch_representation.set(model, execution_id)
         # Set up optimizer function
@@ -572,10 +582,10 @@ class AutodiffComposition(Composition):
                 curr_tensor_targets = {}
                 for component in inputs.keys():
                     input = inputs[component][input_index]
-                    curr_tensor_inputs[component] = torch.tensor(input).double()
+                    curr_tensor_inputs[component] = torch.tensor(input, device = self.device).double()
                 for component in targets.keys():
                     target = targets[component][input_index]
-                    curr_tensor_targets[component] = torch.tensor(target).double()
+                    curr_tensor_targets[component] = torch.tensor(target, device = self.device).double()
 
                 # do forward computation on current inputs
                 curr_tensor_outputs = self.parameters.pytorch_representation.get(execution_id).forward(

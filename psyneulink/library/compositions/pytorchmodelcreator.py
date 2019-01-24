@@ -22,7 +22,7 @@ __all__ = ['PytorchModelCreator']
 class PytorchModelCreator(torch.nn.Module):
 
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, processing_graph, param_init_from_pnl, execution_sets, execution_id=None):
+    def __init__(self, processing_graph, param_init_from_pnl, execution_sets, device, execution_id=None):
 
         if not torch_available:
             raise Exception('Pytorch python module (torch) is not installed. Please install it with '
@@ -35,6 +35,7 @@ class PytorchModelCreator(torch.nn.Module):
         self.projections_to_pytorch_weights = {}  # dict mapping PNL projections to Pytorch weights
         self.mechanisms_to_pytorch_biases = {}  # dict mapping PNL mechanisms to Pytorch biases
         self.params = nn.ParameterList()  # list that Pytorch optimizers will use to keep track of parameters
+        self.device = device
 
         for i in range(len(self.execution_sets)):
             for component in self.execution_sets[i]:
@@ -49,7 +50,8 @@ class PytorchModelCreator(torch.nn.Module):
 
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
-                        biases = nn.Parameter(torch.zeros(len(component.input_states[0].parameters.value.get(None))).double())
+                        input_length = len(component.input_states[0].parameters.value.get(None))
+                        biases = nn.Parameter(torch.zeros(input_length, device=self.device).double())
                         self.params.append(biases)
                         self.mechanisms_to_pytorch_biases[component] = biases
 
@@ -69,9 +71,9 @@ class PytorchModelCreator(torch.nn.Module):
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
                         if param_init_from_pnl:
-                            weights = nn.Parameter(torch.tensor(proj_matrix.copy()).double())
+                            weights = nn.Parameter(torch.tensor(proj_matrix.copy(), device=self.device).double())
                         else:
-                            weights = nn.Parameter(torch.rand(np.shape(proj_matrix)).double())
+                            weights = nn.Parameter(torch.rand(np.shape(proj_matrix), device=self.device).double())
                         afferents[input_node] = weights
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
@@ -103,7 +105,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                 # forward computation if we do not have origin node
                 else:
-                    value = torch.zeros(len(component.input_states[0].defaults.value)).double()
+                    value = torch.zeros(len(component.input_states[0].defaults.value), device=self.device).double()
                     for input_node, weights in afferents.items():
                         value += torch.matmul(self.component_to_forward_info[input_node.component][0], weights)
                     if biases is not None:
@@ -154,8 +156,8 @@ class PytorchModelCreator(torch.nn.Module):
             gain = get_fct_param_value('gain')
             bias = get_fct_param_value('bias')
             leak = get_fct_param_value('leak')
-            return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0]).double()) * gain +
-                              torch.min(input=(x - bias), other=torch.tensor([0]).double()) * leak)
+            return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=self.device).double()) * gain +
+                              torch.min(input=(x - bias), other=torch.tensor([0], device=self.device).double()) * leak)
 
     # returns dict mapping psyneulink projections to corresponding pytorch weights. Pytorch weights are copied
     # over from tensors inside Pytorch's Parameter data type to numpy arrays (and thus copied to a different
