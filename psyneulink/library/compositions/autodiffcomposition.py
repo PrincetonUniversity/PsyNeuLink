@@ -76,7 +76,13 @@ attribute, which can be toggled between runs.
 **optimizer_type** specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
 default) or 'adam'.
 
-**loss_spec** specifies the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
+**loss_spec** specifies the loss function for training. It can be a string or a PyTorch loss function. The current
+options for strings are 'mse' (the default), 'crossentropy', 'l1', 'nll', 'poissonnll', and 'kldiv'. These refer to
+Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
+Divergence respectively. The **loss_spec** can also be any PyTorch loss function, including a custom-written one. For a
+list of PyTorch loss functions, see https://pytorch.org/docs/stable/nn.html#loss-functions. For information on writing
+a custom loss function, see https://pytorch.org/docs/master/notes/extending.html and
+https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235
 
 **randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
 run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
@@ -106,7 +112,7 @@ The `optimizer <AutodiffComposition.optimizer>` attribute contains the PyTorch o
 is determined at initialization by the **optimizer_type** and **learning_rate** arguments.
 
 The `loss <AutodiffComposition.loss>` attribute contains the PyTorch loss function used for learning. It is determined
-at initialization by the **loss_spec** arguments.
+at initialization by the **loss_spec** argument.
 
 .. _AutodiffComposition_Execution:
 
@@ -289,8 +295,10 @@ class AutodiffComposition(Composition):
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
 
-    loss_spec : str : default 'mse'
-        the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
+    loss_spec : str or PyTorch loss function : default 'mse'
+        specifies the loss function for training. The current string options are 'mse' (the default), 'crossentropy',
+        'l1', 'nll', 'poissonnll', and 'kldiv'. Any PyTorch loss function can work here, such as ones from
+        https://pytorch.org/docs/stable/nn.html#loss-functions
 
     randomize: boolean : default False
         specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are run, but
