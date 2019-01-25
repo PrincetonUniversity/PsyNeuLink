@@ -482,12 +482,7 @@ class AutodiffComposition(Composition):
         if self.loss is not None:
             logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
                 self, self.loss))
-        if callable(self.loss_spec):
-            assert hasattr(self.loss_spec, 'forward')
-            assert hasattr(self.loss_spec, 'backward')
-            self.loss = self.loss_spec
-        else:
-            self.loss = self._get_loss(self.loss_spec)
+        self.loss = self._get_loss(self.loss_spec)
 
     def _make_optimizer(self, optimizer_type, learning_rate, execution_id):
         if not isinstance(learning_rate, (int, float)):
@@ -503,11 +498,6 @@ class AutodiffComposition(Composition):
 
     def _get_loss(self, loss_spec):
         if callable(self.loss_spec):
-            if not (hasattr(self.loss_spec, 'forward') and hasattr(self.loss_spec, 'backward')):
-                logger.warning("Custom loss function {} does not have forward and backward methods. This may cause an "
-                               "error during training. To prevent this, specify your custom loss in a manner compatible"
-                               " with Pytorch, such as in https://pytorch.org/docs/master/notes/extending.html"
-                               .format(loss_spec))
             return self.loss_spec
         elif loss_spec == 'mse':
             return nn.MSELoss(reduction='sum')
