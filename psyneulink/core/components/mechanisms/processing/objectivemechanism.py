@@ -16,8 +16,8 @@ Overview
 An ObjectiveMechanism is a `ProcessingMechanism <ProcessingMechanism>` that monitors the `OutputStates <OutputState>`
 of one or more other ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` attribute,
 and evaluates them using its `function <ObjectiveMechanism.function>`. The result of the evaluation is placed in the
-ObjectiveMechanism's `primary OutputState <OutputState_Primary>`.  ObjectiveMechanisms are typically used closely
-with (and often created automatically by) `AdaptiveMechanisms <AdaptiveMechanism>`.
+ObjectiveMechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.  ObjectiveMechanisms are typically used
+closely with (and often created automatically by) `AdaptiveMechanisms <AdaptiveMechanism>`.
 
 .. _ObjectiveMechanism_Creation:
 
@@ -32,12 +32,12 @@ attribute, that is specified using the corresponding argument of its constructor
 
 .. _ObjectiveMechanism_Monitor:
 
-*Monitored OutputStates*
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Monitor*
+~~~~~~~~~
 
 COMMENT:
 FOR DEVELOPERS:
-    The monitor argument is in effect and alias to the input_states argument
+    The monitor argument is in effect an alias to the input_states argument
     of the constructor for a Mechanism;  it is simply assigned to input_state in the __init__ method
     and the specifications are handled by an override of the Mechanism's _instantiate_input_states method.
     The monitor property returns the OutputStates that project to the Mechanism's InputStates
@@ -48,9 +48,12 @@ This takes the place of the **input_states** argument used by most other forms o
 by the ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection`
 from the OutputState to that InputState.  The **monitor** argument takes a list of items that can
 include any of the `forms of specification <InputState_Specification>` used in a standard **input_states** argument.
-For the **monitor** argument, this is usually a list of OutputStates to be monitored.  However,
-as with a standard **input_states** argument, items in the  **monitor** argument can also be used to
-specify attributes of the InputState and/or MappingProjection to it created that the ObjectiveMechanism creates to
+For the **monitor** argument, this is usually a list of OutputStates to be monitored.  However, as with a standard
+**input_states** argument, the **monitor** argument can include Mechanisms (in which case their `primary Outputstate
+<OutputState_Primary>` is used) or other the `InputState(s) <InputState>` of other Mechanisms (in which case the
+ObjectiveMechanism will be assigned Projections from all of the OutputStates that project to the specified InputState
+-- that is, it will `shadow their inputs <InputState_Shadow_Inputs>`). Items in the *monitor* argument can also be
+used to specify attributes of the InputState and/or MappingProjection(s) to it, that the ObjectiveMechanism creates to
 monitor the specified OutputState.  In general, the `value <OutputState.value>` of each specified OutputState determines
 the format of the `variable <InputState.variable>` of the InputState that is created for it by the ObjectiveMechanism.
 However, this can be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>`
@@ -86,7 +89,7 @@ precedence afforded to each) are described below.
     described in the specifications below.
 COMMENT
 
-The list of OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>`
+The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>`
 attribute.  When an ObjectiveMechanism is created by a `ControlMechanism`, or a `System` for its `controller
 <System.controller>`, these may pass a set of OutputStates to be monitored to the ObjectiveMechanism.  A
 ControlMechanism passes OutputState specifications listed in its **objective_mechanism** argument (see
@@ -113,13 +116,18 @@ corresponding OutputState, the values of which are used by the ObjectiveMechanis
 <ObjectiveMechanism.input_states>` attribute, and the monitored OutputStates from which they receive projections are
 listed in the same order its `monitor <ObjectiveMechanism.monitor>` attribute.
 
+COMMENT:
+  FIX: Shadowing inputs may generate an exception to this, if the shadowed InputState receives more than one projection.
+       In that case, there will be more than on OutputState listed in monitor for the corresponding input_state
+COMMENT
+
 By default, the format of the `variable <InputState.variable>` for each InputState is determined by the `value
-<OutputState.value>` of the monitored OutputState to which it corresponds.  However, if either the **default_variable**
-or **size** argument is specified in an Objective Mechanism's constructor, or a `variable <InputState.variable>` is
-`specified for an InputState <InputState_Specification>` for one or more of the items in its **monitor** argument,
-then that is used as the format for the corresponding InputState(s).  This can be used to transform the
-`value <OutputState.value>` of a monitored OutputState into different form for the `variable <InputState.variable>` of
-the InputState (see the `first example <ObjectiveMechanism_Monitor_Examples>` below).
+<OutputState.value>` of the monitored OutputState(s) to which it corresponds.  However, if either the
+**default_variable** or **size** argument is specified in an Objective Mechanism's constructor, or a `variable
+<InputState.variable>` is `specified for an InputState <InputState_Specification>` for one or more of the items in
+its **monitor** argument, then that is used as the format for the corresponding InputState(s).  This can be used to
+transform the `value <OutputState.value>` of a monitored OutputState into different form for the `variable
+<InputState.variable>` of the InputState (see the `first example <ObjectiveMechanism_Monitor_Examples>` below).
 
 If the weight and/or exponent is specified for ay item in the **monitor** argument of the ObjectiveMechanism's
 constructor, it is assigned to the corresponding InputState.  If the ObjectiveMechanism's `function
@@ -137,7 +145,7 @@ The ObjectiveMechanism's `function <ObjectiveMechanism.function>` uses the value
 <ObjectiveMechanism.input_states>` to compute an `objective (or "loss") function
 <https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>`.  By default, it uses a `LinearCombination` function to sum the values of the values of
-the OutputStates listed in `monitor <ObjectiveMechanism.monior>`. However, by assigning values to the 'weight
+the items in its `variable <ObjectiveMechanism.variable>`. However, by assigning values to the 'weight
 <InputState.weight>` and/or 'exponent <InputState.exponent>` attributes of the corresponding InputStates,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
@@ -453,8 +461,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     COMMENT
 
     function: CombinationFunction, ObjectiveFunction, function or method : default LinearCombination
-        specifies the function used to evaluate the values listed in :keyword:`monitor`
-        (see `function <LearningMechanism.function>` for details.
+        specifies the function used to evaluate the values listed in `monitor` <ObjectiveMechanism.monitor>`
+        (see `function <ObjectiveMechanism.function>` for details).
 
     output_states :  List[OutputState, value, str or dict] or Dict[] : default [OUTCOME]
         specifies the OutputStates for the Mechanism;
@@ -484,8 +492,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     monitor : ContentAddressableList[OutputState]
         determines the OutputStates, the `values <OutputState.value>` of which are monitored, and evaluated by the
         ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  Each item in the list refers to an
-        `OutputState` containing the value to be monitored, with a `MappingProjection` from it to the
-        corresponding `InputState` listed in the `input_states <ObjectiveMechanism.input_states>` attribute.
+        `OutputState` containing the value to be monitored, with a `MappingProjection` from it to an
+        corresponding `InputState` listed in the `input_states <ObjectiveMechanism.input_states>` attribute
+
+        .. note::
+           If any of the ObjectiveMechanism's `input_states <ObjectiveMechanism.input_states>` were specified to
+           `shadow the InputState <InputState_Shadow_Input>` of another Mechanism, and any of those shadowed InputStates
+           receives more than one `Projection`, then the list of monitored OutputStates in `monitor` will be longer
+           than the list of the ObjectiveMechanism's `input_states <ObjectiveMechanisms.input_states>`.
 
     monitor_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains a weight and exponent associated with a corresponding InputState listed in the
