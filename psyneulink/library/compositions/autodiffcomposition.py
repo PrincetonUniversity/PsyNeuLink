@@ -456,7 +456,7 @@ class AutodiffComposition(Composition):
         else:
             self.device = torch.device('cpu')
 
-    # CLEANUP: move some of what's done in the method below to a "validate_params" type of method
+    # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     def _build_pytorch_representation(self, execution_id = None):
         if self.scheduler is None:  # if learning_enabled has never been run yet
             self.scheduler = Scheduler(graph=self.graph_processing)
@@ -483,6 +483,8 @@ class AutodiffComposition(Composition):
             logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
                 self, self.loss))
         if callable(self.loss_spec):
+            assert hasattr(self.loss_spec, 'forward')
+            assert hasattr(self.loss_spec, 'backward')
             self.loss = self.loss_spec
         else:
             self.loss = self._make_loss(loss_str=self.loss_spec)
@@ -499,25 +501,32 @@ class AutodiffComposition(Composition):
         else:
             return optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
 
-    def _make_loss(self, loss_str):
-        if loss_str == 'mse':
+    def _get_loss(self, loss_spec):
+        if callable(self.loss_spec):
+            if not (hasattr(self.loss_spec, 'forward') and hasattr(self.loss_spec, 'backward')):
+                logger.warning("Custom loss function {} does not have forward and backward methods. This may cause an "
+                               "error during training. To prevent this, specify your custom loss in a manner compatible"
+                               " with Pytorch, such as in https://pytorch.org/docs/master/notes/extending.html"
+                               .format(loss_spec))
+            return self.loss_spec
+        elif loss_spec == 'mse':
             return nn.MSELoss(reduction='sum')
-        elif loss_str == 'crossentropy':
+        elif loss_spec == 'crossentropy':
             return nn.CrossEntropyLoss(reduction='sum')
-        elif loss_str == 'l1':
+        elif loss_spec == 'l1':
             return nn.L1Loss(reduction='sum')
-        elif loss_str == 'nll':
+        elif loss_spec == 'nll':
             return nn.NLLLoss(reduction='sum')
-        elif loss_str == 'poissonnll':
+        elif loss_spec == 'poissonnll':
             return nn.PoissonNLLLoss(reduction='sum')
-        elif loss_str == 'kldiv':
+        elif loss_spec == 'kldiv':
             return nn.KLDivLoss(reduction='sum')
         else:
-            raise AutodiffCompositionError("Loss type not recognized. Loss argument must be a string or function. "
+            raise AutodiffCompositionError("Loss type {} not recognized. Loss argument must be a string or function. "
                                            "Currently, the recognized loss types are Mean Squared Error, Cross Entropy,"
                                            " L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, "
                                            "and KL Divergence. These are specified as 'mse', 'crossentropy', 'l1', "
-                                           "'nll', 'poissonnll', and 'kldiv' respectively.")
+                                           "'nll', 'poissonnll', and 'kldiv' respectively.".format(loss_spec))
 
     def _has_required_keys(self, input_dict):
         required_keys = {"inputs", "targets"}

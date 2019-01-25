@@ -179,6 +179,53 @@ class TestMiscTrainingFunctionality:
         # assert np.allclose(pt_weights_hid_bp, pt_weights_hid_ap)
         # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
 
+    @pytest.mark.parametrize(
+        'loss', ['l1', 'poissonnll', torch.nn.SmoothL1Loss(), torch.nn.SoftMarginLoss(reduction='sum')]
+    )
+    def test_various_loss_specs(self, loss):
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        hid_map = MappingProjection()
+        out_map = MappingProjection()
+
+        xor = AutodiffComposition(param_init_from_pnl=True, loss_spec = loss)
+
+        xor.add_c_node(xor_in)
+        xor.add_c_node(xor_hid)
+        xor.add_c_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # train model for a few epochs
+        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
+        #                               targets={xor_out:xor_targets},
+        #                               epochs=10)
+        results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+                                                "targets": {xor_out:xor_targets},
+                                               "epochs": 10})
+
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self):
         xor_in = TransferMechanism(name='xor_in',
