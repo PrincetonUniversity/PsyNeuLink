@@ -1200,7 +1200,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
             # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS SENDER IN A NESTED COMPOSITION
-            sender = self._get_nested_c_node_CIM_state(sender_mechanism, sender_output_state, CNodeRole.OUTPUT)
+            sender, graph_sender = self._get_nested_c_node_CIM_state(sender_mechanism,
+                                                                     sender_output_state,
+                                                                     CNodeRole.OUTPUT)
             if sender is None:
                 raise CompositionError("sender arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
@@ -1241,7 +1243,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
             # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS RECEIVER IN A NESTED COMPOSITION
-            receiver = self._get_nested_c_node_CIM_state(receiver_mechanism, receiver_input_state, CNodeRole.INPUT)
+            receiver, graph_receiver = self._get_nested_c_node_CIM_state(receiver_mechanism,
+                                                                         receiver_input_state,
+                                                                         CNodeRole.INPUT)
             if receiver is None:
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
@@ -1612,7 +1616,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      role:tc.enum(CNodeRole.INPUT, CNodeRole.OUTPUT)
                                      ):
         '''Check for c_node in nested Composition
-        Return relevant state of relevant CIM if found, else None
+        Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         '''
 
         CIM_state_for_nested_c_node = None
@@ -1629,11 +1633,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
                                     "only first one found (in {}) will be used".
                                     format(c_node.name, CNodeRole.__name__, repr(role),
-                                           Composition.__name__, self.name, comp.name))
+                                           Composition.__name__, self.name, nested_comp.name))
                       continue
                   CIM_state_for_nested_c_node = c.input_CIM_states[c_node_state][0]
-                  comp = c
-        return CIM_state_for_nested_c_node
+                  nested_comp = c
+        return CIM_state_for_nested_c_node, nested_comp
 
     def add_required_c_node_role(self, c_node, role):
         if role not in CNodeRole:
