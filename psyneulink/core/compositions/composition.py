@@ -1199,7 +1199,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Check if sender is in a nested Composition and, if so, it is an OUTPUT Mechanism
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
-            # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS SENDER IN A NESTED COMPOSITION
             sender, graph_sender = self._get_nested_c_node_CIM_state(sender_mechanism,
                                                                      sender_output_state,
                                                                      CNodeRole.OUTPUT)
@@ -1242,7 +1241,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
-            # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS RECEIVER IN A NESTED COMPOSITION
             receiver, graph_receiver = self._get_nested_c_node_CIM_state(receiver_mechanism,
                                                                          receiver_input_state,
                                                                          CNodeRole.INPUT)
@@ -1618,6 +1616,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         '''Check for c_node in nested Composition
         Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         '''
+
+        # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS RECEIVER IN A NESTED COMPOSITION
 
         CIM_state_for_nested_c_node = None
         nested_comps = [c for c in self.c_nodes if isinstance(c, Composition)]
