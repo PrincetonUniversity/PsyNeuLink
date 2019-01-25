@@ -76,6 +76,8 @@ attribute, which can be toggled between runs.
 **optimizer_type** specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
 default) or 'adam'.
 
+**weight_decay** specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults to 0.
+
 **loss_spec** specifies the loss function for training. It can be a string or a PyTorch loss function. The current
 options for strings are 'mse' (the default), 'crossentropy', 'l1', 'nll', 'poissonnll', and 'kldiv'. These refer to
 Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
@@ -109,7 +111,7 @@ As mentioned above, the `learning_enabled <AutodiffComposition.learning_enabled>
 whether the AutodiffComposition learns or whether it executes like an ordinary Composition.
 
 The `optimizer <AutodiffComposition.optimizer>` attribute contains the PyTorch optimizer function used for learning. It
-is determined at initialization by the **optimizer_type** and **learning_rate** arguments.
+is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
 
 The `loss <AutodiffComposition.loss>` attribute contains the PyTorch loss function used for learning. It is determined
 at initialization by the **loss_spec** argument.
@@ -285,7 +287,7 @@ class AutodiffComposition(Composition):
         the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
         Used for early stopping of training, in combination with **patience**.
 
-    learning_rate : float: default 0.001
+    learning_rate : float : default 0.001
         the learning rate, which is passed to the optimizer.
 
     learning_enabled : boolean : default True
@@ -294,6 +296,9 @@ class AutodiffComposition(Composition):
 
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
+
+    weight_decay : float : default 0
+        specifies the L2 penalty (which discourages large weights) used by the optimizer.
 
     loss_spec : str or PyTorch loss function : default 'mse'
         specifies the loss function for training. The current string options are 'mse' (the default), 'crossentropy',
@@ -335,8 +340,8 @@ class AutodiffComposition(Composition):
         the learning rate for training. Currently only used to initialize the `optimizer` attribute.
 
     optimizer : PyTorch optimizer function
-        the optimizer used for training. Depends on the **optimizer_type** and **learning_rate** arguments
-        from initialization.
+        the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
+        arguments from initialization.
 
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
@@ -409,6 +414,7 @@ class AutodiffComposition(Composition):
                  learning_rate=0.001,
                  learning_enabled=True,
                  optimizer_type='sgd',
+                 weight_decay=0,
                  loss_spec='mse',
                  randomize=None,
                  refresh_losses=False,
@@ -435,7 +441,8 @@ class AutodiffComposition(Composition):
 
         # pytorch representation of model and associated training parameters
         self.pytorch_representation = None
-        self.learning_rate = learning_rate  # possibly remove this line
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         self.optimizer = None
         self.loss = None
 
@@ -483,7 +490,7 @@ class AutodiffComposition(Composition):
         if old_opt is not None:
             logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
                 self, old_opt))
-        opt = self._make_optimizer(self.optimizer_type, self.learning_rate, execution_id)
+        opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, execution_id)
         self.parameters.optimizer.set(opt, execution_id)
 
         # Set up loss function
@@ -492,17 +499,18 @@ class AutodiffComposition(Composition):
                 self, self.loss))
         self.loss = self._get_loss(self.loss_spec)
 
-    def _make_optimizer(self, optimizer_type, learning_rate, execution_id):
+    def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, execution_id):
         if not isinstance(learning_rate, (int, float)):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
         if optimizer_type not in ['sgd', 'adam']:
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
                                            "optimizers (specified as 'sgd' or 'adam').")
+        params = self.parameters.pytorch_representation.get(execution_id).parameters()
         if optimizer_type == 'sgd':
-            return optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
+            return optim.SGD(params, lr=learning_rate, weight_decay=weight_decay)
         else:
-            return optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
+            return optim.Adam(params, lr=learning_rate, weight_decay=weight_decay)
 
     def _get_loss(self, loss_spec):
         if not isinstance(self.loss_spec, str):
