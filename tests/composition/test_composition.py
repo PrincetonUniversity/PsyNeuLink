@@ -366,8 +366,9 @@ class TestAnalyzeGraph:
         assert B in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
         assert A in comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
         assert B in comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
-        assert A in comp.get_c_nodes_by_role(CNodeRole.CYCLE)
-        assert B in comp.get_c_nodes_by_role(CNodeRole.RECURRENT_INIT)
+        # KAM 1/25/19 removed CYCLE and RECURRENT_INIT roles from _analyze_graph and docs
+        # assert A in comp.get_c_nodes_by_role(CNodeRole.CYCLE)
+        # assert B in comp.get_c_nodes_by_role(CNodeRole.RECURRENT_INIT)
 
     # (A)->(B)<->(C)<-(D)
     @pytest.mark.skip
