@@ -347,11 +347,13 @@ from psyneulink.core.globals.utilities import ContentAddressableList
 
 __all__ = [
     'DEFAULT_MONITORED_STATE_WEIGHT', 'DEFAULT_MONITORED_STATE_EXPONENT', 'DEFAULT_MONITORED_STATE_MATRIX',
-    'MONITORED_OUTPUT_STATE_NAME_SUFFIX', 'MONITORED_OUTPUT_STATES',
+    'MONITOR', 'MONITOR_SUFFIX', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX', 'MONITORED_OUTPUT_STATES',
     'OBJECTIVE_OUTPUT', 'ObjectiveMechanism', 'ObjectiveMechanismError', 'OUTCOME', 'ROLE'
 ]
 
 ROLE = 'role'
+MONITOR = 'monitor'
+MONITOR_SUFFIX = '_Monitor'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
 
@@ -570,7 +572,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 monitored_output_states=None,
+                 monitor=None,
                  default_variable=None,
                  size=None,
                  function=LinearCombination,
@@ -580,8 +582,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        monitored_output_states = monitored_output_states or None # deal with possibility of empty list
-        input_states = monitored_output_states
+        # For backward compatibility
+        if MONITORED_OUTPUT_STATES in kwargs:
+            if monitor:
+                raise ObjectiveMechanismError("Can't specifiy both {} ({}) and {} ({}) args of {} specified; pick one!".
+                                              format(repr(MONITOR), monitor,
+                                                     repr(MONITORED_OUTPUT_STATES), kwargs[MONITORED_OUTPUT_STATES]))
+            monitor = kwargs[MONITORED_OUTPUT_STATES]
+
+
+        monitor = monitor or None # deal with possibility of empty list
+        input_states = monitor
         if output_states is None or output_states is OUTCOME:
             output_states = [OUTCOME]
 
@@ -626,7 +637,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                           format(target_set[ROLE], self.name))
 
-    def _instantiate_input_states(self, monitored_output_states_specs=None, reference_value=None, context=None):
+    def _instantiate_input_states(self, monitor_specs=None, reference_value=None, context=None):
         """Instantiate InputStates specified in **input_states** argument of constructor or each OutputState
         specified in monitored_output_states_specs
 
@@ -650,7 +661,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
             #     (note: these will replace any existing ones, including the default one created on initialization)
 
-            input_states = super()._instantiate_input_states(input_states=monitored_output_states_specs,
+            input_states = super()._instantiate_input_states(input_states=monitor_specs,
                                                              reference_value=reference_value,
                                                              context=context)
         self._name_input_states(input_states)
@@ -683,6 +694,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             register_instance(state, state.name, InputState, self._stateRegistry, INPUT_STATE)
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
+        return self.add_to_monitor(monitored_output_states_specs, context=None)
+
+
+    def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
 
         Used by other Components to add a `State` or list of States to be monitored by the ObjectiveMechanism.
@@ -695,7 +710,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         - list with any of the above.
         If the item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
         """
-        monitored_output_states_specs = list(monitored_output_states_specs)
+        monitor_specs = list(monitor_specs)
 
         # If ObjectiveMechanism has only its default InputState and that has no afferent Projections:
         #    delete it and first item of variable
@@ -706,7 +721,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Get reference value
         reference_value = []
         # Get value of each OutputState or, if a Projection from it is specified, then the Projection's value
-        for i, spec in enumerate(monitored_output_states_specs):
+        for i, spec in enumerate(monitor_specs):
             from psyneulink.core.components.states.inputstate import InputState
             from psyneulink.core.components.system import MonitoredOutputStateTuple
             from psyneulink.core.components.projections.projection import _get_projection_value_shape
@@ -724,7 +739,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                         WEIGHT: spec.weight,
                         EXPONENT: spec.exponent,
                         PROJECTIONS: [(spec.output_state, spec.matrix)]}
-                monitored_output_states_specs[i] = spec
+                monitor_specs[i] = spec
 
             # Parse spec to get value of OutputState and (possibly) the Projection from it
             input_state = _parse_state_spec(owner=self, state_type = InputState, state_spec=spec)
@@ -746,7 +761,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 reference_value.append(projection_tuple.state.value)
 
-        input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
+        input_states = self._instantiate_input_states(monitor_specs=monitor_specs,
                                                       reference_value=reference_value,
                                                       context = ContextFlags.METHOD)
 
@@ -782,22 +797,23 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
+
     @property
-    def monitored_output_states(self):
+    def monitor(self):
         if not isinstance(self.input_states, ContentAddressableList):
             return None
         else:
-            monitored_output_states = []
+            monitor = []
             for input_state in self.input_states:
                 for projection in input_state.path_afferents:
-                    monitored_output_states.append(projection.sender)
+                    monitor.append(projection.sender)
 
             return ContentAddressableList(component_type=OutputState,
                                           list=[projection.sender for input_state in self.input_states
                                                 for projection in input_state.path_afferents])
 
     @property
-    def monitored_output_states_weights_and_exponents(self):
+    def monitor_weights_and_exponents(self):
         if hasattr(self.function, WEIGHTS) and self.function.weights is not None:
             weights = self.function.weights
         else:
@@ -808,18 +824,33 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             exponents = [input_state.exponent for input_state in self.input_states]
         return [(w,e) for w, e in zip(weights,exponents)]
 
-    @monitored_output_states_weights_and_exponents.setter
-    def monitored_output_states_weights_and_exponents(self, weights_and_exponents_tuples):
+    @monitor_weights_and_exponents.setter
+    def monitor_weights_and_exponents(self, weights_and_exponents_tuples):
 
         weights = [w[0] for w in weights_and_exponents_tuples]
         exponents = [e[1] for e in weights_and_exponents_tuples]
         self._instantiate_weights_and_exponents(weights, exponents)
 
+    # For backward compatibility
+    @property
+    def monitored_output_states(self):
+        return self.monitor
+
+    # For backward compatibility
+    @property
+    def monitored_output_states_weights_and_exponents(self):
+        return self.monitor_weights_and_exponents
+
+    # For backward compatibility
+    @monitored_output_states_weights_and_exponents.setter
+    def monitored_output_states_weights_and_exponents(self, weights_and_exponents_tuples):
+        self.monitor_weights_and_exponents = weights_and_exponents_tuples
+
     @property
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            self.monitored_output_states,
+            self.monitor,
         ))
 
 def _objective_mechanism_role(mech, role):
