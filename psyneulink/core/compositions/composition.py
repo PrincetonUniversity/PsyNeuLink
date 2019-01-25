@@ -1196,7 +1196,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(sender, self.name,
                                           Mechanism.__name__, OutputState.__name__, Composition.__name__))
 
-        if (not sender_mechanism is self.output_CIM
+        if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.c_nodes):
             # Check if sender is in a nested Composition and, if so, it is an OUTPUT Mechanism
@@ -1240,7 +1240,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(receiver, self.name,
                                           Mechanism.__name__, InputState.__name__, Composition.__name__))
 
-        if (not receiver_mechanism is self.input_CIM
+        if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
                 and receiver not in self.c_nodes):
             # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
