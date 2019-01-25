@@ -76,7 +76,7 @@ attribute, which can be toggled between runs.
 **optimizer_type** specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
 default) or 'adam'.
 
-**loss_type** specifies the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
+**loss_spec** specifies the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
 
 **randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
 run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
@@ -106,7 +106,7 @@ The `optimizer <AutodiffComposition.optimizer>` attribute contains the PyTorch o
 is determined at initialization by the **optimizer_type** and **learning_rate** arguments.
 
 The `loss <AutodiffComposition.loss>` attribute contains the PyTorch loss function used for learning. It is determined
-at initialization by the **loss_type** arguments.
+at initialization by the **loss_spec** arguments.
 
 .. _AutodiffComposition_Execution:
 
@@ -255,7 +255,7 @@ class AutodiffComposition(Composition):
     learning_rate=0.001,            \
     learning_enabled=True,          \
     optimizer_type=None,            \
-    loss_type=None,                 \
+    loss_spec=None,                 \
     randomize=False,                \
     refresh_losses=False,           \
     name="autodiff_composition")
@@ -289,7 +289,7 @@ class AutodiffComposition(Composition):
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
 
-    loss_type : str : default 'mse'
+    loss_spec : str : default 'mse'
         the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
 
     randomize: boolean : default False
@@ -331,7 +331,7 @@ class AutodiffComposition(Composition):
         from initialization.
 
     loss : PyTorch loss function
-        the loss function used for training. Depends on the **loss_type** argument from initialization.
+        the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
     name : str : default LeabraMechanism-<index>
         the name of the Mechanism.
@@ -401,7 +401,7 @@ class AutodiffComposition(Composition):
                  learning_rate=0.001,
                  learning_enabled=True,
                  optimizer_type='sgd',
-                 loss_type='mse',
+                 loss_spec='mse',
                  randomize=None,
                  refresh_losses=False,
                  disable_cuda=False,
@@ -421,7 +421,7 @@ class AutodiffComposition(Composition):
 
         self.learning_enabled = learning_enabled
         self.optimizer_type = optimizer_type
-        self.loss_type = loss_type
+        self.loss_spec = loss_spec
         self.randomize = randomize
         self.refresh_losses = refresh_losses
 
@@ -482,7 +482,7 @@ class AutodiffComposition(Composition):
         if self.loss is not None:
             logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
                 self, self.loss))
-        self.loss = self._make_loss(self.loss_type)
+        self.loss = self._make_loss(self.loss_spec)
 
     def _make_optimizer(self, optimizer_type, learning_rate, execution_id):
         if not isinstance(learning_rate, (int, float)):
@@ -496,18 +496,26 @@ class AutodiffComposition(Composition):
         else:
             return optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
 
-    def _make_loss(self, loss_type):
-        if loss_type not in ['mse', 'crossentropy']:
-            raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
+    def _make_loss(self, loss_spec):
+        if loss_spec == 'mse':
+            return nn.MSELoss(reduction='sum')
+        elif loss_spec == 'crossentropy':
+            return nn.CrossEntropyLoss(reduction='sum')
+        elif loss_spec == 'l1':
+            return nn.L1Loss(reduction='sum')
+        elif loss_spec == 'nll':
+            return nn.NLLLoss(reduction='sum')
+        elif loss_spec == 'poissonnll':
+            return nn.PoissonNLLLoss(reduction='sum')
+        elif loss_spec == 'kldiv':
+            return nn.KLDivLoss(reduction='sum')
+        else:
+            raise AutodiffCompositionError("Loss type not recognized. Loss argument must be a string. "
                                            "Currently, Mean Squared Error and Cross Entropy are the only "
                                            "available loss functions (specified as 'mse' or 'crossentropy').")
-        if loss_type == 'mse':
-            return nn.MSELoss(reduction='sum')
-        else:
-            return nn.CrossEntropyLoss(reduction='sum')
 
     def _has_required_keys(self, input_dict):
-        required_keys = set(["inputs", "targets"])
+        required_keys = {"inputs", "targets"}
         return required_keys.issubset(set(input_dict.keys()))
 
     def _adjust_stimulus_dict(self, inputs):
@@ -602,6 +610,8 @@ class AutodiffComposition(Composition):
                 # compute total loss across output neurons for current trial
                 curr_loss = torch.zeros(1).double()
                 for component in curr_tensor_outputs.keys():
+                    # possibly add custom loss option, which is a loss function that takes many args
+                    # (outputs, targets, weights, and more) and returns a scalar
                     curr_loss += self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
 
                 # save average loss across all output neurons on current trial
