@@ -1511,49 +1511,13 @@ class CNodeRole(Enum):
     - INPUT
         A Node that receives external input. A Composition may have many `INPUT` Nodes.
 
-    - INTERNAL
-        A Node that is not designated as having any other status.
-COMMENT:
-    - CYCLE
-        A Node that is *not* an `ORIGIN` Mechanism, and receives a `Projection <Projection>` that closes a recurrent
-        loop in a Composition.  If it is an `ORIGIN` Node, then it is simply designated as such (since it will be
-        assigned input and therefore be initialized in any event).
-
-    - INITIALIZE_CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
-        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
-        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-COMMENT
     - TERMINAL
         A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
 
     - OUTPUT
         A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
         Composition may have many `OUTPUT` Nodes.
-COMMENT:
-    - SINGLETON
-        A `ProcessingNode <ProcessingNode>` that is the only Node in a `Process` and/or `System`.
-        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
-
-    - LEARNING
-        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
-
-    - TARGET
-        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
-        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
-        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
-        :keyword:`target_nodes` attribute, and can be displayed using its :keyword:`show` method.  For additional
-        details, see `TARGET Mechanisms <LearningMechanism_Targets>`, `learning sequence <Process_Learning_Sequence>`,
-        and specifying `target values <Run_Targets>`.
-
-    - RECURRENT_INIT
-        .
-COMMENT
 
     """
     ORIGIN = 0
