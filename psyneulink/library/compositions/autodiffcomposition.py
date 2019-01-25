@@ -505,7 +505,7 @@ class AutodiffComposition(Composition):
             return optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
 
     def _get_loss(self, loss_spec):
-        if callable(self.loss_spec):
+        if not isinstance(self.loss_spec, str):
             return self.loss_spec
         elif loss_spec == 'mse':
             return nn.MSELoss(reduction='sum')
