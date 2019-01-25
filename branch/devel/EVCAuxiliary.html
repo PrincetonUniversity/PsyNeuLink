@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCAuxiliary &mdash; PsyNeuLink 0.5.0.0+64.g9fd0b15 documentation</title>
+  <title>EVCAuxiliary &mdash; PsyNeuLink 0.5.0.0+65.gbf9736f documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+64.g9fd0b15 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+65.gbf9736f documentation" href="index.html"/>
         <link rel="up" title="EVC" href="EVC.html"/>
         <link rel="next" title="Models" href="Models.html"/>
         <link rel="prev" title="EVCControlMechanism" href="EVCControlMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+64
+                0.5.0.0+65
               </div>
             
           
@@ -272,7 +272,7 @@ EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.
 the input to the corresponding <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanisms of the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a> it controls;
 the values of all <span class="xref std std-ref">stateful attributes</span> of ‘Components` in the System are <span class="xref std std-ref">re-initialized</span> to the
 same value prior to each simulation, so that the results for each <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> are based on the same initial conditions.  Each simulation includes
-execution of the EVCControlMechanism’s <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, which provides the result to the
+execution of the EVCControlMechanism’s <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, which provides the result to the
 EVCControlMechanism.  If <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.recordSimulationPref is <code class="xref any docutils literal"><span class="pre">True</span></code>,
 the results of each simulation are appended to the <code class="xref any docutils literal"><span class="pre">simulation_results</span></code>
 attribute of <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.</p>
@@ -419,7 +419,7 @@ proper comparisons can be made between policies.</p>
 format as the <code class="xref any docutils literal"><span class="pre">variable</span></code> of its <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.origin_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.origin_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanism</span></code></a>,
 and must return a similarly formatted value or a list of them (see <a class="reference internal" href="#predictionmechanism-function"><span class="std std-ref">above</span></a>
 for additional details).</li>
-<li><strong>initial_value</strong> (<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies value used to initialize the PredictionMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute;
+<li><strong>initial_value</strong> (<a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.value" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies value used to initialize the PredictionMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute;
 if <code class="xref any docutils literal"><span class="pre">None</span></code> is specified, 0 is used if the <code class="xref any docutils literal"><span class="pre">value</span></code> of the PredictionMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is numeric, and an empty list is used if <em>INPUT_SEQUENCE</em> is specified.</li>
 <li><strong>window_size</strong> (<em>int : default None</em>) – specifies number of input values to maintain when <em>INPUT_SEQUENCE</em> option is used for
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a></li>
@@ -520,7 +520,7 @@ each trial of a simulation, each of which is a 2d np.array containing the input 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+64.g9fd0b15',
+            VERSION:'0.5.0.0+65.gbf9736f',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
