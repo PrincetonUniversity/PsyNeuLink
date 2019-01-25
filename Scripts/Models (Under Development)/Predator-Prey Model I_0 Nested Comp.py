@@ -166,9 +166,9 @@ full_comp.add_c_node(player_input)
 full_comp.add_c_node(predator_input)
 full_comp.add_c_node(prey_input)
 
-full_comp.add_projection(sender=player_input, receiver=player_obs)
-full_comp.add_projection(sender=predator_input, receiver=predator_obs)
-full_comp.add_projection(sender=prey_input, receiver=prey_obs)
+# full_comp.add_projection(sender=player_input, receiver=player_obs)
+# full_comp.add_projection(sender=predator_input, receiver=predator_obs)
+# full_comp.add_projection(sender=prey_input, receiver=prey_obs)
 
 # full_comp.add_linear_processing_pathway([player_input,player_obs])
 # full_comp.add_linear_processing_pathway([predator_input,predator_obs])
@@ -176,7 +176,7 @@ full_comp.add_projection(sender=prey_input, receiver=prey_obs)
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    # agent_comp.show_graph(show_controller=True)
+    agent_comp.show_graph(show_controller=True)
     full_comp.show_graph(show_controller=True)
 
 
