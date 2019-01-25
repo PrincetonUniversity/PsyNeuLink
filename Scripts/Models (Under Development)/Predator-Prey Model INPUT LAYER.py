@@ -94,6 +94,7 @@ def diff_fct(variable):
     return -(np.sum(player_diff))
 
 
+
 if PERCEPTUAL_DISTORT:
     CTL_PARAM = VARIANCE
 else:
