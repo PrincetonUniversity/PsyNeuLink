@@ -16,7 +16,7 @@ class TestControlMechanisms:
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
-                                                    monitored_output_states=[m1, m2]),
+                                                    monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
@@ -36,7 +36,7 @@ class TestControlMechanisms:
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
-                                                    monitored_output_states=[m1, m2]),
+                                                    monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
@@ -58,7 +58,7 @@ class TestControlMechanisms:
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                                 feature_function=pnl.LinearCombination(offset=10.0),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
-                                                    monitored_output_states=[m1, m2]),
+                                                    monitor=[m1, m2]),
                                                 function=pnl.GradientOptimization(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
@@ -87,7 +87,7 @@ class TestControlMechanisms:
             scaling_factor_gain=k,
             objective_mechanism=pnl.ObjectiveMechanism(
                 function=pnl.Linear,
-                monitored_output_states=[B],
+                monitor=[B],
                 name='LC ObjectiveMechanism'
             )
         )
@@ -214,7 +214,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                                   features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, reward]},
                                                                                   feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                                                                                                                             monitored_output_states=[reward,
+                                                                                                                             monitor=[reward,
                                                                                                                                                       Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
                                                                                                                                                       (Decision.output_states[pnl.RESPONSE_TIME], -1, 1)]),
                                                                                   function=pnl.GridSearch(),
@@ -342,7 +342,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                        allocation_samples=signalSearchRange)
 
         objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                                                monitored_output_states=[reward,
+                                                monitor=[reward,
                                                                          (Decision.output_states[
                                                                               pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
         # Model Based OCM (formerly controller)

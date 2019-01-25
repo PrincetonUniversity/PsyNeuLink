@@ -923,7 +923,7 @@ class TestExecutionOrder:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               monitored_output_states=[C],
+                               monitor=[C],
                                name="B")
         A = LCControlMechanism(name="A",
                                modulated_mechanisms=D,
@@ -968,7 +968,7 @@ class TestExecutionOrder:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               monitored_output_states=[C],
+                               monitor=[C],
                                name="B")
         A = LCControlMechanism(name="A", modulation=ModulationParam.ADDITIVE,
                                modulated_mechanisms=D,
@@ -1013,7 +1013,7 @@ class TestExecutionOrder:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               monitored_output_states=[C],
+                               monitor=[C],
                                name="B")
         A = LCControlMechanism(name="A", modulation=ModulationParam.OVERRIDE,
                                modulated_mechanisms=D,
@@ -1058,7 +1058,7 @@ class TestExecutionOrder:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               monitored_output_states=[C],
+                               monitor=[C],
                                name="B")
         A = LCControlMechanism(name="A", modulation=ModulationParam.DISABLE,
                                modulated_mechanisms=D,
