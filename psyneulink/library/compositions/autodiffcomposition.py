@@ -487,7 +487,7 @@ class AutodiffComposition(Composition):
             assert hasattr(self.loss_spec, 'backward')
             self.loss = self.loss_spec
         else:
-            self.loss = self._make_loss(loss_str=self.loss_spec)
+            self.loss = self._get_loss(loss_str=self.loss_spec)
 
     def _make_optimizer(self, optimizer_type, learning_rate, execution_id):
         if not isinstance(learning_rate, (int, float)):
