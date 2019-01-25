@@ -328,6 +328,7 @@ Class Reference
 
 """
 import itertools
+import warnings
 
 from collections import Iterable
 
@@ -588,6 +589,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 raise ObjectiveMechanismError("Can't specifiy both {} ({}) and {} ({}) args of {} specified; pick one!".
                                               format(repr(MONITOR), monitor,
                                                      repr(MONITORED_OUTPUT_STATES), kwargs[MONITORED_OUTPUT_STATES]))
+            warnings.warn('Use of {} as arg of {} is deprecated;  use {} instead'.
+                          format(repr(MONITORED_OUTPUT_STATES), self.__class__.__name__, repr(MONITOR)))
             monitor = kwargs[MONITORED_OUTPUT_STATES]
 
 
