@@ -469,36 +469,42 @@ class AutodiffComposition(Composition):
                                         self.device,
                                         execution_id)
             self.parameters.pytorch_representation.set(model, execution_id)
+
         # Set up optimizer function
-        if self.optimizer_type not in ['sgd', 'adam']:
-            raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
-                                           "Currently, Stochastic Gradient Descent and Adam are the only available "
-                                           "optimizers (specified as 'sgd' or 'adam').")
-        if self.parameters.optimizer.get(execution_id) is not None:
+        old_opt = self.parameters.optimizer.get(execution_id)
+        if old_opt is not None:
             logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
-                self, self.parameters.optimizer.get(execution_id)))
-        if self.optimizer_type == 'sgd':
-            opt = optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
-            self.parameters.optimizer.set(opt, execution_id)
-        else:
-            opt = optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
-            self.parameters.optimizer.set(opt, execution_id)
+                self, old_opt))
+        opt = self._make_optimizer(self.optimizer_type, self.learning_rate, execution_id)
+        self.parameters.optimizer.set(opt, execution_id)
 
         # Set up loss function
-        if self.loss_type not in ['mse', 'crossentropy']:
-            raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
-                                           "Currently, Mean Squared Error and Cross Entropy are the only "
-                                           "available loss functions (specified as 'mse' or 'crossentropy').")
         if self.loss is not None:
             logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
                 self, self.loss))
-        if self.loss_type == 'mse':
-            self.loss = nn.MSELoss(reduction='sum')
-        else:
-            self.loss = nn.CrossEntropyLoss(reduction='sum')
+        self.loss = self._make_loss(self.loss_type)
 
-        if not isinstance(self.learning_rate, (int, float)):
+    def _make_optimizer(self, optimizer_type, learning_rate, execution_id):
+        if not isinstance(learning_rate, (int, float)):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
+        if optimizer_type not in ['sgd', 'adam']:
+            raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
+                                           "Currently, Stochastic Gradient Descent and Adam are the only available "
+                                           "optimizers (specified as 'sgd' or 'adam').")
+        if optimizer_type == 'sgd':
+            return optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
+        else:
+            return optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
+
+    def _make_loss(self, loss_type):
+        if loss_type not in ['mse', 'crossentropy']:
+            raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
+                                           "Currently, Mean Squared Error and Cross Entropy are the only "
+                                           "available loss functions (specified as 'mse' or 'crossentropy').")
+        if loss_type == 'mse':
+            return nn.MSELoss(reduction='sum')
+        else:
+            return nn.CrossEntropyLoss(reduction='sum')
 
     def _has_required_keys(self, input_dict):
         required_keys = set(["inputs", "targets"])
