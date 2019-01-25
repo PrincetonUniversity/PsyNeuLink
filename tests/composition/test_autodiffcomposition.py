@@ -142,17 +142,17 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # train model for a few epochs
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
@@ -216,17 +216,17 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # train the model for a few epochs
         result = xor.run(inputs={"inputs": {xor_in:xor_inputs},
@@ -273,17 +273,17 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # call run to only process the inputs, so that pytorch representation of AC gets created
         # results = xor.run(inputs={xor_in:xor_inputs})
@@ -365,17 +365,17 @@ class TestTrainingCorrectness:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         if calls == 'single':
             results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
@@ -784,17 +784,17 @@ class TestTrainingTime:
 
         # SET UP INPUTS AND TARGETS
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # TIME TRAINING FOR COMPOSITION
 
@@ -1250,17 +1250,17 @@ class TestTrainingIdenticalness():
 
         # SET UP INPUTS AND TARGETS
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # TRAIN COMPOSITION
         inputs_dict = {"inputs": {xor_in:xor_inputs},
