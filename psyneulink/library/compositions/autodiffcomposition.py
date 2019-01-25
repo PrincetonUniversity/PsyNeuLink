@@ -482,7 +482,10 @@ class AutodiffComposition(Composition):
         if self.loss is not None:
             logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
                 self, self.loss))
-        self.loss = self._make_loss(self.loss_spec)
+        if callable(self.loss_spec):
+            self.loss = self.loss_spec
+        else:
+            self.loss = self._make_loss(loss_str=self.loss_spec)
 
     def _make_optimizer(self, optimizer_type, learning_rate, execution_id):
         if not isinstance(learning_rate, (int, float)):
@@ -496,23 +499,25 @@ class AutodiffComposition(Composition):
         else:
             return optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=learning_rate)
 
-    def _make_loss(self, loss_spec):
-        if loss_spec == 'mse':
+    def _make_loss(self, loss_str):
+        if loss_str == 'mse':
             return nn.MSELoss(reduction='sum')
-        elif loss_spec == 'crossentropy':
+        elif loss_str == 'crossentropy':
             return nn.CrossEntropyLoss(reduction='sum')
-        elif loss_spec == 'l1':
+        elif loss_str == 'l1':
             return nn.L1Loss(reduction='sum')
-        elif loss_spec == 'nll':
+        elif loss_str == 'nll':
             return nn.NLLLoss(reduction='sum')
-        elif loss_spec == 'poissonnll':
+        elif loss_str == 'poissonnll':
             return nn.PoissonNLLLoss(reduction='sum')
-        elif loss_spec == 'kldiv':
+        elif loss_str == 'kldiv':
             return nn.KLDivLoss(reduction='sum')
         else:
-            raise AutodiffCompositionError("Loss type not recognized. Loss argument must be a string. "
-                                           "Currently, Mean Squared Error and Cross Entropy are the only "
-                                           "available loss functions (specified as 'mse' or 'crossentropy').")
+            raise AutodiffCompositionError("Loss type not recognized. Loss argument must be a string or function. "
+                                           "Currently, the recognized loss types are Mean Squared Error, Cross Entropy,"
+                                           " L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, "
+                                           "and KL Divergence. These are specified as 'mse', 'crossentropy', 'l1', "
+                                           "'nll', 'poissonnll', and 'kldiv' respectively.")
 
     def _has_required_keys(self, input_dict):
         required_keys = {"inputs", "targets"}
