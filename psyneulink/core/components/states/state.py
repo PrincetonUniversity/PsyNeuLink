@@ -2340,7 +2340,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         implement default using reference_value
     + State object:
         check compatibility of value with reference_value
-        check owner is owner (if not, user is given options in _check_state_ownership)
+        check owner is owner; if not, raise exception
     + 2-item tuple:
         assign first item to state_spec
         assign second item to STATE_PARAMS{PROJECTIONS:<projection>}
@@ -2691,9 +2691,19 @@ def _parse_state_spec(state_type=None,
             else:
                 state_owner = state_specification.owner
             if owner is not None and state_owner is not None and state_owner is not owner:
-                raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-                                 format(State.__name__, state_specification.name, owner.name,
-                                        Mechanism.__name__, state_owner.name))
+                try:
+                    new_state_specification = state_type._parse_self_state_type_spec(state_type,
+                                                                                     owner,
+                                                                                     state_specification,
+                                                                                     context)
+                    state_specification = _parse_state_spec(state_type=state_type,
+                                                            owner=owner,
+                                                            state_spec=new_state_specification)
+                    assert True
+                except AttributeError:
+                    raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
+                                     format(State.__name__, state_specification.name, owner.name,
+                                            Mechanism.__name__, state_owner.name))
             return state_specification
 
         # Re-process with Projection specified

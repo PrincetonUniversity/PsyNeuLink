@@ -326,7 +326,7 @@ Class Reference
 import itertools
 import warnings
 
-from collections import Iterable
+from collections import Iterable, namedtuple
 
 import typecheck as tc
 
@@ -334,9 +334,13 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, standard_output_states
+from psyneulink.core.components.states.inputstate import InputState, INPUT_STATE
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, \
+    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
+    kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -428,8 +432,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     monitor : List[`OutputState`, 'InputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or dict
         specifies the OutputStates, the `values <OutputState.value>` of which will be monitored, and evaluated by
-        the ObjectiveMechanism's `function <ObjectiveMechanism>` (see `ObjectiveMechanism_Monitor`
-        for details of specification).
+        `function <ObjectiveMechanism.function>` (see `ObjectiveMechanism_Monitor` for details of specification).
 
     default_variable : number, list or np.ndarray : default monitor
         specifies the format of the `variable <ObjectiveMechanism.variable>` for the `InputStates` of the
@@ -646,17 +649,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Otherwise, uses monitor_specs as specification of InputStates to instantiate;
             these will replace any existing InputStates (including a default one)
         """
-        # If call is for initialization
 
+        # If call is for initialization
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            # Use self.input_states (containing specs from **input_states** arg of constructor) or
+            # Use self.input_states (containing specs from **input_states** arg of constructor)
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
             input_states = super()._instantiate_input_states(input_states=input_states, context=context)
         else:
-            # Instantiate InputStates corresponding to OutputStates specified in monitor
-            #     (note: these will replace any existing ones, including the default one created on initialization)
+            # Parse any spec that is an InputState into the OutputState(s) that project to it
+            monitor_specs = _parse_monitor_specs(monitor_specs)
 
+            # Instantiate InputStates corresponding to items specified in monitor
+            #     (note: these will replace any existing ones, including the default one created on initialization)
             input_states = super()._instantiate_input_states(input_states=monitor_specs,
                                                              reference_value=reference_value,
                                                              context=context)
@@ -670,7 +675,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     def _name_input_states(self, input_states):
         # If InputStates are not already named, name them based on the OutputStates that project to them
-        from psyneulink.core.components.states.inputstate import InputState, INPUT_STATE
         from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
         if not input_states:
             return
@@ -857,6 +861,30 @@ def _objective_mechanism_role(mech, role):
             return False
     else:
         return False
+
+
+def _parse_monitor_specs(monitor_specs):
+    spec_tuple = namedtuple('SpecTuple', 'index spec')
+    parsed_specs = []
+    specs_to_replace = []
+    for i, spec in enumerate(parsed_specs):
+        if (isinstance(spec, InputState)
+                or (isinstance(spec, dict) and spec[STATE_TYPE] in {INPUT_STATE, InputState})):
+            pass # DO PARSING HERE
+            if isinstance(spec, InputState):
+                pass # Get all projects to it and create InputState specification dictionary with them
+            if isinstance(spec, dict) and spec[STATE_TYPE] in {INPUT_STATE, InputState}:
+                pass # Get Projections entry and append
+            new_spec = None
+            specs_to_replace.append(spec_tuple(i, new_spec))
+
+    for spec_tuple in specs_to_replace:
+        # # Delete old spec in monitored_specs at specified index
+        # del monitor_specs[spec_tuple.index]
+        # # Insert new item(s) from spec_tuple into monitor_specs at specified index
+        # monitor_specs[spec_tuple.index:spec_tuple.index] = spec_tuple.spec
+        monitor_specs[spec_tuple.index] = spec_tuple.spec
+
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)

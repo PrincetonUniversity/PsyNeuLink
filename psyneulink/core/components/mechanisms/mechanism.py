@@ -3108,11 +3108,10 @@ class Mechanism_Base(Mechanism):
         been constructed.
 
         If the `owner <State_Base.owner>` of a State specified in the **states** argument is not the same as the
-        Mechanism to which it is being added, the user is given the option of reassigning the State to the `owner
-        <State_Base.owner>`, making a copy of the State and assigning that to the `owner <State_Base.owner>`, or
-        aborting.  If the name of a specified State is the same as an existing one with the same name, an index is
-        appended to its name, and incremented for each State subsequently added with the same name (see :ref:`naming
-        conventions <LINK>`).  If a specified State already belongs to the Mechanism, the request is ignored.
+        Mechanism to which it is being added an error is generated.    If the name of a specified State is the same
+        as an existing one with the same name, an index is appended to its name, and incremented for each State
+        subsequently added with the same name (see :ref:`naming conventions <LINK>`).  If a specified State already
+        belongs to the Mechanism, the request is ignored.
 
         .. note::
             Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,

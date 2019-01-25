@@ -295,7 +295,7 @@ should project to the FeatureInputState. Each of these is described below:
 .. _FeatureInputState_Compatability_and_Constraints:
 
 FeatureInputState `variable <FeatureInputState.variable>`: Compatibility and Constraints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `variable <FeatureInputState.variable>` of a FeatureInputState must be compatible with the item of its owner Mechanism's
 `variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism_Variable_and_FeatureInputStates>`). This may
