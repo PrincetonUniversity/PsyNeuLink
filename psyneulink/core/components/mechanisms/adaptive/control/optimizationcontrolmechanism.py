@@ -851,18 +851,25 @@ class OptimizationControlMechanism(ControlMechanism):
         # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
 
         # Assign default net_outcome if it is not yet specified (presumably first trial)
-        # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-                 self.control_signals]
-        try:
-            net_outcome = variable[0] - self.combine_costs(costs)
-        except AttributeError:
-            net_outcome = [0]
-        # FIX: END
+        # # MODIFIED 1/23/19 OLD:
+        # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
+        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
+        #          self.control_signals]
+        # try:
+        #     net_outcome = variable[0] - self.combine_costs(costs)
+        # except AttributeError:
+        #     net_outcome = [0]
+        # # FIX: END
+        # MODIFIED 1/23/19 NEW: [JDC]
+        net_outcome = self.parameters.net_outcome.get(execution_id)
+        # MODIFIED 1/23/19 END
         #
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
-            self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
+            self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
+                                 control_allocation,
+                                 net_outcome,
+                                 execution_id=execution_id)
         except AttributeError as e:
             # If error is due to absence of adapt method, OK; otherwise, raise exception
             if not 'has no attribute \'adapt\'' in e.args[0]:
@@ -1035,9 +1042,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def _parse_shadow_inputs_spec(self, spec:dict, fct:tc.optional(Function)):
-        ''' Return a list of InputState specifications for the inputs specified in value of dict
+        ''' Return a list of InputState specifications for the inputs specified in value of each dict entry
 
-        For any other specification, specify an InputState with a Projection from the sender of any Projections
+        For any other specification, return an InputState with a Projection from the sender of any Projections
             that project to the specified item
         If FUNCTION entry, assign as Function for all InputStates specified in SHADOW_EXTERNAL_INPUTS
         '''

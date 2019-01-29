@@ -29,8 +29,12 @@ environment:
 install:
   - choco upgrade graphviz.portable -y
   - pip --version
-  - pip install --user -U certifi pip
+  - pip install --user -U pip
   - pip --version
+  # certifi upgrade is needed by pytest-profiling (it does not set the dependencies right)
+  # numpy 1.16 gets pulled by leabra below and pnl downgrades it to <1.16 later
+  # llvmlite==0.27 segfaults in windows when using 64bit python
+  - pip install --user -U certifi "numpy<1.16" "llvmlite<0.27"
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute packages over pypi. Install it directly.
@@ -42,7 +46,7 @@ install:
   - pip install --user -e .[dev]
 
 cache:
-    - '%APPDATA%\Python\%PYTHON% -> .appveyor.yml'
+    - '%LOCALAPPDATA%\pip\Cache -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
 

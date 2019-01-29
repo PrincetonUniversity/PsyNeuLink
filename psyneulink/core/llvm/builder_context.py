@@ -10,6 +10,7 @@
 
 import atexit
 import ctypes
+import inspect
 import numpy as np
 import os, re
 
@@ -81,6 +82,62 @@ class LLVMBuilderContext:
             assert decl_f.is_declaration
             return decl_f
         return f
+
+    @staticmethod
+    def _get_full_func_name(func, component):
+        name = func.name
+        try:
+            while component is not None:
+                name = str(component) + ":" + name
+                component = component.owner
+        except AttributeError:
+            pass
+
+        return name
+
+    @staticmethod
+    def get_debug_location(func, component):
+        if 'debug_info' not in debug_env:
+            return
+        mod = func.module
+        path = inspect.getfile(component.__class__) if component is not None else "<builtin>"
+        d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
+        di_version = mod.add_metadata([ir.IntType(32)(2), "Debug Info Version", ir.IntType(32)(3)])
+        flags = mod.add_named_metadata("llvm.module.flags")
+        if len(flags.operands) == 0:
+            flags.add(d_version)
+            flags.add(di_version)
+        cu = mod.add_named_metadata("llvm.dbg.cu")
+        di_file = mod.add_debug_info("DIFile", {
+            "filename": os.path.basename(path),
+            "directory": os.path.dirname(path),
+        })
+        di_func_type = mod.add_debug_info("DISubroutineType", {
+            # None as `null`
+            "types":           mod.add_metadata([None]),
+            })
+        di_compileunit = mod.add_debug_info("DICompileUnit", {
+            "language":        ir.DIToken("DW_LANG_Python"),
+            "file":            di_file,
+            "producer":        "PsyNeuLink",
+            "runtimeVersion":  0,
+            "isOptimized":     False,
+        }, is_distinct=True)
+        cu.add(di_compileunit)
+        di_func = mod.add_debug_info("DISubprogram", {
+            "name":            LLVMBuilderContext._get_full_func_name(func, component),
+            "file":            di_file,
+            "line":            0,
+            "type":            di_func_type,
+            "isLocal":         False,
+            "unit":            di_compileunit,
+}, is_distinct=True)
+        di_loc = mod.add_debug_info("DILocation", {
+            "line":            0,
+            "column":          0,
+            "scope":           di_func,
+        })
+        return di_loc
 
     def get_input_struct_type(self, component):
         if hasattr(component, '_get_input_struct_type'):
@@ -159,6 +216,7 @@ class LLVMBuilderContext:
         # Create entry block
         entry_block = llvm_func.append_basic_block(name="entry")
         builder = ir.IRBuilder(entry_block)
+        builder.debug_metadata = self.get_debug_location(llvm_func, composition)
 
         if 'const_params' in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
@@ -292,6 +350,7 @@ class LLVMBuilderContext:
         # Create entry block
         entry_block = llvm_func.append_basic_block(name="entry")
         builder = ir.IRBuilder(entry_block)
+        builder.debug_metadata = self.get_debug_location(llvm_func, composition)
 
         # Allocate and initialize condition structure
         cond_gen = ConditionGenerator(self, composition)
