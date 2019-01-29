@@ -1183,6 +1183,8 @@ class Component(object, metaclass=ComponentsMeta):
 
             func_name = ctx.get_unique_name(self.name)
             llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             params, context, arg_in, arg_out = llvm_func.args
             for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
