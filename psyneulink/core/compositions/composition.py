@@ -3709,6 +3709,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), tuple(args))
             llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             context, params, comp_in, data_in, data_out = llvm_func.args[:5]
             cond_ptr = llvm_func.args[-1]
 
