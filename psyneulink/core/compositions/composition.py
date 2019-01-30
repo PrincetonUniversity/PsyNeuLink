@@ -1424,6 +1424,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Clear old information
         self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
+        # KAM - IN PROGRESS 1/30/19
+        for node in self.c_nodes:
+            for input_state in node.input_states:
+                if input_state.shadow_inputs is not None:
+                    original_senders = set()
+
+                    for original_projection in input_state.shadow_inputs.path_afferents:
+                        original_senders.add(original_projection.sender)
+                        correct_sender = original_projection.sender
+                        shadow_found = False
+                        for shadow_projection in input_state.path_afferents:
+                            if shadow_projection.sender == correct_sender:
+                                shadow_found = True
+                                break
+                        if not shadow_found:
+                            # TBI - Shadow projection type? Matrix value?
+                            new_projection = MappingProjection(sender=correct_sender,
+                                                               receiver=input_state)
+                            self.add_projection(new_projection)
+                    for shadow_projection in input_state.path_afferents:
+                        if shadow_projection.sender not in original_senders:
+                            self.remove_projection(shadow_projection)
+
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
