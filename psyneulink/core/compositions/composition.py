@@ -506,6 +506,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.input_CIM_states = {}
         self.output_CIM_states = {}
 
+        self.shadows = {}
         self.enable_model_based_optimizer = enable_model_based_optimizer
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
@@ -628,6 +629,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             required_roles : psyneulink.core.globals.utilities.CNodeRole or list of CNodeRoles
                 any CNodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
+        if node not in self.shadows:
+            self.shadows[node] = []
 
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
@@ -694,7 +697,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Add all projections to the composition
             for proj_spec in projections:
-                print(proj_spec[0])
                 self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
         if required_roles:
             if not isinstance(required_roles, list):
@@ -1541,18 +1543,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for input_state in node.input_states:
                 if input_state.shadow_inputs is not None:
                     original_senders = set()
-                    print("input state = ", input_state.name)
-                    print("owner = ", input_state.owner.name)
-                    print("shadow_inputs = ", input_state.shadow_inputs)
-                    print("input_state.path_afferents = ", input_state.path_afferents)
-                    print("input_state.projections = ", input_state.projections)
                     for original_projection in input_state.shadow_inputs.path_afferents:
-                        print("original projection = ", original_projection)
                         original_senders.add(original_projection.sender)
                         correct_sender = original_projection.sender
                         shadow_found = False
                         for shadow_projection in input_state.path_afferents:
-                            print("shadow projection = ", shadow_projection)
                             if shadow_projection.sender == correct_sender:
                                 shadow_found = True
                                 break
@@ -1562,7 +1557,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                receiver=input_state)
                             self.add_projection(new_projection)
                     for shadow_projection in input_state.path_afferents:
-                        print("shadow_projection", shadow_projection)
                         if shadow_projection.sender not in original_senders:
                             self.remove_projection(shadow_projection)
 
