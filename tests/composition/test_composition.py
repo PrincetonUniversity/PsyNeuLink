@@ -4782,3 +4782,72 @@ class TestAuxComponents:
 
         for comp in expected_stateful_nodes:
             assert comp.stateful_nodes == expected_stateful_nodes[comp]
+
+class TestShadowInputs:
+
+    def test_remove_projection(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A',
+                                function=Linear(slope=0.5))
+        B = ProcessingMechanism(name='B',
+                                function=Linear(slope=3.0))
+        P = MappingProjection(sender=A, receiver=B)
+        comp.add_linear_processing_pathway([A, P, B])
+        # comp.show_graph()
+        comp.run(inputs={A: [[1.0]]})
+
+        print(A.value)
+        print(B.value)
+
+        comp.remove_projection(B)
+        print("Origins = ", comp.get_c_nodes_by_role(CNodeRole.ORIGIN))
+        print("Inputs = ", comp.get_c_nodes_by_role(CNodeRole.INPUT))
+        comp._analyze_graph()
+        comp.show_graph()
+
+        comp.run(inputs={A: [[1.0]],
+                         B: [[2.0]]})
+    def test_two_origins(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B',
+                                input_states=[A.input_state])
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.run(inputs={A: [[1.23]]})
+
+        assert A.value == [[1.23]]
+        assert B.value == [[1.23]]
+        assert comp.external_input_sources == {B: [A.input_state]}
+
+        C = ProcessingMechanism(name='C')
+        comp.add_linear_processing_pathway([C, A])
+
+        comp.add_linear_processing_pathway([C, B])
+        with pytest.raises(CompositionError) as err:
+            comp.run(inputs={C: 4.56})
+        assert "External input source" in str(err.value)
+
+    def test_shadow_internal_projections(self):
+        comp = Composition(name='comp')
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C',
+                                input_states=[B.input_state])
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+        print(comp.run(inputs={A: [[1.23]]}))
+
+        # assert A.value == [[1.23]]
+        # assert B.value == [[1.23]]
+        # assert comp.external_input_sources == {B: [A.input_state]}
+        #
+        # C = ProcessingMechanism(name='C')
+        # comp.add_linear_processing_pathway([C, A])
+        #
+        # comp.add_linear_processing_pathway([C, B])
+        # with pytest.raises(CompositionError) as err:
+        #     comp.run(inputs={C: 4.56})
+        # assert "External input source" in str(err.value)
