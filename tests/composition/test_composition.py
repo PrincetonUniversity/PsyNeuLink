@@ -4810,23 +4810,29 @@ class TestShadowInputs:
     def test_two_origins(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
+        comp.add_c_node(A)
+        # comp._analyze_graph()
         B = ProcessingMechanism(name='B',
                                 input_states=[A.input_state])
-        comp.add_c_node(A)
+
         comp.add_c_node(B)
         comp.run(inputs={A: [[1.23]]})
 
         assert A.value == [[1.23]]
         assert B.value == [[1.23]]
-        assert comp.external_input_sources == {B: [A.input_state]}
+        # assert comp.external_input_sources == {B: [A.input_state]}
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
 
-        comp.add_linear_processing_pathway([C, B])
-        with pytest.raises(CompositionError) as err:
-            comp.run(inputs={C: 4.56})
-        assert "External input source" in str(err.value)
+        comp.run(inputs={C: 4.56})
+
+        print(A.value)
+        # Since B is shadowing A, its old projection from the CIM should be deleted,
+        # and a new projection from C should be added
+        print(B.value)
+        print(C.value)
+        print(B.path_afferents)
 
     def test_shadow_internal_projections(self):
         comp = Composition(name='comp')
@@ -4839,7 +4845,7 @@ class TestShadowInputs:
         comp.add_linear_processing_pathway([A, B])
         comp.add_c_node(C)
         print(comp.run(inputs={A: [[1.23]]}))
-
+        print(C.input_state.shadow_inputs)
         # assert A.value == [[1.23]]
         # assert B.value == [[1.23]]
         # assert comp.external_input_sources == {B: [A.input_state]}
@@ -4851,3 +4857,13 @@ class TestShadowInputs:
         # with pytest.raises(CompositionError) as err:
         #     comp.run(inputs={C: 4.56})
         # assert "External input source" in str(err.value)
+
+    def test_simple(self):
+        c = Composition()
+        t1 = TransferMechanism()
+        c.add_c_node(t1)
+        c._analyze_graph()
+        t2 = TransferMechanism(input_states=[t1.input_state])
+        print(t1.input_state.path_afferents)
+        print(t2.input_state.path_afferents)
+        print(t2.path_afferents)
