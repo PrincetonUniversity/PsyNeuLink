@@ -694,6 +694,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Add all projections to the composition
             for proj_spec in projections:
+                print(proj_spec[0])
                 self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
         if required_roles:
             if not isinstance(required_roles, list):
@@ -1254,8 +1255,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__,))
 
-
-        if projection not in [vertex.component for vertex in self.graph.vertices]:
+        if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
+           and projection not in [vertex.component for vertex in self.graph.vertices]:
 
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
@@ -1266,17 +1267,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.graph.connect_components(projection, graph_receiver)
             except CompositionError as c:
                 raise CompositionError("{} to {}".format(c.args[0], self.name))
-            self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism)
 
-            self.needs_update_graph = True
-            self.needs_update_graph_processing = True
-            self.needs_update_scheduler_processing = True
-            self.needs_update_scheduler_learning = True
-            self.projections.append(projection)
+        self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism)
 
-            projection._activate_for_compositions(self)
-            for comp in subcompositions:
-                projection._activate_for_compositions(comp)
+        self.needs_update_graph = True
+        self.needs_update_graph_processing = True
+        self.needs_update_scheduler_processing = True
+        self.needs_update_scheduler_learning = True
+        self.projections.append(projection)
+
+        projection._activate_for_compositions(self)
+        for comp in subcompositions:
+            projection._activate_for_compositions(comp)
 
         return projection
 
@@ -1424,29 +1426,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Clear old information
         self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
-        # KAM - IN PROGRESS 1/30/19
-        for node in self.c_nodes:
-            for input_state in node.input_states:
-                if input_state.shadow_inputs is not None:
-                    original_senders = set()
-
-                    for original_projection in input_state.shadow_inputs.path_afferents:
-                        original_senders.add(original_projection.sender)
-                        correct_sender = original_projection.sender
-                        shadow_found = False
-                        for shadow_projection in input_state.path_afferents:
-                            if shadow_projection.sender == correct_sender:
-                                shadow_found = True
-                                break
-                        if not shadow_found:
-                            # TBI - Shadow projection type? Matrix value?
-                            new_projection = MappingProjection(sender=correct_sender,
-                                                               receiver=input_state)
-                            self.add_projection(new_projection)
-                    for shadow_projection in input_state.path_afferents:
-                        if shadow_projection.sender not in original_senders:
-                            self.remove_projection(shadow_projection)
-
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
@@ -1499,6 +1478,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
                 # else:
                 self._add_c_node_role(node, CNodeRole.TERMINAL)
+
 
         # KAM Commented out below 1/25/19 because we do not use the CYCLE or RECURRENT_INIT roles
         # Identify Recurrent_init and Cycle nodes
@@ -1557,6 +1537,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_c_node_role(node, CNodeRole.OUTPUT)
 
         self._create_CIM_states()
+        for node in self.c_nodes:
+            for input_state in node.input_states:
+                if input_state.shadow_inputs is not None:
+                    original_senders = set()
+                    print("input state = ", input_state.name)
+                    print("owner = ", input_state.owner.name)
+                    print("shadow_inputs = ", input_state.shadow_inputs)
+                    print("input_state.path_afferents = ", input_state.path_afferents)
+                    print("input_state.projections = ", input_state.projections)
+                    for original_projection in input_state.shadow_inputs.path_afferents:
+                        print("original projection = ", original_projection)
+                        original_senders.add(original_projection.sender)
+                        correct_sender = original_projection.sender
+                        shadow_found = False
+                        for shadow_projection in input_state.path_afferents:
+                            print("shadow projection = ", shadow_projection)
+                            if shadow_projection.sender == correct_sender:
+                                shadow_found = True
+                                break
+                        if not shadow_found:
+                            # TBI - Shadow projection type? Matrix value?
+                            new_projection = MappingProjection(sender=correct_sender,
+                                                               receiver=input_state)
+                            self.add_projection(new_projection)
+                    for shadow_projection in input_state.path_afferents:
+                        print("shadow_projection", shadow_projection)
+                        if shadow_projection.sender not in original_senders:
+                            self.remove_projection(shadow_projection)
 
         self.needs_update_graph = False
 
