@@ -1283,6 +1283,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _add_projection(self, projection):
         self.projections.append(projection)
 
+    def remove_projection(self, projection):
+        # step 1 - remove Vertex from Graph
+        if projection in [vertex.component for vertex in self.graph.vertices]:
+            # print("removing vertex")
+            vert = self.graph.comp_to_vertex[projection]
+            self.graph.remove_vertex(vert)
+        # print("projections = ", self.projections)
+        # print("projection = ", projection)
+        # step 2 - remove Projection from Composition's list
+        if projection in self.projections:
+            # print("removing from list")
+            self.projections.remove(projection)
+
+        # step 3 - TBI? remove Projection from afferents & efferents lists of any node
+        
     def add_pathway(self, path):
         '''
             Adds an existing Pathway to the current Composition
