@@ -472,7 +472,7 @@ def _gen_cuda_kernel_wrapper_module(function):
             # #runs and #trials needs to be the same
             if is_comp_run and i >= 5:
                 offset = ir.IntType(32)(0)
-            # data arrays need spcial hadling
+            # data arrays need special handling
             elif is_comp_run and i == 4: # data_out
                 offset = builder.mul(global_id, builder.load(runs_count))
             elif is_comp_run and i == 3: # data_in
