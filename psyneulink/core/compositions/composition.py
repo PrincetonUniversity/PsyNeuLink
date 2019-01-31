@@ -629,8 +629,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             required_roles : psyneulink.core.globals.utilities.CNodeRole or list of CNodeRoles
                 any CNodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
+        # Create an empty entry for this node in the Composition's "shadows" dict
+        # If any other nodes shadow this node, they will be added to the list
         if node not in self.shadows:
             self.shadows[node] = []
+
+        # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
+        for input_state in node.input_states:
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                if node not in self.shadows[input_state.shadow_inputs.owner]:
+                    self.shadows[input_state.shadow_inputs.owner].append(node)
 
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
@@ -1281,6 +1289,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection._activate_for_compositions(self)
         for comp in subcompositions:
             projection._activate_for_compositions(comp)
+
+        if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
+            for shadow in self.shadows[receiver_mechanism]:
+                # TBI: Copy the projection type/matrix value of the projection that is being shadowed
+                self.add_projection(MappingProjection(), sender_mechanism, shadow)
 
         return projection
 
@@ -1983,7 +1996,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # projection.receiver.efferents.remove(projection)
                     # Bug? ^^ projection is not in receiver.efferents??
-
+                    if projection.receiver.owner in self.shadows and len(self.shadows[projection.receiver.owner]) > 0:
+                        for shadow in self.shadows[projection.receiver.owner]:
+                            for shadow_input_state in shadow.input_states:
+                                for shadow_projection in shadow_input_state.path_afferents:
+                                    if shadow_projection.sender == self.input_CIM_states[input_state][1]:
+                                        shadow_input_state.path_afferents.remove(shadow_projection)
+                                        
             # remove the CIM input and output states associated with this INPUT node input state
             self.input_CIM.input_states.remove(self.input_CIM_states[input_state][0])
             self.input_CIM.output_states.remove(self.input_CIM_states[input_state][1])
