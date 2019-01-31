@@ -4796,12 +4796,7 @@ class TestShadowInputs:
         # comp.show_graph()
         comp.run(inputs={A: [[1.0]]})
 
-        print(A.value)
-        print(B.value)
-
         comp.remove_projection(B)
-        print("Origins = ", comp.get_c_nodes_by_role(CNodeRole.ORIGIN))
-        print("Inputs = ", comp.get_c_nodes_by_role(CNodeRole.INPUT))
         comp._analyze_graph()
         comp.show_graph()
 
@@ -4811,28 +4806,29 @@ class TestShadowInputs:
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         comp.add_c_node(A)
-        # comp._analyze_graph()
         B = ProcessingMechanism(name='B',
                                 input_states=[A.input_state])
 
         comp.add_c_node(B)
-        comp.run(inputs={A: [[1.23]]})
+        comp.run(inputs={A: [[1.0]]})
 
-        assert A.value == [[1.23]]
-        assert B.value == [[1.23]]
-        # assert comp.external_input_sources == {B: [A.input_state]}
+        assert A.value == [[1.0]]
+        assert B.value == [[1.0]]
+        assert comp.shadows[A] == [B]
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
 
-        comp.run(inputs={C: 4.56})
+        comp.run(inputs={C: 1.5})
+        assert A.value == [[1.5]]
+        assert B.value == [[1.5]]
+        assert C.value == [[1.5]]
 
-        print(A.value)
         # Since B is shadowing A, its old projection from the CIM should be deleted,
         # and a new projection from C should be added
-        print(B.value)
-        print(C.value)
-        print(B.path_afferents)
+        assert len(B.path_afferents) == 1
+        assert B.path_afferents[0].sender.owner == C
+
 
     def test_shadow_internal_projections(self):
         comp = Composition(name='comp')
@@ -4844,8 +4840,7 @@ class TestShadowInputs:
 
         comp.add_linear_processing_pathway([A, B])
         comp.add_c_node(C)
-        print(comp.run(inputs={A: [[1.23]]}))
-        print(C.input_state.shadow_inputs)
+        comp.run(inputs={A: [[1.23]]})
         # assert A.value == [[1.23]]
         # assert B.value == [[1.23]]
         # assert comp.external_input_sources == {B: [A.input_state]}
