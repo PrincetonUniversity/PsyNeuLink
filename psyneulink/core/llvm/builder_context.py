@@ -97,8 +97,9 @@ class LLVMBuilderContext:
 
     @staticmethod
     def get_debug_location(func, component):
-        if 'debug_info' not in debug_env:
+        if "debug_info" not in debug_env:
             return
+
         mod = func.module
         path = inspect.getfile(component.__class__) if component is not None else "<builtin>"
         d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
@@ -218,7 +219,7 @@ class LLVMBuilderContext:
         builder = ir.IRBuilder(entry_block)
         builder.debug_metadata = self.get_debug_location(llvm_func, composition)
 
-        if 'const_params' in debug_env:
+        if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             builder.store(const_params, params)
 
