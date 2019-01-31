@@ -721,6 +721,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if hasattr(node, "shadow_external_inputs"):
             self.external_input_sources[node] = node.shadow_external_inputs
 
+        for input_state in node.input_states:
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                for proj in input_state.shadow_inputs.path_afferents:
+                    sender = proj.sender
+                    if sender.owner != self.input_CIM:
+                        self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
+                                            sender=proj.sender.owner,
+                                            receiver=node)
     def add_model_based_optimizer(self, optimizer):
         """
         Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
@@ -1298,9 +1306,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
             for shadow in self.shadows[receiver_mechanism]:
                 for input_state in shadow.input_states:
-                    if input_state.shadow_inputs.owner == receiver:
-                        # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-                        self.add_projection(MappingProjection(sender=sender, receiver=input_state), sender_mechanism, shadow)
+                    if input_state.shadow_inputs is not None:
+                        if input_state.shadow_inputs.owner == receiver:
+                            # TBI: Copy the projection type/matrix value of the projection that is being shadowed
+                            self.add_projection(MappingProjection(sender=sender, receiver=input_state), sender_mechanism, shadow)
 
         return projection
 
@@ -1697,7 +1706,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         CIM_state_for_nested_c_node = None
         nested_comps = [c for c in self.c_nodes if isinstance(c, Composition)]
-
+        nested_comp = None
         for c in nested_comps:
               if c_node in c.c_nodes:
                   # Must be assigned CNode.Role of INPUT
