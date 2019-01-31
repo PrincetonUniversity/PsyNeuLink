@@ -616,6 +616,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_unique_id(self):
         return uuid.uuid4()
 
+    def _update_shadows_dict(self, node):
+        # Create an empty entry for this node in the Composition's "shadows" dict
+        # If any other nodes shadow this node, they will be added to the list
+        if node not in self.shadows:
+            self.shadows[node] = []
+
+        # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
+        for input_state in node.input_states:
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                if node not in self.shadows[input_state.shadow_inputs.owner]:
+                    self.shadows[input_state.shadow_inputs.owner].append(node)
+
     def add_c_node(self, node, required_roles=None, external_input_source=None):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
@@ -629,16 +641,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             required_roles : psyneulink.core.globals.utilities.CNodeRole or list of CNodeRoles
                 any CNodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
-        # Create an empty entry for this node in the Composition's "shadows" dict
-        # If any other nodes shadow this node, they will be added to the list
-        if node not in self.shadows:
-            self.shadows[node] = []
 
-        # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
-        for input_state in node.input_states:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                if node not in self.shadows[input_state.shadow_inputs.owner]:
-                    self.shadows[input_state.shadow_inputs.owner].append(node)
+        self._update_shadows_dict(node)
 
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
