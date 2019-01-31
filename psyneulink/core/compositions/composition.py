@@ -1294,10 +1294,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for comp in subcompositions:
             projection._activate_for_compositions(comp)
 
+        # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
         if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
             for shadow in self.shadows[receiver_mechanism]:
-                # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-                self.add_projection(MappingProjection(), sender_mechanism, shadow)
+                for input_state in shadow.input_states:
+                    if input_state.shadow_inputs.owner == receiver:
+                        # TBI: Copy the projection type/matrix value of the projection that is being shadowed
+                        self.add_projection(MappingProjection(sender=sender, receiver=input_state), sender_mechanism, shadow)
 
         return projection
 
