@@ -2002,7 +2002,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 for shadow_projection in shadow_input_state.path_afferents:
                                     if shadow_projection.sender == self.input_CIM_states[input_state][1]:
                                         shadow_input_state.path_afferents.remove(shadow_projection)
-                                        
+
             # remove the CIM input and output states associated with this INPUT node input state
             self.input_CIM.input_states.remove(self.input_CIM_states[input_state][0])
             self.input_CIM.output_states.remove(self.input_CIM_states[input_state][1])
