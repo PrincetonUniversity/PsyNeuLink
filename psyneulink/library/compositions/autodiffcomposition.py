@@ -750,6 +750,7 @@ class AutodiffComposition(Composition):
     def run(
         self,
         inputs=None,
+        do_logging=False,
         scheduler_processing=None,
         scheduler_learning=None,
         termination_processing=None,
@@ -766,7 +767,9 @@ class AutodiffComposition(Composition):
         targets=None,
         bin_execute=False,
         initial_values=None,
-        runtime_params=None):
+        reinitialize_values=None,
+        runtime_params=None,
+        context=None):
         # TBI: Handle trials, timesteps, etc
         execution_id = self._assign_execution_ids(execution_id)
         if self.learning_enabled:
@@ -785,6 +788,7 @@ class AutodiffComposition(Composition):
                 trial_output = self.execute(
                     inputs=adjusted_stimuli[stimulus_index],
                     execution_id=execution_id,
+                    do_logging=do_logging,
                 )
                 results.append(trial_output)
             return results
@@ -807,7 +811,9 @@ class AutodiffComposition(Composition):
                                                     targets=targets,
                                                     bin_execute=bin_execute,
                                                     initial_values=initial_values,
-                                                    runtime_params=runtime_params)
+                                                    reinitialize_values=reinitialize_values,
+                                                    runtime_params=runtime_params,
+                                                    context=context)
 
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):
