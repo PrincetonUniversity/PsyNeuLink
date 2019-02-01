@@ -1,4 +1,5 @@
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.globals.context import ContextFlags
 
 try:
     import torch
@@ -87,7 +88,7 @@ class PytorchModelCreator(torch.nn.Module):
         self.copy_weights_to_psyneulink(execution_id)
 
     # performs forward computation for the model
-    def forward(self, inputs, execution_id=None):
+    def forward(self, inputs, execution_id=None, do_logging=True):
 
         outputs = {}  # dict for storing values of terminal (output) nodes
 
@@ -114,12 +115,17 @@ class PytorchModelCreator(torch.nn.Module):
 
                 # store the current value of the node
                 self.component_to_forward_info[component][0] = value
+                if do_logging:
+                    detached_value = value.detach().numpy()
+                    component.parameters.value._log_value(detached_value, execution_id, ContextFlags.COMMAND_LINE)
 
                 # save value in output list if we're at a node in the last execution set
                 if i == len(self.execution_sets) - 1:
                     outputs[component] = value
 
         self.copy_outputs_to_psyneulink(outputs, execution_id)
+        if do_logging:
+            self.log_weights(execution_id)
         return outputs
 
     def copy_weights_to_psyneulink(self, execution_id=None):
@@ -129,8 +135,12 @@ class PytorchModelCreator(torch.nn.Module):
     def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
         for component, value in outputs.items():
             detached_value = value.detach().numpy()
-            component.parameters.value.set(detached_value, execution_id, override=True)
-            component.output_state.parameters.value.set(detached_value, execution_id, override=True)
+            component.parameters.value.set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
+            component.output_state.parameters.value.set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
+
+    def log_weights(self, execution_id=None):
+        for projection, weights in self.projections_to_pytorch_weights.items():
+            projection.parameters.matrix._log_value(weights.detach().numpy(), execution_id, ContextFlags.COMMAND_LINE)
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it
