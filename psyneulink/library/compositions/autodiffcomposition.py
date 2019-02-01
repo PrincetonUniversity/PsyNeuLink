@@ -157,7 +157,8 @@ Logging
 Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
 is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
 projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
-set the **do_logging** argument of the ``run()`` method to ``True``.
+set the **do_logging** argument of the ``run()`` method to ``True``. Logging with AutodiffComposition is slightly hacked
+together, so the time and context in the log are not meaningful, only the logged value is meaningful.
 
 Nested Execution
 ----------------
