@@ -50,6 +50,7 @@ import collections
 import inspect
 import itertools
 import logging
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -651,6 +652,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Add all "c_nodes" to the composition first (in case projections reference them)
             for component in node.aux_components:
                 if isinstance(component, (Mechanism, Composition)):
+                    if isinstance(component, Composition):
+                        component._analyze_graph()
                     self.add_c_node(component)
                 elif isinstance(component, Projection):
                     projections.append((component, False))
@@ -685,7 +688,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                " is specified, then the index 0 item must be a Projection, Mechanism, "
                                                "or Composition.".format(component, node.name))
                 else:
-                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                     raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
                                            "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
@@ -1145,11 +1148,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection : Projection, matrix
                 the projection to add
 
-            receiver : Mechanism, Composition, or OutputState
+            receiver : Mechanism, Composition, or InputState
                 the receiver of **projection**
 
             feedback : Boolean
-                if False, any cycles containing this projection will be
+                if False, any cycles containing this projection will be [FIX:  WHAT?]
         '''
 
         if isinstance(projection, (np.ndarray, np.matrix, list)):
@@ -1177,14 +1180,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         subcompositions = []
 
-        sender_mechanism = sender
         graph_sender = sender
-        if isinstance(sender, OutputState):
+        if isinstance(sender, Mechanism):
+            sender_mechanism = sender
+            sender_output_state = sender.output_state
+        elif isinstance(sender, OutputState):
             sender_mechanism = sender.owner
+            sender_output_state = sender
             graph_sender = sender.owner
         elif isinstance(sender, Composition):
             sender_mechanism = sender.output_CIM
             subcompositions.append(sender)
+        else:
+            raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
+                                   format(sender, self.name,
+                                          Mechanism.__name__, OutputState.__name__, Composition.__name__))
+
+        if (not sender_mechanism is self.output_CIM
+                and not isinstance(sender, Composition)
+                and sender_mechanism not in self.c_nodes):
+            # Check if sender is in a nested Composition and, if so, it is an OUTPUT Mechanism
+            #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
+            #    - otherwise, raise error
+            sender, graph_sender = self._get_nested_c_node_CIM_state(sender_mechanism,
+                                                                     sender_output_state,
+                                                                     CNodeRole.OUTPUT)
+            if sender is None:
+                raise CompositionError("sender arg ({}) in call to add_projection method of {} "
+                                       "is not in it or any of its nested {}s ".
+                                       format(repr(sender), self.name, Composition.__name__,))
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
@@ -1199,16 +1223,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a receiver specification. ".format(projection.name))
-
-        receiver_mechanism = receiver
         graph_receiver = receiver
 
-        if isinstance(receiver, InputState):
+        if isinstance(receiver, Mechanism):
+            receiver_mechanism = receiver
+            receiver_input_state = receiver.input_state
+        elif isinstance(receiver, InputState):
             receiver_mechanism = receiver.owner
+            receiver_input_state = receiver
             graph_receiver = receiver.owner
         elif isinstance(receiver, Composition):
             receiver_mechanism = receiver.input_CIM
             subcompositions.append(receiver)
+        else:
+            raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
+                                   format(receiver, self.name,
+                                          Mechanism.__name__, InputState.__name__, Composition.__name__))
+
+        if (not receiver_mechanism is self.input_CIM
+                and not isinstance(receiver, Composition)
+                and receiver not in self.c_nodes):
+            # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
+            #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
+            #    - otherwise, raise error
+            receiver, graph_receiver = self._get_nested_c_node_CIM_state(receiver_mechanism,
+                                                                         receiver_input_state,
+                                                                         CNodeRole.INPUT)
+            if receiver is None:
+                raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
+                                       "is not in it or any of its nested {}s ".
+                                       format(repr(receiver), self.name, Composition.__name__,))
+
 
         if projection not in [vertex.component for vertex in self.graph.vertices]:
 
@@ -1341,7 +1386,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _analyze_graph(self, graph=None, context=None):
         """
-        Assigns one or more `CNodeRole <CNodeRoles>` to each node based on the structure of the `Graph`.
+        Assigns `CNodeRoles <CNodeRoles>` to nodes based on the structure of the `Graph`.
 
         By default, if _analyze_graph determines that a node is `ORIGIN <CNodeRole.ORIGIN>`, it is also given the role
         `INPUT <CNodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
@@ -1349,7 +1394,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         However, if the required_roles argument of `add_c_node <Composition.add_c_node>` is used to set any node in the
         Composition to `INPUT <CNodeRole.INPUT>`, then the `ORIGIN <CNodeRole.ORIGIN>` nodes are not set to `INPUT
-        <CNodeRole.INPUT>` by deafult. If the required_roles argument of `add_c_node <Composition.add_c_node>` is used
+        <CNodeRole.INPUT>` by default. If the required_roles argument of `add_c_node <Composition.add_c_node>` is used
         to set any node in the Composition to `OUTPUT <CNodeRole.OUTPUT>`, then the `TERMINAL <CNodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <CNodeRole.OUTPUT>` by default.
 
@@ -1367,10 +1412,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
+        # First check for ORIGIN nodes:
+        # Nodes at the beginning of the consideration queue are ORIGIN
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[0]:
                 self._add_c_node_role(node, CNodeRole.ORIGIN)
 
+        # First check for TERMINAL nodes:
+        # Nodes at the beginning of the consideration queue are TERMINAL
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
                 # if self.model_based_optimizer:
@@ -1380,10 +1429,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
                 # else:
                 self._add_c_node_role(node, CNodeRole.TERMINAL)
-        # Identify Origin nodes
+
+        # loop over all nodes in the Composition to identify additional roles
         for node in self.c_nodes:
-            # KAM added len(node.path_afferents) check 1/7/19 in order to
-            # include nodes that receive mod projections as ORIGIN
+
+            # Second check for ORIGIN nodes:
+            # Nodes that either (1) have no "parents" in the graph OR (2) only receive mod projections are ORIGIN
             mod_only = False
             if hasattr(node, "path_afferents"):
                 if len(node.path_afferents) == 0:
@@ -1399,7 +1450,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if graph.get_parents_from_component(node) == [] or mod_only:
                 # if not isinstance(node, ObjectiveMechanism):
                 self._add_c_node_role(node, CNodeRole.ORIGIN)
-            # Identify Terminal nodes
+
+            # Second check for TERMINAL nodes:
+            # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
 
                 # if self.model_based_optimizer:
@@ -1408,39 +1461,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
                 # else:
                 self._add_c_node_role(node, CNodeRole.TERMINAL)
-        # Identify Recurrent_init and Cycle nodes
-        visited = []  # Keep track of all nodes that have been visited
-        for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
-            visited_current_path = []  # Track all nodes visited from the current origin
-            next_visit_stack = []  # Keep a stack of nodes to be visited next
-            next_visit_stack.append(origin_node)
-            for node in next_visit_stack:  # While the stack isn't empty
-                visited.append(node)  # Mark the node as visited
-                visited_current_path.append(node)  # And visited during the current path
-                children = [vertex.component for vertex in graph.get_children_from_component(node)]
-                for child in children:
-                    # If the child has been visited this path and is not already initialized
-                    if child in visited_current_path:
-                        self._add_c_node_role(node, CNodeRole.RECURRENT_INIT)
-                        self._add_c_node_role(child, CNodeRole.CYCLE)
-                    elif child not in visited:  # Else if the child has not been explored
-                        next_visit_stack.append(child)  # Add it to the visit stack
-        for node in self.c_nodes:
-            if node not in visited:  # Check the rest of the nodes
-                visited_current_path = []
-                next_visit_stack = []
-                next_visit_stack.append(node)
-                for remaining_node in next_visit_stack:
-                    visited.append(remaining_node)
-                    visited_current_path.append(remaining_node)
-                    children = [vertex.component for vertex in graph.get_children_from_component(remaining_node)]
-                    for child in children:
-                        if child in visited_current_path:
-                            self._add_c_node_role(remaining_node, CNodeRole.RECURRENT_INIT)
-                            self._add_c_node_role(child, CNodeRole.CYCLE)
-                        elif child not in visited:
-                            next_visit_stack.append(child)
 
+        # KAM Commented out below 1/25/19 because we do not use the CYCLE or RECURRENT_INIT roles
+        # Identify Recurrent_init and Cycle nodes
+        # visited = []  # Keep track of all nodes that have been visited
+        # for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
+        #     visited_current_path = []  # Track all nodes visited from the current origin
+        #     next_visit_stack = []  # Keep a stack of nodes to be visited next
+        #     next_visit_stack.append(origin_node)
+        #     for node in next_visit_stack:  # While the stack isn't empty
+        #         visited.append(node)  # Mark the node as visited
+        #         visited_current_path.append(node)  # And visited during the current path
+        #         children = [vertex.component for vertex in graph.get_children_from_component(node)]
+        #         for child in children:
+        #             # If the child has been visited this path and is not already initialized
+        #             if child in visited_current_path:
+        #                 self._add_c_node_role(node, CNodeRole.RECURRENT_INIT)
+        #                 self._add_c_node_role(child, CNodeRole.CYCLE)
+        #             elif child not in visited:  # Else if the child has not been explored
+        #                 next_visit_stack.append(child)  # Add it to the visit stack
+        # for node in self.c_nodes:
+        #     if node not in visited:  # Check the rest of the nodes
+        #         visited_current_path = []
+        #         next_visit_stack = []
+        #         next_visit_stack.append(node)
+        #         for remaining_node in next_visit_stack:
+        #             visited.append(remaining_node)
+        #             visited_current_path.append(remaining_node)
+        #             children = [vertex.component for vertex in graph.get_children_from_component(remaining_node)]
+        #             for child in children:
+        #                 if child in visited_current_path:
+        #                     self._add_c_node_role(remaining_node, CNodeRole.RECURRENT_INIT)
+        #                     self._add_c_node_role(child, CNodeRole.CYCLE)
+        #                 elif child not in visited:
+        #                     next_visit_stack.append(child)
+
+        # Assign any INPUT/OUTPUT roles that were specified by user
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
@@ -1567,6 +1623,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.c_nodes_to_roles[c_node].remove(role)
 
+    tc.typecheck
+    def _get_nested_c_node_CIM_state(self,
+                                     c_node:Mechanism,
+                                     c_node_state:tc.any(InputState, OutputState),
+                                     role:tc.enum(CNodeRole.INPUT, CNodeRole.OUTPUT)
+                                     ):
+        '''Check for c_node in nested Composition
+        Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
+        '''
+
+        # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS RECEIVER IN A NESTED COMPOSITION
+
+        CIM_state_for_nested_c_node = None
+        nested_comps = [c for c in self.c_nodes if isinstance(c, Composition)]
+
+        for c in nested_comps:
+              if c_node in c.c_nodes:
+                  # Must be assigned CNode.Role of INPUT
+                  if not role in c.c_nodes_to_roles[c_node]:
+                      raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
+                                             format(c_node.name, Composition.__name__ , self.name, c.name,
+                                                    CNodeRole.__name__, repr(role)))
+                  if CIM_state_for_nested_c_node:
+                      warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
+                                    "only first one found (in {}) will be used".
+                                    format(c_node.name, CNodeRole.__name__, repr(role),
+                                           Composition.__name__, self.name, nested_comp.name))
+                      continue
+                  CIM_state_for_nested_c_node = c.input_CIM_states[c_node_state][0]
+                  nested_comp = c
+        return CIM_state_for_nested_c_node, nested_comp
+
     def add_required_c_node_role(self, c_node, role):
         if role not in CNodeRole:
             raise CompositionError('Invalid CNodeRole: {0}'.format(role))
@@ -1582,7 +1670,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (c_node, role)
         if node_role_pair in self.required_c_node_roles:
             self.required_c_node_roles.remove(node_role_pair)
-
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
