@@ -14,7 +14,7 @@ class TestControlMechanisms:
         c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
+                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
@@ -34,7 +34,7 @@ class TestControlMechanisms:
         c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
@@ -55,7 +55,7 @@ class TestControlMechanisms:
         c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state, m2],
                                                 feature_function=pnl.LinearCombination(offset=10.0),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
@@ -211,7 +211,7 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, reward]},
+                                                                                  features=[Input.input_state, reward.input_state],
                                                                                   feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
                                                                                                                              monitor=[reward,
@@ -347,10 +347,9 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                               pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
         # Model Based OCM (formerly controller)
         evc_gratton.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
-                                                                                         features={
-                                                                                             pnl.SHADOW_EXTERNAL_INPUTS: [
-                                                                                                 target_stim,
-                                                                                                 flanker_stim, reward]},
+                                                                                         features=[target_stim.input_state,
+                                                                                                   flanker_stim.input_state,
+                                                                                                   reward.input_state],
                                                                                          feature_function=pnl.AdaptiveIntegrator(
                                                                                              rate=1.0),
                                                                                          objective_mechanism=objective_mech,

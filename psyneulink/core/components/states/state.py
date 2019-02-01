@@ -1938,6 +1938,7 @@ class State_Base(State):
         variable = []
         # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
+
             # Only update if sender has also executed in this round
             #     (i.e., has same execution_id as owner)
             # Get sender's execution id
@@ -3006,13 +3007,13 @@ def _parse_state_spec(state_type=None,
     if state_dict[VALUE] is None:
         state_dict[VALUE] = spec_function_value
     # Otherwise, make sure value returned by spec function is same as one specified for State's value
-    else:
-        if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
-            state_name = state_dict[NAME] or 'unnamed'
-            raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
-                             'the value ({}) computed from the state_spec function ({})'.
-                             format(state_dict[VALUE], state_name, state_type.__name__,
-                                    state_dict[OWNER].name, spec_function_value, spec_function))
+    # else:
+    #     if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
+    #         state_name = state_dict[NAME] or 'unnamed'
+    #         raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
+    #                          'the value ({}) computed from the state_spec function ({})'.
+    #                          format(state_dict[VALUE], state_name, state_type.__name__,
+    #                                 state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
         raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".

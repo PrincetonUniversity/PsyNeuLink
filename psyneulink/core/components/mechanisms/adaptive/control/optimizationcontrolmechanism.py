@@ -996,11 +996,15 @@ class OptimizationControlMechanism(ControlMechanism):
             features = [features]
 
         for spec in features:
-
+            if isinstance(spec, InputState):
+                spec = InputState._parse_self_state_type_spec(InputState,
+                                                              self,
+                                                              spec,
+                                                              context)
             spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:
-                spec[PARAMS][FUNCTION] = feature_function
+                spec.update({FUNCTION: feature_function})
             spec = [spec]   # so that extend works below
 
             parsed_features.extend(spec)

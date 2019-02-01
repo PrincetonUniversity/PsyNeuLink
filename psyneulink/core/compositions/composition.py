@@ -706,6 +706,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         optimizer._activate_projections_for_compositions(self)
         self._analyze_graph()
+        self._update_shadows_dict(optimizer)
+
+        for input_state in optimizer.input_states:
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                for proj in input_state.shadow_inputs.path_afferents:
+                    sender = proj.sender
+                    if sender.owner != self.input_CIM:
+                        self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
+                                            sender=sender.owner,
+                                            receiver=optimizer)
+                        shadow_proj._activate_for_compositions(self)
+                    else:
+                        shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
+                        self.projections.append(shadow_proj)
+                        shadow_proj._activate_for_compositions(self)
 
     def _get_control_signals_for_system(self, control_signals=None):
         """Generate and return a list of control_signal_specs for System
@@ -3448,6 +3463,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             output value of the final Node executed in the composition : various
         '''
+
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
@@ -4150,8 +4166,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: the indexing below for predicted_input is not correct 
         for i in range(num_trials):
             inputs = {}
-            # for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
-            #     inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j]
+            # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
+            # If this is not a good assumption, we need another way to look up the feature InputStates
+            # of the OCM and know which InputState maps to which predicted_input value 
+            for j in range(len(self.model_based_optimizer.input_states) - 1):
+                input_state = self.model_based_optimizer.input_states[j+1]
+                if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+
+                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
             for output_state in self.output_states:
