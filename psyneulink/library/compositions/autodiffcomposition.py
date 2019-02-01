@@ -552,11 +552,11 @@ class AutodiffComposition(Composition):
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
-    def autodiff_processing(self, inputs, execution_id=None):
+    def autodiff_processing(self, inputs, execution_id=None, do_logging=False):
         pytorch_representation = self.parameters.pytorch_representation.get(execution_id)
         # run the model on inputs - switch autograd off for this (we don't need it)
         with torch.no_grad():
-            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id)
+            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging)
 
         # get outputs back into numpy
         outputs = []
@@ -566,7 +566,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, execution_id=None):
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -616,15 +616,16 @@ class AutodiffComposition(Composition):
                 curr_tensor_targets = {}
                 for component in inputs.keys():
                     input = inputs[component][input_index]
-                    curr_tensor_inputs[component] = torch.tensor(input, device = self.device).double()
+                    curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
                 for component in targets.keys():
                     target = targets[component][input_index]
-                    curr_tensor_targets[component] = torch.tensor(target, device = self.device).double()
+                    curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
                 # do forward computation on current inputs
                 curr_tensor_outputs = self.parameters.pytorch_representation.get(execution_id).forward(
                     curr_tensor_inputs,
-                    execution_id
+                    execution_id,
+                    do_logging
                 )
 
                 # compute total loss across output neurons for current trial
@@ -683,6 +684,7 @@ class AutodiffComposition(Composition):
     def execute(self,
                 inputs=None,
                 autodiff_stimuli=None,
+                do_logging=False,
                 scheduler_processing=None,
                 scheduler_learning=None,
                 termination_processing=None,
