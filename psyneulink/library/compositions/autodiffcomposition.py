@@ -151,6 +151,14 @@ and specifying inputs and targets:
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>> my_autodiff.run(inputs = input_dict)
 
+Logging
+-------
+
+Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
+is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
+projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
+set the **do_logging** argument of the ``run()`` method to ``True``.
+
 Nested Execution
 ----------------
 COMMENT:
