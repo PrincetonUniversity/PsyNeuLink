@@ -31,7 +31,6 @@ matrix:
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - $HOME/venv
           - $HOME/Library/Caches
 
   - os: osx
@@ -43,7 +42,6 @@ matrix:
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - $HOME/venv
           - $HOME/Library/Caches
 
   - os: osx
@@ -56,7 +54,6 @@ matrix:
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - $HOME/venv
           - $HOME/Library/Caches
 
 addons:
@@ -72,28 +69,24 @@ before_install: |
     fi
     sudo installer -pkg $HOME/Library/Caches/$FILE -target /
     python3 --version
-    # Check if the cached version is available
-    if [ "x`$HOME/venv/bin/python --version`" == "xPython $PYTHON" ] ; then
-       echo "Reusing python venv"
-       source $HOME/venv/bin/activate
-       python --version
-    else
-       echo "Deploying new python venv"
-       # This sidesteps TLSv1.1 issue when using pip
-       curl https://bootstrap.pypa.io/get-pip.py | python3
-       python3 -m pip  install virtualenv
-       python3 -m venv $HOME/venv
-       source $HOME/venv/bin/activate
-       python --version
-       # virtualenv installs default pip even if we updated it above.
-       # update it again.
-       curl https://bootstrap.pypa.io/get-pip.py | python
 
-       # setuptools also face the same TLS deprecation issue.
-       # Update them explicitly
-       python -m pip install -U setuptools
-       python -m pip install -U setuptools-git
-    fi
+    echo "Deploying new python venv"
+    python3 -m pip --version
+
+    # This sidesteps TLSv1.1 issue when using pip
+    curl https://bootstrap.pypa.io/get-pip.py | python3
+    python3 -m pip  install virtualenv
+    python3 -m venv $HOME/venv
+    source $HOME/venv/bin/activate
+    python --version
+    # virtualenv installs default pip even if we updated it above.
+    # update it again.
+    curl https://bootstrap.pypa.io/get-pip.py | python
+
+    # setuptools also face the same TLS deprecation issue.
+    # Update them explicitly
+    python -m pip install -U setuptools
+    python -m pip install -U setuptools-git
 
     HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
   fi
