@@ -347,7 +347,7 @@ class CompExecution(CUDAExecution):
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
-        if 'comp_node_debug' in self._debug_env:
+        if "comp_node_debug" in self._debug_env:
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
     def execute(self, inputs):
