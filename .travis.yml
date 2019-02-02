@@ -32,7 +32,7 @@ matrix:
     cache:
         directories:
           - $HOME/venv
-          - $HOME/Library/Caches/Homebrew
+          - $HOME/Library/Caches
 
   - os: osx
     python: 3.6
@@ -44,7 +44,7 @@ matrix:
     cache:
         directories:
           - $HOME/venv
-          - $HOME/Library/Caches/Homebrew
+          - $HOME/Library/Caches
 
   - os: osx
     python: 3.7
@@ -57,7 +57,7 @@ matrix:
     cache:
         directories:
           - $HOME/venv
-          - $HOME/Library/Caches/Homebrew
+          - $HOME/Library/Caches
 
 addons:
   apt:
@@ -67,8 +67,10 @@ addons:
 before_install: |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     FILE=python-$PYTHON-$PYTHON_PKG_VERSION.pkg
-    curl -O -#  https://www.python.org/ftp/python/$PYTHON/$FILE
-    sudo installer -pkg $FILE -target /
+    if [ ! -f $HOME/Library/Caches/$FILE ]; then
+      curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
+    fi
+    sudo installer -pkg $HOME/Library/Caches/$FILE -target /
     python3 --version
     # Check if the cached version is available
     if [ "x`$HOME/venv/bin/python --version`" == "xPython $PYTHON" ] ; then
