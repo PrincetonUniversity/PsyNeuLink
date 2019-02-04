@@ -13,6 +13,7 @@ import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.function import ModulationParam
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -4785,23 +4786,6 @@ class TestAuxComponents:
 
 class TestShadowInputs:
 
-    # def test_remove_projection(self):
-    #     comp = Composition(name='comp')
-    #     A = ProcessingMechanism(name='A',
-    #                             function=Linear(slope=0.5))
-    #     B = ProcessingMechanism(name='B',
-    #                             function=Linear(slope=3.0))
-    #     P = MappingProjection(sender=A, receiver=B)
-    #     comp.add_linear_processing_pathway([A, P, B])
-    #     # comp.show_graph()
-    #     comp.run(inputs={A: [[1.0]]})
-    #
-    #     comp.remove_projection(B)
-    #     comp._analyze_graph()
-    #     comp.show_graph()
-    #
-    #     comp.run(inputs={A: [[1.0]],
-    #                      B: [[2.0]]})
     def test_two_origins(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
@@ -4888,3 +4872,22 @@ class TestShadowInputs:
         assert A2.value == [[1.0]]
         assert B.value == [[2.0]]
         assert C.value == [[2.0]]
+
+    def test_monitor_input_states(self):
+        comp = Composition(name='comp')
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+
+        obj = ObjectiveMechanism(name='A_input_plus_B_input',
+                                 monitor=[A.input_state, B.input_state],
+                                 function=LinearCombination())
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(obj)
+
+        comp.run(inputs={A:10.0,
+                         B:15.0})
+        assert obj.value == [[25.0]]
+
