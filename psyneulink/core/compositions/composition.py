@@ -687,6 +687,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
+
     def add_model_based_optimizer(self, optimizer):
         """
         Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
@@ -1291,14 +1292,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
         if projection in [vertex.component for vertex in self.graph.vertices]:
-            # print("removing vertex")
             vert = self.graph.comp_to_vertex[projection]
             self.graph.remove_vertex(vert)
-        # print("projections = ", self.projections)
-        # print("projection = ", projection)
         # step 2 - remove Projection from Composition's list
         if projection in self.projections:
-            # print("removing from list")
             self.projections.remove(projection)
 
         # step 3 - TBI? remove Projection from afferents & efferents lists of any node
@@ -1545,18 +1542,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if input_state.shadow_inputs is not None:
                     original_senders = set()
                     for original_projection in input_state.shadow_inputs.path_afferents:
-                        original_senders.add(original_projection.sender)
-                        correct_sender = original_projection.sender
-                        shadow_found = False
-                        for shadow_projection in input_state.path_afferents:
-                            if shadow_projection.sender == correct_sender:
-                                shadow_found = True
-                                break
-                        if not shadow_found:
-                            # TBI - Shadow projection type? Matrix value?
-                            new_projection = MappingProjection(sender=correct_sender,
-                                                               receiver=input_state)
-                            self.add_projection(new_projection)
+                        if original_projection in self.projections:
+                            original_senders.add(original_projection.sender)
+                            correct_sender = original_projection.sender
+                            shadow_found = False
+                            for shadow_projection in input_state.path_afferents:
+                                if shadow_projection.sender == correct_sender:
+                                    shadow_found = True
+                                    break
+                            if not shadow_found:
+                                # TBI - Shadow projection type? Matrix value?
+                                new_projection = MappingProjection(sender=correct_sender,
+                                                                   receiver=input_state)
+                                self.add_projection(new_projection, sender=correct_sender, receiver = input_state)
                     for shadow_projection in input_state.path_afferents:
                         if shadow_projection.sender not in original_senders:
                             self.remove_projection(shadow_projection)
