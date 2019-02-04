@@ -35,7 +35,7 @@ def test_control_mechanism_assignment():
 
     # Test direct assignment
     S.controller = C1
-    assert len(C1.monitor)==2
+    assert len(C1.monitored_output_states)==2
     assert len(S.control_signals)==3
     assert S.controller.name == 'C-1'
 
@@ -46,7 +46,7 @@ def test_control_mechanism_assignment():
                                  control_signals=[(pnl.GAIN, T4)])
     # Test use of assign_as_controller method
     C2.assign_as_controller(S)
-    assert len(C2.monitor)==3
+    assert len(C2.monitored_output_states)==3
     assert len(S.control_signals)==4
     assert S.controller.name == 'C-2'
 
@@ -78,7 +78,7 @@ def test_control_mechanism_assignment_additional():
     T_2 = pnl.TransferMechanism(name='T_2')
     S = pnl.sys([T_1,T_2],
                 controller=pnl.EVCControlMechanism(control_signals=(pnl.SLOPE, T_1)),
-                monitor_for_control=T_1,
+                monitor_for_control=[T_1],
                 control_signals=(pnl.SLOPE, T_2),
                 enable_controller=True)
     assert S.controller.objective_mechanism.input_state.path_afferents[0].sender.owner == T_1

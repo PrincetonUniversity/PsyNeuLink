@@ -594,6 +594,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  **kwargs):
 
         # For backward compatibility
+
         if MONITORED_OUTPUT_STATES in kwargs:
             if monitor:
                 raise ObjectiveMechanismError("Can't specifiy both {} ({}) and {} ({}) args of {} specified; pick one!".
@@ -602,7 +603,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             warnings.warn('Use of {} as arg of {} is deprecated;  use {} instead'.
                           format(repr(MONITORED_OUTPUT_STATES), self.__class__.__name__, repr(MONITOR)))
             monitor = kwargs[MONITORED_OUTPUT_STATES]
-
 
         monitor = monitor or None # deal with possibility of empty list
         input_states = monitor
@@ -898,7 +898,7 @@ def _parse_monitor_specs(monitor_specs):
         # # Insert new item(s) from spec_tuple into monitor_specs at specified index
         # monitor_specs[spec_tuple.index:spec_tuple.index] = spec_tuple.spec
         monitor_specs[spec_tuple.index] = spec_tuple.spec
-
+    return monitor_specs
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)
