@@ -86,6 +86,10 @@ def _cpu_jit_constructor():
 
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(_float_ty)
+    if "llvm" in debug_env:
+        with open(builtins_module.name + '.parse.ll', 'w') as dump_file:
+            dump_file.write(str(builtins_module))
+
     __backing_mod = binding.parse_assembly(str(builtins_module))
 
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
