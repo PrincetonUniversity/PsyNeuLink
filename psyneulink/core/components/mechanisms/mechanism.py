@@ -480,7 +480,9 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
   InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
   `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
-  **default_variable** is not specified, a default value is specified by the Mechanism.
+  **default_variable** is not specified, a default value is specified by the Mechanism. An InputState may also be
+  specified by the InputState of another Node in the Composition. In this case, a new InputState is created that
+  "shadows" the one specified, meaning that it receives projections from all of the same senders.
 
 COMMENT:
 *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)

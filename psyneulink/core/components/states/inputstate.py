@@ -520,36 +520,7 @@ class InputState(State_Base):
         prefs=None)
 
     Subclass of `State <State>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
-    `PathwayProjection <PathwayProjection>`.
-
-    COMMENT:
-
-        Description
-        -----------
-            The InputState class is a Component type in the State category of Function,
-            Its FUNCTION executes the Projections that it receives and updates the InputState's value
-
-        Class attributes
-        ----------------
-            + componentType (str) = INPUT_STATE
-            + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination, Operation.SUM)
-                + FUNCTION_PARAMS (dict)
-                # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
-                # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
-
-        Class methods
-        -------------
-            _instantiate_function: insures that function is ARITHMETIC)
-            update: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
-
-        StateRegistry
-        -------------
-            All INPUT_STATE are registered in StateRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-
-    COMMENT
-
+    `PathwayProjections <PathwayProjection>`.
 
     Arguments
     ---------
@@ -570,13 +541,14 @@ class InputState(State_Base):
         if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function or method : default LinearCombination(operation=SUM)
-        specifies the function used to aggregate the `values <Projection_Base.value>` of the `Projections <Projection>`
-        received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
-        by the InputState.  It must produce a result that has the same format (number and type of elements) as the
-        item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
+        specifies the function applied to the variable. In most cases, this function aggregates the `values
+        <Projection_Base.value>` of the `Projections <Projection>` received by the InputState, under the possible
+        influence of `GatingProjections <GatingProjection>` received by the InputState.  It must produce a result that
+        has the same format (number and type of elements) as the item of its owner Mechanism's `variable
+        <Mechanism_Base.variable>` to which the InputState has been assigned.
 
     combine : SUM or PRODUCT : default None
-        specifies the **operation** argument used by the default `LinearCombination` function, wnich determines how the
+        specifies the **operation** argument used by the default `LinearCombination` function, which determines how the
         `value <Projection.value>` of the InputState's `projections <InputState.projections>` are combined.  This is a
         convenience argument, that **operation** to be specified without having to specify the function's constructor;
         accordingly, it assumes that LinearCombination (the default) is used as the InputState's function -- if it
