@@ -614,6 +614,8 @@ class AutodiffComposition(Composition):
             # reset temporary list to keep track of most recent outputs
             outputs = []
 
+            self.parameters.pytorch_representation.get(execution_id).detach_all()
+
             # iterate over inputs, targets
             for t in range(num_inputs):
 
@@ -652,7 +654,7 @@ class AutodiffComposition(Composition):
                 # backpropagate to compute gradients and perform learning update for parameters
                 optimizer.zero_grad()
                 curr_loss = curr_loss/2
-                curr_loss.backward()
+                curr_loss.backward(retain_graph=True)
                 optimizer.step()
 
                 # save outputs of model if this is final epoch

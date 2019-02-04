@@ -46,6 +46,14 @@ class PytorchModelCreator(torch.nn.Module):
                 function = self.function_creator(component, execution_id)  # the node's function
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
 
+                if param_init_from_pnl:
+                    if component.parameters.value.get(execution_id) is None:
+                        value = torch.tensor(component.parameters.value.get(None)[0])
+                    else:
+                        value = torch.tensor(component.parameters.value.get(execution_id)[0])
+                else:
+                    value = torch.zeros(input_length, device=self.device).double()
+
                 # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
                 if i != 0:
 
@@ -127,6 +135,12 @@ class PytorchModelCreator(torch.nn.Module):
         if do_logging:
             self.log_weights(execution_id)
         return outputs
+
+    def detach_all(self):
+        for component, info in self.component_to_forward_info.items():
+            info[0].detach_()
+            if info[1] is not None:
+                info[1].detach_()
 
     def copy_weights_to_psyneulink(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
