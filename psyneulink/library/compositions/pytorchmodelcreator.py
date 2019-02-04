@@ -102,7 +102,11 @@ class PytorchModelCreator(torch.nn.Module):
         outputs = {}  # dict for storing values of terminal (output) nodes
 
         for i in range(len(self.execution_sets)):
-            for component in self.execution_sets[i]:
+            current_exec_set = self.execution_sets[i]
+            frozen_values = {}
+            for component in current_exec_set:
+                frozen_values[component] = self.component_to_forward_info[component][0]
+            for component in current_exec_set:
 
                 # get forward computation info for current component
                 biases = self.component_to_forward_info[component][1]
@@ -117,7 +121,11 @@ class PytorchModelCreator(torch.nn.Module):
                 else:
                     value = torch.zeros(len(component.input_states[0].defaults.value), device=self.device).double()
                     for input_node, weights in afferents.items():
-                        value += torch.matmul(self.component_to_forward_info[input_node.component][0], weights)
+                        if input_node.component in current_exec_set:
+                            input_value = frozen_values[input_node.component]
+                        else:
+                            input_value = self.component_to_forward_info[input_node.component][0]
+                        value += torch.matmul(input_value, weights)
                     if biases is not None:
                         value = value + biases
                     value = function(value)
