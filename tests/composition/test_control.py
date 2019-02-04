@@ -34,7 +34,7 @@ class TestControlMechanisms:
         c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state],
+                                                features=[m1.input_states[0], m1.input_states[1], m2.input_state, m2],
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
