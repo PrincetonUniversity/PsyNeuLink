@@ -52,6 +52,7 @@ class PytorchModelCreator(torch.nn.Module):
                     else:
                         value = torch.tensor(component.parameters.value.get(execution_id)[0])
                 else:
+                    input_length = len(component.input_states[0].parameters.value.get(None))
                     value = torch.zeros(input_length, device=self.device).double()
 
                 # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
