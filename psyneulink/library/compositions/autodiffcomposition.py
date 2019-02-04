@@ -92,6 +92,14 @@ run, but if **randomize** is True then the order in which inputs are within an e
 **refresh_losses** specifies whether the `losses` attribute is refreshed for each call to `run()`. If False, the losses
 of each run are appended to the `losses` attribute. If True, the losses of each run overwrite `losses` instead.
 
+**force_no_retain_graph** defaults to False. If True, the AutodiffComposition does not use the `retain_graph` option
+when computing PyTorch gradient. This can reduce memory usage. However, it breaks recurrent networks, so it should only
+be used when the network is not recurrent.
+
+.. note::
+    The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
+    see `here <bit.ly/2t2ZkyR>` or `here <bit.ly/2RGuMNg>`.
+
 .. _AutodiffComposition_Structure:
 
 Structure
@@ -429,6 +437,7 @@ class AutodiffComposition(Composition):
                  refresh_losses=False,
                  disable_cuda=False,
                  cuda_index=None,
+                 force_no_retain_graph=False,
                  name="autodiff_composition"):
 
         self.learning_enabled = True
@@ -454,6 +463,7 @@ class AutodiffComposition(Composition):
         self.weight_decay = weight_decay
         self.optimizer = None
         self.loss = None
+        self.force_no_retain_graph = force_no_retain_graph
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -654,7 +664,10 @@ class AutodiffComposition(Composition):
                 # backpropagate to compute gradients and perform learning update for parameters
                 optimizer.zero_grad()
                 curr_loss = curr_loss/2
-                curr_loss.backward(retain_graph=True)
+                if self.force_no_retain_graph:
+                    curr_loss.backward(retain_graph=False)
+                else:
+                    curr_loss.backward(retain_graph=True)
                 optimizer.step()
 
                 # save outputs of model if this is final epoch
