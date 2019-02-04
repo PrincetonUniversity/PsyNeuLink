@@ -10,8 +10,8 @@ class TestControlMechanisms:
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
-        c.add_c_node(m1, required_roles=pnl.CNodeRole.INPUT)
-        c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
+        c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
+        c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[m1.input_states[0], m1.input_states[1], m2.input_state],
@@ -19,7 +19,7 @@ class TestControlMechanisms:
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
-        c.add_c_node(lvoc)
+        c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 
         c.run(inputs=input_dict)
@@ -30,8 +30,8 @@ class TestControlMechanisms:
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
-        c.add_c_node(m1, required_roles=pnl.CNodeRole.INPUT)
-        c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
+        c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
+        c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[m1.input_states[0], m1.input_states[1], m2.input_state, m2],
@@ -39,7 +39,7 @@ class TestControlMechanisms:
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
-        c.add_c_node(lvoc)
+        c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 
 
@@ -51,8 +51,8 @@ class TestControlMechanisms:
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
-        c.add_c_node(m1, required_roles=pnl.CNodeRole.INPUT)
-        c.add_c_node(m2, required_roles=pnl.CNodeRole.INPUT)
+        c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
+        c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 features=[m1.input_states[0], m1.input_states[1], m2.input_state, m2],
@@ -61,7 +61,7 @@ class TestControlMechanisms:
                                                     monitor=[m1, m2]),
                                                 function=pnl.GradientOptimization(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
-        c.add_c_node(lvoc)
+        c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 
         c.run(inputs=input_dict)
@@ -96,9 +96,9 @@ class TestControlMechanisms:
 
         path = [A, B, LC]
         S = pnl.Composition()
-        S.add_c_node(A, required_roles=pnl.CNodeRole.INPUT)
+        S.add_node(A, required_roles=pnl.NodeRole.INPUT)
         S.add_linear_processing_pathway(pathway=path)
-        S.add_c_node(LC, required_roles=pnl.CNodeRole.OUTPUT)
+        S.add_node(LC, required_roles=pnl.NodeRole.OUTPUT)
         LC.reinitialize_when = pnl.Never()
 
         gain_created_by_LC_output_state_1 = []
@@ -205,8 +205,8 @@ class TestModelBasedOptimizationControlMechanisms:
                            name='Decision')
 
         comp = pnl.Composition(name="evc")
-        comp.add_c_node(reward, required_roles=[pnl.CNodeRole.OUTPUT])
-        comp.add_c_node(Decision, required_roles=[pnl.CNodeRole.OUTPUT])
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
@@ -321,10 +321,10 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # Composition
         evc_gratton = pnl.Composition(name="EVCGratton")
-        evc_gratton.add_c_node(Decision, required_roles=pnl.CNodeRole.OUTPUT)
+        evc_gratton.add_node(Decision, required_roles=pnl.NodeRole.OUTPUT)
         for path in pathways:
             evc_gratton.add_linear_processing_pathway(path)
-        evc_gratton.add_c_node(reward, required_roles=pnl.CNodeRole.OUTPUT)
+        evc_gratton.add_node(reward, required_roles=pnl.NodeRole.OUTPUT)
 
         # Control Signals
         signalSearchRange = pnl.SampleSpec(start=1.0, stop=1.8, step=0.2)

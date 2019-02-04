@@ -75,7 +75,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import AutoNumber, CNodeRole, call_with_pruned_args
+from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
 from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
@@ -392,7 +392,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             used in processing or learning.
         COMMENT
 
-        c_nodes : `list[Mechanisms and Compositions]`
+        nodes : `list[Mechanisms and Compositions]`
             A list of all Composition Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
             this Composition
 
@@ -459,8 +459,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # core attribute
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
-        self.c_nodes = []
-        self.required_c_node_roles = []
+        self.nodes = []
+        self.required_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
         self.env = None
@@ -488,7 +488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_scheduler_processing = True  # Tracks if the processing scheduler needs to be regenerated
         self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
-        self.c_nodes_to_roles = collections.OrderedDict()
+        self.nodes_to_roles = collections.OrderedDict()
 
         # Create lists to track certain categories of Composition Nodes:
         # TBI???
@@ -591,7 +591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node not in self.shadows[input_state.shadow_inputs.owner]:
                     self.shadows[input_state.shadow_inputs.owner].append(node)
 
-    def add_c_node(self, node, required_roles=None):
+    def add_node(self, node, required_roles=None):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
@@ -601,8 +601,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node : `Mechanism` or `Composition`
                 the node to be added to the Composition
 
-            required_roles : psyneulink.core.globals.utilities.CNodeRole or list of CNodeRoles
-                any CNodeRoles roles that this node should have in addition to those determined by analyze graph.
+            required_roles : psyneulink.core.globals.utilities.NodeRole or list of NodeRoles
+                any NodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
 
         self._update_shadows_dict(node)
@@ -610,8 +610,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
             self.graph.add_component(node)  # Set incoming edge list of node to empty
-            self.c_nodes.append(node)
-            self.c_nodes_to_roles[node] = set()
+            self.nodes.append(node)
+            self.nodes_to_roles[node] = set()
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
@@ -627,12 +627,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if hasattr(node, "aux_components"):
 
             projections = []
-            # Add all "c_nodes" to the composition first (in case projections reference them)
+            # Add all "nodes" to the composition first (in case projections reference them)
             for component in node.aux_components:
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
                         component._analyze_graph()
-                    self.add_c_node(component)
+                    self.add_node(component)
                 elif isinstance(component, Projection):
                     projections.append((component, False))
                 elif isinstance(component, tuple):
@@ -645,11 +645,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "be the Projection, and the index 1 item must be the feedback "
                                                    "specification (True or False).".format(component, node.name))
                     elif isinstance(component[0], (Mechanism, Composition)):
-                        if isinstance(component[1], CNodeRole):
-                            self.add_c_node(node=component[0], required_roles=component[1])
+                        if isinstance(component[1], NodeRole):
+                            self.add_node(node=component[0], required_roles=component[1])
                         elif isinstance(component[1], list):
-                            if isinstance(component[1][0], CNodeRole):
-                                self.add_c_node(node=component[0], required_roles=component[1])
+                            if isinstance(component[1][0], NodeRole):
+                                self.add_node(node=component[0], required_roles=component[1])
                             else:
                                 raise CompositionError("Invalid component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "
@@ -677,7 +677,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
             for required_role in required_roles:
-                self.add_required_c_node_role(node, required_role)
+                self.add_required_node_role(node, required_role)
 
         for input_state in node.input_states:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
@@ -700,7 +700,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.model_based_optimizer.composition = self
         # if monitor_for_control:
         #     self.model_based_optimizer.objective_mechanism.add_monitored_output_states(monitor_for_control)
-        self.add_c_node(self.model_based_optimizer.objective_mechanism)
+        self.add_node(self.model_based_optimizer.objective_mechanism)
 
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
@@ -736,7 +736,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         control_signal_specs = control_signals or []
-        for node in self.c_nodes:
+        for node in self.nodes:
             for parameter_state in node._parameter_states:
                 for projection in parameter_state.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
@@ -899,7 +899,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # spec is a string
                 elif isinstance(spec, str):
                     # Search System for Mechanisms with OutputStates with the string as their name
-                    for node in self.c_nodes:
+                    for node in self.nodes:
                         for output_state in node.output_states:
                             if output_state.name == spec:
                                 monitored_output_state_tuples.extend(
@@ -948,7 +948,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
         model_based_optimizer_and_system_specs = all_specs_extracted_from_tuples.copy()
 
-        for node in self.c_nodes:
+        for node in self.nodes:
 
             # For each Mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)
@@ -1067,10 +1067,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #   or it is a terminal Mechanism
                 elif (node.name in local_specs or node in local_specs or
                               any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
-                              node in self.get_c_nodes_by_role(CNodeRole.TERMINAL)):
+                              node in self.get_nodes_by_role(NodeRole.TERMINAL)):
                     #
                     if (not (node.name in local_specs or node in local_specs) and
-                            not node in self.get_c_nodes_by_role(CNodeRole.TERMINAL)):
+                            not node in self.get_nodes_by_role(NodeRole.TERMINAL)):
                         continue
 
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and OutputState is primary, include it
@@ -1194,13 +1194,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
-                and sender_mechanism not in self.c_nodes):
+                and sender_mechanism not in self.nodes):
             # Check if sender is in a nested Composition and, if so, it is an OUTPUT Mechanism
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
-            sender, graph_sender = self._get_nested_c_node_CIM_state(sender_mechanism,
+            sender, graph_sender = self._get_nested_node_CIM_state(sender_mechanism,
                                                                      sender_output_state,
-                                                                     CNodeRole.OUTPUT)
+                                                                     NodeRole.OUTPUT)
             if sender is None:
                 raise CompositionError("sender arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
@@ -1238,13 +1238,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
-                and receiver not in self.c_nodes):
+                and receiver not in self.nodes):
             # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
-            receiver, graph_receiver = self._get_nested_c_node_CIM_state(receiver_mechanism,
+            receiver, graph_receiver = self._get_nested_node_CIM_state(receiver_mechanism,
                                                                          receiver_input_state,
-                                                                         CNodeRole.INPUT)
+                                                                         NodeRole.INPUT)
             if receiver is None:
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
@@ -1312,18 +1312,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         '''
 
         # identify nodes and projections
-        c_nodes, projections = [], []
+        nodes, projections = [], []
         for c in path.graph.vertices:
             if isinstance(c.component, Mechanism):
-                c_nodes.append(c.component)
+                nodes.append(c.component)
             elif isinstance(c.component, Composition):
-                c_nodes.append(c.component)
+                nodes.append(c.component)
             elif isinstance(c.component, Projection):
                 projections.append(c.component)
 
-        # add all c_nodes first
-        for node in c_nodes:
-            self.add_c_node(node)
+        # add all nodes first
+        for node in nodes:
+            self.add_node(node)
 
         # then projections
         for p in projections:
@@ -1334,7 +1334,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_processing_pathway(self, pathway, feedback=False):
         # First, verify that the pathway begins with a node
         if isinstance(pathway[0], (Mechanism, Composition)):
-            self.add_c_node(pathway[0])
+            self.add_node(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
@@ -1343,7 +1343,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
             # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
-                self.add_c_node(pathway[c])
+                self.add_node(pathway[c])
 
         # Then, loop through and validate that the mechanism-projection relationships make sense
         # and add MappingProjections where needed
@@ -1403,17 +1403,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _analyze_graph(self, graph=None, context=None):
         """
-        Assigns `CNodeRoles <CNodeRoles>` to nodes based on the structure of the `Graph`.
+        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
 
-        By default, if _analyze_graph determines that a node is `ORIGIN <CNodeRole.ORIGIN>`, it is also given the role
-        `INPUT <CNodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
-        <CNodeRole.TERMINAL>`, it is also given the role `OUTPUT <CNodeRole.OUTPUT>`.
+        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
+        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
 
-        However, if the required_roles argument of `add_c_node <Composition.add_c_node>` is used to set any node in the
-        Composition to `INPUT <CNodeRole.INPUT>`, then the `ORIGIN <CNodeRole.ORIGIN>` nodes are not set to `INPUT
-        <CNodeRole.INPUT>` by default. If the required_roles argument of `add_c_node <Composition.add_c_node>` is used
-        to set any node in the Composition to `OUTPUT <CNodeRole.OUTPUT>`, then the `TERMINAL <CNodeRole.TERMINAL>`
-        nodes are not set to `OUTPUT <CNodeRole.OUTPUT>` by default.
+        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
+        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
+        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
+        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
+        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
 
 
         :param graph:
@@ -1424,16 +1424,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             graph = self.graph_processing
 
         # Clear old information
-        self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
+        self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
-        for node_role_pair in self.required_c_node_roles:
-            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
+        for node_role_pair in self.required_node_roles:
+            self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         # First check for ORIGIN nodes:
         # Nodes at the beginning of the consideration queue are ORIGIN
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[0]:
-                self._add_c_node_role(node, CNodeRole.ORIGIN)
+                self._add_node_role(node, NodeRole.ORIGIN)
 
         # First check for TERMINAL nodes:
         # Nodes at the beginning of the consideration queue are TERMINAL
@@ -1443,12 +1443,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #
                 #     if node == self.model_based_optimizer.objective_mechanism:
                 #         for vertex in graph.get_parents_from_component(node):
-                #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                #             self._add_node_role(vertex.component, NodeRole.TERMINAL)
                 # else:
-                self._add_c_node_role(node, CNodeRole.TERMINAL)
+                self._add_node_role(node, NodeRole.TERMINAL)
 
         # loop over all nodes in the Composition to identify additional roles
-        for node in self.c_nodes:
+        for node in self.nodes:
 
             # Second check for ORIGIN nodes:
             # Nodes that either (1) have no "parents" in the graph OR (2) only receive mod projections are ORIGIN
@@ -1466,7 +1466,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         mod_only = True
             if graph.get_parents_from_component(node) == [] or mod_only:
                 # if not isinstance(node, ObjectiveMechanism):
-                self._add_c_node_role(node, CNodeRole.ORIGIN)
+                self._add_node_role(node, NodeRole.ORIGIN)
 
             # Second check for TERMINAL nodes:
             # Nodes that have no "children" in the graph are TERMINAL
@@ -1475,15 +1475,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # if self.model_based_optimizer:
                 #     if node == self.model_based_optimizer.objective_mechanism:
                 #         for vertex in graph.get_parents_from_component(node):
-                #             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                #             self._add_node_role(vertex.component, NodeRole.TERMINAL)
                 # else:
-                self._add_c_node_role(node, CNodeRole.TERMINAL)
+                self._add_node_role(node, NodeRole.TERMINAL)
 
 
         # KAM Commented out below 1/25/19 because we do not use the CYCLE or RECURRENT_INIT roles
         # Identify Recurrent_init and Cycle nodes
         # visited = []  # Keep track of all nodes that have been visited
-        # for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
+        # for origin_node in self.get_nodes_by_role(NodeRole.ORIGIN):  # Cycle through origin nodes first
         #     visited_current_path = []  # Track all nodes visited from the current origin
         #     next_visit_stack = []  # Keep a stack of nodes to be visited next
         #     next_visit_stack.append(origin_node)
@@ -1494,11 +1494,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #         for child in children:
         #             # If the child has been visited this path and is not already initialized
         #             if child in visited_current_path:
-        #                 self._add_c_node_role(node, CNodeRole.RECURRENT_INIT)
-        #                 self._add_c_node_role(child, CNodeRole.CYCLE)
+        #                 self._add_node_role(node, NodeRole.RECURRENT_INIT)
+        #                 self._add_node_role(child, NodeRole.CYCLE)
         #             elif child not in visited:  # Else if the child has not been explored
         #                 next_visit_stack.append(child)  # Add it to the visit stack
-        # for node in self.c_nodes:
+        # for node in self.nodes:
         #     if node not in visited:  # Check the rest of the nodes
         #         visited_current_path = []
         #         next_visit_stack = []
@@ -1509,35 +1509,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #             children = [vertex.component for vertex in graph.get_children_from_component(remaining_node)]
         #             for child in children:
         #                 if child in visited_current_path:
-        #                     self._add_c_node_role(remaining_node, CNodeRole.RECURRENT_INIT)
-        #                     self._add_c_node_role(child, CNodeRole.CYCLE)
+        #                     self._add_node_role(remaining_node, NodeRole.RECURRENT_INIT)
+        #                     self._add_node_role(child, NodeRole.CYCLE)
         #                 elif child not in visited:
         #                     next_visit_stack.append(child)
 
         # Assign any INPUT/OUTPUT roles that were specified by user
-        for node_role_pair in self.required_c_node_roles:
-            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
+        for node_role_pair in self.required_node_roles:
+            self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         # If INPUT nodes were not specified by user, ORIGIN nodes become INPUT nodes
-        if not self.get_c_nodes_by_role(CNodeRole.INPUT):
-            origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        if not self.get_nodes_by_role(NodeRole.INPUT):
+            origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
             for node in origin_nodes:
-                self._add_c_node_role(node, CNodeRole.INPUT)
+                self._add_node_role(node, NodeRole.INPUT)
 
         # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes
         # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node
-        if not self.get_c_nodes_by_role(CNodeRole.OUTPUT):
-            terminal_nodes = self.get_c_nodes_by_role(CNodeRole.TERMINAL)
+        if not self.get_nodes_by_role(NodeRole.OUTPUT):
+            terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
             if not terminal_nodes:
                 try:
-                    terminal_nodes = self.c_nodes[-1]
+                    terminal_nodes = self.nodes[-1]
                 except IndexError:
                     terminal_nodes = []
             for node in terminal_nodes:
-                self._add_c_node_role(node, CNodeRole.OUTPUT)
+                self._add_node_role(node, NodeRole.OUTPUT)
 
         self._create_CIM_states()
-        for node in self.c_nodes:
+        for node in self.nodes:
             for input_state in node.input_states:
                 if input_state.shadow_inputs is not None:
                     original_senders = set()
@@ -1610,105 +1610,105 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.needs_update_graph_processing = False
 
-    def get_c_nodes_by_role(self, role):
+    def get_nodes_by_role(self, role):
         '''
             Returns a List of Composition Nodes in this Composition that have the role `role`
 
             Arguments
             _________
 
-            role : CNodeRole
+            role : NodeRole
                 the List of nodes having this role to return
 
             Returns
             -------
 
-            List of Composition Nodes with `CNodeRole` `role` : List(`Mechanisms <Mechanism>` and
+            List of Composition Nodes with `NodeRole` `role` : List(`Mechanisms <Mechanism>` and
             `Compositions <Composition>`)
         '''
-        if role not in CNodeRole:
-            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         try:
-            return [node for node in self.c_nodes if role in self.c_nodes_to_roles[node]]
+            return [node for node in self.nodes if role in self.nodes_to_roles[node]]
 
         except KeyError as e:
-            raise CompositionError('Node missing from {0}.c_nodes_to_roles: {1}'.format(self, e))
+            raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
-    def get_roles_by_c_node(self, c_node):
+    def get_roles_by_node(self, node):
         try:
-            return self.c_nodes_to_roles[c_node]
+            return self.nodes_to_roles[node]
         except KeyError:
-            raise CompositionError('Node {0} not found in {1}.c_nodes_to_roles'.format(c_node, self))
+            raise CompositionError('Node {0} not found in {1}.nodes_to_roles'.format(node, self))
 
-    def _set_c_node_roles(self, c_node, roles):
-        self._clear_c_node_roles(c_node)
+    def _set_node_roles(self, node, roles):
+        self._clear_node_roles(node)
         for role in roles:
-            self._add_c_node_role(role)
+            self._add_node_role(role)
 
-    def _clear_c_node_roles(self, c_node):
-        if c_node in self.c_nodes_to_roles:
-            self.c_nodes_to_roles[c_node] = set()
+    def _clear_node_roles(self, node):
+        if node in self.nodes_to_roles:
+            self.nodes_to_roles[node] = set()
 
-    def _add_c_node_role(self, c_node, role):
-        if role not in CNodeRole:
-            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+    def _add_node_role(self, node, role):
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        self.c_nodes_to_roles[c_node].add(role)
+        self.nodes_to_roles[node].add(role)
 
-    def _remove_c_node_role(self, c_node, role):
-        if role not in CNodeRole:
-            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+    def _remove_node_role(self, node, role):
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        self.c_nodes_to_roles[c_node].remove(role)
+        self.nodes_to_roles[node].remove(role)
 
     tc.typecheck
-    def _get_nested_c_node_CIM_state(self,
-                                     c_node:Mechanism,
-                                     c_node_state:tc.any(InputState, OutputState),
-                                     role:tc.enum(CNodeRole.INPUT, CNodeRole.OUTPUT)
+    def _get_nested_node_CIM_state(self,
+                                     node:Mechanism,
+                                     node_state:tc.any(InputState, OutputState),
+                                     role:tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
                                      ):
-        '''Check for c_node in nested Composition
+        '''Check for node in nested Composition
         Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         '''
 
         # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS RECEIVER IN A NESTED COMPOSITION
 
-        CIM_state_for_nested_c_node = None
-        nested_comps = [c for c in self.c_nodes if isinstance(c, Composition)]
+        CIM_state_for_nested_node = None
+        nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
         nested_comp = None
         for c in nested_comps:
-              if c_node in c.c_nodes:
-                  # Must be assigned CNode.Role of INPUT
-                  if not role in c.c_nodes_to_roles[c_node]:
+              if node in c.nodes:
+                  # Must be assigned Node.Role of INPUT
+                  if not role in c.nodes_to_roles[node]:
                       raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                             format(c_node.name, Composition.__name__ , self.name, c.name,
-                                                    CNodeRole.__name__, repr(role)))
-                  if CIM_state_for_nested_c_node:
+                                             format(node.name, Composition.__name__ , self.name, c.name,
+                                                    NodeRole.__name__, repr(role)))
+                  if CIM_state_for_nested_node:
                       warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
                                     "only first one found (in {}) will be used".
-                                    format(c_node.name, CNodeRole.__name__, repr(role),
+                                    format(node.name, NodeRole.__name__, repr(role),
                                            Composition.__name__, self.name, nested_comp.name))
                       continue
-                  CIM_state_for_nested_c_node = c.input_CIM_states[c_node_state][0]
+                  CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
                   nested_comp = c
-        return CIM_state_for_nested_c_node, nested_comp
+        return CIM_state_for_nested_node, nested_comp
 
-    def add_required_c_node_role(self, c_node, role):
-        if role not in CNodeRole:
-            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+    def add_required_node_role(self, node, role):
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        node_role_pair = (c_node, role)
-        if node_role_pair not in self.required_c_node_roles:
-            self.required_c_node_roles.append(node_role_pair)
+        node_role_pair = (node, role)
+        if node_role_pair not in self.required_node_roles:
+            self.required_node_roles.append(node_role_pair)
 
-    def remove_required_c_node_role(self, c_node, role):
-        if role not in CNodeRole:
-            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+    def remove_required_node_role(self, node, role):
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        node_role_pair = (c_node, role)
-        if node_role_pair in self.required_c_node_roles:
-            self.required_c_node_roles.remove(node_role_pair)
+        node_role_pair = (node, role)
+        if node_role_pair in self.required_node_roles:
+            self.required_node_roles.remove(node_role_pair)
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
@@ -1819,7 +1819,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         #  INPUT CIMS
         # loop over all INPUT nodes
-        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         redirected_inputs = set()
         for node in input_nodes:
@@ -2001,7 +2001,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # OUTPUT CIMS
         # loop over all OUTPUT nodes
         current_output_node_output_states = set()
-        for node in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
+        for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             for output_state in node.output_states:
                 current_output_node_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
@@ -2104,20 +2104,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _parse_runtime_params(self, runtime_params):
         if runtime_params is None:
             return {}
-        for c_node in runtime_params:
-            for param in runtime_params[c_node]:
-                if isinstance(runtime_params[c_node][param], tuple):
-                    if len(runtime_params[c_node][param]) == 1:
-                        runtime_params[c_node][param] = (runtime_params[c_node][param], Always())
-                    elif len(runtime_params[c_node][param]) != 2:
+        for node in runtime_params:
+            for param in runtime_params[node]:
+                if isinstance(runtime_params[node][param], tuple):
+                    if len(runtime_params[node][param]) == 1:
+                        runtime_params[node][param] = (runtime_params[node][param], Always())
+                    elif len(runtime_params[node][param]) != 2:
                         raise CompositionError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
                                           "Must be a tuple of the form (parameter value, condition), or simply the "
-                                          "parameter value. ".format(runtime_params[c_node][param],
-                                                                     c_node.name,
+                                          "parameter value. ".format(runtime_params[node][param],
+                                                                     node.name,
                                                                      param,
                                                                      self.name))
                 else:
-                    runtime_params[c_node][param] = (runtime_params[c_node][param], Always())
+                    runtime_params[node][param] = (runtime_params[node][param], Always())
         return runtime_params
 
     def _get_graph_node_label(self, item, show_dimensions=None, show_role=None):
@@ -2443,8 +2443,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
-            if rcvr in self.get_c_nodes_by_role(CNodeRole.INPUT) and \
-                    rcvr in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
+            if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
+                    rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                 if rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = input_and_output_color
@@ -2455,7 +2455,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     rcvr_color = input_and_output_color
                     rcvr_penwidth = str(bold_width)
-            elif rcvr in self.get_c_nodes_by_role(CNodeRole.INPUT):
+            elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
                 if rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = input_color
@@ -2467,7 +2467,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     rcvr_color = input_color
                     rcvr_penwidth = str(bold_width)
                 rcvr_rank = input_rank
-            elif rcvr in self.get_c_nodes_by_role(CNodeRole.OUTPUT):
+            elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                 if rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = output_color
@@ -3103,7 +3103,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if targets is None:
             targets = {}
         execution_id = self._assign_execution_ids(execution_id)
-        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
@@ -3115,7 +3115,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
         # for example:
         # comp.run()
-        # comp.add_c_node(new_node)
+        # comp.add_node(new_node)
         # comp.run().
         # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
         if self.most_recent_execution_context != execution_id or self.env is None:
@@ -3278,12 +3278,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Values of node with compiled wrappers are
                         # in binary data structure
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
-                        for src_node in srcs:
-                            assert src_node in self.c_nodes or src_node is self.input_CIM
-                            data = _comp_ex.extract_frozen_node_output(src_node)
+                        for srnode in srcs:
+                            assert srnode in self.nodes or srnode is self.input_CIM
+                            data = _comp_ex.extract_frozen_node_output(srnode)
                             for i, v in enumerate(data):
                                 #This sets frozen values
-                                src_node.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
+                                srnode.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
 
                     node._assign_context_values(execution_id, composition=node)
 
@@ -3474,7 +3474,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if initial_values is not None:
             for node in initial_values:
-                if node not in self.c_nodes:
+                if node not in self.nodes:
                     raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
                                       format(node.name, self.name))
 
@@ -3502,7 +3502,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scheduler_processing.update_termination_conditions(termination_processing)
         # scheduler_learning.update_termination_conditions(termination_learning)
 
-        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         # if there is only one INPUT mechanism, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
@@ -3620,7 +3620,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
 
-            # terminal_mechanisms = self.get_c_nodes_by_role(CNodeRole.TERMINAL)
+            # terminal_mechanisms = self.get_nodes_by_role(NodeRole.TERMINAL)
             # for terminal_mechanism in terminal_mechanisms:
             #     for terminal_output_state in terminal_mechanism.output_states:
             #         CIM_output_state = self.output_CIM_states[terminal_output_state]
@@ -3690,7 +3690,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #         saved_state[node] = reinitialization_value
     #
     #     node_values = {}
-    #     for node in self.c_nodes:
+    #     for node in self.nodes:
     #         node_values[node] = (node.value, node.output_values)
     #
     #     self.sim_reinitialize_values, self.sim_node_values = saved_state, node_values
@@ -3712,7 +3712,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def _all_nodes(self):
-        for n in self.c_nodes:
+        for n in self.nodes:
             yield n
         yield self.input_CIM
         yield self.output_CIM
@@ -3741,7 +3741,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
 
         data = [pnlvm.ir.LiteralStructType(output_type_list)]
-        for node in self.c_nodes:
+        for node in self.nodes:
             nested_data = ctx.get_data_struct_type(node)
             data.append(nested_data)
         return pnlvm.ir.LiteralStructType(data)
@@ -3759,7 +3759,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_data_initializer(self, execution_id=None):
         output = ((os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes)
         data = [output]
-        for node in self.c_nodes:
+        for node in self.nodes:
             nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node, '_get_data_initializer') else []
             data.append(nested_data)
         return pnlvm._tupleize(data)
@@ -3897,7 +3897,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     comp = par_mech.composition
                     assert par_mech is comp.output_CIM
-                    par_idx = self.c_nodes.index(comp)
+                    par_idx = self.nodes.index(comp)
                 output_state_idx = par_mech.output_states.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                                 ctx.int32_ty(0),
@@ -3999,7 +3999,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     del stimuli[node]
 
         # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
-        input_nodes = self.get_c_nodes_by_role(CNodeRole.INPUT)
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in stimuli.keys():
             if not node in input_nodes:
                 raise CompositionError("{} in inputs dict for {} is not one of its INPUT nodes".
@@ -4285,7 +4285,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         stateful_nodes = []
-        for node in self.c_nodes:
+        for node in self.nodes:
             if isinstance(node, Composition):
                 if len(node.stateful_nodes) > 0:
                     stateful_nodes.append(node)
@@ -4311,7 +4311,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            self.c_nodes,
+            self.nodes,
             self.projections,
             [self.input_CIM, self.output_CIM],
             self.input_CIM.efferents,

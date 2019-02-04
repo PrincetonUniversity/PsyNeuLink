@@ -12,7 +12,7 @@ class TestRuntimeParams:
         # Construction
         T = TransferMechanism()
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         assert T.function.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
@@ -35,7 +35,7 @@ class TestRuntimeParams:
         # Construction
         T = TransferMechanism()
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         assert T.noise == 0.0
         assert T.parameter_states['noise'].value == 0.0
@@ -60,7 +60,7 @@ class TestRuntimeParams:
         T = TransferMechanism()
         C = Composition()
         # S = Scheduler(composition=C)
-        C.add_c_node(T)
+        C.add_node(T)
 
         # Runtime param used for noise
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
@@ -85,7 +85,7 @@ class TestRuntimeParams:
         # Construction
         T = TransferMechanism()
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         assert T.noise == 0.0
         assert T.parameter_states['noise'].value == 0.0
@@ -110,7 +110,7 @@ class TestRuntimeParams:
         # Construction
         T = TransferMechanism()
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         # Runtime param used for noise
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it

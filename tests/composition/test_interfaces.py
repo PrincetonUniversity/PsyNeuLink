@@ -64,8 +64,8 @@ class TestExecuteCIM:
         B = TransferMechanism(name="composition-pytests-B",
                               function=Linear(slope=3.0))
 
-        comp.add_c_node(A)
-        comp.add_c_node(B)
+        comp.add_node(A)
+        comp.add_node(B)
 
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
@@ -94,8 +94,8 @@ class TestExecuteCIM:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        comp.add_c_node(A)
-        comp.add_c_node(B)
+        comp.add_node(A)
+        comp.add_node(B)
 
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A, B)
@@ -137,8 +137,8 @@ class TestConnectCompositionsViaCIMS:
         B = TransferMechanism(name="composition-pytests-B",
                               function=Linear(slope=3.0))
 
-        comp1.add_c_node(A)
-        comp1.add_c_node(B)
+        comp1.add_node(A)
+        comp1.add_node(B)
 
         comp1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
@@ -158,8 +158,8 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                               function=Linear(slope=3.0))
 
-        comp2.add_c_node(A2)
-        comp2.add_c_node(B2)
+        comp2.add_node(A2)
+        comp2.add_node(B2)
 
         comp2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
 
@@ -167,8 +167,8 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=comp2)
 
         comp3 = Composition(name="outer_composition")
-        comp3.add_c_node(comp1)
-        comp3.add_c_node(comp2)
+        comp3.add_node(comp1)
+        comp3.add_node(comp2)
         comp3.add_projection(MappingProjection(), comp1, comp2)
 
         # comp1:
@@ -214,8 +214,8 @@ class TestConnectCompositionsViaCIMS:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        inner_composition_1.add_c_node(A)
-        inner_composition_1.add_c_node(B)
+        inner_composition_1.add_node(A)
+        inner_composition_1.add_node(B)
 
         inner_composition_1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         inner_composition_1.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A,
@@ -233,8 +233,8 @@ class TestConnectCompositionsViaCIMS:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        inner_composition_2.add_c_node(A2)
-        inner_composition_2.add_c_node(B2)
+        inner_composition_2.add_node(A2)
+        inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
         inner_composition_2.add_projection(MappingProjection(sender=A2.output_states[1], receiver=B2.input_states[1]),
@@ -244,8 +244,8 @@ class TestConnectCompositionsViaCIMS:
 
         outer_composition = Composition(name="outer_composition")
 
-        outer_composition.add_c_node(inner_composition_1)
-        outer_composition.add_c_node(inner_composition_2)
+        outer_composition.add_node(inner_composition_1)
+        outer_composition.add_node(inner_composition_2)
 
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=inner_composition_2)
@@ -290,9 +290,9 @@ class TestConnectCompositionsViaCIMS:
         C = TransferMechanism(name="composition-pytests-C",
                               function=Linear(slope=3.0))
 
-        inner_composition_1.add_c_node(A)
-        inner_composition_1.add_c_node(B)
-        inner_composition_1.add_c_node(C)
+        inner_composition_1.add_node(A)
+        inner_composition_1.add_node(B)
+        inner_composition_1.add_node(C)
 
         inner_composition_1.add_projection(MappingProjection(), A, C)
         inner_composition_1.add_projection(MappingProjection(), B, C)
@@ -307,8 +307,8 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                                function=Linear(slope=1.0))
 
-        inner_composition_2.add_c_node(A2)
-        inner_composition_2.add_c_node(B2)
+        inner_composition_2.add_node(A2)
+        inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(), A2, B2)
 
@@ -319,9 +319,9 @@ class TestConnectCompositionsViaCIMS:
 
         outer_composition = Composition(name="outer_composition")
 
-        outer_composition.add_c_node(inner_composition_1)
-        outer_composition.add_c_node(inner_composition_2)
-        outer_composition.add_c_node(mechanism_d)
+        outer_composition.add_node(inner_composition_1)
+        outer_composition.add_node(inner_composition_2)
+        outer_composition.add_node(mechanism_d)
 
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=mechanism_d)
@@ -376,9 +376,9 @@ class TestConnectCompositionsViaCIMS:
         C = TransferMechanism(name="composition-pytests-C",
                               function=Linear(slope=3.0))
 
-        inner_composition_1.add_c_node(A)
-        inner_composition_1.add_c_node(B)
-        inner_composition_1.add_c_node(C)
+        inner_composition_1.add_node(A)
+        inner_composition_1.add_node(B)
+        inner_composition_1.add_node(C)
 
         inner_composition_1.add_projection(MappingProjection(), A, C)
         inner_composition_1.add_projection(MappingProjection(), B, C)
@@ -393,8 +393,8 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                                function=Linear(slope=1.0))
 
-        inner_composition_2.add_c_node(A2)
-        inner_composition_2.add_c_node(B2)
+        inner_composition_2.add_node(A2)
+        inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(), A2, B2)
 
@@ -405,9 +405,9 @@ class TestConnectCompositionsViaCIMS:
 
         outer_composition = Composition(name="outer_composition")
 
-        outer_composition.add_c_node(inner_composition_1)
-        outer_composition.add_c_node(inner_composition_2)
-        outer_composition.add_c_node(mechanism_d)
+        outer_composition.add_node(inner_composition_1)
+        outer_composition.add_node(inner_composition_2)
+        outer_composition.add_node(mechanism_d)
 
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=mechanism_d)
@@ -455,8 +455,8 @@ class TestConnectCompositionsViaCIMS:
         B0 = TransferMechanism(name="composition-pytests-B0",
                                function=Linear(slope=2.))
 
-        level_0.add_c_node(A0)
-        level_0.add_c_node(B0)
+        level_0.add_node(A0)
+        level_0.add_node(B0)
         level_0.add_projection(MappingProjection(), A0, B0)
         level_0.add_projection(MappingProjection(sender=A0.output_states[1], receiver=B0), A0, B0)
         level_0._analyze_graph()
@@ -469,9 +469,9 @@ class TestConnectCompositionsViaCIMS:
         B1 = TransferMechanism(name="composition-pytests-B1",
                               function=Linear(slope=2.))
 
-        level_1.add_c_node(level_0)
-        level_1.add_c_node(A1)
-        level_1.add_c_node(B1)
+        level_1.add_node(level_0)
+        level_1.add_node(A1)
+        level_1.add_node(B1)
         level_1.add_projection(MappingProjection(), level_0, B1)
         level_1.add_projection(MappingProjection(), A1, B1)
         level_1._analyze_graph()
@@ -485,9 +485,9 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                                function=Linear(slope=2.))
 
-        level_2.add_c_node(level_1)
-        level_2.add_c_node(A2)
-        level_2.add_c_node(B2)
+        level_2.add_node(level_1)
+        level_2.add_node(A2)
+        level_2.add_node(B2)
         level_2.add_projection(MappingProjection(), level_1, B2)
         level_2.add_projection(MappingProjection(), A2, B2)
         level_2._analyze_graph()
@@ -519,7 +519,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp = Composition(name='comp')
 
         comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(C)
+        comp.add_node(C)
 
         comp.run(inputs={A: [[1.23]]})
 
@@ -536,7 +536,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp = Composition(name='comp')
 
         comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(C)
+        comp.add_node(C)
 
         comp.run(inputs={A: [[1.23]]})
 
@@ -556,9 +556,9 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         comp = Composition(name="comp")
 
-        comp.add_c_node(A)
-        comp.add_c_node(B)
-        comp.add_c_node(C)
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_node(C)
 
         comp.run(inputs=input_dict)
 
@@ -661,7 +661,7 @@ class TestInputSpec:
     def test_valid_input_float(self):
         A = ProcessingMechanism(name="A")
         comp = Composition(name="comp")
-        comp.add_c_node(A)
+        comp.add_node(A)
 
         comp.run(inputs={A: 5.0})
         assert np.allclose(comp.results, [[5.0]])

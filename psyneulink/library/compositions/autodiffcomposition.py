@@ -134,8 +134,8 @@ and specifying inputs and targets:
     ...                     receiver=my_mech_2)
     >>> # create AutodiffComposition
     >>> my_autodiff = pnl.AutodiffComposition()
-    >>> my_autodiff.add_c_node(my_mech_1)
-    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
     >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
     >>> # input specification
     >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
@@ -176,8 +176,8 @@ Below is an example script showing how to nest an AutodiffComposition with learn
     ...                     receiver=my_mech_2)
     >>> # create AutodiffComposition
     >>> my_autodiff = pnl.AutodiffComposition()
-    >>> my_autodiff.add_c_node(my_mech_1)
-    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
     >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
     >>> my_autodiff._analyze_graph()  # alternatively, my_autodiff.run( ... )
     >>>
@@ -187,7 +187,7 @@ Below is an example script showing how to nest an AutodiffComposition with learn
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>>
     >>> parentComposition = pnl.Composition()
-    >>> parentComposition.add_c_node(my_autodiff)
+    >>> parentComposition.add_node(my_autodiff)
     >>>
     >>> training_input = {my_autodiff: input_dict}
     >>> result1 = parentComposition.run(inputs=input)
