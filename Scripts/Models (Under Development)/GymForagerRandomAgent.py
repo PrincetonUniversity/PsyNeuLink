@@ -19,6 +19,7 @@ agent_mech = ProcessingMechanism(function=random_action)
 agent_comp = Composition()
 agent_comp.add_node(agent_mech)
 
+
 def main():
     for _ in range(num_trials):
         observation = env.reset()
