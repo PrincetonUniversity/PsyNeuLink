@@ -63,7 +63,8 @@ from psyneulink.core.components.component import Component, ComponentsMeta, func
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, \
+    DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Composition_Base
@@ -72,7 +73,9 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
+from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, \
+    MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, \
+    VALUES
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
@@ -107,6 +110,8 @@ class RunError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
     (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
@@ -117,6 +122,7 @@ class MonitoredOutputStatesOption(AutoNumber):
     ALL_OUTPUT_STATES = ()
     """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
     NUM_MONITOR_STATES_OPTIONS = ()
+
 
 # Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
 OUTPUT_STATE_INDEX = 0
@@ -206,8 +212,10 @@ class Graph(object):
             g.add_vertex(Vertex(vertex.component, feedback=vertex.feedback))
 
         for i in range(len(self.vertices)):
-            g.vertices[i].parents = [g.comp_to_vertex[parent_vertex.component] for parent_vertex in self.vertices[i].parents]
-            g.vertices[i].children = [g.comp_to_vertex[parent_vertex.component] for parent_vertex in self.vertices[i].children]
+            g.vertices[i].parents = [g.comp_to_vertex[parent_vertex.component] for parent_vertex in
+                                     self.vertices[i].parents]
+            g.vertices[i].children = [g.comp_to_vertex[parent_vertex.component] for parent_vertex in
+                                      self.vertices[i].children]
 
         return g
 
@@ -253,7 +261,6 @@ class Graph(object):
                                        format(Projection.__name__, repr(parent.name), repr(child.name)))
             else:
                 raise KeyError(e)
-
 
     def connect_vertices(self, parent, child):
         if child not in parent.children:
@@ -442,11 +449,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scheduler_conditions = None
 
     def __init__(
-        self,
-        name=None,
-        model_based_optimizer=None,
-        enable_model_based_optimizer=None,
-        **param_defaults
+            self,
+            name=None,
+            model_based_optimizer=None,
+            enable_model_based_optimizer=None,
+            **param_defaults
     ):
         # also sets name
         register_category(
@@ -483,8 +490,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # status attributes
         self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
-        self.needs_update_graph = True   # Tracks if the Composition graph has been analyzed to assign roles to components
-        self.needs_update_graph_processing = True   # Tracks if the processing graph is current with the full graph
+        self.needs_update_graph = True  # Tracks if the Composition graph has been analyzed to assign roles to components
+        self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
         self.needs_update_scheduler_processing = True  # Tracks if the processing scheduler needs to be regenerated
         self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
@@ -502,7 +509,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(owner=self, **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
+        self.defaults = Defaults(owner=self,
+                                 **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
         self._initialize_parameters()
 
         # Compiled resources
@@ -607,7 +615,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._update_shadows_dict(node)
 
-        if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
+        if node not in [vertex.component for vertex in
+                        self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
             self.graph.add_component(node)  # Set incoming edge list of node to empty
             self.nodes.append(node)
@@ -666,7 +675,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                " is specified, then the index 0 item must be a Projection, Mechanism, "
                                                "or Composition.".format(component, node.name))
                 else:
-                     raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
                                            "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
@@ -819,7 +828,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If model_based_optimizer_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if model_based_optimizer_specs:
             if (any(isinstance(item, MonitoredOutputStatesOption) for item in model_based_optimizer_specs)):
-                option_item = next((item for item in system_specs if isinstance(item,MonitoredOutputStatesOption)),None)
+                option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),
+                                   None)
                 if option_item is not None:
                     del system_specs[option_item]
             for item in model_based_optimizer_specs:
@@ -836,8 +846,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
         #          specs were initially processed by the System to parse its *monitor_for_control* argument;
         #    - a specification for an existing Mechanism or OutputStates from the *monitor_for_control* arg of System.
-        all_specs_extracted_from_tuples=[]
-        all_specs_parsed=[]
+        all_specs_extracted_from_tuples = []
+        all_specs_parsed = []
         for i, spec in enumerate(all_specs):
 
             # Leave MonitoredOutputStatesOption and MonitoredOutputStatesTuple spec in place;
@@ -855,9 +865,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Note:  assign parsed spec(s) to a list, as there may be more than one (that will be added to all_specs)
             monitored_output_state_tuples = []
 
-            weight=DEFAULT_MONITORED_STATE_WEIGHT
-            exponent=DEFAULT_MONITORED_STATE_EXPONENT
-            matrix=DEFAULT_MONITORED_STATE_MATRIX
+            weight = DEFAULT_MONITORED_STATE_WEIGHT
+            exponent = DEFAULT_MONITORED_STATE_EXPONENT
+            matrix = DEFAULT_MONITORED_STATE_MATRIX
 
             # spec is a tuple
             # - put OutputState(s) in spec
@@ -886,16 +896,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # spec is Mechanism, so use the State's owner, and get the relevant OutputState(s)
                     elif isinstance(spec, Mechanism):
                         if (MONITOR_FOR_CONTROL in spec.params
-                            and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputStatesOption.ALL_OUTPUT_STATES):
+                                and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputStatesOption.ALL_OUTPUT_STATES):
                             output_states = spec.output_states
                         else:
                             output_states = [spec.output_state]
                     for output_state in output_states:
                         monitored_output_state_tuples.extend(
-                                [MonitoredOutputStateTuple(output_state=output_state,
-                                                           weight=weight,
-                                                           exponent=exponent,
-                                                           matrix=matrix)])
+                            [MonitoredOutputStateTuple(output_state=output_state,
+                                                       weight=weight,
+                                                       exponent=exponent,
+                                                       matrix=matrix)])
                 # spec is a string
                 elif isinstance(spec, str):
                     # Search System for Mechanisms with OutputStates with the string as their name
@@ -903,10 +913,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for output_state in node.output_states:
                             if output_state.name == spec:
                                 monitored_output_state_tuples.extend(
-                                        [MonitoredOutputStateTuple(output_state=output_state,
-                                                                   weight=weight,
-                                                                   exponent=exponent,
-                                                                   matrix=matrix)])
+                                    [MonitoredOutputStateTuple(output_state=output_state,
+                                                               weight=weight,
+                                                               exponent=exponent,
+                                                               matrix=matrix)])
 
                 else:
                     raise SystemError("Specification of item in \'{}\' arg in constructor for {} ({}) "
@@ -919,8 +929,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_specs = all_specs_parsed
 
         try:
-            all (isinstance(item, (OutputState, MonitoredOutputStatesOption))
-                 for item in all_specs_extracted_from_tuples)
+            all(isinstance(item, (OutputState, MonitoredOutputStatesOption))
+                for item in all_specs_extracted_from_tuples)
         except:
             raise SystemError("PROGRAM ERROR: Fail to parse items of \'{}\' arg ({}) in constructor for {}".
                               format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
@@ -935,7 +945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified "
                               "for OutputStates to be monitored in {}: {}".
-                           format(self.name, option_specs))
+                              format(self.name, option_specs))
 
         # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
         # Assign OutputStates to monitored_output_states
@@ -1003,7 +1013,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     option_spec = option_specs[0]
                 else:
                     raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
-                                   format(node.name, option_specs))
+                                      format(node.name, option_specs))
 
             # PARSE OutputState'S SPECS
 
@@ -1048,7 +1058,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if (output_state in local_specs or output_state.name in local_specs):
                     option_spec = None
 
-
             # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO monitored_output_states
 
             for output_state in node.output_states:
@@ -1058,16 +1067,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     monitored_output_states.append(output_state)
                     continue
 
-    # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
-    # THE LIST NOR IS IT A TERMINAL MECHANISM
+                # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
+                # THE LIST NOR IS IT A TERMINAL MECHANISM
 
                 # If:
                 #   Mechanism is named or referenced in any specification
                 #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a Mechanism)
                 #   or it is a terminal Mechanism
                 elif (node.name in local_specs or node in local_specs or
-                              any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
-                              node in self.get_nodes_by_role(NodeRole.TERMINAL)):
+                      any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
+                      node in self.get_nodes_by_role(NodeRole.TERMINAL)):
                     #
                     if (not (node.name in local_specs or node in local_specs) and
                             not node in self.get_nodes_by_role(NodeRole.TERMINAL)):
@@ -1089,9 +1098,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         continue
                     else:
                         raise SystemError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
-                                       "{0} of {1}".
-                                       format(output_state.name, node.name))
-
+                                          "{0} of {1}".
+                                          format(output_state.name, node.name))
 
         # ASSIGN EXPONENTS, WEIGHTS and MATRICES
 
@@ -1107,8 +1115,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     output_state = output_state_tuple.output_state
                     # If either that OutputState or its owner is the object specified in the tuple
                     if (output_state is object_spec
-                        or output_state.name is object_spec
-                        or output_state.owner is object_spec):
+                            or output_state.name is object_spec
+                            or output_state.owner is object_spec):
                         # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
                         # (can't just assign spec, as its output_state entry may be an unparsed string rather than
                         #  an actual OutputState)
@@ -1199,17 +1207,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
             sender, graph_sender = self._get_nested_node_CIM_state(sender_mechanism,
-                                                                     sender_output_state,
-                                                                     NodeRole.OUTPUT)
+                                                                   sender_output_state,
+                                                                   NodeRole.OUTPUT)
             if sender is None:
                 raise CompositionError("sender arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
-                                       format(repr(sender), self.name, Composition.__name__,))
+                                       format(repr(sender), self.name, Composition.__name__, ))
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
-               projection.sender.owner != graph_sender and \
-               projection.sender.owner != sender_mechanism:
+                    projection.sender.owner != graph_sender and \
+                    projection.sender.owner != sender_mechanism:
                 raise CompositionError("The position of {} in {} conflicts with its sender attribute."
                                        .format(projection.name, self.name))
         if receiver is None:
@@ -1243,15 +1251,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
             receiver, graph_receiver = self._get_nested_node_CIM_state(receiver_mechanism,
-                                                                         receiver_input_state,
-                                                                         NodeRole.INPUT)
+                                                                       receiver_input_state,
+                                                                       NodeRole.INPUT)
             if receiver is None:
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
-                                       format(repr(receiver), self.name, Composition.__name__,))
+                                       format(repr(receiver), self.name, Composition.__name__, ))
 
         if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
-           and projection not in [vertex.component for vertex in self.graph.vertices]:
+                and projection not in [vertex.component for vertex in self.graph.vertices]:
 
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
@@ -1282,7 +1290,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if input_state.shadow_inputs is not None:
                         if input_state.shadow_inputs.owner == receiver:
                             # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-                            self.add_projection(MappingProjection(sender=sender, receiver=input_state), sender_mechanism, shadow)
+                            self.add_projection(MappingProjection(sender=sender, receiver=input_state),
+                                                sender_mechanism, shadow)
 
         return projection
 
@@ -1299,7 +1308,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.projections.remove(projection)
 
         # step 3 - TBI? remove Projection from afferents & efferents lists of any node
-        
+
     def add_pathway(self, path):
         '''
             Adds an existing Pathway to the current Composition
@@ -1375,7 +1384,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(
                         "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
                         "preceded by a Composition Node (Mechanism or Composition) and followed by a Composition Node"
-                        .format(pathway[c]))
+                            .format(pathway[c]))
             else:
                 raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
@@ -1432,7 +1441,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # First check for ORIGIN nodes:
         # Nodes at the beginning of the consideration queue are ORIGIN
         if len(self.scheduler_processing.consideration_queue) > 0:
-
             for node in self.scheduler_processing.consideration_queue[0]:
                 self._add_node_role(node, NodeRole.ORIGIN)
 
@@ -1458,16 +1466,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if len(node.path_afferents) == 0:
                     mod_only = True
                 else:
-                    self._add_node_role(node, NodeRole.TERMINAL)
-        # Identify Origin nodes
-        for node in self.nodes:
-            # KAM added len(node.path_afferents) check 1/7/19 in order to
-            # include nodes that receive mod projections as ORIGIN
-            mod_only = False
-            if hasattr(node, "path_afferents"):
-                if len(node.path_afferents) == 0:
-                    mod_only = True
-                else:
                     all_input = True
                     for proj in node.path_afferents:
                         if not proj.sender.owner is self.input_CIM:
@@ -1479,15 +1477,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # if not isinstance(node, ObjectiveMechanism):
                 self._add_node_role(node, NodeRole.ORIGIN)
 
+            # Second check for TERMINAL nodes:
+            # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
-
                 # if self.model_based_optimizer:
                 #     if node == self.model_based_optimizer.objective_mechanism:
                 #         for vertex in graph.get_parents_from_component(node):
                 #             self._add_node_role(vertex.component, NodeRole.TERMINAL)
                 # else:
                 self._add_node_role(node, NodeRole.TERMINAL)
-
 
         # KAM Commented out below 1/25/19 because we do not use the CYCLE or RECURRENT_INIT roles
         # Identify Recurrent_init and Cycle nodes
@@ -1563,7 +1561,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # TBI - Shadow projection type? Matrix value?
                                 new_projection = MappingProjection(sender=correct_sender,
                                                                    receiver=input_state)
-                                self.add_projection(new_projection, sender=correct_sender, receiver = input_state)
+                                self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
                     for shadow_projection in input_state.path_afferents:
                         if shadow_projection.sender not in original_senders:
                             self.remove_projection(shadow_projection)
@@ -1608,14 +1606,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             self._graph_processing.connect_vertices(parent, child)
 
                     for node in cur_vertex.parents + cur_vertex.children:
-                        logger.debug('New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(node, node.parents, node.children))
+                        logger.debug('New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(node, node.parents,
+                                                                                                     node.children))
                     logger.debug('Removing vertex {0}'.format(cur_vertex))
 
                     self._graph_processing.remove_vertex(cur_vertex)
 
                 visited_vertices.add(cur_vertex)
                 # add to next_vertices (frontier) any parents and children of cur_vertex that have not been visited yet
-                next_vertices.extend([vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
+                next_vertices.extend(
+                    [vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
 
         self.needs_update_graph_processing = False
 
@@ -1672,11 +1672,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     tc.typecheck
+
     def _get_nested_node_CIM_state(self,
-                                     node:Mechanism,
-                                     node_state:tc.any(InputState, OutputState),
-                                     role:tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
-                                     ):
+                                   node: Mechanism,
+                                   node_state: tc.any(InputState, OutputState),
+                                   role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
+                                   ):
         '''Check for node in nested Composition
         Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         '''
@@ -1687,20 +1688,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
         nested_comp = None
         for c in nested_comps:
-              if node in c.nodes:
-                  # Must be assigned Node.Role of INPUT
-                  if not role in c.nodes_to_roles[node]:
-                      raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                             format(node.name, Composition.__name__ , self.name, c.name,
-                                                    NodeRole.__name__, repr(role)))
-                  if CIM_state_for_nested_node:
-                      warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
-                                    "only first one found (in {}) will be used".
-                                    format(node.name, NodeRole.__name__, repr(role),
-                                           Composition.__name__, self.name, nested_comp.name))
-                      continue
-                  CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
-                  nested_comp = c
+            if node in c.nodes:
+                # Must be assigned Node.Role of INPUT
+                if not role in c.nodes_to_roles[node]:
+                    raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
+                                           format(node.name, Composition.__name__, self.name, c.name,
+                                                  NodeRole.__name__, repr(role)))
+                if CIM_state_for_nested_node:
+                    warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
+                                  "only first one found (in {}) will be used".
+                                  format(node.name, NodeRole.__name__, repr(role),
+                                         Composition.__name__, self.name, nested_comp.name))
+                    continue
+                CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                nested_comp = c
         return CIM_state_for_nested_node, nested_comp
 
     def add_required_node_role(self, node, role):
@@ -1749,7 +1750,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                      "{!s} where the InputState takes values of length {!s}".
     #                                      format(i, mech.name, val_length, state_length))
 
-
     def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
         for mech in feed_dict.keys():  # For each mechanism given an input
             if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
@@ -1758,7 +1758,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     article = "a"
                 # Throw an error informing the user that the mechanism was not found in the mech type list
-                raise ValueError("The Mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
+                raise ValueError(
+                    "The Mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
             for i, timestep in enumerate(feed_dict[mech]):  # If mechanism is correct type, iterate over timesteps
                 # Check if there are multiple input states specified
                 try:
@@ -1766,7 +1767,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except TypeError:
                     raise TypeError("The Mechanism  \"{}\" is incorrectly formatted at time step {!s}. "
                                     "Likely missing set of brackets.".format(mech.name, i))
-                if not isinstance(timestep[0], collections.Iterable) or isinstance(timestep[0], str):  # Iterable imported from collections
+                if not isinstance(timestep[0], collections.Iterable) or isinstance(timestep[0],
+                                                                                   str):  # Iterable imported from collections
                     # If not, embellish the formatting to match the verbose case
                     timestep = [timestep]
                 # Then, check that each input_state is receiving the right size of input
@@ -1888,16 +1890,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
                                                          default_variable=self.input_CIM.defaults.variable,
-                                                         function=InterfaceStateMap(corresponding_input_state=interface_input_state),
+                                                         function=InterfaceStateMap(
+                                                             corresponding_input_state=interface_input_state),
                                                          name="INPUT_CIM_" + node.name + "_" + OutputState.__name__)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
 
                     projection = MappingProjection(sender=interface_output_state,
-                                      receiver=input_state,
-                                      matrix= IDENTITY_MATRIX,
-                                      name="("+interface_output_state.name + ") to ("
-                                           + input_state.owner.name + "-" + input_state.name+")")
+                                                   receiver=input_state,
+                                                   matrix=IDENTITY_MATRIX,
+                                                   name="(" + interface_output_state.name + ") to ("
+                                                        + input_state.owner.name + "-" + input_state.name + ")")
                     projection._activate_for_compositions(self)
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
@@ -2119,12 +2122,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if len(runtime_params[node][param]) == 1:
                         runtime_params[node][param] = (runtime_params[node][param], Always())
                     elif len(runtime_params[node][param]) != 2:
-                        raise CompositionError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
-                                          "Must be a tuple of the form (parameter value, condition), or simply the "
-                                          "parameter value. ".format(runtime_params[node][param],
-                                                                     node.name,
-                                                                     param,
-                                                                     self.name))
+                        raise CompositionError(
+                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                            "Must be a tuple of the form (parameter value, condition), or simply the "
+                            "parameter value. ".format(runtime_params[node][param],
+                                                       node.name,
+                                                       param,
+                                                       self.name))
                 else:
                     runtime_params[node][param] = (runtime_params[node][param], Always())
         return runtime_params
@@ -2177,24 +2181,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
     def show_graph(self,
-                   show_processes = False,
-                   show_learning = False,
-                   show_controller = False,
-                   show_roles = False,
-                   show_dimensions = False,
+                   show_processes=False,
+                   show_learning=False,
+                   show_controller=False,
+                   show_roles=False,
+                   show_dimensions=False,
                    show_mechanism_structure=False,
                    show_headers=True,
                    show_projection_labels=False,
-                   direction = 'BT',
-                   active_items = None,
-                   active_color = BOLD,
-                   input_color = 'green',
-                   output_color = 'red',
-                   input_and_output_color = 'brown',
-                   learning_color = 'orange',
+                   direction='BT',
+                   active_items=None,
+                   active_color=BOLD,
+                   input_color='green',
+                   output_color='red',
+                   input_and_output_color='brown',
+                   learning_color='orange',
                    controller_color='blue',
                    prediction_mechanism_color='pink',
-                   system_color = 'purple',
+                   system_color='purple',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
                    ):
@@ -2445,9 +2449,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # HELPER METHODS
 
         tc.typecheck
+
         def _assign_processing_components(G, sg, rcvr,
-                                          processes:tc.optional(list)=None,
-                                          subgraphs:tc.optional(dict)=None):
+                                          processes: tc.optional(list) = None,
+                                          subgraphs: tc.optional(dict) = None):
             '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             rcvr_rank = 'same'
@@ -2502,7 +2507,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 rcvr_penwidth = str(default_width)
 
             # Implement rcvr node
-            rcvr_label=self._get_graph_node_label(rcvr, show_dimensions, show_roles)
+            rcvr_label = self._get_graph_node_label(rcvr, show_dimensions, show_roles)
 
             if show_mechanism_structure:
                 sg.node(rcvr_label,
@@ -2576,11 +2581,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for proj in projs:
                             # if proj.receiver.owner == rcvr:
                             if show_mechanism_structure:
-                                sndr_proj_label = '{}:{}-{}'.\
+                                sndr_proj_label = '{}:{}-{}'. \
                                     format(sndr_label, OutputState.__name__, proj.sender.name)
-                                proc_mech_rcvr_label = '{}:{}-{}'.\
+                                proc_mech_rcvr_label = '{}:{}-{}'. \
                                     format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
-                                    # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
                             else:
                                 sndr_proj_label = sndr_label
                                 proc_mech_rcvr_label = rcvr_label
@@ -2632,8 +2637,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print ("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
-                       "can't be used in its show_graph() method\n".format(self.name))
+                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
+                      "can't be used in its show_graph() method\n".format(self.name))
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
@@ -2669,13 +2674,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         model_based_optimizer.show_structure(**mech_struct_args),
                         color=ctlr_color,
                         penwidth=ctlr_width,
-                        rank = control_rank
-                       )
+                        rank=control_rank
+                        )
                 sg.node(objmech_label,
                         objmech.show_structure(**mech_struct_args),
                         color=objmech_color,
                         penwidth=ctlr_width,
-                        rank = control_rank
+                        rank=control_rank
                         )
             else:
                 sg.node(ctlr_label,
@@ -2757,11 +2762,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj_color = controller_color
                         proj_width = str(default_width)
                     if show_mechanism_structure:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions, show_roles) +\
+                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions,
+                                                                     show_roles) + \
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions, show_roles)
+                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions,
+                                                                     show_roles)
                         objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions, show_roles)
                     if show_projection_labels:
                         edge_label = projection.name
@@ -2837,28 +2844,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             active_items = list(active_items)
         for item in active_items:
             if not isinstance(item, Component) and item is not INITIAL_FRAME:
-                raise CompositionError("PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                                  format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+                raise CompositionError(
+                    "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
+                    format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
         self.active_item_rendered = False
 
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_mechanism_structure, (list, tuple, set)):
-            mech_struct_args = {'system':self,
-                                'show_role':any(key in show_mechanism_structure for key in {ROLES, ALL}),
-                                'show_functions':any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
-                                'show_values':any(key in show_mechanism_structure for key in {VALUES, ALL}),
-                                'use_labels':any(key in show_mechanism_structure for key in {LABELS, ALL}),
-                                'show_headers':show_headers,
-                                'output_fmt':'struct'}
+            mech_struct_args = {'system': self,
+                                'show_role': any(key in show_mechanism_structure for key in {ROLES, ALL}),
+                                'show_functions': any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
+                                'show_values': any(key in show_mechanism_structure for key in {VALUES, ALL}),
+                                'use_labels': any(key in show_mechanism_structure for key in {LABELS, ALL}),
+                                'show_headers': show_headers,
+                                'output_fmt': 'struct'}
         else:
-            mech_struct_args = {'system':self,
-                                'show_role':show_mechanism_structure in {ROLES, ALL},
-                                'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
-                                'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
-                                'use_labels':show_mechanism_structure in {LABELS, ALL},
-                                'show_headers':show_headers,
-                                'output_fmt':'struct'}
+            mech_struct_args = {'system': self,
+                                'show_role': show_mechanism_structure in {ROLES, ALL},
+                                'show_functions': show_mechanism_structure in {FUNCTIONS, ALL},
+                                'show_values': show_mechanism_structure in {VALUES, LABELS, ALL},
+                                'use_labels': show_mechanism_structure in {LABELS, ALL},
+                                'show_headers': show_headers,
+                                'output_fmt': 'struct'}
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
@@ -2881,28 +2889,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # build graph and configure visualisation settings
         G = gv.Digraph(
-                name = self.name,
-                engine = "dot",
-                # engine = "fdp",
-                # engine = "neato",
-                # engine = "circo",
-                node_attr  = {
-                    'fontsize':'12',
-                    'fontname':'arial',
-                    # 'shape':mechanism_shape,
-                    'shape':'record',
-                    'color':default_node_color,
-                    'penwidth':str(default_width)
-                },
-                edge_attr  = {
-                    # 'arrowhead':'halfopen',
-                    'fontsize': '10',
-                    'fontname': 'arial'
-                },
-                graph_attr = {
-                    "rankdir" : direction,
-                    'overlap' : "False"
-                },
+            name=self.name,
+            engine="dot",
+            # engine = "fdp",
+            # engine = "neato",
+            # engine = "circo",
+            node_attr={
+                'fontsize': '12',
+                'fontname': 'arial',
+                # 'shape':mechanism_shape,
+                'shape': 'record',
+                'color': default_node_color,
+                'penwidth': str(default_width)
+            },
+            edge_attr={
+                # 'arrowhead':'halfopen',
+                'fontsize': '10',
+                'fontname': 'arial'
+            },
+            graph_attr={
+                "rankdir": direction,
+                'overlap': "False"
+            },
         )
         # G.attr(compound = 'True')
 
@@ -2917,12 +2925,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             process_intersections = {}
             subgraphs = {}  # Entries: Process:sg
             for process in self.processes:
-                subgraph_name = 'cluster_'+process.name
+                subgraph_name = 'cluster_' + process.name
                 subgraph_label = process.name
                 with G.subgraph(name=subgraph_name) as sg:
-                    subgraphs[process.name]=sg
+                    subgraphs[process.name] = sg
                     sg.attr(label=subgraph_label)
-                    sg.attr(rank = 'same')
+                    sg.attr(rank='same')
                     # sg.attr(style='filled')
                     # sg.attr(color='lightgrey')
 
@@ -2930,7 +2938,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for r in rcvrs:
                         intersection = [p for p in self.processes if p in r.processes]
                         # If the rcvr is in only one Process, add it to the subgraph for that Process
-                        if len(intersection)==1:
+                        if len(intersection) == 1:
                             # If the rcvr is in the current Process, assign it to the subgraph
                             if process in intersection:
                                 _assign_processing_components(G, sg, r, [process])
@@ -2945,7 +2953,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Create a process for each unique intersection and assign rcvrs to that
             for intersection_name, mech_list in process_intersections.items():
-                with G.subgraph(name='cluster_'+intersection_name) as sg:
+                with G.subgraph(name='cluster_' + intersection_name) as sg:
                     sg.attr(label=intersection_name)
                     # get list of processes in the intersection (to pass to _assign_processing_components)
                     processes = [p for p in self.processes if p.name in intersection_name]
@@ -2955,7 +2963,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             _assign_processing_components(G, sg, r, processes, subgraphs)
                         else:
                             raise CompositionError("PROGRAM ERROR: Component in interaction process ({}) is not in "
-                                              "{}'s graph or learningGraph".format(r.name, self.name))
+                                                   "{}'s graph or learningGraph".format(r.name, self.name))
 
         else:
             for r in rcvrs:
@@ -2991,19 +2999,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 elif execution_phase == ContextFlags.PROCESSING:
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
                     time = self.scheduler_processing.get_clock(execution_id).time
-                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
+                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Processing Phase - '
                 elif execution_phase == ContextFlags.LEARNING:
                     time = self.scheduler_learning.get_clock(execution_id).time
-                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
+                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Learning Phase - '
                 elif execution_phase == ContextFlags.CONTROL:
                     time_string = ''
                     phase_string = 'Control phase'
                 else:
-                    raise CompositionError("PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
+                    raise CompositionError(
+                        "PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
                 label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
                 G.attr(label=label)
                 G.attr(labelloc='b')
@@ -3015,7 +3024,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     index = repr(self._component_execution_count)
                 image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
                 image_file = self._animate_directory + '/' + image_filename + '.gif'
-                G.render(filename = image_filename,
+                G.render(filename=image_filename,
                          directory=self._animate_directory,
                          cleanup=True,
                          # view=True
@@ -3034,24 +3043,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return G
 
     def execute(
-        self,
-        inputs=None,
-        autodiff_stimuli=None,
-        scheduler_processing=None,
-        scheduler_learning=None,
-        termination_processing=None,
-        termination_learning=None,
-        call_before_time_step=None,
-        call_before_pass=None,
-        call_after_time_step=None,
-        call_after_pass=None,
-        execution_id=None,
-        base_execution_id=None,
-        clamp_input=SOFT_CLAMP,
-        targets=None,
-        runtime_params=None,
-        bin_execute=False,
-        context=None
+            self,
+            inputs=None,
+            autodiff_stimuli=None,
+            scheduler_processing=None,
+            scheduler_learning=None,
+            termination_processing=None,
+            termination_learning=None,
+            call_before_time_step=None,
+            call_before_pass=None,
+            call_after_time_step=None,
+            call_after_pass=None,
+            execution_id=None,
+            base_execution_id=None,
+            clamp_input=SOFT_CLAMP,
+            targets=None,
+            runtime_params=None,
+            bin_execute=False,
+            context=None
     ):
         '''
             Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
@@ -3199,17 +3208,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_before_pass:
             call_with_pruned_args(call_before_pass, execution_context=execution_id)
 
-        for next_execution_set in execution_scheduler.run(termination_conds=termination_processing, execution_id=execution_id):
+        for next_execution_set in execution_scheduler.run(termination_conds=termination_processing,
+                                                          execution_id=execution_id):
             if call_after_pass:
-                if next_pass_after == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
-                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
+                if next_pass_after == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS,
+                                                                                                        TimeScale.TRIAL):
+                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after,
+                                                                                  execution_scheduler.clocks[
+                                                                                      execution_id].get_total_times_relative(
+                                                                                      TimeScale.PASS, TimeScale.TRIAL)))
                     call_with_pruned_args(call_after_pass, execution_context=execution_id)
                     next_pass_after += 1
 
             if call_before_pass:
-                if next_pass_before == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
+                if next_pass_before == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS,
+                                                                                                         TimeScale.TRIAL):
                     call_with_pruned_args(call_before_pass, execution_context=execution_id)
-                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
+                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before,
+                                                                                   execution_scheduler.clocks[
+                                                                                       execution_id].get_total_times_relative(
+                                                                                       TimeScale.PASS,
+                                                                                       TimeScale.TRIAL)))
                     next_pass_before += 1
 
             if call_before_time_step:
@@ -3237,10 +3256,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node in hard_clamp_inputs:
                             # clamp = HARD_CLAMP --> "turn off" recurrent projection
                             if hasattr(node, "recurrent_projection"):
-                                node.recurrent_projection.sender.parameters.value.set([0.0], execution_id, override=True)
+                                node.recurrent_projection.sender.parameters.value.set([0.0], execution_id,
+                                                                                      override=True)
                         elif node in no_clamp_inputs:
                             for input_state in node.input_states:
-                                self.input_CIM_states[input_state][1].parameters.value.set(0.0, execution_id, override=True)
+                                self.input_CIM_states[input_state][1].parameters.value.set(0.0, execution_id,
+                                                                                           override=True)
                             # self.input_mechanisms[mechanism]._output_states[0].value = 0.0
 
                 if isinstance(node, Mechanism):
@@ -3251,7 +3272,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for param in runtime_params[node]:
                             if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
                                                                            # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                                                                                execution_context=execution_id):
+                                                                           execution_context=execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -3268,7 +3289,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         if execution_id in node._runtime_params_reset:
                             for key in node._runtime_params_reset[execution_id]:
-                                node._set_parameter_value(key, node._runtime_params_reset[execution_id][key], execution_id)
+                                node._set_parameter_value(key, node._runtime_params_reset[execution_id][key],
+                                                          execution_id)
                         node._runtime_params_reset[execution_id] = {}
 
                         if execution_id in node.function._runtime_params_reset:
@@ -3286,13 +3308,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if bin_execute:
                         # Values of node with compiled wrappers are
                         # in binary data structure
-                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
+                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if
+                                proj.sender.owner in self.__generated_wrappers)
                         for srnode in srcs:
                             assert srnode in self.nodes or srnode is self.input_CIM
                             data = _comp_ex.extract_frozen_node_output(srnode)
                             for i, v in enumerate(data):
-                                #This sets frozen values
-                                srnode.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
+                                # This sets frozen values
+                                srnode.output_states[i].parameters.value.set(v, execution_id, skip_history=True,
+                                                                             skip_log=True, override=True)
 
                     node._assign_context_values(execution_id, composition=node)
 
@@ -3303,33 +3327,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             learning_enabled = True
                     if learning_enabled:
                         ret = node.execute(inputs=autodiff_stimuli[node],
-                                     execution_id=execution_id,
-                                     context=ContextFlags.COMPOSITION)
+                                           execution_id=execution_id,
+                                           context=ContextFlags.COMPOSITION)
                     else:
                         ret = node.execute(execution_id=execution_id,
-                                     context=ContextFlags.COMPOSITION)
+                                           context=ContextFlags.COMPOSITION)
                     if bin_execute:
                         # Update result in binary data structure
                         _comp_ex.insert_node_output(node, ret)
                         for i, v in enumerate(ret):
                             # Set current output. This will be stored to "new_values" below
-                            node.output_CIM.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
+                            node.output_CIM.output_states[i].parameters.value.set(v, execution_id, skip_history=True,
+                                                                                  skip_log=True, override=True)
 
                 if node in input_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
                             for input_state in node.input_states:
-                            # clamp = None --> "turn off" input node
-                                self.input_CIM_states[input_state][1].parameters.value.set(0, execution_id, override=True)
+                                # clamp = None --> "turn off" input node
+                                self.input_CIM_states[input_state][1].parameters.value.set(0, execution_id,
+                                                                                           override=True)
                 new_values[node] = node.get_output_values(execution_id)
 
                 for i in range(len(node.output_states)):
-                    node.output_states[i].parameters.value.set(frozen_values[node][i], execution_id, override=True, skip_history=True, skip_log=True)
+                    node.output_states[i].parameters.value.set(frozen_values[node][i], execution_id, override=True,
+                                                               skip_history=True, skip_log=True)
 
             for node in next_execution_set:
 
                 for i in range(len(node.output_states)):
-                    node.output_states[i].parameters.value.set(new_values[node][i], execution_id, override=True, skip_history=True, skip_log=True)
+                    node.output_states[i].parameters.value.set(new_values[node][i], execution_id, override=True,
+                                                               skip_history=True, skip_log=True)
 
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, execution_context=execution_id)
@@ -3346,14 +3374,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # control phase
         execution_phase = self.parameters.context.get(execution_id).execution_phase
         if (
-            execution_phase != ContextFlags.INITIALIZING
-            and execution_phase != ContextFlags.SIMULATION
-            and self.enable_model_based_optimizer
+                execution_phase != ContextFlags.INITIALIZING
+                and execution_phase != ContextFlags.SIMULATION
+                and self.enable_model_based_optimizer
         ):
             if self.model_based_optimizer:
-                self.model_based_optimizer.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                self.model_based_optimizer.parameters.context.get(
+                    execution_id).execution_phase = ContextFlags.PROCESSING
                 control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id, runtime_params=runtime_params, context=context)
+                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
+                                                                    runtime_params=runtime_params, context=context)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
@@ -3372,28 +3402,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.stateful_nodes[i].reinitialize(values[i], execution_context=execution_context)
 
     def run(
-        self,
-        inputs=None,
-        scheduler_processing=None,
-        scheduler_learning=None,
-        termination_processing=None,
-        termination_learning=None,
-        execution_id=None,
-        base_execution_id=None,
-        num_trials=None,
-        call_before_time_step=None,
-        call_after_time_step=None,
-        call_before_pass=None,
-        call_after_pass=None,
-        call_before_trial=None,
-        call_after_trial=None,
-        clamp_input=SOFT_CLAMP,
-        targets=None,
-        bin_execute=False,
-        initial_values=None,
-        reinitialize_values=None,
-        runtime_params=None,
-        context=None
+            self,
+            inputs=None,
+            scheduler_processing=None,
+            scheduler_learning=None,
+            termination_processing=None,
+            termination_learning=None,
+            execution_id=None,
+            base_execution_id=None,
+            num_trials=None,
+            call_before_time_step=None,
+            call_after_time_step=None,
+            call_before_pass=None,
+            call_after_pass=None,
+            call_before_trial=None,
+            call_after_trial=None,
+            clamp_input=SOFT_CLAMP,
+            targets=None,
+            bin_execute=False,
+            initial_values=None,
+            reinitialize_values=None,
+            runtime_params=None,
+            context=None
     ):
         '''
             Passes inputs to compositions, then executes
@@ -3485,7 +3515,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in initial_values:
                 if node not in self.nodes:
                     raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
-                                      format(node.name, self.name))
+                                           format(node.name, self.name))
 
         if reinitialize_values is None:
             reinitialize_values = {}
@@ -3518,8 +3548,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if len(input_nodes) == 1:
                 inputs = {next(iter(input_nodes)): inputs}
             else:
-                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
-                               "nodes.".format(self.name, len(input_nodes)))
+                raise CompositionError(
+                    "Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
+                    "nodes.".format(self.name, len(input_nodes)))
         elif callable(inputs):
             num_inputs_sets = 1
             autodiff_stimuli = {}
@@ -3529,8 +3560,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     "Inputs to {} must be specified in a list or in a dictionary with the INPUT mechanism({}) "
                     "as its only key".format(self.name, next(iter(input_nodes)).name))
             else:
-                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
-                               "nodes.".format(self.name, len(input_nodes)))
+                raise CompositionError(
+                    "Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
+                    "nodes.".format(self.name, len(input_nodes)))
         if not callable(inputs):
             # Currently, no validation if 'inputs' arg is a function
             inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
@@ -3583,7 +3615,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                   execution_context=execution_id):
                 break
-        # PROCESSING ------------------------------------------------------------------------
+            # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
                 # If 'inputs' argument is a function, call the function here with results from last trial
@@ -3606,8 +3638,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node]
 
-
-
             # execute processing
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
@@ -3626,7 +3656,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         runtime_params=runtime_params,
                                         bin_execute=bin_execute)
 
-        # ---------------------------------------------------------------------------------
+            # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
 
             # terminal_mechanisms = self.get_nodes_by_role(NodeRole.TERMINAL)
@@ -3644,7 +3674,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 results.append(result_copy)
 
-        # LEARNING ------------------------------------------------------------------------
+            # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
             execution_targets = {}
             target_index = trial_num % num_inputs_sets
@@ -3769,7 +3799,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output = ((os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes)
         data = [output]
         for node in self.nodes:
-            nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node, '_get_data_initializer') else []
+            nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node,
+                                                                                           '_get_data_initializer') else []
             data.append(nested_data)
         return pnlvm._tupleize(data)
 
@@ -3883,7 +3914,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 incoming_projections = node.afferents
 
             # Run all incoming projections
-            #TODO: This should filter out projections with different execution ID
+            # TODO: This should filter out projections with different execution ID
 
             for par_proj in incoming_projections:
                 # Skip autoassociative projections
@@ -3944,7 +3975,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert node is self.output_CIM
                     proj_in = builder.bitcast(proj_in, proj_function.args[2].type)
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
-
 
             idx = ctx.int32_ty(self._get_node_index(node))
             zero = ctx.int32_ty(0)
@@ -4012,7 +4042,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in stimuli.keys():
             if not node in input_nodes:
                 raise CompositionError("{} in inputs dict for {} is not one of its INPUT nodes".
-                               format(node.name, self.name))
+                                       format(node.name, self.name))
 
         # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
         for node in input_nodes:
@@ -4082,7 +4112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     check_spec_type = self._input_matches_variable(stim, input_must_match)
                     # loop over each input to verify that it matches variable
                     if check_spec_type == False:
-                        err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).".\
+                        err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).". \
                             format(stim, node.name, input_must_match)
                         # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
                         # for "functionality" but rather a hack for user clarity
@@ -4124,7 +4154,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 input_must_match = node.default_external_input_values
 
-
             check_spec_type = self._input_matches_variable(stimulus, input_must_match)
             # If a node provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
@@ -4141,14 +4170,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return adjusted_stimuli
 
     def evaluate(
-        self,
-        predicted_input=None,
-        control_allocation=None,
-        num_trials=1,
-        runtime_params=None,
-        base_execution_id=None,
-        execution_id=None,
-        context=None
+            self,
+            predicted_input=None,
+            control_allocation=None,
+            num_trials=1,
+            runtime_params=None,
+            base_execution_id=None,
+            execution_id=None,
+            context=None
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
@@ -4171,16 +4200,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 context=context)
 
         net_control_allocation_outcomes = []
-        # FIX: the indexing below for predicted_input is not correct 
+        # FIX: the indexing below for predicted_input is not correct
         for i in range(num_trials):
             inputs = {}
             # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
             # If this is not a good assumption, we need another way to look up the feature InputStates
-            # of the OCM and know which InputState maps to which predicted_input value 
+            # of the OCM and know which InputState maps to which predicted_input value
             for j in range(len(self.model_based_optimizer.input_states) - 1):
-                input_state = self.model_based_optimizer.input_states[j+1]
+                input_state = self.model_based_optimizer.input_states[j + 1]
                 if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-
                     inputs[input_state.shadow_inputs.owner] = predicted_input[j]
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
@@ -4197,7 +4225,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
             if context.initialization_status != ContextFlags.INITIALIZING:
                 try:
-                    self.parameters.simulation_results.get(base_execution_id).append(self.get_output_values(execution_id))
+                    self.parameters.simulation_results.get(base_execution_id).append(
+                        self.get_output_values(execution_id))
                 except AttributeError:
                     self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
@@ -4276,7 +4305,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def default_external_input_values(self):
         """Returns the default values of all external InputStates that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_state.defaults.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
+            return [input_state.defaults.value for input_state in self.input_CIM.input_states if
+                    not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
 
