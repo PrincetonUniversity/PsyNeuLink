@@ -915,8 +915,10 @@ class Component(object, metaclass=ComponentsMeta):
     # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
     prev_context = None
 
-    _deepcopy_shared_keys = set([
-        'init_args'
+    _deepcopy_shared_keys = frozenset([
+        'init_args',
+        '_Component__llvm_function_name',
+        '_Component__llvm_bin_function',
     ])
 
     class _CompilationData(ParametersBase):
