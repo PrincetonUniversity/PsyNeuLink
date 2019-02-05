@@ -218,13 +218,9 @@ class TestMiscTrainingFunctionality:
              [1],
              [0]])
 
-        # train model for a few epochs
-        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
-        #                               targets={xor_out:xor_targets},
-        #                               epochs=10)
-        results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
-                                                "targets": {xor_out:xor_targets},
-                                               "epochs": 10})
+        xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+                          "targets": {xor_out:xor_targets},
+                          "epochs": 10})
 
     def test_pytorch_loss_spec(self):
         ls = torch.nn.SoftMarginLoss(reduction='sum')
@@ -264,13 +260,9 @@ class TestMiscTrainingFunctionality:
              [1],
              [0]])
 
-        # train model for a few epochs
-        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
-        #                               targets={xor_out:xor_targets},
-        #                               epochs=10)
-        results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
-                                                "targets": {xor_out:xor_targets},
-                                               "epochs": 10})
+        xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+                          "targets": {xor_out:xor_targets},
+                          "epochs": 10})
 
 
     @pytest.mark.parametrize(
