@@ -486,7 +486,6 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     return module
 
-_field_count = 0
 _struct_count = 0
 
 def _convert_llvm_ir_to_ctype(t):
@@ -507,24 +506,18 @@ def _convert_llvm_ir_to_ctype(t):
         element_type = _convert_llvm_ir_to_ctype(t.element)
         return element_type * len(t)
     elif type(t) is ir.LiteralStructType:
-        field_list = []
-        for e in t.elements:
-            # llvmlite modules get _unique string only works for symbol names
-            global _field_count
-            uniq_name = "field_" + str(_field_count)
-            _field_count += 1
-
-            field_list.append((uniq_name, _convert_llvm_ir_to_ctype(e)))
-
         global _struct_count
         uniq_name = "struct_" + str(_struct_count)
         _struct_count += 1
 
-        def __init__(self, *args, **kwargs):
-            ctypes.Structure.__init__(self, *args, **kwargs)
+        field_list = []
+        for i, e in enumerate(t.elements):
+            # llvmlite modules get _unique string only works for symbol names
+            field_uniq_name = uniq_name + "field_" + str(i)
+            field_list.append((field_uniq_name, _convert_llvm_ir_to_ctype(e)))
 
-        new_type = type(uniq_name, (ctypes.Structure,), {"__init__": __init__})
-        new_type.__name__ = uniq_name
+
+        new_type = type(uniq_name, (ctypes.Structure,), {"__init__": ctypes.Structure.__init__})
         new_type._fields_ = field_list
         assert len(new_type._fields_) == len(t.elements)
         return new_type
