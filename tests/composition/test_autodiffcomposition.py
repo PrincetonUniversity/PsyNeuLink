@@ -260,9 +260,12 @@ class TestMiscTrainingFunctionality:
              [1],
              [0]])
 
-        xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+        xor.run(inputs={"inputs": {xor_in:xor_inputs},
                           "targets": {xor_out:xor_targets},
                           "epochs": 10})
+        xor.run(inputs={"inputs": {xor_in: xor_inputs},
+                        "targets": {xor_out: xor_targets},
+                        "epochs": 10})
 
 
     @pytest.mark.parametrize(
