@@ -1458,9 +1458,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if len(node.path_afferents) == 0:
                     mod_only = True
                 else:
-                    self._add_c_node_role(node, CNodeRole.TERMINAL)
+                    self._add_node_role(node, NodeRole.TERMINAL)
         # Identify Origin nodes
-        for node in self.c_nodes:
+        for node in self.nodes:
             # KAM added len(node.path_afferents) check 1/7/19 in order to
             # include nodes that receive mod projections as ORIGIN
             mod_only = False
