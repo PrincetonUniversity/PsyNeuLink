@@ -395,18 +395,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             The full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
             `Compositions <Composition>`) and `Projections <Projection>`
 
-        COMMENT:
-            used in processing or learning.
-        COMMENT
-
         nodes : `list[Mechanisms and Compositions]`
-            A list of all Composition Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
+            A list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
             this Composition
+
+        input_CIM : `CompositionInterfaceMechanism`
+            Aggregates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
+            input_CIM and its InputStates serve as proxies for the Composition itself in terms of afferent projections.
+
+        output_CIM : `CompositionInterfaceMechanism`
+            Aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
+            output_CIM and its OutputStates serve as proxies for the Composition itself in terms of efferent projections.
+
+        input_CIM_states : dict
+            A dictionary in which keys are InputStates of INPUT Nodes in a composition, and values are lists
+            containing two items: the corresponding InputState and OutputState on the input_CIM.
+
+        output_CIM_states : dict
+            A dictionary in which keys are OutputStates of OUTPUT Nodes in a composition, and values are lists
+            containing two items: the corresponding InputState and OutputState on the input_CIM.
+
+        env : Gym Forager Environment : default: None
+            Stores a Gym Forager Environment so that the Composition may interact with this environment within a
+            single call to `run <Composition.run>`.
+
+        shadows : dict
+            A dictionary in which keys are Nodes whose inputs are "shadowed" by one or more other Nodes, and values are
+            a list of those Nodes.
+
+        enable_model_based_optimizer : bool
+            When True, executes the Composition's `model_based_optimizer <Composition.model_based_optimizer>` at the
+            end of each Trial.
+
+        model_based_optimizer : OptimizationControlMechanism
+            If the Composition contains an `OptimizationControlMechanism` that runs simulations of its own
+            `Composition`, then the OCM is stored here.
 
         default_execution_id
             if no *execution_id* is specified in a call to run, this *execution_id* will be used.
 
             :default value: the Composition's name
+
+        execution_ids : set
+            Stores all execution_ids used by this Composition.
+
+
 
         COMMENT:
         name : str
@@ -483,7 +516,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.model_based_optimizer = model_based_optimizer
 
         self.projections = []
-        self.shadow_projections = {}
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -497,16 +529,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.nodes_to_roles = collections.OrderedDict()
 
-        # Create lists to track certain categories of Composition Nodes:
-        # TBI???
-        self.explicit_input_nodes = []  # Need to track to know which to leave untouched
-        self.all_input_nodes = []
-        self.explicit_output_nodes = []  # Need to track to know which to leave untouched
-        self.all_output_nodes = []
-        self.target_nodes = []  # Do not need to track explicit as they must be explicit
-
         # TBI: update self.sched whenever something is added to the composition
-        self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
+        # self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self,
@@ -1786,21 +1810,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
 
-            COMMENT:
-            - for each INPUT node:
-                - if the INPUT node's external_input_sources specification is True or not listed, create a corresponding
-                  InputState and OutputState on the Input CompositionInterfaceMechanism for each "external" InputState
-                  of each INPUT node, and a Projection between the newly created InputCIM OutputState and the INPUT
-                  InputState
-                - if the INPUT node's external_input_sources specification is another INPUT node, create projections
-                  from that other INPUT node's corresponding InputCIM OutputStates to the current INPUT node's
-                  InputStates. The two nodes must have the same shape.
-                - if the INPUT node's external_input_sources specification is a list, the list must contain only INPUT
-                  nodes and/or InputStates of INPUT nodes. In this case, an INPUT node is shorthand for all of the
-                  InputStates of that INPUT node. The concatenation of the values of all of the INPUT nodes specified
-                  in the list must match the shape of the node whose external_input_sources is being specified.
-            COMMENT
-
             - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
               OutputState of each OUTPUT node, and a Projection between the OUTPUT OutputState and the newly created
               OutputCIM InputState
@@ -1832,49 +1841,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # loop over all INPUT nodes
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        redirected_inputs = set()
+
         for node in input_nodes:
-            # if node in self.external_input_sources:
-            #     if self.external_input_sources[node] == True:
-            #         pass
-            #     elif self.external_input_sources[node] in input_nodes:
-            #         redirected_inputs.add(node)
-            #         continue
-            #     elif isinstance(self.external_input_sources[node], list):
-            #         valid_spec = True
-            #         for source in self.external_input_sources[node]:
-            #             if isinstance(source, (Composition, Mechanism)):
-            #                 if source not in input_nodes:
-            #                     valid_spec = False
-            #                 elif source in self.external_input_sources:
-            #                     if self.external_input_sources[source] != True:
-            #                         valid_spec = False
-            #             elif isinstance(source, InputState):
-            #                 if source.owner not in input_nodes:
-            #                     valid_spec = False
-            #                 elif source.owner in self.external_input_sources:
-            #                     if self.external_input_sources[source.owner] != True:
-            #                         valid_spec = False
-            #         if valid_spec:
-            #             redirected_inputs.add(node)
-            #             continue
-            #         raise CompositionError("External input source ({0}) specified for {1} is not valid. It contains "
-            #                                "either (1) a source which is not an INPUT node or an InputState of an "
-            #                                "INPUT node, or (2) source which is an INPUT node (or INPUT node "
-            #                                "InputState), but is already borrowing input from yet another INPUT node."
-            #                                .format(self.external_input_sources[node], node.name))
-            #
-            #     elif self.external_input_sources[node] == ALL:
-            #         redirected_inputs.add(node)
-            #         continue
-            #     else:
-            #         raise CompositionError("External input source ({0}) specified for {1} is not valid. Must be (1) True "
-            #                                "[the key node is represented on the input_CIM by one or more pairs of "
-            #                                "states that pass its input value], (2) another INPUT node [the key node "
-            #                                "gets its input from another INPUT node's input_CIM representation], or (3)"
-            #                                " a list of INPUT nodes and/or INPUT node InputStates [the key node gets "
-            #                                "its input from a mix of other INPUT nodes' input_CIM representations."
-            #                                .format(self.external_input_sources[node], node.name))
 
             for input_state in node.external_input_states:
                 # add it to our set of current input states
@@ -1906,73 +1874,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projection._activate_for_compositions(node)
 
         new_shadow_projections = {}
-        # allow projections from CIM to ANY node listed in external_input_sources
-        # for node in self.external_input_sources:
-        #     if node not in input_nodes or node in redirected_inputs:
-        #
-        #         cim_rep = self.external_input_sources[node]
-        #         expanded_cim_rep = []
-        #         if isinstance(cim_rep, (Mechanism, Composition)):
-        #             for state in cim_rep.external_input_states:
-        #                 expanded_cim_rep.append(state)
-        #         elif isinstance(cim_rep, list):
-        #             for rep in cim_rep:
-        #                 if isinstance(rep, (Mechanism, Composition)):
-        #                     for rep_state in rep.external_input_states:
-        #                         expanded_cim_rep.append(rep_state)
-        #                 elif isinstance(rep, (InputState)):
-        #                     expanded_cim_rep.append(rep)
-        #                 elif rep is None:
-        #                     if node not in redirected_inputs:
-        #                         expanded_cim_rep.append(rep)
-        #                 else:
-        #                     raise CompositionError("Invalid item: {} in external_input_sources specified for {}: {}. Each "
-        #                                            "items in list must be a Mechanism, Composition, InputStates, or "
-        #                                            "None.".format(rep, node.name, cim_rep))
-        #         elif cim_rep is ALL:
-        #             for input_node in input_nodes:
-        #                 if input_node not in redirected_inputs:
-        #                     for state in input_node.external_input_states:
-        #                         expanded_cim_rep.append(state)
-        #         else:
-        #             raise CompositionError("Invalid external_input_sources specified for {}: {}. Must be a Mechanism, "
-        #                                    "Composition, or a List of Mechanisms, Compositions, and/or InputStates."
-        #                                    .format(node.name, cim_rep))
-        #
-        #         if node in redirected_inputs:
-        #             # each node in redirected inputs requires an input for each of its input states
-        #             if len(node.external_input_states) != len(expanded_cim_rep) and len(expanded_cim_rep) > 0:
-        #                 raise CompositionError("The input source specification of {0} ({1}) has an "
-        #                                        "incompatible number of external InputStates. {0} has {2} external "
-        #                                        "InputStates while the input source specification has a total of {3}."
-        #                                        .format(node.name,
-        #                                                cim_rep,
-        #                                                    len(node.external_input_states),
-        #                                                    len(expanded_cim_rep)))
-        #
-        #         # for non-origin nodes, too few origin sources specified is ok, but too many is not
-        #         if len(expanded_cim_rep) > len(node.external_input_states):
-        #             raise CompositionError("The input source specification of {0} ({1}) has too many external "
-        #                                    "InputStates states. {0} has {2} external InputStates while the input source"
-        #                                    " specification has a total of {3}."
-        #                                    .format(node.name,
-        #                                            cim_rep,
-        #                                            len(node.external_input_states),
-        #                                            len(expanded_cim_rep)))
-        #
-        #         for i in range(len(expanded_cim_rep)):
-        #             if expanded_cim_rep[i]:
-        #                 new_shadow_projections[(self.input_CIM_states[expanded_cim_rep[i]][1],
-        #                                         node.external_input_states[i])] = None
-
-        for shadow_projection_pair in self.shadow_projections:
-            # if this projection is also in new projections, move it to new projections
-            if shadow_projection_pair in new_shadow_projections:
-                new_shadow_projections[shadow_projection_pair] = self.shadow_projections[shadow_projection_pair]
-            # otherwise, it's no longer valid and should be removed from self.projections and self.shadow_projections
-            else:
-                self.projections.remove(self.shadow_projections[shadow_projection_pair])
-                del self.shadow_projections[shadow_projection_pair]
 
         # for any entirely new shadow_projections, create a MappingProjection object and add to projections
         for output_state, input_state in new_shadow_projections:
@@ -1981,7 +1882,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       receiver=input_state,
                                                       name="(" + output_state.name + ") to ("
                                                            + input_state.owner.name + "-" + input_state.name + ")")
-                self.shadow_projections[(output_state, input_state)] = shadow_projection
                 self.projections.append(shadow_projection)
                 shadow_projection._activate_for_compositions(self)
 
