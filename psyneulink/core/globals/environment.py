@@ -50,8 +50,8 @@ looking for values after a run, it's important to know the execution context you
         >>> c = pnl.Composition()
         >>> d = pnl.Composition()
         >>> t = pnl.TransferMechanism()
-        >>> c.add_c_node(t)
-        >>> d.add_c_node(t)
+        >>> c.add_node(t)
+        >>> d.add_node(t)
 
         >>> t.execute(1)
         array([[1.]])

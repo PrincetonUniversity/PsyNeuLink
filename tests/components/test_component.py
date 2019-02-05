@@ -32,8 +32,8 @@ class TestComponent:
         T1 = pnl.TransferMechanism()
         T2 = pnl.TransferMechanism()
         c = pnl.Composition()
-        c.add_c_node(T1)
-        c.add_c_node(T2)
+        c.add_node(T1)
+        c.add_node(T2)
         c.add_projection(sender=T1, receiver=T2)
 
         input_dict = {T1:[[0]]}

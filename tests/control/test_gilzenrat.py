@@ -235,8 +235,8 @@ class TestGilzenratMechanisms:
 #             # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
 #             objective_mechanism=ObjectiveMechanism(
 #                 function=Linear,
-#                 monitored_output_states=[(decision_layer, None, None, np.array([[0.3], [0.0]]))],
-#                 # monitored_output_states=[{PROJECTION_TYPE: MappingProjection,
+#                 monitor=[(decision_layer, None, None, np.array([[0.3], [0.0]]))],
+#                 # monitor=[{PROJECTION_TYPE: MappingProjection,
 #                 #                           SENDER: decision_layer,
 #                 #                           MATRIX: np.array([[0.3],[0.0]])}],
 #                 name='LC ObjectiveMechanism'

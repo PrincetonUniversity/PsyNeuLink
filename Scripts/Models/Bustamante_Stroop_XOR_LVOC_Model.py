@@ -93,15 +93,15 @@ lvoc = pnl.OptimizationControlMechanism(
 
 lvoc.reportOutputPref=True
 c = pnl.Composition(name='Stroop XOR Model')
-c.add_c_node(color_stim)
-c.add_c_node(word_stim)
-c.add_c_node(color_task, required_roles=pnl.CNodeRole.ORIGIN)
-c.add_c_node(word_task, required_roles=pnl.CNodeRole.ORIGIN)
-c.add_c_node(reward)
-c.add_c_node(task_decision)
+c.add_node(color_stim)
+c.add_node(word_stim)
+c.add_node(color_task, required_roles=pnl.NodeRole.ORIGIN)
+c.add_node(word_task, required_roles=pnl.NodeRole.ORIGIN)
+c.add_node(reward)
+c.add_node(task_decision)
 c.add_projection(sender=color_task, receiver=task_decision)
 c.add_projection(sender=word_task, receiver=task_decision)
-c.add_c_node(lvoc)
+c.add_node(lvoc)
 
 # c.show_graph()
 

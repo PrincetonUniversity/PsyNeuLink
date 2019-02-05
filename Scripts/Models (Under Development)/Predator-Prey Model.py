@@ -1,4 +1,5 @@
 import timeit
+
 import numpy as np
 from psyneulink import *
 
@@ -13,7 +14,6 @@ SHOW_GRAPH = False
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
-
 
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 3
@@ -33,7 +33,6 @@ prey_value_idx = prey_idx * obs_len + obs_coords
 prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
-
 
 # *********************************************************************************************************************
 # **************************************  MECHANISMS AND COMPOSITION  *************************************************
@@ -55,10 +54,10 @@ greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=
 
 # Create Composition
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_c_node(player_obs)
-agent_comp.add_c_node(predator_obs)
-agent_comp.add_c_node(prey_obs)
-agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_node(player_obs)
+agent_comp.add_node(predator_obs)
+agent_comp.add_node(prey_obs)
+agent_comp.add_node(greedy_action_mech)
 
 
 # ControlMechanism
@@ -143,6 +142,7 @@ def main():
                                          call_after_trial=my_print,
                                          bin_execute=BIN_EXECUTE
                                          )
+
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))

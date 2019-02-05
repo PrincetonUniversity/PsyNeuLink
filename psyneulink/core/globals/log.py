@@ -494,7 +494,7 @@ def _time_string(time):
     #     time_str = "None"
     # return time_str
 
-    if all(t is not None for t in time ):
+    if time is not None and all(t is not None for t in time ):
         time_str = ":".join([str(i) for i in time])
     else:
         time_str = "None"
