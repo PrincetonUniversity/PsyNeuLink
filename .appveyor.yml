@@ -3,6 +3,8 @@ branches:
     - master
     - devel
     - appveyor
+    - /.*-apy/
+    - /devel-.*/
 version: '{build}'
 clone_depth: 25
 
