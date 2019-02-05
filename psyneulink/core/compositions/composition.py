@@ -717,6 +717,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             sender=proj.sender.owner,
                                             receiver=node)
 
+    def add_nodes(self, nodes):
+
+        for node in nodes:
+            self.add_node(node)
+            
     def add_model_based_optimizer(self, optimizer):
         """
         Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
