@@ -1432,6 +1432,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # First check for ORIGIN nodes:
         # Nodes at the beginning of the consideration queue are ORIGIN
         if len(self.scheduler_processing.consideration_queue) > 0:
+
             for node in self.scheduler_processing.consideration_queue[0]:
                 self._add_node_role(node, NodeRole.ORIGIN)
 
@@ -1457,6 +1458,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if len(node.path_afferents) == 0:
                     mod_only = True
                 else:
+                    self._add_c_node_role(node, CNodeRole.TERMINAL)
+        # Identify Origin nodes
+        for node in self.c_nodes:
+            # KAM added len(node.path_afferents) check 1/7/19 in order to
+            # include nodes that receive mod projections as ORIGIN
+            mod_only = False
+            if hasattr(node, "path_afferents"):
+                if len(node.path_afferents) == 0:
+                    mod_only = True
+                else:
                     all_input = True
                     for proj in node.path_afferents:
                         if not proj.sender.owner is self.input_CIM:
@@ -1468,8 +1479,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # if not isinstance(node, ObjectiveMechanism):
                 self._add_node_role(node, NodeRole.ORIGIN)
 
-            # Second check for TERMINAL nodes:
-            # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
 
                 # if self.model_based_optimizer:
