@@ -782,7 +782,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the receiver of **projection**
 
             feedback : Boolean
-                if False, any cycles containing this projection will be [FIX:  WHAT?]
+                When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
+                means that each Projections within the cycle actually passes to its receiver its sender's value from
+                the sender's previous execution.
+
+                When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
+                Projection marked as 'feedback' passes to its receiver its sender's value from the sender's previous
+                execution.
         '''
 
         if isinstance(projection, (np.ndarray, np.matrix, list)):
