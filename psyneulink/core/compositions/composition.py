@@ -1358,15 +1358,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
 
-            - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
-              OutputState of each OUTPUT node, and a Projection between the OUTPUT OutputState and the newly created
-              OutputCIM InputState
+            - create a corresponding InputState and OutputState on the `input_CIM <Composition.input_CIM>` for each
+              InputState of each INPUT node. Connect the OutputState on the input_CIM to the INPUT node's corresponding
+              InputState via a standard MappingProjection.
+
+            - create a corresponding InputState and OutputState on the `output_CIM <Composition.output_CIM>` for each
+              OutputState of each OUTPUT node. Connect the OUTPUT node's OutputState to the output_CIM's corresponding
+              InputState via a standard MappingProjection.
 
             - build two dictionaries:
 
                 (1) input_CIM_states = { INPUT Node InputState: (InputCIM InputState, InputCIM OutputState) }
 
                 (2) output_CIM_states = { OUTPUT Node OutputState: (OutputCIM InputState, OutputCIM OutputState) }
+
+            - if the Node has any shadows, create the appropriate projections as needed.
 
             - delete all of the above for any node States which were previously, but are no longer, classified as
               INPUT/OUTPUT
@@ -1385,10 +1391,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         current_input_node_input_states = set()
 
-        #  INPUT CIMS
-        # loop over all INPUT nodes
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-
 
         for node in input_nodes:
 
@@ -1535,9 +1538,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _assign_execution_ids(self, execution_id=None):
         '''
-            assigns the same uuid to each Node in the composition's processing graph as well as the CIMs. The uuid is
-            either specified in the user's call to run(), or from
-            the Composition's **default_execution_id**
+            assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
+            The execution id is either specified in the user's call to run(), or from the Composition's
+            **default_execution_id**
         '''
 
         # Traverse processing graph and assign one uuid to all of its nodes
