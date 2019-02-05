@@ -1202,7 +1202,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _update_processing_graph(self):
         '''
-        Constructs the processing graph (the graph that contains only non-learning nodes as vertices)
+        Constructs the processing graph (the graph that contains only Nodes as vertices)
         from the composition's full graph
         '''
         logger.debug('Updating processing graph')
@@ -1253,7 +1253,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def get_nodes_by_role(self, role):
         '''
-            Returns a List of Composition Nodes in this Composition that have the role `role`
+            Returns a List of Composition Nodes in this Composition that have the *role* specified
 
             Arguments
             _________
@@ -1264,7 +1264,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Returns
             -------
 
-            List of Composition Nodes with `NodeRole` `role` : List(`Mechanisms <Mechanism>` and
+            List of Composition Nodes with `NodeRole` *role* : List(`Mechanisms <Mechanism>` and
             `Compositions <Composition>`)
         '''
         if role not in NodeRole:
@@ -1351,66 +1351,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (node, role)
         if node_role_pair in self.required_node_roles:
             self.required_node_roles.remove(node_role_pair)
-
-    # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
-    # feed_dict is a dictionary of the input states of each mechanism of the specified type
-    # def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
-    #     for mech in feed_dict.keys():  # For each mechanism given an input
-    #         if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
-    #             if mech_type[0] in ['a', 'e', 'i', 'o', 'u']:  # Check for grammar
-    #                 article = "an"
-    #             else:
-    #                 article = "a"
-    #             # Throw an error informing the user that the mechanism was not found in the mech type list
-    #             raise ValueError("The Mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
-    #         for i, timestep in enumerate(feed_dict[mech]):  # If mechanism is correct type, iterate over timesteps
-    #             # Check if there are multiple input states specified
-    #             try:
-    #                 timestep[0]
-    #             except TypeError:
-    #                 raise TypeError("The Mechanism  \"{}\" is incorrectly formatted at time step {!s}. "
-    #                                 "Likely missing set of brackets.".format(mech.name, i))
-    #             if not isinstance(timestep[0], collections.Iterable) or isinstance(timestep[0], str):  # Iterable imported from collections
-    #                 # If not, embellish the formatting to match the verbose case
-    #                 timestep = [timestep]
-    #             # Then, check that each input_state is receiving the right size of input
-    #             for i, value in enumerate(timestep):
-    #                 val_length = len(value)
-    #                 state_length = len(mech.input_state.defaults.variable)
-    #                 if val_length != state_length:
-    #                     raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
-    #                                      "{!s} where the InputState takes values of length {!s}".
-    #                                      format(i, mech.name, val_length, state_length))
-
-    def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
-        for mech in feed_dict.keys():  # For each mechanism given an input
-            if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
-                if mech_type[0] in ['a', 'e', 'i', 'o', 'u']:  # Check for grammar
-                    article = "an"
-                else:
-                    article = "a"
-                # Throw an error informing the user that the mechanism was not found in the mech type list
-                raise ValueError(
-                    "The Mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
-            for i, timestep in enumerate(feed_dict[mech]):  # If mechanism is correct type, iterate over timesteps
-                # Check if there are multiple input states specified
-                try:
-                    timestep[0]
-                except TypeError:
-                    raise TypeError("The Mechanism  \"{}\" is incorrectly formatted at time step {!s}. "
-                                    "Likely missing set of brackets.".format(mech.name, i))
-                if not isinstance(timestep[0], collections.Iterable) or isinstance(timestep[0],
-                                                                                   str):  # Iterable imported from collections
-                    # If not, embellish the formatting to match the verbose case
-                    timestep = [timestep]
-                # Then, check that each input_state is receiving the right size of input
-                for i, value in enumerate(timestep):
-                    val_length = len(value)
-                    state_length = len(mech.input_state.defaults.value)
-                    if val_length != state_length:
-                        raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
-                                         "{!s} where the InputState takes values of length {!s}".
-                                         format(i, mech.name, val_length, state_length))
 
     def _create_CIM_states(self, context=None):
 
