@@ -221,8 +221,8 @@ class LLVMBuilderContext:
             builder.store(const_params, params)
 
         # Call input CIM
-        input_cim_name = composition._get_node_wrapper(composition.input_CIM);
-        input_cim_f = self.get_llvm_function(input_cim_name)
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM);
+        input_cim_f = self.get_llvm_function(input_cim_w)
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
         # Allocate run set structure
@@ -274,8 +274,8 @@ class LLVMBuilderContext:
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
             with builder.if_then(mech_cond):
-                mech_name = composition._get_node_wrapper(mech);
-                mech_f = self.get_llvm_function(mech_name)
+                mech_w = composition._get_node_wrapper(mech);
+                mech_f = self.get_llvm_function(mech_w)
                 # Wrappers do proper indexing of all strctures
                 if len(mech_f.args) == 5: # Mechanism wrappers have 5 inputs
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
@@ -317,8 +317,8 @@ class LLVMBuilderContext:
 
         builder.position_at_end(exit_block)
         # Call output CIM
-        output_cim_name = composition._get_node_wrapper(composition.output_CIM);
-        output_cim_f = self.get_llvm_function(output_cim_name)
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM);
+        output_cim_f = self.get_llvm_function(output_cim_w)
         builder.call(output_cim_f, [context, params, comp_in, data, data])
 
         # Bump run counter

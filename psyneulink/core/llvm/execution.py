@@ -192,9 +192,7 @@ class CompExecution(CUDAExecution):
         self._debug_env = debug_env
 
         # At least the input_CIM wrapper should be generated
-        with LLVMBuilderContext() as ctx:
-            input_cim_fn_name = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_fn = ctx.get_llvm_function(input_cim_fn_name)
+        input_cim_fn = composition._get_node_wrapper(composition.input_CIM)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:

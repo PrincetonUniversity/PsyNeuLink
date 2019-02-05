@@ -3721,7 +3721,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_node_wrapper(self, node):
         if node not in self.__generated_node_wrappers:
-            wrapper = self.__gen_node_wrapper(node).name
+            class node_wrapper():
+                def __init__(self, func):
+                    self._llvm_function = func
+            wrapper_f = self.__gen_node_wrapper(node)
+            wrapper = node_wrapper(wrapper_f)
             self.__generated_node_wrappers[node] = wrapper
             return wrapper
 
@@ -3730,7 +3734,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_bin_node(self, node):
         if node not in self.__compiled_node_wrappers:
             wrapper = self._get_node_wrapper(node)
-            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
             self.__compiled_node_wrappers[node] = bin_f
             return bin_f
 
