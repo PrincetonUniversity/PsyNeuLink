@@ -72,10 +72,10 @@ class LLVMBuilderContext:
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def get_llvm_function(self, name):
-        if hasattr(name, '_llvm_symbol_name'):
-            name = name._llvm_symbol_name
-
-        f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
+        try:
+            f = name._llvm_function
+        except AttributeError:
+            f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
         # Add declaration to the current module
         if f.name not in LLVMBuilderContext.module.globals:
             decl_f = ir.Function(LLVMBuilderContext.module, f.type.pointee, f.name)

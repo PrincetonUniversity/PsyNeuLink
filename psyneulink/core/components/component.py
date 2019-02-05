@@ -1161,16 +1161,16 @@ class Component(object, metaclass=ComponentsMeta):
         self._compilation_data = self._CompilationData(owner=self)
 
     @property
-    def _llvm_symbol_name(self):
+    def _llvm_function(self):
         if self.__llvm_function is None:
             self.__llvm_function = self._gen_llvm_function()
             self.__llvm_bin_function = None
-        return self.__llvm_function.name
+        return self.__llvm_function
 
     @property
     def _llvmBinFunction(self):
         if self.__llvm_bin_function is None:
-            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_symbol_name)
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
         return self.__llvm_bin_function
 
     def _gen_llvm_function(self):
