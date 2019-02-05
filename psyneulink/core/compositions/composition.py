@@ -542,8 +542,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._initialize_parameters()
 
         # Compiled resources
-        self.__generated_wrappers = {}
-        self.__compiled_mech = {}
+        self.__generated_node_wrappers = {}
+        self.__compiled_node_wrappers = {}
         self.__generated_execution = None
         self.__compiled_execution = None
         self.__compiled_run = None
@@ -3125,7 +3125,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._get_node_wrapper(m)
                 # Compile all mechanism wrappers
                 for m in mechanisms:
-                    self._get_bin_mechanism(m)
+                    self._get_bin_node(m)
 
                 bin_execute = True
             except Exception as e:
@@ -3230,7 +3230,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if bin_execute:
                         # Values of node with compiled wrappers are
                         # in binary data structure
-                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
+                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_node_wrappers)
                         for src_node in srcs:
                             assert src_node in self.c_nodes or src_node is self.input_CIM
                             data = _comp_ex.extract_frozen_node_output(src_node)
@@ -3720,21 +3720,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return list(self._all_nodes).index(node)
 
     def _get_node_wrapper(self, node):
-        if node not in self.__generated_wrappers:
+        if node not in self.__generated_node_wrappers:
             wrapper = self.__gen_node_wrapper(node).name
-            self.__generated_wrappers[node] = wrapper
+            self.__generated_node_wrappers[node] = wrapper
             return wrapper
 
-        return self.__generated_wrappers[node]
+        return self.__generated_node_wrappers[node]
 
-    def _get_bin_mechanism(self, mechanism):
-        if mechanism not in self.__compiled_mech:
-            wrapper = self._get_node_wrapper(mechanism)
+    def _get_bin_node(self, node):
+        if node not in self.__compiled_node_wrappers:
+            wrapper = self._get_node_wrapper(node)
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
-            self.__compiled_mech[mechanism] = bin_f
+            self.__compiled_node_wrappers[node] = bin_f
             return bin_f
 
-        return self.__compiled_mech[mechanism]
+        return self.__compiled_node_wrappers[node]
 
     @property
     def _llvm_function(self):
