@@ -1938,6 +1938,7 @@ class State_Base(State):
         variable = []
         # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
+
             # Only update if sender has also executed in this round
             #     (i.e., has same execution_id as owner)
             # Get sender's execution id
@@ -2340,7 +2341,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         implement default using reference_value
     + State object:
         check compatibility of value with reference_value
-        check owner is owner (if not, user is given options in _check_state_ownership)
+        check owner is owner; if not, raise exception
     + 2-item tuple:
         assign first item to state_spec
         assign second item to STATE_PARAMS{PROJECTIONS:<projection>}
@@ -2691,9 +2692,19 @@ def _parse_state_spec(state_type=None,
             else:
                 state_owner = state_specification.owner
             if owner is not None and state_owner is not None and state_owner is not owner:
-                raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
-                                 format(State.__name__, state_specification.name, owner.name,
-                                        Mechanism.__name__, state_owner.name))
+                try:
+                    new_state_specification = state_type._parse_self_state_type_spec(state_type,
+                                                                                     owner,
+                                                                                     state_specification,
+                                                                                     context)
+                    state_specification = _parse_state_spec(state_type=state_type,
+                                                            owner=owner,
+                                                            state_spec=new_state_specification)
+                    assert True
+                except AttributeError:
+                    raise StateError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
+                                     format(State.__name__, state_specification.name, owner.name,
+                                            Mechanism.__name__, state_owner.name))
             return state_specification
 
         # Re-process with Projection specified
@@ -2996,13 +3007,13 @@ def _parse_state_spec(state_type=None,
     if state_dict[VALUE] is None:
         state_dict[VALUE] = spec_function_value
     # Otherwise, make sure value returned by spec function is same as one specified for State's value
-    else:
-        if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
-            state_name = state_dict[NAME] or 'unnamed'
-            raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
-                             'the value ({}) computed from the state_spec function ({})'.
-                             format(state_dict[VALUE], state_name, state_type.__name__,
-                                    state_dict[OWNER].name, spec_function_value, spec_function))
+    # else:
+    #     if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
+    #         state_name = state_dict[NAME] or 'unnamed'
+    #         raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
+    #                          'the value ({}) computed from the state_spec function ({})'.
+    #                          format(state_dict[VALUE], state_name, state_type.__name__,
+    #                                 state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
         raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".

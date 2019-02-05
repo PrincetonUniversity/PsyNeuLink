@@ -101,9 +101,9 @@ class TestMiscTrainingFunctionality:
         # put the mechanisms and projections together in an autodiff composition (AC)
         xor = AutodiffComposition(param_init_from_pnl=True)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -135,9 +135,9 @@ class TestMiscTrainingFunctionality:
 
         xor = AutodiffComposition(param_init_from_pnl=True)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -199,9 +199,9 @@ class TestMiscTrainingFunctionality:
 
         xor = AutodiffComposition(param_init_from_pnl=True, loss_spec = loss)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -252,9 +252,9 @@ class TestMiscTrainingFunctionality:
                                   optimizer_type=optimizer_type,
                                   weight_decay=weight_decay)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -309,9 +309,9 @@ class TestMiscTrainingFunctionality:
                                   learning_rate=10.0,
                                   optimizer_type="sgd")
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -366,9 +366,9 @@ class TestMiscTrainingFunctionality:
         xor = AutodiffComposition(param_init_from_pnl=True,
                                   learning_rate=1.0)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -458,9 +458,9 @@ class TestTrainingCorrectness:
                                   optimizer_type=opt,
                                   learning_rate=0.1)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -583,14 +583,14 @@ class TestTrainingCorrectness:
         sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
                                       optimizer_type=opt, learning_rate=0.001)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -744,8 +744,8 @@ class TestTrainingTime:
 
         and_net = AutodiffComposition(param_init_from_pnl=True)
 
-        and_net.add_c_node(and_in)
-        and_net.add_c_node(and_out)
+        and_net.add_node(and_in)
+        and_net.add_node(and_out)
 
         and_net.add_projection(sender=and_in, projection=and_map, receiver=and_out)
 
@@ -875,9 +875,9 @@ class TestTrainingTime:
 
         xor = AutodiffComposition(param_init_from_pnl=True)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1098,14 +1098,14 @@ class TestTrainingTime:
 
         sem_net = AutodiffComposition(param_init_from_pnl=True)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -1341,9 +1341,9 @@ class TestTrainingIdenticalness():
                                   learning_rate=10,
                                   optimizer_type=opt)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1546,14 +1546,14 @@ class TestTrainingIdenticalness():
                                       learning_rate=0.5,
                                       optimizer_type=opt)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -1767,9 +1767,9 @@ class TestNested:
             learning_enabled=True
         )
 
-        xor_autodiff.add_c_node(xor_in)
-        xor_autodiff.add_c_node(xor_hid)
-        xor_autodiff.add_c_node(xor_out)
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
 
         xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1782,7 +1782,7 @@ class TestNested:
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
         parentComposition = pnl.Composition()
-        parentComposition.add_c_node(xor_autodiff)
+        parentComposition.add_node(xor_autodiff)
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
@@ -1846,9 +1846,9 @@ class TestNested:
             learning_enabled=False
         )
 
-        xor_autodiff.add_c_node(xor_in)
-        xor_autodiff.add_c_node(xor_hid)
-        xor_autodiff.add_c_node(xor_out)
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
 
         xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1861,7 +1861,7 @@ class TestNested:
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
         parentComposition = pnl.Composition()
-        parentComposition.add_c_node(xor_autodiff)
+        parentComposition.add_node(xor_autodiff)
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
@@ -1925,9 +1925,9 @@ class TestNested:
     #         learning_enabled=True
     #     )
     #
-    #     xor_autodiff.add_c_node(xor_in)
-    #     xor_autodiff.add_c_node(xor_hid)
-    #     xor_autodiff.add_c_node(xor_out)
+    #     xor_autodiff.add_node(xor_in)
+    #     xor_autodiff.add_node(xor_hid)
+    #     xor_autodiff.add_node(xor_out)
     #
     #     xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
     #     xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1942,8 +1942,8 @@ class TestNested:
     #     no_training_input_dict = {xor_in: xor_inputs}
     #
     #     parentComposition = pnl.Composition()
-    #     parentComposition.add_c_node(myTransfer)
-    #     parentComposition.add_c_node(xor_autodiff)
+    #     parentComposition.add_node(myTransfer)
+    #     parentComposition.add_node(xor_autodiff)
     #     parentComposition.add_projection(myMappingProj, sender=myTransfer, receiver=xor_autodiff)
     #     xor_autodiff.learning_enabled = False
     #
@@ -2104,14 +2104,14 @@ class TestNested:
                                       learning_rate=0.5,
                                       optimizer_type=opt)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -2199,7 +2199,7 @@ class TestNested:
         sem_net._analyze_graph()
 
         parentComposition = pnl.Composition()
-        parentComposition.add_c_node(sem_net)
+        parentComposition.add_node(sem_net)
 
         input = {sem_net: input_dict}
         no_training_input = {sem_net: inputs_dict.copy()}

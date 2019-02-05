@@ -1846,7 +1846,7 @@ class TestOnResumeIntegratorMode:
                               integration_rate=0.5,
                               integrator_mode=True)
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
@@ -1872,7 +1872,7 @@ class TestOnResumeIntegratorMode:
                               integration_rate=0.5,
                               integrator_mode=True)
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
@@ -1897,10 +1897,10 @@ class TestOnResumeIntegratorMode:
         T = TransferMechanism(on_resume_integrator_mode=REINITIALIZE,
                               integrator_mode=True)
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         C = Composition()
-        C.add_c_node(T)
+        C.add_node(T)
 
         C.run(inputs={T: [[1.0], [2.0]]})                        # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5

@@ -81,7 +81,7 @@ def test_nested_transfer_mechanism_composition_parallel(benchmark, executions):
     sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
-    outer_comp.add_c_node(inner_comp)
+    outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
     sched = Scheduler(composition=outer_comp)
@@ -118,7 +118,7 @@ def test_nested_transfer_mechanism_composition_run_parallel(benchmark, execution
     sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
-    outer_comp.add_c_node(inner_comp)
+    outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
     sched = Scheduler(composition=outer_comp)
@@ -154,7 +154,7 @@ def test_nested_transfer_mechanism_composition_run_multi_parallel(benchmark, exe
     sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
-    outer_comp.add_c_node(inner_comp)
+    outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
     sched = Scheduler(composition=outer_comp)

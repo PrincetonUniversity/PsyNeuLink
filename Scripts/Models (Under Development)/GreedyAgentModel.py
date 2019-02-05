@@ -47,9 +47,9 @@ reward = TransferMechanism(name="REWARD")
 greedy_action_mech = ComparatorMechanism(name='MOTOR OUTPUT',sample=player,target=prey)
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_c_node(player)
-agent_comp.add_c_node(prey)
-agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_node(player)
+agent_comp.add_node(prey)
+agent_comp.add_node(greedy_action_mech)
 
 # agent_comp.show_graph()
 

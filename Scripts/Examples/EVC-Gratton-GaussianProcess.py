@@ -46,8 +46,8 @@ Decision = pnl.DDM(
 )
 
 comp = pnl.Composition(name="evc")
-comp.add_c_node(Reward, required_roles=[pnl.CNodeRole.TERMINAL])
-comp.add_c_node(Decision, required_roles=[pnl.CNodeRole.TERMINAL])
+comp.add_node(Reward, required_roles=[pnl.NodeRole.TERMINAL])
+comp.add_node(Decision, required_roles=[pnl.NodeRole.TERMINAL])
 task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
 comp.add_linear_processing_pathway(task_execution_pathway)
 

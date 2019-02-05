@@ -3,7 +3,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import SOFT_CLAMP
-from psyneulink.core.globals.utilities import CNodeRole
+from psyneulink.core.globals.utilities import NodeRole
 
 
 __all__ = [
@@ -37,7 +37,7 @@ class PathwayComposition(Composition):
     def add_linear_processing_pathway(self, pathway):
         # First, verify that the pathway begins with a mechanism
         if isinstance(pathway[0], Mechanism):
-            self.add_c_node(pathway[0])
+            self.add_node(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise PathwayCompositionError("The first item in a linear processing pathway must be a "
@@ -46,7 +46,7 @@ class PathwayComposition(Composition):
         for c in range(1, len(pathway)):
             # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
-                self.add_c_node(pathway[c])
+                self.add_node(pathway[c])
 
         # Then, loop through and validate that the mechanism-projection relationships make sense
         # and add MappingProjections where needed
@@ -95,7 +95,7 @@ class PathwayComposition(Composition):
     ):
 
         if isinstance(inputs, list):
-            inputs = {self.get_mechanisms_by_role(CNodeRole.ORIGIN).pop(): inputs}
+            inputs = {self.get_mechanisms_by_role(NodeRole.ORIGIN).pop(): inputs}
 
         output = super(PathwayComposition, self).execute(inputs, scheduler_processing=scheduler_processing,
                                                          scheduler_learning=scheduler_learning,

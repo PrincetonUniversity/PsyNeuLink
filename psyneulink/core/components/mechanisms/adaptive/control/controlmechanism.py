@@ -361,7 +361,7 @@ from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTRO
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import CNodeRole, ContentAddressableList, is_iterable
+from psyneulink.core.globals.utilities import NodeRole, ContentAddressableList, is_iterable
 
 __all__ = [
     'CONTROL_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -999,11 +999,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
 
-        objective_roles = [CNodeRole.OBJECTIVE]
+        objective_roles = [NodeRole.OBJECTIVE]
         if self.origin_objective_mechanism:
-            objective_roles.append(CNodeRole.ORIGIN)
+            objective_roles.append(NodeRole.ORIGIN)
         if self.terminal_objective_mechanism:
-            objective_roles.append(CNodeRole.TERMINAL)
+            objective_roles.append(NodeRole.TERMINAL)
         self.aux_components.append((self.objective_mechanism, objective_roles))
         self.aux_components.append((projection_from_objective, True))
         self._objective_projection = projection_from_objective

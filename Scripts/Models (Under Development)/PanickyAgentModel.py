@@ -101,11 +101,11 @@ Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(f
 
 # Create Composition
 agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
-agent_comp.add_c_node(player_obs)
-agent_comp.add_c_node(prey_obs)
-agent_comp.add_c_node(predator_obs)
-agent_comp.add_c_node(greedy_action_mech)
-agent_comp.add_c_node((Panicky_control_mech))
+agent_comp.add_node(player_obs)
+agent_comp.add_node(prey_obs)
+agent_comp.add_node(predator_obs)
+agent_comp.add_node(greedy_action_mech)
+agent_comp.add_node((Panicky_control_mech))
 
 # agent_comp.show_graph()
 
