@@ -24,10 +24,10 @@ def test_control_mechanism_assignment():
                                         ('O-1', 1, -1)],
                    control_signals=[(pnl.GAIN, T3)]
                    )
-    assert len(S.controller.objective_mechanism.monitored_output_states)==3
+    assert len(S.controller.objective_mechanism.monitor)==3
     assert len(S.control_signals)==2
 
-    # Test for avoiding duplicate assignment of monitored_output_states and control_signals
+    # Test for avoiding duplicate assignment of monitor and control_signals
     C1 = pnl.EVCControlMechanism(name='C-1',
                                  objective_mechanism = [(T1, None, None, np.ones((3,1)))],
                                  control_signals=[(pnl.GAIN, T3)]
@@ -78,7 +78,7 @@ def test_control_mechanism_assignment_additional():
     T_2 = pnl.TransferMechanism(name='T_2')
     S = pnl.sys([T_1,T_2],
                 controller=pnl.EVCControlMechanism(control_signals=(pnl.SLOPE, T_1)),
-                monitor_for_control=T_1,
+                monitor_for_control=[T_1],
                 control_signals=(pnl.SLOPE, T_2),
                 enable_controller=True)
     assert S.controller.objective_mechanism.input_state.path_afferents[0].sender.owner == T_1

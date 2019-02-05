@@ -1,4 +1,5 @@
 import timeit
+
 import numpy as np
 from psyneulink import *
 
@@ -14,6 +15,7 @@ PNL_COMPILE = True
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
 
+
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 2
 action_len = 2
@@ -26,7 +28,6 @@ prey_value_idx = 8
 
 player_len = prey_len = predator_len = obs_len
 
-
 # *********************************************************************************************************************
 # **************************************  MECHANISMS AND COMPOSITION  *************************************************
 # *********************************************************************************************************************
@@ -38,6 +39,7 @@ else:
     player = TransferMechanism(size=prey_len, name="PLAYER OBS")
     prey = TransferMechanism(size=prey_len, name="PREY OBS")
 
+
 # For future use:
 values = TransferMechanism(size=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
@@ -47,9 +49,10 @@ reward = TransferMechanism(name="REWARD")
 greedy_action_mech = ComparatorMechanism(name='MOTOR OUTPUT',sample=player,target=prey)
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_c_node(player)
-agent_comp.add_c_node(prey)
-agent_comp.add_c_node(greedy_action_mech)
+
+agent_comp.add_node(player)
+agent_comp.add_node(prey)
+agent_comp.add_node(greedy_action_mech)
 
 # agent_comp.show_graph()
 
@@ -98,7 +101,6 @@ def main():
           f'{stop_time - start_time:.2f} seconds')
     if RENDER:
         env.render()  # If visualization is desired
-
 
 if __name__ == "__main__":
     main()

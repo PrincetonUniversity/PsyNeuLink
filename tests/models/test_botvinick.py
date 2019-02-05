@@ -140,15 +140,15 @@ def test_botvinick_model(benchmark, mode, reps):
     comp = pnl.Composition()
 
     # Add mechanisms
-    comp.add_c_node(colors_input_layer)
-    comp.add_c_node(colors_hidden_layer)
+    comp.add_node(colors_input_layer)
+    comp.add_node(colors_hidden_layer)
 
-    comp.add_c_node(words_input_layer)
-    comp.add_c_node(words_hidden_layer)
+    comp.add_node(words_input_layer)
+    comp.add_node(words_hidden_layer)
 
-    comp.add_c_node(task_input_layer)
-    comp.add_c_node(task_layer)
-    comp.add_c_node(response_layer)
+    comp.add_node(task_input_layer)
+    comp.add_node(task_layer)
+    comp.add_node(response_layer)
 
     # Add projections
     comp.add_projection(task_input_weights, task_input_layer, task_layer)
