@@ -241,9 +241,9 @@ class TestMiscTrainingFunctionality:
 
         xor = AutodiffComposition(param_init_from_pnl=True, loss_spec=ls)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
