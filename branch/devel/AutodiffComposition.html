@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.0.0+75.g0e0adec documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.0.0+76.gb87f404 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+75.g0e0adec documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+76.gb87f404 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Compositions.html"/>
         <link rel="next" title="Subsystems" href="Subystems.html"/>
         <link rel="prev" title="Compositions" href="Compositions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+75
+                0.5.0.0+76
               </div>
             
           
@@ -238,11 +238,26 @@ Composition, which does not change weights. <code class="xref any docutils liter
 attribute, which can be toggled between runs.</p>
 <p><strong>optimizer_type</strong> specifies the kind of optimizer used in training. The current options are ‘sgd’ (which is the
 default) or ‘adam’.</p>
-<p><strong>loss_type</strong> specifies the loss function for training. The current options are ‘mse’ (the default) and ‘crossentropy’.</p>
+<p><strong>weight_decay</strong> specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults to 0.</p>
+<p><strong>loss_spec</strong> specifies the loss function for training. It can be a string or a PyTorch loss function. The current
+options for strings are ‘mse’ (the default), ‘crossentropy’, ‘l1’, ‘nll’, ‘poissonnll’, and ‘kldiv’. These refer to
+Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
+Divergence respectively. The <strong>loss_spec</strong> can also be any PyTorch loss function, including a custom-written one. For a
+list of PyTorch loss functions, see <a class="reference external" href="https://pytorch.org/docs/stable/nn.html#loss-functions">https://pytorch.org/docs/stable/nn.html#loss-functions</a>. For information on writing
+a custom loss function, see <a class="reference external" href="https://pytorch.org/docs/master/notes/extending.html">https://pytorch.org/docs/master/notes/extending.html</a> and
+<a class="reference external" href="https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235">https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235</a></p>
 <p><strong>randomize</strong> specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
 run, but if <strong>randomize</strong> is True then the order in which inputs are within an epoch is random.)</p>
-<p><strong>refresh_losses</strong> specifies whether the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute is refreshed for each call to <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run()</span></code></a>. If False, the losses
+<p><strong>refresh_losses</strong> specifies whether the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute is refreshed for each call to <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run()</span></code></a>. If False, the losses
 of each run are appended to the <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute. If True, the losses of each run overwrite <code class="xref any docutils literal"><span class="pre">losses</span></code> instead.</p>
+<p><strong>force_no_retain_graph</strong> defaults to False. If True, the AutodiffComposition does not use the <code class="xref any docutils literal"><span class="pre">retain_graph</span></code> option
+when computing PyTorch gradient. This can reduce memory usage. However, it breaks recurrent networks, so it should only
+be used when the network is not recurrent.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
+see <code class="xref any docutils literal"><span class="pre">here</span></code> or <code class="xref any docutils literal"><span class="pre">here</span></code>.</p>
+</div>
 </div>
 <div class="section" id="structure">
 <span id="autodiffcomposition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -255,13 +270,13 @@ of the PsyNeuLink model that AutodiffComposition contains.</p>
 <p>As mentioned above, the <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> attribute can be toggled to determine
 whether the AutodiffComposition learns or whether it executes like an ordinary Composition.</p>
 <p>The <code class="xref any docutils literal"><span class="pre">optimizer</span></code> attribute contains the PyTorch optimizer function used for learning. It
-is determined at initialization by the <strong>optimizer_type</strong> and <strong>learning_rate</strong> arguments.</p>
+is determined at initialization by the <strong>optimizer_type</strong>, <strong>learning_rate</strong>, and <strong>weight_decay</strong> arguments.</p>
 <p>The <code class="xref any docutils literal"><span class="pre">loss</span></code> attribute contains the PyTorch loss function used for learning. It is determined
-at initialization by the <strong>loss_type</strong> arguments.</p>
+at initialization by the <strong>loss_spec</strong> argument.</p>
 </div>
 <div class="section" id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="System.html#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as in a Composition. When
+<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as in a Composition. When
 <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is False, the arguments are the same, since in this
 case the AutodiffComposition executes like a Composition.</p>
 <p>However, if <code class="xref any docutils literal"><span class="pre">learning_enabled</span></code> is True, the <strong>inputs</strong> argument
@@ -290,6 +305,14 @@ and specifying inputs and targets:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
+is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
+projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
+set the <strong>do_logging</strong> argument of the <code class="docutils literal"><span class="pre">run()</span></code> method to <code class="docutils literal"><span class="pre">True</span></code>. Logging with AutodiffComposition is slightly hacked
+together, so the time and context in the log are not meaningful, only the logged value is meaningful.</p>
 </div>
 <div class="section" id="nested-execution">
 <h2>Nested Execution<a class="headerlink" href="#nested-execution" title="Permalink to this headline">¶</a></h2>
@@ -389,7 +412,7 @@ therefore be placed anywhere in a Composition.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+75.g0e0adec',
+            VERSION:'0.5.0.0+76.gb87f404',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
