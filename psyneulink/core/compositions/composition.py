@@ -2605,9 +2605,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if termination_processing is None:
             termination_processing = self.termination_processing
 
-        # if hasattr(self, "prediction_mechanisms"):
-        #     self._execute_prediction_mechanisms(context=context)
-
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -2694,15 +2691,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in next_execution_set:
                 frozen_values[node] = node.get_output_values(execution_id)
                 if node in input_nodes:
-                    # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle
-                    # a recurrent projection on the first time step (meaning, before its node has executed)
-                    # FIX: determine the correct behavior for this case & document it
-
-                    # if (
-                    #     scheduler_processing.times[execution_id][TimeScale.TRIAL][TimeScale.TIME_STEP] == 0
-                    #     and hasattr(node, "recurrent_projection")
-                    # ):
-                    #     node.recurrent_projection.sender.value = [0.0]
                     if clamp_input:
                         if node in hard_clamp_inputs:
                             # clamp = HARD_CLAMP --> "turn off" recurrent projection
@@ -3668,7 +3656,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proj.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
             self.run(inputs=inputs,
-                     # reinitialize_values=reinitialize_values,
                      execution_id=execution_id,
                      runtime_params=runtime_params,
                      context=context)
