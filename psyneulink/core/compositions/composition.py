@@ -3736,7 +3736,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return self.__compiled_mech[mechanism]
 
-    def _get_execution_wrapper(self):
+    @property
+    def _llvm_function(self):
         if self.__generated_execution is None:
             with pnlvm.LLVMBuilderContext() as ctx:
                 self.__generated_execution = ctx.gen_composition_exec(self)
@@ -3745,7 +3746,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_bin_execution(self):
         if self.__compiled_execution is None:
-            wrapper = self._get_execution_wrapper()
+            wrapper = self._llvm_function
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper.name)
             self.__compiled_execution = bin_f
 
@@ -3808,11 +3809,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             builder = pnlvm.ir.IRBuilder(block)
             builder.debug_metadata = ctx.get_debug_location(llvm_func, self)
 
-            if is_mech:
-                m_function = ctx.get_llvm_function(node)
-            else:
-                exec_wrapper = node._get_execution_wrapper()
-                m_function = ctx.get_llvm_function(exec_wrapper.name)
+            m_function = ctx.get_llvm_function(node)
 
             if node is self.input_CIM:
                 m_in = comp_in

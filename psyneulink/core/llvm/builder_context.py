@@ -384,8 +384,7 @@ class LLVMBuilderContext:
         data_in_ptr = builder.gep(data_in, [input_idx])
 
         # Call execution
-        exec_f_wrapper = composition._get_execution_wrapper()
-        exec_f = self.get_llvm_function(exec_f_wrapper.name)
+        exec_f = self.get_llvm_function(composition)
         builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
         # Extract output_CIM result
