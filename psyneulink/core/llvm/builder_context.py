@@ -194,9 +194,6 @@ class LLVMBuilderContext:
         return element
 
     def gen_composition_exec(self, composition):
-        func_name = None
-        llvm_func = None
-
         # Create condition generator
         cond_gen = ConditionGenerator(self, composition)
 
@@ -329,7 +326,7 @@ class LLVMBuilderContext:
 
         builder.ret_void()
 
-        return func_name
+        return llvm_func
 
     def gen_composition_run(self, composition):
         func_name = self.get_unique_name('run_wrap_' + composition.name)
@@ -410,7 +407,7 @@ class LLVMBuilderContext:
 
         builder.ret_void()
 
-        return func_name
+        return llvm_func
 
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:

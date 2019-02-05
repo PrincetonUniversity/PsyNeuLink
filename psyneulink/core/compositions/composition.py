@@ -3721,7 +3721,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_node_wrapper(self, node):
         if node not in self.__generated_wrappers:
-            wrapper = self.__gen_node_wrapper(node)
+            wrapper = self.__gen_node_wrapper(node).name
             self.__generated_wrappers[node] = wrapper
             return wrapper
 
@@ -3739,7 +3739,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_execution_wrapper(self):
         if self.__generated_execution is None:
             with pnlvm.LLVMBuilderContext() as ctx:
-                self.__generated_execution = ctx.gen_composition_exec(self)
+                self.__generated_execution = ctx.gen_composition_exec(self).name
 
         return self.__generated_execution
 
@@ -3755,7 +3755,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.__compiled_run is None:
             with pnlvm.LLVMBuilderContext() as ctx:
                 wrapper = ctx.gen_composition_run(self)
-            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper.name)
             self.__compiled_run = bin_f
 
         return self.__compiled_run
@@ -3777,7 +3777,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __gen_node_wrapper(self, node):
         is_mech = isinstance(node, Mechanism)
 
-        func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name("comp_wrap_" + node.name)
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
@@ -3909,7 +3908,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             builder.ret_void()
 
-        return func_name
+        return llvm_func
 
     def _get_processing_condition_set(self, node):
         dep_group = []
