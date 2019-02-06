@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Adaptive Mechanisms &mdash; PsyNeuLink 0.5.0.0+82.g136ad69 documentation</title>
+  <title>Adaptive Mechanisms &mdash; PsyNeuLink 0.5.0.0+97.g0ed8f46 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+82.g136ad69 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+97.g0ed8f46 documentation" href="index.html"/>
         <link rel="up" title="Mechanisms" href="Mechanism.html"/>
         <link rel="next" title="Learning Mechanism" href="LearningMechanism.html"/>
         <link rel="prev" title="ObjectiveMechanism" href="ObjectiveMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+82
+                0.5.0.0+97
               </div>
             
           
@@ -250,8 +250,8 @@ subtypes of AdaptiveMechanism for more specific information about their structur
 </div>
 <div class="section" id="execution">
 <span id="adaptivemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>LearningMechanism and ControlMechanism are always executed at the end of a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which they belong have been executed; all LearningMechanism
-executed first, and then ControlMechanism.  All modifications made are available during the next <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.
+<p>LearningMechanism and ControlMechanism are always executed at the end of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which they belong have been executed; all LearningMechanism
+executed first, and then ControlMechanism.  All modifications made are available during the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.
 GatingMechanism are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
 introduce recurrent connections, care must be given to their <a class="reference internal" href="GatingMechanism.html#gatingmechanism-execution"><span class="std std-ref">initialization and/or scheduling</span></a>).</p>
 </div>
@@ -322,7 +322,7 @@ modulate the value of the State(s) to which their <a class="reference internal" 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+82.g136ad69',
+            VERSION:'0.5.0.0+97.g0ed8f46',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
