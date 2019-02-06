@@ -35,13 +35,18 @@ Creating a Composition
 A generic Composition can be created by calling the constructor, and then adding `Components <Component>` using the
 following Composition methods:
 
-    - `add_node <Composition.add_node>` (Adds a node to the Composition)
-    - `add_nodes <Composition.add_nodes>` (Adds mutiple nodes to the Composition)
-    - `add_projection <Composition.add_projection>` (Connects two nodes in the Composition via a Projection)
-    - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` (Adds and connects a list of nodes and/or Projections to the Composition; Inserts a Projection between any two adjacent Nodes)
+    - `add_node <Composition.add_node>`
+        Adds a node to the Composition
+    - `add_nodes <Composition.add_nodes>`
+        Adds mutiple nodes to the Composition
+    - `add_projection <Composition.add_projection>`
+        Connects two nodes in the Composition via a Projection
+    - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
+        Adds and connects a list of nodes and/or Projections to the Composition; Inserts a default Projection between any adjacent Nodes
 
-Only Components added to a Composition via one of these four methods constitute a Composition, even if other
-PsyNeuLink Mechanisms or Projections are constructed in the same script.
+.. note::
+  Only Nodes and Projections added to a Composition via one of four methods above constitute a Composition, even if
+  other Nodes and/or Projections are constructed in the same script.
 
 In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
 
@@ -78,6 +83,8 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
 
 Execution
 ---------
+
+
 
 
 .. _Composition_Class_Reference:
