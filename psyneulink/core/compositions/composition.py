@@ -2754,6 +2754,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # in binary data structure
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents if
                                 proj.sender.owner in self.__generated_node_wrappers)
+
                         for srnode in srcs:
                             assert srnode in self.nodes or srnode is self.input_CIM
                             data = _comp_ex.extract_frozen_node_output(srnode)
