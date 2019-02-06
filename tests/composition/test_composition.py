@@ -96,6 +96,19 @@ class TestAddMechanism:
         comp.add_node(mech)
         comp.add_node(mech)
 
+    def test_add_multiple_nodes_at_once(self):
+        comp = Composition()
+        a = TransferMechanism()
+        b = TransferMechanism()
+        c = TransferMechanism()
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+        output = comp.run(inputs={a: [1.0],
+                                  b: [2.0],
+                                  c: [3.0]})
+        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == set(nodes)
+        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == set(nodes)
+        assert np.allclose(output, [[1.0], [2.0], [3.0]])
     @pytest.mark.stress
     @pytest.mark.parametrize(
         'count', [
