@@ -488,9 +488,13 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     return module
 
-def _convert_llvm_ir_to_ctype(t):
-    type_t = type(t)
+_type_cache = {}
 
+def _convert_llvm_ir_to_ctype(t):
+    if t in _type_cache:
+        return _type_cache[t]
+
+    type_t = type(t)
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
@@ -525,4 +529,5 @@ def _convert_llvm_ir_to_ctype(t):
         print(t)
         assert(False)
 
+    _type_cache[t] = ret_t
     return ret_t
