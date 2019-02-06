@@ -302,7 +302,7 @@ class CompExecution(CUDAExecution):
         setattr(my_res_struct, node_field_name, _tupleize(data))
 
     def _get_input_struct(self, inputs):
-        origins = self._composition.get_nodes_by_role(NodeRole.ORIGIN)
+        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
         # Either node execute or composition execute, either way the
         # input_CIM should be ready
         bin_input_node = self._composition._get_bin_node(self._composition.input_CIM)
@@ -329,7 +329,7 @@ class CompExecution(CUDAExecution):
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
             # CIM input states
-            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.ORIGIN) for istate in n.input_states)
+            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_states)
             input_data = ([proj.parameters.value.get(execution_id) for proj in state.all_afferents] for state in node.input_states)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
@@ -373,7 +373,7 @@ class CompExecution(CUDAExecution):
     # Methods used to accelerate "Run"
 
     def _get_run_input_struct(self, inputs, num_input_sets):
-        origins = self._composition.get_nodes_by_role(NodeRole.ORIGIN)
+        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
         input_type = self._composition._get_bin_run().byref_arg_types[3]
         c_input = input_type * num_input_sets
         if len(self._execution_ids) > 1:
