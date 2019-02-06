@@ -21,23 +21,33 @@ Overview
 Composition is the base class for objects that combine PsyNeuLink `Components <Component>` into an executable model.
 It defines a common set of attributes possessed, and methods used by all Composition objects.
 
+Composition "Nodes" are `Mechanisms <Mechanism_Base>` and/or nested `Compositions <Composition>`. `Projections
+<Projection_Base>` connect two Nodes. The Composition's `graph <Composition.graph>` stores the structural relationships
+among the Nodes of a Composition and the Projections that connect them. The Composition's `scheduler
+<Composition.scheduler>` starts with these structural dependencies and generates a plan for execution, allowing for
+other user-specified scheduling and termination conditions to be mixed in.
+
 .. _Composition_Creation:
 
 Creating a Composition
 ----------------------
 
 A generic Composition can be created by calling the constructor, and then adding `Components <Component>` using the
-Composition's add methods.  However, more commonly, a Composition is created using the constructor for one of its
-subclasses:  `System` or `Process`.  These automatically create Compositions from lists of Components.  Once created,
-Components can be added or removed from an existing Composition using its add and/or remove methods.
+following Composition methods:
+
+    - `add_node <Composition.add_node>` (Adds a node to the Composition)
+    - `add_nodes <Composition.add_nodes>` (Adds mutiple nodes to the Composition)
+    - `add_projection <Composition.add_projection>` (Connects two nodes in the Composition via a Projection)
+    - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` (Adds and connects a list of nodes and/or Projections to the Composition; Inserts a Projection between any two adjacent Nodes)
+
+Only Components added to a Composition via one of these four methods constitute a Composition, even if other
+PsyNeuLink Mechanisms or Projections are constructed in the same script.
 
 .. _Composition_Execution:
 
 Execution
 ---------
 
-See `System <System_Execution>` or `Process <Process_Execution>` for documentation concerning execution of the
-corresponding subclass.
 
 .. _Composition_Class_Reference:
 
@@ -724,10 +734,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             
     def add_model_based_optimizer(self, optimizer):
         """
-        Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
-        <Composition.model_based_optimizer>` of the Composition, which gives the Mechanism access to the
-        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
-        `ModelBasedOptimizationControlMechanism` to use simulations to determine an optimal Control policy.
+        Adds an `OptimizationControlMechanism` as the `model_based_optimizer
+        <Composition.model_based_optimizer>` of the Composition, which gives the OCM access to the
+        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
+        an optimal Control policy.
         """
 
         self.model_based_optimizer = optimizer
