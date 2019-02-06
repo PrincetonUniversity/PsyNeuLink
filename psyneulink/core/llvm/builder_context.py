@@ -489,23 +489,25 @@ def _gen_cuda_kernel_wrapper_module(function):
     return module
 
 def _convert_llvm_ir_to_ctype(t):
-    if type(t) is ir.VoidType:
+    type_t = type(t)
+
+    if type_t is ir.VoidType:
         return None
-    elif type(t) is ir.PointerType:
-        # FIXME: Can this handle void*? Do we care?
-        pointee = _convert_llvm_ir_to_ctype(t.pointee)
-        return ctypes.POINTER(pointee)
-    elif type(t) is ir.IntType:
+    elif type_t is ir.IntType:
         # FIXME: We should consider bitwidth here
         return ctypes.c_int
-    elif type(t) is ir.DoubleType:
+    elif type_t is ir.DoubleType:
         return ctypes.c_double
-    elif type(t) is ir.FloatType:
+    elif type_t is ir.FloatType:
         return ctypes.c_float
-    elif type(t) is ir.ArrayType:
+    elif type_t is ir.PointerType:
+        # FIXME: Can this handle void*? Do we care?
+        pointee = _convert_llvm_ir_to_ctype(t.pointee)
+        ret_t = ctypes.POINTER(pointee)
+    elif type_t is ir.ArrayType:
         element_type = _convert_llvm_ir_to_ctype(t.element)
-        return element_type * len(t)
-    elif type(t) is ir.LiteralStructType:
+        ret_t = element_type * len(t)
+    elif type_t is ir.LiteralStructType:
         global _struct_count
         uniq_name = "struct_" + str(_struct_count)
         _struct_count += 1
@@ -516,11 +518,11 @@ def _convert_llvm_ir_to_ctype(t):
             field_uniq_name = uniq_name + "field_" + str(i)
             field_list.append((field_uniq_name, _convert_llvm_ir_to_ctype(e)))
 
+        ret_t = type(uniq_name, (ctypes.Structure,), {"__init__": ctypes.Structure.__init__})
+        ret_t._fields_ = field_list
+        assert len(ret_t._fields_) == len(t.elements)
+    else:
+        print(t)
+        assert(False)
 
-        new_type = type(uniq_name, (ctypes.Structure,), {"__init__": ctypes.Structure.__init__})
-        new_type._fields_ = field_list
-        assert len(new_type._fields_) == len(t.elements)
-        return new_type
-
-    print(t)
-    assert(False)
+    return ret_t
