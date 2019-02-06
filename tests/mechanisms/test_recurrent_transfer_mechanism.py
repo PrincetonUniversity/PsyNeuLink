@@ -1,17 +1,24 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
-from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-from psyneulink.scheduling.condition import Never
+import psyneulink.core.llvm as pnlvm
+
+from psyneulink.core.components.functions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.distributionfunctions import NormalDist
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, get_matrix
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
+from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.scheduling.condition import Never
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferError, RecurrentTransferMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
@@ -27,7 +34,7 @@ class TestMatrixSpec:
 
         results = []
         def record_trial():
-            results.append(recurrent_mech.value)
+            results.append(recurrent_mech.parameters.value.get(s))
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
         assert True
@@ -43,7 +50,7 @@ class TestMatrixSpec:
 
         results = []
         def record_trial():
-            results.append(recurrent_mech.value)
+            results.append(recurrent_mech.parameters.value.get(s))
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
 
@@ -60,7 +67,7 @@ class TestMatrixSpec:
 
         results = []
         def record_trial():
-            results.append(recurrent_mech.value)
+            results.append(recurrent_mech.parameters.value.get(s))
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
 
@@ -68,8 +75,8 @@ class TestRecurrentTransferMechanismInputs:
 
     def test_recurrent_mech_empty_spec(self):
         R = RecurrentTransferMechanism(auto=1.0)
-        assert R.value is None
-        np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
+        np.testing.assert_allclose(R.value, R.defaults.value)
+        np.testing.assert_allclose(R.defaults.variable, [[0]])
         np.testing.assert_allclose(R.matrix, [[1]])
 
     def test_recurrent_mech_check_attrs(self):
@@ -78,8 +85,8 @@ class TestRecurrentTransferMechanismInputs:
             size=3,
             auto=1.0
         )
-        assert R.value is None
-        np.testing.assert_allclose(R.instance_defaults.variable, [[0., 0., 0.]])
+        np.testing.assert_allclose(R.value, R.defaults.value)
+        np.testing.assert_allclose(R.defaults.variable, [[0., 0., 0.]])
         np.testing.assert_allclose(R.matrix, [[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]])
 
     def test_recurrent_mech_check_proj_attrs(self):
@@ -91,23 +98,89 @@ class TestRecurrentTransferMechanismInputs:
         assert R.recurrent_projection.sender is R.output_state
         assert R.recurrent_projection.receiver is R.input_state
 
-    def test_recurrent_mech_inputs_list_of_ints(self):
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0]
         )
-        val = R.execute([10, 12, 0, -1])
-        np.testing.assert_allclose(val, [[10.0, 12.0, 0, -1]])
-        val = R.execute([1, 2, 3, 0])
-        np.testing.assert_allclose(val, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
 
-    def test_recurrent_mech_inputs_list_of_floats(self):
+        val1 = EX([10, 12, 0, -1])
+        val2 = EX([1, 2, 3, 0])
+        benchmark(EX, [1, 2, 3, 0])
+
+        np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
+        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
+
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
             size=4
         )
-        val = R.execute([10.0, 10.0, 10.0, 10.0])
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
+
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_recurrent_mech_integrator(self, benchmark, mode):
+        R = RecurrentTransferMechanism(size=2,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       integrator_mode=True,
+                                       integration_rate=0.01,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val1 = EX([[1.0, 2.0]])
+        val2 = EX([[1.0, 2.0]])
+        # execute 10 times
+        for i in range(10):
+            val = EX([[1.0, 2.0]])
+        benchmark(EX, [[1.0, 2.0]])
+
+        assert np.allclose(val1, [[0.50249998, 0.50499983]])
+        assert np.allclose(val2, [[0.50497484, 0.50994869]])
+        assert np.allclose(val, [[0.52837327, 0.55656439]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -122,12 +195,28 @@ class TestRecurrentTransferMechanismInputs:
     #     for i in range(len(val[0])):
     #         np.testing.assert_allclose(val[0][i], expected[0][i])
 
-    def test_recurrent_mech_no_inputs(self):
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_recurrent_mech_no_inputs(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R'
         )
-        np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
-        val = R.execute([10])
+        np.testing.assert_allclose(R.defaults.variable, [[0]])
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val = EX([10])
+        benchmark(EX, [1])
         np.testing.assert_allclose(val, [[10.]])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
@@ -481,7 +570,7 @@ class TestRecurrentTransferMechanismFunction:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=[0, 0, 0, 0],
-                function=ConstantIntegrator(),
+                function=AccumulatorIntegrator(),
                 integration_rate=1.0,
                 integrator_mode=True
             )
@@ -591,17 +680,17 @@ class TestRecurrentTransferMechanismInProcess:
         )
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         p.run(inputs={R: [[1, 2, 3, 4]]})
-        np.testing.assert_allclose(R.value, [[1., 2., 3., 4.]])
-        np.testing.assert_allclose(T.value, [[10., 10., 10.]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[1., 2., 3., 4.]])
+        np.testing.assert_allclose(T.parameters.value.get(p), [[10., 10., 10.]])
         p.run(inputs={R: [[5, 6, 7, 8]]})
-        np.testing.assert_allclose(R.value, [[-4, -2, 0, 2]])
-        np.testing.assert_allclose(T.value, [[-4, -4, -4]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[-4, -2, 0, 2]])
+        np.testing.assert_allclose(T.parameters.value.get(p), [[-4, -4, -4]])
         p.run(inputs={R: [[-1, 2, -2, 5.5]]})
-        np.testing.assert_allclose(R.value, [[-1.0, 4.0, 2.0, 11.5]])
-        np.testing.assert_allclose(T.value, [[16.5, 16.5, 16.5]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[-1.0, 4.0, 2.0, 11.5]])
+        np.testing.assert_allclose(T.parameters.value.get(p), [[16.5, 16.5, 16.5]])
 
     def test_transfer_mech_process_matrix_change(self):
-        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         T1 = TransferMechanism(
             size=4,
             function=Linear)
@@ -632,12 +721,12 @@ class TestRecurrentTransferMechanismInProcess:
         R.matrix = [[2, 0, 1, 3]] * 4
 
         p.run(inputs={T: [[1, 2, 3, 4]]})
-        np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
-        np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
+        np.testing.assert_allclose(T.parameters.value.get(p), [[1, 2, 3, 4]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[1, 2, 3, 4]])
         p.run(inputs={T: [[1, 3, 2, 5]]})
         np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
-        np.testing.assert_allclose(T.value, [[1, 3, 2, 5]])
-        np.testing.assert_allclose(R.value, [[21, 3, 12, 35]])
+        np.testing.assert_allclose(T.parameters.value.get(p), [[1, 3, 2, 5]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[21, 3, 12, 35]])
 
     # this test must wait until we create a property such that R.recurrent_projection.matrix sets R.auto and R.hetero
     def test_recurrent_mech_process_proj_matrix_change(self):
@@ -651,12 +740,12 @@ class TestRecurrentTransferMechanismInProcess:
         p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.recurrent_projection.matrix = [[2, 0, 1, 3]] * 4
         p.run(inputs={T: [[1, 2, 3, 4]]})
-        np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
-        np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
+        np.testing.assert_allclose(T.parameters.value.get(p), [[1, 2, 3, 4]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[1, 2, 3, 4]])
         p.run(inputs={T: [[1, 3, 2, 5]]})
         np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
-        np.testing.assert_allclose(T.value, [[1, 3, 2, 5]])
-        np.testing.assert_allclose(R.value, [[21, 3, 12, 35]])
+        np.testing.assert_allclose(T.parameters.value.get(p), [[1, 3, 2, 5]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[21, 3, 12, 35]])
 
 
 class TestRecurrentTransferMechanismInSystem:
@@ -675,15 +764,16 @@ class TestRecurrentTransferMechanismInSystem:
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [[1, 2, 3, 4]]})
-        np.testing.assert_allclose(R.value, [[1., 2., 3., 4.]])
-        np.testing.assert_allclose(T.value, [[10., 10., 10.]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[1., 2., 3., 4.]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[10., 10., 10.]])
         s.run(inputs={R: [[5, 6, 7, 8]]})
-        np.testing.assert_allclose(R.value, [[-4, -2, 0, 2]])
-        np.testing.assert_allclose(T.value, [[-4, -4, -4]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[-4, -2, 0, 2]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[-4, -4, -4]])
         s.run(inputs={R: [[-1, 2, -2, 5.5]]})
-        np.testing.assert_allclose(R.value, [[-1.0, 4.0, 2.0, 11.5]])
-        np.testing.assert_allclose(T.value, [[16.5, 16.5, 16.5]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[-1.0, 4.0, 2.0, 11.5]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[16.5, 16.5, 16.5]])
 
+    @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_system_auto_change(self):
         R = RecurrentTransferMechanism(
             size=4,
@@ -695,17 +785,18 @@ class TestRecurrentTransferMechanismInSystem:
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [[1, 2, 3, 4]]})
-        np.testing.assert_allclose(R.value, [[1., 2., 3., 4.]])
-        np.testing.assert_allclose(T.value, [[10., 10., 10.]])
-        R.auto = 0
+        np.testing.assert_allclose(R.parameters.value.get(s), [[1., 2., 3., 4.]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[10., 10., 10.]])
+        R.parameters.auto.set(0, s)
         s.run(inputs={R: [[5, 6, 7, 8]]})
-        np.testing.assert_allclose(R.value, [[-4, -2, 0, 2]])
-        np.testing.assert_allclose(T.value, [[-4, -4, -4]])
-        R.recurrent_projection.auto = [1, 1, 2, 4]
+        np.testing.assert_allclose(R.parameters.value.get(s), [[-4, -2, 0, 2]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[-4, -4, -4]])
+        R.recurrent_projection.parameters.auto.set([1, 1, 2, 4], s)
         s.run(inputs={R: [[12, 11, 10, 9]]})
-        np.testing.assert_allclose(R.value, [[8, 11, 14, 23]])
-        np.testing.assert_allclose(T.value, [[56, 56, 56]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[8, 11, 14, 23]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[56, 56, 56]])
 
+    @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_system_hetero_change(self):
         R = RecurrentTransferMechanism(
             size=4,
@@ -717,17 +808,18 @@ class TestRecurrentTransferMechanismInSystem:
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [[1, 2, 3, -0.5]]})
-        np.testing.assert_allclose(R.value, [[1., 2., 3., -0.5]])
-        np.testing.assert_allclose(T.value, [[5.5, 5.5, 5.5, 5.5, 5.5]])
-        R.hetero = 0
+        np.testing.assert_allclose(R.parameters.value.get(s), [[1., 2., 3., -0.5]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[5.5, 5.5, 5.5, 5.5, 5.5]])
+        R.parameters.hetero.set(0, s)
         s.run(inputs={R: [[-1.5, 0, 1, 2]]})
-        np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
-        np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
-        R.hetero = np.array([[-1, 2, 3, 1.5]] * 4)
+        np.testing.assert_allclose(R.parameters.value.get(s), [[-.5, 4, 10, 0]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[13.5, 13.5, 13.5, 13.5, 13.5]])
+        R.parameters.hetero.set(np.array([[-1, 2, 3, 1.5]] * 4), s)
         s.run(inputs={R: [[12, 11, 10, 9]]})
-        np.testing.assert_allclose(R.value, [[-2.5, 38, 50.5, 29.25]])
-        np.testing.assert_allclose(T.value, [[115.25, 115.25, 115.25, 115.25, 115.25]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[-2.5, 38, 50.5, 29.25]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[115.25, 115.25, 115.25, 115.25, 115.25]])
 
+    @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_system_auto_and_hetero_change(self):
         R = RecurrentTransferMechanism(
             size=4,
@@ -739,17 +831,18 @@ class TestRecurrentTransferMechanismInSystem:
         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s.run(inputs={R: [[1, 2, 3, -0.5]]})
-        np.testing.assert_allclose(R.value, [[1., 2., 3., -0.5]])
-        np.testing.assert_allclose(T.value, [[5.5, 5.5, 5.5, 5.5, 5.5]])
-        R.hetero = 0
+        np.testing.assert_allclose(R.parameters.value.get(s), [[1., 2., 3., -0.5]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[5.5, 5.5, 5.5, 5.5, 5.5]])
+        R.parameters.hetero.set(0, s)
         s.run(inputs={R: [[-1.5, 0, 1, 2]]})
-        np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
-        np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
-        R.auto = [0, 0, 0, 0]
+        np.testing.assert_allclose(R.parameters.value.get(s), [[-.5, 4, 10, 0]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[13.5, 13.5, 13.5, 13.5, 13.5]])
+        R.parameters.auto.set([0, 0, 0, 0], s)
         s.run(inputs={R: [[12, 11, 10, 9]]})
-        np.testing.assert_allclose(R.value, [[12, 11, 10, 9]])
-        np.testing.assert_allclose(T.value, [[42, 42, 42, 42, 42]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[12, 11, 10, 9]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[42, 42, 42, 42, 42]])
 
+    @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_system_matrix_change(self):
         R = RecurrentTransferMechanism(
             size=4,
@@ -760,14 +853,14 @@ class TestRecurrentTransferMechanismInSystem:
             function=Linear)
         p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = System(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        R.matrix = [[2, 0, 1, 3]] * 4
+        R.parameters.matrix.set([[2, 0, 1, 3]] * 4, s)
         s.run(inputs={T: [[1, 2, 3, 4]]})
-        np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
-        np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
+        np.testing.assert_allclose(T.parameters.value.get(s), [[1, 2, 3, 4]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[1, 2, 3, 4]])
         s.run(inputs={T: [[1, 3, 2, 5]]})
-        np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
-        np.testing.assert_allclose(T.value, [[1, 3, 2, 5]])
-        np.testing.assert_allclose(R.value, [[21, 3, 12, 35]])
+        np.testing.assert_allclose(R.recurrent_projection.parameters.matrix.get(s), [[2, 0, 1, 3]] * 4)
+        np.testing.assert_allclose(T.parameters.value.get(s), [[1, 3, 2, 5]])
+        np.testing.assert_allclose(R.parameters.value.get(s), [[21, 3, 12, 35]])
 
     def test_recurrent_mech_with_learning(self):
         R = RecurrentTransferMechanism(size=4,
@@ -793,14 +886,14 @@ class TestRecurrentTransferMechanismInSystem:
         R.learning_enabled = False
         p.execute([1, 1, 0, 0])
         p.execute([1, 1, 0, 0])
-        np.testing.assert_allclose(R.value, [[1.2, 1.2, 0.2, 0.2]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[1.2, 1.2, 0.2, 0.2]])
 
         # Test that activity and weight changes are properly computed with learning
         R.learning_enabled = True
         p.execute([1, 1, 0, 0])
-        np.testing.assert_allclose(R.value, [[1.28, 1.28, 0.28, 0.28]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[1.28, 1.28, 0.28, 0.28]])
         np.testing.assert_allclose(
-            R.recurrent_projection.mod_matrix,
+            R.recurrent_projection.get_mod_matrix(p),
             [
                 [0.1, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
                 [0.18192000000000003, 0.1, 0.11792000000000001, 0.11792000000000001],
@@ -809,9 +902,9 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
         p.execute([1, 1, 0, 0])
-        np.testing.assert_allclose(R.value, [[1.4268928, 1.4268928, 0.3589728, 0.3589728]])
+        np.testing.assert_allclose(R.parameters.value.get(p), [[1.4268928, 1.4268928, 0.3589728, 0.3589728]])
         np.testing.assert_allclose(
-            R.recurrent_projection.mod_matrix,
+            R.recurrent_projection.get_mod_matrix(p),
             [
                 [0.1, 0.28372115, 0.14353079, 0.14353079],
                 [0.28372115, 0.1, 0.14353079, 0.14353079],
@@ -854,7 +947,7 @@ class TestRecurrentTransferMechanismInSystem:
         S.run(num_trials=4,
               inputs=inputs_dict)
         np.testing.assert_allclose(
-            R.recurrent_projection.mod_matrix,
+            R.recurrent_projection.get_mod_matrix(S),
             [
                 [0.0,        0.0,  0.23700501,  0.0],
                 [0.0,        0.0,  0.0,         0.0],
@@ -862,15 +955,15 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.0,  0.0,         0.0]
             ]
         )
-        np.testing.assert_allclose(R.output_state.value, [1.18518086, 0.0, 1.18518086, 0.0])
+        np.testing.assert_allclose(R.output_state.parameters.value.get(S), [1.18518086, 0.0, 1.18518086, 0.0])
 
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.value = [0,0,0,0]
+        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)
         np.testing.assert_allclose(
-            R.recurrent_projection.mod_matrix,
+            R.recurrent_projection.get_mod_matrix(S),
             [
                 [0.0,        0.0,        0.23700501, 0.0       ],
                 [0.0,        0.0,        0.0,        0.23700501],
@@ -878,7 +971,7 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.23700501, 0.0,        0.        ]
             ]
         )
-        np.testing.assert_allclose(R.output_state.value,[0.0, 1.18518086, 0.0, 1.18518086])
+        np.testing.assert_allclose(R.output_state.parameters.value.get(S),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
 # this doesn't work consistently due to EVC's issue with the scheduler
@@ -929,17 +1022,17 @@ class TestRecurrentTransferMechanismReinitialize:
         # Trial 2    |   variable = 1.0 + 0.55
         # integration: 0.9*0.55 + 0.1*1.55 + 0.0 = 0.65  --->  previous value = 0.65
         # linear fn: 0.65*1.0 = 0.65
-        assert np.allclose(R.integrator_function.previous_value, 0.65)
+        assert np.allclose(R.integrator_function.parameters.previous_value.get(S), 0.65)
 
-        R.integrator_function.reinitialize(0.9)
+        R.integrator_function.reinitialize(0.9, execution_context=S)
 
-        assert np.allclose(R.integrator_function.previous_value, 0.9)
-        assert np.allclose(R.value, 0.65)
+        assert np.allclose(R.integrator_function.parameters.previous_value.get(S), 0.9)
+        assert np.allclose(R.parameters.value.get(S), 0.65)
 
-        R.reinitialize(0.5)
+        R.reinitialize(0.5, execution_context=S)
 
-        assert np.allclose(R.integrator_function.previous_value, 0.5)
-        assert np.allclose(R.value, 0.5)
+        assert np.allclose(R.integrator_function.parameters.previous_value.get(S), 0.5)
+        assert np.allclose(R.parameters.value.get(S), 0.5)
 
         S.run(inputs={R: 1.0}, num_trials=2)
         # Trial 3
@@ -948,7 +1041,7 @@ class TestRecurrentTransferMechanismReinitialize:
         # Trial 4
         # integration: 0.9*0.6 + 0.1*1.6 + 0.0 = 0.7 --->  previous value = 0.7
         # linear fn: 0.7*1.0 = 0.7
-        assert np.allclose(R.integrator_function.previous_value, 0.7)
+        assert np.allclose(R.integrator_function.parameters.previous_value.get(S), 0.7)
 
 class TestClip:
     def test_clip_float(self):
@@ -968,6 +1061,7 @@ class TestClip:
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
 class TestRecurrentInputState:
+
     def test_ris_simple(self):
         R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                             matrix=[[1.0, 2.0, 3.0],
@@ -978,7 +1072,7 @@ class TestRecurrentInputState:
         p2 = Process(pathway=[R2])
         s2 = System(processes=[p2])
         s2.run(inputs=[[1, 3, 2]])
-        np.testing.assert_allclose(R2.value, [[14., 12., 13.]])
+        np.testing.assert_allclose(R2.parameters.value.get(s2), [[14., 12., 13.]])
         assert len(R2.input_states) == 2
         assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary
 

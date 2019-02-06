@@ -3,6 +3,8 @@
 import psyneulink as pnl
 import numpy as np
 
+import psyneulink.core.components.functions.transferfunctions
+
 input_layer=pnl.TransferMechanism(size=2,
     name="input layer")
 
@@ -18,9 +20,9 @@ input_layer=pnl.TransferMechanism(size=2,
 #    name="bias out")
 
 hidden_layer=pnl.TransferMechanism(size=2,
-                                   function=pnl.Logistic,
+                                   function=psyneulink.core.components.functions.transferfunctions.Logistic,
                                    name="hidden layer"
-                                  )
+                                   )
 
 proj=pnl.MappingProjection(matrix=(np.random.rand(2,2)),name="proj 1")
 proj_h=pnl.MappingProjection(matrix=(np.random.rand(2,1)),name="proj 2")
@@ -28,7 +30,7 @@ proj_h=pnl.MappingProjection(matrix=(np.random.rand(2,1)),name="proj 2")
 #p_b=pnl.MappingProjection(matrix=.1*(np.random.rand(2,2)),name="proj bias 1")
 #p_b_o=pnl.MappingProjection(matrix=.1*(np.random.rand(1,1)),name="proj bias 2")
 
-output_layer=pnl.TransferMechanism(size=1,function=pnl.Logistic,name="output layer")
+output_layer=pnl.TransferMechanism(size=1, function=psyneulink.core.components.functions.transferfunctions.Logistic, name="output layer")
 
 #bias_h=pnl.Process(pathway=[bias_mech_h,p_b,hidden_layer],learning=pnl.ENABLED)
 #bias_out=pnl.Process(pathway=[bias_mech_out,p_b_o,output_layer],learning=pnl.ENABLED)

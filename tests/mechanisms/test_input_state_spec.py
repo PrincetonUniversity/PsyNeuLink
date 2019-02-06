@@ -2,20 +2,19 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-from psyneulink.components.functions.function import LinearCombination, Reduce
-from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import ProjectionError
-from psyneulink.components.states.inputstate import InputState, InputStateError
-from psyneulink.components.states.state import StateError
-from psyneulink.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
+from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination
+from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.projection import ProjectionError
+from psyneulink.core.components.states.inputstate import InputState, InputStateError
+from psyneulink.core.components.states.state import StateError
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
-belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
 class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
@@ -32,7 +31,7 @@ class TestInputStateSpec:
             default_variable=[[0, 0], [0]],
             input_states=[[32, 24], 'HELLO']
         )
-        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
         assert len(T.input_states) == 2
         assert T.input_states[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
@@ -62,7 +61,7 @@ class TestInputStateSpec:
             input_states=[[32], 'HELLO'],
             params={INPUT_STATES: [[32, 24], 'HELLO']}
         )
-        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
         assert len(T.input_states) == 2
         assert T.input_states[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
@@ -79,7 +78,7 @@ class TestInputStateSpec:
         #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
         #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
         T = TransferMechanism(input_states=[[32, 24], 'HELLO'])
-        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
         assert len(T.input_states) == 2
         assert T.input_states[1].name == 'HELLO'
 
@@ -94,7 +93,7 @@ class TestInputStateSpec:
         #                INSTEAD, SEEM TO IGNORE InputState SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
         #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
         T = TransferMechanism(params={INPUT_STATES: [[32, 24], 'HELLO']})
-        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
         assert len(T.input_states) == 2
         assert T.input_states[1].name == 'HELLO'
 
@@ -108,7 +107,7 @@ class TestInputStateSpec:
             default_variable=[[0]],
             input_states=[R1]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
         assert T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
@@ -124,7 +123,7 @@ class TestInputStateSpec:
             default_variable=[[0]],
             input_states=R1
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
         assert T.input_state.path_afferents[0].sender == R1.output_state
         T.execute()
@@ -142,7 +141,7 @@ class TestInputStateSpec:
                 R1.output_states['SECOND']
             ]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0], [0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0], [0]]))
         assert len(T.input_states) == 2
         assert T.input_states.names[0] == 'InputState-0'
         assert T.input_states.names[1] == 'InputState-1'
@@ -161,7 +160,7 @@ class TestInputStateSpec:
             default_variable=[0],
             input_states=R1.output_states['FIRST']
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
         assert T.input_states.names[0] == 'InputState-0'
         T.input_state.path_afferents[0].sender == R1.output_state
@@ -185,7 +184,7 @@ class TestInputStateSpec:
                     PROJECTIONS: R1.output_states['SECOND']
                 }
             ])
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0], [0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0], [0]]))
         assert len(T.input_states) == 2
         assert T.input_states.names[0] == 'FROM DECISION'
         assert T.input_states.names[1] == 'FROM RESPONSE_TIME'
@@ -207,10 +206,10 @@ class TestInputStateSpec:
             default_variable=[[0, 0]],
             input_states=[R2]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable[0]) == 2
+        assert len(T.input_state.path_afferents[0].sender.defaults.variable) == 3
+        assert len(T.input_state.defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -220,9 +219,9 @@ class TestInputStateSpec:
     def test_2_item_tuple_spec(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, np.zeros((3, 2)))])
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
+        assert len(T.input_state.path_afferents[0].sender.defaults.variable) == 3
         assert T.input_state.socket_width == 2
         T.execute()
 
@@ -233,7 +232,7 @@ class TestInputStateSpec:
     def test_2_item_tuple_value_for_first_item(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(input_states=[([0,0], R2)])
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
         assert T.input_state.path_afferents[0].sender.socket_width == 3
         assert T.input_state.socket_width == 2
@@ -246,9 +245,9 @@ class TestInputStateSpec:
     def test_projection_tuple_with_matrix_spec(self):
         R2 = TransferMechanism(size=3)
         T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3, 2)))])
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert T.input_state.path_afferents[0].sender.instance_defaults.variable.shape[-1] == 3
+        assert T.input_state.path_afferents[0].sender.defaults.variable.shape[-1] == 3
         assert T.input_state.socket_width == 2
         T.execute()
 
@@ -263,10 +262,10 @@ class TestInputStateSpec:
             size=2,
             input_states=[P]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.input_state.path_afferents[0].sender.defaults.variable) == 3
+        assert len(T.input_state.defaults.variable) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -280,10 +279,10 @@ class TestInputStateSpec:
             size=2,
             input_states=[(R2, None, None, P)]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.input_state.path_afferents[0].sender.defaults.variable) == 3
+        assert len(T.input_state.defaults.variable) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -301,7 +300,7 @@ class TestInputStateSpec:
                 ]
             }]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
         assert T.input_state.name == 'My InputState with Two Projections'
         for input_state in T.input_states:
@@ -321,7 +320,7 @@ class TestInputStateSpec:
                 OUTPUT_STATES: ['FIRST', 'SECOND']
             }]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
         for input_state in T.input_states:
             for projection in input_state.path_afferents:
@@ -333,7 +332,7 @@ class TestInputStateSpec:
 
     def test_dict_with_variable(self):
         T = TransferMechanism(input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}])
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -345,7 +344,7 @@ class TestInputStateSpec:
             default_variable=[0, 0],
             input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -356,7 +355,7 @@ class TestInputStateSpec:
             default_variable=[[0, 0]],
             input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -370,7 +369,7 @@ class TestInputStateSpec:
                 {NAME: 'SECOND', VARIABLE: [0]}
             ]
         )
-        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
         assert len(T.input_states) == 2
 
     # ------------------------------------------------------------------------------------------------
@@ -406,7 +405,7 @@ class TestInputStateSpec:
             size=2,
             input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
         )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -428,32 +427,8 @@ class TestInputStateSpec:
             input_states=[[0], [0]],
             params={INPUT_STATES: [[0, 0], [0]]}
         )
-        assert T.instance_defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
         assert len(T.input_states) == 2
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 27
-
-    def test_add_input_state_belonging_to_another_mech_error(self):
-        with pytest.raises(StateError) as error_text:
-            m = TransferMechanism(default_variable=[0, 0, 0])
-            i = InputState(owner=m, variable=[0, 0, 0])
-            TransferMechanism(input_states=[i])
-        assert belongs_to_another_mechanism_error_text in str(error_text.value)
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 39
-
-    def test_name_assigned_before_error(self):
-        name = 'target'
-        with pytest.raises(StateError) as error_text:
-            m = TransferMechanism(default_variable=[0, 0, 0])
-            i = InputState(owner=m, name=name, variable=[0, 0, 0])
-            TransferMechanism(input_states=[i])
-        assert (
-            belongs_to_another_mechanism_error_text in str(error_text.value)
-            and 'Attempt to assign a State ({})'.format(name) in str(error_text.value)
-        )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 28
@@ -461,7 +436,7 @@ class TestInputStateSpec:
     def test_inputstate_class(self):
         T = TransferMechanism(input_states=[InputState])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, [InputState.ClassDefaults.variable])
+        np.testing.assert_array_equal(T.defaults.variable, [InputState.defaults.variable])
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -470,7 +445,7 @@ class TestInputStateSpec:
     def test_inputstate_class_with_variable(self):
         T = TransferMechanism(default_variable=[[0, 0]], input_states=[InputState])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -490,7 +465,7 @@ class TestInputStateSpec:
         p = MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
         T = TransferMechanism(input_states=[p])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -511,7 +486,7 @@ class TestInputStateSpec:
         p = MappingProjection(sender=t)
         T = TransferMechanism(default_variable=[[0, 0]], input_states=[p])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -521,7 +496,7 @@ class TestInputStateSpec:
         p = MappingProjection()
         T = TransferMechanism(input_states=[p])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -531,7 +506,7 @@ class TestInputStateSpec:
         p = MappingProjection()
         T = TransferMechanism(default_variable=[[0, 0]], input_states=[p])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -541,7 +516,7 @@ class TestInputStateSpec:
         p = MappingProjection()
         T = TransferMechanism(input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS:[p]}])
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0, 0]]))
         assert len(T.input_states) == 1
 
     # ------------------------------------------------------------------------------------------------
@@ -588,8 +563,8 @@ class TestInputStateSpec:
         T1 = TransferMechanism()
         T2 = TransferMechanism()
         InputState(owner=T2, projections=[T1])
-        assert T2.input_states[1].path_afferents[0].sender.owner is T1
 
+        assert T2.input_states[1].path_afferents[0].sender.owner is T1
     # ------------------------------------------------------------------------------------------------
     # TEST 29
 
@@ -760,16 +735,16 @@ class TestInputStateSpec:
             input_states=input_states
         )
         assert T.input_states[0].socket_width == variable_len_state
-        assert T.instance_defaults.variable.shape[-1] == variable_len_mech
+        assert T.defaults.variable.shape[-1] == variable_len_mech
 
     def test_input_states_arg_no_list(self):
         T = TransferMechanism(input_states={VARIABLE: [0, 0, 0]})
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0, 0]]))
         assert len(T.input_states) == 1
 
     def test_input_states_params_no_list(self):
         T = TransferMechanism(params={INPUT_STATES: {VARIABLE: [0, 0, 0]}})
 
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0, 0]]))
         assert len(T.input_states) == 1

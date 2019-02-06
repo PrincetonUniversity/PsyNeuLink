@@ -22,6 +22,7 @@ import typecheck as tc
 #       REP_IN         _|
 
 # It does not yet implement learning or testing.
+import psyneulink.core.components.functions.transferfunctions
 
 
 def step(variable):
@@ -34,12 +35,12 @@ def step(variable):
 #Processing Units:
 rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
 rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
-rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
-rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
-prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
-qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
-act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
+rep_hidden = pnl.TransferMechanism(size=4, function=psyneulink.core.components.functions.transferfunctions.Logistic, name='REP_HIDDEN')
+rel_hidden = pnl.TransferMechanism(size=5, function=psyneulink.core.components.functions.transferfunctions.Logistic, name='REL_HIDDEN')
+rep_out = pnl.TransferMechanism(size=10, function=psyneulink.core.components.functions.transferfunctions.Logistic, name='REP_OUT')
+prop_out = pnl.TransferMechanism(size=12, function=psyneulink.core.components.functions.transferfunctions.Logistic, name='PROP_OUT')
+qual_out = pnl.TransferMechanism(size=13, function=psyneulink.core.components.functions.transferfunctions.Logistic, name='QUAL_OUT')
+act_out = pnl.TransferMechanism(size=14, function=psyneulink.core.components.functions.transferfunctions.Logistic, name='ACT_OUT')
 r_step = pnl.ProcessingMechanism(size=10, function=step, name='REP_STEP')
 p_step = pnl.ProcessingMechanism(size=12, function=step, name='PROP_STEP')
 q_step = pnl.ProcessingMechanism(size=13, function=step, name='QUAL_STEP')
@@ -93,6 +94,7 @@ S = pnl.System(processes=[rep_hidden_proc,
 # S.show_graph(show_dimensions=True)
 
 # Shows all of the learning components:
-# S.show_graph(show_learning=pnl.ALL)
-# S.show_graph(show_learning=pnl.ALL, show_mechanism_structure=True)
-S.show_graph(show_processes=True)
+S.show_graph(show_learning=pnl.ALL)
+# S.show_graph(show_mechanism_structure=True)
+# S.show_graph(show_processes=True)
+# S.show_graph()

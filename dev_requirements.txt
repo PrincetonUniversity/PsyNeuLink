@@ -1,11 +1,15 @@
-pytest
+pytest<4
 pytest-benchmark
 pytest-cov
 pytest-profiling
 pytest-helpers-namespace
+pytest-xdist
 jupyter
 sphinx
 sphinx_rtd_theme
 matplotlib
-ipykernel>=4.6.1
+ipykernel
 graphviz
+pillow
+torch
+ipython

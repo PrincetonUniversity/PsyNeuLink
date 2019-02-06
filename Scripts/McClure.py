@@ -1,7 +1,9 @@
 import functools
-import psyneulink as pnl
 import numpy as np
-from matplotlib import pyplot as plt
+import psyneulink as pnl
+
+import psyneulink.core.components.functions.transferfunctions
+
 np.random.seed(2)
 
 a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
@@ -31,26 +33,29 @@ input_layer = pnl.TransferMechanism(size=2,
 
 
 action_selection = pnl.TransferMechanism(size=2,
-                                         function=pnl.SoftMax(
+                                         function=psyneulink.core.components.functions.transferfunctions.SoftMax(
                                            output=pnl.ALL,
                                            gain=1.0),
                                          output_states=[{pnl.NAME: 'SELECTED ACTION',
                                                          pnl.VARIABLE: [(pnl.INPUT_STATE_VARIABLES, 0),
                                                                         (pnl.OWNER_VALUE, 0)],
                                                          # pnl.VARIABLE: [(pnl.OWNER_VALUE, 0)],
-                                                         pnl.FUNCTION: pnl.OneHot(mode=pnl.PROB_INDICATOR).function},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .selectionfunctions.OneHot(mode=pnl.PROB_INDICATOR).function},
                                                         {pnl.NAME: 'REWARD RATE',
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
-                                                         pnl.FUNCTION: pnl.AdaptiveIntegrator(rate=0.2)},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .integratorfunctions.AdaptiveIntegrator(rate=0.2)},
                                                         {pnl.NAME: 'CONFLICT K',
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
                                           #Jon said this should also work and would be safer: [(pnl.OWNER_VALUE, 0),
                                           #(pnl.OWNER_VALUE, 1)], but it doesn't work (maybe I did sth wrong)
-                                                         pnl.FUNCTION: pnl.Stability(default_variable=[0,0],
-                                                                                     metric=pnl.ENERGY,
-                                                                                     normalize=True)},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .objectivefunctions.Stability(default_variable=[0, 0],
+                                                                                                                                         metric=pnl.ENERGY,
+                                                                                                                                         normalize=True)},
                                                         ],
                                                             #as stated in the paper 'Response conflict was calculated as a normalized                                                                   measure of the energy in the response units during the trial'
                                          name='Action Selection')
@@ -72,16 +77,17 @@ action_selection = pnl.TransferMechanism(size=2,
 #                           name='K')
 
 conflicts = pnl.IntegratorMechanism(input_states=[action_selection.output_states[2]],
-                                    function=pnl.AGTUtilityIntegrator(short_term_gain=6.0,
-                                                                      long_term_gain=6.0,
-                                                                      short_term_rate=0.05,
-                                                                      long_term_rate=0.2),
+                                    function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator(short_term_gain=6.0,
+                                                                                                                                                long_term_gain=6.0,
+                                                                                                                                                short_term_rate=0.05,
+                                                                                                                                                long_term_rate=0.2),
                                     name='Short- and Long-term conflict')
 
 decision_process = pnl.Process(default_variable=[0, 0],
                                pathway=[input_layer,
                                         action_selection],
-                               learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(
+                               learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions
+                                   .learningfunctions.Reinforcement(
                                    learning_rate=0.03)), # if learning rate set to .3 output state values annealing to [0., 0.]
                                # which leads to error in reward function
                                target=0
@@ -96,24 +102,24 @@ LC_NE = pnl.LCControlMechanism(objective_mechanism=pnl.ObjectiveMechanism(monito
                                                                           name='LC-NE ObjectiveMech'),
                                modulated_mechanisms=[action_selection],
                                integration_method='EULER',
-                               initial_w_FHN=initial_u,
-                               initial_v_FHN=initial_v,
-                               time_step_size_FHN=dt,
-                               t_0_FHN=0.0,
-                               a_v_FHN=-1.0,
-                               b_v_FHN=1.0,
-                               c_v_FHN=1.0,
-                               d_v_FHN=0.0,
-                               e_v_FHN=-1.0,
-                               f_v_FHN=1.0,
-                               time_constant_v_FHN=tau_v,
-                               a_w_FHN=1.0,
-                               b_w_FHN=-1.0,
-                               c_w_FHN=0.0,
-                               threshold_FHN=a,
-                               time_constant_w_FHN=tau_u,
-                               mode_FHN=C,
-                               uncorrelated_activity_FHN=d,
+                               initial_w_FitzHughNagumo=initial_u,
+                               initial_v_FitzHughNagumo=initial_v,
+                               time_step_size_FitzHughNagumo=dt,
+                               t_0_FitzHughNagumo=0.0,
+                               a_v_FitzHughNagumo=-1.0,
+                               b_v_FitzHughNagumo=1.0,
+                               c_v_FitzHughNagumo=1.0,
+                               d_v_FitzHughNagumo=0.0,
+                               e_v_FitzHughNagumo=-1.0,
+                               f_v_FitzHughNagumo=1.0,
+                               time_constant_v_FitzHughNagumo=tau_v,
+                               a_w_FitzHughNagumo=1.0,
+                               b_w_FitzHughNagumo=-1.0,
+                               c_w_FitzHughNagumo=0.0,
+                               threshold_FitzHughNagumo=a,
+                               time_constant_w_FitzHughNagumo=tau_u,
+                               mode_FitzHughNagumo=C,
+                               uncorrelated_activity_FitzHughNagumo=d,
                                base_level_gain=G,
                                scaling_factor_gain=k,
                                name='LC-NE')
@@ -150,7 +156,7 @@ def print_header(system):
     print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 
 
-def show_weights():
+def show_weights(system):
     # print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
     # print(
     #     '\nAction selected:  {}; predicted reward: {}'.format(
@@ -176,21 +182,21 @@ def show_weights():
           '\ncoherence C:                {} '
           '\nshort-long-term conflict:   {} '.
         format(
-            action_selection.value,
-            action_selection.output_state.value,
-            comparator.input_states[pnl.SAMPLE].value,
-            comparator.input_states[pnl.TARGET].value,
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].value,
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].value,
-            learn_mech.input_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0],
-            rrate.append(action_selection.output_states[1].value),
-            conflictK.append(action_selection.output_states[2].value),
-            coherence.append(LC_NE.parameter_states[35].value),
-            update.append(updateC.output_state.value),
-            cons.append(conflicts.output_state.value)
+            action_selection.parameters.value.get(system),
+            action_selection.output_state.parameters.value.get(system),
+            comparator.input_states[pnl.SAMPLE].parameters.value.get(system),
+            comparator.input_states[pnl.TARGET].parameters.value.get(system),
+            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(system),
+            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
+            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(system),
+            action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0],
+            rrate.append(action_selection.output_states[1].parameters.value.get(system)),
+            conflictK.append(action_selection.output_states[2].parameters.value.get(system)),
+            coherence.append(LC_NE.parameter_states[35].parameters.value.get(system)),
+            update.append(updateC.output_state.parameters.value.get(system)),
+            cons.append(conflicts.output_state.parameters.value.get(system))
                 )
     )
 
@@ -222,6 +228,6 @@ DA_sys.run(
     num_trials=10,
     inputs=input_dict,
     targets=reward,
-    call_after_trial=show_weights
+    call_after_trial=functools.partial(show_weights, DA_sys)
 )
 

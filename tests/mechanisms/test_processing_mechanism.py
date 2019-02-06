@@ -1,7 +1,17 @@
 import numpy as np
 import pytest
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.components.functions.function import FunctionError, Reduce, LinearCombination, CombineMeans, Linear, Exponential, Logistic, SoftMax, LinearMatrix, Integrator, SimpleIntegrator, ConstantIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, AccumulatorIntegrator, FHNIntegrator, AGTUtilityIntegrator, BogaczEtAl, NavarroAndFuss, NormalDist, UniformToNormalDist, ExponentialDist, UniformDist, GammaDist, WaldDist, Stability, Distance, Hebbian, Reinforcement, BackPropagation, TDLearning
+
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, TDLearning
+from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist, \
+    UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, \
+    AccumulatorIntegrator, DualAdaptiveIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
+from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 
 class TestProcessingMechanismFunctions:
 
@@ -51,11 +61,6 @@ class TestProcessingMechanismFunctions:
         PM1 = ProcessingMechanism(function=SimpleIntegrator)
         PM1.execute(1.0)
 
-    def test_processing_mechanism_ConstantIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=ConstantIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
     def test_processing_mechanism_AdaptiveIntegrator_function(self):
         PM1 = ProcessingMechanism(function=AdaptiveIntegrator)
         PM1.execute(1.0)
@@ -76,18 +81,18 @@ class TestProcessingMechanismFunctions:
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
-    def test_processing_mechanism_FHNIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=FHNIntegrator)
+    def test_processing_mechanism_FitzHughNagumoIntegrator_function(self):
+        PM1 = ProcessingMechanism(function=FitzHughNagumoIntegrator)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
-    def test_processing_mechanism_AGTUtilityIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AGTUtilityIntegrator)
+    def test_processing_mechanism_DualAdaptiveIntegrator_function(self):
+        PM1 = ProcessingMechanism(function=DualAdaptiveIntegrator)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_BogaczEtAl_function(self):
-        PM1 = ProcessingMechanism(function=BogaczEtAl)
+        PM1 = ProcessingMechanism(function=DriftDiffusionAnalytical)
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 

@@ -1,16 +1,18 @@
 import numpy
 
-from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import System
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
-from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.time import TimeScale
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
+from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
+from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
 
 
 
@@ -36,7 +38,7 @@ class TestInit:
 
         # Decision Mechanisms
         Decision = DDM(
-            function=BogaczEtAl(
+            function=DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(0.1654),
                 noise=(0.5),
@@ -130,7 +132,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
 
     def test_two_AAB(self):
         A = IntegratorMechanism(
@@ -176,7 +178,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
 
     def test_two_ABB(self):
         A = TransferMechanism(
@@ -223,7 +225,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
 
 
 class TestBranching:
@@ -290,7 +292,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
 
     def test_three_ABAC_convenience(self):
         A = IntegratorMechanism(
@@ -352,7 +354,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
 
     def test_three_ABACx2(self):
         A = IntegratorMechanism(
@@ -416,7 +418,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
 
     def test_three_2_ABC(self):
         A = IntegratorMechanism(
@@ -479,7 +481,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
 
     def test_three_2_ABCx2(self):
         A = IntegratorMechanism(
@@ -542,7 +544,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
 
     def test_three_integrators(self):
         A = IntegratorMechanism(
@@ -614,7 +616,7 @@ class TestBranching:
 
         for m in range(len(mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].get_output_values(s)[i])
 
     def test_four_ABBCD(self):
         A = TransferMechanism(
@@ -685,7 +687,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
 
     def test_four_integrators_mixed(self):
         A = IntegratorMechanism(
@@ -781,7 +783,7 @@ class TestBranching:
 
         for m in range(len(mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].get_output_values(s)[i])
 
     def test_five_ABABCDE(self):
         A = TransferMechanism(
@@ -859,7 +861,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
 
     #
     #   A  B
@@ -1015,7 +1017,7 @@ class TestBranching:
 
         for m in expected_output:
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], m.output_values[i])
+                numpy.testing.assert_allclose(expected_output[m][i], m.get_output_values(s)[i])
 
 
 class TestTermination:
@@ -1065,7 +1067,7 @@ class TestTermination:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
 
         s.run(
             inputs=stim_list,
@@ -1078,4 +1080,4 @@ class TestTermination:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])

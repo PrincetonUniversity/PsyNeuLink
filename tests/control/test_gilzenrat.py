@@ -1,24 +1,25 @@
 import numpy as np
 
-from psyneulink.components.functions.function import FHNIntegrator, Linear
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FitzHughNagumoIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 
 
 class TestGilzenratMechanisms:
 
     def test_defaults(self):
-        G = LCA(integrator_mode=True,
-                leak=-1.0,
-                noise=0.0,
-                time_step_size=0.02,
-                function=Linear,
-                self_excitation=1.0,
-                competition=-1.0)
+        G = LCAMechanism(integrator_mode=True,
+                         leak=-1.0,
+                         noise=0.0,
+                         time_step_size=0.02,
+                         function=Linear,
+                         self_excitation=1.0,
+                         competition=-1.0)
 
-        # - - - - - LCA integrator functions - - - - -
+        # - - - - - LCAMechanism integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise
         # f(X) = 1.0*X + 0
 
@@ -39,20 +40,20 @@ class TestGilzenratMechanisms:
         # f(X) = 1.0*0.0396 <--- return 0.02, recurrent projection 0.02
 
     def test_previous_value_stored(self):
-        G = LCA(integrator_mode=True,
-                leak=-1.0,
-                noise=0.0,
-                time_step_size=0.02,
-                function=Linear(slope=2.0),
-                self_excitation=1.0,
-                competition=-1.0,
-                initial_value=np.array([[1.0]]))
+        G = LCAMechanism(integrator_mode=True,
+                         leak=-1.0,
+                         noise=0.0,
+                         time_step_size=0.02,
+                         function=Linear(slope=2.0),
+                         self_excitation=1.0,
+                         competition=-1.0,
+                         initial_value=np.array([[1.0]]))
 
         P = Process(pathway=[G])
         S = System(processes=[P])
         G.output_state.value = [0.0]
 
-        # - - - - - LCA integrator functions - - - - -
+        # - - - - - LCAMechanism integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise
         # f(X) = 2.0*X + 0
 
@@ -76,15 +77,15 @@ class TestGilzenratMechanisms:
         # X = 1.04 + 0.0408 = 1.0808 <--- previous value 1.0808
         # f(X) = 2.1616  <--- return 2.1616
 
-    def test_fhn_gilzenrat_figure_2(self):
-        # Isolate the FHN mechanism for testing and recreate figure 2 from the gilzenrat paper
+    def test_fitzHughNagumo_gilzenrat_figure_2(self):
+        # Isolate the FitzHughNagumo mechanism for testing and recreate figure 2 from the gilzenrat paper
 
         initial_v = 0.2
         initial_w = 0.0
 
         F = IntegratorMechanism(
-            name='IntegratorMech-FHNFunction',
-            function=FHNIntegrator(
+            name='IntegratorMech-FitzHughNagumoFunction',
+            function=FitzHughNagumoIntegrator(
                 initial_v=initial_v,
                 initial_w=initial_w,
                 time_step_size=0.01,
@@ -193,7 +194,7 @@ class TestGilzenratMechanisms:
 #                                                     # hetero=-1.0,
 #                                                     time_step_size=time_step_size,
 #                                                     noise=NormalDist(mean=0.0,
-#                                                                      standard_dev=standard_deviation).function,
+#                                                                      standard_deviation=standard_deviation).function,
 #                                                     function=Logistic(bias=0.0),
 #                                                     name='DECISION LAYER')
 #
@@ -207,35 +208,35 @@ class TestGilzenratMechanisms:
 #                                               matrix=np.matrix([[0.5]]),
 #                                               function=Logistic(bias=2),
 #                                               time_step_size=time_step_size,
-#                                               noise=NormalDist(mean=0.0, standard_dev=standard_deviation).function,
+#                                               noise=NormalDist(mean=0.0, standard_deviation=standard_deviation).function,
 #                                               name='RESPONSE')
 #
 #         # Implement response layer with input_state for ObjectiveMechanism that has a single value
 #         # and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
 #         LC = LCControlMechanism(
-#             time_step_size_FHN=time_step_size,  # integrating step size
-#             mode_FHN=C,  # coherence: set to either .95 or .55
-#             uncorrelated_activity_FHN=d,  # Baseline level of intrinsic, uncorrelated LC activity
-#             time_constant_v_FHN=0.05,
-#             time_constant_w_FHN=5,
-#             a_v_FHN=-1.0,
-#             b_v_FHN=1.0,
-#             c_v_FHN=1.0,
-#             d_v_FHN=0.0,
-#             e_v_FHN=-1.0,
-#             f_v_FHN=1.0,
-#             a_w_FHN=1.0,
-#             b_w_FHN=-1.0,
-#             c_w_FHN=0.0,
-#             t_0_FHN=0,
-#             initial_v_FHN=initial_v,
-#             initial_w_FHN=initial_w,
-#             threshold_FHN=0.5,
+#             time_step_size_FitzHughNagumo=time_step_size,  # integrating step size
+#             mode_FitzHughNagumo=C,  # coherence: set to either .95 or .55
+#             uncorrelated_activity_FitzHughNagumo=d,  # Baseline level of intrinsic, uncorrelated LC activity
+#             time_constant_v_FitzHughNagumo=0.05,
+#             time_constant_w_FitzHughNagumo=5,
+#             a_v_FitzHughNagumo=-1.0,
+#             b_v_FitzHughNagumo=1.0,
+#             c_v_FitzHughNagumo=1.0,
+#             d_v_FitzHughNagumo=0.0,
+#             e_v_FitzHughNagumo=-1.0,
+#             f_v_FitzHughNagumo=1.0,
+#             a_w_FitzHughNagumo=1.0,
+#             b_w_FitzHughNagumo=-1.0,
+#             c_w_FitzHughNagumo=0.0,
+#             t_0_FitzHughNagumo=0,
+#             initial_v_FitzHughNagumo=initial_v,
+#             initial_w_FitzHughNagumo=initial_w,
+#             threshold_FitzHughNagumo=0.5,
 #             # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
 #             objective_mechanism=ObjectiveMechanism(
 #                 function=Linear,
-#                 monitored_output_states=[(decision_layer, None, None, np.array([[0.3], [0.0]]))],
-#                 # monitored_output_states=[{PROJECTION_TYPE: MappingProjection,
+#                 monitor=[(decision_layer, None, None, np.array([[0.3], [0.0]]))],
+#                 # monitor=[{PROJECTION_TYPE: MappingProjection,
 #                 #                           SENDER: decision_layer,
 #                 #                           MATRIX: np.array([[0.3],[0.0]])}],
 #                 name='LC ObjectiveMechanism'

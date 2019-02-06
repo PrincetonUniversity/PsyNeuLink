@@ -1,6 +1,10 @@
-import psyneulink as pnl
 import numpy as np
+import psyneulink as pnl
 import pytest
+
+import psyneulink.core.components.functions.combinationfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 
 class TestInputStates:
 
@@ -23,7 +27,8 @@ class TestInputStates:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_states=pnl.InputState(function=pnl.LinearCombination,
+                input_states=pnl.InputState(function=psyneulink.core.components.functions.combinationfunctions
+                                            .LinearCombination,
                                             combine=pnl.PRODUCT))
         p1 = pnl.Process(pathway=[t1, t3])
         p2 = pnl.Process(pathway=[t2, t3])
@@ -37,7 +42,7 @@ class TestInputStates:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_states=pnl.InputState(function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                input_states=pnl.InputState(function=psyneulink.core.components.functions.combinationfunctions.LinearCombination(operation=pnl.PRODUCT),
                                             combine=pnl.PRODUCT))
         p1 = pnl.Process(pathway=[t1, t3])
         p2 = pnl.Process(pathway=[t2, t3])
@@ -48,20 +53,21 @@ class TestInputStates:
 
     def test_combine_param_conflicting_fct_operation_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.LinearCombination(operation=pnl.SUM),
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions.combinationfunctions.LinearCombination(operation=pnl.SUM),
                                                                   combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with specification of 'operation' (SUM) " \
                "for LinearCombination in 'function' argument for InputState" in str(error_text.value)
 
     def test_combine_param_conflicting_function_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.Linear(), combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions
+                                                                  .transferfunctions.Linear(), combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear Function" in str(error_text.value)
 
     def test_combine_param_conflicting_fct_class_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.Linear, combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions.transferfunctions.Linear, combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear) for InputState" in str(error_text.value)
 
@@ -71,8 +77,8 @@ class TestInputStates:
 
         pnl.MappingProjection(sender=a, receiver=b)
 
-        assert b.input_state.instance_defaults.variable.shape == np.array([0]).shape
-        assert b.input_state.function_object.instance_defaults.variable.shape == np.array([0]).shape
+        assert b.input_state.defaults.variable.shape == np.array([0]).shape
+        assert b.input_state.function.defaults.variable.shape == np.array([0]).shape
 
     @pytest.mark.parametrize('num_incoming_projections', [2, 3, 4])
     def test_adding_projections_modifies_variable(self, num_incoming_projections):
@@ -81,17 +87,17 @@ class TestInputStates:
 
         receiver_input_state_variable = np.array([[0] for _ in range(num_incoming_projections)])
 
-        assert mechs[-1].input_state.instance_defaults.variable.shape == receiver_input_state_variable.shape
-        assert mechs[-1].input_state.function_object.instance_defaults.variable.shape == receiver_input_state_variable.shape
+        assert mechs[-1].input_state.defaults.variable.shape == receiver_input_state_variable.shape
+        assert mechs[-1].input_state.function.defaults.variable.shape == receiver_input_state_variable.shape
 
     def test_input_state_variable_shapes(self):
         t = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [[0], [0]]}])
 
-        assert t.input_state.instance_defaults.variable.shape == np.array([[0], [0]]).shape
-        assert t.input_state.instance_defaults.value.shape == np.array([0]).shape
+        assert t.input_state.defaults.variable.shape == np.array([[0], [0]]).shape
+        assert t.input_state.defaults.value.shape == np.array([0]).shape
 
-        assert t.input_state.function_object.instance_defaults.variable.shape == np.array([[0], [0]]).shape
-        assert t.input_state.function_object.instance_defaults.value.shape == np.array([0]).shape
+        assert t.input_state.function.defaults.variable.shape == np.array([[0], [0]]).shape
+        assert t.input_state.function.defaults.value.shape == np.array([0]).shape
 
     def test_internal_only(self):
         m = pnl.TransferMechanism(input_states=['EXTERNAL', pnl.InputState(name='INTERNAL_ONLY', internal_only=True)])

@@ -1,15 +1,16 @@
 import pytest
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 
 def test_control_mechanism_assignment():
     '''ControlMechanism assignment/replacement,  monitor_for_control, and control_signal specifications'''
 
     T1 = pnl.TransferMechanism(size=3, name='T-1')
-    T2 = pnl.TransferMechanism(function=pnl.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T-2')
-    T3 = pnl.TransferMechanism(function=pnl.Logistic, name='T-3')
-    T4 = pnl.TransferMechanism(function=pnl.Logistic, name='T-4')
+    T2 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T-2')
+    T3 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, name='T-3')
+    T4 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, name='T-4')
     P = pnl.Process(pathway=[T1, T2, T3, T4])
     S = pnl.System(processes=P,
                    # controller=pnl.EVCControlMechanism,
@@ -23,10 +24,10 @@ def test_control_mechanism_assignment():
                                         ('O-1', 1, -1)],
                    control_signals=[(pnl.GAIN, T3)]
                    )
-    assert len(S.controller.objective_mechanism.monitored_output_states)==3
+    assert len(S.controller.objective_mechanism.monitor)==3
     assert len(S.control_signals)==2
 
-    # Test for avoiding duplicate assignment of monitored_output_states and control_signals
+    # Test for avoiding duplicate assignment of monitor and control_signals
     C1 = pnl.EVCControlMechanism(name='C-1',
                                  objective_mechanism = [(T1, None, None, np.ones((3,1)))],
                                  control_signals=[(pnl.GAIN, T3)]
@@ -77,7 +78,7 @@ def test_control_mechanism_assignment_additional():
     T_2 = pnl.TransferMechanism(name='T_2')
     S = pnl.sys([T_1,T_2],
                 controller=pnl.EVCControlMechanism(control_signals=(pnl.SLOPE, T_1)),
-                monitor_for_control=T_1,
+                monitor_for_control=[T_1],
                 control_signals=(pnl.SLOPE, T_2),
                 enable_controller=True)
     assert S.controller.objective_mechanism.input_state.path_afferents[0].sender.owner == T_1
@@ -92,6 +93,7 @@ def test_prediction_mechanism_assignment():
     T3 = pnl.TransferMechanism(name='T3')
 
     S = pnl.sys([T1, T2, T3],
+                # controller=pnl.EVCControlMechanism(name='EVC',
                 controller=pnl.EVCControlMechanism(name='EVC',
                                                    prediction_mechanisms=(pnl.PredictionMechanism,
                                                                           {pnl.FUNCTION: pnl.INPUT_SEQUENCE,

@@ -3,76 +3,58 @@ language: python
 python:
     - 3.5
     - 3.6
+    - 3.7
 
 install:
   - pip install coveralls
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
-os:
-  - linux
+os: linux
+
+dist: xenial
+
+env: PYTHONWARNINGS="ignore::DeprecationWarning"
 
 # Cache installed python packages
 cache:
-  directories:
-    - $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages
-    - $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin
+  pip
 
 matrix:
   include:
-  - python: 3.7
-    dist: xenial # Python 3.7 is only available on xenial because of deps
-
   - os: osx
     python: 3.5
-    language: generic
+    language: minimal
     env:
         - PYTHON=3.5.4
         - PYTHON_PKG_VERSION=macosx10.6
-    # Cache installed python packages
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - venv/lib/python3.5/site-packages
-          - venv/bin
-    # The pip update script below overwrites (and thus modifies) cached entries.
-    # Remove them to avoid reuploading the cache on every build
-    before_cache:
-        - rm -rvf venv/lib/python3.5/site-packages/pip*
-        - rm -rvf venv/bin/pip*
+          - $HOME/Library/Caches
 
   - os: osx
     python: 3.6
-    language: generic
+    language: minimal
     env:
-        - PYTHON=3.6.6
+        - PYTHON=3.6.8
         - PYTHON_PKG_VERSION=macosx10.9
-    # Cache installed python packages
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - venv/lib/python3.6/site-packages
-          - venv/bin
-    # The pip update script below overwrites (and thus modifies) cached entries.
-    # Remove them to avoid reuploading the cache on every build
-    before_cache:
-        - rm -rvf venv/lib/python3.6/site-packages/pip*
-        - rm -rvf venv/bin/pip*
+          - $HOME/Library/Caches
 
   - os: osx
     python: 3.7
-    language: generic
+    language: minimal
     env:
-        - PYTHON=3.7.0
+        - PYTHON=3.7.2
         - PYTHON_PKG_VERSION=macosx10.9
-    # Cache installed python packages
+        - PYTHONWARNINGS="ignore::DeprecationWarning"
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - venv/lib/python3.7/site-packages
-          - venv/bin
-    # The pip update script below overwrites (and thus modifies) cached entries.
-    # Remove them to avoid reuploading the cache on every build
-    before_cache:
-        - rm -rvf venv/lib/python3.7/site-packages/pip*
-        - rm -rvf venv/bin/pip*
+          - $HOME/Library/Caches
 
 addons:
   apt:
@@ -82,14 +64,20 @@ addons:
 before_install: |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     FILE=python-$PYTHON-$PYTHON_PKG_VERSION.pkg
-    curl -O -#  https://www.python.org/ftp/python/$PYTHON/$FILE
-    sudo installer -pkg $FILE -target /
+    if [ ! -f $HOME/Library/Caches/$FILE ]; then
+      curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
+    fi
+    sudo installer -pkg $HOME/Library/Caches/$FILE -target /
     python3 --version
+
+    echo "Deploying new python venv"
+    python3 -m pip --version
+
     # This sidesteps TLSv1.1 issue when using pip
     curl https://bootstrap.pypa.io/get-pip.py | python3
     python3 -m pip  install virtualenv
-    python3 -m venv venv
-    source venv/bin/activate
+    python3 -m venv $HOME/venv
+    source $HOME/venv/bin/activate
     python --version
     # virtualenv installs default pip even if we updated it above.
     # update it again.

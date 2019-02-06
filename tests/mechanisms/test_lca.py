@@ -1,22 +1,22 @@
-import pytest
 import numpy as np
+import pytest
 
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.functions.function import Linear
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.scheduling.condition import Never
+from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 
 class TestLCA:
-    def test_LCA_length_1(self):
+    def test_LCAMechanism_length_1(self):
 
         T = TransferMechanism(function=Linear(slope=1.0))
-        L = LCA(function=Linear(slope=2.0),
-                self_excitation=3.0,
-                leak=0.5,
-                competition=1.0,   #  competition does not matter because we only have one unit
-                time_step_size=0.1)
+        L = LCAMechanism(function=Linear(slope=2.0),
+                         self_excitation=3.0,
+                         leak=0.5,
+                         competition=1.0,  #  competition does not matter because we only have one unit
+                         time_step_size=0.1)
         P = Process(pathway=[T, L])
         S = System(processes=[P])
         L.reinitialize_when = Never()
@@ -35,7 +35,7 @@ class TestLCA:
 
         results=[]
         def record_execution():
-            results.append(L.value[0][0])
+            results.append(L.parameters.value.get(S)[0][0])
 
         S.run(inputs={T: [1.0]},
               num_trials=3,
@@ -59,16 +59,16 @@ class TestLCA:
         assert np.allclose(results, [0.2, 0.53, 1.0745])
 
 
-    def test_LCA_length_2(self):
+    def test_LCAMechanism_length_2(self):
 
         T = TransferMechanism(function=Linear(slope=1.0),
                               size=2)
-        L = LCA(function=Linear(slope=2.0),
-                size=2,
-                self_excitation=3.0,
-                leak=0.5,
-                competition=1.0,
-                time_step_size=0.1)
+        L = LCAMechanism(function=Linear(slope=2.0),
+                         size=2,
+                         self_excitation=3.0,
+                         leak=0.5,
+                         competition=1.0,
+                         time_step_size=0.1)
 
         P = Process(pathway=[T, L])
         S = System(processes=[P])
@@ -88,7 +88,7 @@ class TestLCA:
 
         results=[]
         def record_execution():
-            results.append(L.value[0])
+            results.append(L.parameters.value.get(S)[0])
 
         S.run(inputs={T: [1.0, 2.0]},
               num_trials=3,
@@ -124,15 +124,15 @@ class TestLCAReinitialize:
 
     def test_reinitialize_run(self):
 
-        L = LCA(name="L",
-                function=Linear,
-                initial_value=0.5,
-                integrator_mode=True,
-                leak=0.1,
-                competition=0,
-                self_excitation=1.0,
-                time_step_size=1.0,
-                noise=0.0)
+        L = LCAMechanism(name="L",
+                         function=Linear,
+                         initial_value=0.5,
+                         integrator_mode=True,
+                         leak=0.1,
+                         competition=0,
+                         self_excitation=1.0,
+                         time_step_size=1.0,
+                         noise=0.0)
         P = Process(name="P",
                     pathway=[L])
         S = System(name="S",
@@ -148,7 +148,7 @@ class TestLCAReinitialize:
               initialize=True,
               initial_values={L: 0.0})
 
-        # Integrator fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
+        # IntegratorFunction fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
 
         # Trial 1    |   variable = 1.0 + 0.0
         # integration: 0.5 + (0.1*0.5 + 1.0)*1.0 + 0.0 = 1.55
@@ -156,17 +156,17 @@ class TestLCAReinitialize:
         # Trial 2    |   variable = 1.0 + 1.55
         # integration: 1.55 + (0.1*1.55 + 2.55)*1.0 + 0.0 = 4.255
         #  linear fn: 4.255*1.0 = 4.255
-        assert np.allclose(L.integrator_function.previous_value, 4.255)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 4.255)
 
-        L.integrator_function.reinitialize(0.9)
+        L.integrator_function.reinitialize(0.9, execution_context=S)
 
-        assert np.allclose(L.integrator_function.previous_value, 0.9)
-        assert np.allclose(L.value, 4.255)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 0.9)
+        assert np.allclose(L.parameters.value.get(S), 4.255)
 
-        L.reinitialize(0.5)
+        L.reinitialize(0.5, execution_context=S)
 
-        assert np.allclose(L.integrator_function.previous_value, 0.5)
-        assert np.allclose(L.value, 0.5)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 0.5)
+        assert np.allclose(L.parameters.value.get(S), 0.5)
 
         S.run(inputs={L: 1.0},
               num_trials=2)
@@ -176,30 +176,30 @@ class TestLCAReinitialize:
         # Trial 4    |   variable = 1.0 + 2.05
         # integration: 2.05 + (0.1*2.05 + 3.05)*1.0 + 0.0 = 5.305
         #  linear fn: 5.305*1.0 = 5.305
-        assert np.allclose(L.integrator_function.previous_value, 5.305)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 5.305)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 
 class TestClip:
 
     def test_clip_float(self):
-        L = LCA(clip=[-2.0, 2.0],
-                function=Linear,
-                integrator_mode=False)
+        L = LCAMechanism(clip=[-2.0, 2.0],
+                         function=Linear,
+                         integrator_mode=False)
         assert np.allclose(L.execute(3.0), 2.0)
         assert np.allclose(L.execute(-3.0), -2.0)
 
     def test_clip_array(self):
-        L = LCA(default_variable=[[0.0, 0.0, 0.0]],
-                clip=[-2.0, 2.0],
-                function=Linear,
-                integrator_mode=False)
+        L = LCAMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                         clip=[-2.0, 2.0],
+                         function=Linear,
+                         integrator_mode=False)
         assert np.allclose(L.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
 
     def test_clip_2d_array(self):
-        L = LCA(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-                clip=[-2.0, 2.0],
-                function=Linear,
-                integrator_mode=False)
+        L = LCAMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                         clip=[-2.0, 2.0],
+                         function=Linear,
+                         integrator_mode=False)
         assert np.allclose(L.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])

@@ -1,11 +1,10 @@
 Compositions
 ============
 
-Collections of `Core` `Components` and/or other Compositions that implement a model of the mechanism(s) underlying a
-particular brain function and/or psychological process.
+Subclasses of `Core` `Composition` that implement specialized operations.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   AGT
-   EVC
+   AutodiffComposition
+

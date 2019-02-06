@@ -1,10 +1,10 @@
-from psyneulink.components.functions.function import Linear
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import ENABLED, ALL
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import ALL, ENABLED
+from psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism import LCControlMechanism
 
 class TestSimpleSystems:
 
@@ -137,7 +137,7 @@ class TestControl:
         b = TransferMechanism(name="b")
         LC = LCControlMechanism(modulated_mechanisms=[a,b],
                                 objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                                       monitored_output_states=[b],
+                                                                       monitor=[b],
                                                                        name='lc_om'),
                                 name="lc"
                                 )
@@ -160,7 +160,7 @@ class TestControl:
                               default_variable=[0, 0, 0, 0, 0])
         LC = LCControlMechanism(modulated_mechanisms=[a,b],
                                 objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                                       monitored_output_states=[b],
+                                                                       monitor=[b],
                                                                        name='lc_om'),
                                 name="lc"
                                 )
@@ -187,7 +187,7 @@ class TestControl:
                               default_variable=[0, 0, 0, 0, 0])
         LC = LCControlMechanism(modulated_mechanisms=[a,b],
                                 objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                                       monitored_output_states=[b],
+                                                                       monitor=[b],
                                                                        name='lc_om'),
                                 name="lc"
                                 )

@@ -1,26 +1,27 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
-    function=pnl.Logistic,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic,
     params={pnl.INPUT_LABELS_DICT:{'red': [-1, 30]}},
     default_variable=np.zeros((2,)))
 
 Hidden_Layer_1 = pnl.TransferMechanism(
     name='Hidden Layer_1',
-    function=pnl.Logistic(),
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
     default_variable=np.zeros((5,)))
 
 Hidden_Layer_2 = pnl.TransferMechanism(
     name='Hidden Layer_2',
-    function=pnl.Logistic(),
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
     default_variable=[0, 0, 0, 0])
 
 Output_Layer = pnl.TransferMechanism(
     name='Output Layer',
-    function=pnl.Logistic,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic,
     default_variable=[0, 0, 0])
 
 Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
@@ -85,33 +86,35 @@ def print_header(system):
 
 def show_target(system):
     i = system.input
-    t = system.target_input_states[0].value
+    t = system.target_input_states[0].parameters.value.get(system)
     print('\nOLD WEIGHTS: \n')
-    print('- Input Weights: \n', Input_Weights.matrix)
-    print('- Middle Weights: \n', Middle_Weights.matrix)
-    print('- Output Weights: \n', Output_Weights.matrix)
+    print('- Input Weights: \n', Input_Weights.parameters.matrix.get(system))
+    print('- Middle Weights: \n', Middle_Weights.parameters.matrix.get(system))
+    print('- Output Weights: \n', Output_Weights.parameters.matrix.get(system))
 
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print('ACTIVITY FROM OLD WEIGHTS: \n')
-    print('- Middle 1: \n', Hidden_Layer_1.value)
-    print('- Middle 2: \n', Hidden_Layer_2.value)
-    print('- Output:\n', Output_Layer.value)
+    print('- Middle 1: \n', Hidden_Layer_1.parameters.value.get(system))
+    print('- Middle 2: \n', Hidden_Layer_2.parameters.value.get(system))
+    print('- Output:\n', Output_Layer.parameters.value.get(system))
 
 
 mySystem = pnl.System(
-    processes=[z],
-    targets=[0, 0, 1],
-    learning_rate=2.0
+        name='Multilayer-Learning',
+        processes=[z],
+        targets=[0, 0, 1],
+        learning_rate=2.0
 )
 
 # Log Middle_Weights of MappingProjection to Hidden_Layer_2
 # Hidden_Layer_2.set_log_conditions('Middle Weights')
-Middle_Weights.set_log_conditions('matrix')
+Middle_Weights.set_log_conditions('mod_matrix')
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:
-# mySystem.show_graph(show_dimensions=pnl.ALL)
-mySystem.show_graph(show_learning=pnl.ALL, show_processes=True)
+mySystem.show_graph(show_dimensions=pnl.ALL)
+mySystem.show_graph(show_learning=pnl.ALL)
+# mySystem.show_graph(show_learning=pnl.ALL, show_processes=True)
 # mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)
 # Shows minimal graph:
 # mySystem.show_graph()
@@ -121,14 +124,15 @@ stim_list = {Input_Layer: ['red']}
 target_list = {Output_Layer: [[0, 0, 1]]}
 
 mySystem.run(
-    num_trials=10,
-    inputs=stim_list,
-    targets=target_list,
-    call_before_trial=functools.partial(print_header, mySystem),
-    call_after_trial=functools.partial(show_target, mySystem),
-    termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
+        num_trials=1,
+        inputs=stim_list,
+        targets=target_list,
+        call_before_trial=functools.partial(print_header, mySystem),
+        call_after_trial=functools.partial(show_target, mySystem),
+        termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)},
+        animate={'show_learning':pnl.ALL, 'unit':pnl.EXECUTION_SET, pnl.SAVE_IMAGES:True}
 )
 
 # Print out logged weights for Middle_Weights
 # print('\nMiddle Weights (to Hidden_Layer_2): \n', Hidden_Layer_2.log.nparray(entries='Middle Weights', header=False))
-print('\nMiddle Weights (to Hidden_Layer_2): \n', Middle_Weights.log.nparray(entries='matrix', header=False))
+print('\nMiddle Weights (to Hidden_Layer_2): \n', Middle_Weights.log.nparray(entries='mod_matrix', header=False))
