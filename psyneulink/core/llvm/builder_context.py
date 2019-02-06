@@ -24,11 +24,13 @@ __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_ll
 
 _modules = set()
 _all_modules = set()
+_struct_count = 0
 
 @atexit.register
 def module_count():
-    if "mod_count" in debug_env:
+    if "stat" in debug_env:
         print("Total LLVM modules: ", len(_all_modules))
+        print("Total structures generated: ", _struct_count)
 
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
@@ -485,8 +487,6 @@ def _gen_cuda_kernel_wrapper_module(function):
     module.add_named_metadata("nvvm.annotations", [kernel_func, "kernel", ir.IntType(32)(1)])
 
     return module
-
-_struct_count = 0
 
 def _convert_llvm_ir_to_ctype(t):
     if type(t) is ir.VoidType:
