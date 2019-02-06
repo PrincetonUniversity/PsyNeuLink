@@ -15,6 +15,7 @@ from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
+from .builder_context import _type_cache
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -144,6 +145,19 @@ if ptx_enabled:
     _ptx_engine = ptx_jit_engine()
 
 # Initialize builtins
-with LLVMBuilderContext() as ctx:
-    builtins.setup_pnl_intrinsics(ctx)
-    builtins.setup_vxm(ctx)
+def init_builtins():
+    with LLVMBuilderContext() as ctx:
+        builtins.setup_pnl_intrinsics(ctx)
+        builtins.setup_vxm(ctx)
+
+def cleanup():
+    _cpu_engine.clean_module()
+    if ptx_enabled:
+        _ptx_engine.clean_module()
+
+    _modules.clear()
+    _compiled_modules.clear()
+    _type_cache.clear()
+    init_builtins()
+
+init_builtins()

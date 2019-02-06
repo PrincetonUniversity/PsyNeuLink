@@ -15,7 +15,6 @@ from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
-belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
 class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
@@ -430,30 +429,6 @@ class TestInputStateSpec:
         )
         assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
         assert len(T.input_states) == 2
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 27
-
-    def test_add_input_state_belonging_to_another_mech_error(self):
-        with pytest.raises(StateError) as error_text:
-            m = TransferMechanism(default_variable=[0, 0, 0])
-            i = InputState(owner=m, variable=[0, 0, 0])
-            TransferMechanism(input_states=[i])
-        assert belongs_to_another_mechanism_error_text in str(error_text.value)
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 39
-
-    def test_name_assigned_before_error(self):
-        name = 'target'
-        with pytest.raises(StateError) as error_text:
-            m = TransferMechanism(default_variable=[0, 0, 0])
-            i = InputState(owner=m, name=name, variable=[0, 0, 0])
-            TransferMechanism(input_states=[i])
-        assert (
-            belongs_to_another_mechanism_error_text in str(error_text.value)
-            and 'Attempt to assign a State ({})'.format(name) in str(error_text.value)
-        )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 28

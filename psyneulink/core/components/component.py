@@ -915,8 +915,10 @@ class Component(object, metaclass=ComponentsMeta):
     # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
     prev_context = None
 
-    _deepcopy_shared_keys = set([
-        'init_args'
+    _deepcopy_shared_keys = frozenset([
+        'init_args',
+        '_Component__llvm_function',
+        '_Component__llvm_bin_function',
     ])
 
     class _CompilationData(ParametersBase):
@@ -1154,25 +1156,24 @@ class Component(object, metaclass=ComponentsMeta):
             self.function.context.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 END
 
-        self.__llvm_function_name = None
+        self.__llvm_function = None
         self.__llvm_bin_function = None
         self._compilation_data = self._CompilationData(owner=self)
 
     @property
-    def _llvm_symbol_name(self):
-        if self.__llvm_function_name is None:
-            self.__llvm_function_name = self._gen_llvm_function()
+    def _llvm_function(self):
+        if self.__llvm_function is None:
+            self.__llvm_function = self._gen_llvm_function()
             self.__llvm_bin_function = None
-        return self.__llvm_function_name
+        return self.__llvm_function
 
     @property
     def _llvmBinFunction(self):
         if self.__llvm_bin_function is None:
-            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_symbol_name)
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
         return self.__llvm_bin_function
 
     def _gen_llvm_function(self):
-        func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
@@ -1183,6 +1184,8 @@ class Component(object, metaclass=ComponentsMeta):
 
             func_name = ctx.get_unique_name(self.name)
             llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
             params, context, arg_in, arg_out = llvm_func.args
             for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
@@ -1191,12 +1194,13 @@ class Component(object, metaclass=ComponentsMeta):
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = pnlvm.ir.IRBuilder(block)
+            builder.debug_metadata = ctx.get_debug_location(llvm_func, self)
 
             builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
 
             builder.ret_void()
-        return func_name
 
+        return llvm_func
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1205,7 +1209,7 @@ class Component(object, metaclass=ComponentsMeta):
     def __deepcopy__(self, memo):
         fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
         newone = fun(self, memo)
-        newone.__dict__['_Component__llvm_function_name'] = None
+        newone.__dict__['_Component__llvm_function'] = None
         newone.__dict__['_Component__llvm_bin_function'] = None
 
         if newone.parameters is not newone.class_parameters:
@@ -2279,16 +2283,19 @@ class Component(object, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._initialize_from_context(execution_context, base_execution_context, override)
 
-        for param in [p for p in self.stateful_parameters if p.setter is None and not isinstance(p, ParameterAlias)]:
-            param._initialize_from_context(execution_context, base_execution_context, override)
+        non_alias_params =  [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
+        for param in non_alias_params:
+            if param.setter is None:
+                param._initialize_from_context(execution_context, base_execution_context, override)
 
         # attempt to initialize any params with setters (some params with setters may depend on the
         # initialization of other params)
         # this pushes the problem down one level so that if there are two such that they depend on each other,
         # it will still fail. in this case, it is best to resolve the problem in the setter with a default
         # initialization value
-        for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParameterAlias)]:
-            param._initialize_from_context(execution_context, base_execution_context, override)
+        for param in non_alias_params:
+            if param.setter is not None:
+                param._initialize_from_context(execution_context, base_execution_context, override)
 
     def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
         context_param = self.parameters.context.get(execution_id)

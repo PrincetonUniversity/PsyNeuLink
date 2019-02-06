@@ -137,7 +137,7 @@ class TestControl:
         b = TransferMechanism(name="b")
         LC = LCControlMechanism(modulated_mechanisms=[a,b],
                                 objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                                       monitored_output_states=[b],
+                                                                       monitor=[b],
                                                                        name='lc_om'),
                                 name="lc"
                                 )
@@ -160,7 +160,7 @@ class TestControl:
                               default_variable=[0, 0, 0, 0, 0])
         LC = LCControlMechanism(modulated_mechanisms=[a,b],
                                 objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                                       monitored_output_states=[b],
+                                                                       monitor=[b],
                                                                        name='lc_om'),
                                 name="lc"
                                 )
@@ -187,7 +187,7 @@ class TestControl:
                               default_variable=[0, 0, 0, 0, 0])
         LC = LCControlMechanism(modulated_mechanisms=[a,b],
                                 objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                                       monitored_output_states=[b],
+                                                                       monitor=[b],
                                                                        name='lc_om'),
                                 name="lc"
                                 )

@@ -165,10 +165,10 @@ xor_autodiff = AutodiffComposition(
     randomize=False
 )
 
-# add the mechanisms (add_c_node) and projections (add_projection) to AutodiffComposition
-xor_autodiff.add_c_node(xor_in)
-xor_autodiff.add_c_node(xor_hid)
-xor_autodiff.add_c_node(xor_out)
+# add the mechanisms (add_node) and projections (add_projection) to AutodiffComposition
+xor_autodiff.add_node(xor_in)
+xor_autodiff.add_node(xor_hid)
+xor_autodiff.add_node(xor_out)
 
 # train the AutodiffComposition
 xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
