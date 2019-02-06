@@ -929,8 +929,10 @@ class LinearCombination(
         exponent_param_ptr, builder = ctx.get_param_ptr(self, builder, params, EXPONENTS)
         exponent_type = exponent_param_ptr.type.pointee
 
-        scale = ctx.float_ty(1.0) if isinstance(scale_type, pnlvm.ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
+        weights_ptr, builder = ctx.get_param_ptr(self, builder, params, WEIGHTS)
+        weights_type = weights_ptr.type.pointee
 
+        scale = ctx.float_ty(1.0) if isinstance(scale_type, pnlvm.ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
@@ -962,6 +964,25 @@ class LinearCombination(
             in_val = builder.load(ptri)
             in_val = builder.call(pow_f, [in_val, exponent])
 
+            # No weights
+            if isinstance(weights_type, pnlvm.ir.LiteralStructType):
+                weight = ctx.float_ty(1.0)
+            # Vector weights
+            elif isinstance(weights_type, pnlvm.ir.ArrayType):
+                assert len(weights_type) == vi.type.pointee.count
+                weight_ptr = builder.gep(weights_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                # Vector of vectors (even 1-element vectors)
+                if isinstance(weights_type.element, pnlvm.ir.ArrayType):
+                    idx = index if len(weights_type.element) > 1 else ctx.int32_ty(0)
+                    weight_ptr = builder.gep(weight_ptr, [ctx.int32_ty(0), idx])
+
+                weight = builder.load(weight_ptr)
+            # Scalar weights
+            else:
+                weight = builder.load(weights_ptr)
+
+            in_val = builder.fmul(in_val, weight)
+
             if operation is SUM:
                 val = builder.fadd(val, in_val)
             else:
@@ -977,6 +998,7 @@ class LinearCombination(
         # Sometimes we arg_out to 2d array
         out_t = arg_out.type.pointee
         if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
+            assert len(out_t) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}

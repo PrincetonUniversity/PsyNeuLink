@@ -8,6 +8,21 @@
 
 
 # ********************************************* Debug environment **************************************************************
+# This file provides preprocessed interface to PNL_LLVM_DEBUG environment variable
+# The currently recognized values are:
+# "compile" -- prints information messages when modules are compiled
+# "stat" -- prints code generation and compilation statistics at the end
+# "debug_info" -- emit line debuging information when generating llvm IR
+# "const_params" -- harcode base parameter values into generated code,
+#                   instead of laoding them from param_struct
+# "comp_node_debug" -- print intermediate results after execution composition node wrapper.
+# "llvm" -- dumps llvm IR into a file (named after the dumped module).
+#            Code is dumped both after module generation and linking into global module.
+# "opt" -- dump llvm IR after running through the optimization passes
+# "isa" -- dump machine specific ISA
+# "cuda" -- enable execution on CUDA devices if available
+# "cuda_data" -- print data upload/download statistic (to GPU VRAM)
+
 import os
 
 debug_env = str(os.environ.get("PNL_LLVM_DEBUG")).split(',')

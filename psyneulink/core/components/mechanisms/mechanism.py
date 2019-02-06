@@ -480,7 +480,9 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
   InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
   `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
-  **default_variable** is not specified, a default value is specified by the Mechanism.
+  **default_variable** is not specified, a default value is specified by the Mechanism. An InputState may also be
+  specified by the InputState of another Node in the Composition. In this case, a new InputState is created that
+  "shadows" the one specified, meaning that it receives projections from all of the same senders.
 
 COMMENT:
 *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
@@ -2709,7 +2711,7 @@ class Mechanism_Base(Mechanism):
             ps_function = ctx.get_llvm_function(state)
 
             # Parameter states are in the 4th block (idx 3).
-            # After input, function,  and output
+            # After input, function, and output.
             ps_idx = ctx.int32_ty(3)
             ps_params = builder.gep(params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
@@ -2774,8 +2776,8 @@ class Mechanism_Base(Mechanism):
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_states(self.function, mf_params_ptr, ctx, builder, params, context, arg_in)
 
-        mf_state = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
+        mf_ctx = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_ctx, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
@@ -3108,11 +3110,10 @@ class Mechanism_Base(Mechanism):
         been constructed.
 
         If the `owner <State_Base.owner>` of a State specified in the **states** argument is not the same as the
-        Mechanism to which it is being added, the user is given the option of reassigning the State to the `owner
-        <State_Base.owner>`, making a copy of the State and assigning that to the `owner <State_Base.owner>`, or
-        aborting.  If the name of a specified State is the same as an existing one with the same name, an index is
-        appended to its name, and incremented for each State subsequently added with the same name (see :ref:`naming
-        conventions <LINK>`).  If a specified State already belongs to the Mechanism, the request is ignored.
+        Mechanism to which it is being added an error is generated.    If the name of a specified State is the same
+        as an existing one with the same name, an index is appended to its name, and incremented for each State
+        subsequently added with the same name (see :ref:`naming conventions <LINK>`).  If a specified State already
+        belongs to the Mechanism, the request is ignored.
 
         .. note::
             Adding InputStates to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,

@@ -659,7 +659,6 @@ class MappingProjection(PathwayProjection_Base):
         self.parameters.context.get(execution_id).string = context
 
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-
         return super()._execute(
             variable=variable,
             execution_id=execution_id,

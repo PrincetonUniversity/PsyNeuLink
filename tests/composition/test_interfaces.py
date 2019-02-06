@@ -64,8 +64,8 @@ class TestExecuteCIM:
         B = TransferMechanism(name="composition-pytests-B",
                               function=Linear(slope=3.0))
 
-        comp.add_c_node(A)
-        comp.add_c_node(B)
+        comp.add_node(A)
+        comp.add_node(B)
 
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
@@ -94,8 +94,8 @@ class TestExecuteCIM:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        comp.add_c_node(A)
-        comp.add_c_node(B)
+        comp.add_node(A)
+        comp.add_node(B)
 
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A, B)
@@ -137,8 +137,8 @@ class TestConnectCompositionsViaCIMS:
         B = TransferMechanism(name="composition-pytests-B",
                               function=Linear(slope=3.0))
 
-        comp1.add_c_node(A)
-        comp1.add_c_node(B)
+        comp1.add_node(A)
+        comp1.add_node(B)
 
         comp1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
@@ -158,8 +158,8 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                               function=Linear(slope=3.0))
 
-        comp2.add_c_node(A2)
-        comp2.add_c_node(B2)
+        comp2.add_node(A2)
+        comp2.add_node(B2)
 
         comp2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
 
@@ -167,8 +167,8 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=comp2)
 
         comp3 = Composition(name="outer_composition")
-        comp3.add_c_node(comp1)
-        comp3.add_c_node(comp2)
+        comp3.add_node(comp1)
+        comp3.add_node(comp2)
         comp3.add_projection(MappingProjection(), comp1, comp2)
 
         # comp1:
@@ -214,8 +214,8 @@ class TestConnectCompositionsViaCIMS:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        inner_composition_1.add_c_node(A)
-        inner_composition_1.add_c_node(B)
+        inner_composition_1.add_node(A)
+        inner_composition_1.add_node(B)
 
         inner_composition_1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         inner_composition_1.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A,
@@ -233,8 +233,8 @@ class TestConnectCompositionsViaCIMS:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        inner_composition_2.add_c_node(A2)
-        inner_composition_2.add_c_node(B2)
+        inner_composition_2.add_node(A2)
+        inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
         inner_composition_2.add_projection(MappingProjection(sender=A2.output_states[1], receiver=B2.input_states[1]),
@@ -244,8 +244,8 @@ class TestConnectCompositionsViaCIMS:
 
         outer_composition = Composition(name="outer_composition")
 
-        outer_composition.add_c_node(inner_composition_1)
-        outer_composition.add_c_node(inner_composition_2)
+        outer_composition.add_node(inner_composition_1)
+        outer_composition.add_node(inner_composition_2)
 
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=inner_composition_2)
@@ -290,9 +290,9 @@ class TestConnectCompositionsViaCIMS:
         C = TransferMechanism(name="composition-pytests-C",
                               function=Linear(slope=3.0))
 
-        inner_composition_1.add_c_node(A)
-        inner_composition_1.add_c_node(B)
-        inner_composition_1.add_c_node(C)
+        inner_composition_1.add_node(A)
+        inner_composition_1.add_node(B)
+        inner_composition_1.add_node(C)
 
         inner_composition_1.add_projection(MappingProjection(), A, C)
         inner_composition_1.add_projection(MappingProjection(), B, C)
@@ -307,8 +307,8 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                                function=Linear(slope=1.0))
 
-        inner_composition_2.add_c_node(A2)
-        inner_composition_2.add_c_node(B2)
+        inner_composition_2.add_node(A2)
+        inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(), A2, B2)
 
@@ -319,9 +319,9 @@ class TestConnectCompositionsViaCIMS:
 
         outer_composition = Composition(name="outer_composition")
 
-        outer_composition.add_c_node(inner_composition_1)
-        outer_composition.add_c_node(inner_composition_2)
-        outer_composition.add_c_node(mechanism_d)
+        outer_composition.add_node(inner_composition_1)
+        outer_composition.add_node(inner_composition_2)
+        outer_composition.add_node(mechanism_d)
 
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=mechanism_d)
@@ -331,7 +331,7 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
 
-        # FIX: order of input states on inner composition 1 is not stable
+        # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 # inner_composition_1: [[2.0], [1.0]],
@@ -376,9 +376,9 @@ class TestConnectCompositionsViaCIMS:
         C = TransferMechanism(name="composition-pytests-C",
                               function=Linear(slope=3.0))
 
-        inner_composition_1.add_c_node(A)
-        inner_composition_1.add_c_node(B)
-        inner_composition_1.add_c_node(C)
+        inner_composition_1.add_node(A)
+        inner_composition_1.add_node(B)
+        inner_composition_1.add_node(C)
 
         inner_composition_1.add_projection(MappingProjection(), A, C)
         inner_composition_1.add_projection(MappingProjection(), B, C)
@@ -393,8 +393,8 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                                function=Linear(slope=1.0))
 
-        inner_composition_2.add_c_node(A2)
-        inner_composition_2.add_c_node(B2)
+        inner_composition_2.add_node(A2)
+        inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(), A2, B2)
 
@@ -405,9 +405,9 @@ class TestConnectCompositionsViaCIMS:
 
         outer_composition = Composition(name="outer_composition")
 
-        outer_composition.add_c_node(inner_composition_1)
-        outer_composition.add_c_node(inner_composition_2)
-        outer_composition.add_c_node(mechanism_d)
+        outer_composition.add_node(inner_composition_1)
+        outer_composition.add_node(inner_composition_2)
+        outer_composition.add_node(mechanism_d)
 
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=mechanism_d)
@@ -417,7 +417,7 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
 
-        # FIX: order of input states on inner composition 1 is not stable
+        # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
             inputs={
                 inner_composition_1: {A: [[2.0], [1.5], [2.5]],
@@ -455,8 +455,8 @@ class TestConnectCompositionsViaCIMS:
         B0 = TransferMechanism(name="composition-pytests-B0",
                                function=Linear(slope=2.))
 
-        level_0.add_c_node(A0)
-        level_0.add_c_node(B0)
+        level_0.add_node(A0)
+        level_0.add_node(B0)
         level_0.add_projection(MappingProjection(), A0, B0)
         level_0.add_projection(MappingProjection(sender=A0.output_states[1], receiver=B0), A0, B0)
         level_0._analyze_graph()
@@ -469,9 +469,9 @@ class TestConnectCompositionsViaCIMS:
         B1 = TransferMechanism(name="composition-pytests-B1",
                               function=Linear(slope=2.))
 
-        level_1.add_c_node(level_0)
-        level_1.add_c_node(A1)
-        level_1.add_c_node(B1)
+        level_1.add_node(level_0)
+        level_1.add_node(A1)
+        level_1.add_node(B1)
         level_1.add_projection(MappingProjection(), level_0, B1)
         level_1.add_projection(MappingProjection(), A1, B1)
         level_1._analyze_graph()
@@ -485,16 +485,16 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                                function=Linear(slope=2.))
 
-        level_2.add_c_node(level_1)
-        level_2.add_c_node(A2)
-        level_2.add_c_node(B2)
+        level_2.add_node(level_1)
+        level_2.add_node(A2)
+        level_2.add_node(B2)
         level_2.add_projection(MappingProjection(), level_1, B2)
         level_2.add_projection(MappingProjection(), A2, B2)
         level_2._analyze_graph()
 
         sched = Scheduler(composition=level_2)
 
-        # FIX: order of input states in each inner composition (level_0 and level_1)
+        # FIX: order of InputStates in each inner composition (level_0 and level_1)
         level_2.run(inputs={A2: [[1.0, 2.0]],
                             level_1: {A1: [[1.0]],
                                       level_0: {A0: [[1.0], [2.0]]}}},
@@ -513,56 +513,19 @@ class TestInputCIMOutputStateToOriginOneToMany:
     def test_one_to_two(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
+        C = ProcessingMechanism(name='C',
+                                input_states=[A.input_state])
 
         comp = Composition(name='comp')
 
         comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(C)
-
-        comp.external_input_sources = {C: A}
+        comp.add_node(C)
 
         comp.run(inputs={A: [[1.23]]})
 
         assert np.allclose(A.parameters.value.get(comp), [[1.23]])
         assert np.allclose(B.parameters.value.get(comp), [[1.23]])
         assert np.allclose(C.parameters.value.get(comp), [[1.23]])
-
-    def test_non_origin_receiver(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-
-        comp = Composition(name='comp')
-
-        comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(C)
-
-        comp.external_input_sources = {C: A,
-                                       B: A}
-
-        comp.run(inputs={A: [[1.23]]})
-
-        assert np.allclose(A.parameters.value.get(comp), [[1.23]])
-        assert np.allclose(B.parameters.value.get(comp), [[2.46]])
-        assert np.allclose(C.parameters.value.get(comp), [[1.23]])
-
-    def test_incorrect_origin_input_source_spec(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-
-        comp = Composition(name='comp')
-
-        comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(C)
-
-        comp.external_input_sources = {C: B}
-
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(inputs={A: [[1.23]]})
-        assert "External input source" in str(error_text) and "specified for C is not valid" in str(error_text)
-
 
     def test_origin_input_source_true_no_input(self):
         A = ProcessingMechanism(name='A')
@@ -573,9 +536,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp = Composition(name='comp')
 
         comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(C)
-
-        comp.external_input_sources = {C: True}
+        comp.add_node(C)
 
         comp.run(inputs={A: [[1.23]]})
 
@@ -588,22 +549,16 @@ class TestInputCIMOutputStateToOriginOneToMany:
         B = ProcessingMechanism(name='B',
                                 default_variable=[[0.], [0.]])
         C = ProcessingMechanism(name='C',
-                                default_variable=[[0.], [0.], [0.]])
+                                input_states=[B.input_states[1], A.input_state, B.input_states[0]])
 
         input_dict = {A: [[2.0]],
                       B: [[3.0], [1.0]]}
 
-        external_input_sources = {C: [B.input_states[1],
-                                    A,
-                                    B.input_states[0]]}
-
         comp = Composition(name="comp")
 
-        comp.add_c_node(A)
-        comp.add_c_node(B)
-        comp.add_c_node(C)
-
-        comp.external_input_sources = external_input_sources
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_node(C)
 
         comp.run(inputs=input_dict)
 
@@ -611,182 +566,18 @@ class TestInputCIMOutputStateToOriginOneToMany:
         assert np.allclose(B.parameters.value.get(comp), [[3.], [1.]])
         assert np.allclose(C.parameters.value.get(comp), [[1.], [2.], [3.]])
 
-    def test_mix_and_match_input_sources_invalid_shape(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B',
-                                default_variable=[[0.], [0.]])
-        C = ProcessingMechanism(name='C',
-                                default_variable=[[0.], [0.], [0.], [0.]])
-
-        input_dict = {A: [[2.0]],
-                      B: [[3.0], [1.0]]}
-
-        external_input_sources = {C: [B.input_states[1],
-                                    A,
-                                    B.input_states[0]]}
-
-        comp = Composition(name="comp")
-
-        comp.add_c_node(A)
-        comp.add_c_node(B)
-        comp.add_c_node(C)
-
-        comp.external_input_sources = external_input_sources
-
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(inputs=input_dict)
-        assert "has an incompatible number of external input states" in str(error_text.value)
-
-    def test_mix_and_match_input_sources_invalid_source(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B',
-                                default_variable=[[0.], [0.]])
-        C = ProcessingMechanism(name='C',
-                                default_variable=[[0.], [0.], [0.]])
-        D = ProcessingMechanism(name='D')
-
-        input_dict = {A: [[2.0]],
-                      B: [[3.0], [1.0]]}
-
-        external_input_sources = {C: [B.input_states[1],
-                                    D,
-                                    B.input_states[0]]}
-
-        comp = Composition(name="comp")
-
-        comp.add_c_node(A)
-        comp.add_c_node(B)
-        comp.add_linear_processing_pathway([C, D])
-
-        comp.external_input_sources = external_input_sources
-
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(inputs=input_dict)
-        assert "source which is not an origin node or an InputState of an origin node" in str(error_text.value)
-
-    def test_input_sources_invalid_origin_source(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B',
-                                default_variable=[[0.], [0.]])
-        C = ProcessingMechanism(name='C',
-                                default_variable=[[0.], [0.], [0.]])
-        D = ProcessingMechanism(name='D')
-
-        input_dict = {A: [[2.0]],
-                      B: [[3.0], [1.0]]}
-
-        external_input_sources = {C: [B.input_states[1],
-                                    D,
-                                    B.input_states[0]],
-                                D: [C.input_states[0]]}
-
-        comp = Composition(name="comp")
-
-        comp.add_c_node(A)
-        comp.add_c_node(B)
-        comp.add_c_node(C)
-        comp.add_c_node(D)
-
-        comp.external_input_sources = external_input_sources
-
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(inputs=input_dict)
-        assert "already borrowing input from yet another origin node" in str(error_text.value)
-
     def test_non_origin_partial_input_spec(self):
         A = ProcessingMechanism(name='A',
                                 function=Linear(slope=2.0))
         B = ProcessingMechanism(name='B',
-                                default_variable=[[0.], [0.]])
+                                input_states=[[0.], A.input_state])
 
         comp = Composition(name='comp')
 
         comp.add_linear_processing_pathway([A, B])
 
-        comp.external_input_sources = {B: [None, A]}
         comp.run(inputs={A: [[1.23]]})
         assert np.allclose(B.get_input_values(comp), [[2.46], [1.23]])
-
-    def test_non_origin_too_many_input_states(self):
-        A = ProcessingMechanism(name='A',
-                                function=Linear(slope=2.0))
-        B = ProcessingMechanism(name='B',
-                                default_variable=[[0.]])
-        C = ProcessingMechanism(name='C')
-
-        comp = Composition(name='comp')
-
-        comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(C)
-
-        comp.external_input_sources = {B: [A, C]}
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(inputs={A: [[1.23]],
-                             C: [[4.0]]})
-        assert "too many external input states" in str(error_text.value)
-
-    def test_origin_partial_input_spec(self):
-        A = ProcessingMechanism(name='A',
-                                function=Linear(slope=2.0))
-        B = ProcessingMechanism(name='B',
-                                default_variable=[[0.], [0.]])
-
-        comp = Composition(name='comp')
-
-        comp.add_c_node(A)
-        comp.add_c_node(B)
-
-        comp.external_input_sources = {B: [None, A]}
-
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(inputs={A: [[1.23]]})
-        assert "incompatible number of external input states" in str(error_text.value)
-
-    def test_specify_external_input_sources_on_mechanism_nonorigin(self):
-        A = ProcessingMechanism(name='A',
-                                function=Linear(slope=2.0))
-        B = ProcessingMechanism(name='B',
-                                default_variable=[[0.], [0.]])
-        comp = Composition(name='comp')
-
-        comp.add_linear_processing_pathway([A, B])
-        comp.add_c_node(B, external_input_source=[None, A])
-        comp.run(inputs={A: [[1.23]]})
-        assert np.allclose(B.get_input_values(comp), [[2.46], [1.23]])
-
-    def test_specify_external_input_sources_on_mechanism_origin(self):
-        A = ProcessingMechanism(name='A',
-                                function=Linear(slope=2.0))
-        B = ProcessingMechanism(name='B',
-                                default_variable=[[0.]])
-        comp = Composition(name='comp')
-
-        comp.add_c_node(A)
-        comp.add_c_node(B, external_input_source=A)
-
-        comp.run(inputs={A: [[1.23]]})
-        assert np.allclose(B.get_input_values(comp), [[1.23]])
-
-    def test_external_input_sources_ALL(self):
-        from psyneulink.core.globals.keywords import ALL
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        D = ProcessingMechanism(name='D',
-                                default_variable=[[0.], [0.]])
-        comp = Composition(name='comp')
-
-        comp.add_c_node(A)
-        comp.add_c_node(B, external_input_source=A)
-        comp.add_c_node(C)
-        comp.add_c_node(D, external_input_source=ALL)
-        comp.add_linear_processing_pathway([C, D])
-
-        comp.run(inputs={A: [[1.23]],
-                         C: [[4.0]]})
-        assert np.allclose(D.get_input_values(comp), [[5.23], [4.0]])
-
-
 
 class TestInputSpec:
 
@@ -822,7 +613,7 @@ class TestInputSpec:
 
     def test_valid_only_one_node_provides_input_spec(self):
         A = ProcessingMechanism(name="A",
-                                default_variable=[[1.5]])   # default variable will be used as input to this origin node
+                                default_variable=[[1.5]])   # default variable will be used as input to this INPUT node
         B = ProcessingMechanism(name="B")
         C = ProcessingMechanism(name="C")
 
@@ -870,7 +661,7 @@ class TestInputSpec:
     def test_valid_input_float(self):
         A = ProcessingMechanism(name="A")
         comp = Composition(name="comp")
-        comp.add_c_node(A)
+        comp.add_node(A)
 
         comp.run(inputs={A: 5.0})
         assert np.allclose(comp.results, [[5.0]])

@@ -77,7 +77,7 @@ comp = pnl.Composition(name='xor')
 # add all nodes
 all_nodes = [input, hidden, output, dnd]
 for node in all_nodes:
-    comp.add_c_node(node)
+    comp.add_node(node)
 # input-hidden-output pathway
 comp.add_projection(sender=input, projection=w_ih, receiver=hidden)
 comp.add_projection(sender=hidden, projection=w_ho, receiver=output)

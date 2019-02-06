@@ -845,7 +845,10 @@ class Function_Base(Function):
             except (AttributeError, TypeError):
                 pass
             if not np.isscalar(param) and param is not None:
-                param = np.asfarray(param).flatten().tolist()
+                if p.name == 'matrix': # Flatten matrix
+                    param = np.asfarray(param).flatten().tolist()
+                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
+                    param = np.asfarray(param[0]).tolist()
             param_init.append(param)
 
         return tuple(param_init)
