@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.5.0.0+2.ge771315 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.5.0.0+3.g8cf6236 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+2.ge771315 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+3.g8cf6236 documentation" href="index.html"/>
         <link rel="up" title="Composition" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Composition" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+2
+                0.5.0.0+3
               </div>
             
           
@@ -211,7 +211,7 @@ monitored by the <a class="reference internal" href="ObjectiveMechanism.html"><s
 <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a>);  these are used in addition to any specified for the ControlMechanism or
 its ObjectiveMechanism.  These can be specified in the <strong>monitor_for_control</strong> argument of the <a class="reference internal" href="#"><span class="doc">System</span></a> using
 any of the ways used to specify the <em>monitored_output_states</em> for an ObjectiveMechanism (see
-<a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a>).  In addition, the <strong>monitor_for_control</strong> argument supports two
+<code class="xref any docutils literal"><span class="pre">ObjectiveMechanism_Monitored_Output_States</span></code>).  In addition, the <strong>monitor_for_control</strong> argument supports two
 other forms of specification:</p>
 <ul class="simple">
 <li><strong>string</strong> – must be the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.name" title="psyneulink.core.components.states.outputstate.OutputState.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> of an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the System
@@ -239,7 +239,7 @@ monitored, whereas <em>ALL_OUTPUT_STATES</em> specifies that <em>every</em> Outp
 The OutputStates specified in the <strong>monitor_for_control</strong> argument are added to any already specified for the
 ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and the full set is listed in
 the ControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and its
-ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute).</p>
+ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> attribute).</p>
 </li>
 </ul>
 <ul class="simple">
@@ -275,7 +275,7 @@ belonging to more than one Process (as shown for control in this figure).</span>
 <p><code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>: sends a Projection that closes a recurrent loop; can be assigned an initial value.</p>
 <p><code class="xref any docutils literal"><span class="pre">CYCLE</span></code>: receives a Projection that closes a recurrent loop.</p>
 <p><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.CONTROL" title="psyneulink.core.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
-<p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.LEARNING" title="psyneulink.core.globals.log.LogCondition.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
+<p><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.LEARNING" title="psyneulink.core.globals.context.ContextFlags.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
 <p><code class="xref any docutils literal"><span class="pre">TARGET</span></code>: ComparatorMechanism that monitors a <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Mechanism of a Process and compares it to a corresponding
 value provided in the <a class="reference internal" href="#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 <p><code class="xref any docutils literal"><span class="pre">INTERNAL</span></code>: ProcessingMechanism that does not fall into any of the categories above.</p>
@@ -328,7 +328,7 @@ specifications made for the System as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li>the OutputStates specified to be monitored in the System’s <strong>monitor_for_control</strong> argument are added to those
-that may have already been specified for the ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (the full set is listed in the ControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and its ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute); see <a class="reference internal" href="#system-control-specification"><span class="std std-ref">Specifying Control</span></a> for additional details of how
+that may have already been specified for the ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (the full set is listed in the ControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and its ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> attribute); see <a class="reference internal" href="#system-control-specification"><span class="std std-ref">Specifying Control</span></a> for additional details of how
 to specify OutputStates to be monitored.</li>
 <li>a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> and <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> is assigned to the ControlMechanism for every parameter that has been
 <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">specified for control</span></a> in the System;  these are added to any that the
@@ -1092,7 +1092,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+2.ge771315',
+            VERSION:'0.5.0.0+3.g8cf6236',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
