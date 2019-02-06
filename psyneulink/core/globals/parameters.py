@@ -41,8 +41,8 @@ is likely to be a Composition:
         >>> c = pnl.Composition()
         >>> d = pnl.Composition()
         >>> t = pnl.TransferMechanism()
-        >>> c.add_c_node(t)
-        >>> d.add_c_node(t)
+        >>> c.add_node(t)
+        >>> d.add_node(t)
 
         >>> c.run({t: 5})
         [[array([5.])]]

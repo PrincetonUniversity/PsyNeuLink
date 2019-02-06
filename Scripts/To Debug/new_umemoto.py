@@ -93,7 +93,7 @@ Umemoto_comp.add_linear_processing_pathway(FlankerAutomatic_pathway)
 Reward_pathway = [Reward]
 Umemoto_comp.add_linear_processing_pathway(Reward_pathway)
 
-Umemoto_comp.add_c_node(Decision, required_roles=pnl.CNodeRole.TERMINAL)
+Umemoto_comp.add_node(Decision, required_roles=pnl.NodeRole.TERMINAL)
 
 # COMPOSITION
 Target_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],

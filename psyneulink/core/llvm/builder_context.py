@@ -228,7 +228,7 @@ class LLVMBuilderContext:
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
         # Allocate run set structure
-        run_set_type = ir.ArrayType(ir.IntType(1), len(composition.c_nodes))
+        run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
 
         # Allocate temporary output storage
@@ -259,7 +259,7 @@ class LLVMBuilderContext:
         any_cond = ir.IntType(1)(0)
 
         # Calculate execution set before running the mechanisms
-        for idx, mech in enumerate(composition.c_nodes):
+        for idx, mech in enumerate(composition.nodes):
             run_set_mech_ptr = builder.gep(run_set_ptr,
                                            [zero, self.int32_ty(idx)],
                                            name="run_cond_ptr_" + mech.name)
@@ -272,7 +272,7 @@ class LLVMBuilderContext:
             any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
             builder.store(mech_cond, run_set_mech_ptr)
 
-        for idx, mech in enumerate(composition.c_nodes):
+        for idx, mech in enumerate(composition.nodes):
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
             with builder.if_then(mech_cond):
@@ -287,7 +287,7 @@ class LLVMBuilderContext:
                 cond_gen.generate_update_after_run(builder, cond, mech)
 
         # Writeback results
-        for idx, mech in enumerate(composition.c_nodes):
+        for idx, mech in enumerate(composition.nodes):
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
             with builder.if_then(mech_cond):

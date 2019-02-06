@@ -103,7 +103,7 @@ from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUS
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'CNodeRole', 'get_class_attributes',
+    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -1502,7 +1502,7 @@ def call_with_pruned_args(func, *args, **kwargs):
     return func(*args, **kwargs)
 
 
-class CNodeRole(Enum):
+class NodeRole(Enum):
     """
 
     - ORIGIN

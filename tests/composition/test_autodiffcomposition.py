@@ -101,9 +101,9 @@ class TestMiscTrainingFunctionality:
         # put the mechanisms and projections together in an autodiff composition (AC)
         xor = AutodiffComposition(param_init_from_pnl=True)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -135,24 +135,24 @@ class TestMiscTrainingFunctionality:
 
         xor = AutodiffComposition(param_init_from_pnl=True)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # train model for a few epochs
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
@@ -178,6 +178,147 @@ class TestMiscTrainingFunctionality:
         # # check that weight parameters before and after processing are the same
         # assert np.allclose(pt_weights_hid_bp, pt_weights_hid_ap)
         # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
+
+    @pytest.mark.parametrize(
+        'loss', ['l1', 'poissonnll']
+    )
+    def test_various_loss_specs(self, loss):
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        hid_map = MappingProjection()
+        out_map = MappingProjection()
+
+        xor = AutodiffComposition(param_init_from_pnl=True, loss_spec=loss)
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+                          "targets": {xor_out:xor_targets},
+                          "epochs": 10})
+
+    def test_pytorch_loss_spec(self):
+        ls = torch.nn.SoftMarginLoss(reduction='sum')
+
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        hid_map = MappingProjection()
+        out_map = MappingProjection()
+
+        xor = AutodiffComposition(param_init_from_pnl=True, loss_spec=ls)
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        xor.run(inputs={"inputs": {xor_in:xor_inputs},
+                          "targets": {xor_out:xor_targets},
+                          "epochs": 10})
+        xor.run(inputs={"inputs": {xor_in: xor_inputs},
+                        "targets": {xor_out: xor_targets},
+                        "epochs": 10})
+
+
+    @pytest.mark.parametrize(
+        'learning_rate, weight_decay, optimizer_type', [
+            (10, 0, 'sgd'), (1.5, 1, 'sgd'),  (1.5, 1, 'adam'),
+        ]
+    )
+    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type):
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        hid_map = MappingProjection()
+        out_map = MappingProjection()
+
+        xor = AutodiffComposition(param_init_from_pnl=True,
+                                  learning_rate=learning_rate,
+                                  optimizer_type=optimizer_type,
+                                  weight_decay=weight_decay)
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # train model for a few epochs
+        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
+        #                               targets={xor_out:xor_targets},
+        #                               epochs=10)
+        results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+                                                "targets": {xor_out:xor_targets},
+                                               "epochs": 10})
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self):
@@ -209,24 +350,24 @@ class TestMiscTrainingFunctionality:
                                   learning_rate=10.0,
                                   optimizer_type="sgd")
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # train the model for a few epochs
         result = xor.run(inputs={"inputs": {xor_in:xor_inputs},
@@ -266,24 +407,24 @@ class TestMiscTrainingFunctionality:
         xor = AutodiffComposition(param_init_from_pnl=True,
                                   learning_rate=1.0)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # call run to only process the inputs, so that pytorch representation of AC gets created
         # results = xor.run(inputs={xor_in:xor_inputs})
@@ -358,24 +499,24 @@ class TestTrainingCorrectness:
                                   optimizer_type=opt,
                                   learning_rate=0.1)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         if calls == 'single':
             results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
@@ -483,14 +624,14 @@ class TestTrainingCorrectness:
         sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
                                       optimizer_type=opt, learning_rate=0.001)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -644,8 +785,8 @@ class TestTrainingTime:
 
         and_net = AutodiffComposition(param_init_from_pnl=True)
 
-        and_net.add_c_node(and_in)
-        and_net.add_c_node(and_out)
+        and_net.add_node(and_in)
+        and_net.add_node(and_out)
 
         and_net.add_projection(sender=and_in, projection=and_map, receiver=and_out)
 
@@ -775,26 +916,26 @@ class TestTrainingTime:
 
         xor = AutodiffComposition(param_init_from_pnl=True)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # SET UP INPUTS AND TARGETS
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # TIME TRAINING FOR COMPOSITION
 
@@ -998,14 +1139,14 @@ class TestTrainingTime:
 
         sem_net = AutodiffComposition(param_init_from_pnl=True)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -1241,26 +1382,26 @@ class TestTrainingIdenticalness():
                                   learning_rate=10,
                                   optimizer_type=opt)
 
-        xor.add_c_node(xor_in)
-        xor.add_c_node(xor_hid)
-        xor.add_c_node(xor_out)
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # SET UP INPUTS AND TARGETS
 
-        xor_inputs = np.zeros((4,2))
-        xor_inputs[0] = [0, 0]
-        xor_inputs[1] = [0, 1]
-        xor_inputs[2] = [1, 0]
-        xor_inputs[3] = [1, 1]
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
 
-        xor_targets = np.zeros((4,1))
-        xor_targets[0] = [0]
-        xor_targets[1] = [1]
-        xor_targets[2] = [1]
-        xor_targets[3] = [0]
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
 
         # TRAIN COMPOSITION
         inputs_dict = {"inputs": {xor_in:xor_inputs},
@@ -1446,14 +1587,14 @@ class TestTrainingIdenticalness():
                                       learning_rate=0.5,
                                       optimizer_type=opt)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -1667,9 +1808,9 @@ class TestNested:
             learning_enabled=True
         )
 
-        xor_autodiff.add_c_node(xor_in)
-        xor_autodiff.add_c_node(xor_hid)
-        xor_autodiff.add_c_node(xor_out)
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
 
         xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1682,7 +1823,7 @@ class TestNested:
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
         parentComposition = pnl.Composition()
-        parentComposition.add_c_node(xor_autodiff)
+        parentComposition.add_node(xor_autodiff)
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
@@ -1746,9 +1887,9 @@ class TestNested:
             learning_enabled=False
         )
 
-        xor_autodiff.add_c_node(xor_in)
-        xor_autodiff.add_c_node(xor_hid)
-        xor_autodiff.add_c_node(xor_out)
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
 
         xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1761,7 +1902,7 @@ class TestNested:
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
         parentComposition = pnl.Composition()
-        parentComposition.add_c_node(xor_autodiff)
+        parentComposition.add_node(xor_autodiff)
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
@@ -1825,9 +1966,9 @@ class TestNested:
     #         learning_enabled=True
     #     )
     #
-    #     xor_autodiff.add_c_node(xor_in)
-    #     xor_autodiff.add_c_node(xor_hid)
-    #     xor_autodiff.add_c_node(xor_out)
+    #     xor_autodiff.add_node(xor_in)
+    #     xor_autodiff.add_node(xor_hid)
+    #     xor_autodiff.add_node(xor_out)
     #
     #     xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
     #     xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
@@ -1842,8 +1983,8 @@ class TestNested:
     #     no_training_input_dict = {xor_in: xor_inputs}
     #
     #     parentComposition = pnl.Composition()
-    #     parentComposition.add_c_node(myTransfer)
-    #     parentComposition.add_c_node(xor_autodiff)
+    #     parentComposition.add_node(myTransfer)
+    #     parentComposition.add_node(xor_autodiff)
     #     parentComposition.add_projection(myMappingProj, sender=myTransfer, receiver=xor_autodiff)
     #     xor_autodiff.learning_enabled = False
     #
@@ -2004,14 +2145,14 @@ class TestNested:
                                       learning_rate=0.5,
                                       optimizer_type=opt)
 
-        sem_net.add_c_node(nouns_in)
-        sem_net.add_c_node(rels_in)
-        sem_net.add_c_node(h1)
-        sem_net.add_c_node(h2)
-        sem_net.add_c_node(out_sig_I)
-        sem_net.add_c_node(out_sig_is)
-        sem_net.add_c_node(out_sig_has)
-        sem_net.add_c_node(out_sig_can)
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
 
         sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
         sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
@@ -2099,7 +2240,7 @@ class TestNested:
         sem_net._analyze_graph()
 
         parentComposition = pnl.Composition()
-        parentComposition.add_c_node(sem_net)
+        parentComposition.add_node(sem_net)
 
         input = {sem_net: input_dict}
         no_training_input = {sem_net: inputs_dict.copy()}

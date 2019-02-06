@@ -172,8 +172,8 @@ def test_dot_notation():
     c = pnl.Composition()
     d = pnl.Composition()
     t = pnl.TransferMechanism()
-    c.add_c_node(t)
-    d.add_c_node(t)
+    c.add_node(t)
+    d.add_node(t)
 
     t.execute(1)
     assert t.value == 1
