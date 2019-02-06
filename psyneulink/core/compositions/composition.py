@@ -43,6 +43,37 @@ following Composition methods:
 Only Components added to a Composition via one of these four methods constitute a Composition, even if other
 PsyNeuLink Mechanisms or Projections are constructed in the same script.
 
+In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
+
+    >>> import psyneulink as pnl
+    # Create Mechanisms
+    >>> A = pnl.ProcessingMechanism(name='A')
+    >>> B = pnl.ProcessingMechanism(name='B')
+    >>> C = pnl.ProcessingMechanism(name='C')
+    # Create Projections
+    >>> A_to_B = pnl.MappingProjection(name="A-to-B")
+    >>> B_to_C = pnl.MappingProjection(name="B-to-C")
+    # Create Composition and add Nodes (Mechanisms) and Projections via the add_linear_processing_pathway method
+    >>> comp_0 = pnl.Composition(name='comp-0')
+    >>> comp_0.add_linear_processing_pathway(pathway=[A, A_to_B, B, B_to_C, C])
+    # Create Composition and add Nodes (Mechanisms) and Projections via the add_nodes and add_projection methods
+    >>> comp_1 = pnl.Composition(name='comp-1')
+    >>> comp_1.add_nodes(nodes=[A, B, C])
+    >>> comp_1.add_projection(projection=A_to_B)
+    >>> comp_1.add_projection(projection=B_to_C)
+    # Create Composition and add Nodes (Mechanisms) and Projections via the add_node and add_projection methods
+    >>> comp_2 = pnl.Composition(name='comp-2')
+    >>> comp_2.add_node(node=A)
+    >>> comp_2.add_node(node=B)
+    >>> comp_2.add_node(node=C)
+    >>> comp_2.add_projection(projection=A_to_B)
+    >>> comp_2.add_projection(projection=B_to_C)
+    # Run each Composition
+    >>> input_dict = {A: [[[1.0]]]}
+    >>> comp_0_output = comp_0.run(inputs=input_dict)
+    >>> comp_1_output = comp_1.run(inputs=input_dict)
+    >>> comp_2_output = comp_2.run(inputs=input_dict)
+
 .. _Composition_Execution:
 
 Execution
@@ -2530,7 +2561,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     ):
         '''
             Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
-            coordinates with the Scheduler to receive and execute sets of nodes that are eligible to run until
+            coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
             termination conditions are met.
 
             Arguments
@@ -3769,11 +3800,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         List of all nodes in the system that are currently marked as stateful. For Mechanisms, statefulness is
         determined by checking whether node.has_initializers is True. For Compositions, statefulness is determined
-        by checking whether the
+        by checking whether any of its nodes are stateful. 
 
         Returns
         -------
-        all stateful nodes in the system : List[Node]
+        all stateful nodes in the system : List[Nodes]
 
         """
 
