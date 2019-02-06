@@ -152,7 +152,7 @@ class jit_engine:
         self.__debug_env = debug_env
 
     def __del__(self):
-        if "mod_count" in self.__debug_env:
+        if "stat" in self.__debug_env:
             print("Total JIT modules in '{}': {}".format(type(self).__name__, self.__opt_modules))
 
     def opt_and_add_bin_module(self, module):

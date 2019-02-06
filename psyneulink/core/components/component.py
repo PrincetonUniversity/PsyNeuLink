@@ -915,8 +915,10 @@ class Component(object, metaclass=ComponentsMeta):
     # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
     prev_context = None
 
-    _deepcopy_shared_keys = set([
-        'init_args'
+    _deepcopy_shared_keys = frozenset([
+        'init_args',
+        '_Component__llvm_function',
+        '_Component__llvm_bin_function',
     ])
 
     class _CompilationData(ParametersBase):
@@ -1154,25 +1156,24 @@ class Component(object, metaclass=ComponentsMeta):
             self.function.context.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 END
 
-        self.__llvm_function_name = None
+        self.__llvm_function = None
         self.__llvm_bin_function = None
         self._compilation_data = self._CompilationData(owner=self)
 
     @property
-    def _llvm_symbol_name(self):
-        if self.__llvm_function_name is None:
-            self.__llvm_function_name = self._gen_llvm_function()
+    def _llvm_function(self):
+        if self.__llvm_function is None:
+            self.__llvm_function = self._gen_llvm_function()
             self.__llvm_bin_function = None
-        return self.__llvm_function_name
+        return self.__llvm_function
 
     @property
     def _llvmBinFunction(self):
         if self.__llvm_bin_function is None:
-            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_symbol_name)
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
         return self.__llvm_bin_function
 
     def _gen_llvm_function(self):
-        func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
@@ -1199,8 +1200,7 @@ class Component(object, metaclass=ComponentsMeta):
 
             builder.ret_void()
 
-        return func_name
-
+        return llvm_func
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1209,7 +1209,7 @@ class Component(object, metaclass=ComponentsMeta):
     def __deepcopy__(self, memo):
         fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
         newone = fun(self, memo)
-        newone.__dict__['_Component__llvm_function_name'] = None
+        newone.__dict__['_Component__llvm_function'] = None
         newone.__dict__['_Component__llvm_bin_function'] = None
 
         if newone.parameters is not newone.class_parameters:

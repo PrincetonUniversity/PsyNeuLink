@@ -11,7 +11,7 @@
 # This file provides preprocessed interface to PNL_LLVM_DEBUG environment variable
 # The currently recognized values are:
 # "compile" -- prints information messages when modules are compiled
-# "mod_count" -- prints the number of generated and compiled modules at the end
+# "stat" -- prints code generation and compilation statistics at the end
 # "debug_info" -- emit line debuging information when generating llvm IR
 # "const_params" -- harcode base parameter values into generated code,
 #                   instead of laoding them from param_struct
