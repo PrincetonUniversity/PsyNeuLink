@@ -208,7 +208,7 @@ def test_botvinick_model(benchmark, mode, reps):
             # Comp results include concatenation of both the above runs
             results.append(comp.results.copy())
             comp.reinitialize()
-            comp.parameters.results.set([], comp)
+            comp.results = []
 
         return results
 

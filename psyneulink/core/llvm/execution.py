@@ -192,9 +192,7 @@ class CompExecution(CUDAExecution):
         self._debug_env = debug_env
 
         # At least the input_CIM wrapper should be generated
-        with LLVMBuilderContext() as ctx:
-            input_cim_fn_name = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_fn = ctx.get_llvm_function(input_cim_fn_name)
+        input_cim_fn = composition._get_node_wrapper(composition.input_CIM)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -307,7 +305,7 @@ class CompExecution(CUDAExecution):
         origins = self._composition.get_nodes_by_role(NodeRole.ORIGIN)
         # Either node execute or composition execute, either way the
         # input_CIM should be ready
-        bin_input_node = self._composition._get_bin_mechanism(self._composition.input_CIM)
+        bin_input_node = self._composition._get_bin_node(self._composition.input_CIM)
         c_input = bin_input_node.byref_arg_types[2]
         if len(self._execution_ids) > 1:
             c_input = c_input * len(self._execution_ids)
@@ -343,7 +341,7 @@ class CompExecution(CUDAExecution):
         assert inputs is not None or node is not self._composition.input_CIM
 
         assert node in self._composition._all_nodes
-        self._bin_func = self._composition._get_bin_mechanism(node)
+        self._bin_func = self._composition._get_bin_node(node)
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
