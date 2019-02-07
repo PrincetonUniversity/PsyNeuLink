@@ -89,6 +89,7 @@ class PytorchModelCreator(torch.nn.Module):
                         self.projections_to_pytorch_weights[mapping_proj] = weights
 
                 node_forward_info = [value, biases, function, afferents]
+                # node_forward_info = [value, biases, function, afferents, value]
 
                 self.component_to_forward_info[component] = node_forward_info
 
@@ -150,6 +151,10 @@ class PytorchModelCreator(torch.nn.Module):
             info[0].detach_()
             if info[1] is not None:
                 info[1].detach_()
+
+    # def reset_all(self):
+    #     for component, info in self.component_to_forward_info.items():
+    #         info[0] = info[4]
 
     def copy_weights_to_psyneulink(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
