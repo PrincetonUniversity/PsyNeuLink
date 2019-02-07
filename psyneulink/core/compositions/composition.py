@@ -45,45 +45,412 @@ following Composition methods:
         Adds and connects a list of nodes and/or Projections to the Composition; Inserts a default Projection between any adjacent Nodes
 
 .. note::
-  Only Nodes and Projections added to a Composition via one of four methods above constitute a Composition, even if
+  Only Nodes and Projections added to a Composition via the four methods above constitute a Composition, even if
   other Nodes and/or Projections are constructed in the same script.
 
 In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
 
+    *Create Mechanisms:*
     >>> import psyneulink as pnl
-    # Create Mechanisms
     >>> A = pnl.ProcessingMechanism(name='A')
     >>> B = pnl.ProcessingMechanism(name='B')
     >>> C = pnl.ProcessingMechanism(name='C')
-    # Create Projections
+
+    *Create Projections:*
+
     >>> A_to_B = pnl.MappingProjection(name="A-to-B")
     >>> B_to_C = pnl.MappingProjection(name="B-to-C")
-    # Create Composition and add Nodes (Mechanisms) and Projections via the add_linear_processing_pathway method
+
+    *Create Composition; Add Nodes (Mechanisms) and Projections via the add_linear_processing_pathway method:*
+
     >>> comp_0 = pnl.Composition(name='comp-0')
     >>> comp_0.add_linear_processing_pathway(pathway=[A, A_to_B, B, B_to_C, C])
-    # Create Composition and add Nodes (Mechanisms) and Projections via the add_nodes and add_projection methods
+
+    *Create Composition; Add Nodes (Mechanisms) and Projections via the add_nodes and add_projection methods:*
+
     >>> comp_1 = pnl.Composition(name='comp-1')
     >>> comp_1.add_nodes(nodes=[A, B, C])
     >>> comp_1.add_projection(projection=A_to_B)
     >>> comp_1.add_projection(projection=B_to_C)
-    # Create Composition and add Nodes (Mechanisms) and Projections via the add_node and add_projection methods
+
+    *Create Composition; Add Nodes (Mechanisms) and Projections via the add_node and add_projection methods:*
+
     >>> comp_2 = pnl.Composition(name='comp-2')
     >>> comp_2.add_node(node=A)
     >>> comp_2.add_node(node=B)
     >>> comp_2.add_node(node=C)
     >>> comp_2.add_projection(projection=A_to_B)
     >>> comp_2.add_projection(projection=B_to_C)
-    # Run each Composition
+
+    *Run each Composition:*
+
     >>> input_dict = {A: [[[1.0]]]}
     >>> comp_0_output = comp_0.run(inputs=input_dict)
     >>> comp_1_output = comp_1.run(inputs=input_dict)
     >>> comp_2_output = comp_2.run(inputs=input_dict)
 
-.. _Composition_Execution:
+.. _Running_a_Composition:
 
-Execution
----------
+Running a Composition
+---------------------
 
+
+.. _Run_Inputs:
+
+*Inputs*
+========
+
+The :keyword:`run` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
+the `scope of execution <Run_Scope_of_Execution>`. These input values are specified in the **inputs** argument of a
+Composition's :keyword:`execute` or :keyword:`run` method.
+COMMENT:
+    From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
+    nodes in the Composition belong to the "scope of execution". What we want to convey (I think) is that ALL of the
+    Nodes execute, but they do so in a "state" (history, parameter vals) corresponding to a particular execution id.
+COMMENT
+
+Inputs are specified in a Python dictionary in which each key is an `INPUT` Node and each value is a list. The lists
+represent the inputs to the key `INPUT` Nodes, such that the i-th element of the list represents the input value to the
+key Node on trial i.
+
+.. _Run_Inputs_Fig_States:
+
+.. figure:: _static/input_spec_states.svg
+   :alt: Example input specifications with input states
+
+
+Each input value must be compatible with the shape of the key `INPUT` Node's `external_input_values
+<MechanismBase.external_input_values>`. As a result, each item in the list of inputs is typically a 2d list/array,
+though `some shorthand notations are allowed <Input_Specification_Examples>`.
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[0.0, 0.0]])
+        >>> b = pnl.TransferMechanism(name='b',
+        ...                           default_variable=[[0.0], [0.0]])
+        >>> c = pnl.TransferMechanism(name='c')
+
+        >>> pathway1 = [a, c]
+        >>> pathway2 = [b, c]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+        >>> comp.add_linear_processing_pathway(pathway2)
+
+        >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+        ...                     b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+.. note::
+    A Node's `external_input_values <MechanismBase.external_input_values>` attribute is always a 2d list in which the
+    index i element is the value of the Node's index i `external_input_state <MechanismBase.external_input_states>`. In
+    many cases, `external_input_values <MechanismBase.external_input_values>` is the same as `variable
+    <MechanismBase.variable>`. Keep in mind that any InputStates marked as "internal" are excluded from
+    `external_input_values <MechanismBase.external_input_values>`, and do not receive user-specified input values.
+
+If num_trials is not in use, the number of inputs provided determines the number of trials in the run. For example, if
+five inputs are provided for each origin mechanism, and num_trials is not specified, the system will execute five times.
+
++----------------------+-------+------+------+------+------+
+| Trial #              |0      |1     |2     |3     |4     |
++----------------------+-------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
++----------------------+-------+------+------+------+------+
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+The number of inputs specified **must** be the same for all Nodes in the input dictionary (except for any Nodes for
+which only one input is specified). In other words, all of the values in the input dictionary must have the same length
+as each other (or length 1).
+
+If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
+are provided for each `INPUT` mechanism, and num_trials = 7, the system executes seven times. The first two
+items in the list of inputs are used again on trial 5 and trial 6, respectively.
+
++----------------------+-------+------+------+------+------+------+------+
+| Trial #              |0      |1     |2     |3     |4     |5     |6     |
++----------------------+-------+------+------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
++----------------------+-------+------+------+------+------+------+------+
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary,
+        ...          num_trials=7)
+
+.. _Input_Specification_Examples:
+
+For convenience, condensed versions of the input specification described above are also accepted in the following
+situations:
+
+* **Case 1: INPUT Node has only one input state**
++--------------------------+-------+------+------+------+------+
+| Trial #                  |0      |1     |2     |3     |4     |
++--------------------------+-------+------+------+------+------+
+| Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
++--------------------------+-------+------+------+------+------+
+
+Complete input specification:
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the outer list on each input because **Mechanism a** only has one input state:
+
+        >>> input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one input state's value is length 1:
+
+        >>> input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+* **Case 2: Only one input is provided for the INPUT Node**
+
++--------------------------+------------------+
+| Trial #                  |0                 |
++--------------------------+------------------+
+| Input to **Mechanism a** |[[1.0], [2.0]]    |
++--------------------------+------------------+
+
+Complete input specification:
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+                                      default_variable=[[0.0], [0.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0], [2.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one trial:
+
+        >>> input_dictionary = {a: [[1.0], [2.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+* **Case 3: The same input is used on all trials**
+
++--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+| Trial #                  |0                  |1                  |2                  |3                  |4                  |
++--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+| Input to **Mechanism a** | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    |
++--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[0.0], [0.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+..
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
+
+::
+
+        >>> input_dictionary = {a: [[1.0], [2.0]]}
+
+        >>> comp.run(inputs=input_dictionary,
+        ...          num_trials=5)
+..
+
+* **Case 4: There is only one INPUT Node**
+
++--------------------------+-------------------+-------------------+
+| Trial #                  |0                  |1                  |
++--------------------------+-------------------+-------------------+
+| Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
++--------------------------+-------------------+-------------------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[1.0, 2.0, 3.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
+
+        >>> s.run(inputs=input_dictionary)
+..
+
+Shorthand - specify **Mechanism a**'s inputs in a list because it is the only INPUT Node
+
+::
+
+        >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+
+        >>> s.run(inputs=input_list)
+..
+
+.. _Run_Scope_of_Execution:
+
+*Execution Contexts*
+====================
+
+An *execution context* is a scope of execution which has its own set of values for Components and their `parameters <Parameters>`.
+This is designed to prevent computations from interfering with each other, when Components are reused, which often occurs
+when using multiple or nested Compositions, or running `simulations <OptimizationControlMechanism_Execution>`. Each execution context is
+or is associated with an *execution_id*, which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`,
+or left unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used. When
+looking for values after a run, it's important to know the execution context you are interested in, as shown below
+
+::
+
+        >>> import psyneulink as pnl
+        >>> c = pnl.Composition()
+        >>> d = pnl.Composition()
+        >>> t = pnl.TransferMechanism()
+        >>> c.add_node(t)
+        >>> d.add_node(t)
+
+        >>> t.execute(1)
+        array([[1.]])
+        >>> c.run({t: 5})
+        [[array([5.])]]
+        >>> d.run({t: 10})
+        [[array([10.])]]
+        >>> c.run({t: 20}, execution_id='custom execution id')
+        [[array([20.])]]
+
+        # context None
+        >>> print(t.parameters.value.get())
+        [[1.]]
+        >>> print(t.parameters.value.get(c))
+        [[5.]]
+        >>> print(t.parameters.value.get(d))
+        [[10.]]
+        >>> print(t.parameters.value.get('custom execution id'))
+        [[20.]]
+
+In general, anything that happens outside of a Composition run and without an explicit setting of execution context
+occurs in the `None` execution context.
+
+
+For Developers
+--------------
+
+.. _Run_Execution_Contexts_Init:
+
+Initialization of Execution Contexts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The parameter values for any execution context can be copied into another execution context by using \
+Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
+and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+
+- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
+other Components to function properly (beyond "standard" things like Component.function, \
+or Mechanism.input_states, as these are added in the proper classes' _dependent_components)
+    - the intent is that with ``_dependent_components`` set properly, calling \
+    ``obj._initialize_from_context(new_execution_id, base_execution_id)`` should be sufficient to run obj \
+    under **new_execution_id**
+    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+
+Debugging Tips
+^^^^^^^^^^^^^^
+If you receive an error like below, while checking for a context value for example,
+
+::
+
+    self.parameters.context.get(execution_id).execution_phase == ContextStatus.PROCESSING
+    AttributeError: 'NoneType' object has no attribute 'execution_phase'
+
+this means that there was no context value found for execution_id, and can be indicative that execution_id
+was not initialized to the values of another execution context, which normally happens during execution.
+See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
+
+.. _Run_Timing:
+
+*Timing*
+========
+
+When :keyword:`run` is called by a Composition, it calls that Composition's :keyword:`execute` method once for each
+`input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
+execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
+executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
+another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
+with `Condition` specifications for individual Components to execute different Components at different time scales.
+
+Runtime Params
+
+
+.. _Visualizing_a_Composition:
+
+Visualizing a Composition
+-------------------------
 
 
 
@@ -480,7 +847,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `Composition`, then the OCM is stored here.
 
         default_execution_id
-            if no *execution_id* is specified in a call to run, this *execution_id* will be used.
+            if no *execution_id* is specified in a call to run, this *execution_id* is used.
 
             :default value: the Composition's name
 
@@ -1706,7 +2073,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_fmt='pdf',
                    execution_id=NotImplemented,
                    ):
-        """Generate a display of the graph structure of Mechanisms and Projections in the System.
+        """Generate a display of the graph structure of Nodes (Mechanisms and Nested Compositions) and Projections in 
+        the Composition.
 
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
@@ -2595,20 +2963,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 values currently do not exist for **execution_id**
 
             call_before_time_step : callable
-                will be called before each `TIME_STEP` is executed
-                will be passed the current *execution_id* (but it is not necessary for your callable to take)
+                called before each `TIME_STEP` is executed
+                passed the current *execution_id* (but it is not necessary for your callable to take)
 
             call_after_time_step : callable
-                will be called after each `TIME_STEP` is executed
-                will be passed the current *execution_id* (but it is not necessary for your callable to take)
+                called after each `TIME_STEP` is executed
+                passed the current *execution_id* (but it is not necessary for your callable to take)
 
             call_before_pass : callable
-                will be called before each `PASS` is executed
-                will be passed the current *execution_id* (but it is not necessary for your callable to take)
+                called before each `PASS` is executed
+                passed the current *execution_id* (but it is not necessary for your callable to take)
 
             call_after_pass : callable
-                will be called after each `PASS` is executed
-                will be passed the current *execution_id* (but it is not necessary for your callable to take)
+                called after each `PASS` is executed
+                passed the current *execution_id* (but it is not necessary for your callable to take)
 
             Returns
             ---------
