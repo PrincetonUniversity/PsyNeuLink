@@ -220,6 +220,7 @@ class LLVMBuilderContext:
 
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
+            params = builder.alloca(const_params.type)
             builder.store(const_params, params)
 
         # Call input CIM
