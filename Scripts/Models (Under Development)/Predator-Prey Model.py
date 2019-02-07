@@ -1,3 +1,4 @@
+
 import timeit
 
 import numpy as np
@@ -42,7 +43,6 @@ player_len = prey_len = predator_len = obs_coords
 player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
 prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
 predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
-
 # Value and Reward Mechanisms (not yet used;  for future use)
 values = TransferMechanism(size=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
@@ -79,6 +79,7 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MINIMIZE,
                                                        save_values=True),
+
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
                                                                           monitored_output_states=[player_obs,
                                                                                                    predator_obs,

@@ -1537,11 +1537,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # First check for ORIGIN nodes:
         # Nodes at the beginning of the consideration queue are ORIGIN
         if len(self.scheduler_processing.consideration_queue) > 0:
+
             for node in self.scheduler_processing.consideration_queue[0]:
                 self._add_node_role(node, NodeRole.ORIGIN)
 
         # First check for TERMINAL nodes:
         # Nodes at the beginning of the consideration queue are TERMINAL
+
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
                 # if self.model_based_optimizer:

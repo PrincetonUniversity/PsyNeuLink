@@ -4,14 +4,12 @@ import numpy as np
 from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
-
 # Runtime Switches:
 RENDER = False
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
-
 
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 3
@@ -38,7 +36,6 @@ PREDATOR = 0
 PREY = 1
 ATTEND = 0
 DISATTEND = 500
-
 UNDECIDED = 0
 
 
@@ -67,7 +64,6 @@ def choose_closer_agent_function(variable):
     return [-1]
 
 def control_allocation_function(variable):
-
     closest_agent = variable[0]
 
     if closest_agent == PREDATOR:

@@ -15,7 +15,6 @@ PNL_COMPILE = True
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
 
-
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 2
 action_len = 2
@@ -38,7 +37,6 @@ if PERCEPT_DISTORT:
 else:
     player = TransferMechanism(size=prey_len, name="PLAYER OBS")
     prey = TransferMechanism(size=prey_len, name="PREY OBS")
-
 
 # For future use:
 values = TransferMechanism(size=3, name="AGENT VALUES")
