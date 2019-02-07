@@ -109,9 +109,9 @@ COMMENT:
     Nodes execute, but they do so in a "state" (history, parameter vals) corresponding to a particular execution id.
 COMMENT
 
-Inputs are specified in a Python dictionary in which each key is an `INPUT` Node and each value is a list. The lists
-represent the inputs to the key `INPUT` Nodes, such that the i-th element of the list represents the input value to the
-key Node on trial i.
+The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT` Node and each value is a
+list. The lists represent the inputs to the key `INPUT` Nodes, such that the i-th element of the list represents the
+input value to the key Node on trial i.
 
 .. _Run_Inputs_Fig_States:
 
@@ -343,7 +343,7 @@ Complete input specification:
 
         >>> input_dictionary = input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
 
-        >>> s.run(inputs=input_dictionary)
+        >>> comp.run(inputs=input_dictionary)
 ..
 
 Shorthand - specify **Mechanism a**'s inputs in a list because it is the only INPUT Node
@@ -352,8 +352,52 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
 
         >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
 
-        >>> s.run(inputs=input_list)
+        >>> comp.run(inputs=input_list)
 ..
+
+.. _Run_Inputs_Interactive:
+
+*Interactive Inputs*
+====================
+
+An alternative way to specify inputs is with a function. The function must return a dictionary that satisfies
+the rules above for standard input specification. The only difference is that on each execution, the function returns
+the input values for each INPUT Node for a single trial.
+
+COMMENT:
+The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
+Environment.
+
+..
+    import psyneulink as pnl
+
+    a = pnl.TransferMechanism(name='a')
+    b = pnl.TransferMechanism(name='b')
+
+    pathway1 = [a, b]
+
+    comp = Composition(name='comp')
+
+    comp.add_linear_processing_pathway(pathway1)
+
+    def input_function(env, result):
+        action = np.where(result[0] == 0, 0, result[0] / np.abs(result[0]))
+        env_step = env.step(action)
+        observation = env_step[0]
+        done = env_step[2]
+        if not done:
+            # NEW: This function MUST return a dictionary of input values for a single trial for each INPUT node
+            return {player: [observation[player_coord_idx]],
+                    prey: [observation[prey_coord_idx]]}
+        return done
+        return {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
+
+    comp.run(inputs=input_dictionary)
+
+COMMENT
+
+
+
 
 .. _Run_Scope_of_Execution:
 
