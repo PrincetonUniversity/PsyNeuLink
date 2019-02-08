@@ -2865,6 +2865,7 @@ class Mechanism_Base(Mechanism):
                        show_headers=False,
                        show_role=False,
                        system=None,
+                       composition=None,
                        output_fmt='pdf'
                        ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -2897,7 +2898,7 @@ class Mechanism_Base(Mechanism):
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
             (shown in caps).
 
-        show_role : bool : default False
+        show_role : boofl : default False
             specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
             in the **system** argument (shown in caps and enclosed in square brackets);
             if **system** is not specified, show_roles is ignored.
@@ -2913,7 +2914,8 @@ class Mechanism_Base(Mechanism):
             for use in a GraphViz node specification.
 
         """
-
+        if composition:
+            system = composition
         open_bracket = r'{'
         pipe = r' | '
         close_bracket = r'}'

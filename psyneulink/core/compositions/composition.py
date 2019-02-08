@@ -503,39 +503,33 @@ Nested Compositions) and Projections in the Composition (based on the `Compositi
 By default, Nodes are shown as ovals labeled by their `names <Mechanism_base.name>`, and Projections are shown
 as unlabeled arrows.
 
-    >>> import psyneulink as pnl
-    >>> A = pnl.ProcessingMechanism(name='A')
-    >>> B = pnl.ProcessingMechanism(name='B')
-    >>> comp = pnl.Composition(name='comp')
-    >>> comp.add_linear_processing_pathway([A,B])
-    >>> comp.show_graph()
 
-    .. figure:: _static/Modulation_fig.svg
-       :alt: Modulation
-       :scale: 150 %
++-------------------------------------------------------+-------------------------------------------------------+
+|    >>> import psyneulink as pnl                       | .. figure:: _static/show_graph_basic.svg              |
+|    >>> A = pnl.ProcessingMechanism(name='A')          |                                                       |
+|    >>> B = pnl.ProcessingMechanism(name='B')          |                                                       |
+|    >>> comp = pnl.Composition(name='comp')            |                                                       |
+|    >>> comp.add_linear_processing_pathway([A,B])      |                                                       |
+|    >>> comp.show_graph()                              |                                                       |
++-------------------------------------------------------+-------------------------------------------------------+
+
 
 However, there are options for displaying more detailed information:
 
-    - **show_node_structure**
+**show_node_structure**
 
-        >>> comp.show_graph(show_node_structure=True)
++-------------------------------------------------------+-------------------------------------------------------+
+|    >>> comp.show_graph(show_node_structure=True)      | .. figure:: _static/show_graph_show_mech_structure.svg|
++-------------------------------------------------------+-------------------------------------------------------+
+|    >>> comp.show_graph(show_node_structure=True,      | .. figure:: _static/show_graph_show_mech_structure.svg|
+|    ... show_headers=False)                            |                                                       |
++-------------------------------------------------------+-------------------------------------------------------+
 
-         .. figure:: _static/Modulation_fig.svg
-           :alt: Modulation
-           :scale: 150 %
+**show_projection_labels**
 
-        >>> comp.show_graph(show_node_structure=True, show_headers=False)
-
-         .. figure:: _static/Modulation_fig.svg
-           :alt: Modulation
-           :scale: 150 %
-
-        >>> comp.show_graph(show_node_structure=True)
-
-    - **show_projection_labels**
-
-    >>> comp.show_graph(show_projection_labels=True)
-
++-------------------------------------------------------+-------------------------------------------------------+
+|    >>> comp.show_graph(show_projection_labels=True)   | .. figure:: _static/show_graph_show_mech_structure.svg|
++-------------------------------------------------------+-------------------------------------------------------+
 
 .. _Composition_Class_Reference:
 
@@ -2078,7 +2072,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
-                   controller_color='blue',
+                   model_based_optimizer_color='blue',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
                    ):
@@ -2124,7 +2118,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_model_based_optimizer :  bool : default False
             specifies whether or not to show the controller components of the system;
-            they will all be displayed in the color specified for **controller_color**.
+            they will all be displayed in the color specified for **model_based_optimizer_color**.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2145,13 +2139,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_and_output_color : keyword : default 'brown'
             specifies the display color of Nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
 
-        controller_color : keyword : default `blue`
-            specifies the color in which the learning components are displayed (note: if the System's
-            `model_based_optimizer <System.model_based_optimizer>` is an `EVCControlMechanism`, then a link is shown in pink from the
-            `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
-            `INPUT` Mechanisms of the System, to indicate that although no projection are created for these,
-            the prediction Mechanisms determine the input to the `INPUT` Mechanisms when the EVCControlMechanism
-            `simulates execution <EVCControlMechanism_Execution>` of the System).
+        model_based_optimizer_color : keyword : default `blue`
+            specifies the color in which the model_based_optimizer components are displayed
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -2342,13 +2331,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             model_based_optimizer = self.model_based_optimizer
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    ctlr_color = controller_color
+                    ctlr_color = model_based_optimizer_color
                 else:
                     ctlr_color = active_color
                 ctlr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                ctlr_color = controller_color
+                ctlr_color = model_based_optimizer_color
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
@@ -2360,26 +2349,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    objmech_ctlr_proj_color = controller_color
+                    objmech_ctlr_proj_color = model_based_optimizer_color
                 else:
                     objmech_ctlr_proj_color = active_color
                 objmech_ctlr_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_ctlr_proj_color = controller_color
+                objmech_ctlr_proj_color = model_based_optimizer_color
                 objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
                 if active_color is BOLD:
-                    objmech_color = controller_color
+                    objmech_color = model_based_optimizer_color
                 else:
                     objmech_color = active_color
                 objmech_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_color = controller_color
+                objmech_color = model_based_optimizer_color
                 objmech_width = str(default_width)
 
             ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
@@ -2425,13 +2414,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
                     if model_based_optimizer in active_items:
                         if active_color is BOLD:
-                            ctl_proj_color = controller_color
+                            ctl_proj_color = model_based_optimizer_color
                         else:
                             ctl_proj_color = active_color
                         ctl_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        ctl_proj_color = controller_color
+                        ctl_proj_color = model_based_optimizer_color
                         ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
@@ -2456,13 +2445,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for projection in input_state.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
-                            proj_color = controller_color
+                            proj_color = model_based_optimizer_color
                         else:
                             proj_color = active_color
                         proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        proj_color = controller_color
+                        proj_color = model_based_optimizer_color
                         proj_width = str(default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
