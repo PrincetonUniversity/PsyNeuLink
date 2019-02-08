@@ -2050,36 +2050,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     runtime_params[node][param] = (runtime_params[node][param], Always())
         return runtime_params
 
-    def _get_graph_node_label(self, item, show_dimensions=None, show_role=None):
-
-        # For Mechanisms, show length of each InputState and OutputState
-        if isinstance(item, (Mechanism, Composition)):
-            if show_role:
-                try:
-                    role = item.systems[self]
-                    role = role or ""
-                except KeyError:
-                    if isinstance(item, ControlMechanism) and hasattr(item, 'system'):
-                        role = 'MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM'
-                    else:
-                        role = ""
-                name = "{}\n[{}]".format(item.name, role)
-            else:
-                name = item.name
-            # TBI Show Dimensions
-            # if show_dimensions in {ALL, MECHANISMS}:
-            #     input_str = "in ({})".format(",".join(str(input_state.socket_width)
-            #                                           for input_state in item.input_states))
-            #     output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
-            #                                             for output_state in item.output_states))
-            #     return "{}\n{}\n{}".format(output_str, name, input_str)
-            # else:
-            return name
-
-        # TBI: Show projections as nodes
-        # For Projection, show dimensions of matrix
-        elif isinstance(item, Projection):
-            return item.name
+    def _get_graph_node_label(self, item, show_dimensions=None):
+        if not isinstance(item, (Mechanism, Composition, Projection)):
+            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+        # TBI Show Dimensions
+        # if show_dimensions in {ALL, MECHANISMS}:
+        #     input_str = "in ({})".format(",".join(str(input_state.socket_width)
+        #                                           for input_state in item.input_states))
+        #     output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
+        #                                             for output_state in item.output_states))
+        #     return "{}\n{}\n{}".format(output_str, name, input_str)
         #     if show_dimensions in {ALL, PROJECTIONS}:
         #         # MappingProjections use matrix
         #         if isinstance(item, MappingProjection):
@@ -2093,30 +2073,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #             return "{}\n{}".format(item.name, dim_string)
         #     else:
         #         return item.name
-
-        else:
-            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+        return item.name
 
     def show_graph(self,
-                   show_processes=False,
-                   show_learning=False,
-                   show_controller=False,
-                   show_roles=False,
-                   show_dimensions=False,
+                   show_controller=False,               # YES?
+                   show_dimensions=False,               # NOT WORKING?
                    show_mechanism_structure=False,
-                   show_headers=True,
-                   show_projection_labels=False,
+                   show_headers=True,                   # NOT WORKING?
+                   show_projection_labels=False,        # YES
                    direction='BT',
                    active_items=None,
                    active_color=BOLD,
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
-                   learning_color='orange',
                    controller_color='blue',
-                   prediction_mechanism_color='pink',
-                   system_color='purple',
-                   output_fmt='pdf',
+                   output_fmt='pdf',                    # NO
                    execution_id=NotImplemented,
                    ):
         """Generate a display of the graph structure of Nodes (Mechanisms and Nested Compositions) and Projections in 
@@ -2126,14 +2098,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
-        By default, only the primary processing Components are shown, and Mechanisms are displayed as simple nodes.
-        However, the **show_mechanism_structure** argument can be used to display more detailed information about
-        each Mechanism, including its States and, optionally, the `function <Component.function>` and `value
+        Displays a graph showing the structure of the Composition (based on the `Composition's graph
+        <Composition.processing_graph>`).
+
+        By default, only the Nodes and Projections are shown. However, the **show_mechanism_structure** argument can be
+        used to display more detailed information about each Node, including its States and, optionally, the `function
+        <Component.function>` and `value
         <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
         arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
-        Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
-        Processes to which they belong. The **show_learning** and **show_controller** arguments can be used to
+        Mechanism and Projection. The **show_learning** and **show_controller** arguments can be used to
         show the Components associated with `learning <LearningMechanism>` and those associated with the
         System's `model_based_optimizer <System_Control>`.
 
@@ -2150,24 +2123,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         arrow shapes: https://graphviz.gitlab.io/_pages/doc/info/arrows.html
         colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
         COMMENT
-
-        .. _System_Projection_Arrow_Corruption:
-
-        .. note::
-           There are two unresolved anomalies associated with show_graph (it is uncertain whether they are bugs in
-           PsyNeuLink, Graphviz, or an interaction between the two):
-
-           1) When both **show_mechanism_structure** and **show_processes** are specified together with
-              **show_learning** and/or **show_controller**, under some arcane conditions Projection arrows can be
-              distorted and/or orphaned.  We have confirmed that this does not reflect a corruption of the underlying
-              graph structure, and the System should execute normally.
-
-           2) Specifying **show_processes** but not setting **show_headers** to `False` raises a GraphViz exception;
-              to deal with this, if **show_processes** is specified, **show_headers** is automatically set to `False`.
-
-           COMMENT:
-               See IMPLEMENTATION NOTE under _assign_control_components() for description of the problem
-           COMMENT
 
         Examples
         --------
@@ -2209,12 +2164,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Arguments
         ---------
-
-        show_processes : bool : False
-            specifies whether to organize the `ProcessingMechanisms <ProcessMechanism>` into the `Processes <Process>`
-            to which they belong, with each Process shown in its own box.  If a Component belongs to more than one
-            Process, it is shown in a separate box along with any others that belong to the same combination of
-            Processes;  these represent intersections of Processes within the System.
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
@@ -2280,16 +2229,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show the controller components of the system;
             they will all be displayed in the color specified for **controller_color**.
 
-        show_roles : bool : default False
-            specifies whether or not to include the `role <System_Mechanisms>` that each Mechanism plays in the System
-            (enclosed by square brackets); 'INPUT' and 'OUTPUT' Mechanisms are also displayed in a color specified
-            by the **input_color**, **output_color** and **input_and_output_color** arguments (see below).
-
+        COMMENT:
         show_dimensions : bool, MECHANISMS, PROJECTIONS or ALL : default False
-            specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
-            is `True`);  can have the following settings:
+            specifies whether or not to show dimensions of Nodes
 
-            * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
+            * *MECHANISMS* -- shows `Node` input and output dimensions.  Input dimensions are shown in parentheses
               below the name of the Mechanism; each number represents the dimension of the `variable
               <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
               the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
@@ -2301,6 +2245,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             * *ALL* -- eqivalent to `True`; shows dimensions for both Mechanisms and Projections (see above for
               formats).
+        COMMENT
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2313,17 +2258,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             by GraphViz, or the keyword *BOLD*.
 
         input_color : keyword : default 'green',
-            specifies the color in which the `INPUT` Mechanisms of the System are displayed.
+            specifies the display color for `INPUT` Nodes in the Composition
 
         output_color : keyword : default 'red',
-            specifies the color in which the `OUTPUT` Mechanisms of the System are displayed.
+            specifies the display color for `OUTPUT` Nodes in the Composition
 
         input_and_output_color : keyword : default 'brown'
-            specifies the color in which Mechanisms that are both
-            an `INPUT` and a `OUTPUT` of the System are displayed.
-
-        learning_color : keyword : default `green`
-            specifies the color in which the learning components are displayed.
+            specifies the display color of Nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
 
         controller_color : keyword : default `blue`
             specifies the color in which the learning components are displayed (note: if the System's
@@ -2332,9 +2273,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `INPUT` Mechanisms of the System, to indicate that although no projection are created for these,
             the prediction Mechanisms determine the input to the `INPUT` Mechanisms when the EVCControlMechanism
             `simulates execution <EVCControlMechanism_Execution>` of the System).
-
-        system_color : keyword : default `purple`
-            specifies the color in which the node representing input from the System is displayed.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -2361,16 +2299,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # IMPLEMENTATION NOTE:
         #    The helper methods below (_assign_XXX__components) all take the main graph *and* subgraph as arguments:
         #        - the main graph (G) is used to assign edges
-        #        - the subgraph (sg) is used to assign nodes to Processes if **show_processes** is specified
-        #          (otherwise, it should simply be passed G)
 
         # HELPER METHODS
 
         tc.typecheck
 
-        def _assign_processing_components(G, sg, rcvr,
-                                          processes: tc.optional(list) = None,
-                                          subgraphs: tc.optional(dict) = None):
+        def _assign_processing_components(G,
+                                          sg,
+                                          rcvr,
+                                          processes: tc.optional(list) = None):
             '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             rcvr_rank = 'same'
@@ -2425,7 +2362,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 rcvr_penwidth = str(default_width)
 
             # Implement rcvr node
-            rcvr_label = self._get_graph_node_label(rcvr, show_dimensions, show_roles)
+            rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
 
             if show_mechanism_structure:
                 sg.node(rcvr_label,
@@ -2451,17 +2388,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                     if show_projection_labels:
-                        edge_label = self._get_graph_node_label(proj, show_dimensions, show_roles)
+                        edge_label = self._get_graph_node_label(proj, show_dimensions)
                     else:
                         edge_label = ''
-                    try:
-                        has_learning = proj.has_learning_projection is not None
-                    except AttributeError:
-                        has_learning = None
-
-                    # Handle learning components for AutoassociativeProjection
-                    #  calls _assign_learning_components,
-                    #  but need to manage it from here since MappingProjection needs be shown as node rather than edge
 
                     # show projection as edge
                     if proj.sender in active_items:
@@ -2491,7 +2420,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Set sndr info
 
-                    sndr_label = self._get_graph_node_label(sndr, show_dimensions, show_roles)
+                    sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
                     # find edge name
                     for output_state in sndr.output_states:
@@ -2507,14 +2436,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 sndr_proj_label = sndr_label
                                 proc_mech_rcvr_label = rcvr_label
-                            # edge_name = self._get_graph_node_label(proj, show_dimensions, show_roles)
-                            # edge_shape = proj.matrix.shape
-                            try:
-                                has_learning = proj.has_learning_projection is not None
-                            except AttributeError:
-                                has_learning = None
                             selected_proj = proj
-                    edge_label = self._get_graph_node_label(proj, show_dimensions, show_roles)
+                    edge_label = self._get_graph_node_label(proj, show_dimensions)
 
                     # Render projections
                     if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
@@ -2585,8 +2508,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 objmech_color = controller_color
                 objmech_width = str(default_width)
 
-            ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions, show_roles)
-            objmech_label = self._get_graph_node_label(objmech, show_dimensions, show_roles)
+            ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
+            objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
                         model_based_optimizer.show_structure(**mech_struct_args),
@@ -2622,22 +2545,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
                    color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
-            # IMPLEMENTATION NOTE:
-            #   When two (or more?) Processes (e.g., A and B) have homologous constructions, and a ControlProjection is
-            #   assigned to a ProcessingMechanism in one Process (e.g., the 1st one in Process A) and a
-            #   ProcessingMechanism in the other Process corresponding to the next in the sequence (e.g., the 2nd one
-            #   in Process B) the Projection arrow for the first one get corrupted and sometimes one or more of the
-            #   following warning/error messages appear in the console:
-            # Warning: Arrow type "arial" unknown - ignoring
-            # Warning: Unable to reclaim box space in spline routing for edge "ProcessingMechanism4 ComparatorMechanism
-            # [LEARNING]" -> "LearningMechanism for MappingProjection from ProcessingMechanism3 to ProcessingMechanism4
-            # [LEARNING]". Something is probably seriously wrong.
-            # These do not appear to reflect corruptions of the graph structure and/or execution.
-
             # outgoing edges (from model_based_optimizer to ProcessingMechanisms)
             for control_signal in model_based_optimizer.control_signals:
                 for ctl_proj in control_signal.efferents:
-                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
+                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
                     if model_based_optimizer in active_items:
                         if active_color is BOLD:
                             ctl_proj_color = controller_color
@@ -2680,14 +2591,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj_color = controller_color
                         proj_width = str(default_width)
                     if show_mechanism_structure:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions,
-                                                                     show_roles) + \
+                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions,
-                                                                     show_roles)
-                        objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions, show_roles)
+                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
+                        objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
                     if show_projection_labels:
                         edge_label = projection.name
                     else:
@@ -2695,53 +2604,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     G.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
-            # prediction mechanisms
-            # for mech in self.execution_list:
-            #     if mech in active_items:
-            #         if active_color is BOLD:
-            #             pred_mech_color = prediction_mechanism_color
-            #         else:
-            #             pred_mech_color = active_color
-            #         pred_mech_width = str(default_width + active_thicker_by)
-            #         self.active_item_rendered = True
-            #     else:
-            #         pred_mech_color = prediction_mechanism_color
-            #         pred_mech_width = str(default_width)
-            #     if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-            #         recvr = mech.origin_mech
-            #         recvr_label = self._get_graph_node_label(recvr, show_dimensions, show_roles)
-            #         # IMPLEMENTATION NOTE:
-            #         #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
-            #         if show_mechanism_structure and False:
-            #             proj = mech.output_state.efferents[0]
-            #             if proj in active_items:
-            #                 if active_color is BOLD:
-            #                     pred_proj_color = prediction_mechanism_color
-            #                 else:
-            #                     pred_proj_color = active_color
-            #                 pred_proj_width = str(default_width + active_thicker_by)
-            #                 self.active_item_rendered = True
-            #             else:
-            #                 pred_proj_color = prediction_mechanism_color
-            #                 pred_proj_width = str(default_width)
-            #             sg.node(mech.name,
-            #                     shape=mech.show_structure(**mech_struct_args),
-            #                     color=pred_mech_color,
-            #                     penwidth=pred_mech_width)
-            #
-            #             G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
-            #                    recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
-            #                    label=' prediction assignment',
-            #                    color=pred_proj_color, penwidth=pred_proj_width)
-            #         else:
-            #             sg.node(self._get_graph_node_label(mech, show_dimensions, show_roles),
-            #                     color=pred_mech_color, shape=mechanism_shape, penwidth=pred_mech_width)
-            #             G.edge(self._get_graph_node_label(mech, show_dimensions, show_roles),
-            #                    recvr_label,
-            #                    label=' prediction assignment',
-            #                    color=prediction_mechanism_color)
-
-        # MAIN BODY OF METHOD:
 
         import graphviz as gv
 
@@ -2749,8 +2611,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if show_dimensions == True:
             show_dimensions = ALL
-        if show_processes:
-            show_headers = False
 
         if not active_items:
             active_items = []
@@ -2788,40 +2648,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
-        projection_shape = 'diamond'
-        # projection_shape = 'point'
-        # projection_shape = 'Mdiamond'
-        # projection_shape = 'hexagon'
 
         bold_width = 3
         default_width = 1
         active_thicker_by = 2
 
-        pos = None
-
         input_rank = 'source'
         control_rank = 'min'
-        obj_mech_rank = 'sink'
         output_rank = 'max'
-        learning_rank = 'sink'
 
         # build graph and configure visualisation settings
         G = gv.Digraph(
             name=self.name,
             engine="dot",
-            # engine = "fdp",
-            # engine = "neato",
-            # engine = "circo",
             node_attr={
                 'fontsize': '12',
                 'fontname': 'arial',
-                # 'shape':mechanism_shape,
                 'shape': 'record',
                 'color': default_node_color,
                 'penwidth': str(default_width)
             },
             edge_attr={
-                # 'arrowhead':'halfopen',
                 'fontsize': '10',
                 'fontname': 'arial'
             },
@@ -2830,74 +2677,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 'overlap': "False"
             },
         )
-        # G.attr(compound = 'True')
 
+        # get all Nodes
         processing_graph = self.scheduler_processing.visual_graph
-        # get System's ProcessingMechanisms
         rcvrs = list(processing_graph.keys())
 
-        # if show_processes is specified, create subgraphs for each Process
-        if show_processes:
+        for r in rcvrs:
+            _assign_processing_components(G, G, r)
 
-            # Manage Processes
-            process_intersections = {}
-            subgraphs = {}  # Entries: Process:sg
-            for process in self.processes:
-                subgraph_name = 'cluster_' + process.name
-                subgraph_label = process.name
-                with G.subgraph(name=subgraph_name) as sg:
-                    subgraphs[process.name] = sg
-                    sg.attr(label=subgraph_label)
-                    sg.attr(rank='same')
-                    # sg.attr(style='filled')
-                    # sg.attr(color='lightgrey')
-
-                    # loop through receivers and assign to the subgraph any that belong to the current Process
-                    for r in rcvrs:
-                        intersection = [p for p in self.processes if p in r.processes]
-                        # If the rcvr is in only one Process, add it to the subgraph for that Process
-                        if len(intersection) == 1:
-                            # If the rcvr is in the current Process, assign it to the subgraph
-                            if process in intersection:
-                                _assign_processing_components(G, sg, r, [process])
-                        # Otherwise, assign rcvr to entry in dict for process intersection (subgraph is created below)
-                        else:
-                            intersection_name = ' and '.join([p.name for p in intersection])
-                            if not intersection_name in process_intersections:
-                                process_intersections[intersection_name] = [r]
-                            else:
-                                if r not in process_intersections[intersection_name]:
-                                    process_intersections[intersection_name].append(r)
-
-            # Create a process for each unique intersection and assign rcvrs to that
-            for intersection_name, mech_list in process_intersections.items():
-                with G.subgraph(name='cluster_' + intersection_name) as sg:
-                    sg.attr(label=intersection_name)
-                    # get list of processes in the intersection (to pass to _assign_processing_components)
-                    processes = [p for p in self.processes if p.name in intersection_name]
-                    # loop through receivers and assign to the subgraph any that belong to the current Process
-                    for r in mech_list:
-                        if r in self.graph:
-                            _assign_processing_components(G, sg, r, processes, subgraphs)
-                        else:
-                            raise CompositionError("PROGRAM ERROR: Component in interaction process ({}) is not in "
-                                                   "{}'s graph or learningGraph".format(r.name, self.name))
-
-        else:
-            for r in rcvrs:
-                _assign_processing_components(G, G, r)
-
-        # Add control-related Components to graph if show_controller
+        # Add model-based-optimizer-related Components to graph if show_controller
         if show_controller:
-            if show_processes:
-                with G.subgraph(name='cluster_MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM') as sg:
-                    sg.attr(label='MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM')
-                    sg.attr(rank='top')
-                    # sg.attr(style='filled')
-                    # sg.attr(color='lightgrey')
-                    _assign_control_components(G, sg)
-            else:
-                _assign_control_components(G, G)
+            _assign_control_components(G, G)
 
         # GENERATE OUTPUT
 
@@ -2949,8 +2739,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                          )
                 # Append gif to self._animation
                 image = Image.open(image_file)
-                if not self._save_images:
-                    remove(image_file)
+                # TBI?
+                # if not self._save_images:
+                #     remove(image_file)
                 if not hasattr(self, '_animation'):
                     self._animation = [image]
                 else:
