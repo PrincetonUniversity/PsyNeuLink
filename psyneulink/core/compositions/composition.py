@@ -496,6 +496,45 @@ Runtime Params
 Visualizing a Composition
 -------------------------
 
+The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
+Nested Compositions) and Projections in the Composition (based on the `Composition's processing graph
+<Composition.processing_graph>`).
+
+By default, Nodes are shown as ovals labeled by their `names <Mechanism_base.name>`, and Projections are shown
+as unlabeled arrows.
+
+    >>> import psyneulink as pnl
+    >>> A = pnl.ProcessingMechanism(name='A')
+    >>> B = pnl.ProcessingMechanism(name='B')
+    >>> comp = pnl.Composition(name='comp')
+    >>> comp.add_linear_processing_pathway([A,B])
+    >>> comp.show_graph()
+
+    .. figure:: _static/Modulation_fig.svg
+       :alt: Modulation
+       :scale: 150 %
+
+However, there are options for displaying more detailed information:
+
+    - **show_node_structure**
+
+        >>> comp.show_graph(show_node_structure=True)
+
+         .. figure:: _static/Modulation_fig.svg
+           :alt: Modulation
+           :scale: 150 %
+
+        >>> comp.show_graph(show_node_structure=True, show_headers=False)
+
+         .. figure:: _static/Modulation_fig.svg
+           :alt: Modulation
+           :scale: 150 %
+
+        >>> comp.show_graph(show_node_structure=True)
+
+    - **show_projection_labels**
+
+    >>> comp.show_graph(show_projection_labels=True)
 
 
 .. _Composition_Class_Reference:
@@ -531,7 +570,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, \
-    MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, \
+    MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, \
     VALUES
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -2005,33 +2044,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not isinstance(item, (Mechanism, Composition, Projection)):
             raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
         # TBI Show Dimensions
-        # if show_dimensions in {ALL, MECHANISMS}:
-        #     input_str = "in ({})".format(",".join(str(input_state.socket_width)
-        #                                           for input_state in item.input_states))
-        #     output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
-        #                                             for output_state in item.output_states))
-        #     return "{}\n{}\n{}".format(output_str, name, input_str)
-        #     if show_dimensions in {ALL, PROJECTIONS}:
-        #         # MappingProjections use matrix
-        #         if isinstance(item, MappingProjection):
-        #             value = np.array(item.matrix)
-        #             dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-        #             return "{}\n{}".format(item.name, dim_string)
-        #         # ModulatoryProjections use value
-        #         else:
-        #             value = np.array(item.value)
-        #             dim_string = "({})".format(len(value))
-        #             return "{}\n{}".format(item.name, dim_string)
-        #     else:
-        #         return item.name
-        return item.name
+        name = item.name
+
+        if show_dimensions in {ALL, MECHANISMS}:
+            input_str = "in ({})".format(",".join(str(input_state.socket_width)
+                                                  for input_state in item.input_states))
+            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
+                                                    for output_state in item.output_states))
+            return "{}\n{}\n{}".format(output_str, name, input_str)
+        if show_dimensions in {ALL, PROJECTIONS}:
+            # MappingProjections use matrix
+            if isinstance(item, MappingProjection):
+                value = np.array(item.matrix)
+                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                return "{}\n{}".format(item.name, dim_string)
+            # ModulatoryProjections use value
+            else:
+                value = np.array(item.value)
+                dim_string = "({})".format(len(value))
+                return "{}\n{}".format(item.name, dim_string)
+
+        return name
 
     def show_graph(self,
-                   show_controller=False,               # YES?
+                   show_model_based_optimizer=False,               # WORKING?
                    show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
-                   show_headers=True,                   # NOT WORKING?
-                   show_projection_labels=False,        # YES
+                   show_headers=False,
+                   show_projection_labels=False,
                    direction='BT',
                    active_items=None,
                    active_color=BOLD,
@@ -2039,79 +2079,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_color='red',
                    input_and_output_color='brown',
                    controller_color='blue',
-                   output_fmt='pdf',                    # NO
+                   output_fmt='pdf',
                    execution_id=NotImplemented,
                    ):
-        """Generate a display of the graph structure of Nodes (Mechanisms and Nested Compositions) and Projections in 
-        the Composition.
-
+        """
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        Displays a graph showing the structure of the Composition (based on the `Composition's graph
-        <Composition.processing_graph>`).
-
-        By default, only the Nodes and Projections are shown. However, the **show_node_structure** argument can be
-        used to display more detailed information about each Node, including its States and, optionally, the `function
-        <Component.function>` and `value
-        <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
-        arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
-        Mechanism and Projection. The **show_learning** and **show_controller** arguments can be used to
-        show the Components associated with `learning <LearningMechanism>` and those associated with the
-        System's `model_based_optimizer <System_Control>`.
-
-        `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_node_structure** is `True`,
-        Mechanism nodes are subdivided into sections for its States with information about each determined by the
-        **show_values** and **show_functions** specifications.  Otherwise, Mechanism nodes are simple ovals.
-        `INPUT` and  `OUTPUT` Mechanisms of the System are displayed with thicker borders in colors specified
-        for each. `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is specified,
-        in which case `MappingProjections <MappingProjection> are displayed as diamond-shaped nodes, and any
-        `LearningProjections <LearningProjecction>` as labelled arrows that point to them.
-
-        COMMENT:
-        node shapes: https://graphviz.gitlab.io/_pages/doc/info/shapes.html
-        arrow shapes: https://graphviz.gitlab.io/_pages/doc/info/arrows.html
-        colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
-        COMMENT
-
-        Examples
-        --------
-
-        The figure below shows different renderings of the following System that can be generated using its
-        show_graph method::
-
-            import psyneulink as pnl
-            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_states=[pnl.RESULTS, pnl.OUTPUT_MEAN])
-            mech_2 = pnl.TransferMechanism(name='Mech 2', size=5)
-            mech_3 = pnl.TransferMechanism(name='Mech 3', size=2, function=pnl.Logistic(gain=pnl.CONTROL))
-            my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
-            my_process_B = pnl.Process(pathway=[mech_2, mech_3])
-            my_system = pnl.System(processes=[my_process_A, my_process_B],
-                                   model_based_optimizer=pnl.ControlMechanism(name='my_system ModelBasedOptimizationControlMechanism'),
-                                   monitor_for_control=[(pnl.OUTPUT_MEAN, mech_1)],
-                                   enable_model_based_optimizer=True)
-
-        .. _System_show_graph_figure:
-
-        **Output of show_graph using different options**
-
-        .. figure:: _static/show_graph_figure.svg
-           :alt: System graph examples
-           :scale: 150 %
-
-           Examples of renderings generated by the show_graph method with different options specified, and the call
-           to the show_graph method used to generate each rendering shown below each example. **Panel A** shows the
-           simplest rendering, with just Processing Components displayed; `INPUT` Mechanisms are shown in red,
-           and the `OUTPUT` Mechanism in green.  **Panel B** shows the same graph with `MappingProjection` names
-           and Component dimensions displayed.  **Panel C** shows the learning Components of the System displayed (in
-           orange).  **Panel D** shows the control Components of the System displayed (in blue).  **Panel E** shows
-           both learning and control Components;  the learning components are shown with all `LearningProjections
-           <LearningProjection>` shown (by specifying show_learning=pnl.ALL).  **Panel F** shows a detailed view of
-           the Processing Components, using the show_node_structure option, that includes Component labels and
-           values.  **Panel G** show a simpler rendering using the show_node_structure, that only shows
-           Component names, but includes the control Components (using the show_controller option).
-
+        See LINK: Visualizing a Composition for details and examples.
 
         Arguments
         ---------
@@ -2143,60 +2119,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Any combination of the settings above can also be specified in a list that is assigned to
             show_node_structure
 
-        COMMENT:
-             and, optionally, the `function <Component.function>` and `value <Component.value>` of each
-            (these can be specified using the **show_functions** and **show_values** arguments.  If this option
-            is specified, Projections are connected to and from the State that is the `sender <Projection.sender>` or
-            `receiver <Projection.receiver>` of each.
-        COMMENT
-
-        show_headers : bool : default False
-            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
-            **show_node_structure** is specified (see above).
-
-        COMMENT:
-        show_functions : bool : default False
-            specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
-            graph (enclosed by parentheses);  this requires **show_node_structure** to be specified as `True`
-            to take effect.
-
-        show_values : bool : default False
-            specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the graph
-            (prefixed by "=");  this requires **show_node_structure** to be specified as `True` to take effect.
-        COMMENT
-
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
 
-        show_learning : bool or ALL : default False
-            specifies whether or not to show the learning components of the system;
-            they will all be displayed in the color specified for **learning_color**.
-            Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
-            if set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
-            as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
-            that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
-
-        show_controller :  bool : default False
+        show_model_based_optimizer :  bool : default False
             specifies whether or not to show the controller components of the system;
             they will all be displayed in the color specified for **controller_color**.
-
-        COMMENT:
-        show_dimensions : bool, MECHANISMS, PROJECTIONS or ALL : default False
-            specifies whether or not to show dimensions of Nodes
-
-            * *MECHANISMS* -- shows `Node` input and output dimensions.  Input dimensions are shown in parentheses
-              below the name of the Mechanism; each number represents the dimension of the `variable
-              <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
-              the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
-              of `OutputState` of the Mechanism.
-
-            * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
-              shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
-              rows (input dimension) and the second the number of columns (output dimension).
-
-            * *ALL* -- eqivalent to `True`; shows dimensions for both Mechanisms and Projections (see above for
-              formats).
-        COMMENT
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2247,19 +2175,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
         #     return
 
-        # IMPLEMENTATION NOTE:
-        #    The helper methods below (_assign_XXX__components) all take the main graph *and* subgraph as arguments:
-        #        - the main graph (G) is used to assign edges
-
         # HELPER METHODS
 
         tc.typecheck
 
-        def _assign_processing_components(G,
-                                          sg,
+        def _assign_processing_components(g,
                                           rcvr,
                                           processes: tc.optional(list) = None):
-            '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
+            '''Assign nodes to graph'''
 
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
@@ -2316,13 +2239,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
 
             if show_node_structure:
-                sg.node(rcvr_label,
-                        rcvr.show_structure(**mech_struct_args),
+                g.node(rcvr_label,
+                        rcvr.show_structure(**node_struct_args),
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
             else:
-                sg.node(rcvr_label,
+                g.node(rcvr_label,
                         shape=node_shape,
                         color=rcvr_color,
                         rank=rcvr_rank,
@@ -2354,7 +2277,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         proj_color = default_node_color
                         proj_width = str(default_width)
-                    G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
+                    g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
             # # if recvr is ObjectiveMechanism for System's model_based_optimizer, break, as those handled below
@@ -2410,11 +2333,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         label = proc_mech_label
                     else:
                         label = ''
-                    G.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                    g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
                            color=proj_color, penwidth=proj_width)
 
-        def _assign_control_components(G, sg):
-            '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
+        def _assign_control_components(g):
+            '''Assign control nodes and edges to graph '''
 
             model_based_optimizer = self.model_based_optimizer
             if model_based_optimizer in active_items:
@@ -2429,7 +2352,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
+                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
                       "can't be used in its show_graph() method\n".format(self.name))
                 return
 
@@ -2462,23 +2385,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
-                sg.node(ctlr_label,
-                        model_based_optimizer.show_structure(**mech_struct_args),
+                g.node(ctlr_label,
+                        model_based_optimizer.show_structure(**node_struct_args),
                         color=ctlr_color,
                         penwidth=ctlr_width,
                         rank=control_rank
                         )
-                sg.node(objmech_label,
-                        objmech.show_structure(**mech_struct_args),
+                g.node(objmech_label,
+                        objmech.show_structure(**node_struct_args),
                         color=objmech_color,
                         penwidth=ctlr_width,
                         rank=control_rank
                         )
             else:
-                sg.node(ctlr_label,
+                g.node(ctlr_label,
                         color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
                         rank=control_rank)
-                sg.node(objmech_label,
+                g.node(objmech_label,
                         color=objmech_color, penwidth=objmech_width, shape=node_shape,
                         rank=control_rank)
 
@@ -2493,7 +2416,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
-            G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
+            g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
                    color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
             # outgoing edges (from model_based_optimizer to ProcessingMechanisms)
@@ -2521,7 +2444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
-                    G.edge(ctl_sndr_label,
+                    g.edge(ctl_sndr_label,
                            proc_mech_rcvr_label,
                            label=edge_label,
                            color=ctl_proj_color,
@@ -2552,7 +2475,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         edge_label = projection.name
                     else:
                         edge_label = ''
-                    G.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
+                    g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
 
@@ -2581,7 +2504,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_node_structure, (list, tuple, set)):
-            mech_struct_args = {'system': self,
+            node_struct_args = {'composition': self,
                                 'show_role': any(key in show_node_structure for key in {ROLES, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
@@ -2589,7 +2512,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_headers': show_headers,
                                 'output_fmt': 'struct'}
         else:
-            mech_struct_args = {'system': self,
+            node_struct_args = {'composition': self,
                                 'show_role': show_node_structure in {ROLES, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
@@ -2634,11 +2557,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
-            _assign_processing_components(G, G, r)
+            _assign_processing_components(G, r)
 
-        # Add model-based-optimizer-related Components to graph if show_controller
-        if show_controller:
-            _assign_control_components(G, G)
+        # Add model-based-optimizer-related Components to graph if show_model_based_optimizer
+        if show_model_based_optimizer:
+            _assign_control_components(G)
 
         # GENERATE OUTPUT
 
