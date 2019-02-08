@@ -152,7 +152,7 @@ though `some shorthand notations are allowed <Input_Specification_Examples>`.
     `external_input_values <MechanismBase.external_input_values>`, and do not receive user-specified input values.
 
 If num_trials is not in use, the number of inputs provided determines the number of trials in the run. For example, if
-five inputs are provided for each origin mechanism, and num_trials is not specified, the system will execute five times.
+five inputs are provided for each INPUT Node, and num_trials is not specified, the Composition executes five times.
 
 +----------------------+-------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |
@@ -180,8 +180,8 @@ which only one input is specified). In other words, all of the values in the inp
 as each other (or length 1).
 
 If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
-are provided for each `INPUT` mechanism, and num_trials = 7, the system executes seven times. The first two
-items in the list of inputs are used again on trial 5 and trial 6, respectively.
+are provided for each `INPUT` Node, and num_trials = 7, the system executes seven times. The input values from trials 0
+and 1 are used again on trials 5 and 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |5     |6     |
@@ -520,10 +520,8 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, \
-    DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Composition_Base
@@ -654,7 +652,7 @@ class Graph(object):
     '''
 
     def __init__(self):
-        self.comp_to_vertex = collections.OrderedDict()  # Translate from mechanisms to related vertex
+        self.comp_to_vertex = collections.OrderedDict()  # Translate from PNL Mech, Comp or Proj to corresponding vertex
         self.vertices = []  # List of vertices within graph
 
     def copy(self):
@@ -1191,9 +1189,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.model_based_optimizer = optimizer
         self.model_based_optimizer.composition = self
-        # if monitor_for_control:
-        #     self.model_based_optimizer.objective_mechanism.add_monitored_output_states(monitor_for_control)
         self.add_node(self.model_based_optimizer.objective_mechanism)
+        self.enable_model_based_optimizer = True
 
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
@@ -1546,12 +1543,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
-                # if self.model_based_optimizer:
-                #
-                #     if node == self.model_based_optimizer.objective_mechanism:
-                #         for vertex in graph.get_parents_from_component(node):
-                #             self._add_node_role(vertex.component, NodeRole.TERMINAL)
-                # else:
                 self._add_node_role(node, NodeRole.TERMINAL)
 
         # loop over all nodes in the Composition to identify additional roles
@@ -1578,48 +1569,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Second check for TERMINAL nodes:
             # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
-                # if self.model_based_optimizer:
-                #     if node == self.model_based_optimizer.objective_mechanism:
-                #         for vertex in graph.get_parents_from_component(node):
-                #             self._add_node_role(vertex.component, NodeRole.TERMINAL)
-                # else:
                 self._add_node_role(node, NodeRole.TERMINAL)
 
-        # KAM Commented out below 1/25/19 because we do not use the CYCLE or RECURRENT_INIT roles
-        # Identify Recurrent_init and Cycle nodes
-        # visited = []  # Keep track of all nodes that have been visited
-        # for origin_node in self.get_nodes_by_role(NodeRole.ORIGIN):  # Cycle through origin nodes first
-        #     visited_current_path = []  # Track all nodes visited from the current origin
-        #     next_visit_stack = []  # Keep a stack of nodes to be visited next
-        #     next_visit_stack.append(origin_node)
-        #     for node in next_visit_stack:  # While the stack isn't empty
-        #         visited.append(node)  # Mark the node as visited
-        #         visited_current_path.append(node)  # And visited during the current path
-        #         children = [vertex.component for vertex in graph.get_children_from_component(node)]
-        #         for child in children:
-        #             # If the child has been visited this path and is not already initialized
-        #             if child in visited_current_path:
-        #                 self._add_node_role(node, NodeRole.RECURRENT_INIT)
-        #                 self._add_node_role(child, NodeRole.CYCLE)
-        #             elif child not in visited:  # Else if the child has not been explored
-        #                 next_visit_stack.append(child)  # Add it to the visit stack
-        # for node in self.nodes:
-        #     if node not in visited:  # Check the rest of the nodes
-        #         visited_current_path = []
-        #         next_visit_stack = []
-        #         next_visit_stack.append(node)
-        #         for remaining_node in next_visit_stack:
-        #             visited.append(remaining_node)
-        #             visited_current_path.append(remaining_node)
-        #             children = [vertex.component for vertex in graph.get_children_from_component(remaining_node)]
-        #             for child in children:
-        #                 if child in visited_current_path:
-        #                     self._add_node_role(remaining_node, NodeRole.RECURRENT_INIT)
-        #                     self._add_node_role(child, NodeRole.CYCLE)
-        #                 elif child not in visited:
-        #                     next_visit_stack.append(child)
-
-        # Assign any INPUT/OUTPUT roles that were specified by user
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
@@ -2078,7 +2029,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_controller=False,               # YES?
                    show_dimensions=False,               # NOT WORKING?
-                   show_mechanism_structure=False,
+                   show_node_structure=False,
                    show_headers=True,                   # NOT WORKING?
                    show_projection_labels=False,        # YES
                    direction='BT',
@@ -2101,7 +2052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Displays a graph showing the structure of the Composition (based on the `Composition's graph
         <Composition.processing_graph>`).
 
-        By default, only the Nodes and Projections are shown. However, the **show_mechanism_structure** argument can be
+        By default, only the Nodes and Projections are shown. However, the **show_node_structure** argument can be
         used to display more detailed information about each Node, including its States and, optionally, the `function
         <Component.function>` and `value
         <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
@@ -2110,7 +2061,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show the Components associated with `learning <LearningMechanism>` and those associated with the
         System's `model_based_optimizer <System_Control>`.
 
-        `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_mechanism_structure** is `True`,
+        `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_node_structure** is `True`,
         Mechanism nodes are subdivided into sections for its States with information about each determined by the
         **show_values** and **show_functions** specifications.  Otherwise, Mechanism nodes are simple ovals.
         `INPUT` and  `OUTPUT` Mechanisms of the System are displayed with thicker borders in colors specified
@@ -2157,15 +2108,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            orange).  **Panel D** shows the control Components of the System displayed (in blue).  **Panel E** shows
            both learning and control Components;  the learning components are shown with all `LearningProjections
            <LearningProjection>` shown (by specifying show_learning=pnl.ALL).  **Panel F** shows a detailed view of
-           the Processing Components, using the show_mechanism_structure option, that includes Component labels and
-           values.  **Panel G** show a simpler rendering using the show_mechanism_structure, that only shows
+           the Processing Components, using the show_node_structure option, that includes Component labels and
+           values.  **Panel G** show a simpler rendering using the show_node_structure, that only shows
            Component names, but includes the control Components (using the show_controller option).
 
 
         Arguments
         ---------
 
-        show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
+        show_node_structure : bool, VALUES, FUNCTIONS or ALL : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
             `States`;  can have the following settings:
 
@@ -2190,7 +2141,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               its States (using labels for the values, if specified;  see above).
 
             Any combination of the settings above can also be specified in a list that is assigned to
-            show_mechanism_structure
+            show_node_structure
 
         COMMENT:
              and, optionally, the `function <Component.function>` and `value <Component.value>` of each
@@ -2201,17 +2152,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_headers : bool : default False
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
-            **show_mechanism_structure** is specified (see above).
+            **show_node_structure** is specified (see above).
 
         COMMENT:
         show_functions : bool : default False
             specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
-            graph (enclosed by parentheses);  this requires **show_mechanism_structure** to be specified as `True`
+            graph (enclosed by parentheses);  this requires **show_node_structure** to be specified as `True`
             to take effect.
 
         show_values : bool : default False
             specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the graph
-            (prefixed by "=");  this requires **show_mechanism_structure** to be specified as `True` to take effect.
+            (prefixed by "=");  this requires **show_node_structure** to be specified as `True` to take effect.
         COMMENT
 
         show_projection_labels : bool : default False
@@ -2364,7 +2315,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Implement rcvr node
             rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
 
-            if show_mechanism_structure:
+            if show_node_structure:
                 sg.node(rcvr_label,
                         rcvr.show_structure(**mech_struct_args),
                         color=rcvr_color,
@@ -2372,7 +2323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         penwidth=rcvr_penwidth)
             else:
                 sg.node(rcvr_label,
-                        shape=mechanism_shape,
+                        shape=node_shape,
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
@@ -2382,7 +2333,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for proj in input_state.path_afferents:
                     if proj.sender.owner is not rcvr:
                         continue
-                    if show_mechanism_structure:
+                    if show_node_structure:
                         sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
                         proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
                     else:
@@ -2427,7 +2378,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projs = output_state.efferents
                         for proj in projs:
                             # if proj.receiver.owner == rcvr:
-                            if show_mechanism_structure:
+                            if show_node_structure:
                                 sndr_proj_label = '{}:{}-{}'. \
                                     format(sndr_label, OutputState.__name__, proj.sender.name)
                                 proc_mech_rcvr_label = '{}:{}-{}'. \
@@ -2510,7 +2461,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
-            if show_mechanism_structure:
+            if show_node_structure:
                 sg.node(ctlr_label,
                         model_based_optimizer.show_structure(**mech_struct_args),
                         color=ctlr_color,
@@ -2525,10 +2476,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
             else:
                 sg.node(ctlr_label,
-                        color=ctlr_color, penwidth=ctlr_width, shape=mechanism_shape,
+                        color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
                         rank=control_rank)
                 sg.node(objmech_label,
-                        color=objmech_color, penwidth=objmech_width, shape=mechanism_shape,
+                        color=objmech_color, penwidth=objmech_width, shape=node_shape,
                         rank=control_rank)
 
             # objmech to model_based_optimizer edge
@@ -2536,7 +2487,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 edge_label = objmech_ctlr_proj.name
             else:
                 edge_label = ''
-            if show_mechanism_structure:
+            if show_node_structure:
                 obj_to_ctrl_label = objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name
                 ctlr_from_obj_label = ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name
             else:
@@ -2563,7 +2514,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         edge_label = ctl_proj.name
                     else:
                         edge_label = ''
-                    if show_mechanism_structure:
+                    if show_node_structure:
                         ctl_sndr_label = ctlr_label + ':' + OutputState.__name__ + '-' + control_signal.name
                         proc_mech_rcvr_label = \
                             proc_mech_label + ':' + ParameterState.__name__ + '-' + ctl_proj.receiver.name
@@ -2590,7 +2541,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         proj_color = controller_color
                         proj_width = str(default_width)
-                    if show_mechanism_structure:
+                    if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
@@ -2629,25 +2580,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.active_item_rendered = False
 
         # Argument values used to call Mechanism.show_structure()
-        if isinstance(show_mechanism_structure, (list, tuple, set)):
+        if isinstance(show_node_structure, (list, tuple, set)):
             mech_struct_args = {'system': self,
-                                'show_role': any(key in show_mechanism_structure for key in {ROLES, ALL}),
-                                'show_functions': any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
-                                'show_values': any(key in show_mechanism_structure for key in {VALUES, ALL}),
-                                'use_labels': any(key in show_mechanism_structure for key in {LABELS, ALL}),
+                                'show_role': any(key in show_node_structure for key in {ROLES, ALL}),
+                                'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
+                                'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
+                                'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
                                 'show_headers': show_headers,
                                 'output_fmt': 'struct'}
         else:
             mech_struct_args = {'system': self,
-                                'show_role': show_mechanism_structure in {ROLES, ALL},
-                                'show_functions': show_mechanism_structure in {FUNCTIONS, ALL},
-                                'show_values': show_mechanism_structure in {VALUES, LABELS, ALL},
-                                'use_labels': show_mechanism_structure in {LABELS, ALL},
+                                'show_role': show_node_structure in {ROLES, ALL},
+                                'show_functions': show_node_structure in {FUNCTIONS, ALL},
+                                'show_values': show_node_structure in {VALUES, LABELS, ALL},
+                                'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
                                 'output_fmt': 'struct'}
 
         default_node_color = 'black'
-        mechanism_shape = 'oval'
+        node_shape = 'oval'
 
         bold_width = 3
         default_width = 1
@@ -2959,7 +2910,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for input_state in node.input_states:
                                 self.input_CIM_states[input_state][1].parameters.value.set(0.0, execution_id,
                                                                                            override=True)
-                            # self.input_mechanisms[mechanism]._output_states[0].value = 0.0
 
                 if isinstance(node, Mechanism):
 
@@ -3241,7 +3191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # if there is only one INPUT mechanism, allow inputs to be specified in a list
+        # if there is only one INPUT Node, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
             if len(input_nodes) == 1:
                 inputs = {next(iter(input_nodes)): inputs}
@@ -3255,7 +3205,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary with the INPUT mechanism({}) "
+                    "Inputs to {} must be specified in a list or in a dictionary with the INPUT node({}) "
                     "as its only key".format(self.name, next(iter(input_nodes)).name))
             else:
                 raise CompositionError(
@@ -3356,12 +3306,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
-
-            # terminal_mechanisms = self.get_nodes_by_role(NodeRole.TERMINAL)
-            # for terminal_mechanism in terminal_mechanisms:
-            #     for terminal_output_state in terminal_mechanism.output_states:
-            #         CIM_output_state = self.output_CIM_states[terminal_output_state]
-            #         CIM_output_state.value = terminal_output_state.value
 
             # object.results.append(result)
             if isinstance(trial_output, collections.Iterable):
@@ -3754,7 +3698,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # b - each input value is a 2d array that matches variable
         # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
         #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
-        # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
+        # (2) Verify that all nodes provide the same number of inputs (check length of each dictionary value)
 
         adjusted_stimuli = {}
         nums_input_sets = set()
