@@ -1191,10 +1191,16 @@ class Component(object, metaclass=ComponentsMeta):
                 p.attributes.add('nonnull')
                 p.attributes.add('noalias')
 
+            metadata = ctx.get_debug_location(llvm_func, self)
+            if metadata is not None:
+                scope = dict(metadata.operands)["scope"]
+                llvm_func.set_metadata("dbg", scope)
+
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = pnlvm.ir.IRBuilder(block)
-            builder.debug_metadata = ctx.get_debug_location(llvm_func, self)
+            builder.debug_metadata = metadata
+
 
             builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
 
