@@ -1182,7 +1182,7 @@ class Component(object, metaclass=ComponentsMeta):
                  ctx.get_input_struct_type(self).as_pointer(),
                  ctx.get_output_struct_type(self).as_pointer()))
 
-            func_name = ctx.get_unique_name(self.name)
+            func_name = ctx.get_unique_name(str(self))
             llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
