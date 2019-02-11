@@ -134,7 +134,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # store the current value of the node
                 self.component_to_forward_info[component][0] = value
                 if do_logging:
-                    detached_value = value.detach().numpy()
+                    detached_value = value.clone().detach().numpy()
                     component.parameters.value._log_value(detached_value, execution_id, ContextFlags.COMMAND_LINE)
 
                 # save value in output list if we're at a node in the last execution set
@@ -158,17 +158,17 @@ class PytorchModelCreator(torch.nn.Module):
 
     def copy_weights_to_psyneulink(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
-            projection.parameters.matrix.set(weights.detach().numpy(), execution_id)
+            projection.parameters.matrix.set(weights.clone().detach().numpy(), execution_id)
 
     def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
         for component, value in outputs.items():
-            detached_value = value.detach().numpy()
+            detached_value = value.clone().detach().numpy()
             component.parameters.value.set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
             component.output_state.parameters.value.set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
 
     def log_weights(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
-            projection.parameters.matrix._log_value(weights.detach().numpy(), execution_id, ContextFlags.COMMAND_LINE)
+            projection.parameters.matrix._log_value(weights.clone().detach().numpy(), execution_id, ContextFlags.COMMAND_LINE)
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it
@@ -203,7 +203,7 @@ class PytorchModelCreator(torch.nn.Module):
     def get_weights_for_projections(self):
         weights_in_numpy = {}
         for projection, weights in self.projections_to_pytorch_weights.items():
-            weights_in_numpy[projection] = weights.detach().numpy().copy()
+            weights_in_numpy[projection] = weights.clone().detach().numpy().copy()
         return weights_in_numpy
 
     # returns dict mapping psyneulink mechanisms to corresponding pytorch biases, the same way as the above function.
@@ -212,5 +212,5 @@ class PytorchModelCreator(torch.nn.Module):
     def get_biases_for_mechanisms(self):
         biases_in_numpy = {}
         for mechanism, biases in self.mechanisms_to_pytorch_biases.items():
-            biases_in_numpy[mechanism] = biases.detach().numpy().copy()
+            biases_in_numpy[mechanism] = biases.clone().detach().numpy().copy()
         return biases_in_numpy
