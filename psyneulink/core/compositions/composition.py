@@ -1224,7 +1224,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for node in nodes:
             self.add_node(node)
-            
+
     def add_model_based_optimizer(self, optimizer):
         """
         Adds an `OptimizationControlMechanism` as the `model_based_optimizer
@@ -2191,6 +2191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         elif output_fmt == 'jupyter':
             return m
+
     def _assign_execution_ids(self, execution_id=None):
         '''
             assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
@@ -2266,8 +2267,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return name
 
     def show_graph(self,
-                   show_model_based_optimizer=False,               # WORKING?
-                   show_dimensions=False,               # NOT WORKING?
+                   show_model_based_optimizer=False,  # WORKING?
+                   show_dimensions=False,  # NOT WORKING?
                    show_node_structure=False,
                    show_headers=False,
                    show_projection_labels=False,
@@ -2383,7 +2384,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
                 nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
-                nested_comp_graph.name = "cluster_"+rcvr.name
+                nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
@@ -2451,16 +2452,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(rcvr_label,
-                            rcvr.show_structure(**node_struct_args),
-                            color=rcvr_color,
-                            rank=rcvr_rank,
-                            penwidth=rcvr_penwidth)
+                           rcvr.show_structure(**node_struct_args),
+                           color=rcvr_color,
+                           rank=rcvr_rank,
+                           penwidth=rcvr_penwidth)
                 else:
                     g.node(rcvr_label,
-                            shape=node_shape,
-                            color=rcvr_color,
-                            rank=rcvr_rank,
-                            penwidth=rcvr_penwidth)
+                           shape=node_shape,
+                           color=rcvr_color,
+                           rank=rcvr_rank,
+                           penwidth=rcvr_penwidth)
 
                 # handle auto-recurrent projections
                 for input_state in rcvr.input_states:
@@ -2469,7 +2470,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
                         if show_node_structure:
                             sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__,
+                                                                     proj.receiver.name)
                         else:
                             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                         if show_projection_labels:
@@ -2562,8 +2564,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
-                      "can't be used in its show_graph() method\n".format(self.name))
+                print(
+                    "\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
+                    "can't be used in its show_graph() method\n".format(self.name))
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
@@ -2596,24 +2599,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                        model_based_optimizer.show_structure(**node_struct_args),
-                        color=ctlr_color,
-                        penwidth=ctlr_width,
-                        rank=control_rank
-                        )
+                       model_based_optimizer.show_structure(**node_struct_args),
+                       color=ctlr_color,
+                       penwidth=ctlr_width,
+                       rank=control_rank
+                       )
                 g.node(objmech_label,
-                        objmech.show_structure(**node_struct_args),
-                        color=objmech_color,
-                        penwidth=ctlr_width,
-                        rank=control_rank
-                        )
+                       objmech.show_structure(**node_struct_args),
+                       color=objmech_color,
+                       penwidth=ctlr_width,
+                       rank=control_rank
+                       )
             else:
                 g.node(ctlr_label,
-                        color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
-                        rank=control_rank)
+                       color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
+                       rank=control_rank)
                 g.node(objmech_label,
-                        color=objmech_color, penwidth=objmech_width, shape=node_shape,
-                        rank=control_rank)
+                       color=objmech_color, penwidth=objmech_width, shape=node_shape,
+                       rank=control_rank)
 
             # objmech to model_based_optimizer edge
             if show_projection_labels:
@@ -2688,7 +2691,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
-
         import graphviz as gv
 
         self._analyze_graph()
@@ -2708,7 +2710,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(item, Component) and item is not INITIAL_FRAME:
                 raise CompositionError(
                     "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                    format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+                        format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
         self.active_item_rendered = False
 
@@ -3587,6 +3589,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             class node_wrapper():
                 def __init__(self, func):
                     self._llvm_function = func
+
             wrapper_f = self.__gen_node_wrapper(node)
             wrapper = node_wrapper(wrapper_f)
             self.__generated_node_wrappers[node] = wrapper
