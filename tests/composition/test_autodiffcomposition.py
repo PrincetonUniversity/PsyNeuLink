@@ -39,21 +39,6 @@ logger = logging.getLogger(__name__)
 @pytest.mark.acconstructor
 class TestACConstructor:
 
-    def test_graph(self):
-        import psyneulink as pnl
-
-        A = pnl.ProcessingMechanism(name='A')
-        B = pnl.ProcessingMechanism(name='B')
-        C = pnl.Composition(name="nested_comp")
-        CA = pnl.ProcessingMechanism(name='CA')
-        CB = pnl.ProcessingMechanism(name='CB')
-        comp = pnl.Composition(name='comp')
-        C.add_linear_processing_pathway([CA, CB])
-        comp.add_node(C)
-        comp.add_linear_processing_pathway([A,B])
-
-        comp.show_graph(show_node_structure=True)
-
     def test_no_args(self):
         comp = AutodiffComposition()
         assert isinstance(comp, AutodiffComposition)

@@ -261,7 +261,6 @@ class TestConnectCompositionsViaCIMS:
             scheduler_processing=sched,
             bin_execute=mode
         )
-        outer_composition.show_graph()
 
         assert np.allclose(output, [[[180.], [1800.]]])
         if mode == 'Python':
