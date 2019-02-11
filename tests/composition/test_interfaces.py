@@ -58,10 +58,10 @@ class TestExecuteCIM:
 
         comp = Composition()
 
-        A = TransferMechanism(name="composition-pytests-A",
+        A = TransferMechanism(name="A",
                               function=Linear(slope=2.0))
 
-        B = TransferMechanism(name="composition-pytests-B",
+        B = TransferMechanism(name="B",
                               function=Linear(slope=3.0))
 
         comp.add_node(A)
@@ -86,11 +86,11 @@ class TestExecuteCIM:
 
         comp = Composition()
 
-        A = TransferMechanism(name="composition-pytests-A",
+        A = TransferMechanism(name="A",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=2.0))
 
-        B = TransferMechanism(name="composition-pytests-B",
+        B = TransferMechanism(name="B",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
@@ -131,10 +131,10 @@ class TestConnectCompositionsViaCIMS:
 
         comp1 = Composition(name="first_composition")
 
-        A = TransferMechanism(name="composition-pytests-A",
+        A = TransferMechanism(name="A",
                               function=Linear(slope=2.0))
 
-        B = TransferMechanism(name="composition-pytests-B",
+        B = TransferMechanism(name="B",
                               function=Linear(slope=3.0))
 
         comp1.add_node(A)
@@ -152,10 +152,10 @@ class TestConnectCompositionsViaCIMS:
 
         comp2 = Composition(name="second_composition")
 
-        A2 = TransferMechanism(name="composition-pytests-A2",
+        A2 = TransferMechanism(name="A2",
                               function=Linear(slope=2.0))
 
-        B2 = TransferMechanism(name="composition-pytests-B2",
+        B2 = TransferMechanism(name="B2",
                               function=Linear(slope=3.0))
 
         comp2.add_node(A2)
@@ -206,11 +206,11 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
-        A = TransferMechanism(name="composition-pytests-A",
+        A = TransferMechanism(name="A",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=2.0))
 
-        B = TransferMechanism(name="composition-pytests-B",
+        B = TransferMechanism(name="B",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
@@ -225,11 +225,11 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_2 = Composition(name="inner_composition_2")
 
-        A2 = TransferMechanism(name="composition-pytests-A2",
+        A2 = TransferMechanism(name="A2",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=2.0))
 
-        B2 = TransferMechanism(name="composition-pytests-B2",
+        B2 = TransferMechanism(name="B2",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
@@ -281,13 +281,13 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
-        A = TransferMechanism(name="composition-pytests-A",
+        A = TransferMechanism(name="A",
                               function=Linear(slope=0.5))
 
-        B = TransferMechanism(name="composition-pytests-B",
+        B = TransferMechanism(name="B",
                               function=Linear(slope=2.0))
 
-        C = TransferMechanism(name="composition-pytests-C",
+        C = TransferMechanism(name="C",
                               function=Linear(slope=3.0))
 
         inner_composition_1.add_node(A)
@@ -301,10 +301,10 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_2 = Composition(name="inner_composition_2")
 
-        A2 = TransferMechanism(name="composition-pytests-A2",
+        A2 = TransferMechanism(name="A2",
                                function=Linear(slope=0.25))
 
-        B2 = TransferMechanism(name="composition-pytests-B2",
+        B2 = TransferMechanism(name="B2",
                                function=Linear(slope=1.0))
 
         inner_composition_2.add_node(A2)
@@ -314,7 +314,7 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_2._analyze_graph()
 
-        mechanism_d = TransferMechanism(name="composition-pytests-D",
+        mechanism_d = TransferMechanism(name="D",
                                         function=Linear(slope=3.0))
 
         outer_composition = Composition(name="outer_composition")
@@ -367,13 +367,13 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
-        A = TransferMechanism(name="composition-pytests-A",
+        A = TransferMechanism(name="A",
                               function=Linear(slope=0.5))
 
-        B = TransferMechanism(name="composition-pytests-B",
+        B = TransferMechanism(name="B",
                               function=Linear(slope=2.0))
 
-        C = TransferMechanism(name="composition-pytests-C",
+        C = TransferMechanism(name="C",
                               function=Linear(slope=3.0))
 
         inner_composition_1.add_node(A)
@@ -387,10 +387,10 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_2 = Composition(name="inner_composition_2")
 
-        A2 = TransferMechanism(name="composition-pytests-A2",
+        A2 = TransferMechanism(name="A2",
                                function=Linear(slope=0.25))
 
-        B2 = TransferMechanism(name="composition-pytests-B2",
+        B2 = TransferMechanism(name="B2",
                                function=Linear(slope=1.0))
 
         inner_composition_2.add_node(A2)
@@ -400,7 +400,7 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_2._analyze_graph()
 
-        mechanism_d = TransferMechanism(name="composition-pytests-D",
+        mechanism_d = TransferMechanism(name="D",
                                         function=Linear(slope=3.0))
 
         outer_composition = Composition(name="outer_composition")
@@ -426,7 +426,7 @@ class TestConnectCompositionsViaCIMS:
             scheduler_processing=sched,
             bin_execute=mode
         )
-        print(output)
+
         # trial 0:
         # inner composition 1 = (0.5*2.0 + 2.0*1.0) * 3.0 = 9.0
         # inner composition 2 = 0.25*12.0 = 3.0
@@ -449,10 +449,10 @@ class TestConnectCompositionsViaCIMS:
         # level_0 composition --------------------------------- innermost composition
         level_0 = Composition(name="level_0")
 
-        A0 = TransferMechanism(name="composition-pytests-A0",
+        A0 = TransferMechanism(name="A0",
                                default_variable=[[0.], [0.]],
                                function=Linear(slope=1.))
-        B0 = TransferMechanism(name="composition-pytests-B0",
+        B0 = TransferMechanism(name="B0",
                                function=Linear(slope=2.))
 
         level_0.add_node(A0)
@@ -464,9 +464,9 @@ class TestConnectCompositionsViaCIMS:
         # level_1 composition ---------------------------------
         level_1 = Composition(name="level_1")
 
-        A1 = TransferMechanism(name="composition-pytests-A1",
+        A1 = TransferMechanism(name="A1",
                               function=Linear(slope=1.))
-        B1 = TransferMechanism(name="composition-pytests-B1",
+        B1 = TransferMechanism(name="B1",
                               function=Linear(slope=2.))
 
         level_1.add_node(level_0)
@@ -479,10 +479,10 @@ class TestConnectCompositionsViaCIMS:
         # level_2 composition --------------------------------- outermost composition
         level_2 = Composition(name="level_2")
 
-        A2 = TransferMechanism(name="composition-pytests-A2",
+        A2 = TransferMechanism(name="A2",
                                size=2,
                                function=Linear(slope=1.))
-        B2 = TransferMechanism(name="composition-pytests-B2",
+        B2 = TransferMechanism(name="B2",
                                function=Linear(slope=2.))
 
         level_2.add_node(level_1)
@@ -506,7 +506,6 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(level_1.get_output_values(level_2), [14.0])
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         assert np.allclose(level_2.get_output_values(level_2), [34.0])
-
 
 class TestInputCIMOutputStateToOriginOneToMany:
 
