@@ -244,6 +244,7 @@ import warnings
 import weakref
 
 from psyneulink.core.globals.context import ContextFlags, _get_time
+from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
@@ -905,7 +906,7 @@ class Parameter(types.SimpleNamespace):
                 owner_context = self._owner.context.get(execution_id)
                 time = _get_time(self._owner._owner, owner_context.execution_phase, execution_id)
             except AttributeError:
-                time = None
+                time = time_object(None, None, None, None)
 
             context_str = ContextFlags._get_context_string(context)
             log_condition_satisfied = True
