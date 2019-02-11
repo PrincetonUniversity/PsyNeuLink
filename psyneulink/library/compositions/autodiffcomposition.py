@@ -625,6 +625,7 @@ class AutodiffComposition(Composition):
             outputs = []
 
             self.parameters.pytorch_representation.get(execution_id).detach_all()
+            # self.parameters.pytorch_representation.get(execution_id).reset_all()
 
             # iterate over inputs, targets
             for t in range(num_inputs):
@@ -748,7 +749,10 @@ class AutodiffComposition(Composition):
             # self.output_CIM.parameters.context.set(new_ctx, execution_id=execution_id)
             if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
                 ctx.execution_phase = ContextFlags.PROCESSING
-            self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+            # note that output[-1] might not be the truly most recent value
+            # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
+            # is not having its parameters populated correctly, and this should be fixed in the long run.
+            self.output_CIM.execute(input=output[-1], execution_id=execution_id, context=ContextFlags.PROCESSING)
 
             return output
 
