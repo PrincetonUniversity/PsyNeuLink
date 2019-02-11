@@ -204,13 +204,13 @@ class TestConnectCompositionsViaCIMS:
                              ])
     def test_connect_compositions_with_complicated_states(self, mode):
 
-        inner_composition_1 = Composition(name="inner_composition_1")
+        inner_composition_1 = Composition(name="comp1")
 
-        A = TransferMechanism(name="A",
+        A = TransferMechanism(name="A1",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=2.0))
 
-        B = TransferMechanism(name="B",
+        B = TransferMechanism(name="B1",
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
@@ -223,7 +223,7 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_1._analyze_graph()
 
-        inner_composition_2 = Composition(name="inner_composition_2")
+        inner_composition_2 = Composition(name="comp2")
 
         A2 = TransferMechanism(name="A2",
                               default_variable=[[0.0], [0.0]],
@@ -261,6 +261,7 @@ class TestConnectCompositionsViaCIMS:
             scheduler_processing=sched,
             bin_execute=mode
         )
+        outer_composition.show_graph()
 
         assert np.allclose(output, [[[180.], [1800.]]])
         if mode == 'Python':

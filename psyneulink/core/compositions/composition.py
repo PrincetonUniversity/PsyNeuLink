@@ -21,11 +21,12 @@ Overview
 Composition is the base class for objects that combine PsyNeuLink `Components <Component>` into an executable model.
 It defines a common set of attributes possessed, and methods used by all Composition objects.
 
-Composition "Nodes" are `Mechanisms <Mechanism_Base>` and/or nested `Compositions <Composition>`. `Projections
-<Projection_Base>` connect two Nodes. The Composition's `graph <Composition.graph>` stores the structural relationships
-among the Nodes of a Composition and the Projections that connect them. The Composition's `scheduler
-<Composition.scheduler>` starts with these structural dependencies and generates a plan for execution, allowing for
-other user-specified scheduling and termination conditions to be mixed in.
+Composition "Nodes" are `Mechanisms <Mechanism>` and/or nested `Compositions <Composition>`. `Projections
+<Projection>` connect two Nodes. The Composition's `graph <Composition.graph>` stores the structural relationships
+among the Nodes of a Composition and the Projections that connect them.
+
+The Composition's `scheduler <Scheduler>` generates an execution queue based on these structural dependencies,
+allowing for other user-specified scheduling and termination conditions to be mixed in.
 
 .. _Composition_Creation:
 
@@ -51,6 +52,7 @@ following Composition methods:
 In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
 
     *Create Mechanisms:*
+
     >>> import psyneulink as pnl
     >>> A = pnl.ProcessingMechanism(name='A')
     >>> B = pnl.ProcessingMechanism(name='B')
@@ -530,6 +532,17 @@ However, there are options for displaying more detailed information:
         +-------------------------------------------------------+-------------------------------------------------------+
         |    >>> comp.show_graph(show_projection_labels=True)   | .. figure:: _static/projection_labels.svg             |
         +-------------------------------------------------------+-------------------------------------------------------+
+
+    - **show_nested**
+
+        *If two Compositions identical to* **comp** *above are added as the nodes of the linear processing pathway of a third* **comp** *:*
+
+        +-------------------------------------------+-------------------------------------------+
+        |    >>> comp.show_graph()                  | .. figure:: _static/nested.svg            |
+        +-------------------------------------------+-------------------------------------------+
+        |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
+        |                                           |                                           |
+        +-------------------------------------------+-------------------------------------------+
 
 .. _Composition_Class_Reference:
 
@@ -2258,6 +2271,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_node_structure=False,
                    show_headers=False,
                    show_projection_labels=False,
+                   show_nested=False,
                    direction='BT',
                    active_items=None,
                    active_color=BOLD,
@@ -2273,7 +2287,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        See LINK: Visualizing a Composition for details and examples.
+        See `Visualizing a Composition <Visualizing_a_Composition>` for details and examples.
 
         Arguments
         ---------
@@ -2307,6 +2321,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
+
+        show_nested : bool : default False
+            specifies whether nested Compositions are shown in details as inset graphs
 
         show_model_based_optimizer :  bool : default False
             specifies whether or not to show the controller components of the system;
@@ -2362,12 +2379,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def _assign_processing_components(g,
                                           rcvr,
-                                          processes: tc.optional(list) = None):
+                                          show_nested):
             '''Assign nodes to graph'''
-            if isinstance(rcvr, Composition):
+            if isinstance(rcvr, Composition) and show_nested:
                 nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
                 nested_comp_graph.name = "cluster_"+rcvr.name
-                nested_comp_graph.attr(label=rcvr.name)
+                rcvr_label = rcvr.name
+                if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
+                        rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
+                    nested_comp_graph.attr(color=input_and_output_color)
+                elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
+                    nested_comp_graph.attr(color=input_color)
+                elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
+                    nested_comp_graph.attr(color=output_color)
+                nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
             else:
                 rcvr_rank = 'same'
@@ -2476,51 +2501,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             sndrs = processing_graph[rcvr]
 
             for sndr in sndrs:
-                if not processes or any(p in processes for p in sndr.processes.keys()):
 
-                    # Set sndr info
+                # Set sndr info
 
-                    sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
-                    # find edge name
-                    for output_state in sndr.output_states:
-                        projs = output_state.efferents
-                        for proj in projs:
-                            # if proj.receiver.owner == rcvr:
-                            if show_node_structure:
-                                sndr_proj_label = '{}:{}-{}'. \
-                                    format(sndr_label, OutputState.__name__, proj.sender.name)
-                                proc_mech_rcvr_label = '{}:{}-{}'. \
-                                    format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
-                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
-                            else:
-                                sndr_proj_label = sndr_label
-                                proc_mech_rcvr_label = rcvr_label
-                            selected_proj = proj
-                    edge_label = self._get_graph_node_label(proj, show_dimensions)
-
-                    # Render projections
-                    if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
-                        if active_color is BOLD:
-
-                            proj_color = default_node_color
+                # find edge name
+                for output_state in sndr.output_states:
+                    projs = output_state.efferents
+                    for proj in projs:
+                        # if proj.receiver.owner == rcvr:
+                        if show_node_structure:
+                            sndr_proj_label = '{}:{}-{}'. \
+                                format(sndr_label, OutputState.__name__, proj.sender.name)
+                            proc_mech_rcvr_label = '{}:{}-{}'. \
+                                format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
+                            # format(rcvr_label, InputState.__name__, proj.receiver.name)
                         else:
-                            proj_color = active_color
-                        proj_width = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
+                            sndr_proj_label = sndr_label
+                            proc_mech_rcvr_label = rcvr_label
+                        selected_proj = proj
+                edge_label = self._get_graph_node_label(proj, show_dimensions)
 
-                    else:
+                # Render projections
+                if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
+                    if active_color is BOLD:
+
                         proj_color = default_node_color
-                        proj_width = str(default_width)
-                    proc_mech_label = edge_label
-
-                    # Render Projection normally (as edge)
-                    if show_projection_labels:
-                        label = proc_mech_label
                     else:
-                        label = ''
-                    g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                           color=proj_color, penwidth=proj_width)
+                        proj_color = active_color
+                    proj_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+
+                else:
+                    proj_color = default_node_color
+                    proj_width = str(default_width)
+                proc_mech_label = edge_label
+
+                # Render Projection normally (as edge)
+                if show_projection_labels:
+                    label = proc_mech_label
+                else:
+                    label = ''
+                g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                       color=proj_color, penwidth=proj_width)
 
         def _assign_control_components(g):
             '''Assign control nodes and edges to graph '''
@@ -2743,7 +2767,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
-            _assign_processing_components(G, r)
+            _assign_processing_components(G, r, show_nested)
 
         # Add model-based-optimizer-related Components to graph if show_model_based_optimizer
         if show_model_based_optimizer:
