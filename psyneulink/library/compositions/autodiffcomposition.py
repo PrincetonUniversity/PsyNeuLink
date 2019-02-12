@@ -486,7 +486,7 @@ class AutodiffComposition(Composition):
             if cuda_index is None:
                 self.device = torch.device('cuda')
             else:
-                self.device = torch.device('cuda:' + cuda_index)
+                self.device = torch.device('cuda:' + str(cuda_index))
         else:
             self.device = torch.device('cpu')
 
