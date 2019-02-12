@@ -673,7 +673,7 @@ class AutodiffComposition(Composition):
 
                 # save outputs of model if this is final epoch or if using early stopping
                 curr_output_list = []
-                if patience is not None or t == num_inputs - 1:
+                if patience is not None or epoch == epochs - 1:
                     for input_state in self.output_CIM.input_states:
                         assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
                         component = input_state.all_afferents[0].sender.owner
