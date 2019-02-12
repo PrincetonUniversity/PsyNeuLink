@@ -48,9 +48,9 @@ class PytorchModelCreator(torch.nn.Module):
 
                 if param_init_from_pnl:
                     if component.parameters.value.get(execution_id) is None:
-                        value = torch.tensor(component.parameters.value.get(None)[0])
+                        value = torch.tensor(component.parameters.value.get(None)[0], device=self.device)
                     else:
-                        value = torch.tensor(component.parameters.value.get(execution_id)[0])
+                        value = torch.tensor(component.parameters.value.get(execution_id)[0], device=self.device)
                 else:
                     input_length = len(component.input_states[0].parameters.value.get(None))
                     value = torch.zeros(input_length, device=self.device).double()

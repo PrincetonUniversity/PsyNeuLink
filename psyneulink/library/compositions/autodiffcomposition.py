@@ -651,7 +651,7 @@ class AutodiffComposition(Composition):
                 )
 
                 # compute total loss across output neurons for current trial
-                curr_loss = torch.zeros(1).double()
+                curr_loss = torch.zeros(1, device=self.device).double()
                 for component in curr_tensor_outputs.keys():
                     # possibly add custom loss option, which is a loss function that takes many args
                     # (outputs, targets, weights, and more) and returns a scalar
