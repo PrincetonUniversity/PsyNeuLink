@@ -580,7 +580,7 @@ class AutodiffComposition(Composition):
         # get outputs back into numpy
         outputs = []
         for i in range(len(tensor_outputs)):
-            outputs.append(tensor_outputs[i].clone().detach().cpu().numpy().copy())
+            outputs.append(tensor_outputs[i].detach().cpu().numpy().copy())
 
         return outputs
 
@@ -676,9 +676,9 @@ class AutodiffComposition(Composition):
                 for input_state in self.output_CIM.input_states:
                     assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
                     component = input_state.all_afferents[0].sender.owner
-                    curr_output_list.append(curr_tensor_outputs[component].clone().detach().cpu().numpy().copy())
+                    curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
                 # for component in curr_tensor_outputs.keys():
-                #     curr_output_list.append(curr_tensor_outputs[component].clone().detach().numpy().copy())
+                #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
                 outputs.append(curr_output_list)
 
             # save average loss on the current epoch
