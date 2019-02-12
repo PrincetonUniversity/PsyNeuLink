@@ -671,12 +671,13 @@ class AutodiffComposition(Composition):
                     curr_loss.backward(retain_graph=True)
                 optimizer.step()
 
-                # save outputs of model if this is final epoch
+                # save outputs of model if this is final epoch or if using early stopping
                 curr_output_list = []
-                for input_state in self.output_CIM.input_states:
-                    assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                    component = input_state.all_afferents[0].sender.owner
-                    curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+                if patience is not None or t == num_inputs - 1:
+                    for input_state in self.output_CIM.input_states:
+                        assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                        component = input_state.all_afferents[0].sender.owner
+                        curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
                 # for component in curr_tensor_outputs.keys():
                 #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
                 outputs.append(curr_output_list)
@@ -686,7 +687,7 @@ class AutodiffComposition(Composition):
             self.parameters.losses.get(execution_id).append(average_loss)
 
             # update early stopper with most recent average loss
-            if self.parameters.patience.get(execution_id) is not None:
+            if patience is not None:
                 should_stop = early_stopper.step(average_loss)
                 if should_stop:
                     logger.warning('Stopped training early after {} epochs'.format(epoch))
