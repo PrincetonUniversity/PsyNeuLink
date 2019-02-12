@@ -141,9 +141,10 @@ class PytorchModelCreator(torch.nn.Module):
                 if i == len(self.execution_sets) - 1:
                     outputs[component] = value
 
-        self.copy_outputs_to_psyneulink(outputs, execution_id)
+        # self.copy_outputs_to_psyneulink(outputs, execution_id)
         if do_logging:
             self.log_weights(execution_id)
+            self.copy_outputs_to_psyneulink(outputs, execution_id)
         return outputs
 
     def detach_all(self):

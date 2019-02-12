@@ -594,6 +594,7 @@ class AutodiffComposition(Composition):
         num_inputs = len(first_input_value)
 
         patience = self.parameters.patience.get(execution_id)
+        pytorch_rep = self.parameters.pytorch_representation.get(execution_id)
 
         if patience is not None:
             # set up object for early stopping
@@ -644,7 +645,7 @@ class AutodiffComposition(Composition):
                     curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
                 # do forward computation on current inputs
-                curr_tensor_outputs = self.parameters.pytorch_representation.get(execution_id).forward(
+                curr_tensor_outputs = pytorch_rep.forward(
                     curr_tensor_inputs,
                     execution_id,
                     do_logging
@@ -681,6 +682,9 @@ class AutodiffComposition(Composition):
                 # for component in curr_tensor_outputs.keys():
                 #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
                 outputs.append(curr_output_list)
+
+                if epoch == epochs - 1 and not do_logging:
+                    pytorch_rep.copy_outputs_to_psyneulink(curr_tensor_outputs, execution_id)
 
             # save average loss on the current epoch
             average_loss = np.mean(curr_losses)
