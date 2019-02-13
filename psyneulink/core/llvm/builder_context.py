@@ -487,8 +487,10 @@ def _convert_llvm_ir_to_ctype(t):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        # FIXME: We should consider bitwidth here
-        return ctypes.c_int
+        if t.width == 32:
+            return ctypes.c_int
+        elif t.width == 64:
+            return ctypes.c_long
     elif type_t is ir.DoubleType:
         return ctypes.c_double
     elif type_t is ir.FloatType:
