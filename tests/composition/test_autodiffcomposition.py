@@ -1748,6 +1748,89 @@ class TestTrainingIdenticalness():
         assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
 
+@pytest.mark.skipif(
+    not torch_available,
+    reason='Pytorch python module (torch) is not installed. Please install it with '
+           '`pip install torch` or `pip3 install torch`'
+)
+@pytest.mark.aclogging
+class TestACLogging:
+    def test_autodiff_logging(self):
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        hid_map = MappingProjection()
+        out_map = MappingProjection()
+
+        xor = AutodiffComposition(param_init_from_pnl=True)
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # train model for a few epochs
+        num_epochs = 10
+        xor.run(inputs={"inputs": {xor_in: xor_inputs},
+                        "targets": {xor_out: xor_targets},
+                        "epochs": num_epochs}, do_logging=True)
+
+        exec_id = xor.default_execution_id
+
+        in_np_dict_vals = xor_in.log.nparray_dictionary()[exec_id]['value']
+        in_np_vals = xor_in.log.nparray()[1][1][1][1:]
+
+        hid_map_np_dict_mats = hid_map.log.nparray_dictionary()[exec_id]['matrix']
+        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][1][1:])
+
+        hid_np_dict_vals = xor_hid.log.nparray_dictionary()[exec_id]['value']
+
+        out_map_np_dict_mats = out_map.log.nparray_dictionary()[exec_id]['matrix']
+        out_map_np_mats = np.array(out_map.log.nparray()[1][1][1][1:])
+
+        out_np_dict_vals = xor_out.log.nparray_dictionary()[exec_id]['value']
+
+        expected_length = len(xor_inputs) * num_epochs
+
+        assert np.all(in_np_dict_vals[0:4] == xor_inputs)
+        assert np.all(np.array(in_np_vals) == in_np_dict_vals)
+        assert in_np_dict_vals.shape == (expected_length, xor_in.size)
+
+        assert hid_map_np_dict_mats.shape == (expected_length, xor_in.size, xor_hid.size)
+        assert hid_map_np_mats.shape == hid_map_np_dict_mats.shape
+        assert np.all(hid_map_np_mats[3] == hid_map_np_dict_mats[3])  # CW: 3 is arbitrary. you can use any index
+
+        assert hid_np_dict_vals.shape == (expected_length, xor_hid.size)
+
+        assert out_map_np_dict_mats.shape == (expected_length, xor_hid.size, xor_out.size)
+        assert out_map_np_mats.shape == out_map_np_dict_mats.shape
+        assert np.all(out_map_np_mats[3] == out_map_np_dict_mats[3])
+
+        assert out_np_dict_vals.shape == (expected_length, xor_out.size)
+
+        xor_out.log.print_entries()
 
 @pytest.mark.skipif(
     not torch_available,

@@ -179,7 +179,7 @@ when learning is enabled, the AutodiffComposition must be an origin mechanism of
 
 .. note::
 
-    Like with all nested Compositions, you must call an AutodiffComposition's `_analyze_graph()` method
+    Like with all nested Compositions, you must call an AutodiffComposition's ``_analyze_graph()`` method
     (or execute the AutodiffComposition) before nesting it.
 
 However, when learning is not enabled, AutodiffComposition works just like an ordinary Composition, in theory. Thus, an
@@ -625,6 +625,7 @@ class AutodiffComposition(Composition):
             outputs = []
 
             self.parameters.pytorch_representation.get(execution_id).detach_all()
+            # self.parameters.pytorch_representation.get(execution_id).reset_all()
 
             # iterate over inputs, targets
             for t in range(num_inputs):
@@ -751,7 +752,7 @@ class AutodiffComposition(Composition):
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
-            self.output_CIM.execute(input=[output[-1]], execution_id=execution_id, context=ContextFlags.PROCESSING)
+            self.output_CIM.execute(input=output[-1], execution_id=execution_id, context=ContextFlags.PROCESSING)
 
             return output
 
@@ -963,5 +964,4 @@ class EarlyStopping(object):
             self.is_better = lambda a, best: a < best - min_delta
         if mode == 'max':
             self.is_better = lambda a, best: a > best + min_delta
-
 
