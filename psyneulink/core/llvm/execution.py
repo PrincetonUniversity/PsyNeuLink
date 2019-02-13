@@ -27,7 +27,7 @@ def _convert_ctype_to_python(x):
         return [_convert_ctype_to_python(num) for num in x]
     if isinstance(x, ctypes.c_double):
         return x.value
-    if isinstance(x, float):
+    if isinstance(x, (float, int)):
         return x
 
     print(x)
