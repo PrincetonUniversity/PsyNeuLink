@@ -141,3 +141,300 @@ def _generate_cpu_builtins_module(_float_ty):
 
     _generate_intrinsic_wrapper(module, "pow", _float_ty, [_float_ty, _float_ty])
     return module
+
+_MERSENNE_N = 624
+_MERSENNE_M = 397
+
+def setup_mersenne_twister(ctx):
+    # Setup types
+    int64_ty = ir.IntType(64)
+    state_ty = ir.LiteralStructType([ctx.int32_ty, # index
+        int64_ty, # seed
+        ir.ArrayType(int64_ty, _MERSENNE_N)]) # array
+
+    init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty))
+    # Create init function
+    init_scalar = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init_scalar")
+    init_scalar.attributes.add('argmemonly')
+    init_scalar.attributes.add('alwaysinline')
+
+    block = init_scalar.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(init_scalar, None)
+    state, seed = init_scalar.args
+
+    # Add function arg attributes
+    state.attributes.add('nonnull')
+    state.attributes.add('noalias')
+
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+
+    # Store seed to the 0-th element
+    a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    seed_lo = builder.and_(seed, seed.type(0xffffffff))
+    builder.store(seed_lo, a_0)
+
+    with helpers.for_loop(builder,
+                          ctx.int32_ty(1),
+                          ctx.int32_ty(_MERSENNE_N),
+                          ctx.int32_ty(1), "init_seed") as (b, i):
+        a_i = b.gep(array, [ctx.int32_ty(0), i])
+        i_m1 = b.sub(i, ctx.int32_ty(1))
+        a_i_m1 = b.gep(array, [ctx.int32_ty(0), i_m1])
+        val = b.load(a_i_m1)
+        val_shift = b.lshr(val, val.type(30))
+
+        val = b.xor(val, val_shift)
+        val = b.mul(val, val.type(1812433253))
+        i_ext = b.zext(i, val.type)
+        val = b.add(val, i_ext)
+        val = b.and_(val, val.type(0xffffffff))
+        b.store(val, a_i)
+
+    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    builder.store(ctx.int32_ty(_MERSENNE_N), pidx)
+
+    builder.ret_void()
+    
+    # Create init_array function
+    init = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init")
+    init.attributes.add('argmemonly')
+    init.attributes.add('alwaysinline')
+
+    block = init.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(init, None)
+    state, seed = init.args
+
+    # Add function arg attributes
+    state.attributes.add('nonnull')
+    state.attributes.add('noalias')
+
+    default_seed = int64_ty(19650218)
+    builder.call(init_scalar, [state, default_seed])
+
+    # python considers everything to be an array
+    key_array = builder.alloca(ir.ArrayType(int64_ty, 1))
+    key_p = builder.gep(key_array, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    builder.store(seed, key_p)
+
+    pi = builder.alloca(ctx.int32_ty)
+    builder.store(ctx.int32_ty(1), pi)
+    pj = builder.alloca(ctx.int32_ty)
+    builder.store(ctx.int32_ty(0), pj)
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+    # This loop should go from max(N, len(key)) -> 0,
+    # but we know the key length so we can hardcode it
+    with helpers.for_loop_zero_inc(builder,
+                                   ctx.int32_ty(_MERSENNE_N),
+                                   "add_key") as (b, _):
+        i = builder.load(pi)
+        i_m1 = b.sub(i, ctx.int32_ty(1))
+        pa_i = b.gep(array, [ctx.int32_ty(0), i])
+        pa_i_m1 = b.gep(array, [ctx.int32_ty(0), i_m1])
+
+        # Load key element
+        j = b.load(pj)
+        pkey = b.gep(key_array, [ctx.int32_ty(0), j])
+
+        # Update key index
+        j_new = b.add(j, ctx.int32_ty(1))
+        j_ovf = b.icmp_unsigned(">=", j_new, ctx.int32_ty(1))
+        j_new = b.select(j_ovf, ctx.int32_ty(0), j_new)
+        b.store(j_new, pj)
+
+        # Mix in the key
+        val = b.load(pa_i_m1)
+        val = b.xor(val, b.lshr(val, val.type(30)))
+        val = b.mul(val, val.type(1664525))
+        val = b.xor(b.load(pa_i), val)
+        val = b.add(val, b.load(pkey))
+        val = b.add(val, b.zext(j, val.type))
+        val = b.and_(val, val.type(0xffffffff))
+        b.store(val, pa_i)
+
+        # Update the index
+        i = b.add(i, ctx.int32_ty(1))
+        b.store(i, pi)
+        i_ovf = b.icmp_unsigned(">=", i, ctx.int32_ty(_MERSENNE_N))
+        with b.if_then(i_ovf, likely=False):
+            b.store(ctx.int32_ty(1), pi)
+            b.store(val, a_0)
+
+
+    with helpers.for_loop_zero_inc(builder,
+                                   ctx.int32_ty(_MERSENNE_N - 1),
+                                   "second_shuffle") as (b, _):
+        i = builder.load(pi)
+        i_m1 = b.sub(i, ctx.int32_ty(1))
+        pa_i = b.gep(array, [ctx.int32_ty(0), i])
+        pa_i_m1 = b.gep(array, [ctx.int32_ty(0), i_m1])
+
+        val = b.load(pa_i_m1)
+        val = b.xor(val, b.lshr(val, val.type(30)))
+        val = b.mul(val, val.type(1566083941))
+        val = b.xor(b.load(pa_i), val)
+        val = b.sub(val, b.zext(i, val.type))
+        val = b.and_(val, val.type(0xffffffff))
+        b.store(val, pa_i)
+
+        # Update the index
+        i = b.add(i, ctx.int32_ty(1))
+        b.store(i, pi)
+        i_ovf = b.icmp_unsigned(">=", i, ctx.int32_ty(_MERSENNE_N))
+        with b.if_then(i_ovf, likely=False):
+            b.store(ctx.int32_ty(1), pi)
+            b.store(val, a_0)
+
+    # set the 0th element to INT_MIN
+    builder.store(a_0.type.pointee(0x80000000), a_0)
+
+    pseed = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    builder.store(seed, pseed)
+    builder.ret_void()
+
+    # Generate random number generator function. It produces random 32bit number in 64bit word
+    gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty.as_pointer()))
+    gen_int = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_int32")
+    gen_int.attributes.add('argmemonly')
+    gen_int.attributes.add('alwaysinline')
+
+    block = gen_int.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(gen_int, None)
+    state, out = gen_int.args
+
+    # Add function arg attributes
+    for a in state, out:
+        a.attributes.add('nonnull')
+        a.attributes.add('noalias')
+
+    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    idx = builder.load(pidx)
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+
+    cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
+    with builder.if_then(cond, likely=False):
+        mag01 = ir.ArrayType(int64_ty, 2)([0, 0x9908b0df])
+        pmag01 = builder.alloca(mag01.type)
+        builder.store(mag01, pmag01)
+
+        with helpers.for_loop_zero_inc(builder,
+                                       ctx.int32_ty(_MERSENNE_N - _MERSENNE_M),
+                                       "first_half") as (b, kk):
+            pkk = b.gep(array, [ctx.int32_ty(0), kk])
+            pkk_1 = b.gep(array, [ctx.int32_ty(0), b.add(kk, ctx.int32_ty(1))])
+
+            val_kk = b.and_(b.load(pkk), int64_ty(0x80000000))
+            val_kk_1 = b.and_(b.load(pkk_1), int64_ty(0x7fffffff))
+            val = b.or_(val_kk, val_kk_1)
+
+            val_1 = b.and_(val, val.type(1))
+            pval_mag = b.gep(pmag01, [ctx.int32_ty(0), val_1])
+            val_mag = b.load(pval_mag)
+
+            val_shift = b.lshr(val, val.type(1))
+
+            kk_m = b.add(kk, ctx.int32_ty(_MERSENNE_M))
+            pval_kk_m = b.gep(array, [ctx.int32_ty(0), kk_m])
+            val_kk_m = b.load(pval_kk_m)
+
+            val = b.xor(val_kk_m, val_shift)
+            val = b.xor(val, val_mag)
+
+            b.store(val, pkk)
+
+        with helpers.for_loop(builder,
+                              ctx.int32_ty(_MERSENNE_N - _MERSENNE_M),
+                              ctx.int32_ty(_MERSENNE_N),
+                              ctx.int32_ty(1), "second_half") as (b, kk):
+            pkk = b.gep(array, [ctx.int32_ty(0), kk])
+            is_last = b.icmp_unsigned( "==", kk, ctx.int32_ty(_MERSENNE_N - 1))
+            idx_1 = b.select(is_last, ctx.int32_ty(0), b.add(kk, ctx.int32_ty(1)))
+            pkk_1 = b.gep(array, [ctx.int32_ty(0), idx_1])
+
+            val_kk = b.and_(b.load(pkk), int64_ty(0x80000000))
+            val_kk_1 = b.and_(b.load(pkk_1), int64_ty(0x7fffffff))
+            val = b.or_(val_kk, val_kk_1)
+
+            val_1 = b.and_(val, val.type(1))
+            pval_mag = b.gep(pmag01, [ctx.int32_ty(0), val_1])
+            val_mag = b.load(pval_mag)
+
+            val_shift = b.lshr(val, val.type(1))
+
+            kk_m = b.add(kk, ctx.int32_ty(_MERSENNE_M - _MERSENNE_N))
+            pval_kk_m = b.gep(array, [ctx.int32_ty(0), kk_m])
+            val_kk_m = b.load(pval_kk_m)
+
+            val = b.xor(val_kk_m, val_shift)
+            val = b.xor(val, val_mag)
+
+            b.store(val, pkk)
+
+        idx = ctx.int32_ty(0)
+
+    # Get pointer and update index
+    pval = builder.gep(array, [ctx.int32_ty(0), idx])
+    idx = builder.add(idx, ctx.int32_ty(1))
+    builder.store(idx, pidx)
+
+    # Load and temper
+    val = builder.load(pval)
+    tmp = builder.lshr(val, val.type(11))
+    val = builder.xor(val, tmp)
+
+    tmp = builder.shl(val, val.type(7))
+    tmp = builder.and_(tmp, tmp.type(0x9d2c5680))
+    val = builder.xor(val, tmp)
+
+    tmp = builder.shl(val, val.type(15))
+    tmp = builder.and_(tmp, tmp.type(0xefc60000))
+    val = builder.xor(val, tmp)
+
+    tmp = builder.lshr(val, val.type(18))
+    val = builder.xor(val, tmp)
+
+    # val is now random 32bit integer in 64 word
+    builder.store(val, out)
+    builder.ret_void()
+
+    # Generate random float number generator function
+    gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
+    gen_float = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_double")
+    gen_float.attributes.add('argmemonly')
+    gen_float.attributes.add('alwaysinline')
+
+    block = gen_float.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(gen_float, None)
+    state, out = gen_float.args
+
+    # Add function arg attributes
+    for a in state, out:
+        a.attributes.add('nonnull')
+        a.attributes.add('noalias')
+
+    al = builder.alloca(ir.IntType(64))
+    builder.call(gen_int, [state, al])
+
+    bl = builder.alloca(ir.IntType(64))
+    builder.call(gen_int, [state, bl])
+
+    a = builder.load(al)
+    b = builder.load(bl)
+
+    a = builder.lshr(a, a.type(5))
+    b = builder.lshr(b, b.type(6))
+
+    af = builder.uitofp(a, ctx.float_ty)
+    bf = builder.uitofp(b, ctx.float_ty)
+
+    val = builder.fmul(af, ctx.float_ty(67108864.0))
+    val = builder.fadd(val, bf)
+    val = builder.fdiv(val, ctx.float_ty(9007199254740992.0))
+
+    builder.store(val, out)
+    builder.ret_void()
