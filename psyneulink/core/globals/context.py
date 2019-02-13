@@ -628,11 +628,14 @@ def _get_time(component, context_flags, execution_id=None):
             elif execution_flags == ContextFlags.CONTROL:
                 t = system.scheduler_processing.clocks[execution_id].time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
-            # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-            # Add autoassociative learning mechanism + related projections to composition as processing components
-            # elif execution_flags == ContextFlags.LEARNING:
-            #     t = system.scheduler_learning.clocks[execution_id].time
-            #     t = time(t.run, t.trial, t.pass_, t.time_step)
+            elif execution_flags == ContextFlags.LEARNING:
+                if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
+                    t = system.scheduler_learning.clocks[execution_id].time
+                    t = time(t.run, t.trial, t.pass_, t.time_step)
+                # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+                # Add autoassociative learning mechanism + related projections to composition as processing components
+                else:
+                    t = None
             else:
                 t = None
         except KeyError:
