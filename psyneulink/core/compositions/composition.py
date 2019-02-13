@@ -1367,7 +1367,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a receiver specification. ".format(projection.name))
         graph_receiver = receiver
-
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        hebbian_learning = False
         if isinstance(receiver, Mechanism):
             receiver_mechanism = receiver
             receiver_input_state = receiver.input_state
@@ -1378,6 +1380,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(receiver, Composition):
             receiver_mechanism = receiver.input_CIM
             subcompositions.append(receiver)
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        elif isinstance(receiver, AutoAssociativeProjection):
+            receiver_mechanism = receiver.owner_mech
+            hebbian_learning = True
         else:
             raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(receiver, self.name,
@@ -1385,7 +1392,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
-                and receiver not in self.nodes):
+                and receiver not in self.nodes
+                and not hebbian_learning):
             # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1397,8 +1405,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
 
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
         if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
-                and projection not in [vertex.component for vertex in self.graph.vertices]:
+                and projection not in [vertex.component for vertex in self.graph.vertices] and not hebbian_learning:
 
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
@@ -1410,7 +1420,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError("{} to {}".format(c.args[0], self.name))
 
-        self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism)
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism, hebbian_learning)
 
         self.needs_update_graph = True
         self.needs_update_graph_processing = True
@@ -1534,6 +1546,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              sender, receiver,
                              graph_sender,
                              graph_receiver,
+                             hebbian_learning
                              ):
 
         if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
@@ -1541,13 +1554,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection.init_args['receiver'] = graph_receiver
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
-
-        if projection.sender.owner != graph_sender:
-            raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                   "Components in the Composition.".format(projection, sender))
-        if projection.receiver.owner != graph_receiver:
-            raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                   "Components in the Composition.".format(projection, receiver))
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        if not hebbian_learning:
+            if projection.sender.owner != graph_sender:
+                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, sender))
+            if projection.receiver.owner != graph_receiver:
+                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, receiver))
 
     def _analyze_graph(self, graph=None, context=None):
         """
