@@ -515,7 +515,6 @@ as unlabeled arrows.
 |    >>> comp.show_graph()                              |                                                       |
 +-------------------------------------------------------+-------------------------------------------------------+
 
-
 However, there are options for displaying more detailed information:
 
     - **show_node_structure**
@@ -1224,7 +1223,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for node in nodes:
             self.add_node(node)
-            
+
     def add_model_based_optimizer(self, optimizer):
         """
         Adds an `OptimizationControlMechanism` as the `model_based_optimizer
@@ -1367,9 +1366,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a receiver specification. ".format(projection.name))
         graph_receiver = receiver
+
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         hebbian_learning = False
+
         if isinstance(receiver, Mechanism):
             receiver_mechanism = receiver
             receiver_input_state = receiver.input_state
@@ -1380,11 +1381,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(receiver, Composition):
             receiver_mechanism = receiver.input_CIM
             subcompositions.append(receiver)
+
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         elif isinstance(receiver, AutoAssociativeProjection):
             receiver_mechanism = receiver.owner_mech
             hebbian_learning = True
+
         else:
             raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(receiver, self.name,
@@ -1394,6 +1397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(receiver, Composition)
                 and receiver not in self.nodes
                 and not hebbian_learning):
+
             # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1409,6 +1413,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
                 and projection not in [vertex.component for vertex in self.graph.vertices] and not hebbian_learning:
+
 
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
@@ -2206,6 +2211,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         elif output_fmt == 'jupyter':
             return m
+
     def _assign_execution_ids(self, execution_id=None):
         '''
             assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
@@ -2702,7 +2708,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         edge_label = ''
                     g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
-
 
         import graphviz as gv
 
