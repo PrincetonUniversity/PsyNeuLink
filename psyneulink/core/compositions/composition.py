@@ -515,7 +515,6 @@ as unlabeled arrows.
 |    >>> comp.show_graph()                              |                                                       |
 +-------------------------------------------------------+-------------------------------------------------------+
 
-
 However, there are options for displaying more detailed information:
 
     - **show_node_structure**
@@ -1368,6 +1367,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        " is missing a receiver specification. ".format(projection.name))
         graph_receiver = receiver
 
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        hebbian_learning = False
+
         if isinstance(receiver, Mechanism):
             receiver_mechanism = receiver
             receiver_input_state = receiver.input_state
@@ -1378,6 +1381,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(receiver, Composition):
             receiver_mechanism = receiver.input_CIM
             subcompositions.append(receiver)
+
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        elif isinstance(receiver, AutoAssociativeProjection):
+            receiver_mechanism = receiver.owner_mech
+            hebbian_learning = True
+
         else:
             raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(receiver, self.name,
@@ -1385,7 +1395,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
-                and receiver not in self.nodes):
+                and receiver not in self.nodes
+                and not hebbian_learning):
+
             # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1397,8 +1409,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
 
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
         if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
-                and projection not in [vertex.component for vertex in self.graph.vertices]:
+                and projection not in [vertex.component for vertex in self.graph.vertices] and not hebbian_learning:
+
 
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
@@ -1410,7 +1425,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError("{} to {}".format(c.args[0], self.name))
 
-        self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism)
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism, hebbian_learning)
 
         self.needs_update_graph = True
         self.needs_update_graph_processing = True
@@ -1534,6 +1551,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              sender, receiver,
                              graph_sender,
                              graph_receiver,
+                             hebbian_learning
                              ):
 
         if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
@@ -1541,13 +1559,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection.init_args['receiver'] = graph_receiver
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
-
-        if projection.sender.owner != graph_sender:
-            raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                   "Components in the Composition.".format(projection, sender))
-        if projection.receiver.owner != graph_receiver:
-            raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                   "Components in the Composition.".format(projection, receiver))
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        if not hebbian_learning:
+            if projection.sender.owner != graph_sender:
+                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, sender))
+            if projection.receiver.owner != graph_receiver:
+                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, receiver))
 
     def _analyze_graph(self, graph=None, context=None):
         """
@@ -2267,8 +2287,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return name
 
     def show_graph(self,
-                   show_model_based_optimizer=False,  # WORKING?
-                   show_dimensions=False,  # NOT WORKING?
+                   show_model_based_optimizer=False,               # WORKING?
+                   show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
                    show_headers=False,
                    show_projection_labels=False,
@@ -2384,7 +2404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
                 nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
-                nested_comp_graph.name = "cluster_" + rcvr.name
+                nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
@@ -2452,16 +2472,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(rcvr_label,
-                           rcvr.show_structure(**node_struct_args),
-                           color=rcvr_color,
-                           rank=rcvr_rank,
-                           penwidth=rcvr_penwidth)
+                            rcvr.show_structure(**node_struct_args),
+                            color=rcvr_color,
+                            rank=rcvr_rank,
+                            penwidth=rcvr_penwidth)
                 else:
                     g.node(rcvr_label,
-                           shape=node_shape,
-                           color=rcvr_color,
-                           rank=rcvr_rank,
-                           penwidth=rcvr_penwidth)
+                            shape=node_shape,
+                            color=rcvr_color,
+                            rank=rcvr_rank,
+                            penwidth=rcvr_penwidth)
 
                 # handle auto-recurrent projections
                 for input_state in rcvr.input_states:
@@ -2470,8 +2490,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
                         if show_node_structure:
                             sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__,
-                                                                     proj.receiver.name)
+                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
                         else:
                             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                         if show_projection_labels:
@@ -2564,9 +2583,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print(
-                    "\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
-                    "can't be used in its show_graph() method\n".format(self.name))
+                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
+                      "can't be used in its show_graph() method\n".format(self.name))
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
@@ -2599,24 +2617,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       model_based_optimizer.show_structure(**node_struct_args),
-                       color=ctlr_color,
-                       penwidth=ctlr_width,
-                       rank=control_rank
-                       )
+                        model_based_optimizer.show_structure(**node_struct_args),
+                        color=ctlr_color,
+                        penwidth=ctlr_width,
+                        rank=control_rank
+                        )
                 g.node(objmech_label,
-                       objmech.show_structure(**node_struct_args),
-                       color=objmech_color,
-                       penwidth=ctlr_width,
-                       rank=control_rank
-                       )
+                        objmech.show_structure(**node_struct_args),
+                        color=objmech_color,
+                        penwidth=ctlr_width,
+                        rank=control_rank
+                        )
             else:
                 g.node(ctlr_label,
-                       color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
-                       rank=control_rank)
+                        color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
+                        rank=control_rank)
                 g.node(objmech_label,
-                       color=objmech_color, penwidth=objmech_width, shape=node_shape,
-                       rank=control_rank)
+                        color=objmech_color, penwidth=objmech_width, shape=node_shape,
+                        rank=control_rank)
 
             # objmech to model_based_optimizer edge
             if show_projection_labels:
@@ -2710,7 +2728,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(item, Component) and item is not INITIAL_FRAME:
                 raise CompositionError(
                     "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                        format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+                    format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
         self.active_item_rendered = False
 
@@ -3589,7 +3607,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             class node_wrapper():
                 def __init__(self, func):
                     self._llvm_function = func
-
             wrapper_f = self.__gen_node_wrapper(node)
             wrapper = node_wrapper(wrapper_f)
             self.__generated_node_wrappers[node] = wrapper
