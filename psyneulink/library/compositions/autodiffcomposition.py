@@ -98,7 +98,7 @@ be used when the network is not recurrent.
 
 .. note::
     The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
-    see `here <bit.ly/2t2ZkyR>` or `here <bit.ly/2RGuMNg>`.
+    see `here <bit.ly/2t2ZkyR>_` or `here <bit.ly/2RGuMNg>_`.
 
 .. _AutodiffComposition_Structure:
 
