@@ -93,8 +93,8 @@ class PytorchModelCreator(torch.nn.Module):
 
                 self.component_to_forward_info[component] = node_forward_info
 
-        # CW 12/3/18: this copies by reference so it only needs to be called during init, rather than
-        # every time the weights are updated
+        # CW 12/3/18: this copies by reference so in theory it only needs to be called during init
+        # but we call copy_weights_to_psyneulink after every run in order to make Autodiff less stateful
         self.copy_weights_to_psyneulink(execution_id)
 
     # performs forward computation for the model
