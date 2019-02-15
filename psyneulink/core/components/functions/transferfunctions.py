@@ -1389,7 +1389,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS, execution_id)
         leak = self.get_current_function_param(LEAK, execution_id)
 
-        result = np.maximum(gain * (variable - bias), bias, leak * (variable - bias))
+        # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
+        x = gain * (variable - bias)
+        result = np.maximum(x, leak*x)
+
         return self.convert_output_type(result)
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
