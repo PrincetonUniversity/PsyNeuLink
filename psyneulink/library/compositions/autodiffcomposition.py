@@ -89,8 +89,8 @@ https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235
 **randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
 run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
 
-**refresh_losses** specifies whether the `losses` attribute is refreshed for each call to `run()`. If False, the losses
-of each run are appended to the `losses` attribute. If True, the losses of each run overwrite `losses` instead.
+**refresh_losses** specifies whether the `losses` attribute is refreshed for each call to `run()`. If False, the average
+losses of each epoch are appended to the `losses` attribute. If True, the losses of each epoch overwrite `losses` instead.
 
 **force_no_retain_graph** defaults to False. If True, the AutodiffComposition does not use the `retain_graph` option
 when computing PyTorch gradient. This can reduce memory usage. However, it breaks recurrent networks, so it should only
@@ -625,8 +625,8 @@ class AutodiffComposition(Composition):
             # reset temporary list to keep track of most recent outputs
             outputs = []
 
-            self.parameters.pytorch_representation.get(execution_id).detach_all()
-            # self.parameters.pytorch_representation.get(execution_id).reset_all()
+            pytorch_rep.detach_all()
+            # pytorch_rep.reset_all()
 
             # iterate over inputs, targets
             for t in range(num_inputs):
@@ -694,7 +694,7 @@ class AutodiffComposition(Composition):
             if patience is not None:
                 should_stop = early_stopper.step(average_loss)
                 if should_stop:
-                    logger.warning('Stopped training early after {} epochs'.format(epoch))
+                    logger.warning('Due to early stopping, stopped training early after {} epochs'.format(epoch))
                     if self.randomize:
                         outputs_list = [None] * len(outputs)
                         for i in range(len(outputs)):
@@ -748,6 +748,8 @@ class AutodiffComposition(Composition):
                 autodiff_epochs = inputs["epochs"]
 
             output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, do_logging)
+            pytorch_rep = self.parameters.pytorch_representation.get(execution_id)
+            pytorch_rep.copy_weights_to_psyneulink(execution_id)
             ctx = self.output_CIM.parameters.context.get(execution_id)
             # new_ctx = copy.deepcopy(ctx)
             # new_ctx.execution_phase = ContextFlags.PROCESSING
@@ -824,6 +826,15 @@ class AutodiffComposition(Composition):
                     do_logging=do_logging,
                 )
                 results.append(trial_output)
+
+            full_results = self.parameters.results.get(execution_id)
+            if full_results is None:
+                full_results = results
+            else:
+                full_results.extend(results)
+
+            self.parameters.results.set(full_results, execution_id)
+            self.most_recent_execution_context = execution_id
             return results
 
         else:
