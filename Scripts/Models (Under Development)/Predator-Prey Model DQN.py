@@ -4,16 +4,16 @@ from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
 
-# Runtime Switches:
-RENDER = False
-PNL_COMPILE = False
-PERCEPTUAL_DISTORT = True
-RUN = False
-SHOW_GRAPH = True
-
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
+
+# Runtime Switches:
+RENDER = False
+PNL_COMPILE = False
+RUN = False
+SHOW_GRAPH = True
+
 
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 3
@@ -35,111 +35,83 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 player_len = prey_len = predator_len = obs_coords
 
 
-# *********************************************************************************************************************
-# **************************************  MECHANISMS AND COMPOSITION  *************************************************
-# *********************************************************************************************************************
+# **********************************************************************************************************************
+# **************************************  CREATE COMPOSITION ***********************************************************
+# **********************************************************************************************************************
 
-# Input Mechanisms
-player_input = ProcessingMechanism(size=prey_len, name="PLAYER INPUT")
-prey_input = ProcessingMechanism(size=prey_len, name="PREY INPUT")
-predator_input = TransferMechanism(size=predator_len, name="PREDATOR INPUT")
+# **************************************  PROCESSING MECHANISMS ********************************************************
 
 # Perceptual Mechanisms
-if PERCEPTUAL_DISTORT:
-    player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-    prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
-    predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
-else:
-    player_obs = ProcessingMechanism(size=prey_len, name="PLAYER OBS")
-    prey_obs = ProcessingMechanism(size=prey_len, name="PREY OBS")
-    predator_obs = TransferMechanism(size=predator_len, name="PREDATOR OBS")
-
+player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER PERCEPT")
+predator_percept = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
+prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY PERCEPT")
 
 # Value and Reward Mechanisms (not yet used;  for future use)
 values = TransferMechanism(size=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
 
+env = ForagerEnv()
+policy = double_dqn(env=env, policy_net='trained net')
+
 # Action Mechanism
-#    Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
-#    note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
-greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
+#    Use ddqn's eval function to compute action for a given observation
+#    note: unitization is done in main loop, to allow compilation of LinearCombination function in ObjectiveMech) (TBI)
+action = ProcessingMechanism(function=policy.eval)
 
-# Create Composition
+# ************************************** BASIC COMPOSITION *************************************************************
+
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-# agent_comp.add_node(player_obs)
-# agent_comp.add_node(predator_obs)
-# agent_comp.add_node(prey_obs)
-agent_comp.add_linear_processing_pathway([player_input, player_obs])
-agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
-agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
-agent_comp.add_node(greedy_action_mech)
+agent_comp.add_node(player_percept)
+agent_comp.add_node(prey_percept)
+agent_comp.add_node(predator_percept)
+agent_comp.add_node(action)
 
-# ControlMechanism
+# **************************************  CONOTROL APPRATUS ************************************************************
 
+difference = Distance(metric=COSINE)
 #   function for ObjectiveMechanism
-def diff_fct(variable):
-    # Get difference in distance of player to predator vs. prey
-    if variable is None:
-        return 0
+
+def objective_function(variable):
+    '''Return difference between optimal and actual actions'''
     player_coord = variable[0]
-    player_percept = variable[1]
-    predator_coord = variable[2]
-    predator_percept = variable[3]
-    prey_coord = variable[4]
-    prey_percept = variable[5]
-    player_diff = np.sum(np.abs(player_percept - player_coord))
-    predator_diff = np.sum(np.abs(predator_percept - predator_coord))
-    prey_diff = np.sum(np.abs(prey_percept - prey_coord))
-    # return - (np.sum(player_diff) + np.sum(predator_diff))
-    return -(np.sum(player_diff))
-
-
-if PERCEPTUAL_DISTORT:
-    CTL_PARAM = VARIANCE
-else:
-    CTL_PARAM = SLOPE
-
+    predator_coord = variable[1]
+    prey_coord = variable[2]
+    actual_action = variable[3]
+    optimal_action = policy.eval(observation=[player_coord, prey_coord, predator_coord])
+    return 1-difference(optimal_action, actual_action)
 
 # ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
-ocm = OptimizationControlMechanism(features=[player_input.input_state,
-                                             predator_input.input_state,
-                                             prey_input.input_state],
-                                   agent_rep=agent_comp,
-                                   function=GridSearch(direction=MAXIMIZE,
-                                                       save_values=True),
-                                   objective_mechanism=ObjectiveMechanism(
-                                           function=diff_fct,
-                                           monitor=[player_input, player_obs,
-                                                    predator_input, predator_obs,
-                                                    prey_input, prey_obs
-                                                    ]
-                                   ),
-                                   control_signals=[ControlSignal(projections=(CTL_PARAM,player_obs),
+ocm = OptimizationControlMechanism(features=[player_percept.input_state,
+                                             predator_percept.input_state,
+                                             prey_percept.input_state],
+                                   agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
+                                   function=GridSearch(direction=MAXIMIZE, save_values=True),
+                                   objective_mechanism=ObjectiveMechanism(function=objective_function,
+                                                                          monitor=[player_percept,
+                                                                                   predator_percept,
+                                                                                   prey_percept, action]),
+                                   control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
                                                                   allocation_samples=[0, 100],
                                                                   intensity_cost_function=Exponential(rate=-.1,
-                                                                                                      bias=5),
-                                                                  ),
-                                                    ControlSignal(projections=(CTL_PARAM,predator_obs),
+                                                                                                      bias=5)),
+                                                    ControlSignal(projections=(VARIANCE,predator_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
                                                                   allocation_samples=[0, 100],
                                                                   intensity_cost_function=Exponential(rate=-.1,
-                                                                                                      bias=5),
-                                                                  ),
-                                                    ControlSignal(projections=(CTL_PARAM,prey_obs),
+                                                                                                      bias=5)),
+                                                    ControlSignal(projections=(VARIANCE,prey_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
                                                                   allocation_samples=[0, 100],
                                                                   intensity_cost_function=Exponential(rate=-.1,
-                                                                                                      bias=5),
-                                                                  ),
-                                                    ],
-                                   )
+                                                                                                      bias=5))])
+# Add controller to Composition
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
 
@@ -155,7 +127,6 @@ if SHOW_GRAPH:
 num_trials = 1
 
 def main():
-    env = ForagerEnv()
     reward = 0
     done = False
     if RENDER:
@@ -171,9 +142,9 @@ def main():
                 BIN_EXECUTE = 'LLVM'
             else:
                 BIN_EXECUTE = 'Python'
-            run_results = agent_comp.run(inputs={player_input:[observation[player_coord_slice]],
-                                                 predator_input:[observation[predator_coord_slice]],
-                                                 prey_input:[observation[prey_coord_slice]],
+            run_results = agent_comp.run(inputs={player_percept:[observation[player_coord_slice]],
+                                                 predator_percept:[observation[predator_coord_slice]],
+                                                 prey_percept:[observation[prey_coord_slice]],
                                                  },
                                          bin_execute=BIN_EXECUTE
                                          )

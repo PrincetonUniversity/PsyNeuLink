@@ -910,8 +910,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute` method.
 
-        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>` (`net_outcome
-        <ControlMechanism.net_outcome>`) for the current `feature_values <OptimizationControlMechanism.feature_values>`
+        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>`
+        for the current `feature_values <OptimizationControlMechanism.feature_values>`
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
@@ -974,20 +974,17 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                     context=ContextFlags.COMMAND_LINE)
+                                                 context=ContextFlags.COMMAND_LINE)
         self.add_states(InputState, features)
 
     @tc.typecheck
     def _parse_feature_specs(self, features, feature_function, context=None):
         """Parse entries of features into InputState spec dictionaries
-
-        For standard InputState specs:
-            - Call _parse_state_spec
-            - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
-
+        Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
+            (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
         Assign functions specified in **feature_function** to InputStates for all features
-
-        Returns list of InputState specification dictionaries
+        Convert state_type of all entries to FeatureInputState (to allow functions other than LinearCombination)
+        Return list of InputState specification dictionaries
         """
 
         parsed_features = []
@@ -996,12 +993,7 @@ class OptimizationControlMechanism(ControlMechanism):
             features = [features]
 
         for spec in features:
-            if isinstance(spec, InputState):
-                spec = InputState._parse_self_state_type_spec(InputState,
-                                                              self,
-                                                              spec,
-                                                              context)
-            spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
+            spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)    # returns InputState dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:
                 spec.update({FUNCTION: feature_function})
@@ -1009,6 +1001,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
+        # Convert state_type to FeatureInputState
         for feature in parsed_features:
             if isinstance(feature, dict):
                 feature['state_type'] = FeatureInputState
