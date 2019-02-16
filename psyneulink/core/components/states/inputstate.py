@@ -982,7 +982,6 @@ class InputState(State_Base):
         Tuple specification can be:
             (state_spec, connections)
             (state_spec, weights, exponents, connections)
-            (state_spec, SHADOW_INPUTS)
 
         See State._parse_state_specific_spec for additional info.
 .
@@ -998,7 +997,6 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW AN ADDITIONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.core.components.projections.projection import Projection, _parse_connection_specs
-        from psyneulink.core.components.mechanisms.mechanism import Mechanism
 
         params_dict = {}
         state_spec = state_specific_spec
