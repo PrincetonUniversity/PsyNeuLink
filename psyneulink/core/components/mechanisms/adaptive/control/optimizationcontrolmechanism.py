@@ -980,14 +980,10 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def _parse_feature_specs(self, features, feature_function, context=None):
         """Parse entries of features into InputState spec dictionaries
-
-        For standard InputState specs:
-            - Call _parse_state_spec
-            - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
-
+        Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
         Assign functions specified in **feature_function** to InputStates for all features
-
-        Returns list of InputState specification dictionaries
+        Convert state_type of all entries to FeatureInputState
+        Return list of InputState specification dictionaries
         """
 
         parsed_features = []
