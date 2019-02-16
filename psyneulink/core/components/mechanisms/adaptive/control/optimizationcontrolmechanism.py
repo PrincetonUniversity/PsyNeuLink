@@ -974,15 +974,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                     context=ContextFlags.COMMAND_LINE)
+                                                 context=ContextFlags.COMMAND_LINE)
         self.add_states(InputState, features)
 
     @tc.typecheck
     def _parse_feature_specs(self, features, feature_function, context=None):
         """Parse entries of features into InputState spec dictionaries
         Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
+            (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
         Assign functions specified in **feature_function** to InputStates for all features
-        Convert state_type of all entries to FeatureInputState
+        Convert state_type of all entries to FeatureInputState (to allow functions other than LinearCombination)
         Return list of InputState specification dictionaries
         """
 
@@ -1000,6 +1001,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
+        # Convert state_type to FeatureInputState
         for feature in parsed_features:
             if isinstance(feature, dict):
                 feature['state_type'] = FeatureInputState
