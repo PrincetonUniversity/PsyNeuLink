@@ -753,13 +753,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # If any features were specified (assigned to self.input_states in __init__):
         if self.input_states:
-            self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
+            # # MODIFIED 2/16/19 OLD:
+            # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
+            # # MODIFIED 2/16/19 END
             # Insert primary InputState for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
             self.input_states.insert(0, outcome_input_state),
         else:
             self.input_states = [outcome_input_state]
 
+        # FIX 2/16/19: MOVE TO AFTER CALL TO SUPER?
         # Configure default_variable to comport with full set of input_states
         self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
