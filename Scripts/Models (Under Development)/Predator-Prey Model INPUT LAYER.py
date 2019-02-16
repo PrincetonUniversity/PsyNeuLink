@@ -94,23 +94,24 @@ def diff_fct(variable):
     return -(np.sum(player_diff))
 
 
-
 if PERCEPTUAL_DISTORT:
     CTL_PARAM = VARIANCE
 else:
     CTL_PARAM = SLOPE
 
 # ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
-ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_input, predator_input, prey_input]},
+ocm = OptimizationControlMechanism(features=[player_input.input_state,
+                                             predator_input.input_state,
+                                             prey_input.input_state],
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MAXIMIZE,
                                                        save_values=True),
                                    objective_mechanism=ObjectiveMechanism(
                                            function=diff_fct,
-                                           monitored_output_states=[player_input, player_obs,
-                                                                    predator_input, predator_obs,
-                                                                    prey_input, prey_obs
-                                                                    ]
+                                           monitor=[player_input, player_obs,
+                                                    predator_input, predator_obs,
+                                                    prey_input, prey_obs
+                                                    ]
                                    ),
                                    control_signals=[ControlSignal(projections=(CTL_PARAM,player_obs),
                                                                   # allocation_samples=[0, 1, 10, 100]),
@@ -143,7 +144,7 @@ agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph(show_controller=True)
+    agent_comp.show_graph()
 
 
 # *********************************************************************************************************************

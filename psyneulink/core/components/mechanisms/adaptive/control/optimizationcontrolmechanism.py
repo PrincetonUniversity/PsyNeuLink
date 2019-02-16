@@ -910,8 +910,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute` method.
 
-        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>` (`net_outcome
-        <ControlMechanism.net_outcome>`) for the current `feature_values <OptimizationControlMechanism.feature_values>`
+        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>`
+        for the current `feature_values <OptimizationControlMechanism.feature_values>`
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''

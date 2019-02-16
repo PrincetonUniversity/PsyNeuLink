@@ -710,7 +710,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         return self.add_to_monitor(monitored_output_states_specs, context=None)
 
-
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
 
@@ -811,7 +810,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
-
     @property
     def monitor(self):
         if not isinstance(self.input_states, ContentAddressableList):
@@ -866,6 +864,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             super()._dependent_components,
             self.monitor,
         ))
+
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):
