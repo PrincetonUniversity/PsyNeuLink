@@ -1722,6 +1722,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
          bias=0.0,         \
          scale=1.0,        \
          offset=0.0,       \
+         seed=None,        \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1798,6 +1799,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     offset : float
         determines value added to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
+    seed : number or None
+       determines the origin PRNG seed. None implies reading and incrementing
+       global seed
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -1861,6 +1866,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(0.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
+        seed = Parameter(None, modulable=False)
 
     @tc.typecheck
     def __init__(self,
@@ -1869,21 +1875,28 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  bias: parameter_spec = 0.0,
                  scale: parameter_spec = 1.0,
                  offset: parameter_spec = 0.0,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        if seed is None:
+            seed = 0 # FIXME load global seed here
+
         params = self._assign_args_to_param_dicts(variance=variance,
                                                   bias=bias,
                                                   scale=scale,
                                                   offset=offset,
+                                                  seed=seed,
                                                   params=params)
+        self._random_state = np.random.RandomState(np.asarray([seed]))
 
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1943,7 +1956,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = self.get_current_function_param(OFFSET, execution_id)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        result = scale * np.random.normal(variable+bias, variance) + offset
+        result = scale * self._random_state.normal(variable+bias, variance) + offset
 
         return self.convert_output_type(result)
 
