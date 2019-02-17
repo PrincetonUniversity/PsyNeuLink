@@ -293,7 +293,7 @@ should project to the InputState. Each of these is described below:
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
 
-    * **Shadow inputs** {*SHADOW_INPUTS: InputState, Mechanism, or list containing either or both} -- this specifies
+    * **Shadow inputs** *{SHADOW_INPUTS: InputState, Mechanism, or list of either or both}* -- this specifies
       the creation of one or more InputStates that receive the same inputs as the InputStates and/or Mechanisms
       listed; for Mechanisms listed, an InputState is created that shadows each of its InputStates.
 
