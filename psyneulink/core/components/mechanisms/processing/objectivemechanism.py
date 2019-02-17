@@ -50,7 +50,7 @@ from the OutputState to that InputState.  The **monitor** argument takes a list 
 include any of the `forms of specification <InputState_Specification>` used in a standard **input_states** argument.
 For the **monitor** argument, this is usually a list of OutputStates to be monitored.  However, as with a standard
 **input_states** argument, the **monitor** argument can include Mechanisms (in which case their `primary Outputstate
-<OutputState_Primary>` is used) or other the `InputState(s) <InputState>` of other Mechanisms (in which case the
+<OutputState_Primary>` is used) or the `InputState(s) <InputState>` of other Mechanisms (in which case the
 ObjectiveMechanism will be assigned Projections from all of the OutputStates that project to the specified InputState
 -- that is, it will `shadow their inputs <InputState_Shadow_Inputs>`). Items in the *monitor* argument can also be
 used to specify attributes of the InputState and/or MappingProjection(s) to it, that the ObjectiveMechanism creates to

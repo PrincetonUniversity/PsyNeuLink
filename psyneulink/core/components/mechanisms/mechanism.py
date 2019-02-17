@@ -482,8 +482,8 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
   **default_variable** is not specified, a default value is specified by the Mechanism. An InputState may also be
   specified by the InputState of another Mechanism. In this case, a new InputState is created that
-  "shadows" the one specified, meaning that it receives projections from all of the same senders (see
-  `InputState_Shadow_Inputs`).
+  `shadows the one specified <InputState_Shadow_Inputs>`, meaning that it receives projections from all of the same
+  senders.
 
 COMMENT:
 *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)

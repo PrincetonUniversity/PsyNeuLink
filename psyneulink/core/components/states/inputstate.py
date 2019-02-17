@@ -294,18 +294,18 @@ should project to the InputState. Each of these is described below:
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
 
     * **Shadow inputs** {*SHADOW_INPUTS: InputState, Mechanism, or list containing either or both} -- this specifies
-      the creation of one or more InputStates that `shadow the inputs <InputState_Shadow_Inputs>` to the InputStates
-      and/or Mechanisms listed; for Mechanisms listed, an InputState is created that shadows each of its InputStates.
+      the creation of one or more InputStates that receive the same inputs as the InputStates and/or Mechanisms
+      listed; for Mechanisms listed, an InputState is created that shadows each of its InputStates.
 
 .. _InputState_Shadow_Inputs:
 
 **Shadowing Inputs**
 
 This can be specified by either an InputState that belongs to another Mechanism, or a dicionatry with a
-*SHADOW_INPUTS* entry with a list of InputStates and/or Mechanisms.  For each InputState specified (and, in the
-case of Mechanisms, all of their InputStates), an InputState is created that receives one `Projection` paralleling
-every Projection received by the specified InputState (i.e., from the same sender), so that the new InputState receives
-exactly the same inputs as the one to be shadowed.
+*SHADOW_INPUTS* entry containing a list of InputStates and/or Mechanisms.  For each InputState specified or, in the
+case of Mechanisms, all of their InputStates, an InputState is created that with a `Projection` paralleling every
+Projection received by the specified InputState (i.e., from the same `sender <Projection.sender>`), so that each of the
+new InputStates receives exactly the same inputs as the ones specified to be shadowed.
 
 
 .. _InputState_Compatability_and_Constraints:
