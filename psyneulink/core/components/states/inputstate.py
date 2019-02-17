@@ -296,7 +296,7 @@ should project to the InputState. Each of these is described below:
     .. _InputState_Shadow_Inputs:
 
     * **InputStates of Mechanisms to shadow** -- either of the following can be used to create InputStates that
-      receive the same inputs as ("shadow") those specified:
+      receive the same inputs as ("shadow") the ones specified:
 
       * *InputState or [InputState, ...]* -- each InputState must belong to an existing Mechanism; creates a new
         InputState for each one specified, along with Projections to it that parallel those of the one specified
