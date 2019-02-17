@@ -190,25 +190,23 @@ transforms these.  For OptimizationControlMechanisms that implement `model-free
 <OptimizationControlMechanism.evaluation_function>` to predict the `net_outcome <ControlMechanism.net_outcome>` for a
 given `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that implement
 `model-based <OptimizationControlMechanism_Model_Based>` optimization, the `feature_values
-<OptimizationControlMechanism.feature_values>` are used as the Composition's `input <Composition.input_values>` when
+<OptimizationCozntrolMechanism.feature_values>` are used as the Composition's `input <Composition.input_values>` when
 it is executed to evaluate the `net_outcome <ControlMechanism.net_outcome>` for a given
 `control_allocation<ControlMechanism.control_allocation>`.
-COMMENT:
-    Features can be of two types:
 
-    * *Input Features* -- these are values received as input by `INPUT` Mechanisms of the `Composition`.
-      They are specified in the **features** argument of the OptimizationControlMechanism's constructor (see
-      `OptimizationControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry,
-      the value of which is one or more `INPUT` Mechanisms and/or their `InputStates
-      <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
-      Projection from the Composition's `InputCIM` to the `INPUT` Mechanism, projecting from the same `OutputState` of
-      the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
-    ..
-    * *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in the
-      Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
-      constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
-      OutputState(s) to the InputState of the OptimizationControlMechanism for that feature.
-COMMENT
+Features can be of two types:
+
+* *Input Features* -- these are values received as input by other Mechanisms in the `Composition`. They are
+  specified as `shadowed inputs <InputState_Shadow_Inputs>` in the **features** argument of the
+  OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`).  An InputState is
+  created on the OptimziationControlMechanism for each feature, that receives a `Projection` paralleling
+  the input to be shadowed.
+..
+* *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in
+  the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
+  constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
+  OutputState(s) to the InputState of the OptimizationControlMechanism for that feature.
+
 The current `value <InputState.value>` of the InputStates for the features are listed in the `feature_values
 <OptimizationControlMechanism.feature_values>` attribute.
 

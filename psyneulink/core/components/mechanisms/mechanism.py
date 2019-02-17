@@ -477,12 +477,12 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   if either of those is specified.  If the `variable <InputState.variable>` and/or `value <InputState.value>`
   is `explicitly specified for an InputState <InputState_Variable_and_Value>` in the **input_states** argument or
   *INPUT_STATES* entry of a **params** dictionary, it must be compatible with the value of the corresponding
-  item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
-  InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
+  item of **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
+  InputState is used to specify the format of the InputState's `variable <InputState.variable>` (e.g., the InputState is
   `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
-  **default_variable** is not specified, a default value is specified by the Mechanism. An InputState may also be
-  specified by the InputState of another Node in the Composition. In this case, a new InputState is created that
-  "shadows" the one specified, meaning that it receives projections from all of the same senders.
+  **default_variable** is not specified, a default value is specified by the Mechanism.  InputStates can also be
+  specifed that `shadow the inputs <InputState_Shadow_Inputs>` of other InputStates and/or Mechanisms; that is, receive
+  Projections from all of the same `senders <Projection.sender>` as those specified.
 
 COMMENT:
 *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)

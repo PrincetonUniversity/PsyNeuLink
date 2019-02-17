@@ -160,11 +160,12 @@ should project to the InputState. Each of these is described below:
 
     **Direct Specification of an InputState**
 
-    * existing **InputState object** or the name of one -- it can not already belong to another Mechanism and, if used
-      to specify an InputState in the constructor for a Mechanism, its `value <InputState.value>` must be compatible
-      with the corresponding item of the owner Mechanism's `variable <Mechanism_Base.variable>` (see `Mechanism
-      InputState specification <Mechanism_InputState_Specification>` and `InputState_Compatability_and_Constraints`
-      below).
+    * existing **InputState object** or the name of one -- If this is used to specify an InputState in the
+      constructor for a Mechanism, its `value <InputState.value>` must be compatible with the corresponding item of
+      the owner Mechanism's `variable <Mechanism_Base.variable>` (see `Mechanism InputState specification
+      <Mechanism_InputState_Specification>` and `InputState_Compatability_and_Constraints` below).  If the InputState
+      belongs to another Mechanism, then an InputState is created along with Projections(s) that `shadow the inputs
+      <InputState_Shadow_Inputs>` to the specified InputState.
     ..
     * **InputState class**, **keyword** *INPUT_STATE*, or a **string** -- this creates a default InputState; if used
       to specify an InputState in the constructor for a Mechanism, the item of the owner Mechanism's `variable
@@ -291,6 +292,21 @@ should project to the InputState. Each of these is described below:
               must be of the same type (i.e.,either OutputStates or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
+
+    * **Shadow inputs** {*SHADOW_INPUTS: InputState, Mechanism, or list containing either or both} -- this specifies
+      the creation of one or more InputStates that receive the same inputs as the InputStates and/or Mechanisms
+      listed; for Mechanisms listed, an InputState is created that shadows each of its InputStates.
+
+.. _InputState_Shadow_Inputs:
+
+**Shadowing Inputs**
+
+This can be specified by either an InputState that belongs to another Mechanism, or a dicionatry with a
+*SHADOW_INPUTS* entry containing a list of InputStates and/or Mechanisms.  For each InputState specified or, in the
+case of Mechanisms, all of their InputStates, an InputState is created that with a `Projection` paralleling every
+Projection received by the specified InputState (i.e., from the same `sender <Projection.sender>`), so that each of the
+new InputStates receives exactly the same inputs as the ones specified to be shadowed.
+
 
 .. _InputState_Compatability_and_Constraints:
 
@@ -467,8 +483,8 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, \
-    MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
+    COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
@@ -997,7 +1013,6 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW AN ADDITIONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.core.components.projections.projection import Projection, _parse_connection_specs
-        from psyneulink.core.components.mechanisms.mechanism import Mechanism
 
         params_dict = {}
         state_spec = state_specific_spec
@@ -1202,7 +1217,7 @@ class InputState(State_Base):
 
         return state_spec, params_dict
 
-    def _parse_self_state_type_spec(self, owner, input_state, context):
+    def _parse_self_state_type_spec(self, owner, input_state, context=None):
         '''Return InputState specification dictionary with projections that shadow inputs to input_state
 
         Called by _parse_state_spec if input_state specified for a Mechanism belongs to a different Mechanism
@@ -1344,6 +1359,36 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     #    while calls from init_methods continue to use owner.input_states (i.e., InputState specifications
     #    assigned in the **input_states** argument of the Mechanism's constructor)
     input_states = input_states or owner.input_states
+
+    # Parse any SHADOW_INPUTS specs into actual InputStates to be shadowed
+    if input_states is not None:
+        input_states_to_shadow_specs=[]
+        for spec_idx, spec in enumerate(input_states):
+            if isinstance(spec, dict) and SHADOW_INPUTS in spec:
+                shadow_inputs_spec = list(spec[SHADOW_INPUTS])
+                input_states_to_shadow_in_spec=[]
+                for item in shadow_inputs_spec:
+                    from psyneulink.core.components.mechanisms.mechanism import Mechanism
+                    # If an InputState was specified, just used that
+                    if isinstance(item, InputState):
+                        input_states_to_shadow_in_spec.append(item)
+                    # If Mechanism was specified, use all of its InputStates
+                    elif isinstance(item, Mechanism):
+                        input_states_to_shadow_in_spec.extend(item.input_states)
+                    else:
+                        raise InputStateError("Specification of {} in for {} arg of {} must be a {} or {}".
+                                              format(repr(SHADOW_INPUTS), repr(INPUT_STATES), owner.name,
+                                                     Mechanism.__name__, InputState.__name__))
+                input_states_to_shadow_specs.append((spec_idx, input_states_to_shadow_in_spec))
+        # If any SHADOW_INPUTS specs were found in input_states, replace them with actual InputStates to be shadowed
+        if input_states_to_shadow_specs:
+            for item in input_states_to_shadow_specs:
+                idx = item[0]
+                del input_states[idx]
+                input_states[idx:idx] = item[1]
+            # Update owner's variable based on full set of InputStates specified
+            owner.defaults.variable, _ = owner._handle_arg_input_states(input_states)
+
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=input_states,
                                          state_type=InputState,

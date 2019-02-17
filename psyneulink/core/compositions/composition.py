@@ -923,7 +923,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         shadows : dict
             A dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
-            shadow the original Node's input.
+            `shadow <InputState_Shadow_Inputs>` the original Node's input.
 
         enable_model_based_optimizer : bool
             When True, executes the Composition's `model_based_optimizer <Composition.model_based_optimizer>` at the
