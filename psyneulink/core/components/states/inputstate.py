@@ -293,19 +293,25 @@ should project to the InputState. Each of these is described below:
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
 
-    * **Shadow inputs** *{SHADOW_INPUTS: InputState, Mechanism, or list of either or both}* -- this specifies
-      the creation of one or more InputStates that receive the same inputs as the InputStates and/or Mechanisms
-      listed; for Mechanisms listed, an InputState is created that shadows each of its InputStates.
+    .. _InputState_Shadow_Inputs:
 
-.. _InputState_Shadow_Inputs:
+    * **InputStates of Mechanisms to shadow** -- either of the following can be used to create InputStates that
+      receive the same inputs as ("shadow") those specified:
 
-**Shadowing Inputs**
-
-This can be specified by either an InputState that belongs to another Mechanism, or a dicionatry with a
-*SHADOW_INPUTS* entry containing a list of InputStates and/or Mechanisms.  For each InputState specified or, in the
-case of Mechanisms, all of their InputStates, an InputState is created that with a `Projection` paralleling every
-Projection received by the specified InputState (i.e., from the same `sender <Projection.sender>`), so that each of the
-new InputStates receives exactly the same inputs as the ones specified to be shadowed.
+      * *InputState or [InputState, ...]* -- each InputState must belong to an existing Mechanism; creates a new
+        InputState for each one specified, along with Projections to it that parallel those of the one specified
+        (see below).
+      |
+      * *{SHADOW_INPUTS: <InputState or Mechanism or [<InputState or Mechanism>,...]>}* -- any InputStates specified
+        must belong to an existing Mechanism;  creates a new InputState for each one specified, and for each of the
+        InputStates belonging to any Mechanisms specified, along with Projections to them that parallel those of the
+        one(s) specified (see below).
+      |
+      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified using the formats
+      above, a new InputState is created along with Projections to it that parallel those received by the
+      corresponding InputState --  that is, that have the same `senders <Projection.sender>` as those that project to
+      the specified InputState, but that project to the one being created.  Thus, for each InputState specified,
+      a new one is created that receives exactly the same inputs; that is, "shadows" it.
 
 
 .. _InputState_Compatability_and_Constraints:
