@@ -196,16 +196,16 @@ it is executed to evaluate the `net_outcome <ControlMechanism.net_outcome>` for 
 COMMENT:
     Features can be of two types:
 
-    * *Input Features* -- these are values received as input by `INPUT` Mechanisms of the `Composition`.
-      They are specified in the **features** argument of the OptimizationControlMechanism's constructor (see
-      `OptimizationControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry,
-      the value of which is one or more `INPUT` Mechanisms and/or their `InputStates
-      <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
-      Projection from the Composition's `InputCIM` to the `INPUT` Mechanism, projecting from the same `OutputState` of
-      the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
+    * *Input Features* -- these are values received as input by other Mechanisms in the `Composition`. They are
+      specified in the **features** argument of the OptimizationControlMechanism's constructor (see
+      `OptimizationControlMechanism_Creation`), by listing either the specific InputStates of Mechanisms to be
+      shadowed, and/or a list of Mechanisms (all of the InputStates of which are to be shadowed) under an entry in a
+      dictionary with the key SHADOW_INPUTS (see `InputState_Shadow_Inputs`).  For each, a `Projection` is
+      automatically created that parallels ("shadows") the Projection to the specified InputState(s) -- that is, it has
+      the same sender but projects to an InputState created for that feature on the OptimizationControlMechanism.
     ..
-    * *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in the
-      Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
+    * *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in
+      the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
       constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
       OutputState(s) to the InputState of the OptimizationControlMechanism for that feature.
 COMMENT

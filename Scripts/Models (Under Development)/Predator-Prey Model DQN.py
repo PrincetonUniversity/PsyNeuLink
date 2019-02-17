@@ -80,10 +80,7 @@ def objective_function(variable):
     optimal_action = policy.eval(observation=[player_coord, prey_coord, predator_coord])
     return 1-difference(optimal_action, actual_action)
 
-# ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
-ocm = OptimizationControlMechanism(features=[player_percept.input_state,
-                                             predator_percept.input_state,
-                                             prey_percept.input_state],
+ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept]},
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
                                    function=GridSearch(direction=MAXIMIZE, save_values=True),
                                    objective_mechanism=ObjectiveMechanism(function=objective_function,

@@ -496,8 +496,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         corresponding `InputState` listed in the `input_states <ObjectiveMechanism.input_states>` attribute
 
         .. note::
-           If any of the ObjectiveMechanism's `input_states <ObjectiveMechanism.input_states>` were specified to
-           `shadow the InputState <InputState_Shadow_Input>` of another Mechanism, and any of those shadowed InputStates
+           If any of the ObjectiveMechanism's `input_states <ObjectiveMechanism.input_states>` were specified to `shadow
+           the InputState <InputState_Shadow_Inputs>` of another Mechanism, and any of those shadowed InputStates
            receives more than one `Projection`, then the list of monitored OutputStates in `monitor` will be longer
            than the list of the ObjectiveMechanism's `input_states <ObjectiveMechanisms.input_states>`.
 

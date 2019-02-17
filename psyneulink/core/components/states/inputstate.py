@@ -160,11 +160,12 @@ should project to the InputState. Each of these is described below:
 
     **Direct Specification of an InputState**
 
-    * existing **InputState object** or the name of one -- it can not already belong to another Mechanism and, if used
-      to specify an InputState in the constructor for a Mechanism, its `value <InputState.value>` must be compatible
-      with the corresponding item of the owner Mechanism's `variable <Mechanism_Base.variable>` (see `Mechanism
-      InputState specification <Mechanism_InputState_Specification>` and `InputState_Compatability_and_Constraints`
-      below).
+    * existing **InputState object** or the name of one -- If this is used to specify an InputState in the
+      constructor for a Mechanism, its `value <InputState.value>` must be compatible with the corresponding item of
+      the owner Mechanism's `variable <Mechanism_Base.variable>` (see `Mechanism InputState specification
+      <Mechanism_InputState_Specification>` and `InputState_Compatability_and_Constraints` below).  If the InputState
+      belongs to another Mechanism, then an InputState is created along with Projections(s) that `shadow the inputs
+      <InputState_Shadow_Inputs>` to the specified InputState.
     ..
     * **InputState class**, **keyword** *INPUT_STATE*, or a **string** -- this creates a default InputState; if used
       to specify an InputState in the constructor for a Mechanism, the item of the owner Mechanism's `variable
@@ -291,6 +292,21 @@ should project to the InputState. Each of these is described below:
               must be of the same type (i.e.,either OutputStates or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
+
+    * **Shadow inputs** {*SHADOW_INPUTS: InputState, Mechanism, or list containing either or both} -- this specifies
+      the creation of one or more InputStates that `shadow the inputs <InputState_Shadow_Inputs>` to the InputStates
+      and/or Mechanisms listed; for Mechanisms listed, an InputState is created that shadows each of its InputStates.
+
+.. _InputState_Shadow_Inputs:
+
+**Shadowing Inputs**
+
+This can be specified by either an InputState that belongs to another Mechanism, or a dicionatry with a
+*SHADOW_INPUTS* entry with a list of InputStates and/or Mechanisms.  For each InputState specified (and, in the
+case of Mechanisms, all of their InputStates), an InputState is created that receives one `Projection` paralleling
+every Projection received by the specified InputState (i.e., from the same sender), so that the new InputState receives
+exactly the same inputs as the one to be shadowed.
+
 
 .. _InputState_Compatability_and_Constraints:
 
