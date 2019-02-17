@@ -61,7 +61,7 @@ from psyneulink.core.globals.keywords import \
     GAUSSIAN_FUNCTION, STANDARD_DEVIATION, GAUSSIAN_DISTORT_FUNCTION
 
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
@@ -1881,7 +1881,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         if seed is None:
-            seed = 0 # FIXME load global seed here
+            seed = get_global_seed()
 
         params = self._assign_args_to_param_dicts(variance=variance,
                                                   bias=bias,

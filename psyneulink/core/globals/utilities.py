@@ -84,6 +84,8 @@ CONTENTS
 * `make_readonly_property`
 * `get_class_attributes`
 * `insert_list`
+* `get_global_seed`
+* `set_global_seed`
 
 """
 
@@ -1401,6 +1403,16 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
+
+_seed = 0
+def get_global_seed(offset=1):
+    global _seed
+    _seed += offset
+    return _seed - offset
+
+def set_global_seed(new_seed):
+    global _seed
+    _seed = new_seed
 
 
 def safe_len(arr, fallback=1):
