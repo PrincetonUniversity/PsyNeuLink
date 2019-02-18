@@ -150,7 +150,9 @@ def setup_mersenne_twister(ctx):
     int64_ty = ir.IntType(64)
     state_ty = ir.LiteralStructType([ctx.int32_ty, # index
         int64_ty, # seed
-        ir.ArrayType(int64_ty, _MERSENNE_N)]) # array
+        ir.ArrayType(int64_ty, _MERSENNE_N), # array
+        ctx.int32_ty, #last_gauss available
+        ctx.float_ty]) #last_gauss
 
     init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty))
     # Create init function
@@ -173,6 +175,12 @@ def setup_mersenne_twister(ctx):
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
     seed_lo = builder.and_(seed, seed.type(0xffffffff))
     builder.store(seed_lo, a_0)
+
+    # clear gauss helpers
+    last_g_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    builder.store(last_g_avail.type.pointee(0), last_g_avail)
+    last_g = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
+    builder.store(last_g.type.pointee(0), last_g)
 
     with helpers.for_loop(builder,
                           ctx.int32_ty(1),
@@ -438,4 +446,76 @@ def setup_mersenne_twister(ctx):
     val = builder.fdiv(val, ctx.float_ty(9007199254740992.0))
 
     builder.store(val, out)
+    builder.ret_void()
+
+    # Generate random float from Normal distribution generator
+    gen_normal = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_normal")
+    gen_normal.attributes.add('argmemonly')
+    gen_normal.attributes.add('alwaysinline')
+
+    block = gen_normal.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(gen_normal, None)
+    state, out = gen_normal.args
+
+    # Add function arg attributes
+    for a in state, out:
+        a.attributes.add('nonnull')
+        a.attributes.add('noalias')
+
+    p_last = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
+    p_last_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    last_avail = builder.load(p_last_avail)
+
+    cond = builder.icmp_signed("==", last_avail, ctx.int32_ty(1))
+    with builder.if_then(cond, likely=False):
+        builder.store(builder.load(p_last), out)
+        builder.store(ctx.float_ty(0), p_last)
+        builder.store(p_last_avail.type.pointee(0), p_last_avail)
+        builder.ret_void()
+
+    loop_block = builder.append_basic_block("gen_loop_gauss")
+    out_block = builder.append_basic_block("gen_gauss_out")
+
+    builder.branch(loop_block)
+    builder.position_at_end(loop_block)
+    tmp = builder.alloca(out.type.pointee)
+
+    # X1
+    builder.call(gen_float, [state, tmp])
+    x1 = builder.load(tmp)
+    x1 = builder.fmul(x1, ctx.float_ty(2.0))
+    x1 = builder.fsub(x1, ctx.float_ty(1.0))
+
+    # x2
+    builder.call(gen_float, [state, tmp])
+    x2 = builder.load(tmp)
+    x2 = builder.fmul(x2, ctx.float_ty(2.0))
+    x2 = builder.fsub(x2, ctx.float_ty(1.0))
+
+    # r2
+    r2 = builder.fmul(x1, x1)
+    r2 = builder.fadd(r2, builder.fmul(x2, x2))
+
+    loop_cond1 = builder.fcmp_unordered(">=", r2, r2.type(1.0))
+    loop_cond2 = builder.fcmp_unordered("==", r2, r2.type(0.0))
+    loop_cond = builder.or_(loop_cond1, loop_cond2)
+    builder.cbranch(loop_cond, loop_block, out_block).set_weights([1, 99])
+
+    builder.position_at_end(out_block)
+    log_f = ctx.get_builtin("log", [r2.type])
+    f = builder.call(log_f, [r2])
+    f = builder.fmul(f, f.type(-2.0))
+    f = builder.fdiv(f, r2)
+
+    sqrt_f = ctx.get_builtin("sqrt", [f.type])
+    f = builder.call(sqrt_f, [f])
+
+    val = builder.fmul(f, x2)
+    builder.store(val, out)
+
+    next_val = builder.fmul(f, x1)
+    builder.store(next_val, p_last)
+    builder.store(p_last_avail.type.pointee(1), p_last_avail)
+
     builder.ret_void()
