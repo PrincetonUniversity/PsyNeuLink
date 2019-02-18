@@ -162,7 +162,7 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     state.attributes.add('nonnull')
     state.attributes.add('noalias')
 
-    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
     # Store seed to the 0-th element
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -192,7 +192,7 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
         val = b.and_(val, val.type(0xffffffff))
         b.store(val, a_i)
 
-    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     builder.store(pidx.type.pointee(_MERSENNE_N), pidx)
 
     builder.ret_void()
@@ -227,7 +227,7 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
     builder.store(ctx.int32_ty(1), pi)
     pj = builder.alloca(ctx.int32_ty)
     builder.store(ctx.int32_ty(0), pj)
-    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
     # This loop should go from max(N, len(key)) -> 0,
@@ -316,9 +316,9 @@ def _setup_mt_rand_integer(ctx, state_ty):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     idx = builder.load(pidx)
-    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
     cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
     with builder.if_then(cond, likely=False):
@@ -525,8 +525,9 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
 def setup_mersenne_twister(ctx):
     # Setup types
     int64_ty = ir.IntType(64)
-    state_ty = ir.LiteralStructType([ctx.int32_ty, # index
+    state_ty = ir.LiteralStructType([
         ir.ArrayType(int64_ty, _MERSENNE_N), # array
+        ctx.int32_ty, #index
         ctx.int32_ty, #last_gauss available
         ctx.float_ty]) #last_gauss
 
