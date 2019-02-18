@@ -162,7 +162,7 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     state.attributes.add('nonnull')
     state.attributes.add('noalias')
 
-    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
     # Store seed to the 0-th element
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -170,9 +170,9 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     builder.store(seed_lo, a_0)
 
     # clear gauss helpers
-    last_g_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    last_g_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
     builder.store(last_g_avail.type.pointee(0), last_g_avail)
-    last_g = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
+    last_g = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     builder.store(last_g.type.pointee(0), last_g)
 
     with helpers.for_loop(builder,
@@ -227,7 +227,7 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
     builder.store(ctx.int32_ty(1), pi)
     pj = builder.alloca(ctx.int32_ty)
     builder.store(ctx.int32_ty(0), pj)
-    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
     # This loop should go from max(N, len(key)) -> 0,
@@ -295,9 +295,6 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
 
     # set the 0th element to INT_MIN
     builder.store(a_0.type.pointee(0x80000000), a_0)
-
-    pseed = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-    builder.store(seed, pseed)
     builder.ret_void()
     return init
 
@@ -321,7 +318,7 @@ def _setup_mt_rand_integer(ctx, state_ty):
 
     pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
     idx = builder.load(pidx)
-    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
     cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
     with builder.if_then(cond, likely=False):
@@ -468,8 +465,8 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    p_last = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
-    p_last_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    p_last = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    p_last_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
     last_avail = builder.load(p_last_avail)
 
     cond = builder.icmp_signed("==", last_avail, ctx.int32_ty(1))
@@ -529,7 +526,6 @@ def setup_mersenne_twister(ctx):
     # Setup types
     int64_ty = ir.IntType(64)
     state_ty = ir.LiteralStructType([ctx.int32_ty, # index
-        int64_ty, # seed
         ir.ArrayType(int64_ty, _MERSENNE_N), # array
         ctx.int32_ty, #last_gauss available
         ctx.float_ty]) #last_gauss
