@@ -2,6 +2,11 @@ import timeit
 import numpy as np
 from psyneulink import *
 
+import sys
+sys.path.insert(0, '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python')
+ddqn = __import__('double-dqn.double_dqn')
+from ddqn.double_dqn import DoubleDQNAgent
+# from double-dqn.double_dqn DoubleDQNAgent
 from gym_forager.envs.forager_env import ForagerEnv
 
 # *********************************************************************************************************************
@@ -51,12 +56,40 @@ values = TransferMechanism(size=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
 
 env = ForagerEnv()
-policy = double_dqn(env=env, policy_net='trained net')
+
+# ************************************** DOUBLE_DQN AGENT **************************************************************
+
+ddqn_agent = DoubleDQNAgent(env=env, policy_net='trained net', eval_mode=True)
+
+perceptual_state = None
+veridical_state = None
+
+def new_episode():
+    global perceptual_state
+    global veridical_state
+    perceptual_state = ddqn_agent.buffer.next(perceptual_state, True)
+    veridical_state = ddqn_agent.buffer.next(veridical_state, True)
+
+def ddqn_perceptual_action(variable):
+    global perceptual_state
+    # Convert variable to observation:
+    observation = list(variable[0]) + list(variable[1]) + list(variable[2])
+    # Get new state based on observation:
+    perceptual_state = ddqn_agent.buffer.next(observation)
+    return ddqn_agent.select_action(perceptual_state)
+
+def ddqn_veridical_action(player, predator, prey):
+    global perceptual_state
+    # Convert variable to observation:
+    observation = list(player) + list(predator) + list(prey)
+    # Get new state based on observation:
+    veridical_state = ddqn_agent.buffer.next(observation)
+    return ddqn_agent.select_action(veridical_state)
 
 # Action Mechanism
 #    Use ddqn's eval function to compute action for a given observation
 #    note: unitization is done in main loop, to allow compilation of LinearCombination function in ObjectiveMech) (TBI)
-action = ProcessingMechanism(function=policy.eval)
+action_mech = ProcessingMechanism(function=ddqn_perceptual_action, name='ACTION')
 
 # ************************************** BASIC COMPOSITION *************************************************************
 
@@ -64,7 +97,7 @@ agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
 agent_comp.add_node(player_percept)
 agent_comp.add_node(prey_percept)
 agent_comp.add_node(predator_percept)
-agent_comp.add_node(action)
+agent_comp.add_node(action_mech)
 
 # **************************************  CONOTROL APPRATUS ************************************************************
 
@@ -77,7 +110,7 @@ def objective_function(variable):
     predator_coord = variable[1]
     prey_coord = variable[2]
     actual_action = variable[3]
-    optimal_action = policy.eval(observation=[player_coord, prey_coord, predator_coord])
+    optimal_action = ddqn_select_action(observation=[player_coord, prey_coord, predator_coord])
     return 1-difference(optimal_action, actual_action)
 
 ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept]},
@@ -86,7 +119,7 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, pred
                                    objective_mechanism=ObjectiveMechanism(function=objective_function,
                                                                           monitor=[player_percept,
                                                                                    predator_percept,
-                                                                                   prey_percept, action]),
+                                                                                   prey_percept, action_mech]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
