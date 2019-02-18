@@ -145,15 +145,8 @@ def _generate_cpu_builtins_module(_float_ty):
 _MERSENNE_N = 624
 _MERSENNE_M = 397
 
-def setup_mersenne_twister(ctx):
-    # Setup types
+def _setup_mt_rand_init_scalar(ctx, state_ty):
     int64_ty = ir.IntType(64)
-    state_ty = ir.LiteralStructType([ctx.int32_ty, # index
-        int64_ty, # seed
-        ir.ArrayType(int64_ty, _MERSENNE_N), # array
-        ctx.int32_ty, #last_gauss available
-        ctx.float_ty]) #last_gauss
-
     init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty))
     # Create init function
     init_scalar = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init_scalar")
@@ -203,7 +196,11 @@ def setup_mersenne_twister(ctx):
     builder.store(pidx.type.pointee(_MERSENNE_N), pidx)
 
     builder.ret_void()
-    
+    return init_scalar
+
+def _setup_mt_rand_init(ctx, state_ty, init_scalar):
+    int64_ty = ir.IntType(64)
+    init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty))
     # Create init_array function
     init = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init")
     init.attributes.add('argmemonly')
@@ -302,9 +299,12 @@ def setup_mersenne_twister(ctx):
     pseed = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     builder.store(seed, pseed)
     builder.ret_void()
+    return init
 
+def _setup_mt_rand_integer(ctx, state_ty):
+    int64_ty = ir.IntType(64)
     # Generate random number generator function. It produces random 32bit number in 64bit word
-    gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), seed.type.as_pointer()))
+    gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty.as_pointer()))
     gen_int = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_int32")
     gen_int.attributes.add('argmemonly')
     gen_int.attributes.add('alwaysinline')
@@ -409,7 +409,9 @@ def setup_mersenne_twister(ctx):
     # val is now random 32bit integer in 64 word
     builder.store(val, out)
     builder.ret_void()
+    return gen_int
 
+def _setup_mt_rand_float(ctx, state_ty, gen_int):
     # Generate random float number generator function
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_float = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_double")
@@ -447,8 +449,11 @@ def setup_mersenne_twister(ctx):
 
     builder.store(val, out)
     builder.ret_void()
+    return gen_float
 
+def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     # Generate random float from Normal distribution generator
+    gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_normal = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_normal")
     gen_normal.attributes.add('argmemonly')
     gen_normal.attributes.add('alwaysinline')
@@ -519,3 +524,19 @@ def setup_mersenne_twister(ctx):
     builder.store(p_last_avail.type.pointee(1), p_last_avail)
 
     builder.ret_void()
+
+def setup_mersenne_twister(ctx):
+    # Setup types
+    int64_ty = ir.IntType(64)
+    state_ty = ir.LiteralStructType([ctx.int32_ty, # index
+        int64_ty, # seed
+        ir.ArrayType(int64_ty, _MERSENNE_N), # array
+        ctx.int32_ty, #last_gauss available
+        ctx.float_ty]) #last_gauss
+
+    init_scalar = _setup_mt_rand_init_scalar(ctx, state_ty)
+    _setup_mt_rand_init(ctx, state_ty, init_scalar)
+
+    gen_int = _setup_mt_rand_integer(ctx, state_ty)
+    gen_float = _setup_mt_rand_float(ctx, state_ty, gen_int)
+    _setup_mt_rand_normal(ctx, state_ty, gen_float)
