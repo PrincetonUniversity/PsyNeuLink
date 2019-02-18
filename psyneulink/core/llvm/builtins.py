@@ -192,7 +192,7 @@ def setup_mersenne_twister(ctx):
         b.store(val, a_i)
 
     pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-    builder.store(ctx.int32_ty(_MERSENNE_N), pidx)
+    builder.store(pidx.type.pointee(_MERSENNE_N), pidx)
 
     builder.ret_void()
     
@@ -374,11 +374,12 @@ def setup_mersenne_twister(ctx):
 
             b.store(val, pkk)
 
-        idx = ctx.int32_ty(0)
+        builder.store(pidx.type.pointee(0), pidx)
 
     # Get pointer and update index
+    idx = builder.load(pidx)
     pval = builder.gep(array, [ctx.int32_ty(0), idx])
-    idx = builder.add(idx, ctx.int32_ty(1))
+    idx = builder.add(idx, idx.type(1))
     builder.store(idx, pidx)
 
     # Load and temper
