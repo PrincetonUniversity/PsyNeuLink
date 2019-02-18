@@ -24,7 +24,7 @@ def test_random(benchmark, mode):
         # Python treats every seed as array, and numpy promotes elements to int64
         state = np.random.RandomState(np.asarray([SEED]))
         res = state.random_sample()
-        benchmark(state.rand)
+        benchmark(state.random_sample)
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.byref_arg_types[0]()
