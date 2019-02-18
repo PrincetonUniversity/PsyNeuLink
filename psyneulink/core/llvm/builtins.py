@@ -146,8 +146,8 @@ _MERSENNE_N = 624
 _MERSENNE_M = 397
 
 def _setup_mt_rand_init_scalar(ctx, state_ty):
-    int64_ty = ir.IntType(64)
-    init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty))
+    seed_ty = state_ty.elements[0].element
+    init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), seed_ty))
     # Create init function
     init_scalar = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init_scalar")
     init_scalar.attributes.add('argmemonly')
@@ -167,6 +167,7 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     # Store seed to the 0-th element
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
     seed_lo = builder.and_(seed, seed.type(0xffffffff))
+    seed_lo = builder.trunc(seed, a_0.type.pointee)
     builder.store(seed_lo, a_0)
 
     # clear gauss helpers
@@ -199,8 +200,8 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     return init_scalar
 
 def _setup_mt_rand_init(ctx, state_ty, init_scalar):
-    int64_ty = ir.IntType(64)
-    init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty))
+    seed_ty = state_ty.elements[0].element
+    init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), seed_ty))
     # Create init_array function
     init = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init")
     init.attributes.add('argmemonly')
@@ -300,7 +301,7 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
 
 def _setup_mt_rand_integer(ctx, state_ty):
     int64_ty = ir.IntType(64)
-    # Generate random number generator function. It produces random 32bit number in 64bit word
+    # Generate random number generator function. It produces random 32bit numberin a 64bit word
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty.as_pointer()))
     gen_int = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_int32")
     gen_int.attributes.add('argmemonly')
@@ -403,7 +404,8 @@ def _setup_mt_rand_integer(ctx, state_ty):
     tmp = builder.lshr(val, val.type(18))
     val = builder.xor(val, tmp)
 
-    # val is now random 32bit integer in 64 word
+    # val is now random 32bit integer
+    val = builder.zext(val, out.type.pointee)
     builder.store(val, out)
     builder.ret_void()
     return gen_int
@@ -524,9 +526,8 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
 
 def setup_mersenne_twister(ctx):
     # Setup types
-    int64_ty = ir.IntType(64)
     state_ty = ir.LiteralStructType([
-        ir.ArrayType(int64_ty, _MERSENNE_N), # array
+        ir.ArrayType(ctx.int32_ty, _MERSENNE_N), # array
         ctx.int32_ty, #index
         ctx.int32_ty, #last_gauss available
         ctx.float_ty]) #last_gauss
