@@ -210,11 +210,11 @@ def setup_mersenne_twister(ctx):
     state.attributes.add('nonnull')
     state.attributes.add('noalias')
 
-    default_seed = int64_ty(19650218)
+    default_seed = seed.type(19650218)
     builder.call(init_scalar, [state, default_seed])
 
     # python considers everything to be an array
-    key_array = builder.alloca(ir.ArrayType(int64_ty, 1))
+    key_array = builder.alloca(ir.ArrayType(seed.type, 1))
     key_p = builder.gep(key_array, [ctx.int32_ty(0), ctx.int32_ty(0)])
     builder.store(seed, key_p)
 
@@ -296,7 +296,7 @@ def setup_mersenne_twister(ctx):
     builder.ret_void()
 
     # Generate random number generator function. It produces random 32bit number in 64bit word
-    gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty.as_pointer()))
+    gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), seed.type.as_pointer()))
     gen_int = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_int32")
     gen_int.attributes.add('argmemonly')
     gen_int.attributes.add('alwaysinline')
@@ -317,7 +317,7 @@ def setup_mersenne_twister(ctx):
 
     cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
     with builder.if_then(cond, likely=False):
-        mag01 = ir.ArrayType(int64_ty, 2)([0, 0x9908b0df])
+        mag01 = ir.ArrayType(array.type.pointee.element, 2)([0, 0x9908b0df])
         pmag01 = builder.alloca(mag01.type)
         builder.store(mag01, pmag01)
 
@@ -327,8 +327,8 @@ def setup_mersenne_twister(ctx):
             pkk = b.gep(array, [ctx.int32_ty(0), kk])
             pkk_1 = b.gep(array, [ctx.int32_ty(0), b.add(kk, ctx.int32_ty(1))])
 
-            val_kk = b.and_(b.load(pkk), int64_ty(0x80000000))
-            val_kk_1 = b.and_(b.load(pkk_1), int64_ty(0x7fffffff))
+            val_kk = b.and_(b.load(pkk), pkk.type.pointee(0x80000000))
+            val_kk_1 = b.and_(b.load(pkk_1), pkk_1.type.pointee(0x7fffffff))
             val = b.or_(val_kk, val_kk_1)
 
             val_1 = b.and_(val, val.type(1))
@@ -355,8 +355,8 @@ def setup_mersenne_twister(ctx):
             idx_1 = b.select(is_last, ctx.int32_ty(0), b.add(kk, ctx.int32_ty(1)))
             pkk_1 = b.gep(array, [ctx.int32_ty(0), idx_1])
 
-            val_kk = b.and_(b.load(pkk), int64_ty(0x80000000))
-            val_kk_1 = b.and_(b.load(pkk_1), int64_ty(0x7fffffff))
+            val_kk = b.and_(b.load(pkk), pkk.type.pointee(0x80000000))
+            val_kk_1 = b.and_(b.load(pkk_1), pkk.type.pointee(0x7fffffff))
             val = b.or_(val_kk, val_kk_1)
 
             val_1 = b.and_(val, val.type(1))
@@ -417,10 +417,10 @@ def setup_mersenne_twister(ctx):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    al = builder.alloca(ir.IntType(64))
+    al = builder.alloca(gen_int.args[1].type.pointee)
     builder.call(gen_int, [state, al])
 
-    bl = builder.alloca(ir.IntType(64))
+    bl = builder.alloca(gen_int.args[1].type.pointee)
     builder.call(gen_int, [state, bl])
 
     a = builder.load(al)
