@@ -179,7 +179,7 @@ when learning is enabled, the AutodiffComposition must be an origin mechanism of
 
 .. note::
 
-    Like with all nested Compositions, you must call an AutodiffComposition's `_analyze_graph()` method
+    Like with all nested Compositions, you must call an AutodiffComposition's ``_analyze_graph()`` method
     (or execute the AutodiffComposition) before nesting it.
 
 However, when learning is not enabled, AutodiffComposition works just like an ordinary Composition, in theory. Thus, an
@@ -964,5 +964,4 @@ class EarlyStopping(object):
             self.is_better = lambda a, best: a < best - min_delta
         if mode == 'max':
             self.is_better = lambda a, best: a > best + min_delta
-
 

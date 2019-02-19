@@ -85,8 +85,7 @@ before_install: |
 
     # setuptools also face the same TLS deprecation issue.
     # Update them explicitly
-    python -m pip install -U setuptools
-    python -m pip install -U setuptools-git
+    python -m pip install -U setuptools setuptools-git setuptools-scm
 
     HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
   fi
