@@ -18,13 +18,13 @@ from gym_forager.envs.forager_env import ForagerEnv
 # Runtime Switches:
 RENDER = False
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 # MODEL_PATH = '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python/double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # These should probably be replaced by reference to ForagerEnv constants:
-obs_len = 3
+obs_len = 2
 obs_coords = 2
 action_len = 2
 player_idx = 0
@@ -71,8 +71,10 @@ veridical_state = None
 def new_episode():
     global perceptual_state
     global veridical_state
-    perceptual_state = ddqn_agent.buffer.next(perceptual_state, True)
-    veridical_state = ddqn_agent.buffer.next(veridical_state, True)
+    observation = ddqn_agent.env.reset()
+    g=GaussianDistort()
+    perceptual_state = ddqn_agent.buffer.next(g(observation), is_new_episode=True)
+    veridical_state = ddqn_agent.buffer.next(observation, is_new_episode=True)
 
 def ddqn_perceptual_action(variable=[[0,0],[0,0],[0,0]]):
     global perceptual_state
@@ -159,7 +161,7 @@ if SHOW_GRAPH:
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_episodes = 100
+num_episodes = 1
 
 def main():
     reward = 0
