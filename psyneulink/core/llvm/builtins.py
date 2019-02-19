@@ -524,13 +524,15 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
 
     builder.ret_void()
 
-def setup_mersenne_twister(ctx):
-    # Setup types
-    state_ty = ir.LiteralStructType([
+def get_mersenne_twister_state_struct(ctx):
+    return ir.LiteralStructType([
         ir.ArrayType(ctx.int32_ty, _MERSENNE_N), # array
         ctx.int32_ty, #index
         ctx.int32_ty, #last_gauss available
         ctx.float_ty]) #last_gauss
+
+def setup_mersenne_twister(ctx):
+    state_ty = get_mersenne_twister_state_struct(ctx)
 
     init_scalar = _setup_mt_rand_init_scalar(ctx, state_ty)
     _setup_mt_rand_init(ctx, state_ty, init_scalar)
