@@ -1799,9 +1799,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     offset : float
         determines value added to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
-    seed : number or None
-       determines the origin PRNG seed. None implies reading and incrementing
-       global seed
+    random_state : numpy.RandomState instance
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1866,7 +1864,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(0.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-        seed = Parameter(None, modulable=False)
+        random_state = Parameter(None, modulable=False)
 
     @tc.typecheck
     def __init__(self,
@@ -1883,13 +1881,16 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         if seed is None:
             seed = get_global_seed()
 
+        random_state = np.random.RandomState(np.asarray([seed]))
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["random_state"]
+
         params = self._assign_args_to_param_dicts(variance=variance,
                                                   bias=bias,
                                                   scale=scale,
                                                   offset=offset,
-                                                  seed=seed,
+                                                  random_state=random_state,
                                                   params=params)
-        self._random_state = np.random.RandomState(np.asarray([seed]))
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -1898,18 +1899,14 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                          context=ContextFlags.CONSTRUCTOR)
 
     def _get_context_struct_type(self, ctx):
-        context = ctx.get_context_struct_type(super())
-        els = list(context.elements)
         rand = pnlvm.builtins.get_mersenne_twister_state_struct(ctx)
-        els.append(rand)
-        return pnlvm.ir.LiteralStructType(els)
+        return pnlvm.ir.LiteralStructType([rand])
 
     def _get_context_initializer(self, execution_id):
-        init = list(super()._get_context_initializer(execution_id))
-        rand_state = self._random_state.get_state()[1:]
-        tupleized = pnlvm.execution._tupleize(rand_state)
-        init.append(tupleized)
-        return tuple(init)
+        random_state = self.get_current_function_param('random_state', execution_id)
+        # The array offset strips away numpy's 'MT19937' string identifier
+        rand_state = random_state.get_state()[1:]
+        return pnlvm.execution._tupleize([rand_state])
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1971,9 +1968,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = self.get_current_function_param(BIAS, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
+        random_state = self.get_current_function_param('random_state', execution_id)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        result = scale * self._random_state.normal(variable+bias, variance) + offset
+        result = scale * random_state.normal(variable+bias, variance) + offset
 
         return self.convert_output_type(result)
 
