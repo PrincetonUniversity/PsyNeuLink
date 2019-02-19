@@ -1897,6 +1897,20 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def _get_context_struct_type(self, ctx):
+        context = ctx.get_context_struct_type(super())
+        els = list(context.elements)
+        rand = pnlvm.builtins.get_mersenne_twister_state_struct(ctx)
+        els.append(rand)
+        return pnlvm.ir.LiteralStructType(els)
+
+    def _get_context_initializer(self, execution_id):
+        init = list(super()._get_context_initializer(execution_id))
+        rand_state = self._random_state.get_state()[1:]
+        tupleized = pnlvm.execution._tupleize(rand_state)
+        init.append(tupleized)
+        return tuple(init)
+
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -1911,14 +1925,18 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        rvalp = builder.alloca(ptri.type.pointee)
+        rand_state = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        normal_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_normal")
+        builder.call(normal_f, [rand_state, rvalp])
+
+        rval = builder.load(rvalp)
+        rval = builder.fmul(rval, variance)
         val = builder.load(ptri)
         val = builder.fadd(val, bias)
-        val = builder.fmul(val, variance)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
+        val = builder.fadd(rval, val)
+        val = builder.fmul(val, scale)
+        val = builder.fadd(offset, val)
 
         builder.store(val, ptro)
 
