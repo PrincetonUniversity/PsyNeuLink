@@ -1368,32 +1368,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     # Parse any SHADOW_INPUTS specs into actual InputStates to be shadowed
     if input_states is not None:
-        input_states_to_shadow_specs=[]
-        for spec_idx, spec in enumerate(input_states):
-            if isinstance(spec, dict) and SHADOW_INPUTS in spec:
-                shadow_inputs_spec = list(spec[SHADOW_INPUTS])
-                input_states_to_shadow_in_spec=[]
-                for item in shadow_inputs_spec:
-                    from psyneulink.core.components.mechanisms.mechanism import Mechanism
-                    # If an InputState was specified, just used that
-                    if isinstance(item, InputState):
-                        input_states_to_shadow_in_spec.append(item)
-                    # If Mechanism was specified, use all of its InputStates
-                    elif isinstance(item, Mechanism):
-                        input_states_to_shadow_in_spec.extend(item.input_states)
-                    else:
-                        raise InputStateError("Specification of {} in for {} arg of {} must be a {} or {}".
-                                              format(repr(SHADOW_INPUTS), repr(INPUT_STATES), owner.name,
-                                                     Mechanism.__name__, InputState.__name__))
-                input_states_to_shadow_specs.append((spec_idx, input_states_to_shadow_in_spec))
-        # If any SHADOW_INPUTS specs were found in input_states, replace them with actual InputStates to be shadowed
-        if input_states_to_shadow_specs:
-            for item in input_states_to_shadow_specs:
-                idx = item[0]
-                del input_states[idx]
-                input_states[idx:idx] = item[1]
-            # Update owner's variable based on full set of InputStates specified
-            owner.defaults.variable, _ = owner._handle_arg_input_states(input_states)
+        input_states = _parse_shadow_inputs(owner, input_states)
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=input_states,
@@ -1438,3 +1413,36 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     return state_list
 
+def _parse_shadow_inputs(owner, input_states):
+    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states'''
+
+    input_states_to_shadow_specs=[]
+    for spec_idx, spec in enumerate(input_states):
+        # If {SHADOW_INPUTS:[InputState or Mechaism,...]} is found:
+        if isinstance(spec, dict) and SHADOW_INPUTS in spec:
+            input_states_to_shadow_in_spec=[]
+            # For each item in list of items to shadow specified in that entry:
+            for item in list(spec[SHADOW_INPUTS]):
+                from psyneulink.core.components.mechanisms.mechanism import Mechanism
+                # If an InputState was specified, just used that
+                if isinstance(item, InputState):
+                    input_states_to_shadow_in_spec.append(item)
+                # If Mechanism was specified, use all of its InputStates
+                elif isinstance(item, Mechanism):
+                    input_states_to_shadow_in_spec.extend(item.input_states)
+                else:
+                    raise InputStateError("Specification of {} in for {} arg of {} must be a {} or {}".
+                                          format(repr(SHADOW_INPUTS), repr(INPUT_STATES), owner.name,
+                                                 Mechanism.__name__, InputState.__name__))
+            input_states_to_shadow_specs.append((spec_idx, input_states_to_shadow_in_spec))
+
+    # If any SHADOW_INPUTS specs were found in input_states, replace them with actual InputStates to be shadowed
+    if input_states_to_shadow_specs:
+        for item in input_states_to_shadow_specs:
+            idx = item[0]
+            del input_states[idx]
+            input_states[idx:idx] = item[1]
+        # Update owner's variable based on full set of InputStates specified
+        owner.defaults.variable, _ = owner._handle_arg_input_states(input_states)
+
+    return input_states
