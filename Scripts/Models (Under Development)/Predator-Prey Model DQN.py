@@ -16,6 +16,7 @@ from gym_forager.envs.forager_env import ForagerEnv
 # *********************************************************************************************************************
 
 # Runtime Switches:
+MPI_IMPLEMENTATION = True
 RENDER = False
 PNL_COMPILE = False
 RUN = True
@@ -27,14 +28,17 @@ MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_
 obs_len = 2
 obs_coords = 2
 action_len = 2
+
 player_idx = 0
 player_obs_start_idx = player_idx * obs_len
 player_value_idx = player_idx * obs_len + obs_coords
 player_coord_slice = slice(player_obs_start_idx,player_value_idx)
+
 predator_idx = 1
 predator_obs_start_idx = predator_idx * obs_len
 predator_value_idx = predator_idx * obs_len + obs_coords
 predator_coord_slice = slice(predator_obs_start_idx,predator_value_idx)
+
 prey_idx = 2
 prey_obs_start_idx = prey_idx * obs_len
 prey_value_idx = prey_idx * obs_len + obs_coords
@@ -51,7 +55,7 @@ player_len = prey_len = predator_len = obs_coords
 
 # Perceptual Mechanisms
 player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER PERCEPT")
-predator_percept = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
+predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
 prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY PERCEPT")
 
 # Value and Reward Mechanisms (not yet used;  for future use)
@@ -82,14 +86,16 @@ def ddqn_perceptual_action(variable=[[0,0],[0,0],[0,0]]):
     observation = list(variable[0]) + list(variable[1]) + list(variable[2])
     # Get new state based on observation:
     perceptual_state = ddqn_agent.buffer.next(np.array(observation))
-    return ddqn_agent._select_action(perceptual_state)
+    action, value = ddqn_agent._select_action(perceptual_state)
+    return np.array(ddqn_agent._io_map(action.item()))
 
 def ddqn_veridical_action(player, predator, prey):
     # Convert variable to observation:
     observation = list(player) + list(predator) + list(prey)
     # Get new state based on observation:
     veridical_state = ddqn_agent.buffer.next(np.array(observation))
-    return ddqn_agent._select_action(veridical_state)
+    action = ddqn_agent._select_action(veridical_state)
+    return np.array(ddqn_agent._io_map(action.item()))
 
 # Action Mechanism
 #    Use ddqn's eval function to compute action for a given observation
@@ -99,10 +105,25 @@ action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]], function
 # ************************************** BASIC COMPOSITION *************************************************************
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_node(player_percept)
-agent_comp.add_node(prey_percept)
-agent_comp.add_node(predator_percept)
-agent_comp.add_node(action_mech)
+# agent_comp.add_linear_processing_pathway([player_percept, action_mech.input_states[0]])
+# agent_comp.add_linear_processing_pathway([predator_percept, action_mech.input_states[1]])
+# agent_comp.add_linear_processing_pathway([prey_percept, action_mech.input_states[2]])
+
+# agent_comp.add_nodes([player_percept, predator_percept, prey_percept, action_mech])
+# agent_comp.add_projection(sender=player_percept, receiver=action_mech.input_states[0])
+# agent_comp.add_projection(sender=predator_percept, receiver=action_mech.input_states[1])
+# agent_comp.add_projection(sender=prey_percept, receiver=action_mech.input_states[2])
+
+agent_comp.add_nodes([player_percept, predator_percept, prey_percept])
+agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
+
+a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
+b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
+c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+agent_comp.add_projection(a)
+agent_comp.add_projection(b)
+agent_comp.add_projection(c)
+
 
 # **************************************  CONOTROL APPRATUS ************************************************************
 
@@ -115,9 +136,8 @@ def objective_function(variable):
     predator_veridical = variable[1]
     prey_veridical = variable[2]
     actual_action = variable[3]
-
     optimal_action = ddqn_veridical_action(player_veridical, predator_veridical, prey_veridical)
-    return 1-difference(np.array([np.array(optimal_action)[0], actual_action]))
+    return 1-difference([optimal_action, actual_action])
 
 ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept]},
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
@@ -154,7 +174,7 @@ agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph()
+    agent_comp.show_graph(show_control=True)
 
 
 # *********************************************************************************************************************
@@ -212,7 +232,7 @@ def main():
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
           f'{stop_time - start_time:.2f} seconds')
     if RENDER:
-        ddqn_agent.env.render()  # If visualization is desired
+        ddqn_agent.env.render(close=True)  # If visualization is desired
 
 if RUN:
     if __name__ == "__main__":
