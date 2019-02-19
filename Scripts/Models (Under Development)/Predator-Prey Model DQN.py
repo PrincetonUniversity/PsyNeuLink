@@ -27,14 +27,17 @@ MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_
 obs_len = 2
 obs_coords = 2
 action_len = 2
+
 player_idx = 0
 player_obs_start_idx = player_idx * obs_len
 player_value_idx = player_idx * obs_len + obs_coords
 player_coord_slice = slice(player_obs_start_idx,player_value_idx)
+
 predator_idx = 1
 predator_obs_start_idx = predator_idx * obs_len
 predator_value_idx = predator_idx * obs_len + obs_coords
 predator_coord_slice = slice(predator_obs_start_idx,predator_value_idx)
+
 prey_idx = 2
 prey_obs_start_idx = prey_idx * obs_len
 prey_value_idx = prey_idx * obs_len + obs_coords
@@ -99,10 +102,13 @@ action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]], function
 # ************************************** BASIC COMPOSITION *************************************************************
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_node(player_percept)
-agent_comp.add_node(prey_percept)
-agent_comp.add_node(predator_percept)
-agent_comp.add_node(action_mech)
+agent_comp.add_linear_processing_pathway([player_percept, action_mech])
+agent_comp.add_linear_processing_pathway([predator_percept, action_mech])
+agent_comp.add_linear_processing_pathway([prey_percept, action_mech])
+# agent_comp.add_node(player_percept)
+# agent_comp.add_node(prey_percept)
+# agent_comp.add_node(predator_percept)
+# agent_comp.add_node(action_mech)
 
 # **************************************  CONOTROL APPRATUS ************************************************************
 
