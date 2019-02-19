@@ -1297,6 +1297,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 execution.
         '''
 
+        # Manage Projection spec ----------------------------------------------
+
         if isinstance(projection, (np.ndarray, np.matrix, list)):
             projection = MappingProjection(matrix=projection, name=name)
         elif isinstance(projection, str):
@@ -1311,6 +1313,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif not isinstance(projection, Projection):
             raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
                                    .format(projection, self.name))
+
+        # Manage sender spec -----------------------------------------------------
 
         if sender is None:
             if hasattr(projection, "sender"):
@@ -1341,7 +1345,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes):
-            # Check if sender is in a nested Composition and, if so, it is an OUTPUT Mechanism
+            # Check if sender is in a nested Composition and, if so, if it is an OUTPUT Mechanism
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
             sender, graph_sender = self._get_nested_node_CIM_state(sender_mechanism,
@@ -1358,6 +1362,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection.sender.owner != sender_mechanism:
                 raise CompositionError("The position of {} in {} conflicts with its sender attribute."
                                        .format(projection.name, self.name))
+
+
+        # Manage receiver spec -------------------------------------------------
+
         if receiver is None:
             if hasattr(projection, "receiver"):
                 receiver = projection.receiver.owner
@@ -1377,6 +1385,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(receiver, InputState):
             receiver_mechanism = receiver.owner
             receiver_input_state = receiver
+            # FIX: THE FOLLOWING FAILS TO KEEP TRACK OF SPECIFIED InputState AS *ACTUAL* RECEIVER
+            # FIX: IN CALL TO _validate_projection BELOW;  ASSUMES MECHANISM AND THEREFORE ASSIGNS PRIMARY InputState
+            # FIX: BUT CHANGING IT TO receiver (I.E., ALLOWING IT TO REMAIN SPECIFIED InputState
+            # FIX: CAUSES ERROR IN _validate_projection
             graph_receiver = receiver.owner
         elif isinstance(receiver, Composition):
             receiver_mechanism = receiver.input_CIM
@@ -1393,12 +1405,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(receiver, self.name,
                                           Mechanism.__name__, InputState.__name__, Composition.__name__))
 
-        if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
+        # # MODIFIED 2/19/19 OLD:
+        # if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
+        #         and not isinstance(receiver, Composition)
+        #         and receiver not in self.nodes
+        #         and not hebbian_learning):
+        # MODIFIED 2/19/19 NEW: [JDC]
+        if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
-                and receiver not in self.nodes
+                and receiver_mechanism not in self.nodes
                 and not hebbian_learning):
+        # MODIFIED 2/19/19 END
 
-            # Check if receiver is in a nested Composition and, if so, it is an INPUT Mechanism
+            # Check if receiver is in a nested Composition and, if so, if it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
             receiver, graph_receiver = self._get_nested_node_CIM_state(receiver_mechanism,
@@ -1804,7 +1823,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_comp = None
         for c in nested_comps:
             if node in c.nodes:
-                # Must be assigned Node.Role of INPUT
+                # Must be assigned Node.Role of role
                 if not role in c.nodes_to_roles[node]:
                     raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
                                            format(node.name, Composition.__name__, self.name, c.name,
