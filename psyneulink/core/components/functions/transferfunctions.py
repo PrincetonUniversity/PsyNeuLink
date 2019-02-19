@@ -16,7 +16,7 @@
 * `Tanh`
 * `ReLU`
 * `Gaussian`
-* `GaussianDistor`
+* `GaussianDistort`
 * `SoftMax`
 * `LinearMatrix`
 

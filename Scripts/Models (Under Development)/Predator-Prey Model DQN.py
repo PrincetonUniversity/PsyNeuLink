@@ -16,6 +16,7 @@ from gym_forager.envs.forager_env import ForagerEnv
 # *********************************************************************************************************************
 
 # Runtime Switches:
+MPI_IMPLEMENTATION = True
 RENDER = False
 PNL_COMPILE = False
 RUN = True
@@ -85,7 +86,7 @@ def ddqn_perceptual_action(variable=[[0,0],[0,0],[0,0]]):
     observation = list(variable[0]) + list(variable[1]) + list(variable[2])
     # Get new state based on observation:
     perceptual_state = ddqn_agent.buffer.next(np.array(observation))
-    action = ddqn_agent._select_action(perceptual_state)
+    action, value = ddqn_agent._select_action(perceptual_state)
     return np.array(ddqn_agent._io_map(action.item()))
 
 def ddqn_veridical_action(player, predator, prey):
@@ -173,7 +174,7 @@ agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph(show_node_structure=True)
+    agent_comp.show_graph(show_control=True)
 
 
 # *********************************************************************************************************************
@@ -231,7 +232,7 @@ def main():
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
           f'{stop_time - start_time:.2f} seconds')
     if RENDER:
-        ddqn_agent.env.render()  # If visualization is desired
+        ddqn_agent.env.render(close=True)  # If visualization is desired
 
 if RUN:
     if __name__ == "__main__":
