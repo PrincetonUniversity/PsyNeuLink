@@ -399,7 +399,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.featureinputstate import FeatureInputState
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -751,6 +751,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # If any features were specified (assigned to self.input_states in __init__):
         if self.input_states:
+            self.input_states = _parse_shadow_inputs(self, self.input_states)
+            # for i, state in enumerate(self.input_states):
+            #     self.input_states[i] = _parse_state_spec(state_type=InputState,
+            #                                              owner=self,
+            #                                              state_spec=state)
             self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
             # Insert primary InputState for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
@@ -758,13 +763,16 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             self.input_states = [outcome_input_state]
 
+        # super()._instantiate_input_states(context=context)
+        #
+        # # GO THROUGH AND REASSIGN AS FEATURE INPUT STATE AND ASSIGN FUNCTION
         # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
-        super()._instantiate_input_states(context=context)
-
 
         # Configure default_variable to comport with full set of input_states
         self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
+        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
+        super()._instantiate_input_states(context=context)
 
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
@@ -979,7 +987,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.add_states(InputState, features)
 
     @tc.typecheck
-    def _parse_feature_specs(self, features, feature_function, context=None):
+    def _parse_feature_specs(self, input_states, feature_function, context=None):
         """Parse entries of features into InputState spec dictionaries
         Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
@@ -990,10 +998,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         parsed_features = []
 
-        if not isinstance(features, list):
-            features = [features]
+        if not isinstance(input_states, list):
+            input_states = [input_states]
 
-        for spec in features:
+        for spec in input_states:
             spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)    # returns InputState dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:

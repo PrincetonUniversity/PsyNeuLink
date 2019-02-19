@@ -159,7 +159,7 @@ if SHOW_GRAPH:
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_trials = 1
+num_episodes = 100
 
 def main():
     reward = 0
@@ -171,7 +171,7 @@ def main():
     steps = 0
     start_time = timeit.default_timer()
     new_episode()
-    for _ in range(num_trials):
+    for _ in range(num_episodes):
         observation = ddqn_agent.env.reset()
         while True:
             if PNL_COMPILE:
