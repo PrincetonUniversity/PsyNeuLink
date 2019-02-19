@@ -86,24 +86,12 @@ class LLVMBuilderContext:
         return f
 
     @staticmethod
-    def _get_full_func_name(func, component):
-        name = func.name
-        try:
-            while component is not None:
-                name = str(component) + ":" + name
-                component = component.owner
-        except AttributeError:
-            pass
-
-        return name
-
-    @staticmethod
     def get_debug_location(func, component):
         if "debug_info" not in debug_env:
             return
 
         mod = func.module
-        path = inspect.getfile(component.__class__) if component is not None else "<builtin>"
+        path = inspect.getfile(component.__class__) if component is not None else "<pnl_builtin>"
         d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
         di_version = mod.add_metadata([ir.IntType(32)(2), "Debug Info Version", ir.IntType(32)(3)])
         flags = mod.add_named_metadata("llvm.module.flags")
@@ -128,7 +116,7 @@ class LLVMBuilderContext:
         }, is_distinct=True)
         cu.add(di_compileunit)
         di_func = mod.add_debug_info("DISubprogram", {
-            "name":            LLVMBuilderContext._get_full_func_name(func, component),
+            "name":            func.name,
             "file":            di_file,
             "line":            0,
             "type":            di_func_type,
@@ -220,6 +208,7 @@ class LLVMBuilderContext:
 
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
+            params = builder.alloca(const_params.type)
             builder.store(const_params, params)
 
         # Call input CIM
@@ -498,8 +487,10 @@ def _convert_llvm_ir_to_ctype(t):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        # FIXME: We should consider bitwidth here
-        return ctypes.c_int
+        if t.width == 32:
+            return ctypes.c_int
+        elif t.width == 64:
+            return ctypes.c_longlong
     elif type_t is ir.DoubleType:
         return ctypes.c_double
     elif type_t is ir.FloatType:
