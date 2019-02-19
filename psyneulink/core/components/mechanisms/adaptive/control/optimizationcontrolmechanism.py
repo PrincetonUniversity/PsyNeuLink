@@ -758,10 +758,13 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             self.input_states = [outcome_input_state]
 
+        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
+        super()._instantiate_input_states(context=context)
+
+
         # Configure default_variable to comport with full set of input_states
         self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
-        super()._instantiate_input_states(context=context)
 
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
@@ -999,7 +1002,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
-        # Convert state_type to FeatureInputState
+        # Convert state_type of InputStates used to shadow into state_type to FeatureInputState
+        #    to insure that their functions are allowed to be other than CombinationFunction,
+        #    and that they only receive on MappingProjection each
+        #        (since they might not be CombinationFunctions, can only accept variable with one item).
         for feature in parsed_features:
             if isinstance(feature, dict):
                 feature['state_type'] = FeatureInputState
