@@ -86,7 +86,7 @@ def ddqn_perceptual_action(variable=[[0,0],[0,0],[0,0]]):
     observation = list(variable[0]) + list(variable[1]) + list(variable[2])
     # Get new state based on observation:
     perceptual_state = ddqn_agent.buffer.next(np.array(observation))
-    action, value = ddqn_agent._select_action(perceptual_state)
+    action = ddqn_agent._select_action(perceptual_state)
     return np.array(ddqn_agent._io_map(action.item()))
 
 def ddqn_veridical_action(player, predator, prey):
@@ -213,18 +213,18 @@ def main():
             print('\nStep: ', steps)
             print('Outcome: {}'.format(ocm.objective_mechanism.value))
             print('OCM ControlSignals:')
-            print('\tPlayer OBS: {}\n\tPredator OBS: {}\n\tPrey OBS: {}'.
+            print('\tPlayer OBS:\t\t{}\n\tPredator OBS\t{}\n\tPrey OBS:\t\t{}'.
                   format(ocm.control_signals[0].value,
                          ocm.control_signals[1].value,
                          ocm.control_signals[2].value))
             print('OCM ControlSignal Costs:')
-            print('\tPlayer OBS: {}\n\tPredator OBS: {}\n\tPrey OBS: {}'.
+            print('\tPlayer OBS:\t\t{}\n\tPredator OBS:\t{}\n\tPrey OBS:\t\t{}'.
                   format(ocm.control_signals[0].cost,
                          ocm.control_signals[1].cost,
                          ocm.control_signals[2].cost))
             print('SIMULATION (PREP FOR NEXT TRIAL):')
             for sample, value in zip(ocm.saved_samples, ocm.saved_values):
-                print('\t\tSample: {} Value: {}'.format(sample, value))
+                print('\t\tSample: {}\t\tValue: {}'.format(sample, value))
             steps += 1
             if done:
                 break
