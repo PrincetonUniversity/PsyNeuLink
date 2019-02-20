@@ -8,7 +8,7 @@
 
 # ********************************************* Binary Execution Wrappers **************************************************************
 
-from psyneulink.core.globals.utilities import CNodeRole
+from psyneulink.core.globals.utilities import NodeRole
 
 import copy, ctypes
 from collections import defaultdict
@@ -27,7 +27,7 @@ def _convert_ctype_to_python(x):
         return [_convert_ctype_to_python(num) for num in x]
     if isinstance(x, ctypes.c_double):
         return x.value
-    if isinstance(x, float):
+    if isinstance(x, (float, int)):
         return x
 
     print(x)
@@ -192,9 +192,7 @@ class CompExecution(CUDAExecution):
         self._debug_env = debug_env
 
         # At least the input_CIM wrapper should be generated
-        with LLVMBuilderContext() as ctx:
-            input_cim_fn_name = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_fn = ctx.get_llvm_function(input_cim_fn_name)
+        input_cim_fn = composition._get_node_wrapper(composition.input_CIM)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -304,10 +302,10 @@ class CompExecution(CUDAExecution):
         setattr(my_res_struct, node_field_name, _tupleize(data))
 
     def _get_input_struct(self, inputs):
-        origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
         # Either node execute or composition execute, either way the
         # input_CIM should be ready
-        bin_input_node = self._composition._get_bin_mechanism(self._composition.input_CIM)
+        bin_input_node = self._composition._get_bin_node(self._composition.input_CIM)
         c_input = bin_input_node.byref_arg_types[2]
         if len(self._execution_ids) > 1:
             c_input = c_input * len(self._execution_ids)
@@ -331,7 +329,7 @@ class CompExecution(CUDAExecution):
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
             # CIM input states
-            origins = (n for n in self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN) for istate in n.input_states)
+            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_states)
             input_data = ([proj.parameters.value.get(execution_id) for proj in state.all_afferents] for state in node.input_states)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
@@ -343,11 +341,11 @@ class CompExecution(CUDAExecution):
         assert inputs is not None or node is not self._composition.input_CIM
 
         assert node in self._composition._all_nodes
-        self._bin_func = self._composition._get_bin_mechanism(node)
+        self._bin_func = self._composition._get_bin_node(node)
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
-        if 'comp_node_debug' in self._debug_env:
+        if "comp_node_debug" in self._debug_env:
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
     def execute(self, inputs):
@@ -375,7 +373,7 @@ class CompExecution(CUDAExecution):
     # Methods used to accelerate "Run"
 
     def _get_run_input_struct(self, inputs, num_input_sets):
-        origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
         input_type = self._composition._get_bin_run().byref_arg_types[3]
         c_input = input_type * num_input_sets
         if len(self._execution_ids) > 1:

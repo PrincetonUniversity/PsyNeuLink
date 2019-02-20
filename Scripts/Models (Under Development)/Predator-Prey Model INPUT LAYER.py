@@ -66,13 +66,13 @@ greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=
 
 # Create Composition
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-# agent_comp.add_c_node(player_obs)
-# agent_comp.add_c_node(predator_obs)
-# agent_comp.add_c_node(prey_obs)
+# agent_comp.add_node(player_obs)
+# agent_comp.add_node(predator_obs)
+# agent_comp.add_node(prey_obs)
 agent_comp.add_linear_processing_pathway([player_input, player_obs])
 agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
 agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
-agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_node(greedy_action_mech)
 
 # ControlMechanism
 
@@ -99,17 +99,17 @@ if PERCEPTUAL_DISTORT:
 else:
     CTL_PARAM = SLOPE
 
-# ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
-ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_input, predator_input, prey_input]},
+
+ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_input, predator_input, prey_input]},
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MAXIMIZE,
                                                        save_values=True),
                                    objective_mechanism=ObjectiveMechanism(
                                            function=diff_fct,
-                                           monitored_output_states=[player_input, player_obs,
-                                                                    predator_input, predator_obs,
-                                                                    prey_input, prey_obs
-                                                                    ]
+                                           monitor=[player_input, player_obs,
+                                                    predator_input, predator_obs,
+                                                    prey_input, prey_obs
+                                                    ]
                                    ),
                                    control_signals=[ControlSignal(projections=(CTL_PARAM,player_obs),
                                                                   # allocation_samples=[0, 1, 10, 100]),
@@ -142,7 +142,7 @@ agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph(show_controller=True)
+    agent_comp.show_graph()
 
 
 # *********************************************************************************************************************

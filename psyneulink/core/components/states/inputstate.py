@@ -160,11 +160,12 @@ should project to the InputState. Each of these is described below:
 
     **Direct Specification of an InputState**
 
-    * existing **InputState object** or the name of one -- it can not already belong to another Mechanism and, if used
-      to specify an InputState in the constructor for a Mechanism, its `value <InputState.value>` must be compatible
-      with the corresponding item of the owner Mechanism's `variable <Mechanism_Base.variable>` (see `Mechanism
-      InputState specification <Mechanism_InputState_Specification>` and `InputState_Compatability_and_Constraints`
-      below).
+    * existing **InputState object** or the name of one -- If this is used to specify an InputState in the
+      constructor for a Mechanism, its `value <InputState.value>` must be compatible with the corresponding item of
+      the owner Mechanism's `variable <Mechanism_Base.variable>` (see `Mechanism InputState specification
+      <Mechanism_InputState_Specification>` and `InputState_Compatability_and_Constraints` below).  If the InputState
+      belongs to another Mechanism, then an InputState is created along with Projections(s) that `shadow the inputs
+      <InputState_Shadow_Inputs>` to the specified InputState.
     ..
     * **InputState class**, **keyword** *INPUT_STATE*, or a **string** -- this creates a default InputState; if used
       to specify an InputState in the constructor for a Mechanism, the item of the owner Mechanism's `variable
@@ -291,6 +292,27 @@ should project to the InputState. Each of these is described below:
               must be of the same type (i.e.,either OutputStates or GatingSignals), and the `Projection
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `sender <Projection_Base.sender>`).
+
+    .. _InputState_Shadow_Inputs:
+
+    * **InputStates of Mechanisms to shadow** -- either of the following can be used to create InputStates that
+      receive the same inputs as ("shadow") the ones specified:
+
+      * *InputState or [InputState, ...]* -- each InputState must belong to an existing Mechanism; creates a new
+        InputState for each one specified, along with Projections to it that parallel those of the one specified
+        (see below).
+      |
+      * *{SHADOW_INPUTS: <InputState or Mechanism or [<InputState or Mechanism>,...]>}* -- any InputStates specified
+        must belong to an existing Mechanism;  creates a new InputState for each one specified, and for each of the
+        InputStates belonging to any Mechanisms specified, along with Projections to them that parallel those of the
+        one(s) specified (see below).
+      |
+      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified using the formats
+      above, a new InputState is created along with Projections to it that parallel those received by the
+      corresponding InputState --  that is, that have the same `senders <Projection.sender>` as those that project to
+      the specified InputState, but that project to the one being created.  Thus, for each InputState specified,
+      a new one is created that receives exactly the same inputs; that is, "shadows" it.
+
 
 .. _InputState_Compatability_and_Constraints:
 
@@ -466,14 +488,18 @@ from psyneulink.core.components.functions.combinationfunctions import Reduce, Li
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SIZE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
+from psyneulink.core.globals.keywords import \
+    COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
+    PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
+    SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
 
 __all__ = [
-    'InputState', 'InputStateError', 'state_type_keywords',
+    'InputState', 'InputStateError', 'state_type_keywords', 'SHADOW_INPUTS',
 ]
 
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
@@ -489,6 +515,7 @@ WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputState variable not yet defined, defer to Mechanism"
+SHADOW_INPUTS = 'shadow_inputs'
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -515,36 +542,7 @@ class InputState(State_Base):
         prefs=None)
 
     Subclass of `State <State>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
-    `PathwayProjection <PathwayProjection>`.
-
-    COMMENT:
-
-        Description
-        -----------
-            The InputState class is a Component type in the State category of Function,
-            Its FUNCTION executes the Projections that it receives and updates the InputState's value
-
-        Class attributes
-        ----------------
-            + componentType (str) = INPUT_STATE
-            + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination, Operation.SUM)
-                + FUNCTION_PARAMS (dict)
-                # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
-                # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
-
-        Class methods
-        -------------
-            _instantiate_function: insures that function is ARITHMETIC)
-            update: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
-
-        StateRegistry
-        -------------
-            All INPUT_STATE are registered in StateRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-
-    COMMENT
-
+    `PathwayProjections <PathwayProjection>`.
 
     Arguments
     ---------
@@ -565,13 +563,14 @@ class InputState(State_Base):
         if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function or method : default LinearCombination(operation=SUM)
-        specifies the function used to aggregate the `values <Projection_Base.value>` of the `Projections <Projection>`
-        received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
-        by the InputState.  It must produce a result that has the same format (number and type of elements) as the
-        item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
+        specifies the function applied to the variable. In most cases, this function aggregates the `values
+        <Projection_Base.value>` of the `Projections <Projection>` received by the InputState, under the possible
+        influence of `GatingProjections <GatingProjection>` received by the InputState.  It must produce a result that
+        has the same format (number and type of elements) as the item of its owner Mechanism's `variable
+        <Mechanism_Base.variable>` to which the InputState has been assigned.
 
     combine : SUM or PRODUCT : default None
-        specifies the **operation** argument used by the default `LinearCombination` function, wnich determines how the
+        specifies the **operation** argument used by the default `LinearCombination` function, which determines how the
         `value <Projection.value>` of the InputState's `projections <InputState.projections>` are combined.  This is a
         convenience argument, that **operation** to be specified without having to specify the function's constructor;
         accordingly, it assumes that LinearCombination (the default) is used as the InputState's function -- if it
@@ -741,6 +740,13 @@ class InputState(State_Base):
                     :default value: False
                     :type: bool
 
+                shadow_inputs
+                    specifies whether InputState shadows inputs of another InputState;
+                    if not None, must be assigned another InputState
+
+                    :default value: None
+                    :type: InputState
+
                 weight
                     see `weight <InputState.weight>`
 
@@ -753,6 +759,7 @@ class InputState(State_Base):
         exponent = Parameter(None, modulable=True)
         combine = None
         internal_only = Parameter(False, stateful=False, loggable=False)
+        shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -794,11 +801,12 @@ class InputState(State_Base):
         if combine:
             self.combine_function_args = (combine, function)
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
                                                   exponent=exponent,
                                                   internal_only=internal_only,
+                                                  shadow_inputs=None,
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
@@ -1011,7 +1019,6 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW AN ADDITIONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.core.components.projections.projection import Projection, _parse_connection_specs
-        from psyneulink.core.components.mechanisms.mechanism import Mechanism
 
         params_dict = {}
         state_spec = state_specific_spec
@@ -1216,6 +1223,25 @@ class InputState(State_Base):
 
         return state_spec, params_dict
 
+    def _parse_self_state_type_spec(self, owner, input_state, context=None):
+        '''Return InputState specification dictionary with projections that shadow inputs to input_state
+
+        Called by _parse_state_spec if input_state specified for a Mechanism belongs to a different Mechanism
+        '''
+
+        if not isinstance(input_state, InputState):
+            raise InputStateError("PROGRAM ERROR: "
+                                  "InputState._parse_self_state_type called with non-InputState specification ({})".
+                                  format(input_state))
+
+        sender_output_states = [p.sender for p in input_state.path_afferents]
+        state_spec = {VARIABLE: np.zeros_like(input_state.variable),
+                      STATE_TYPE: InputState,
+                      PROJECTIONS: sender_output_states,
+                      PARAMS: {SHADOW_INPUTS: input_state},
+                      OWNER: owner}
+        return state_spec
+
     @staticmethod
     def _state_spec_allows_override_variable(spec):
         '''
@@ -1339,6 +1365,11 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     #    while calls from init_methods continue to use owner.input_states (i.e., InputState specifications
     #    assigned in the **input_states** argument of the Mechanism's constructor)
     input_states = input_states or owner.input_states
+
+    # Parse any SHADOW_INPUTS specs into actual InputStates to be shadowed
+    if input_states is not None:
+        input_states = _parse_shadow_inputs(owner, input_states)
+
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=input_states,
                                          state_type=InputState,
@@ -1381,3 +1412,37 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             )
 
     return state_list
+
+def _parse_shadow_inputs(owner, input_states):
+    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states'''
+
+    input_states_to_shadow_specs=[]
+    for spec_idx, spec in enumerate(input_states):
+        # If {SHADOW_INPUTS:[InputState or Mechaism,...]} is found:
+        if isinstance(spec, dict) and SHADOW_INPUTS in spec:
+            input_states_to_shadow_in_spec=[]
+            # For each item in list of items to shadow specified in that entry:
+            for item in list(spec[SHADOW_INPUTS]):
+                from psyneulink.core.components.mechanisms.mechanism import Mechanism
+                # If an InputState was specified, just used that
+                if isinstance(item, InputState):
+                    input_states_to_shadow_in_spec.append(item)
+                # If Mechanism was specified, use all of its InputStates
+                elif isinstance(item, Mechanism):
+                    input_states_to_shadow_in_spec.extend(item.input_states)
+                else:
+                    raise InputStateError("Specification of {} in for {} arg of {} must be a {} or {}".
+                                          format(repr(SHADOW_INPUTS), repr(INPUT_STATES), owner.name,
+                                                 Mechanism.__name__, InputState.__name__))
+            input_states_to_shadow_specs.append((spec_idx, input_states_to_shadow_in_spec))
+
+    # If any SHADOW_INPUTS specs were found in input_states, replace them with actual InputStates to be shadowed
+    if input_states_to_shadow_specs:
+        for item in input_states_to_shadow_specs:
+            idx = item[0]
+            del input_states[idx]
+            input_states[idx:idx] = item[1]
+        # Update owner's variable based on full set of InputStates specified
+        owner.defaults.variable, _ = owner._handle_arg_input_states(input_states)
+
+    return input_states

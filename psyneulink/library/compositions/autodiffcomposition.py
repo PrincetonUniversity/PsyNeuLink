@@ -76,13 +76,29 @@ attribute, which can be toggled between runs.
 **optimizer_type** specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
 default) or 'adam'.
 
-**loss_type** specifies the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
+**weight_decay** specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults to 0.
+
+**loss_spec** specifies the loss function for training. It can be a string or a PyTorch loss function. The current
+options for strings are 'mse' (the default), 'crossentropy', 'l1', 'nll', 'poissonnll', and 'kldiv'. These refer to
+Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
+Divergence respectively. The **loss_spec** can also be any PyTorch loss function, including a custom-written one. For a
+list of PyTorch loss functions, see https://pytorch.org/docs/stable/nn.html#loss-functions. For information on writing
+a custom loss function, see https://pytorch.org/docs/master/notes/extending.html and
+https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235
 
 **randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
 run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
 
 **refresh_losses** specifies whether the `losses` attribute is refreshed for each call to `run()`. If False, the losses
 of each run are appended to the `losses` attribute. If True, the losses of each run overwrite `losses` instead.
+
+**force_no_retain_graph** defaults to False. If True, the AutodiffComposition does not use the `retain_graph` option
+when computing PyTorch gradient. This can reduce memory usage. However, it breaks recurrent networks, so it should only
+be used when the network is not recurrent.
+
+.. note::
+    The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
+    see `here <bit.ly/2t2ZkyR>` or `here <bit.ly/2RGuMNg>`.
 
 .. _AutodiffComposition_Structure:
 
@@ -103,10 +119,10 @@ As mentioned above, the `learning_enabled <AutodiffComposition.learning_enabled>
 whether the AutodiffComposition learns or whether it executes like an ordinary Composition.
 
 The `optimizer <AutodiffComposition.optimizer>` attribute contains the PyTorch optimizer function used for learning. It
-is determined at initialization by the **optimizer_type** and **learning_rate** arguments.
+is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
 
 The `loss <AutodiffComposition.loss>` attribute contains the PyTorch loss function used for learning. It is determined
-at initialization by the **loss_type** arguments.
+at initialization by the **loss_spec** argument.
 
 .. _AutodiffComposition_Execution:
 
@@ -134,14 +150,23 @@ and specifying inputs and targets:
     ...                     receiver=my_mech_2)
     >>> # create AutodiffComposition
     >>> my_autodiff = pnl.AutodiffComposition()
-    >>> my_autodiff.add_c_node(my_mech_1)
-    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
     >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
     >>> # input specification
     >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
     >>> my_targets = {my_mech_2: [[4, 5]]}
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>> my_autodiff.run(inputs = input_dict)
+
+Logging
+-------
+
+Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
+is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
+projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
+set the **do_logging** argument of the ``run()`` method to ``True``. Logging with AutodiffComposition is slightly hacked
+together, so the time and context in the log are not meaningful, only the logged value is meaningful.
 
 Nested Execution
 ----------------
@@ -154,7 +179,7 @@ when learning is enabled, the AutodiffComposition must be an origin mechanism of
 
 .. note::
 
-    Like with all nested Compositions, you must call an AutodiffComposition's `_analyze_graph()` method
+    Like with all nested Compositions, you must call an AutodiffComposition's ``_analyze_graph()`` method
     (or execute the AutodiffComposition) before nesting it.
 
 However, when learning is not enabled, AutodiffComposition works just like an ordinary Composition, in theory. Thus, an
@@ -176,8 +201,8 @@ Below is an example script showing how to nest an AutodiffComposition with learn
     ...                     receiver=my_mech_2)
     >>> # create AutodiffComposition
     >>> my_autodiff = pnl.AutodiffComposition()
-    >>> my_autodiff.add_c_node(my_mech_1)
-    >>> my_autodiff.add_c_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_1)
     >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
     >>> my_autodiff._analyze_graph()  # alternatively, my_autodiff.run( ... )
     >>>
@@ -187,7 +212,7 @@ Below is an example script showing how to nest an AutodiffComposition with learn
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>>
     >>> parentComposition = pnl.Composition()
-    >>> parentComposition.add_c_node(my_autodiff)
+    >>> parentComposition.add_node(my_autodiff)
     >>>
     >>> training_input = {my_autodiff: input_dict}
     >>> result1 = parentComposition.run(inputs=input)
@@ -255,7 +280,7 @@ class AutodiffComposition(Composition):
     learning_rate=0.001,            \
     learning_enabled=True,          \
     optimizer_type=None,            \
-    loss_type=None,                 \
+    loss_spec=None,                 \
     randomize=False,                \
     refresh_losses=False,           \
     name="autodiff_composition")
@@ -279,7 +304,7 @@ class AutodiffComposition(Composition):
         the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
         Used for early stopping of training, in combination with **patience**.
 
-    learning_rate : float: default 0.001
+    learning_rate : float : default 0.001
         the learning rate, which is passed to the optimizer.
 
     learning_enabled : boolean : default True
@@ -289,8 +314,13 @@ class AutodiffComposition(Composition):
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
 
-    loss_type : str : default 'mse'
-        the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
+    weight_decay : float : default 0
+        specifies the L2 penalty (which discourages large weights) used by the optimizer.
+
+    loss_spec : str or PyTorch loss function : default 'mse'
+        specifies the loss function for training. The current string options are 'mse' (the default), 'crossentropy',
+        'l1', 'nll', 'poissonnll', and 'kldiv'. Any PyTorch loss function can work here, such as ones from
+        https://pytorch.org/docs/stable/nn.html#loss-functions
 
     randomize: boolean : default False
         specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are run, but
@@ -327,11 +357,11 @@ class AutodiffComposition(Composition):
         the learning rate for training. Currently only used to initialize the `optimizer` attribute.
 
     optimizer : PyTorch optimizer function
-        the optimizer used for training. Depends on the **optimizer_type** and **learning_rate** arguments
-        from initialization.
+        the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
+        arguments from initialization.
 
     loss : PyTorch loss function
-        the loss function used for training. Depends on the **loss_type** argument from initialization.
+        the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
     name : str : default LeabraMechanism-<index>
         the name of the Mechanism.
@@ -393,7 +423,7 @@ class AutodiffComposition(Composition):
         min_delta = 0
         pytorch_representation = None
 
-    # TODO (CW 9/28): add compositions to registry so default arg for name is no longer needed
+    # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     def __init__(self,
                  param_init_from_pnl=True,
                  patience=None,
@@ -401,9 +431,13 @@ class AutodiffComposition(Composition):
                  learning_rate=0.001,
                  learning_enabled=True,
                  optimizer_type='sgd',
-                 loss_type='mse',
+                 weight_decay=0,
+                 loss_spec='mse',
                  randomize=None,
                  refresh_losses=False,
+                 disable_cuda=False,
+                 cuda_index=None,
+                 force_no_retain_graph=False,
                  name="autodiff_composition"):
 
         self.learning_enabled = True
@@ -419,15 +453,17 @@ class AutodiffComposition(Composition):
 
         self.learning_enabled = learning_enabled
         self.optimizer_type = optimizer_type
-        self.loss_type = loss_type
+        self.loss_spec = loss_spec
         self.randomize = randomize
         self.refresh_losses = refresh_losses
 
         # pytorch representation of model and associated training parameters
         self.pytorch_representation = None
-        self.learning_rate = learning_rate  # possibly remove this line
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         self.optimizer = None
         self.loss = None
+        self.force_no_retain_graph = force_no_retain_graph
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -446,8 +482,15 @@ class AutodiffComposition(Composition):
 
         # CW 11/1/18: maybe we should make scheduler a property, like in Composition
         self.scheduler = None
+        if not disable_cuda and torch.cuda.is_available():
+            if cuda_index is None:
+                self.device = torch.device('cuda')
+            else:
+                self.device = torch.device('cuda:' + cuda_index)
+        else:
+            self.device = torch.device('cpu')
 
-    # CLEANUP: move some of what's done in the method below to a "validate_params" type of method
+    # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     def _build_pytorch_representation(self, execution_id = None):
         if self.scheduler is None:  # if learning_enabled has never been run yet
             self.scheduler = Scheduler(graph=self.graph_processing)
@@ -457,41 +500,61 @@ class AutodiffComposition(Composition):
             model = PytorchModelCreator(self.graph_processing,
                                         self.param_init_from_pnl,
                                         self.execution_sets,
+                                        self.device,
                                         execution_id)
             self.parameters.pytorch_representation.set(model, execution_id)
+
         # Set up optimizer function
-        if self.optimizer_type not in ['sgd', 'adam']:
-            raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
-                                           "Currently, Stochastic Gradient Descent and Adam are the only available "
-                                           "optimizers (specified as 'sgd' or 'adam').")
-        if self.parameters.optimizer.get(execution_id) is not None:
+        old_opt = self.parameters.optimizer.get(execution_id)
+        if old_opt is not None:
             logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
-                self, self.parameters.optimizer.get(execution_id)))
-        if self.optimizer_type == 'sgd':
-            opt = optim.SGD(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
-            self.parameters.optimizer.set(opt, execution_id)
-        else:
-            opt = optim.Adam(self.parameters.pytorch_representation.get(execution_id).parameters(), lr=self.learning_rate)
-            self.parameters.optimizer.set(opt, execution_id)
+                self, old_opt))
+        opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, execution_id)
+        self.parameters.optimizer.set(opt, execution_id)
 
         # Set up loss function
-        if self.loss_type not in ['mse', 'crossentropy']:
-            raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
-                                           "Currently, Mean Squared Error and Cross Entropy are the only "
-                                           "available loss functions (specified as 'mse' or 'crossentropy').")
         if self.loss is not None:
             logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
                 self, self.loss))
-        if self.loss_type == 'mse':
-            self.loss = nn.MSELoss(reduction='sum')
-        else:
-            self.loss = nn.CrossEntropyLoss(reduction='sum')
+        self.loss = self._get_loss(self.loss_spec)
 
-        if not isinstance(self.learning_rate, (int, float)):
+    def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, execution_id):
+        if not isinstance(learning_rate, (int, float)):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
+        if optimizer_type not in ['sgd', 'adam']:
+            raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
+                                           "Currently, Stochastic Gradient Descent and Adam are the only available "
+                                           "optimizers (specified as 'sgd' or 'adam').")
+        params = self.parameters.pytorch_representation.get(execution_id).parameters()
+        if optimizer_type == 'sgd':
+            return optim.SGD(params, lr=learning_rate, weight_decay=weight_decay)
+        else:
+            return optim.Adam(params, lr=learning_rate, weight_decay=weight_decay)
+
+    def _get_loss(self, loss_spec):
+        if not isinstance(self.loss_spec, str):
+            return self.loss_spec
+        elif loss_spec == 'mse':
+            return nn.MSELoss(reduction='sum')
+        elif loss_spec == 'crossentropy':
+            return nn.CrossEntropyLoss(reduction='sum')
+        elif loss_spec == 'l1':
+            return nn.L1Loss(reduction='sum')
+        elif loss_spec == 'nll':
+            return nn.NLLLoss(reduction='sum')
+        elif loss_spec == 'poissonnll':
+            return nn.PoissonNLLLoss(reduction='sum')
+        elif loss_spec == 'kldiv':
+            return nn.KLDivLoss(reduction='sum')
+        else:
+            raise AutodiffCompositionError("Loss type {} not recognized. Loss argument must be a string or function. "
+                                           "Currently, the recognized loss types are Mean Squared Error, Cross Entropy,"
+                                           " L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, "
+                                           "and KL Divergence. These are specified as 'mse', 'crossentropy', 'l1', "
+                                           "'nll', 'poissonnll', and 'kldiv' respectively.".format(loss_spec))
 
     def _has_required_keys(self, input_dict):
-        required_keys = set(["inputs", "targets"])
+        required_keys = {"inputs", "targets"}
         return required_keys.issubset(set(input_dict.keys()))
 
     def _adjust_stimulus_dict(self, inputs):
@@ -508,11 +571,11 @@ class AutodiffComposition(Composition):
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
-    def autodiff_processing(self, inputs, execution_id=None):
+    def autodiff_processing(self, inputs, execution_id=None, do_logging=False):
         pytorch_representation = self.parameters.pytorch_representation.get(execution_id)
         # run the model on inputs - switch autograd off for this (we don't need it)
         with torch.no_grad():
-            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id)
+            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging)
 
         # get outputs back into numpy
         outputs = []
@@ -522,7 +585,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, execution_id=None):
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -561,6 +624,9 @@ class AutodiffComposition(Composition):
             # reset temporary list to keep track of most recent outputs
             outputs = []
 
+            self.parameters.pytorch_representation.get(execution_id).detach_all()
+            # self.parameters.pytorch_representation.get(execution_id).reset_all()
+
             # iterate over inputs, targets
             for t in range(num_inputs):
 
@@ -572,20 +638,23 @@ class AutodiffComposition(Composition):
                 curr_tensor_targets = {}
                 for component in inputs.keys():
                     input = inputs[component][input_index]
-                    curr_tensor_inputs[component] = torch.tensor(input).double()
+                    curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
                 for component in targets.keys():
                     target = targets[component][input_index]
-                    curr_tensor_targets[component] = torch.tensor(target).double()
+                    curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
                 # do forward computation on current inputs
                 curr_tensor_outputs = self.parameters.pytorch_representation.get(execution_id).forward(
                     curr_tensor_inputs,
-                    execution_id
+                    execution_id,
+                    do_logging
                 )
 
                 # compute total loss across output neurons for current trial
                 curr_loss = torch.zeros(1).double()
                 for component in curr_tensor_outputs.keys():
+                    # possibly add custom loss option, which is a loss function that takes many args
+                    # (outputs, targets, weights, and more) and returns a scalar
                     curr_loss += self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
 
                 # save average loss across all output neurons on current trial
@@ -596,7 +665,10 @@ class AutodiffComposition(Composition):
                 # backpropagate to compute gradients and perform learning update for parameters
                 optimizer.zero_grad()
                 curr_loss = curr_loss/2
-                curr_loss.backward()
+                if self.force_no_retain_graph:
+                    curr_loss.backward(retain_graph=False)
+                else:
+                    curr_loss.backward(retain_graph=True)
                 optimizer.step()
 
                 # save outputs of model if this is final epoch
@@ -637,6 +709,7 @@ class AutodiffComposition(Composition):
     def execute(self,
                 inputs=None,
                 autodiff_stimuli=None,
+                do_logging=False,
                 scheduler_processing=None,
                 scheduler_learning=None,
                 termination_processing=None,
@@ -669,14 +742,17 @@ class AutodiffComposition(Composition):
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
 
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id)
+            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, do_logging)
             ctx = self.output_CIM.parameters.context.get(execution_id)
             # new_ctx = copy.deepcopy(ctx)
             # new_ctx.execution_phase = ContextFlags.PROCESSING
             # self.output_CIM.parameters.context.set(new_ctx, execution_id=execution_id)
             if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
                 ctx.execution_phase = ContextFlags.PROCESSING
-            self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+            # note that output[-1] might not be the truly most recent value
+            # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
+            # is not having its parameters populated correctly, and this should be fixed in the long run.
+            self.output_CIM.execute(input=output[-1], execution_id=execution_id, context=ContextFlags.PROCESSING)
 
             return output
 
@@ -702,6 +778,7 @@ class AutodiffComposition(Composition):
     def run(
         self,
         inputs=None,
+        do_logging=False,
         scheduler_processing=None,
         scheduler_learning=None,
         termination_processing=None,
@@ -718,7 +795,9 @@ class AutodiffComposition(Composition):
         targets=None,
         bin_execute=False,
         initial_values=None,
-        runtime_params=None):
+        reinitialize_values=None,
+        runtime_params=None,
+        context=None):
         # TBI: Handle trials, timesteps, etc
         execution_id = self._assign_execution_ids(execution_id)
         if self.learning_enabled:
@@ -737,6 +816,7 @@ class AutodiffComposition(Composition):
                 trial_output = self.execute(
                     inputs=adjusted_stimuli[stimulus_index],
                     execution_id=execution_id,
+                    do_logging=do_logging,
                 )
                 results.append(trial_output)
             return results
@@ -759,7 +839,9 @@ class AutodiffComposition(Composition):
                                                     targets=targets,
                                                     bin_execute=bin_execute,
                                                     initial_values=initial_values,
-                                                    runtime_params=runtime_params)
+                                                    reinitialize_values=reinitialize_values,
+                                                    runtime_params=runtime_params,
+                                                    context=context)
 
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):
@@ -882,5 +964,4 @@ class EarlyStopping(object):
             self.is_better = lambda a, best: a < best - min_delta
         if mode == 'max':
             self.is_better = lambda a, best: a > best + min_delta
-
 

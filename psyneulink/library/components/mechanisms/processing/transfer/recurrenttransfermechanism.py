@@ -1438,20 +1438,24 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                               name="{} for {}".format(
                                                                       AutoAssociativeLearningMechanism.className,
                                                                       self.name))
-        learning_mechanism.condition = learning_condition
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        # (via aux_components attr)
 
+        learning_mechanism.condition = learning_condition
+        self.aux_components.append(learning_mechanism)
         # Instantiate Projection from Mechanism's output to LearningMechanism
         mproj = MappingProjection(sender=activity_vector,
                           receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
                           name="Error Projection for {}".format(learning_mechanism.name))
         mproj._activate_for_all_compositions()
-
+        self.aux_components.append(mproj)
         # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
         lproj = LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
                            receiver=matrix.parameter_states[MATRIX],
                            name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
         lproj._activate_for_all_compositions()
-
+        self.aux_components.append((lproj, True))
         return learning_mechanism
 
     def configure_learning(self,
@@ -1501,7 +1505,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                        context=context)
 
         self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
-
         if self.learning_mechanism is None:
             self.learning_enabled = False
 

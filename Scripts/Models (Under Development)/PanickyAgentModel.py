@@ -1,9 +1,9 @@
 import timeit
+
 import numpy as np
 from psyneulink import *
 
 from gym_forager.envs.forager_env import ForagerEnv
-
 # Runtime Switches:
 RENDER = False
 
@@ -29,7 +29,9 @@ prey_value_idx = prey_idx * obs_len + obs_coords
 prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
+
 dist = Distance(metric=EUCLIDEAN)
+
 PREDATOR = 0
 PREY = 1
 ATTEND = 0
@@ -41,6 +43,7 @@ UNDECIDED = 0
 # *********************************  SAPMLE FUNCTIONS USED FOR CONTROL  ***********************************************
 # *********************************************************************************************************************
 # NOTE:  THESE WILL BE REPLACED BY OCM-SPECIFIC FUNCTIONS (AS DECRIBED BELOW) WHEN THAT IS IMPLEMENTED
+
 
 def choose_closer_agent_function(variable):
     if variable is None:
@@ -61,7 +64,6 @@ def choose_closer_agent_function(variable):
     return [-1]
 
 def control_allocation_function(variable):
-
     closest_agent = variable[0]
 
     if closest_agent == PREDATOR:
@@ -70,7 +72,6 @@ def control_allocation_function(variable):
         return [[DISATTEND],[ATTEND]]
     else:
         return [[UNDECIDED],[UNDECIDED]]
-
 
 # *********************************************************************************************************************
 # **************************************  MECHANISMS AND COMPOSITION  *************************************************
@@ -101,11 +102,11 @@ Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(f
 
 # Create Composition
 agent_comp = Composition(name='PANICKY CONTROL COMPOSITION')
-agent_comp.add_c_node(player_obs)
-agent_comp.add_c_node(prey_obs)
-agent_comp.add_c_node(predator_obs)
-agent_comp.add_c_node(greedy_action_mech)
-agent_comp.add_c_node((Panicky_control_mech))
+agent_comp.add_node(player_obs)
+agent_comp.add_node(prey_obs)
+agent_comp.add_node(predator_obs)
+agent_comp.add_node(greedy_action_mech)
+agent_comp.add_node((Panicky_control_mech))
 
 # agent_comp.show_graph()
 
@@ -148,7 +149,6 @@ def main():
           f'{stop_time - start_time:.2f} seconds')
     if RENDER:
         env.render()  # If visualization is desired
-
 
 if __name__ == "__main__":
     main()

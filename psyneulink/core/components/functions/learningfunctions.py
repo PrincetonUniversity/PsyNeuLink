@@ -792,7 +792,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
         if matrix.ndim != 2:
             raise FunctionError("Third item of variable ({}) for {} must be a 2d array or matrix".
-                                format(activity, name))
+                                format(matrix, name))
 
         if len(input) != len(activity):
             raise FunctionError("Length of first ({}) and second ({}) items of variable for {} must be the same".

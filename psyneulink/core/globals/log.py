@@ -390,6 +390,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.globals.context import ContextFlags, _get_time
+from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import ALL, CONTEXT, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
 from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
 
@@ -494,7 +495,7 @@ def _time_string(time):
     #     time_str = "None"
     # return time_str
 
-    if all(t is not None for t in time ):
+    if time is not None and all(t is not None for t in time ):
         time_str = ":".join([str(i) for i in time])
     else:
         time_str = "None"
@@ -864,6 +865,9 @@ class Log:
 
         """
         from psyneulink.core.components.shellclasses import Function
+
+        if time is None:
+            time = time_object(None, None, None, None)
 
         if isinstance(value, LogEntry):
             self.entries[self.owner.name] = value

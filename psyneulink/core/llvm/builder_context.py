@@ -24,11 +24,13 @@ __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_ll
 
 _modules = set()
 _all_modules = set()
+_struct_count = 0
 
 @atexit.register
 def module_count():
-    if "mod_count" in debug_env:
+    if "stat" in debug_env:
         print("Total LLVM modules: ", len(_all_modules))
+        print("Total structures generated: ", _struct_count)
 
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
@@ -72,10 +74,10 @@ class LLVMBuilderContext:
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def get_llvm_function(self, name):
-        if hasattr(name, '_llvm_symbol_name'):
-            name = name._llvm_symbol_name
-
-        f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
+        try:
+            f = name._llvm_function
+        except AttributeError:
+            f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
         # Add declaration to the current module
         if f.name not in LLVMBuilderContext.module.globals:
             decl_f = ir.Function(LLVMBuilderContext.module, f.type.pointee, f.name)
@@ -84,23 +86,12 @@ class LLVMBuilderContext:
         return f
 
     @staticmethod
-    def _get_full_func_name(func, component):
-        name = func.name
-        try:
-            while component is not None:
-                name = str(component) + ":" + name
-                component = component.owner
-        except AttributeError:
-            pass
-
-        return name
-
-    @staticmethod
     def get_debug_location(func, component):
-        if 'debug_info' not in debug_env:
+        if "debug_info" not in debug_env:
             return
+
         mod = func.module
-        path = inspect.getfile(component.__class__) if component is not None else "<builtin>"
+        path = inspect.getfile(component.__class__) if component is not None else "<pnl_builtin>"
         d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
         di_version = mod.add_metadata([ir.IntType(32)(2), "Debug Info Version", ir.IntType(32)(3)])
         flags = mod.add_named_metadata("llvm.module.flags")
@@ -125,7 +116,7 @@ class LLVMBuilderContext:
         }, is_distinct=True)
         cu.add(di_compileunit)
         di_func = mod.add_debug_info("DISubprogram", {
-            "name":            LLVMBuilderContext._get_full_func_name(func, component),
+            "name":            func.name,
             "file":            di_file,
             "line":            0,
             "type":            di_func_type,
@@ -193,9 +184,6 @@ class LLVMBuilderContext:
         return element
 
     def gen_composition_exec(self, composition):
-        func_name = None
-        llvm_func = None
-
         # Create condition generator
         cond_gen = ConditionGenerator(self, composition)
 
@@ -218,17 +206,18 @@ class LLVMBuilderContext:
         builder = ir.IRBuilder(entry_block)
         builder.debug_metadata = self.get_debug_location(llvm_func, composition)
 
-        if 'const_params' in debug_env:
+        if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
+            params = builder.alloca(const_params.type)
             builder.store(const_params, params)
 
         # Call input CIM
-        input_cim_name = composition._get_node_wrapper(composition.input_CIM);
-        input_cim_f = self.get_llvm_function(input_cim_name)
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM);
+        input_cim_f = self.get_llvm_function(input_cim_w)
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
         # Allocate run set structure
-        run_set_type = ir.ArrayType(ir.IntType(1), len(composition.c_nodes))
+        run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
 
         # Allocate temporary output storage
@@ -259,7 +248,7 @@ class LLVMBuilderContext:
         any_cond = ir.IntType(1)(0)
 
         # Calculate execution set before running the mechanisms
-        for idx, mech in enumerate(composition.c_nodes):
+        for idx, mech in enumerate(composition.nodes):
             run_set_mech_ptr = builder.gep(run_set_ptr,
                                            [zero, self.int32_ty(idx)],
                                            name="run_cond_ptr_" + mech.name)
@@ -272,12 +261,12 @@ class LLVMBuilderContext:
             any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
             builder.store(mech_cond, run_set_mech_ptr)
 
-        for idx, mech in enumerate(composition.c_nodes):
+        for idx, mech in enumerate(composition.nodes):
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
             with builder.if_then(mech_cond):
-                mech_name = composition._get_node_wrapper(mech);
-                mech_f = self.get_llvm_function(mech_name)
+                mech_w = composition._get_node_wrapper(mech);
+                mech_f = self.get_llvm_function(mech_w)
                 # Wrappers do proper indexing of all strctures
                 if len(mech_f.args) == 5: # Mechanism wrappers have 5 inputs
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
@@ -287,7 +276,7 @@ class LLVMBuilderContext:
                 cond_gen.generate_update_after_run(builder, cond, mech)
 
         # Writeback results
-        for idx, mech in enumerate(composition.c_nodes):
+        for idx, mech in enumerate(composition.nodes):
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
             with builder.if_then(mech_cond):
@@ -319,8 +308,8 @@ class LLVMBuilderContext:
 
         builder.position_at_end(exit_block)
         # Call output CIM
-        output_cim_name = composition._get_node_wrapper(composition.output_CIM);
-        output_cim_f = self.get_llvm_function(output_cim_name)
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM);
+        output_cim_f = self.get_llvm_function(output_cim_w)
         builder.call(output_cim_f, [context, params, comp_in, data, data])
 
         # Bump run counter
@@ -328,7 +317,7 @@ class LLVMBuilderContext:
 
         builder.ret_void()
 
-        return func_name
+        return llvm_func
 
     def gen_composition_run(self, composition):
         func_name = self.get_unique_name('run_wrap_' + composition.name)
@@ -386,8 +375,7 @@ class LLVMBuilderContext:
         data_in_ptr = builder.gep(data_in, [input_idx])
 
         # Call execution
-        exec_f_name = composition._get_execution_wrapper()
-        exec_f = self.get_llvm_function(exec_f_name)
+        exec_f = self.get_llvm_function(composition)
         builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
         # Extract output_CIM result
@@ -409,7 +397,7 @@ class LLVMBuilderContext:
 
         builder.ret_void()
 
-        return func_name
+        return llvm_func
 
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
@@ -472,7 +460,7 @@ def _gen_cuda_kernel_wrapper_module(function):
             # #runs and #trials needs to be the same
             if is_comp_run and i >= 5:
                 offset = ir.IntType(32)(0)
-            # data arrays need spcial hadling
+            # data arrays need special handling
             elif is_comp_run and i == 4: # data_out
                 offset = builder.mul(global_id, builder.load(runs_count))
             elif is_comp_run and i == 3: # data_in
@@ -489,48 +477,48 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     return module
 
-_field_count = 0
-_struct_count = 0
+_type_cache = {}
 
 def _convert_llvm_ir_to_ctype(t):
-    if type(t) is ir.VoidType:
+    if t in _type_cache:
+        return _type_cache[t]
+
+    type_t = type(t)
+    if type_t is ir.VoidType:
         return None
-    elif type(t) is ir.PointerType:
+    elif type_t is ir.IntType:
+        if t.width == 32:
+            return ctypes.c_int
+        elif t.width == 64:
+            return ctypes.c_longlong
+    elif type_t is ir.DoubleType:
+        return ctypes.c_double
+    elif type_t is ir.FloatType:
+        return ctypes.c_float
+    elif type_t is ir.PointerType:
         # FIXME: Can this handle void*? Do we care?
         pointee = _convert_llvm_ir_to_ctype(t.pointee)
-        return ctypes.POINTER(pointee)
-    elif type(t) is ir.IntType:
-        # FIXME: We should consider bitwidth here
-        return ctypes.c_int
-    elif type(t) is ir.DoubleType:
-        return ctypes.c_double
-    elif type(t) is ir.FloatType:
-        return ctypes.c_float
-    elif type(t) is ir.ArrayType:
+        ret_t = ctypes.POINTER(pointee)
+    elif type_t is ir.ArrayType:
         element_type = _convert_llvm_ir_to_ctype(t.element)
-        return element_type * len(t)
-    elif type(t) is ir.LiteralStructType:
-        field_list = []
-        for e in t.elements:
-            # llvmlite modules get _unique string only works for symbol names
-            global _field_count
-            uniq_name = "field_" + str(_field_count)
-            _field_count += 1
-
-            field_list.append((uniq_name, _convert_llvm_ir_to_ctype(e)))
-
+        ret_t = element_type * len(t)
+    elif type_t is ir.LiteralStructType:
         global _struct_count
         uniq_name = "struct_" + str(_struct_count)
         _struct_count += 1
 
-        def __init__(self, *args, **kwargs):
-            ctypes.Structure.__init__(self, *args, **kwargs)
+        field_list = []
+        for i, e in enumerate(t.elements):
+            # llvmlite modules get _unique string only works for symbol names
+            field_uniq_name = uniq_name + "field_" + str(i)
+            field_list.append((field_uniq_name, _convert_llvm_ir_to_ctype(e)))
 
-        new_type = type(uniq_name, (ctypes.Structure,), {"__init__": __init__})
-        new_type.__name__ = uniq_name
-        new_type._fields_ = field_list
-        assert len(new_type._fields_) == len(t.elements)
-        return new_type
+        ret_t = type(uniq_name, (ctypes.Structure,), {"__init__": ctypes.Structure.__init__})
+        ret_t._fields_ = field_list
+        assert len(ret_t._fields_) == len(t.elements)
+    else:
+        print(t)
+        assert(False)
 
-    print(t)
-    assert(False)
+    _type_cache[t] = ret_t
+    return ret_t

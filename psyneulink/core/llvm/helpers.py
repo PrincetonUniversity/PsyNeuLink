@@ -14,7 +14,7 @@ from contextlib import contextmanager
 @contextmanager
 def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
-    assert(start.type is stop.type)
+    assert start.type is stop.type
     index_var = builder.alloca(stop.type)
     builder.store(start, index_var)
 
@@ -87,26 +87,26 @@ class ConditionGenerator:
                 ir.LiteralStructType([
                     self.ctx.int32_ty, # number of executions
                     time_stamp_struct # time stamp of last execution
-                ]), len(composition.c_nodes)
+                ]), len(composition.nodes)
             )
         ])
         return structure
 
     def get_private_condition_initializer(self, composition):
         return ((0, 0, 0),
-                tuple((0,(-1, -1, -1)) for _ in composition.c_nodes))
+                tuple((0,(-1, -1, -1)) for _ in composition.nodes))
 
     def get_condition_struct_type(self, composition = None):
         composition = self.composition if composition is None else composition
         structs = [self.get_private_condition_struct_type(composition)]
-        for node in composition.c_nodes:
+        for node in composition.nodes:
             structs.append(self.get_condition_struct_type(node) if isinstance(node, type(self.composition)) else ir.LiteralStructType([]))
         return ir.LiteralStructType(structs)
 
     def get_condition_initializer(self, composition = None):
         composition = self.composition if composition is None else composition
         data = [self.get_private_condition_initializer(composition)]
-        for node in composition.c_nodes:
+        for node in composition.nodes:
             data.append(self.get_condition_initializer(node) if isinstance(node, type(self.composition)) else tuple())
         return tuple(data)
 
@@ -146,7 +146,7 @@ class ConditionGenerator:
         return builder.or_(trial, builder.or_(run, step))
 
     def __get_node_status_ptr(self, builder, cond_ptr, node):
-        node_idx = self.ctx.int32_ty(self.composition.c_nodes.index(node))
+        node_idx = self.ctx.int32_ty(self.composition.nodes.index(node))
         return builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1), node_idx])
 
     def __get_node_ts(self, builder, cond_ptr, node):
@@ -207,14 +207,14 @@ class ConditionGenerator:
         elif isinstance(condition, AllHaveRun):
             run_cond = ir.IntType(1)(1)
             array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            for node in self.composition.c_nodes:
+            for node in self.composition.nodes:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
-            target_idx = self.ctx.int32_ty(self.composition.c_nodes.index(target))
+            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
 
             array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
             target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))

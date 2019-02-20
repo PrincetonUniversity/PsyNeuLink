@@ -25,7 +25,7 @@ ComparatorMechanisms are generally created automatically when other PsyNeuLink c
 `LearningMechanisms <LearningMechanism_Creation>`).  A ComparatorMechanism can also be created directly by calling
 its constructor.  Its **sample** and **target** arguments are used to specify the OutputStates that provide the
 sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
-specification, which are special versions of an ObjectiveMechanism's **monitored_output_states** argument).  When the
+specification, which are special versions of an ObjectiveMechanism's **monitor** argument).  When the
 ComparatorMechanism is created, two InputStates are created, one each for its sample and target inputs (and named,
 by default, *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the corresponding OutputState specified
 in the **sample** and **target** arguments.
@@ -58,14 +58,14 @@ A ComparatorMechanism has two `input_states <ComparatorMechanism.input_states>`,
 constructor.  The InputStates are listed in the Mechanism's `input_states <ComparatorMechanism.input_States>` attribute
 and named, respectively, *SAMPLE* and *TARGET*.  The OutputStates from which they receive their projections (specified
 in the **sample** and **target** arguments) are listed in the Mechanism's `sample <ComparatorMechanism.sample>` and
-`target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states
-<ComparatorMechanism.monitored_output_states>` attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>`
-compares the value of the sample and target InputStates.  By default, it uses a `LinearCombination` function,
-assigning the sample InputState a `weight <LinearCombination.weight>` of *-1* and the target a `weight
-<LinearCombination.weight>` of *1*, so that the sample is subtracted from the target.  However, the `function
-<ComparatorMechanism.function>` can be customized, so long as it is replaced with one that takes two arrays with the
-same format as its inputs and generates a similar array as its result. The result is assigned as the value of the
-Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.
+`target <ComparatorMechanism.target>` attributes as well as in its `monitor <ComparatorMechanism.monitor>` attribute.
+The ComparatorMechanism's `function <ComparatorMechanism.function>` compares the value of the sample and target
+InputStates.  By default, it uses a `LinearCombination` function, assigning the sample InputState a `weight
+<LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the sample
+is subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so long as
+it is replaced with one that takes two arrays with the same format as its inputs and generates a similar array as its
+result. The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`)
+OutputState.
 
 .. _ComparatorMechanism_Function:
 
@@ -389,8 +389,8 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        super().__init__(# monitored_output_states=[sample, target],
-                         monitored_output_states=input_states,
+        super().__init__(# monitor=[sample, target],
+                         monitor=input_states,
                          function=function,
                          output_states=output_states.copy(), # prevent default from getting overwritten by later assign
                          params=params,

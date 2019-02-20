@@ -86,6 +86,10 @@ def _cpu_jit_constructor():
 
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(_float_ty)
+    if "llvm" in debug_env:
+        with open(builtins_module.name + '.parse.ll', 'w') as dump_file:
+            dump_file.write(str(builtins_module))
+
     __backing_mod = binding.parse_assembly(str(builtins_module))
 
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
@@ -148,7 +152,7 @@ class jit_engine:
         self.__debug_env = debug_env
 
     def __del__(self):
-        if "mod_count" in self.__debug_env:
+        if "stat" in self.__debug_env:
             print("Total JIT modules in '{}': {}".format(type(self).__name__, self.__opt_modules))
 
     def opt_and_add_bin_module(self, module):

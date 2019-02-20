@@ -33,7 +33,7 @@ class TestLCControlMechanism:
             scaling_factor_gain=k,
             objective_mechanism=pnl.ObjectiveMechanism(
                 function=psyneulink.core.components.functions.transferfunctions.Linear,
-                monitored_output_states=[B],
+                monitor=[B],
                 name='LC ObjectiveMechanism'
             )
         )

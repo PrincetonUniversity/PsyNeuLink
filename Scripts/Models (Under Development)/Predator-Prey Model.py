@@ -1,4 +1,6 @@
+
 import timeit
+
 import numpy as np
 from psyneulink import *
 
@@ -7,13 +9,12 @@ from gym_forager.envs.forager_env import ForagerEnv
 # Runtime Switches:
 RENDER = False
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
-
 
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 3
@@ -34,7 +35,6 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
 
-
 # *********************************************************************************************************************
 # **************************************  MECHANISMS AND COMPOSITION  *************************************************
 # *********************************************************************************************************************
@@ -43,7 +43,6 @@ player_len = prey_len = predator_len = obs_coords
 player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
 prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
 predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
-
 # Value and Reward Mechanisms (not yet used;  for future use)
 values = TransferMechanism(size=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
@@ -55,10 +54,10 @@ greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=
 
 # Create Composition
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_c_node(player_obs)
-agent_comp.add_c_node(predator_obs)
-agent_comp.add_c_node(prey_obs)
-agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_node(player_obs)
+agent_comp.add_node(predator_obs)
+agent_comp.add_node(prey_obs)
+agent_comp.add_node(greedy_action_mech)
 
 
 # ControlMechanism
@@ -76,10 +75,11 @@ def dist_diff_fct(variable):
     dist_to_prey = dist([player_coord, prey_coord])
     return dist_to_predator - dist_to_prey
 
-ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
+ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MINIMIZE,
                                                        save_values=True),
+
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
                                                                           monitored_output_states=[player_obs,
                                                                                                    predator_obs,
@@ -119,6 +119,10 @@ def main():
     env = ForagerEnv()
     reward = 0
     done = False
+
+    def my_print():
+        print(ocm.net_outcome)
+
     if RENDER:
         env.render()  # If visualization is desired
     else:
@@ -136,8 +140,10 @@ def main():
                                                  predator_obs:[observation[predator_coord_slice]],
                                                  prey_obs:[observation[prey_coord_slice]],
                                                  },
+                                         call_after_trial=my_print,
                                          bin_execute=BIN_EXECUTE
                                          )
+
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))

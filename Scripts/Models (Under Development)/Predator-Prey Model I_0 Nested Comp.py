@@ -7,9 +7,9 @@ from gym_forager.envs.forager_env import ForagerEnv
 # Runtime Switches:
 RENDER = False
 PNL_COMPILE = False
-PERCEPTUAL_DISTORT = True
-RUN = False
-SHOW_GRAPH = True
+PERCEPTUAL_DISTORT = False
+RUN = True
+SHOW_GRAPH = False
 
 
 # *********************************************************************************************************************
@@ -67,13 +67,13 @@ greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=
 
 # Create Composition
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_c_node(player_obs)
-agent_comp.add_c_node(predator_obs)
-agent_comp.add_c_node(prey_obs)
+agent_comp.add_node(player_obs)
+agent_comp.add_node(predator_obs)
+agent_comp.add_node(prey_obs)
 # agent_comp.add_linear_processing_pathway([player_input, player_obs])
 # agent_comp.add_linear_processing_pathway([predator_input, predator_obs])
 # agent_comp.add_linear_processing_pathway([prey_input, prey_obs])
-agent_comp.add_c_node(greedy_action_mech)
+agent_comp.add_node(greedy_action_mech)
 
 # ControlMechanism
 
@@ -94,23 +94,44 @@ def diff_fct(variable):
     # return - (np.sum(player_diff) + np.sum(predator_diff))
     return -(np.sum(player_diff))
 
+def test_fct(variable):
+    if variable is None:
+        return 0
+    return variable[1]-variable[0]
 
 if PERCEPTUAL_DISTORT:
     CTL_PARAM = VARIANCE
 else:
     CTL_PARAM = SLOPE
-
-# ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
-ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs, predator_obs, prey_obs]},
+# agent_comp._analyze_graph()
+ocm = OptimizationControlMechanism(features=[player_obs.input_state, predator_obs.input_state, prey_obs.input_state],
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MAXIMIZE,
                                                        save_values=True),
                                    objective_mechanism=ObjectiveMechanism(
-                                           function=diff_fct,
-                                           monitored_output_states=[player_input, player_obs,
-                                                                    predator_input, predator_obs,
-                                                                    prey_input, prey_obs
-                                                                    ]
+                                           # function=diff_fct,
+                                           function=test_fct,
+                                           monitor=[player_obs,
+                                                    player_obs.input_state,
+                                                    predator_obs,
+                                                    predator_obs.input_state,
+                                                    prey_obs,
+                                                    prey_obs.input_state
+                                                    ]
+                                           # monitored_output_states=[player_input, player_obs,
+                                           #                          predator_input, predator_obs,
+                                           #                          prey_input, prey_obs
+                                           #                          ]
+                                           # monitored_output_states=[agent_comp.input_CIM_states[
+                                           #                              player_obs.input_state][1],
+                                           #                          player_obs,
+                                           #                          agent_comp.input_CIM_states[
+                                           #                              predator_obs.input_state][1],
+                                           #                          predator_obs,
+                                           #                          agent_comp.input_CIM_states[
+                                           #                              prey_obs.input_state][1],
+                                           #                          prey_obs
+                                           #                          ]
                                    ),
                                    control_signals=[ControlSignal(projections=(CTL_PARAM,player_obs),
                                                                   # allocation_samples=[0, 1, 10, 100]),
@@ -140,16 +161,25 @@ ocm = OptimizationControlMechanism(features={SHADOW_EXTERNAL_INPUTS: [player_obs
                                    )
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
-agent_comp._analyze_graph()
 
-full_comp = Composition(name='FULL COMPOSITION')
-full_comp.add_linear_processing_pathway(player_input,player_obs)
-full_comp.add_linear_processing_pathway(predator_input,predator_obs)
-full_comp.add_linear_processing_pathway(prey_input,prey_obs)
+full_comp = Composition(name='FULL_COMPOSITION')
+full_comp.add_node(agent_comp)
+full_comp.add_node(player_input)
+full_comp.add_node(predator_input)
+full_comp.add_node(prey_input)
+
+# full_comp.add_projection(sender=player_input, receiver=player_obs)
+# full_comp.add_projection(sender=predator_input, receiver=predator_obs)
+# full_comp.add_projection(sender=prey_input, receiver=prey_obs)
+
+full_comp.add_linear_processing_pathway([player_input,player_obs])
+full_comp.add_linear_processing_pathway([predator_input,predator_obs])
+full_comp.add_linear_processing_pathway([prey_input,prey_obs])
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph(show_controller=True)
+    # agent_comp.show_graph(show_controller=True)
+    full_comp.show_graph(show_controller=True)
 
 
 # *********************************************************************************************************************
@@ -175,7 +205,8 @@ def main():
                 BIN_EXECUTE = 'LLVM'
             else:
                 BIN_EXECUTE = 'Python'
-            run_results = agent_comp.run(inputs={player_input:[observation[player_coord_slice]],
+
+            run_results = full_comp.run(inputs={player_input:[observation[player_coord_slice]],
                                                  predator_input:[observation[predator_coord_slice]],
                                                  prey_input:[observation[prey_coord_slice]],
                                                  },

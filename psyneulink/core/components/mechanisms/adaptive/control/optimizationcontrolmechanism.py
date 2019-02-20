@@ -110,12 +110,6 @@ The following arguments of its constructor are specific to the OptimizationContr
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  Features can be
   specified using any of the following, singly or combined in a list:
 
-  * {*SHADOW_EXTERNAL_INPUTS*: <`INPUT` Mechanism, InputState for one, or list with either or both>} --
-    InputStates of the same shapes as those listed are created on the ModelFreeOptimizationControlMechanism,
-    and are connected to the corresponding input_CIM OutputStates by projections. The external input values
-    that are passed through the input_CIM are used as the `features <ModelFreeOptimizationControlMechanism_Feature>`.
-    If a Mechanism is included in the list, it refers to all of its InputStates.
-  |
   * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
     that resolves to an OutputState from which the InputState receives a Projection;  the `value
     <OutputState.value>` of that OutputState is used as the feature. Each of these InputStates is marked as
@@ -196,22 +190,20 @@ transforms these.  For OptimizationControlMechanisms that implement `model-free
 <OptimizationControlMechanism.evaluation_function>` to predict the `net_outcome <ControlMechanism.net_outcome>` for a
 given `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that implement
 `model-based <OptimizationControlMechanism_Model_Based>` optimization, the `feature_values
-<OptimizationControlMechanism.feature_values>` are used as the Composition's `input <Composition.input_values>` when
+<OptimizationCozntrolMechanism.feature_values>` are used as the Composition's `input <Composition.input_values>` when
 it is executed to evaluate the `net_outcome <ControlMechanism.net_outcome>` for a given
 `control_allocation<ControlMechanism.control_allocation>`.
 
 Features can be of two types:
 
-* *Input Features* -- these are values received as input by `INPUT` Mechanisms of the `Composition`.
-  They are specified in the **features** argument of the OptimizationControlMechanism's constructor (see
-  `OptimizationControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry,
-  the value of which is one or more `INPUT` Mechanisms and/or their `InputStates
-  <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
-  Projection from the Composition's `InputCIM` to the `INPUT` Mechanism, projecting from the same `OutputState` of
-  the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
+* *Input Features* -- these are values received as input by other Mechanisms in the `Composition`. They are
+  specified as `shadowed inputs <InputState_Shadow_Inputs>` in the **features** argument of the
+  OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`).  An InputState is
+  created on the OptimziationControlMechanism for each feature, that receives a `Projection` paralleling
+  the input to be shadowed.
 ..
-* *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in the
-  Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
+* *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in
+  the Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
   constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
   OutputState(s) to the InputState of the OptimizationControlMechanism for that feature.
 
@@ -407,7 +399,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.featureinputstate import FeatureInputState
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -422,12 +414,11 @@ from psyneulink.core.globals.utilities import is_iterable
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
-    'AGENT_REP', 'FEATURES', 'SHADOW_EXTERNAL_INPUTS'
+    'AGENT_REP', 'FEATURES'
 ]
 
 AGENT_REP = 'agent_rep'
 FEATURES = 'features'
-SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 
 
 def _parse_feature_values_from_variable(variable):
@@ -470,14 +461,11 @@ class OptimizationControlMechanism(ControlMechanism):
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
-    features : Mechanism, OutputState, Projection, dict, or list containing any of these : default
-    {SHADOW_EXTERNAL_INPUTS : ALL}
+    features : Mechanism, OutputState, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
         <OptimizationControlMechanism.feature_values>` and used to predict `net_outcome <ControlMechanism.net_outcome>`.
         Any `InputState specification <InputState_Specification>` can be used that resolves to an `OutputState` that
-        projects to the InputState. In addition, a dictionary with a *SHADOW_EXTERNAL_INPUTS* entry can be used to
-        shadow inputs to the Composition's `INPUT` Node(s) (see `above <OptimizationControlMechanism_Creation>`
-        for details).
+        projects to the InputState.
 
     feature_function : Function or function : default None
         specifies the `function <InputState.function>` for the `InputState` assigned to each `feature
@@ -763,6 +751,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # If any features were specified (assigned to self.input_states in __init__):
         if self.input_states:
+            self.input_states = _parse_shadow_inputs(self, self.input_states)
+            # for i, state in enumerate(self.input_states):
+            #     self.input_states[i] = _parse_state_spec(state_type=InputState,
+            #                                              owner=self,
+            #                                              state_spec=state)
             self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
             # Insert primary InputState for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
@@ -770,9 +763,15 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             self.input_states = [outcome_input_state]
 
+        # super()._instantiate_input_states(context=context)
+        #
+        # # GO THROUGH AND REASSIGN AS FEATURE INPUT STATE AND ASSIGN FUNCTION
+        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
+
         # Configure default_variable to comport with full set of input_states
         self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
+        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
         super()._instantiate_input_states(context=context)
 
         for i in range(1, len(self.input_states)):
@@ -851,18 +850,25 @@ class OptimizationControlMechanism(ControlMechanism):
         # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
 
         # Assign default net_outcome if it is not yet specified (presumably first trial)
-        # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-                 self.control_signals]
-        try:
-            net_outcome = variable[0] - self.combine_costs(costs)
-        except AttributeError:
-            net_outcome = [0]
-        # FIX: END
+        # # MODIFIED 1/23/19 OLD:
+        # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
+        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
+        #          self.control_signals]
+        # try:
+        #     net_outcome = variable[0] - self.combine_costs(costs)
+        # except AttributeError:
+        #     net_outcome = [0]
+        # # FIX: END
+        # MODIFIED 1/23/19 NEW: [JDC]
+        net_outcome = self.parameters.net_outcome.get(execution_id)
+        # MODIFIED 1/23/19 END
         #
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
-            self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
+            self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
+                                 control_allocation,
+                                 net_outcome,
+                                 execution_id=execution_id)
         except AttributeError as e:
             # If error is due to absence of adapt method, OK; otherwise, raise exception
             if not 'has no attribute \'adapt\'' in e.args[0]:
@@ -913,8 +919,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute` method.
 
-        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>` (`net_outcome
-        <ControlMechanism.net_outcome>`) for the current `feature_values <OptimizationControlMechanism.feature_values>`
+        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>`
+        for the current `feature_values <OptimizationControlMechanism.feature_values>`
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
@@ -972,58 +978,42 @@ class OptimizationControlMechanism(ControlMechanism):
         '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
-        **features** argument can use any of the forms of specification allowed for InputState(s),
-        as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
-        list of `INPUT` Mechanisms and/or their InputStates as its value.
+        **features** argument can use any of the forms of specification allowed for InputState(s)
         '''
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                     context=ContextFlags.COMMAND_LINE)
+                                                 context=ContextFlags.COMMAND_LINE)
         self.add_states(InputState, features)
 
     @tc.typecheck
-    def _parse_feature_specs(self, features, feature_function, context=None):
+    def _parse_feature_specs(self, input_states, feature_function, context=None):
         """Parse entries of features into InputState spec dictionaries
-
-        For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an INPUT node InputState):
-            - Call _parse_shadow_input_spec
-
-        For standard InputState specs:
-            - Call _parse_state_spec
-            - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
-
+        Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
+            (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
         Assign functions specified in **feature_function** to InputStates for all features
-
-        Returns list of InputState specification dictionaries
+        Convert state_type of all entries to FeatureInputState (to allow functions other than LinearCombination)
+        Return list of InputState specification dictionaries
         """
 
         parsed_features = []
 
-        if not isinstance(features, list):
-            features = [features]
+        if not isinstance(input_states, list):
+            input_states = [input_states]
 
-        for spec in features:
-
-            # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
-            if isinstance(spec, dict):
-                if SHADOW_EXTERNAL_INPUTS in spec:
-                    self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
-                    spec = self._parse_shadow_inputs_spec(spec, feature_function)
-                else:
-                    raise OptimizationControlMechanismError("Incorrect specification ({}) "
-                                                                     "in features argument of {}."
-                                                                     .format(spec, self.name))
-            # e.g. Mechanism, OutputState
-            else:
-                spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
-                spec[PARAMS][INTERNAL_ONLY] = True
-                if feature_function:
-                    spec[PARAMS][FUNCTION] = feature_function
-                spec = [spec]   # so that extend works below
+        for spec in input_states:
+            spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)    # returns InputState dict
+            spec[PARAMS][INTERNAL_ONLY] = True
+            if feature_function:
+                spec.update({FUNCTION: feature_function})
+            spec = [spec]   # so that extend works below
 
             parsed_features.extend(spec)
 
+        # Convert state_type of InputStates used to shadow into state_type to FeatureInputState
+        #    to insure that their functions are allowed to be other than CombinationFunction,
+        #    and that they only receive on MappingProjection each
+        #        (since they might not be CombinationFunctions, can only accept variable with one item).
         for feature in parsed_features:
             if isinstance(feature, dict):
                 feature['state_type'] = FeatureInputState
@@ -1032,41 +1022,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
                                                             .format(self.name, feature))
         return parsed_features
-
-    @tc.typecheck
-    def _parse_shadow_inputs_spec(self, spec:dict, fct:tc.optional(Function)):
-        ''' Return a list of InputState specifications for the inputs specified in value of each dict entry
-
-        For any other specification, return an InputState with a Projection from the sender of any Projections
-            that project to the specified item
-        If FUNCTION entry, assign as Function for all InputStates specified in SHADOW_EXTERNAL_INPUTS
-        '''
-
-        input_state_specs = []
-
-        shadow_spec = spec[SHADOW_EXTERNAL_INPUTS]
-
-        if not isinstance(shadow_spec, list):
-            shadow_spec = [shadow_spec]
-        for item in shadow_spec:
-            if isinstance(item, Mechanism):
-                # Shadow all of the InputStates for the Mechanism
-                input_states = item.input_states
-            if isinstance(item, InputState):
-                # Place in a list for consistency of handling below
-                input_states = [item]
-            # Shadow all of the Projections to each specified InputState
-            input_state_specs.extend([
-                {
-                    #NAME:i.name + ' of ' + i.owner.name,
-                    VARIABLE: i.variable}
-                for i in input_states
-            ])
-        if fct:
-            for i in input_state_specs:
-                i.update({FUNCTION:fct})
-
-        return input_state_specs
 
     @property
     def control_allocation_search_space(self):

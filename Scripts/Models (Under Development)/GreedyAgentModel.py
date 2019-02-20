@@ -1,4 +1,5 @@
 import timeit
+
 import numpy as np
 from psyneulink import *
 
@@ -26,7 +27,6 @@ prey_value_idx = 8
 
 player_len = prey_len = predator_len = obs_len
 
-
 # *********************************************************************************************************************
 # **************************************  MECHANISMS AND COMPOSITION  *************************************************
 # *********************************************************************************************************************
@@ -47,9 +47,10 @@ reward = TransferMechanism(name="REWARD")
 greedy_action_mech = ComparatorMechanism(name='MOTOR OUTPUT',sample=player,target=prey)
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_c_node(player)
-agent_comp.add_c_node(prey)
-agent_comp.add_c_node(greedy_action_mech)
+
+agent_comp.add_node(player)
+agent_comp.add_node(prey)
+agent_comp.add_node(greedy_action_mech)
 
 # agent_comp.show_graph()
 
@@ -98,7 +99,6 @@ def main():
           f'{stop_time - start_time:.2f} seconds')
     if RENDER:
         env.render()  # If visualization is desired
-
 
 if __name__ == "__main__":
     main()

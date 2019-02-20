@@ -84,6 +84,8 @@ CONTENTS
 * `make_readonly_property`
 * `get_class_attributes`
 * `insert_list`
+* `get_global_seed`
+* `set_global_seed`
 
 """
 
@@ -91,6 +93,7 @@ import copy
 import inspect
 import logging
 import numbers
+import time
 import warnings
 import weakref
 
@@ -103,7 +106,7 @@ from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUS
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'CNodeRole', 'get_class_attributes',
+    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -1402,6 +1405,16 @@ def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
 
+_seed = int(time.monotonic())
+def get_global_seed(offset=1):
+    global _seed
+    _seed += offset
+    return _seed - offset
+
+def set_global_seed(new_seed):
+    global _seed
+    _seed = new_seed
+
 
 def safe_len(arr, fallback=1):
     '''
@@ -1502,7 +1515,7 @@ def call_with_pruned_args(func, *args, **kwargs):
     return func(*args, **kwargs)
 
 
-class CNodeRole(Enum):
+class NodeRole(Enum):
     """
 
     - ORIGIN
@@ -1511,49 +1524,13 @@ class CNodeRole(Enum):
     - INPUT
         A Node that receives external input. A Composition may have many `INPUT` Nodes.
 
-    - INTERNAL
-        A Node that is not designated as having any other status.
-COMMENT:
-    - CYCLE
-        A Node that is *not* an `ORIGIN` Mechanism, and receives a `Projection <Projection>` that closes a recurrent
-        loop in a Composition.  If it is an `ORIGIN` Node, then it is simply designated as such (since it will be
-        assigned input and therefore be initialized in any event).
-
-    - INITIALIZE_CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
-        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
-        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-COMMENT
     - TERMINAL
         A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
 
     - OUTPUT
         A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
         Composition may have many `OUTPUT` Nodes.
-COMMENT:
-    - SINGLETON
-        A `ProcessingNode <ProcessingNode>` that is the only Node in a `Process` and/or `System`.
-        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
-
-    - LEARNING
-        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
-
-    - TARGET
-        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
-        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
-        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
-        :keyword:`target_nodes` attribute, and can be displayed using its :keyword:`show` method.  For additional
-        details, see `TARGET Mechanisms <LearningMechanism_Targets>`, `learning sequence <Process_Learning_Sequence>`,
-        and specifying `target values <Run_Targets>`.
-
-    - RECURRENT_INIT
-        .
-COMMENT
 
     """
     ORIGIN = 0

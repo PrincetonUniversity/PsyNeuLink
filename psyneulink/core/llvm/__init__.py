@@ -15,6 +15,7 @@ from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
+from .builder_context import _type_cache
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -148,6 +149,7 @@ def init_builtins():
     with LLVMBuilderContext() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
+        builtins.setup_mersenne_twister(ctx)
 
 def cleanup():
     _cpu_engine.clean_module()
@@ -156,6 +158,7 @@ def cleanup():
 
     _modules.clear()
     _compiled_modules.clear()
+    _type_cache.clear()
     init_builtins()
 
 init_builtins()
