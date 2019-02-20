@@ -152,27 +152,27 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, pred
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
                                                                   allocation_samples=[0, 100],
-                                                                  cost_options=ControlSignalCosts.NONE
-                                                                  # intensity_cost_function=Exponential(rate=-.1,
-                                                                  #                                     bias=5)
+                                                                  # cost_options=ControlSignalCosts.NONE
+                                                                  intensity_cost_function=Exponential(rate=-.05,
+                                                                                                      bias=.001)
                                                                   ),
                                                     ControlSignal(projections=(VARIANCE,predator_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
                                                                   allocation_samples=[0, 100],
-                                                                  cost_options=ControlSignalCosts.NONE
-                                                                  # intensity_cost_function=Exponential(rate=-.1,
-                                                                  #                                     bias=5)
+                                                                  # cost_options=ControlSignalCosts.NONE
+                                                                  intensity_cost_function=Exponential(rate=-.05,
+                                                                                                      bias=.001)
                                                                   ),
                                                     ControlSignal(projections=(VARIANCE,prey_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
                                                                   allocation_samples=[0, 100],
-                                                                  cost_options=ControlSignalCosts.NONE
-                                                                  # intensity_cost_function=Exponential(rate=-.1,
-                                                                  #                                     bias=5)
+                                                                  # cost_options=ControlSignalCosts.NONE
+                                                                  intensity_cost_function=Exponential(rate=-.05,
+                                                                                                      bias=.001)
                                                                   )])
 # Add controller to Composition
 agent_comp.add_model_based_optimizer(ocm)
