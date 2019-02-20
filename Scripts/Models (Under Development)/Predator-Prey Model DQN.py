@@ -229,7 +229,7 @@ def main():
             print('Action taken: {}'.format(action))
             print('Outcome: {}'.format(ocm.objective_mechanism.value))
 
-            print('OCM Allocation: {}'.format(repr(list(np.squeeze(ocm.control_allocation)))))
+            print('OCM Allocation (ocm.control_allocation):\n\t{}'.format(repr(list(np.squeeze(ocm.control_allocation)))))
 
             print('OCM ControlSignal Costs:')
             print('\tPlayer OBS:\t\t{}\n\tPredator OBS:\t{}\n\tPrey OBS:\t\t{}'.
