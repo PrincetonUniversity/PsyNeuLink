@@ -14,7 +14,7 @@ from contextlib import contextmanager
 @contextmanager
 def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
-    assert(start.type is stop.type)
+    assert start.type is stop.type
     index_var = builder.alloca(stop.type)
     builder.store(start, index_var)
 

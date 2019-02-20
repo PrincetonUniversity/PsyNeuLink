@@ -42,6 +42,9 @@ def pytest_runtest_call(item):
     seed = 0
     random.seed(seed)
     np.random.seed(seed)
+    from psyneulink.core.globals.utilities import set_global_seed
+    set_global_seed(seed)
+
 
 
 def pytest_runtest_teardown(item):
