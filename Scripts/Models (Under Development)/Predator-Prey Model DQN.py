@@ -2,11 +2,6 @@ import timeit
 import numpy as np
 from psyneulink import *
 
-# import sys
-# sys.path.insert(0, '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python')
-# ddqn = __import__('double-dqn.double_dqn')
-# from ddqn.double_dqn import DoubleDQNAgent
-# from double-dqn.double_dqn DoubleDQNAgent
 from double_dqn import DoubleDQNAgent
 
 from gym_forager.envs.forager_env import ForagerEnv
