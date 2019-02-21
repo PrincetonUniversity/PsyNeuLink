@@ -67,7 +67,10 @@ reward = TransferMechanism(name="REWARD")
 # ************************************** DOUBLE_DQN AGENT **************************************************************
 
 # ddqn_agent = DoubleDQNAgent(env=env, model_load_path='', eval_mode=True)
-ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH, eval_mode=True)
+ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
+                            eval_mode=True,
+                            render=False
+                            )
 
 perceptual_state = None
 veridical_state = None
@@ -151,14 +154,16 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, pred
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
-                                                                  allocation_samples=[0, 100],
+                                                                  # allocation_samples=[0, 100],
+                                                                  allocation_samples=[100],
                                                                   intensity_cost_function=Exponential(rate=-.05,
                                                                                                       bias=.001)),
                                                     ControlSignal(projections=(VARIANCE,predator_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
-                                                                  allocation_samples=[0, 100],
+                                                                  # allocation_samples=[0, 100],
+                                                                  allocation_samples=[0],
                                                                   intensity_cost_function=Exponential(rate=-.05,
                                                                                                       bias=.001)),
                                                     ControlSignal(projections=(VARIANCE,prey_percept),
@@ -196,6 +201,7 @@ def main():
     for _ in range(num_episodes):
         observation = ddqn_agent.env.reset()
         while True:
+            execution_id = 'TEST'
             if PNL_COMPILE:
                 BIN_EXECUTE = 'LLVM'
             else:
@@ -204,6 +210,7 @@ def main():
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],
                                                  },
+                                         execution_id=execution_id,
                                          bin_execute=BIN_EXECUTE,
                                          )
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
@@ -213,52 +220,53 @@ def main():
             print('\n**********************\nSTEP: ', steps)
 
             print('Observations:')
-            print('\tPlayer:\n\t\tveridical: {}\n\t\tperceived: {}'.format(player_percept.variable,
-                                                                           player_percept.value))
-            print('\tPredator:\n\t\tveridical: {}\n\t\tperceived: {}'.format(predator_percept.variable,
-                                                                           predator_percept.value))
-            print('\tPrey:\n\t\tveridical: {}\n\t\tperceived: {}'.format(prey_percept.variable,
-                                                                         prey_percept.value))
+            print('\tPlayer:\n\t\tveridical: {}\n\t\tperceived: {}'.format(player_percept.parameters.variable.get(execution_id),
+                                                                           player_percept.parameters.value.get(execution_id)))
+            print('\tPredator:\n\t\tveridical: {}\n\t\tperceived: {}'.format(predator_percept.parameters.variable.get(execution_id),
+                                                                           predator_percept.parameters.value.get(execution_id)))
+            print('\tPrey:\n\t\tveridical: {}\n\t\tperceived: {}'.format(prey_percept.parameters.variable.get(execution_id),
+                                                                         prey_percept.parameters.value.get(execution_id)))
             print('Action taken: {}'.format(action))
-            print('Outcome: {}'.format(ocm.objective_mechanism.value))
+            print('Outcome: {}'.format(ocm.objective_mechanism.parameters.value.get(execution_id)))
 
-            print('OCM Allocation (ocm.control_allocation):\n\t{}'.format(repr(list(np.squeeze(ocm.control_allocation)))))
+            print('OCM Allocation (ocm.control_allocation):\n\t{}'.
+                  format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
             print('OCM ControlSignal Costs:')
             print('\tPlayer OBS:\t\t{}\n\tPredator OBS:\t{}\n\tPrey OBS:\t\t{}'.
-                  format(ocm.control_signals[0].cost,
-                         ocm.control_signals[1].cost,
-                         ocm.control_signals[2].cost))
+                  format(ocm.control_signals[0].parameters.cost.get(execution_id),
+                         ocm.control_signals[1].parameters.cost.get(execution_id),
+                         ocm.control_signals[2].parameters.cost.get(execution_id)))
 
             print('OCM ControlSignals:')
             print('\tPlayer OBS:\t\t{}\n\tPredator OBS\t{}\n\tPrey OBS:\t\t{}'.
-                  format(ocm.control_signals[0].value,
-                         ocm.control_signals[1].value,
-                         ocm.control_signals[2].value))
+                  format(ocm.control_signals[0].parameters.value.get(execution_id),
+                         ocm.control_signals[1].parameters.value.get(execution_id),
+                         ocm.control_signals[2].parameters.value.get(execution_id)))
 
             print('Control Projection Senders\' Values (<percept>.parameter_states[VARIANCE].mod_afferents[0].sender.value):')
             print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-                  format(player_percept.parameter_states[VARIANCE].mod_afferents[0].sender.value,
-                         predator_percept.parameter_states[VARIANCE].mod_afferents[0].sender.value,
-                         prey_percept.parameter_states[VARIANCE].mod_afferents[0].sender.value))
+                  format(player_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(execution_id),
+                         predator_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(execution_id),
+                         prey_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(execution_id)))
 
             print('Control Projection Variables (<percept>.parameter_states[VARIANCE].mod_afferents[0].variable)):')
             print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-                  format(player_percept.parameter_states[VARIANCE].mod_afferents[0].variable,
-                         predator_percept.parameter_states[VARIANCE].mod_afferents[0].variable,
-                         prey_percept.parameter_states[VARIANCE].mod_afferents[0].variable))
+                  format(player_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(execution_id),
+                         predator_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(execution_id),
+                         prey_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(execution_id)))
 
             print('Control Projection Values (<percept>.parameter_states[VARIANCE].mod_afferents[0].value):')
             print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-                  format(player_percept.parameter_states[VARIANCE].mod_afferents[0].value,
-                         predator_percept.parameter_states[VARIANCE].mod_afferents[0].value,
-                         prey_percept.parameter_states[VARIANCE].mod_afferents[0].value))
+                  format(player_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(execution_id),
+                         predator_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(execution_id),
+                         prey_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(execution_id)))
 
             print('Variance Params:')
             print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-                  format(player_percept.parameter_states[VARIANCE].value,
-                         predator_percept.parameter_states[VARIANCE].value,
-                         prey_percept.parameter_states[VARIANCE].value))
+                  format(player_percept.parameter_states[VARIANCE].parameters.value.get(execution_id),
+                         predator_percept.parameter_states[VARIANCE].parameters.value.get(execution_id),
+                         prey_percept.parameter_states[VARIANCE].parameters.value.get(execution_id)))
 
             print('SIMULATION (PREP FOR NEXT TRIAL):')
             for sample, value in zip(ocm.saved_samples, ocm.saved_values):
