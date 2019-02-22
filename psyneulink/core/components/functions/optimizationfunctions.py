@@ -62,8 +62,12 @@ class OptimizationFunctionError(Exception):
 #     generator: callable
 
 # SampleSpec = namedtuple('SampleSpec', [('start', numbers.Number), ('stop', numbers.Number), ('generator', callable)])
-
 # SampleSpec = namedtuple('SampleSpec', 'start, stop, num, generator')
+
+PRECISION = 16
+from decimal import Decimal, getcontext
+getcontext().prec = PRECISION
+
 
 class SampleSpec():
     '''
@@ -158,9 +162,10 @@ class SampleSpec():
                 raise OptimizationFunctionError("If 'function' is not specified, then 'start' and 'stop' must be "
                                                 "specified.")
             if num is None and step is not None:
-                num = 1.0 + (stop - start) / step
+                num = int(Decimal(1.0) + Decimal(stop - start) / Decimal(step))
+                # num = 1.0 + (stop - start) / step
             elif step is None and num is not None:
-                step = (stop - start) / (num - 1)
+                step = (Decimal(stop) - Decimal(start)) / (num - 1)
             elif num is None and step is None:
                 raise OptimizationFunctionError("Must specify one of {}, {} or {}."
                                                 .format(repr('step'), repr('num'), repr('function')))
@@ -286,7 +291,7 @@ class SampleIterator(Iterator):
                 self.generator = None                    # ??
 
                 def generate_current_value():   # return next value in range
-                    return float(self.start + self.step*self.current_step)
+                    return float(Decimal(self.start) + Decimal(self.step) * Decimal(self.current_step))
 
             elif is_function_type(specification.function):
                 self.start = 0
