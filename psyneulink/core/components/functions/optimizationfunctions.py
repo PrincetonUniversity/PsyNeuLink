@@ -207,7 +207,6 @@ class SampleSpec():
 
         # Restore global precision
         getcontext().prec = _global_precision
-        assert True
 
 
 class SampleIterator(Iterator):
