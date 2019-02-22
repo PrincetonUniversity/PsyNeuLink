@@ -189,8 +189,10 @@ def main():
             print('\n**********************\nSTEP: ', steps)
 
             print('Observations:')
-            print('\tPlayer:\n\t\tveridical: {}\n\t\tperceived: {}'.format(player_percept.parameters.variable.get(execution_id),
-                                                                           player_percept.parameters.value.get(execution_id)))
+
+            print(f'\tPlayer:'
+                  f'\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
+                  f'\n\t\tperceived: {player_percept.parameters.value.get(execution_id)}')
             print('\tPredator:\n\t\tveridical: {}\n\t\tperceived: {}'.format(predator_percept.parameters.variable.get(execution_id),
                                                                            predator_percept.parameters.value.get(execution_id)))
             print('\tPrey:\n\t\tveridical: {}\n\t\tperceived: {}'.format(prey_percept.parameters.variable.get(execution_id),
