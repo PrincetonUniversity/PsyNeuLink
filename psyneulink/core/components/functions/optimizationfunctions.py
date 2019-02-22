@@ -74,7 +74,7 @@ class SampleSpec():
     step=None,     \
     num=None,      \
     function=None  \
-    precision=None \
+    precision=16   \
     )
 
     Specify the information needed to create a SampleIterator that will either (a) generate discrete values in a range
@@ -87,7 +87,8 @@ class SampleSpec():
           <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.arange.html>`_. Calling
           `next <SampleIterator.__next__>`first returns **start**. Each subsequent call to next returns
           **start** :math:`+` **step** :math:`*` current_step.
-          Iteration stops when the current value exceeds the **stop** value.
+          Iteration stops when the current value exceeds the **stop** value.  If any of the specified arguments are
+          floats, precision determines the number of decimal places used for rounding to ensure num is a int.
 
         * if **start**, **stop**, and **num** are specified, the behavior is similar to `Numpy's linspace
           <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.linspace.html>`_. Calling
@@ -127,6 +128,9 @@ class SampleSpec():
     function : function
         Function to be called on each iteration. Must return one sample.
 
+    precision : int default 16
+        Number of decimal places used for rounding in floating point operations.
+
 
     Attributes
     ----------
@@ -154,11 +158,11 @@ class SampleSpec():
                  step:tc.optional(tc.any(int, float))=None,
                  num:tc.optional(int)=None,
                  function:tc.optional(is_function_type)=None,
-                 precision:int=None
+                 precision:int=16
                  ):
 
         from decimal import Decimal, getcontext
-        self._precision = precision or PRECISION
+        self._precision = precision
         getcontext().prec = self._precision
 
         if function is None:
