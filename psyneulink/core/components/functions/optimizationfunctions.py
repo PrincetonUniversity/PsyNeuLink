@@ -106,7 +106,8 @@ class SampleSpec():
           indefintely.
 
     .. note::
-        Some OptimizationFunctions may require that their SampleIterators have a "num" attribute.
+        * Some OptimizationFunctions may require that their SampleIterators have a "num" attribute.
+        * The Python decimal module is used to implement **precision** for rounding.
 
 
     Arguments
@@ -162,6 +163,9 @@ class SampleSpec():
 
         from decimal import Decimal, getcontext
         self._precision = precision or SAMPLE_SPEC_PRECISION
+        # Save global precision for later restoration
+        _global_precision = getcontext().prec
+        # Set SampleSpec precision
         getcontext().prec = self._precision
 
         if function is None:
@@ -200,6 +204,10 @@ class SampleSpec():
         self.step = step
         self.num = num
         self.function = function
+
+        # Restore global precision
+        getcontext().prec = _global_precision
+        assert True
 
 
 class SampleIterator(Iterator):
@@ -273,10 +281,6 @@ class SampleIterator(Iterator):
         # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
 
-        from decimal import Decimal, getcontext
-        global PRECISION
-        getcontext().prec = SAMPLE_SPEC_PRECISION
-
         if isinstance(specification, range):
             specification = list(specification)
 
@@ -292,8 +296,6 @@ class SampleIterator(Iterator):
 
         elif isinstance(specification, SampleSpec):
 
-            getcontext().prec = specification._precision
-
             if specification.function is None:
                 self.start = specification.start
                 self.stop = specification.stop
@@ -303,7 +305,15 @@ class SampleIterator(Iterator):
                 self.generator = None                    # ??
 
                 def generate_current_value():   # return next value in range
-                    return float(Decimal(self.start) + Decimal(self.step) * Decimal(self.current_step))
+                    from decimal import Decimal, getcontext
+                    # Save global precision for later restoration
+                    _global_precision = getcontext().prec
+                    # Set SampleSpec precision
+                    getcontext().prec = specification._precision
+                    return_value = float(Decimal(self.start) + Decimal(self.step) * Decimal(self.current_step))
+                    # Restore global precision
+                    getcontext().prec = _global_precision
+                    return return_value
 
             elif is_function_type(specification.function):
                 self.start = 0
@@ -321,6 +331,7 @@ class SampleIterator(Iterator):
                 assert False, 'PROGRAM ERROR: {} item of {} passed to specification arg of {} ' \
                               'is not an iterator or a function_type'.\
                               format(repr('function'), SampleSpec.__name__, self.__class__.__name__)
+
 
         else:
             assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
