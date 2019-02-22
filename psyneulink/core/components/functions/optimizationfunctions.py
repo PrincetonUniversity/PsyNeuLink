@@ -68,12 +68,13 @@ PRECISION = 16
 
 class SampleSpec():
     '''
-    SampleSpec(   \
-    start=None,   \
-    stop=None,    \
-    step=None,    \
-    num=None,     \
-    function=None \
+    SampleSpec(    \
+    start=None,    \
+    stop=None,     \
+    step=None,     \
+    num=None,      \
+    function=None  \
+    precision=None \
     )
 
     Specify the information needed to create a SampleIterator that will either (a) generate discrete values in a range
@@ -153,11 +154,11 @@ class SampleSpec():
                  step:tc.optional(tc.any(int, float))=None,
                  num:tc.optional(int)=None,
                  function:tc.optional(is_function_type)=None,
-                 precision:int=PRECISION
+                 precision:int=None
                  ):
 
         from decimal import Decimal, getcontext
-        self._precision = precision
+        self._precision = precision or PRECISION
         getcontext().prec = self._precision
 
         if function is None:
