@@ -981,4 +981,3 @@ class EarlyStopping(object):
         if mode == 'max':
             self.is_better = lambda a, best: a > best + min_delta
 
-
