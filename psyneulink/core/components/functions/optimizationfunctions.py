@@ -63,8 +63,7 @@ class OptimizationFunctionError(Exception):
 # SampleSpec = namedtuple('SampleSpec', [('start', numbers.Number), ('stop', numbers.Number), ('generator', callable)])
 # SampleSpec = namedtuple('SampleSpec', 'start, stop, num, generator')
 
-PRECISION = 16
-
+SAMPLE_SPEC_PRECISION = 16
 
 class SampleSpec():
     '''
@@ -74,7 +73,7 @@ class SampleSpec():
     step=None,     \
     num=None,      \
     function=None  \
-    precision=16   \
+    precision=None \
     )
 
     Specify the information needed to create a SampleIterator that will either (a) generate discrete values in a range
@@ -158,11 +157,11 @@ class SampleSpec():
                  step:tc.optional(tc.any(int, float))=None,
                  num:tc.optional(int)=None,
                  function:tc.optional(is_function_type)=None,
-                 precision:int=16
+                 precision:tc.optional(int)=None
                  ):
 
         from decimal import Decimal, getcontext
-        self._precision = precision
+        self._precision = precision or SAMPLE_SPEC_PRECISION
         getcontext().prec = self._precision
 
         if function is None:
@@ -275,6 +274,8 @@ class SampleIterator(Iterator):
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
 
         from decimal import Decimal, getcontext
+        global PRECISION
+        getcontext().prec = SAMPLE_SPEC_PRECISION
 
         if isinstance(specification, range):
             specification = list(specification)
