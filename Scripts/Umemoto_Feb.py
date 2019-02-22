@@ -26,7 +26,7 @@ reconfCostParam1 = 5
 
 
 # Control Parameters
-signalSearchRange = pnl.SampleSpec(start=1, stop=1.8, step=0.2)
+signalSearchRange = pnl.SampleSpec(start=0.0, stop=0.5, step=0.2)
 # signalSearchRange = pnl.SampleSpec(start=0.0, stop=0.4, step=0.2)
 
 # Stimulus Mechanisms
