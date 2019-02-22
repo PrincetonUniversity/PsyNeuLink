@@ -51,6 +51,19 @@ max_alloc = 500
 # **************************************  CREATE COMPOSITION ***********************************************************
 # **********************************************************************************************************************
 
+# **************************************  PROCESSING MECHANISMS ********************************************************
+
+# Perceptual Mechanisms
+player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER PERCEPT")
+predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
+prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY PERCEPT")
+
+# Value and Reward Mechanisms (not yet used;  for future use)
+values = TransferMechanism(size=3, name="AGENT VALUES")
+reward = TransferMechanism(name="REWARD")
+
+# env = ForagerEnv()
+
 # ************************************** DOUBLE_DQN AGENT **************************************************************
 
 # ddqn_agent = DoubleDQNAgent(env=env, model_load_path='', eval_mode=True)
@@ -58,6 +71,7 @@ ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
                             eval_mode=True,
                             render=False
                             )
+
 perceptual_state = None
 veridical_state = None
 
@@ -69,34 +83,27 @@ def new_episode():
     perceptual_state = ddqn_agent.buffer.next(g(observation), is_new_episode=True)
     veridical_state = ddqn_agent.buffer.next(observation, is_new_episode=True)
 
-def get_optimal_action(observation):
-    # Get new state based on observation:
-    veridical_state = ddqn_agent.buffer.next(np.array(observation))
-    optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
-    return optimal_action
-
-# **************************************  PROCESSING MECHANISMS ********************************************************
-
-# Perceptual Mechanisms
-player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER PERCEPT")
-predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
-prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY PERCEPT")
-
-optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION")
-
-def get_action(variable=[[0,0],[0,0],[0,0]]):
+def ddqn_perceptual_action(variable=[[0,0],[0,0],[0,0]]):
     global perceptual_state
     # Convert variable to observation:
-    observation = np.array(list(variable[0]) + list(variable[1]) + list(variable[2]))
+    observation = list(variable[0]) + list(variable[1]) + list(variable[2])
     # Get new state based on observation:
-    perceptual_state = ddqn_agent.buffer.next(observation)
-    action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
-    return action
+    perceptual_state = ddqn_agent.buffer.next(np.array(observation))
+    action = ddqn_agent._select_action(perceptual_state)
+    return np.array(ddqn_agent._io_map(action.item()))
+
+def ddqn_veridical_action(player, predator, prey):
+    # Convert variable to observation:
+    observation = list(player) + list(predator) + list(prey)
+    # Get new state based on observation:
+    veridical_state = ddqn_agent.buffer.next(np.array(observation))
+    action = ddqn_agent._select_action(veridical_state)
+    return np.array(ddqn_agent._io_map(action.item()))
 
 # Action Mechanism
 #    Use ddqn's eval function to compute action for a given observation
 #    note: unitization is done in main loop, to allow compilation of LinearCombination function in ObjectiveMech) (TBI)
-action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]], function=get_action, name='ACTION')
+action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]], function=ddqn_perceptual_action, name='ACTION')
 
 # ************************************** BASIC COMPOSITION *************************************************************
 
@@ -110,7 +117,7 @@ agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
 # agent_comp.add_projection(sender=predator_percept, receiver=action_mech.input_states[1])
 # agent_comp.add_projection(sender=prey_percept, receiver=action_mech.input_states[2])
 
-agent_comp.add_nodes([player_percept, predator_percept, prey_percept, optimal_action_mech])
+agent_comp.add_nodes([player_percept, predator_percept, prey_percept])
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
 a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
@@ -125,29 +132,51 @@ agent_comp.add_projection(c)
 
 difference = Distance(metric=DIFFERENCE)
 #   function for ObjectiveMechanism
+optimal_action = [0,0]
+d=0
 
 def objective_function(variable):
     '''Return difference between optimal and actual actions'''
-    actual_action = variable[0]
-    optimal_action = variable[1]
-    similarity = 1-difference([optimal_action, actual_action])/4
-    return similarity
+    global optimal_action
+    global d
+    player_veridical = variable[0]
+    predator_veridical = variable[1]
+    prey_veridical = variable[2]
+    actual_action = variable[3]
+    optimal_action = ddqn_veridical_action(player_veridical, predator_veridical, prey_veridical)
+    d = difference([optimal_action, actual_action])/4
+    return 1-d
 
 ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept]},
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
                                    function=GridSearch(direction=MAXIMIZE, save_values=True),
                                    objective_mechanism=ObjectiveMechanism(function=objective_function,
-                                                                          monitor=[action_mech, optimal_action_mech]),
+                                                                          monitor=[{SHADOW_INPUTS:[player_percept,
+                                                                                                   predator_percept,
+                                                                                                   prey_percept]},
+                                                                                   action_mech]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
+                                                                  # allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 10, 100]),
+                                                                  # allocation_samples=[10, 1]),
                                                                   allocation_samples=[min_alloc, max_alloc],
+                                                                  # allocation_samples=[100],
                                                                   intensity_cost_function=Exponential(rate=cost_rate,
                                                                                                       bias=cost_bias)),
                                                     ControlSignal(projections=(VARIANCE,predator_percept),
+                                                                  # allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 10, 100]),
+                                                                  # allocation_samples=[10, 1]),
                                                                   allocation_samples=[min_alloc, max_alloc],
+                                                                  # allocation_samples=[0],
                                                                   intensity_cost_function=Exponential(rate=cost_rate,
                                                                                                       bias=cost_bias)),
                                                     ControlSignal(projections=(VARIANCE,prey_percept),
+                                                                  # allocation_samples=[0, 1, 10, 100]),
+                                                                  # allocation_samples=[0, 10, 100]),
+                                                                  # allocation_samples=[10, 1]),
                                                                   allocation_samples=[min_alloc, max_alloc],
+                                                                  # allocation_samples=[100],
                                                                   intensity_cost_function=Exponential(rate=cost_rate,
                                                                                                       bias=cost_bias))])
 # Add controller to Composition
@@ -177,24 +206,23 @@ def main():
     new_episode()
     for _ in range(num_episodes):
         observation = ddqn_agent.env.reset()
-        optimal_action=[0,0]
         while True:
             execution_id = 'TEST'
             if PNL_COMPILE:
                 BIN_EXECUTE = 'LLVM'
             else:
                 BIN_EXECUTE = 'Python'
-            optimal_action = get_optimal_action(observation)
             run_results = agent_comp.run(inputs={player_percept:[observation[player_coord_slice]],
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],
-                                                 optimal_action_mech:optimal_action},
+                                                 },
                                          execution_id=execution_id,
                                          bin_execute=BIN_EXECUTE,
                                          )
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
+            observation, reward, done, _ = ddqn_agent.env.step(action)
             print('\n**********************\nSTEP: ', steps)
 
             print('Observations:')
@@ -204,13 +232,8 @@ def main():
                                                                            predator_percept.parameters.value.get(execution_id)))
             print('\tPrey:\n\t\tveridical: {}\n\t\tperceived: {}'.format(prey_percept.parameters.variable.get(execution_id),
                                                                          prey_percept.parameters.value.get(execution_id)))
-            print('Actions:')
-            print('\tActual: {}\n\tOptimal: {}'.format(action, optimal_action))
-            # print('ObjectiveMechanism:')
-            # print('\tActual: {}\n\tOptimal: {}\n\tSimilarity: {}'.
-            #       format(ocm.objective_mechanism.parameters.variable.get(execution_id)[0],
-            #              ocm.objective_mechanism.parameters.variable.get(execution_id)[1],
-            #              ocm.objective_mechanism.parameters.value.get(execution_id)))
+            print('Action:')
+            print('\tActual: {}\n\tOptimal: {}\n\tDifference: {}'.format(action, optimal_action, d))
             print('Outcome: {}'.format(ocm.objective_mechanism.parameters.value.get(execution_id)))
 
             # print('Variance Params:')
@@ -256,8 +279,6 @@ def main():
             print('OCM Allocation (ocm.control_allocation):\n\t{}'.
                   format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
-            # Get observation for next iteration (based on action taken on this one)
-            observation, reward, done, _ = ddqn_agent.env.step(action)
             steps += 1
             if done:
                 break
