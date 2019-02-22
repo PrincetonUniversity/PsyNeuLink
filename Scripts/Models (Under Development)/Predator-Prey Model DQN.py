@@ -145,6 +145,7 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, pred
 # Add controller to Composition
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
+agent_comp.model_based_optimizer_mode = BEFORE
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
@@ -186,7 +187,18 @@ def main():
                                          )
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
+            def print_controller():
+                print('SIMULATION:')
+                for sample, value in zip(ocm.saved_samples, ocm.saved_values):
+                    print('\t\tSample: {} Value: {}'.format(sample, value))
+
+                print('OCM Allocation:\n\t{}'.
+                      format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
+
             print('\n**********************\nSTEP: ', steps)
+
+            if agent_comp.model_based_optimizer_mode is BEFORE:
+                print_controller()
 
             print('Observations:')
             print('\tPlayer:\n\t\tveridical: {}\n\t\tperceived: {}'.format(player_percept.parameters.variable.get(execution_id),
@@ -211,12 +223,9 @@ def main():
                          ocm.control_signals[1].parameters.cost.get(execution_id),
                          ocm.control_signals[2].parameters.cost.get(execution_id)))
 
-            print('SIMULATION (PREP FOR NEXT TRIAL):')
-            for sample, value in zip(ocm.saved_samples, ocm.saved_values):
-                print('\t\tSample: {} Value: {}'.format(sample, value))
+            if agent_comp.model_based_optimizer_mode is AFTER:
+                print_controller()
 
-            print('OCM Allocation (ocm.control_allocation):\n\t{}'.
-                  format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
             # Get observation for next iteration (based on action taken on this one)
             observation, reward, done, _ = ddqn_agent.env.step(action)
