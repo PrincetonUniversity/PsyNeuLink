@@ -60,41 +60,44 @@ class OptimizationFunctionError(Exception):
 #     start: numbers.Number
 #     stop: numbers.Number
 #     generator: callable
-
 # SampleSpec = namedtuple('SampleSpec', [('start', numbers.Number), ('stop', numbers.Number), ('generator', callable)])
-
 # SampleSpec = namedtuple('SampleSpec', 'start, stop, num, generator')
+
+SAMPLE_SPEC_PRECISION = 16
 
 class SampleSpec():
     '''
-    SampleSpec(   \
-    start=None,   \
-    stop=None,    \
-    step=None,    \
-    num=None,     \
-    function=None \
+    SampleSpec(    \
+    start=None,    \
+    stop=None,     \
+    step=None,     \
+    num=None,      \
+    function=None  \
+    precision=None \
     )
 
-    Specify the information needed to create a SampleIterator which will either (1) generate values in a range or (2)
-    call a function.
+    Specify the information needed to create a SampleIterator that will either (a) generate discrete values in a range
+    or (b) call a function that does so.
 
     (1) Generate values in a range by explicitly specifying a finite regular sequence of values, using an appropriate
         combination of the **start**, **stop**, **step** and/or **num**arguments.
 
         * if **start**, **stop**, and **step** are specified, the behavior is similar to `Numpy's arange
           <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.arange.html>`_. Calling
-          `next <SampleIterator.__next__>`first returns **start**. Each subsequent call to next returns **start** :math:`+` **step** :math:`*` current_step.
-          Iteration stops when the current value exceeds the **stop** value.
+          `next <SampleIterator.__next__>`first returns **start**. Each subsequent call to next returns
+          **start** :math:`+` **step** :math:`*` current_step.
+          Iteration stops when the current value exceeds the **stop** value.  If any of the specified arguments are
+          floats, precision determines the number of decimal places used for rounding to ensure num is a int.
 
         * if **start**, **stop**, and **num** are specified, the behavior is similar to `Numpy's linspace
           <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.linspace.html>`_. Calling
-          `next <SampleIterator.__next__>` first returns **start**. Each subsequent call to next returns **start** :math:`+` step :math:`*` current_step, where
-          step is set to :math:`\\frac{stop-start)}{num - 1}`. Iteration stops when **num** is reached,
-          or the current value exceeds the **stop** value.
+          `next <SampleIterator.__next__>` first returns **start**. Each subsequent call to next returns
+          **start** :math:`+` step :math:`*` current_step, where step is set to :math:`\\frac{stop-start)}{num - 1}`.
+          Iteration stops when **num** is reached, or the current value exceeds the **stop** value.
 
         * if **start**, **stop*, **step**, and **num** are all specified, then **step** and **num** must be compatible.
 
-    (2) Specify a function, which is called repeatedly to generate a sequence of values.
+    (2) Specify a function, that is called repeatedly to generate a sequence of values.
 
         * if **num** is specified, the **function** is called once on each iteration until **num** iterations are
           complete.
@@ -103,7 +106,8 @@ class SampleSpec():
           indefintely.
 
     .. note::
-        Some OptimizationFunctions may require that their SampleIterators have a "num" attribute.
+        * Some OptimizationFunctions may require that their SampleIterators have a "num" attribute.
+        * The Python decimal module is used to implement **precision** for rounding.
 
 
     Arguments
@@ -123,6 +127,9 @@ class SampleSpec():
 
     function : function
         Function to be called on each iteration. Must return one sample.
+
+    precision : int default 16
+        Number of decimal places used for rounding in floating point operations.
 
 
     Attributes
@@ -150,17 +157,26 @@ class SampleSpec():
                  stop:tc.optional(tc.any(int, float))=None,
                  step:tc.optional(tc.any(int, float))=None,
                  num:tc.optional(int)=None,
-                 function:tc.optional(is_function_type)=None
+                 function:tc.optional(is_function_type)=None,
+                 precision:tc.optional(int)=None
                  ):
+
+        from decimal import Decimal, getcontext
+        self._precision = precision or SAMPLE_SPEC_PRECISION
+        # Save global precision for later restoration
+        _global_precision = getcontext().prec
+        # Set SampleSpec precision
+        getcontext().prec = self._precision
 
         if function is None:
             if start is None or stop is None:
                 raise OptimizationFunctionError("If 'function' is not specified, then 'start' and 'stop' must be "
                                                 "specified.")
             if num is None and step is not None:
-                num = 1.0 + (stop - start) / step
+                num = int(Decimal(1.0) + Decimal(stop - start) / Decimal(step))
+                # num = 1.0 + (stop - start) / step
             elif step is None and num is not None:
-                step = (stop - start) / (num - 1)
+                step = (Decimal(stop) - Decimal(start)) / (num - 1)
             elif num is None and step is None:
                 raise OptimizationFunctionError("Must specify one of {}, {} or {}."
                                                 .format(repr('step'), repr('num'), repr('function')))
@@ -188,6 +204,9 @@ class SampleSpec():
         self.step = step
         self.num = num
         self.function = function
+
+        # Restore global precision
+        getcontext().prec = _global_precision
 
 
 class SampleIterator(Iterator):
@@ -225,8 +244,7 @@ class SampleIterator(Iterator):
 
     @tc.typecheck
     def __init__(self,
-                 specification:tc.any(list, range, np.ndarray, SampleSpec)):
-
+                 specification:tc.any(list, np.ndarray, range, SampleSpec)):
         '''
 
         Arguments
@@ -286,7 +304,15 @@ class SampleIterator(Iterator):
                 self.generator = None                    # ??
 
                 def generate_current_value():   # return next value in range
-                    return float(self.start + self.step*self.current_step)
+                    from decimal import Decimal, getcontext
+                    # Save global precision for later restoration
+                    _global_precision = getcontext().prec
+                    # Set SampleSpec precision
+                    getcontext().prec = specification._precision
+                    return_value = float(Decimal(self.start) + Decimal(self.step) * Decimal(self.current_step))
+                    # Restore global precision
+                    getcontext().prec = _global_precision
+                    return return_value
 
             elif is_function_type(specification.function):
                 self.start = 0
@@ -304,6 +330,7 @@ class SampleIterator(Iterator):
                 assert False, 'PROGRAM ERROR: {} item of {} passed to specification arg of {} ' \
                               'is not an iterator or a function_type'.\
                               format(repr('function'), SampleSpec.__name__, self.__class__.__name__)
+
 
         else:
             assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\

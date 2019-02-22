@@ -10,7 +10,7 @@ from gym_forager.envs.forager_env import ForagerEnv
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
 
-# Runtime Switches:
+# Runtime switches:
 MPI_IMPLEMENTATION = True
 RENDER = False
 PNL_COMPILE = False
@@ -18,6 +18,13 @@ RUN = True
 SHOW_GRAPH = False
 # MODEL_PATH = '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python/double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
+
+
+# Control costs
+COST_RATE = -.05
+COST_BIAS = -3
+ALLOCATION_SAMPLES = [0]
+
 
 # These should probably be replaced by reference to ForagerEnv constants:
 obs_len = 2
@@ -40,11 +47,6 @@ prey_value_idx = prey_idx * obs_len + obs_coords
 prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
-
-cost_rate = -.05
-cost_bias = -3
-min_alloc = 0
-max_alloc = 500
 
 
 # **********************************************************************************************************************
@@ -82,6 +84,7 @@ player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, na
 predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
 prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY PERCEPT")
 
+# Mechanism used to encode optimal action from call to Run
 optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION")
 
 def get_action(variable=[[0,0],[0,0],[0,0]]):
@@ -131,20 +134,21 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, pred
                                    objective_mechanism=ObjectiveMechanism(function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
-                                                                  allocation_samples=[min_alloc, max_alloc],
-                                                                  intensity_cost_function=Exponential(rate=cost_rate,
-                                                                                                      bias=cost_bias)),
+                                                                  allocation_samples=ALLOCATION_SAMPLES,
+                                                                  intensity_cost_function=Exponential(rate=COST_RATE,
+                                                                                                      bias=COST_BIAS)),
                                                     ControlSignal(projections=(VARIANCE,predator_percept),
-                                                                  allocation_samples=[min_alloc, max_alloc],
-                                                                  intensity_cost_function=Exponential(rate=cost_rate,
-                                                                                                      bias=cost_bias)),
+                                                                  allocation_samples=ALLOCATION_SAMPLES,
+                                                                  intensity_cost_function=Exponential(rate=COST_RATE,
+                                                                                                      bias=COST_BIAS)),
                                                     ControlSignal(projections=(VARIANCE,prey_percept),
-                                                                  allocation_samples=[min_alloc, max_alloc],
-                                                                  intensity_cost_function=Exponential(rate=cost_rate,
-                                                                                                      bias=cost_bias))])
+                                                                  allocation_samples=ALLOCATION_SAMPLES,
+                                                                  intensity_cost_function=Exponential(rate=COST_RATE,
+                                                                                                      bias=COST_BIAS))])
 # Add controller to Composition
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
+agent_comp.model_based_optimizer_mode = BEFORE
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
@@ -186,39 +190,39 @@ def main():
                                          )
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
+            def print_controller():
+                print('SIMULATION:')
+                for sample, value in zip(ocm.saved_samples, ocm.saved_values):
+                    print(f'\t\tSample: {sample} Value: {value}')
+                print('OCM Allocation:\n\t{}'.
+                      format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
+
             print('\n**********************\nSTEP: ', steps)
 
-            print('Observations:')
+            if agent_comp.model_based_optimizer_mode is BEFORE:
+                print_controller()
 
-            print(f'\tPlayer:'
-                  f'\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
-                  f'\n\t\tperceived: {player_percept.parameters.value.get(execution_id)}')
-            print('\tPredator:\n\t\tveridical: {}\n\t\tperceived: {}'.format(predator_percept.parameters.variable.get(execution_id),
-                                                                           predator_percept.parameters.value.get(execution_id)))
-            print('\tPrey:\n\t\tveridical: {}\n\t\tperceived: {}'.format(prey_percept.parameters.variable.get(execution_id),
-                                                                         prey_percept.parameters.value.get(execution_id)))
-            print('Actions:')
-            print('\tActual: {}\n\tOptimal: {}'.format(action, optimal_action))
-            print('Outcome: {}'.format(ocm.objective_mechanism.parameters.value.get(execution_id)))
+            print('Observations:'
+                  f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
+                  f'\n\t\tperceived: {player_percept.parameters.value.get(execution_id)}'
+                  f'\n\tPredator:\n\t\tveridical: {predator_percept.parameters.variable.get(execution_id)}'
+                  f'\n\t\tperceived: {predator_percept.parameters.value.get(execution_id)}'
+                  f'\n\tPrey:\n\t\tveridical: {prey_percept.parameters.variable.get(execution_id)}'
+                  f'\n\t\tperceived: {prey_percept.parameters.value.get(execution_id)}'
+                  f'\nActions:\n\tActual: {action}\n\tOptimal: {optimal_action}'
+                  f'\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
+                  f'\nOCM ControlSignals:'
+                  f'\n\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(execution_id)}'
+                  f'\n\tPredator\t{ocm.control_signals[1].parameters.value.get(execution_id)}'
+                  f'\n\tPrey:\t\t{ocm.control_signals[2].parameters.value.get(execution_id)}'
+                  f'\nOCM ControlSignal Costs:'
+                  f'\n\tPlayer:\t\t{ocm.control_signals[0].parameters.cost.get(execution_id)}'
+                  f'\n\tPredator:\t{ocm.control_signals[1].parameters.cost.get(execution_id)}'
+                  f'\n\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(execution_id)}')
 
-            print('OCM ControlSignals:')
-            print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-                  format(ocm.control_signals[0].parameters.value.get(execution_id),
-                         ocm.control_signals[1].parameters.value.get(execution_id),
-                         ocm.control_signals[2].parameters.value.get(execution_id)))
+            if agent_comp.model_based_optimizer_mode is AFTER:
+                print_controller()
 
-            print('OCM ControlSignal Costs:')
-            print('\tPlayer:\t\t{}\n\tPredator:\t{}\n\tPrey:\t\t{}'.
-                  format(ocm.control_signals[0].parameters.cost.get(execution_id),
-                         ocm.control_signals[1].parameters.cost.get(execution_id),
-                         ocm.control_signals[2].parameters.cost.get(execution_id)))
-
-            print('SIMULATION (PREP FOR NEXT TRIAL):')
-            for sample, value in zip(ocm.saved_samples, ocm.saved_values):
-                print('\t\tSample: {} Value: {}'.format(sample, value))
-
-            print('OCM Allocation (ocm.control_allocation):\n\t{}'.
-                  format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
             # Get observation for next iteration (based on action taken on this one)
             observation, reward, done, _ = ddqn_agent.env.step(action)

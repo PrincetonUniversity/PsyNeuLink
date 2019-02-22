@@ -575,9 +575,9 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALL, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, \
-    MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, \
-    VALUES
+from psyneulink.core.globals.keywords import AFTER, ALL, BEFORE, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, \
+    IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, \
+    ROLES, SOFT_CLAMP, VALUES
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
@@ -884,11 +884,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         name: str
 
         model_based_optimzer:   `OptimizationControlmechanism`
-            must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`
+            Must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`.
 
         enable_model_based_optimizer: bool
-            When set to True, executes the model_based_optimizer after each trial. When False, ignores the
-            model_based_optimizer
+            When set to True, executes the model_based_optimizer. When False, ignores the model_based_optimizer.
+
+        model_based_optimizer_mode: AFTER
+            Determines whether the model_based_optimizer is executed before or after the rest of the `Composition`
+            is executed in each trial.  Must be either the keyword BEFORE or AFTER.
 
         Attributes
         ----------
@@ -925,13 +928,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             A dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
             `shadow <InputState_Shadow_Inputs>` the original Node's input.
 
-        enable_model_based_optimizer : bool
-            When True, executes the Composition's `model_based_optimizer <Composition.model_based_optimizer>` at the
-            end of each Trial.
-
         model_based_optimizer : OptimizationControlMechanism
             If the Composition contains an `OptimizationControlMechanism` that runs simulations of its own
             `Composition`, then the OCM is stored here.
+
+        enable_model_based_optimizer : bool
+            When True, executes the Composition's `model_based_optimizer <Composition.model_based_optimizer>` in
+            each trial (see model_based_optimizer_mode <Composition.model_based_optimizer_mode>` for timing of
+            execution).
+
+        model_based_optimizer_mode :
+            Determines whether the model_based_optimizer is executed before or after the rest of the `Composition`
+            is executed on each trial.
 
         default_execution_id
             if no *execution_id* is specified in a call to run, this *execution_id* is used.
@@ -988,6 +996,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             name=None,
             model_based_optimizer=None,
             enable_model_based_optimizer=None,
+            model_based_optimizer_mode:tc.enum(BEFORE,AFTER)=AFTER,
             **param_defaults
     ):
         # also sets name
@@ -1016,6 +1025,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
         self.model_based_optimizer = model_based_optimizer
+        self.model_based_optimizer_mode = model_based_optimizer_mode
 
         self.projections = []
 
@@ -2996,6 +3006,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
+        if self.model_based_optimizer_mode is BEFORE:
+            # control phase
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
+            if (
+                    execution_phase != ContextFlags.INITIALIZING
+                    and execution_phase != ContextFlags.SIMULATION
+                    and self.enable_model_based_optimizer
+            ):
+                if self.model_based_optimizer:
+                    self.model_based_optimizer.parameters.context.get(
+                        execution_id).execution_phase = ContextFlags.PROCESSING
+                    control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
+                    self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
+                                                                    runtime_params=runtime_params, context=context)
+
+
         if bin_execute == 'Python':
             bin_execute = False
 
@@ -3191,18 +3217,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _comp_ex.execute_node(self.output_CIM)
             return _comp_ex.extract_node_output(self.output_CIM)
 
-        # control phase
-        execution_phase = self.parameters.context.get(execution_id).execution_phase
-        if (
-                execution_phase != ContextFlags.INITIALIZING
-                and execution_phase != ContextFlags.SIMULATION
-                and self.enable_model_based_optimizer
-        ):
-            if self.model_based_optimizer:
-                self.model_based_optimizer.parameters.context.get(
-                    execution_id).execution_phase = ContextFlags.PROCESSING
-                control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
+        if self.model_based_optimizer_mode is AFTER:
+            # control phase
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
+            if (
+                    execution_phase != ContextFlags.INITIALIZING
+                    and execution_phase != ContextFlags.SIMULATION
+                    and self.enable_model_based_optimizer
+            ):
+                if self.model_based_optimizer:
+                    self.model_based_optimizer.parameters.context.get(
+                        execution_id).execution_phase = ContextFlags.PROCESSING
+                    control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
+                    self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -3995,7 +4022,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
-           `net_outcome <ModelBasedOptimizationControlMechanism.net_outcome>` of the Composition, according to its
+           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
 
