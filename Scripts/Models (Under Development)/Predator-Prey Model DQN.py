@@ -41,6 +41,11 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
 
+cost_rate = -.05
+cost_bias = -1
+min_alloc = 0
+max_alloc = 500
+
 
 # **********************************************************************************************************************
 # **************************************  CREATE COMPOSITION ***********************************************************
@@ -149,25 +154,26 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, pred
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
-                                                                  # allocation_samples=[0, 100],
-                                                                  allocation_samples=[100],
-                                                                  intensity_cost_function=Exponential(rate=-.05,
-                                                                                                      bias=.001)),
+                                                                  allocation_samples=[min_alloc, max_alloc],
+                                                                  # allocation_samples=[100],
+                                                                  intensity_cost_function=Exponential(rate=cost_rate,
+                                                                                                      bias=cost_bias)),
                                                     ControlSignal(projections=(VARIANCE,predator_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
-                                                                  # allocation_samples=[0, 100],
-                                                                  allocation_samples=[0],
-                                                                  intensity_cost_function=Exponential(rate=-.05,
-                                                                                                      bias=.001)),
+                                                                  allocation_samples=[min_alloc, max_alloc],
+                                                                  # allocation_samples=[0],
+                                                                  intensity_cost_function=Exponential(rate=cost_rate,
+                                                                                                      bias=cost_bias)),
                                                     ControlSignal(projections=(VARIANCE,prey_percept),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
-                                                                  allocation_samples=[0, 100],
-                                                                  intensity_cost_function=Exponential(rate=-.05,
-                                                                                                      bias=.001))])
+                                                                  allocation_samples=[min_alloc, max_alloc],
+                                                                  # allocation_samples=[100],
+                                                                  intensity_cost_function=Exponential(rate=cost_rate,
+                                                                                                      bias=cost_bias))])
 # Add controller to Composition
 agent_comp.add_model_based_optimizer(ocm)
 agent_comp.enable_model_based_optimizer = True
@@ -228,13 +234,13 @@ def main():
                   format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
             print('OCM ControlSignal Costs:')
-            print('\tPlayer OBS:\t\t{}\n\tPredator OBS:\t{}\n\tPrey OBS:\t\t{}'.
+            print('\tPlayer:\t\t{}\n\tPredator:\t{}\n\tPrey:\t\t{}'.
                   format(ocm.control_signals[0].parameters.cost.get(execution_id),
                          ocm.control_signals[1].parameters.cost.get(execution_id),
                          ocm.control_signals[2].parameters.cost.get(execution_id)))
 
             print('OCM ControlSignals:')
-            print('\tPlayer OBS:\t\t{}\n\tPredator OBS\t{}\n\tPrey OBS:\t\t{}'.
+            print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
                   format(ocm.control_signals[0].parameters.value.get(execution_id),
                          ocm.control_signals[1].parameters.value.get(execution_id),
                          ocm.control_signals[2].parameters.value.get(execution_id)))
