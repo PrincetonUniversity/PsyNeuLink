@@ -85,14 +85,15 @@ class SampleSpec():
 
         * if **start**, **stop**, and **step** are specified, the behavior is similar to `Numpy's arange
           <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.arange.html>`_. Calling
-          `next <SampleIterator.__next__>`first returns **start**. Each subsequent call to next returns **start** :math:`+` **step** :math:`*` current_step.
+          `next <SampleIterator.__next__>`first returns **start**. Each subsequent call to next returns
+          **start** :math:`+` **step** :math:`*` current_step.
           Iteration stops when the current value exceeds the **stop** value.
 
         * if **start**, **stop**, and **num** are specified, the behavior is similar to `Numpy's linspace
           <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.linspace.html>`_. Calling
-          `next <SampleIterator.__next__>` first returns **start**. Each subsequent call to next returns **start** :math:`+` step :math:`*` current_step, where
-          step is set to :math:`\\frac{stop-start)}{num - 1}`. Iteration stops when **num** is reached,
-          or the current value exceeds the **stop** value.
+          `next <SampleIterator.__next__>` first returns **start**. Each subsequent call to next returns
+          **start** :math:`+` step :math:`*` current_step, where step is set to :math:`\\frac{stop-start)}{num - 1}`.
+          Iteration stops when **num** is reached, or the current value exceeds the **stop** value.
 
         * if **start**, **stop*, **step**, and **num** are all specified, then **step** and **num** must be compatible.
 
@@ -233,8 +234,7 @@ class SampleIterator(Iterator):
 
     @tc.typecheck
     def __init__(self,
-                 specification:tc.any(list, range, np.ndarray, SampleSpec)):
-
+                 specification:tc.any(list, np.ndarray, range, SampleSpec)):
         '''
 
         Arguments
@@ -270,6 +270,8 @@ class SampleIterator(Iterator):
         # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
 
+        from decimal import Decimal, getcontext
+
         if isinstance(specification, range):
             specification = list(specification)
 
@@ -284,6 +286,8 @@ class SampleIterator(Iterator):
                 return self.generator[self.current_step]
 
         elif isinstance(specification, SampleSpec):
+
+            getcontext().prec = specification._precision
 
             if specification.function is None:
                 self.start = specification.start
