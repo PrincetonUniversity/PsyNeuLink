@@ -42,7 +42,7 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 player_len = prey_len = predator_len = obs_coords
 
 cost_rate = -.05
-cost_bias = -1
+cost_bias = -3
 min_alloc = 0
 max_alloc = 500
 
