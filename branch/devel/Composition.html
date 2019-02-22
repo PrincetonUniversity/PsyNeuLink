@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.0.0+159.gea3de99 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.0.0+160.g86c8854 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+159.gea3de99 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+160.g86c8854 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+159
+                0.5.0.0+160
               </div>
             
           
@@ -368,7 +368,7 @@ five inputs are provided for each INPUT Node, and num_trials is not specified, t
 <p>The number of inputs specified <strong>must</strong> be the same for all Nodes in the input dictionary (except for any Nodes for
 which only one input is specified). In other words, all of the values in the input dictionary must have the same length
 as each other (or length 1).</p>
-<p>If num_trials is in use, <a class="reference internal" href="Run.html#psyneulink.core.globals.environment.run" title="psyneulink.core.globals.environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
+<p>If num_trials is in use, <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Node, and num_trials = 7, the system executes seven times. The input values from trials 0
 and 1 are used again on trials 5 and 6, respectively.</p>
 <table border="1" class="docutils">
@@ -834,16 +834,17 @@ as unlabeled arrows.</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x107470550&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>name</strong> (<em>str</em>) – </li>
-<li><strong>model_based_optimzer</strong> (<code class="xref any docutils literal"><span class="pre">OptimizationControlmechanism</span></code>) – must be specified if the <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> runs simulations of its own <a class="reference internal" href="#"><span class="doc">Composition</span></a></li>
-<li><strong>enable_model_based_optimizer</strong> (<em>bool</em>) – When set to True, executes the model_based_optimizer after each trial. When False, ignores the
-model_based_optimizer</li>
+<li><strong>model_based_optimzer</strong> (<code class="xref any docutils literal"><span class="pre">OptimizationControlmechanism</span></code>) – Must be specified if the <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> runs simulations of its own <a class="reference internal" href="#"><span class="doc">Composition</span></a>.</li>
+<li><strong>enable_model_based_optimizer</strong> (<em>bool</em>) – When set to True, executes the model_based_optimizer. When False, ignores the model_based_optimizer.</li>
+<li><strong>model_based_optimizer_mode</strong> (<em>AFTER</em>) – Determines whether the model_based_optimizer is executed before or after the rest of the <a class="reference internal" href="#"><span class="doc">Composition</span></a>
+is executed in each trial.  Must be either the keyword BEFORE or AFTER.</li>
 </ul>
 </td>
 </tr>
@@ -906,17 +907,25 @@ single call to <a class="reference internal" href="#psyneulink.core.compositions
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.compositions.composition.Composition.enable_model_based_optimizer">
-<code class="descname">enable_model_based_optimizer</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.enable_model_based_optimizer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – When True, executes the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer" title="psyneulink.core.compositions.composition.Composition.model_based_optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">model_based_optimizer</span></code></a> at the
-end of each Trial.</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="psyneulink.core.compositions.composition.Composition.model_based_optimizer">
 <code class="descname">model_based_optimizer</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>OptimizationControlMechanism</em> – If the Composition contains an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> that runs simulations of its own
 <a class="reference internal" href="#"><span class="doc">Composition</span></a>, then the OCM is stored here.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.enable_model_based_optimizer">
+<code class="descname">enable_model_based_optimizer</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.enable_model_based_optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – When True, executes the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer" title="psyneulink.core.compositions.composition.Composition.model_based_optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">model_based_optimizer</span></code></a> in
+each trial (see model_based_optimizer_mode &lt;Composition.model_based_optimizer_mode&gt;` for timing of
+execution).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.model_based_optimizer_mode">
+<code class="descname">model_based_optimizer_mode</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether the model_based_optimizer is executed before or after the rest of the <a class="reference internal" href="#"><span class="doc">Composition</span></a>
+is executed on each trial.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1031,7 +1040,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="MaskedMappingProjection.html#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – <p>When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
 means that each Projections within the cycle actually passes to its receiver its sender’s value from
@@ -1291,7 +1300,7 @@ a <a class="reference internal" href="Condition.html"><span class="doc">Conditio
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>predicted_input=None</em>, <em>control_allocation=None</em>, <em>num_trials=1</em>, <em>runtime_params=None</em>, <em>base_execution_id=None</em>, <em>execution_id=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs a simulation of the <a class="reference internal" href="#"><span class="doc">Composition</span></a>, with the specified control_allocation, excluding its
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer" title="psyneulink.core.compositions.composition.Composition.model_based_optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">model_based_optimizer</span></code></a> in order to return the
-<code class="xref any docutils literal"><span class="pre">net_outcome</span></code> of the Composition, according to its
+<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> of the Composition, according to its
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer" title="psyneulink.core.compositions.composition.Composition.model_based_optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">model_based_optimizer</span></code></a> under that control_allocation. All values are
 reset to pre-simulation values at the end of the simulation.</p>
 </dd></dl>
@@ -1417,7 +1426,7 @@ by checking whether any of its nodes are stateful.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+159.gea3de99',
+            VERSION:'0.5.0.0+160.g86c8854',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
