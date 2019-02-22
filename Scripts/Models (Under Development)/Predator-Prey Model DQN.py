@@ -133,7 +133,8 @@ def objective_function(variable):
     similarity = 1-difference([optimal_action, actual_action])/4
     return similarity
 
-ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept]},
+ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept,
+                                                            optimal_action_mech]},
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
                                    function=GridSearch(direction=MAXIMIZE, save_values=True),
                                    objective_mechanism=ObjectiveMechanism(function=objective_function,
