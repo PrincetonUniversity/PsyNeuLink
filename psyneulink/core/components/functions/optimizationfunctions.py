@@ -60,7 +60,6 @@ class OptimizationFunctionError(Exception):
 #     start: numbers.Number
 #     stop: numbers.Number
 #     generator: callable
-
 # SampleSpec = namedtuple('SampleSpec', [('start', numbers.Number), ('stop', numbers.Number), ('generator', callable)])
 # SampleSpec = namedtuple('SampleSpec', 'start, stop, num, generator')
 
