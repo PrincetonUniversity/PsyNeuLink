@@ -65,8 +65,6 @@ class OptimizationFunctionError(Exception):
 # SampleSpec = namedtuple('SampleSpec', 'start, stop, num, generator')
 
 PRECISION = 16
-from decimal import Decimal, getcontext
-getcontext().prec = PRECISION
 
 
 class SampleSpec():
@@ -79,8 +77,8 @@ class SampleSpec():
     function=None \
     )
 
-    Specify the information needed to create a SampleIterator which will either (1) generate values in a range or (2)
-    call a function.
+    Specify the information needed to create a SampleIterator that will either (a) generate discrete values in a range
+    or (b) call a function that does so.
 
     (1) Generate values in a range by explicitly specifying a finite regular sequence of values, using an appropriate
         combination of the **start**, **stop**, **step** and/or **num**arguments.
@@ -98,7 +96,7 @@ class SampleSpec():
 
         * if **start**, **stop*, **step**, and **num** are all specified, then **step** and **num** must be compatible.
 
-    (2) Specify a function, which is called repeatedly to generate a sequence of values.
+    (2) Specify a function, that is called repeatedly to generate a sequence of values.
 
         * if **num** is specified, the **function** is called once on each iteration until **num** iterations are
           complete.
@@ -154,8 +152,13 @@ class SampleSpec():
                  stop:tc.optional(tc.any(int, float))=None,
                  step:tc.optional(tc.any(int, float))=None,
                  num:tc.optional(int)=None,
-                 function:tc.optional(is_function_type)=None
+                 function:tc.optional(is_function_type)=None,
+                 precision:int=PRECISION
                  ):
+
+        from decimal import Decimal, getcontext
+        self._precision = precision
+        getcontext().prec = self._precision
 
         if function is None:
             if start is None or stop is None:
