@@ -13,26 +13,27 @@ RENDER = True
 PNL_COMPILE = False
 RUN = True
 SHOW_GRAPH = False
-# MODEL_PATH = '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python/double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
+# Switch for determining actual action taken in each step
 OPTIMAL_ACTION = 'OPTIMAL_ACTION'
 AGENT_ACTION = 'AGENT_ACTION'
 ACTION = AGENT_ACTION
 
+# Verbosity levels for console printout
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
 VERBOSE = STANDARD_REPORTING
 
-
-# Control costs
+# ControlSignal parameters
 COST_RATE = -.05
 COST_BIAS = -3
 ALLOCATION_SAMPLES = [500]
 
 
-# These should probably be replaced by reference to ForagerEnv constants:
+# Environment coordinates
+# (these should probably be replaced by reference to ForagerEnv constants)
 obs_len = 2
 obs_coords = 2
 action_len = 2
