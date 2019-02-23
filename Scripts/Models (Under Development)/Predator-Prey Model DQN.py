@@ -74,7 +74,16 @@ def new_episode():
 def get_optimal_action(observation):
     # Get new state based on observation:
     veridical_state = ddqn_agent.buffer.next(np.array(observation))
-    optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
+    # optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
+    optimal_action = ddqn_agent._select_action(veridical_state)
+    optimal_action_item = optimal_action.item()
+    mapped_action = ddqn_agent._io_map(optimal_action_item)
+    optimal_action = np.array(mapped_action)
+    print(f'\n\nOPTIMAL OBSERVATION: {observation}'
+          f'\nOPTIMAL ACTION: {optimal_action}'
+          f'\nOPTIMAL ACTION_ITEM: {optimal_action_item}'
+          f'\nMAPPED ACTION: {mapped_action}'
+          f'\nOPTIMAL ACTION FROM FUNCTION: {optimal_action}')
     return optimal_action
 
 # **************************************  PROCESSING MECHANISMS ********************************************************
@@ -90,10 +99,19 @@ optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION"
 def get_action(variable=[[0,0],[0,0],[0,0]]):
     global perceptual_state
     # Convert variable to observation:
-    observation = np.array(list(variable[0]) + list(variable[1]) + list(variable[2]))
+    observation = variable.reshape(6,)
     # Get new state based on observation:
     perceptual_state = ddqn_agent.buffer.next(observation)
-    action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
+    # action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
+    selected_action = ddqn_agent._select_action(perceptual_state)
+    selected_action_item = selected_action.item()
+    mapped_action = ddqn_agent._io_map(selected_action_item)
+    action = np.array(mapped_action)
+    print(f'\n\nACTUAL OBSERVATION: {observation}'
+          f'\nSELECTED ACTION: {selected_action}'
+          f'\nSELECTED ACTION_ITEM: {selected_action_item}'
+          f'\nMAPPED ACTION: {mapped_action}'
+          f'\nACTUAL ACTION FROM FUNCTION: {action}')
     return action
 
 # Action Mechanism
@@ -198,6 +216,10 @@ def main():
                       format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
             print('\n**********************\nSTEP: ', steps)
+
+            print(f'OUTER LOOP OPTIMAL ACTION:{optimal_action}')
+            print(f'OUTER LOOP RUN RESULTS:{run_results}')
+            print(f'OUTER LOOP ACTION:{action}')
 
             if agent_comp.model_based_optimizer_mode is BEFORE:
                 print_controller()
