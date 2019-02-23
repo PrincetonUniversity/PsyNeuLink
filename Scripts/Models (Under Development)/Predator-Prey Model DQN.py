@@ -56,28 +56,38 @@ player_len = prey_len = predator_len = obs_coords
 # ************************************** DOUBLE_DQN AGENT **************************************************************
 
 # ddqn_agent = DoubleDQNAgent(env=env, model_load_path='', eval_mode=True)
-ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
-                            eval_mode=True,
-                            render=False
-                            )
-perceptual_state = None
+ddqn_optimal_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
+                                    eval_mode=True,
+                                    render=False
+                                    )
+ddqn_actual_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
+                                   eval_mode=True,
+                                   render=False
+                                   )
+
 veridical_state = None
+perceptual_state = None
 
 def new_episode():
-    global perceptual_state
     global veridical_state
-    observation = ddqn_agent.env.reset()
+    global perceptual_state
+    veridical_observation = ddqn_optimal_agent.env.reset()
+    actual_observation = ddqn_optimal_agent.env.reset()
     g=GaussianDistort()
-    perceptual_state = ddqn_agent.buffer.next(g(observation), is_new_episode=True)
-    veridical_state = ddqn_agent.buffer.next(observation, is_new_episode=True)
+    veridical_state = ddqn_optimal_agent.buffer.next(veridical_observation, is_new_episode=True)
+
+    # Initial
+    ddqn_actual_agent.buffer = ddqn_optimal_agent.buffer
+    perceptual_state = veridical_state
+
 
 def get_optimal_action(observation):
     # Get new state based on observation:
-    veridical_state = ddqn_agent.buffer.next(np.array(observation))
+    veridical_state = ddqn_optimal_agent.buffer.next(np.array(observation))
     # optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
-    optimal_action = ddqn_agent._select_action(veridical_state)
+    optimal_action = ddqn_optimal_agent._select_action(veridical_state)
     optimal_action_item = optimal_action.item()
-    mapped_action = ddqn_agent._io_map(optimal_action_item)
+    mapped_action = ddqn_optimal_agent._io_map(optimal_action_item)
     optimal_action = np.array(mapped_action)
     print(f'\n\nOPTIMAL OBSERVATION: {observation}'
           f'\nOPTIMAL ACTION: {optimal_action}'
