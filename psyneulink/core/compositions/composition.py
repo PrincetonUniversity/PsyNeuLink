@@ -2822,6 +2822,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_model_based_optimizer:
             _assign_control_components(G)
 
+
         # GENERATE OUTPUT
 
         # Show as pdf
