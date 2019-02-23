@@ -223,17 +223,10 @@ def main():
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
             def print_controller():
-                print('\nSIMULATION RESULTS:')
-                for sample, value in zip(ocm.saved_samples, ocm.saved_values):
-                    print(f'\t\tSample: {sample} Value: {value}')
-
-            if VERBOSE >= ACTION_REPORTING:
-                print(f'OUTER LOOP RUN RESULTS:{run_results}')
-                print(f'OUTER LOOP ACTION:{action}')
-
-            if agent_comp.model_based_optimizer_mode is BEFORE:
-                if VERBOSE > SIMULATION_REPORTING:
-                    print_controller()
+                if VERBOSE >= SIMULATION_REPORTING:
+                    print('\nSIMULATION RESULTS:')
+                    for sample, value in zip(ocm.saved_samples, ocm.saved_values):
+                        print(f'\t\tSample: {sample} Value: {value}')
                 # print(f'\nOCM Allocation:\n\t{repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))})
                 print(f'\nOCM:'
                       f'\n\tControlSignals:'
@@ -245,7 +238,13 @@ def main():
                       f'\n\t\tPredator:\t{ocm.control_signals[1].parameters.cost.get(execution_id)}'
                       f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(execution_id)}')
 
+            if VERBOSE >= ACTION_REPORTING:
+                print(f'OUTER LOOP RUN RESULTS:{run_results}')
+                print(f'OUTER LOOP ACTION:{action}')
+
             if VERBOSE >= STANDARD_REPORTING:
+                if agent_comp.model_based_optimizer_mode is BEFORE:
+                    print_controller()
                 print(f'\nObservations:'
                       f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
                       f'\n\t\tperceived: {player_percept.parameters.value.get(execution_id)}'
@@ -256,7 +255,6 @@ def main():
                       f'\n\nActions:\n\tActual: {action}\n\tOptimal: {optimal_action}'
                       f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
                       )
-
                 if agent_comp.model_based_optimizer_mode is AFTER:
                     print_controller()
 
