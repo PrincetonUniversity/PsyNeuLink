@@ -2,7 +2,7 @@ import timeit
 import numpy as np
 from psyneulink import *
 
-from double_dqn import DoubleDQNAgent
+from double_dqn import DoubleDQNAgent, FrameBuffer
 
 from gym_forager.envs.forager_env import ForagerEnv
 
@@ -56,38 +56,42 @@ player_len = prey_len = predator_len = obs_coords
 # ************************************** DOUBLE_DQN AGENT **************************************************************
 
 # ddqn_agent = DoubleDQNAgent(env=env, model_load_path='', eval_mode=True)
-ddqn_optimal_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
-                                    eval_mode=True,
-                                    render=False
-                                    )
-ddqn_actual_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
-                                   eval_mode=True,
-                                   render=False
-                                   )
+ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
+                            eval_mode=True,
+                            render=False
+                            )
+
 
 veridical_state = None
+veridical_frame_buffer = None
 perceptual_state = None
+perceptual_frame_buffer = None
 
 def new_episode():
+    # Start new episode with veridical state
     global veridical_state
+    global veridical_frame_buffer
     global perceptual_state
-    veridical_observation = ddqn_optimal_agent.env.reset()
-    actual_observation = ddqn_optimal_agent.env.reset()
-    g=GaussianDistort(variance=0)
-    veridical_state = ddqn_optimal_agent.buffer.next(veridical_observation, is_new_episode=True)
+    global perceptual_frame_buffer
 
-    # Initialize ddqn_actual to be in same state as verdicial
-    ddqn_actual_agent.buffer = ddqn_optimal_agent.buffer
-    perceptual_state = veridical_state
+    initial_observation = ddqn_agent.env.reset()
+
+    # Initialize both states to verdical state based on first observation
+    perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
+
+    # Initialize both frame_buffers to veridical state
+    veridical_frame_buffer = ddqn_agent.buffer.buffer.copy()
+    perceptual_frame_buffer = ddqn_agent.buffer.buffer.copy()
 
 
 def get_optimal_action(observation):
     # Get new state based on observation:
-    veridical_state = ddqn_optimal_agent.buffer.next(np.array(observation))
+    ddqn_agent.buffer.buffer = veridical_frame_buffer
+    veridical_state = ddqn_agent.buffer.next(np.array(observation))
     # optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
-    optimal_action = ddqn_optimal_agent._select_action(veridical_state)
+    optimal_action = ddqn_agent._select_action(veridical_state)
     optimal_action_item = optimal_action.item()
-    mapped_action = ddqn_optimal_agent._io_map(optimal_action_item)
+    mapped_action = ddqn_agent._io_map(optimal_action_item)
     optimal_action = np.array(mapped_action)
     print(f'\n\nOPTIMAL OBSERVATION: {observation}'
           f'\nOPTIMAL ACTION: {optimal_action}'
@@ -111,12 +115,13 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
     # Convert variable to observation:
     observation = variable.reshape(6,)
     # Get new state based on observation:
-    ddqn_actual_agent.buffer.buffer = ddqn_optimal_agent.buffer.buffer.copy()
-    perceptual_state = ddqn_actual_agent.buffer.next(observation)
+    if perceptual_frame_buffer:
+        ddqn_agent.buffer.buffer = perceptual_frame_buffer
+    perceptual_state = ddqn_agent.buffer.next(observation)
     # action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
-    selected_action = ddqn_actual_agent._select_action(perceptual_state)
+    selected_action = ddqn_agent._select_action(perceptual_state)
     selected_action_item = selected_action.item()
-    mapped_action = ddqn_actual_agent._io_map(selected_action_item)
+    mapped_action = ddqn_agent._io_map(selected_action_item)
     action = np.array(mapped_action)
     print(f'\n\nACTUAL OBSERVATION: {observation}'
           f'\nSELECTED ACTION: {selected_action}'
@@ -194,16 +199,13 @@ def main():
     reward = 0
     done = False
     if RENDER:
-        ddqn_actual_agent.env.render()  # If visualization is desired
+        ddqn_agent.env.render()  # If visualization is desired
     else:
         print("Running simulation...")
     steps = 0
     start_time = timeit.default_timer()
-    new_episode()
     for _ in range(num_episodes):
-        ddqn_optimal_agent.env.reset()
-        observation = ddqn_actual_agent.env.reset()
-        optimal_action=[0,0]
+        new_episode()
         while True:
             execution_id = 'TEST'
             if PNL_COMPILE:
@@ -257,9 +259,9 @@ def main():
             if agent_comp.model_based_optimizer_mode is AFTER:
                 print_controller()
 
-
-            # Get observation for next iteration (based on action taken on this one)
-            observation, reward, done, _ = ddqn_actual_agent.env.step(action)
+            # Get observation for next iteration based on optimal action taken on this one)
+            ddqn_agent.buffer = veridical_frame_buffer
+            observation, reward, done, _ = ddqn_agent.env.step(optimal_action)
             steps += 1
             if done:
                 break
@@ -267,7 +269,7 @@ def main():
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
           f'{stop_time - start_time:.2f} seconds')
     if RENDER:
-        ddqn_actual_agent.env.render(close=True)  # If visualization is desired
+        ddqn_agent.env.render(close=True)  # If visualization is desired
 
 if RUN:
     if __name__ == "__main__":
