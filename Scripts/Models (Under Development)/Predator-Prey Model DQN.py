@@ -12,7 +12,7 @@ from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime switches:
 MPI_IMPLEMENTATION = True
-RENDER = False
+RENDER = True
 PNL_COMPILE = False
 RUN = True
 SHOW_GRAPH = False
@@ -23,7 +23,7 @@ MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_
 # Control costs
 COST_RATE = -.05
 COST_BIAS = -3
-ALLOCATION_SAMPLES = [0]
+ALLOCATION_SAMPLES = [0,500]
 
 
 # These should probably be replaced by reference to ForagerEnv constants:
@@ -73,10 +73,10 @@ def new_episode():
     global perceptual_state
     veridical_observation = ddqn_optimal_agent.env.reset()
     actual_observation = ddqn_optimal_agent.env.reset()
-    g=GaussianDistort()
+    g=GaussianDistort(variance=0)
     veridical_state = ddqn_optimal_agent.buffer.next(veridical_observation, is_new_episode=True)
 
-    # Initial
+    # Initialize ddqn_actual to be in same state as verdicial
     ddqn_actual_agent.buffer = ddqn_optimal_agent.buffer
     perceptual_state = veridical_state
 
@@ -111,11 +111,12 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
     # Convert variable to observation:
     observation = variable.reshape(6,)
     # Get new state based on observation:
-    perceptual_state = ddqn_agent.buffer.next(observation)
+    ddqn_actual_agent.buffer.buffer = ddqn_optimal_agent.buffer.buffer.copy()
+    perceptual_state = ddqn_actual_agent.buffer.next(observation)
     # action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
-    selected_action = ddqn_agent._select_action(perceptual_state)
+    selected_action = ddqn_actual_agent._select_action(perceptual_state)
     selected_action_item = selected_action.item()
-    mapped_action = ddqn_agent._io_map(selected_action_item)
+    mapped_action = ddqn_actual_agent._io_map(selected_action_item)
     action = np.array(mapped_action)
     print(f'\n\nACTUAL OBSERVATION: {observation}'
           f'\nSELECTED ACTION: {selected_action}'
@@ -193,14 +194,15 @@ def main():
     reward = 0
     done = False
     if RENDER:
-        ddqn_agent.env.render()  # If visualization is desired
+        ddqn_actual_agent.env.render()  # If visualization is desired
     else:
         print("Running simulation...")
     steps = 0
     start_time = timeit.default_timer()
     new_episode()
     for _ in range(num_episodes):
-        observation = ddqn_agent.env.reset()
+        ddqn_optimal_agent.env.reset()
+        observation = ddqn_actual_agent.env.reset()
         optimal_action=[0,0]
         while True:
             execution_id = 'TEST'
@@ -257,7 +259,7 @@ def main():
 
 
             # Get observation for next iteration (based on action taken on this one)
-            observation, reward, done, _ = ddqn_agent.env.step(action)
+            observation, reward, done, _ = ddqn_actual_agent.env.step(action)
             steps += 1
             if done:
                 break
@@ -265,7 +267,7 @@ def main():
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
           f'{stop_time - start_time:.2f} seconds')
     if RENDER:
-        ddqn_agent.env.render(close=True)  # If visualization is desired
+        ddqn_actual_agent.env.render(close=True)  # If visualization is desired
 
 if RUN:
     if __name__ == "__main__":
