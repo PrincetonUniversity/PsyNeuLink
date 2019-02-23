@@ -29,7 +29,7 @@ VERBOSE = STANDARD_REPORTING
 # ControlSignal parameters
 COST_RATE = -.05
 COST_BIAS = -3
-ALLOCATION_SAMPLES = [500]
+ALLOCATION_SAMPLES = [0, 500]
 
 
 # Environment coordinates
@@ -96,7 +96,10 @@ prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), na
 # Mechanism used to encode optimal action from call to Run
 optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION")
 
+actual_agent_frame_buffer = None
+
 def get_action(variable=[[0,0],[0,0],[0,0]]):
+    global actual_agent_frame_buffer
     # Convert variable to observation:
     observation = variable.reshape(6,)
 
@@ -105,7 +108,9 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
     buffer_cache = ddqn_agent.buffer.buffer.copy()
     # - then get new state based on current observation
     perceptual_state = ddqn_agent.buffer.next(observation)
-    # - finally, restore frame buffer for use by next action/simulation
+    # Save frame buffer in case needed to restore buffer to state following perceptual observation
+    actual_agent_frame_buffer = ddqn_agent.buffer.buffer
+    # - finally, restore frame buffer to initial state for use by next simulation or actual action
     ddqn_agent.buffer.buffer = buffer_cache
 
     # Get and return action
@@ -182,10 +187,12 @@ if SHOW_GRAPH:
 num_episodes = 1
 
 def main():
+
     if RENDER:
         ddqn_agent.env.render()  # If visualization is desired
     else:
-        print("\nRunning simulation...")
+        print('\nRunning simulation... ')
+
     steps = 0
     start_time = timeit.default_timer()
     for _ in range(num_episodes):
@@ -202,13 +209,13 @@ def main():
                 print(f'\nSTEP: {steps} ************************************************')
 
             # Cache frame buffer
-            buffer_cache = ddqn_agent.buffer.buffer.copy()
+            trial_start_buffer = ddqn_agent.buffer.buffer.copy()
             # Get optimal action based on observation
             optimal_action = get_optimal_action(observation)
             # Save frame buffer after optimal action
-            optimal_buffer_frame = ddqn_agent.buffer.buffer
+            optimal_agent_frame_buffer = ddqn_agent.buffer.buffer
             # Restore initial state of frame buffer (for use by Composition)
-            ddqn_agent.buffer.buffer = buffer_cache
+            ddqn_agent.buffer.buffer = trial_start_buffer
 
             if VERBOSE >= ACTION_REPORTING:
                 print(f'\nOUTER LOOP OPTIMAL ACTION:{optimal_action}')
@@ -221,8 +228,8 @@ def main():
                                          execution_id=execution_id,
                                          bin_execute=BIN_EXECUTE,
                                          )
-            action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
-
+            agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            
             def print_controller():
                 if VERBOSE >= SIMULATION_REPORTING:
                     print('\nSIMULATION RESULTS:')
@@ -241,7 +248,7 @@ def main():
 
             if VERBOSE >= ACTION_REPORTING:
                 print(f'OUTER LOOP RUN RESULTS:{run_results}')
-                print(f'OUTER LOOP ACTION:{action}')
+                print(f'OUTER LOOP AGENT ACTION:{agent_action}')
 
             if VERBOSE >= STANDARD_REPORTING:
                 if agent_comp.model_based_optimizer_mode is BEFORE:
@@ -253,23 +260,29 @@ def main():
                       f'\n\t\tperceived: {predator_percept.parameters.value.get(execution_id)}'
                       f'\n\tPrey:\n\t\tveridical: {prey_percept.parameters.variable.get(execution_id)}'
                       f'\n\t\tperceived: {prey_percept.parameters.value.get(execution_id)}'
-                      f'\n\nActions:\n\tActual: {action}\n\tOptimal: {optimal_action}'
+                      f'\n\nActions:\n\tAgent: {agent_action}\n\tOptimal: {optimal_action}'
                       f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
                       )
                 if agent_comp.model_based_optimizer_mode is AFTER:
                     print_controller()
 
             # Restore frame buffer to state after optimal action taken (at beginning of trial)
-            ddqn_agent.buffer.buffer = optimal_buffer_frame
+            # This is so that agent's action's can be compared to optimal ones on a trial-by-trial basis
+            ddqn_agent.buffer.buffer = optimal_agent_frame_buffer
+            # # The following allows accumulation of agent's errors (assumes simulations are run before actual action)
+            # ddqn_agent.buffer.buffer = actual_agent_frame_buffer
 
             if ACTION is OPTIMAL_ACTION:
-                # Get observation for next iteration based on optimal action taken in this one
-                observation, reward, done, _ = ddqn_agent.env.step(optimal_action)
+                action = optimal_action
             elif ACTION is AGENT_ACTION:
-                # Get observation for next iteration based on agent's action in this one
-                observation, reward, done, _ = ddqn_agent.env.step(action)
+                action = agent_action
             else:
                 assert False, "Must choose either OPTIMAL_ACTION or AGENT_ACTION"
+
+            # Get observation for next iteration based on optimal action taken in this one
+            observation, reward, done, _ = ddqn_agent.env.step(action)
+
+            print(f'\nAction Taken (using {ACTION}): {action}')
 
 
             steps += 1
