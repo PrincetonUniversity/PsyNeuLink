@@ -28,7 +28,9 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+from psyneulink.core.globals.keywords import \
+    ANGLE, CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
@@ -477,9 +479,10 @@ class Distance(ObjectiveFunction):
     .. _Distance:
 
     Return the distance between the vectors in the two items of `variable <Distance.variable>` using the `distance
-    metric <DistanceMetrics>` specified in the `metric <Stability.metric>` attribute.  If `normalize
-    <Distance.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
-    <Stability.variable>`.
+    metric <DistanceMetrics>` specified in the `metric <Stability.metric>` attribute.
+
+    If `normalize <Distance.normalize>` is `True`, the result is normalized by the length of (number of elements in)
+    `variable <Stability.variable>` (except for
 
     Arguments
     ---------
@@ -492,7 +495,7 @@ class Distance(ObjectiveFunction):
         <Distance.variable>`.
 
     normalize : bool : Default False
-        specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
+        specifies whether to normalize the result;  metric-dependent
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -519,7 +522,9 @@ class Distance(ObjectiveFunction):
         <Distance.variable>`.
 
     normalize : bool
-        determines whether the distance is normalized by the length of `variable <Distance.variable>`.
+        determines whether the distance is normalized for metrics that support this.
+        For most metrics, normalized by the length of `variable <Distance.variable>`;
+        for *ANGLE*, absolute value of angle (0-180 degress) is normalized between 0-1.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -611,15 +616,29 @@ class Distance(ObjectiveFunction):
                 )
 
     def cosine(v1, v2):
-        numer = np.sum(v1 * v2)
-        denom = np.sqrt(np.sum(v1 ** 2)) * np.sqrt(np.sum(v2 ** 2)) or EPSILON
-        return numer / denom
+        numerator = np.sum(v1 * v2)
+        denominator = np.sqrt(np.sum(v1 ** 2)) * np.sqrt(np.sum(v2 ** 2)) or EPSILON
+        return numerator / denominator
+
+    def angle(v1, v2):
+        '''Return angle of v2 relative to v1 (0 and 180 degrees; positive = clockwise, negative = counter-clockwise'''
+        if len(v1)==1 or len(v2)==1:
+            return 0
+        # define matrix for clockwise rotation
+        R = np.matrix([[v2[0,0], v2[1,0]],[-v2[1,0], v2[0,0]]])
+        # rotate vector to align it with x-axis
+        rotated_v2 = R*v1
+        # compute distance metric
+        distance_metric = np.arctan2(rotated_v2[1,0],rotated_v2[0,0])
+        distance_metric_normalized = distance_metric/np.arctan2(0, -1)
+        return distance_metric_normalized * 180
 
     def correlation(v1, v2):
         v1_norm = v1 - np.mean(v1)
         v2_norm = v2 - np.mean(v2)
         denom = np.sqrt(np.sum(v1_norm ** 2) * np.sum(v2_norm ** 2)) or EPSILON
         return np.sum(v1_norm * v2_norm) / denom
+
 
     def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
@@ -897,8 +916,14 @@ class Distance(ObjectiveFunction):
 
         # Cosine similarity of v1 and v2
         elif self.metric is COSINE:
-            # result = np.correlate(v1, v2)
             result = 1 - np.abs(Distance.cosine(v1, v2))
+            return self.convert_output_type(result)
+
+        # Angle between v1 and v2 (0-180 degrees; postivie=clockwise, negative=counterclockise; normalize:0-1)
+        elif self.metric is ANGLE:
+            result = Distance.angle(v1, v2)
+            if self.normalize:
+                result = np.abs(result)/180
             return self.convert_output_type(result)
 
         # Correlation of v1 and v2
@@ -925,7 +950,7 @@ class Distance(ObjectiveFunction):
         else:
             assert False, '{} not recognized in {}'.format(repr(METRIC), self.__class__.__name__)
 
-        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
+        if self.normalize and not self.metric in {MAX_ABS_DIFF}:
             if self.metric is ENERGY:
                 result /= len(v1) ** 2
             else:
