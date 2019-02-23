@@ -18,13 +18,17 @@ RUN = True
 SHOW_GRAPH = False
 # MODEL_PATH = '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python/double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
-VERBOSE = 1
+
+ACTION_REPORTING = 3
+SIMULATION_REPORTING = 2
+STANDARD_REPORTING = 1
+VERBOSE = STANDARD_REPORTING
 
 
 # Control costs
 COST_RATE = -.05
 COST_BIAS = -3
-ALLOCATION_SAMPLES = [500]
+ALLOCATION_SAMPLES = [0,500]
 
 
 # These should probably be replaced by reference to ForagerEnv constants:
@@ -75,7 +79,7 @@ def get_optimal_action(observation):
     # Get new state based on observation:
     veridical_state = ddqn_agent.buffer.next(np.array(observation))
     optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
-    if VERBOSE > 1:
+    if VERBOSE >= ACTION_REPORTING:
         print(f'\n\nOPTIMAL OBSERVATION: {observation}'
               f'\nVERIDICAL STATE: {veridical_state.reshape(12,)}'
               f'\nOPTIMAL ACTION: {optimal_action}')
@@ -105,7 +109,7 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
 
     # Get and return action
     action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
-    if VERBOSE > 1:
+    if VERBOSE >= ACTION_REPORTING:
         print(f'\n\nACTUAL OBSERVATION: {observation}'
               f'\nACTUAL PERCEPTUAL STATE: {perceptual_state.reshape(12,)}'
               f'\nACTUAL ACTION FROM FUNCTION: {action}')
@@ -193,7 +197,7 @@ def main():
             else:
                 BIN_EXECUTE = 'Python'
 
-            if VERBOSE:
+            if VERBOSE >= STANDARD_REPORTING:
                 print(f'\nSTEP: {steps} ************************************************')
 
             # Cache frame buffer
@@ -205,7 +209,7 @@ def main():
             # Restore initial state of frame buffer (for use by Composition)
             ddqn_agent.buffer.buffer = buffer_cache
 
-            if VERBOSE:
+            if VERBOSE >= ACTION_REPORTING:
                 print(f'\nOUTER LOOP OPTIMAL ACTION:{optimal_action}')
 
             # Get agent's action based on perceptual distoration of observation (and application of control)
@@ -222,34 +226,36 @@ def main():
                 print('\nSIMULATION RESULTS:')
                 for sample, value in zip(ocm.saved_samples, ocm.saved_values):
                     print(f'\t\tSample: {sample} Value: {value}')
-                print('OCM Allocation:\n\t{}'.
-                      format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
-            if VERBOSE:
+            if VERBOSE >= ACTION_REPORTING:
                 print(f'OUTER LOOP RUN RESULTS:{run_results}')
                 print(f'OUTER LOOP ACTION:{action}')
 
             if agent_comp.model_based_optimizer_mode is BEFORE:
-                print_controller()
+                if VERBOSE > SIMULATION_REPORTING:
+                    print_controller()
+                # print(f'\nOCM Allocation:\n\t{repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))})
+                print(f'\nOCM:'
+                      f'\n\tControlSignals:'
+                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(execution_id)}'
+                      f'\n\t\tPredator\t{ocm.control_signals[1].parameters.value.get(execution_id)}'
+                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.value.get(execution_id)}'
+                      f'\n\n\tControlSignal Costs:'
+                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.cost.get(execution_id)}'
+                      f'\n\t\tPredator:\t{ocm.control_signals[1].parameters.cost.get(execution_id)}'
+                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(execution_id)}')
 
-            if VERBOSE:
-                print('Observations:'
+            if VERBOSE >= STANDARD_REPORTING:
+                print(f'\nObservations:'
                       f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
                       f'\n\t\tperceived: {player_percept.parameters.value.get(execution_id)}'
                       f'\n\tPredator:\n\t\tveridical: {predator_percept.parameters.variable.get(execution_id)}'
                       f'\n\t\tperceived: {predator_percept.parameters.value.get(execution_id)}'
                       f'\n\tPrey:\n\t\tveridical: {prey_percept.parameters.variable.get(execution_id)}'
                       f'\n\t\tperceived: {prey_percept.parameters.value.get(execution_id)}'
-                      f'\nActions:\n\tActual: {action}\n\tOptimal: {optimal_action}'
-                      f'\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
-                      f'\nOCM ControlSignals:'
-                      f'\n\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(execution_id)}'
-                      f'\n\tPredator\t{ocm.control_signals[1].parameters.value.get(execution_id)}'
-                      f'\n\tPrey:\t\t{ocm.control_signals[2].parameters.value.get(execution_id)}'
-                      f'\nOCM ControlSignal Costs:'
-                      f'\n\tPlayer:\t\t{ocm.control_signals[0].parameters.cost.get(execution_id)}'
-                      f'\n\tPredator:\t{ocm.control_signals[1].parameters.cost.get(execution_id)}'
-                      f'\n\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(execution_id)}')
+                      f'\n\nActions:\n\tActual: {action}\n\tOptimal: {optimal_action}'
+                      f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
+                      )
 
                 if agent_comp.model_based_optimizer_mode is AFTER:
                     print_controller()
