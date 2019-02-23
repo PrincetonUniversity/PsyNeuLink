@@ -1,10 +1,7 @@
 import timeit
 import numpy as np
 from psyneulink import *
-
 from double_dqn import DoubleDQNAgent, FrameBuffer
-
-from gym_forager.envs.forager_env import ForagerEnv
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -12,12 +9,16 @@ from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime switches:
 MPI_IMPLEMENTATION = True
-RENDER = False
+RENDER = True
 PNL_COMPILE = False
 RUN = True
 SHOW_GRAPH = False
 # MODEL_PATH = '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python/double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
+
+OPTIMAL_ACTION = 'OPTIMAL_ACTION'
+AGENT_ACTION = 'AGENT_ACTION'
+ACTION = AGENT_ACTION
 
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
@@ -28,7 +29,7 @@ VERBOSE = STANDARD_REPORTING
 # Control costs
 COST_RATE = -.05
 COST_BIAS = -3
-ALLOCATION_SAMPLES = [0,500]
+ALLOCATION_SAMPLES = [500]
 
 
 # These should probably be replaced by reference to ForagerEnv constants:
@@ -261,8 +262,16 @@ def main():
             # Restore frame buffer to state after optimal action
             ddqn_agent.buffer.buffer = optimal_buffer_frame
 
-            # Get observation for next iteration based on optimal action taken in this one)
-            observation, reward, done, _ = ddqn_agent.env.step(optimal_action)
+            if ACTION is OPTIMAL_ACTION:
+                # Get observation for next iteration based on optimal action taken in this one)
+                observation, reward, done, _ = ddqn_agent.env.step(optimal_action)
+            elif ACTION is AGENT_ACTION:
+                # Get observation for next iteration based on agent's action in this one)
+                observation, reward, done, _ = ddqn_agent.env.step(action)
+            else:
+                assert False, "Must choose either OPTIMAL_ACTION or AGENT_ACTION"
+
+
             steps += 1
             if done:
                 break
