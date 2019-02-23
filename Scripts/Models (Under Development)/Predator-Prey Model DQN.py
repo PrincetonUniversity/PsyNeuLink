@@ -1,7 +1,7 @@
 import timeit
 import numpy as np
 from psyneulink import *
-from double_dqn import DoubleDQNAgent, FrameBuffer
+from double_dqn import DoubleDQNAgent
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -65,9 +65,8 @@ player_len = prey_len = predator_len = obs_coords
 # ddqn_agent = DoubleDQNAgent(env=env, model_load_path='', eval_mode=True)
 ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
                             eval_mode=True,
-                            render=False
+                            # render=False
                             )
-
 
 def new_episode():
     # Start new episode with veridical state
@@ -260,14 +259,14 @@ def main():
                 if agent_comp.model_based_optimizer_mode is AFTER:
                     print_controller()
 
-            # Restore frame buffer to state after optimal action
+            # Restore frame buffer to state after optimal action taken (at beginning of trial)
             ddqn_agent.buffer.buffer = optimal_buffer_frame
 
             if ACTION is OPTIMAL_ACTION:
-                # Get observation for next iteration based on optimal action taken in this one)
+                # Get observation for next iteration based on optimal action taken in this one
                 observation, reward, done, _ = ddqn_agent.env.step(optimal_action)
             elif ACTION is AGENT_ACTION:
-                # Get observation for next iteration based on agent's action in this one)
+                # Get observation for next iteration based on agent's action in this one
                 observation, reward, done, _ = ddqn_agent.env.step(action)
             else:
                 assert False, "Must choose either OPTIMAL_ACTION or AGENT_ACTION"
