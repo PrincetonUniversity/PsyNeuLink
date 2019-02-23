@@ -62,31 +62,16 @@ ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
                             )
 
 
-veridical_state = None
-veridical_frame_deque = None
-perceptual_state = None
-perceptual_frame_deque = None
-
 def new_episode():
     # Start new episode with veridical state
-    global veridical_state
-    global veridical_frame_deque
-    global perceptual_state
-    global perceptual_frame_deque
 
     initial_observation = ddqn_agent.env.reset()
 
     # Initialize both states to verdical state based on first observation
     perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
 
-    # Initialize both frame_buffers to veridical state
-    veridical_frame_deque = ddqn_agent.buffer.buffer.copy()
-    perceptual_frame_deque = ddqn_agent.buffer.buffer.copy()
-
-
 def get_optimal_action(observation):
     # Get new state based on observation:
-    ddqn_agent.buffer.buffer = veridical_frame_deque
     veridical_state = ddqn_agent.buffer.next(np.array(observation))
     optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
     print(f'\n\nOPTIMAL OBSERVATION: {observation}'
@@ -105,7 +90,6 @@ prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(varia
 optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION")
 
 def get_action(variable=[[0,0],[0,0],[0,0]]):
-    global perceptual_state
     # Convert variable to observation:
     observation = variable.reshape(6,)
     # Get new state based on observation, caching and restoring buffer so that it is not incremented by observation:
@@ -204,8 +188,14 @@ def main():
 
             print(f'\nSTEP: {steps} ************************************************')
 
-            # Get optimal action based on observation, which also updates frame buffer based on that action
+            # Cache frame buffer
+            buffer_cache = ddqn_agent.buffer.buffer.copy()
+            # Get optimal action based on observation
             optimal_action = get_optimal_action(observation)
+            # Save frame buffer after optimal action
+            optimal_buffer_frame = ddqn_agent.buffer.buffer
+            # Restore initial state of frame buffer (for use by Composition)
+            ddqn_agent.buffer.buffer = buffer_cache
 
             print(f'\nOUTER LOOP OPTIMAL ACTION:{optimal_action}')
 
@@ -253,8 +243,10 @@ def main():
             if agent_comp.model_based_optimizer_mode is AFTER:
                 print_controller()
 
+            # Restore frame buffer to state after optimal action
+            ddqn_agent.buffer.buffer = optimal_buffer_frame
+
             # Get observation for next iteration based on optimal action taken in this one)
-            ddqn_agent.buffer.buffer = veridical_frame_deque
             observation, reward, done, _ = ddqn_agent.env.step(optimal_action)
             steps += 1
             if done:
