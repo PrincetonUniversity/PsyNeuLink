@@ -152,11 +152,13 @@ def objective_function(variable):
     similarity = 1-difference([optimal_action, actual_action])/4
     return similarity
 
-ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept,
+ocm = OptimizationControlMechanism(name='EVC',
+                                   features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept,
                                                             optimal_action_mech]},
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
                                    function=GridSearch(direction=MAXIMIZE, save_values=True),
-                                   objective_mechanism=ObjectiveMechanism(function=objective_function,
+                                   objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
+                                                                          function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
@@ -176,8 +178,8 @@ agent_comp.enable_model_based_optimizer = True
 agent_comp.model_based_optimizer_mode = BEFORE
 
 if SHOW_GRAPH:
-    # agent_comp.show_graph(show_model_based_optimizer=True)
-    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True)
+    agent_comp.show_graph(show_model_based_optimizer=True)
+    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True)
 
 
 # *********************************************************************************************************************
