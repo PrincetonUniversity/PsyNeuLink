@@ -12,7 +12,7 @@ from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime switches:
 MPI_IMPLEMENTATION = True
-RENDER = True
+RENDER = False
 PNL_COMPILE = False
 RUN = True
 SHOW_GRAPH = False
@@ -88,25 +88,18 @@ def get_optimal_action(observation):
     # Get new state based on observation:
     ddqn_agent.buffer.buffer = veridical_frame_deque
     veridical_state = ddqn_agent.buffer.next(np.array(observation))
-    # optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
-    optimal_action = ddqn_agent._select_action(veridical_state)
-    optimal_action_item = optimal_action.item()
-    mapped_action = ddqn_agent._io_map(optimal_action_item)
-    optimal_action = np.array(mapped_action)
+    optimal_action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(veridical_state).item()))
     print(f'\n\nOPTIMAL OBSERVATION: {observation}'
-          f'\nOPTIMAL FRAME BUFFER: {perceptual_frame_deque}'
-          f'\nOPTIMAL ACTION: {optimal_action}'
-          f'\nOPTIMAL ACTION_ITEM: {optimal_action_item}'
-          f'\nMAPPED ACTION: {mapped_action}'
-          f'\nOPTIMAL ACTION FROM FUNCTION: {optimal_action}')
+          f'\nVERIDICAL STATE: {veridical_state.reshape(12,)}'
+          f'\nOPTIMAL ACTION: {optimal_action}')
     return optimal_action
 
 # **************************************  PROCESSING MECHANISMS ********************************************************
 
 # Perceptual Mechanisms
-player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER PERCEPT")
-predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
-prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY PERCEPT")
+player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=0), name="PLAYER PERCEPT")
+predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort(variance=0), name="PREDATOR PERCEPT")
+prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(variance=0), name="PREY PERCEPT")
 
 # Mechanism used to encode optimal action from call to Run
 optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION")
@@ -115,22 +108,17 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
     global perceptual_state
     # Convert variable to observation:
     observation = variable.reshape(6,)
-    # Get new state based on observation:
-    if perceptual_frame_deque:
-        ddqn_agent.buffer.buffer = perceptual_frame_deque
+    # Get new state based on observation, caching and restoring buffer so that it is not incremented by observation:
+    buffer_cache = ddqn_agent.buffer.buffer
+    ddqn_agent.buffer.buffer = ddqn_agent.buffer.buffer.copy()
     perceptual_state = ddqn_agent.buffer.next(observation)
-    # action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
-    selected_action = ddqn_agent._select_action(perceptual_state)
-    selected_action_item = selected_action.item()
-    mapped_action = ddqn_agent._io_map(selected_action_item)
-    action = np.array(mapped_action)
+    ddqn_agent.buffer.buffer = buffer_cache
+    action = np.array(ddqn_agent._io_map(ddqn_agent._select_action(perceptual_state).item()))
     print(f'\n\nACTUAL OBSERVATION: {observation}'
-          f'\nACTUAL FRAME BUFFER: {perceptual_frame_deque}'
-          f'\nSELECTED ACTION: {selected_action}'
-          f'\nSELECTED ACTION_ITEM: {selected_action_item}'
-          f'\nMAPPED ACTION: {mapped_action}'
+          f'\nACTUAL PERCEPTUAL STATE: {perceptual_state.reshape(12,)}'
           f'\nACTUAL ACTION FROM FUNCTION: {action}')
     return action
+
 
 # Action Mechanism
 #    Use ddqn's eval function to compute action for a given observation
@@ -198,12 +186,10 @@ if SHOW_GRAPH:
 num_episodes = 1
 
 def main():
-    reward = 0
-    done = False
     if RENDER:
         ddqn_agent.env.render()  # If visualization is desired
     else:
-        print("Running simulation...")
+        print("\nRunning simulation...")
     steps = 0
     start_time = timeit.default_timer()
     for _ in range(num_episodes):
@@ -215,7 +201,15 @@ def main():
                 BIN_EXECUTE = 'LLVM'
             else:
                 BIN_EXECUTE = 'Python'
+
+            print(f'\nSTEP: {steps} ************************************************')
+
+            # Get optimal action based on observation, which also updates frame buffer based on that action
             optimal_action = get_optimal_action(observation)
+
+            print(f'\nOUTER LOOP OPTIMAL ACTION:{optimal_action}')
+
+            # Get agent's action based on perceptual distoration of observation (and application of control)
             run_results = agent_comp.run(inputs={player_percept:[observation[player_coord_slice]],
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],
@@ -226,15 +220,12 @@ def main():
             action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
             def print_controller():
-                print('SIMULATION:')
+                print('\nSIMULATION RESULTS:')
                 for sample, value in zip(ocm.saved_samples, ocm.saved_values):
                     print(f'\t\tSample: {sample} Value: {value}')
                 print('OCM Allocation:\n\t{}'.
                       format(repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))))
 
-            print('\n**********************\nSTEP: ', steps)
-
-            print(f'OUTER LOOP OPTIMAL ACTION:{optimal_action}')
             print(f'OUTER LOOP RUN RESULTS:{run_results}')
             print(f'OUTER LOOP ACTION:{action}')
 
@@ -262,7 +253,7 @@ def main():
             if agent_comp.model_based_optimizer_mode is AFTER:
                 print_controller()
 
-            # Get observation for next iteration based on optimal action taken on this one)
+            # Get observation for next iteration based on optimal action taken in this one)
             ddqn_agent.buffer.buffer = veridical_frame_deque
             observation, reward, done, _ = ddqn_agent.env.step(optimal_action)
             steps += 1
