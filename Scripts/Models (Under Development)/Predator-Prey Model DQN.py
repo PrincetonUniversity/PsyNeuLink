@@ -143,8 +143,8 @@ agent_comp.add_projection(c)
 # **************************************  CONOTROL APPRATUS ************************************************************
 
 #   function for ObjectiveMechanism
-difference = Distance(metric=DIFFERENCE) # <- Compilable
-# difference = Distance(metric=ANGLE, normalize=True) # <- Not compilable (yet)
+# difference = Distance(metric=DIFFERENCE) # <- Compilable
+difference = Distance(metric=ANGLE, normalize=True) # <- Not compilable (yet)
 
 def objective_function(variable):
     '''Return difference between optimal and actual actions'''

@@ -624,6 +624,10 @@ class Distance(ObjectiveFunction):
         '''Return angle of v2 relative to v1 (0 and 180 degrees; positive = clockwise, negative = counter-clockwise'''
         if len(v1)==1 or len(v2)==1:
             return 0
+        if v1.ndim == 1:
+            v1=v1.reshape(v1.size,1)
+        if v2.ndim == 1:
+            v2=v2.reshape(v2.size,1)
         # define matrix for clockwise rotation
         R = np.matrix([[v2[0,0], v2[1,0]],[-v2[1,0], v2[0,0]]])
         # rotate vector to align it with x-axis
