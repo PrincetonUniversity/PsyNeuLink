@@ -2822,6 +2822,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_model_based_optimizer:
             _assign_control_components(G)
 
+        # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
+        def get_list_index(node):
+            for i, item in enumerate(G.body):
+                if node.name in item and not '->' in item:
+                    return i
+        for node in self.nodes:
+            roles = self.get_roles_by_node(node)
+            if NodeRole.INPUT in roles:
+                i = get_list_index(node)
+                G.body.insert(0,G.body.pop(i))
+        if self.model_based_optimizer:
+            # i = get_list_index(self.model_based_optimizer.objective_mechanism)
+            # G.body.insert(len(G.body),G.body.pop(i))
+            i = get_list_index(self.model_based_optimizer)
+            G.body.insert(len(G.body),G.body.pop(i))
+
         # GENERATE OUTPUT
 
         # Show as pdf
