@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.0.0+161.gf36c1b6 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.0.0+162.g089e95e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+161.gf36c1b6 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+162.g089e95e documentation" href="index.html"/>
         <link rel="next" title="Quick Reference" href="QuickReference.html"/>
         <link rel="prev" title="Welcome to PsyNeuLink" href="index.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.5.0.0+161
+                0.5.0.0+162
               </div>
             
           
@@ -324,14 +324,14 @@ that require fine-grained updates (e.g., Euler integration of a drift diffusion 
 “single shot” computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
 is run, each Component in it is executed at least once.  However, PsyNeuLink has a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> that can be used to
 design more complex dynamics of execution by assigning one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> to any Mechanism. Conditions
-can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>), or its
+can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>), or its
 behavior relative to that of one or more other Components (e.g., how many times it should execute or when it should
 stop executing relative to other Mechanisms).</p>
 <p>For example, the following script implements a Composition that integrates a 3-layered feedforward network for
 performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
 to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
 following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
-be used to execute the recurrent layer multiple times but the feedforward network only once in each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, as
+be used to execute the recurrent layer multiple times but the feedforward network only once in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, as
 follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
 <span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
@@ -438,7 +438,7 @@ and the <a class="reference internal" href="index_logo_with_text.html#tutorial">
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+161.gf36c1b6',
+            VERSION:'0.5.0.0+162.g089e95e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
