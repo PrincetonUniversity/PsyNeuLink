@@ -2316,7 +2316,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return name
 
     def show_graph(self,
-                   show_model_based_optimizer=False,               # WORKING?
+                   show_model_based_optimizer=False,
                    show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
                    show_headers=False,
@@ -2376,8 +2376,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether nested Compositions are shown in details as inset graphs
 
         show_model_based_optimizer :  bool : default False
-            specifies whether or not to show the controller components of the system;
-            they will all be displayed in the color specified for **model_based_optimizer_color**.
+            specifies whether or not to show the Composition's model_based_optimizer and associated ObjectiveMechanism;
+            these are displayed in the color specified for **model_based_optimizer_color**.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2414,16 +2414,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
-        INITIAL_FRAME = "INITIAL_FRAME"
-        ALL = "ALL"
-
-        if execution_id is NotImplemented:
-            execution_id = self.default_execution_id
-
-        # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
-        #     return
-
-        # HELPER METHODS
+        # HELPER METHODS ----------------------------------------------------------------------
 
         tc.typecheck
 
@@ -2505,6 +2496,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             color=rcvr_color,
                             rank=rcvr_rank,
                             penwidth=rcvr_penwidth)
+
+                # MODIFIED 2/24/18 NEW: [JDC]
+                # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
+                elif (isinstance(rcvr, ObjectiveMechanism)
+                        and self.model_based_optimizer
+                        and rcvr is self.model_based_optimizer.objective_mechanism):
+                    return
+                # MODIFIED 2/24/18 END
+
                 else:
                     g.node(rcvr_label,
                             shape=node_shape,
@@ -2541,11 +2541,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
-                # # if recvr is ObjectiveMechanism for System's model_based_optimizer, break, as those handled below
-                if (isinstance(rcvr, ObjectiveMechanism)
-                        and self.model_based_optimizer
-                        and rcvr is self.model_based_optimizer.objective_mechanism):
-                    return
+                # # MODIFIED 2/24/18 OLD:
+                # # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
+                # if (isinstance(rcvr, ObjectiveMechanism)
+                #         and self.model_based_optimizer
+                #         and rcvr is self.model_based_optimizer.objective_mechanism):
+                #     return
+                # # MODIFIED 2/24/18 END
 
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
@@ -2738,9 +2740,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
-        import graphviz as gv
+        def _assign_CIM_components(g):
+            pass
 
-        self._analyze_graph()
+        # SETUP AND CONSTANTS -----------------------------------------------------------------
+
+        INITIAL_FRAME = "INITIAL_FRAME"
+        ALL = "ALL"
+
+        if execution_id is NotImplemented:
+            execution_id = self.default_execution_id
+
+        # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
+        #     return
 
         if show_dimensions == True:
             show_dimensions = ALL
@@ -2781,6 +2793,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         default_node_color = 'black'
         node_shape = 'oval'
+        cim_shape = 'square'
 
         bold_width = 3
         default_width = 1
@@ -2790,7 +2803,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         control_rank = 'min'
         output_rank = 'max'
 
-        # build graph and configure visualisation settings
+        # BUILD GRAPH ------------------------------------------------------------------------
+
+        import graphviz as gv
+
         G = gv.Digraph(
             name=self.name,
             engine="dot",
@@ -2812,6 +2828,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # get all Nodes
+        self._analyze_graph()
         processing_graph = self.scheduler_processing.visual_graph
         rcvrs = list(processing_graph.keys())
 
@@ -2832,13 +2849,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if NodeRole.INPUT in roles:
                 i = get_list_index(node)
                 G.body.insert(0,G.body.pop(i))
-        if self.model_based_optimizer:
+        if self.model_based_optimizer and show_model_based_optimizer:
             # i = get_list_index(self.model_based_optimizer.objective_mechanism)
             # G.body.insert(len(G.body),G.body.pop(i))
             i = get_list_index(self.model_based_optimizer)
             G.body.insert(len(G.body),G.body.pop(i))
 
-        # GENERATE OUTPUT
+        # GENERATE OUTPUT ---------------------------------------------------------------------
 
         # Show as pdf
         if output_fmt == 'pdf':

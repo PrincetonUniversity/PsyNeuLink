@@ -11,7 +11,7 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = True
+RUN = False
 SHOW_GRAPH = True
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
@@ -178,6 +178,7 @@ agent_comp.enable_model_based_optimizer = True
 agent_comp.model_based_optimizer_mode = BEFORE
 
 if SHOW_GRAPH:
+    # agent_comp.show_graph()
     agent_comp.show_graph(show_model_based_optimizer=True)
     # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True)
 
