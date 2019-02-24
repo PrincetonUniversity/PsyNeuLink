@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.0.0+163.g85dcb2b documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.0.0+164.g67ed879 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+163.g85dcb2b documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+164.g67ed879 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+163
+                0.5.0.0+164
               </div>
             
           
@@ -368,7 +368,7 @@ five inputs are provided for each INPUT Node, and num_trials is not specified, t
 <p>The number of inputs specified <strong>must</strong> be the same for all Nodes in the input dictionary (except for any Nodes for
 which only one input is specified). In other words, all of the values in the input dictionary must have the same length
 as each other (or length 1).</p>
-<p>If num_trials is in use, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
+<p>If num_trials is in use, <a class="reference internal" href="Run.html#psyneulink.core.globals.environment.run" title="psyneulink.core.globals.environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Node, and num_trials = 7, the system executes seven times. The input values from trials 0
 and 1 are used again on trials 5 and 6, respectively.</p>
 <table border="1" class="docutils">
@@ -834,7 +834,7 @@ as unlabeled arrows.</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x107ce4dd8&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x1051f8748&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1040,7 +1040,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – <p>When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
 means that each Projections within the cycle actually passes to its receiver its sender’s value from
@@ -1134,7 +1134,7 @@ for use in a GraphViz node specification.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_model_based_optimizer=False</em>, <em>show_dimensions=False</em>, <em>show_node_structure=False</em>, <em>show_headers=False</em>, <em>show_projection_labels=False</em>, <em>show_nested=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>model_based_optimizer_color='blue'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_model_based_optimizer=False</em>, <em>show_dimensions=False</em>, <em>show_node_structure=False</em>, <em>show_cim=False</em>, <em>show_headers=False</em>, <em>show_projection_labels=False</em>, <em>show_nested=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>model_based_optimizer_color='blue'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
 <dd><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
@@ -1165,6 +1165,7 @@ show_node_structure</p>
 </li>
 <li><strong>show_projection_labels</strong> (<em>bool : default False</em>) – specifies whether or not to show names of projections.</li>
 <li><strong>show_nested</strong> (<em>bool : default False</em>) – specifies whether nested Compositions are shown in details as inset graphs</li>
+<li><strong>show_cim</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s input and out CompositionInterfaceMechanisms (CIMs)</li>
 <li><strong>show_model_based_optimizer</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s model_based_optimizer and associated ObjectiveMechanism;
 these are displayed in the color specified for <strong>model_based_optimizer_color</strong>.</li>
 <li><strong>direction</strong> (<em>keyword : default 'BT'</em>) – ‘BT’: bottom to top; ‘TB’: top to bottom; ‘LR’: left to right; and ‘RL`: right to left.</li>
@@ -1173,7 +1174,8 @@ these are displayed in the color specified for <strong>model_based_optimizer_col
 by GraphViz, or the keyword <em>BOLD</em>.</li>
 <li><strong>input_color</strong> (<em>keyword : default 'green'</em><em>,</em>) – specifies the display color for <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Nodes in the Composition</li>
 <li><strong>output_color</strong> (<em>keyword : default 'red'</em><em>,</em>) – specifies the display color for <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> Nodes in the Composition</li>
-<li><strong>input_and_output_color</strong> (<em>keyword : default 'brown'</em>) – specifies the display color of Nodes that are both an <code class="xref any docutils literal"><span class="pre">INPUT</span></code> and an <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> Node in the Composition</li>
+<li><strong>input_and_output_color</strong> (<em>keyword : default 'brown'</em>) – specifies the display color of nodes that are both an <code class="xref any docutils literal"><span class="pre">INPUT</span></code> and an <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> Node in the Composition</li>
+<li><strong>cim_shape</strong> (<em>default 'square'</em>) – specifies the display color input_CIM and output_CIM nodes</li>
 <li><strong>model_based_optimizer_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – specifies the color in which the model_based_optimizer components are displayed</li>
 <li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – ‘pdf’: generate and open a pdf with the visualization;
 ‘jupyter’: return the object (ideal for working in jupyter/ipython notebooks).</li>
@@ -1426,7 +1428,7 @@ by checking whether any of its nodes are stateful.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+163.g85dcb2b',
+            VERSION:'0.5.0.0+164.g67ed879',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
