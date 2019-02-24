@@ -2532,7 +2532,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
-                # # if recvr is ObjectiveMechanism for System's model_based_optimizer, break, as those handled below
+                # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
                 if (isinstance(rcvr, ObjectiveMechanism)
                         and self.model_based_optimizer
                         and rcvr is self.model_based_optimizer.objective_mechanism):
