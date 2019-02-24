@@ -2496,6 +2496,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             color=rcvr_color,
                             rank=rcvr_rank,
                             penwidth=rcvr_penwidth)
+
+                # MODIFIED 2/24/18 NEW: [JDC]
+                # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
+                elif (isinstance(rcvr, ObjectiveMechanism)
+                        and self.model_based_optimizer
+                        and rcvr is self.model_based_optimizer.objective_mechanism):
+                    return
+                # MODIFIED 2/24/18 END
+
                 else:
                     g.node(rcvr_label,
                             shape=node_shape,
@@ -2532,11 +2541,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
-                # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
-                if (isinstance(rcvr, ObjectiveMechanism)
-                        and self.model_based_optimizer
-                        and rcvr is self.model_based_optimizer.objective_mechanism):
-                    return
+                # # MODIFIED 2/24/18 OLD:
+                # # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
+                # if (isinstance(rcvr, ObjectiveMechanism)
+                #         and self.model_based_optimizer
+                #         and rcvr is self.model_based_optimizer.objective_mechanism):
+                #     return
+                # # MODIFIED 2/24/18 END
 
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
@@ -2838,7 +2849,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if NodeRole.INPUT in roles:
                 i = get_list_index(node)
                 G.body.insert(0,G.body.pop(i))
-        if self.model_based_optimizer:
+        if self.model_based_optimizer and show_model_based_optimizer:
             # i = get_list_index(self.model_based_optimizer.objective_mechanism)
             # G.body.insert(len(G.body),G.body.pop(i))
             i = get_list_index(self.model_based_optimizer)
