@@ -2319,6 +2319,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_model_based_optimizer=False,
                    show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
+                   show_cim=False,
                    show_headers=False,
                    show_projection_labels=False,
                    show_nested=False,
@@ -2375,6 +2376,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_nested : bool : default False
             specifies whether nested Compositions are shown in details as inset graphs
 
+        show_cim : bool : default False
+            specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
+
         show_model_based_optimizer :  bool : default False
             specifies whether or not to show the Composition's model_based_optimizer and associated ObjectiveMechanism;
             these are displayed in the color specified for **model_based_optimizer_color**.
@@ -2396,7 +2400,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the display color for `OUTPUT` Nodes in the Composition
 
         input_and_output_color : keyword : default 'brown'
-            specifies the display color of Nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
+            specifies the display color of nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
+
+        cim_shape : default 'square'
+            specifies the display color input_CIM and output_CIM nodes
 
         model_based_optimizer_color : keyword : default `blue`
             specifies the color in which the model_based_optimizer components are displayed
@@ -2421,6 +2428,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_processing_components(g,
                                           rcvr,
                                           show_nested):
+
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
                 nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
@@ -2435,9 +2443,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_comp_graph.attr(color=output_color)
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
+
+            # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
+            elif (isinstance(rcvr, ObjectiveMechanism)
+                    and self.model_based_optimizer
+                    and rcvr is self.model_based_optimizer.objective_mechanism):
+                return
+
             else:
                 rcvr_rank = 'same'
-                # Set rcvr color and penwidth info
+                # Set rcvr color and penwidth info based on node type
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
@@ -2476,7 +2491,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     rcvr_rank = output_rank
                 elif rcvr in active_items:
                     if active_color is BOLD:
-
                         rcvr_color = default_node_color
                     else:
                         rcvr_color = active_color
@@ -2492,25 +2506,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(rcvr_label,
-                            rcvr.show_structure(**node_struct_args),
-                            color=rcvr_color,
-                            rank=rcvr_rank,
-                            penwidth=rcvr_penwidth)
-
-                # MODIFIED 2/24/18 NEW: [JDC]
-                # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
-                elif (isinstance(rcvr, ObjectiveMechanism)
-                        and self.model_based_optimizer
-                        and rcvr is self.model_based_optimizer.objective_mechanism):
-                    return
-                # MODIFIED 2/24/18 END
-
+                           rcvr.show_structure(**node_struct_args),
+                           color=rcvr_color,
+                           rank=rcvr_rank,
+                           penwidth=rcvr_penwidth)
                 else:
                     g.node(rcvr_label,
-                            shape=node_shape,
-                            color=rcvr_color,
-                            rank=rcvr_rank,
-                            penwidth=rcvr_penwidth)
+                           shape=node_shape,
+                           color=rcvr_color,
+                           rank=rcvr_rank,
+                           penwidth=rcvr_penwidth)
 
                 # handle auto-recurrent projections
                 for input_state in rcvr.input_states:
@@ -2541,14 +2546,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
-                # # MODIFIED 2/24/18 OLD:
-                # # # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
-                # if (isinstance(rcvr, ObjectiveMechanism)
-                #         and self.model_based_optimizer
-                #         and rcvr is self.model_based_optimizer.objective_mechanism):
-                #     return
-                # # MODIFIED 2/24/18 END
-
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
 
@@ -2573,7 +2570,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             sndr_proj_label = sndr_label
                             proc_mech_rcvr_label = rcvr_label
                         selected_proj = proj
-                edge_label = self._get_graph_node_label(proj, show_dimensions)
+                # # MODIFIED 2/24/18 OLD:
+                # edge_label = self._get_graph_node_label(proj, show_dimensions)
+                # MODIFIED 2/24/18 NEW: [JDC]
+                edge_label = self._get_graph_node_label(selected_proj, show_dimensions)
+                # MODIFIED 2/24/18 END
 
                 # Render projections
                 if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
@@ -2597,6 +2598,130 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     label = ''
                 g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
                        color=proj_color, penwidth=proj_width)
+
+        def _assign_cim_components(g, cims):
+
+            cim_penwidth = str(default_width)
+            cim_rank = 'same'
+
+            for cim in cims:
+
+                # Assign color for CIM node
+                # Also take opportunity to verify that cim is either input_CIM or output_CIM
+                if cim is self.input_CIM:
+                    cim_color = input_color
+                elif cim is self.output_CIM:
+                    cim_color = output_color
+                else:
+                    assert False, '_assignm_cim_components called with node that is not input_CIM or output_CIM'
+
+                # Assign lablel for CIM node
+                cim_label = self._get_graph_node_label(cim, show_dimensions)
+
+                cim_label = cim_label.replace('Input_CIM','INPUT')
+                cim_label = cim_label.replace('Output_CIM', 'OUTPUT')
+
+                if show_node_structure:
+                    g.node(cim_label,
+                           cim.show_structure(**node_struct_args),
+                           color=cim_color,
+                           rank=cim_rank,
+                           penwidth=cim_penwidth)
+
+                else:
+                    g.node(cim_label,
+                           shape=cim_shape,
+                           color=cim_color,
+                           rank=cim_rank,
+                           penwidth=cim_penwidth)
+
+                # Projections from input_CIM to INPUT nodes
+                if cim is self.input_CIM:
+
+                    for output_state in self.input_CIM.output_states:
+                        projs = output_state.efferents
+                        for proj in projs:
+                            # Validate the Projection is to an INPUT node or a node that is shadowing one
+                            input_mech = proj.receiver.owner
+                            if ((input_mech in self.nodes_to_roles and
+                                 not NodeRole.INPUT in self.nodes_to_roles[input_mech])
+                                    and (proj.receiver.shadow_inputs in self.nodes_to_roles and
+                                         not NodeRole.INPUT in self.nodes_to_roles[proj.receiver.shadow_inputs])):
+                                raise CompositionError("Projection from input_CIM of {} to node {} "
+                                                       "that is not an {} node or shadowing its {}".
+                                                       format(self.name, input_mech,
+                                                              NodeRole.INPUT.name, NodeRole.INPUT.name.lower()))
+                            # Construct edge name
+                            input_mech_label = self._get_graph_node_label(input_mech, show_dimensions)
+                            if show_node_structure:
+                                cim_proj_label = '{}:{}-{}'. \
+                                    format(cim_label, OutputState.__name__, proj.sender.name)
+                                proc_mech_rcvr_label = '{}:{}-{}'. \
+                                    format(input_mech_label, InputState.__name__, proj.receiver.name)
+                            else:
+                                cim_proj_label = cim_label
+                                proc_mech_rcvr_label = input_mech_label
+
+                            # Render Projection
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                                if active_color is BOLD:
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            if show_projection_labels:
+                                label = self._get_graph_node_label(proj, show_dimensions)
+                            else:
+                                label = ''
+                            g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
+
+                # Projections from OUTPUT nodes to input_CIM
+                if cim is self.output_CIM:
+                    # Construct edge name
+                    for input_state in self.output_CIM.input_states:
+                        projs = input_state.path_afferents
+                        for proj in projs:
+                            # Validate the Projection is from an OUTPUT node
+                            output_mech = proj.sender.owner
+                            if not NodeRole.OUTPUT in self.nodes_to_roles[output_mech]:
+                                raise CompositionError("Projection to output_CIM of {} from node {} "
+                                                       "that is not an {} node".
+                                                       format(self.name, output_mech,
+                                                              NodeRole.OUTPUT.name, NodeRole.OUTPUT.name.lower()))
+                            # Construct edge name
+                            output_mech_label = self._get_graph_node_label(output_mech, show_dimensions)
+                            if show_node_structure:
+                                cim_proj_label = '{}:{}-{}'. \
+                                    format(cim_label, InputState.__name__, proj.receiver.name)
+                                proc_mech_sndr_label = '{}:{}-{}'.\
+                                    format(output_mech_label, proj.sender.__class__.__name__, proj.sender.name)
+                                    # format(output_mech_label, OutputState.__name__, proj.sender.name)
+                            else:
+                                cim_proj_label = cim_label
+                                proc_mech_sndr_label = output_mech_label
+
+                            # Render Projection
+                            if any(item in active_items for item in {proj, proj.sender.owner}):
+                                if active_color is BOLD:
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            if show_projection_labels:
+                                label = self._get_graph_node_label(proj, show_dimensions)
+                            else:
+                                label = ''
+                            g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
 
         def _assign_control_components(g):
             '''Assign control nodes and edges to graph '''
@@ -2740,8 +2865,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
-        def _assign_CIM_components(g):
-            pass
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
@@ -2793,7 +2916,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         default_node_color = 'black'
         node_shape = 'oval'
-        cim_shape = 'square'
+        cim_shape = 'rectangle'
 
         bold_width = 3
         default_width = 1
@@ -2834,6 +2957,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for r in rcvrs:
             _assign_processing_components(G, r, show_nested)
+
+        if show_cim:
+            _assign_cim_components(G, [self.input_CIM, self.output_CIM])
 
         # Add model-based-optimizer-related Components to graph if show_model_based_optimizer
         if show_model_based_optimizer:
