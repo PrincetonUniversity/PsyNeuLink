@@ -2618,6 +2618,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign lablel for CIM node
                 cim_label = self._get_graph_node_label(cim, show_dimensions)
 
+                cim_label = cim_label.replace('Input_CIM','INPUT')
+                cim_label = cim_label.replace('Output_CIM', 'OUTPUT')
+
                 if show_node_structure:
                     g.node(cim_label,
                            cim.show_structure(**node_struct_args),
@@ -2654,14 +2657,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 cim_proj_label = '{}:{}-{}'. \
                                     format(cim_label, OutputState.__name__, proj.sender.name)
                                 proc_mech_rcvr_label = '{}:{}-{}'. \
-                                    format(input_mech_label, proj.receiver.__class__.__name__, proj.receiver.name)
-                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                    format(input_mech_label, InputState.__name__, proj.receiver.name)
                             else:
                                 cim_proj_label = cim_label
                                 proc_mech_rcvr_label = input_mech_label
-
-                            # edge_label = self._get_graph_node_label(proj, show_dimensions)
-                            edge_label = self._get_graph_node_label(proj, show_dimensions)
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
@@ -2674,9 +2673,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
-                            proc_mech_label = edge_label
                             if show_projection_labels:
-                                label = proc_mech_label
+                                label = self._get_graph_node_label(proj, show_dimensions)
                             else:
                                 label = ''
                             g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
@@ -2700,18 +2698,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 cim_proj_label = '{}:{}-{}'. \
                                     format(cim_label, InputState.__name__, proj.receiver.name)
-                                proc_mech_sndr_label = '{}:{}-{}'. \
+                                proc_mech_sndr_label = '{}:{}-{}'.\
                                     format(output_mech_label, proj.sender.__class__.__name__, proj.sender.name)
+                                    # format(output_mech_label, OutputState.__name__, proj.sender.name)
                             else:
                                 cim_proj_label = cim_label
                                 proc_mech_sndr_label = output_mech_label
-                            selected_proj = proj
-
-                            # edge_label = self._get_graph_node_label(proj, show_dimensions)
-                            edge_label = self._get_graph_node_label(selected_proj, show_dimensions)
 
                             # Render Projection
-                            if any(item in active_items for item in {selected_proj, selected_proj.sender.owner}):
+                            if any(item in active_items for item in {proj, proj.sender.owner}):
                                 if active_color is BOLD:
                                     proj_color = default_node_color
                                 else:
@@ -2721,9 +2716,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 proj_color = default_node_color
                                 proj_width = str(default_width)
-                            proc_mech_label = edge_label
                             if show_projection_labels:
-                                label = proc_mech_label
+                                label = self._get_graph_node_label(proj, show_dimensions)
                             else:
                                 label = ''
                             g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
