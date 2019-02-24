@@ -490,7 +490,7 @@ from psyneulink.core.components.states.state import StateError, State_Base, _ins
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
-    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
@@ -516,6 +516,7 @@ EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputState variable not yet defined, defer to Mechanism"
 SHADOW_INPUTS = 'shadow_inputs'
+SHADOW_INPUT_NAME = 'Shadowed input of '
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -1226,7 +1227,7 @@ class InputState(State_Base):
     def _parse_self_state_type_spec(self, owner, input_state, context=None):
         '''Return InputState specification dictionary with projections that shadow inputs to input_state
 
-        Called by _parse_state_spec if input_state specified for a Mechanism belongs to a different Mechanism
+        Called by _parse_state_spec if InputState specified for a Mechanism belongs to a different Mechanism
         '''
 
         if not isinstance(input_state, InputState):
@@ -1235,7 +1236,8 @@ class InputState(State_Base):
                                   format(input_state))
 
         sender_output_states = [p.sender for p in input_state.path_afferents]
-        state_spec = {VARIABLE: np.zeros_like(input_state.variable),
+        state_spec = {NAME: SHADOW_INPUT_NAME + input_state.owner.name,
+                      VARIABLE: np.zeros_like(input_state.variable),
                       STATE_TYPE: InputState,
                       PROJECTIONS: sender_output_states,
                       PARAMS: {SHADOW_INPUTS: input_state},
@@ -1414,7 +1416,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     return state_list
 
 def _parse_shadow_inputs(owner, input_states):
-    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states'''
+    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict.'''
 
     input_states_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_states):
