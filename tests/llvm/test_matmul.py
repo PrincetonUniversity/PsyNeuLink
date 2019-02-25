@@ -3,7 +3,6 @@
 import ctypes
 import numpy as np
 import pytest
-import timeit
 
 from psyneulink.core import llvm as pnlvm
 
@@ -23,13 +22,10 @@ def test_matmul_numpy(benchmark):
     numpy_res = benchmark(np.dot, vector, matrix)
     assert np.allclose(numpy_res, result)
 
-#start = timeit.default_timer()
 ct_vec = vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_mat = matrix.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_res = llvm_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 x, y = matrix.shape
-#stop = timeit.default_timer()
-#print("Convert time elapsed {:f}".format(stop-start))
 
 @pytest.mark.llvm
 @pytest.mark.benchmark
