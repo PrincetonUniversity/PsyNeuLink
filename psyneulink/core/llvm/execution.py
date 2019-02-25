@@ -30,8 +30,7 @@ def _convert_ctype_to_python(x):
     if isinstance(x, (float, int)):
         return x
 
-    print(x)
-    assert False
+    assert False, "Don't know how to convert: {}".format(x)
 
 def _tupleize(x):
     try:

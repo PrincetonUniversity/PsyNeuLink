@@ -179,7 +179,7 @@ class LLVMBuilderContext:
 
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
-            assert(element.type.pointee.count == 1)
+            assert element.type.pointee.count == 1
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
@@ -414,8 +414,7 @@ class LLVMBuilderContext:
         elif t is None:
             return ir.LiteralStructType([])
 
-        print(type(t))
-        assert False
+        assert False, "Don't know how to convert {}".format(type(t))
 
 def _find_llvm_function(name, mods = _all_modules):
     f = None
@@ -517,8 +516,7 @@ def _convert_llvm_ir_to_ctype(t):
         ret_t._fields_ = field_list
         assert len(ret_t._fields_) == len(t.elements)
     else:
-        print(t)
-        assert(False)
+        assert False, "Don't know how to convert LLVM type: {}".format(t)
 
     _type_cache[t] = ret_t
     return ret_t

@@ -394,6 +394,7 @@ COMMENT
         # Transfer Function if configured
         trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
         if self.transfer_fct is not None:
+            #FIXME: implement this
             assert False
         else:
             builder.store(builder.load(dot_out), trans_out)
