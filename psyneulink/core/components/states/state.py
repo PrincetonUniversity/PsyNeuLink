@@ -1559,6 +1559,10 @@ class State_Base(State):
 
             self.owner._projection_added(projection, context)
 
+        # MODIFIED 2/24/19 NEW: [JDC]
+        self._assign_default_state_name(context=context)
+        # MODIFIED 2/24/19 END
+
         return new_projections
 
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):

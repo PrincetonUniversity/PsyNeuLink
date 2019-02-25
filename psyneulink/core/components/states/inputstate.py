@@ -840,8 +840,7 @@ class InputState(State_Base):
                                          function=function,
                                          )
 
-        if self.name is self.componentName or self.componentName + '-' in self.name:
-            self._assign_default_state_name(context=context)
+        self._assign_default_state_name(context=context)
 
     def _assign_variable_from_projection(self, variable, size, projections):
         """Assign variable to value of Projection in projections
@@ -960,15 +959,24 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
+    # MODIFIED 2/24/19 NEW: [JDC]
     def _assign_default_state_name(self, context=None):
-        num = len(self.path_afferents)
-        if num==1:
-            self.name = 'Input from {}'.format(self.path_afferents[0].sender.owner.name)
-            return True
-        elif num>1:
-            name = 'Input from {}'.format(', '.join([p.sender.owner.name for p in self.path_afferents]))
-            return True
+
+        # If current name is default
+        if self.name is self.componentName or self.componentName + '-' in self.name:
+            # One Projection
+            num = len(self.path_afferents)
+            if num==1:
+                self.name = 'Input from {}'.format(self.path_afferents[0].sender.owner.name)
+                return True
+            # Multiple Projections
+            elif num>1:
+                name = 'Input from {}'.format(', '.join([p.sender.owner.name for p in self.path_afferents]))
+                return True
+            # No Projections
+            return False
         return False
+    # MODIFIED 2/24/19 END
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
