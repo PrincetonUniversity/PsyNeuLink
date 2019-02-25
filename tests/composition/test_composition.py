@@ -96,6 +96,80 @@ class TestAddMechanism:
         comp.add_node(mech)
         comp.add_node(mech)
 
+    def test_add_multiple_projections_at_once(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = MappingProjection(sender=b, receiver=c, matrix=[[3.0]])
+        projections = [ab, bc]
+        comp.add_projections(projections)
+
+        comp.run(inputs={a: 1.0})
+
+        assert np.allclose(a.value, [[1.0]])
+        assert np.allclose(b.value, [[2.0]])
+        assert np.allclose(c.value, [[24.0]])
+        assert ab in comp.projections
+        assert bc in comp.projections
+
+    def test_add_multiple_projections_no_sender(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = MappingProjection(sender=b)
+        projections = [ab, bc]
+        with pytest.raises(CompositionError) as err:
+            comp.add_projections(projections)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+
+    def test_add_multiple_projections_no_receiver(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = MappingProjection(receiver=c)
+        projections = [ab, bc]
+        with pytest.raises(CompositionError) as err:
+            comp.add_projections(projections)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+
+    def test_add_multiple_projections_not_a_proj(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = [[3.0]]
+        projections = [ab, bc]
+        with pytest.raises(CompositionError) as err:
+            comp.add_projections(projections)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+
     def test_add_multiple_nodes_at_once(self):
         comp = Composition()
         a = TransferMechanism()

@@ -93,6 +93,7 @@ import copy
 import inspect
 import logging
 import numbers
+import time
 import warnings
 import weakref
 
@@ -1404,7 +1405,7 @@ def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
 
-_seed = 0
+_seed = int(time.monotonic())
 def get_global_seed(offset=1):
     global _seed
     _seed += offset
