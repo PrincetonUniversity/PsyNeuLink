@@ -6,7 +6,7 @@ python:
     - 3.7
 
 install:
-  - pip install coveralls
+  - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
@@ -89,9 +89,15 @@ before_install: |
 
     HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
   fi
+  if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then
+        export PYTEST_COV="--cov=psyneulink"
+  else
+        export PYTEST_COV=""
+  fi
+
 
 script:
-  - python -m pytest -p no:logging --cov=psyneulink tests/
+  - python -m pytest -p no:logging $PYTEST_COV tests/
 
 after_script:
-  - coveralls
+  - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then coveralls; fi
