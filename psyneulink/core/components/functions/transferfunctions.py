@@ -1412,11 +1412,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         var = builder.load(ptri)
         val = builder.fsub(var, bias)
         val1 = builder.fmul(val, gain)
-        val2 = builder.fmul(val, leak)
+        val2 = builder.fmul(val1, leak)
 
-        val = builder.call(max_f, [val1, bias])
-        # TODO: WHat is the third param to np.maximum
-        # val = builder.call(max_f, [val, val2])
+        val = builder.call(max_f, [val1, val2])
 
         builder.store(val, ptro)
 
