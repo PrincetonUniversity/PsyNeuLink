@@ -1244,14 +1244,17 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `function <ReLU.function>` returns rectified linear tranform of `variable <ReLU.variable>`:
 
     .. math::
-        gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise
+        x = gain*(variable - bias)
+
+    .. math::
+        max(x, leak * x)
 
     Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
 
     `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
 
     .. math::
-        gain\ if\ input > 0,\ leak\ otherwise
+        gain\ if\ input > 0,\ gain*leak\ otherwise
 
     Arguments
     ---------
@@ -1259,13 +1262,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         specifies a template for the value to be transformed.
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it, if (variable - bias) is greater than 0.
+        from it.
     bias : float : default 0.0
-        specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
-        result is greater than 0 and multiplying by either gain or leak based on the result.
+        specifies a value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it if (variable - bias) is lesser than or equal to 0.
+        specifies a scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1283,14 +1284,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     variable : number or array
         contains value to be transformed.
     gain : float : default 1.0
-        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is greater than 0.
+        value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
+        from it.
     bias : float : default 0.0
-        value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
-        greater than 0 and multiplying by either gain or leak based on the result.
+        value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is lesser than or equal to 0.
+        scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1443,7 +1442,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self.get_current_function_param(LEAK, execution_id)
 
         if (input > 0): return gain
-        else: return leak
+        else: return gain*leak
 
 
 class Gaussian(TransferFunction):  # -----------------------------------------------------------------------------------
