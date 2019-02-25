@@ -960,6 +960,16 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
+    def _assign_default_state_name(self, context=None):
+        num = len(self.path_afferents)
+        if num==1:
+            self.name = 'Input from {}'.format(self.path_afferents[0].sender.owner.name)
+            return True
+        elif num>1:
+            name = 'Input from {}'.format(', '.join([p.sender.owner.name for p in self.path_afferents]))
+            return True
+        return False
+
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
