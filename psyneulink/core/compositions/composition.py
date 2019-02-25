@@ -41,12 +41,14 @@ following Composition methods:
     - `add_nodes <Composition.add_nodes>`
         Adds mutiple nodes to the Composition
     - `add_projection <Composition.add_projection>`
-        Connects two nodes in the Composition via a Projection
+        Adds a connection between a pair of nodes in the Composition
+    - `add_projections <Composition.add_projections>`
+        Adds connection between multiple pairs of nodes in the Composition
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
         Adds and connects a list of nodes and/or Projections to the Composition; Inserts a default Projection between any adjacent Nodes
 
 .. note::
-  Only Nodes and Projections added to a Composition via the four methods above constitute a Composition, even if
+  Only Nodes and Projections added to a Composition via the methods above constitute a Composition, even if
   other Nodes and/or Projections are constructed in the same script.
 
 In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
@@ -1482,6 +1484,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _add_projection(self, projection):
         self.projections.append(projection)
+
+    def add_projections(self, projections=None):
+        '''
+            Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
+            Projection must have its `sender <Projection.sender>` and `receiver <Projection.receiver>` already
+            specified.
+
+            Arguments
+            ---------
+
+            projections : list of Projections
+                list of Projections to be added to the Composition
+
+        '''
+
+        if isinstance(projections, list):
+            for projection in projections:
+                if isinstance(projection, Projection) and \
+                        hasattr(projection, "sender") and \
+                        hasattr(projection, "receiver"):
+                    self.add_projection(projection)
+                else:
+                    raise CompositionError("Invalid projections specification for {}. The add_projections method of "
+                                           "Composition requires a list of Projections, each of which must have a "
+                                           "sender and a receiver.".format(self.name))
+        else:
+            raise CompositionError("Invalid projections specification for {}. The add_projections method of "
+                                   "Composition requires a list of Projections, each of which must have a "
+                                   "sender and a receiver.".format(self.name))
 
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
