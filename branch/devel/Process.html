@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Process &mdash; PsyNeuLink 0.5.0.0+165.gf7cea17 documentation</title>
+  <title>Process &mdash; PsyNeuLink 0.5.0.0+166.g98bd258 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+165.gf7cea17 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+166.g98bd258 documentation" href="index.html"/>
         <link rel="up" title="Composition" href="Composition.html"/>
         <link rel="next" title="Scheduling" href="Scheduling.html"/>
         <link rel="prev" title="System" href="System.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+165
+                0.5.0.0+166
               </div>
             
           
@@ -516,7 +516,7 @@ that conform to the format for the <a class="reference internal" href="#psyneuli
 
 <dl class="class">
 <dt id="psyneulink.core.components.process.Process">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x1050dd9d8&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x104cc59d8&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process(process_spec=None,                               default_variable=None,                                   pathway=None,                                            initial_values={},                                       clamp_input:=None,                                       default_projection_matrix=DEFAULT_PROJECTION_MATRIX,     learning=None,                                           learning_rate=None                                       target=None,                                             params=None,                                             name=None,                                               prefs=None</p>
 <p>Base class for Process.</p>
 <dl class="attribute">
@@ -714,11 +714,11 @@ occurs at the beginning of one or a series of executions invoked by a call to th
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>] or </em><em>ndarray: default zeroes</em>) – specifies the value(s) of the Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> for the <a class="reference internal" href="#process-execution"><span class="std std-ref">execution</span></a>;
+<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="EVCAuxiliary.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value"><em>value</em></a><em>] or </em><em>ndarray: default zeroes</em>) – specifies the value(s) of the Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> for the <a class="reference internal" href="#process-execution"><span class="std std-ref">execution</span></a>;
 it is provided as the input to the <a class="reference internal" href="#psyneulink.core.components.process.Process.origin_mechanism" title="psyneulink.core.components.process.Process.origin_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanism</span></code></a> and must be compatible
 (in number and type of items) with its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute (see
 <a class="reference internal" href="#process-input-and-output"><span class="std std-ref">Process input and output</span></a> for details).</li>
-<li><strong>target</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>] or </em><em>ndarray: default None</em>) – specifies the target value assigned to each of the <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> for
+<li><strong>target</strong> (<em>List</em><em>[</em><a class="reference internal" href="EVCAuxiliary.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.value"><em>value</em></a><em>] or </em><em>ndarray: default None</em>) – specifies the target value assigned to each of the <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> for
 the <a class="reference internal" href="#process-execution"><span class="std std-ref">execution</span></a>.  Each item is assigned to the <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of the corresponding <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> in <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>; the number of items must equal the number of items in
 <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>, and each item of <strong>target</strong> be compatible with the
 <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a>
@@ -807,7 +807,7 @@ If <code class="xref any docutils literal"><span class="pre">True</span></code>,
 <dt id="psyneulink.core.components.process.ProcessInputState">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">ProcessInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.ProcessInputState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents inputs and targets specified in a call to the Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.execute" title="psyneulink.core.components.process.Process.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods.</p>
-<p id="processinputstate">A ProcessInputState is created for each <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of the <a class="reference internal" href="EVCAuxiliary.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.origin_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.PredictionMechanism.origin_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanism</span></code></a>, and for the <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of each <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> listed in <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>.  A <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created that projects to each of these InputStates
+<p id="processinputstate">A ProcessInputState is created for each <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of the <a class="reference internal" href="#psyneulink.core.components.process.Process.origin_mechanism" title="psyneulink.core.components.process.Process.origin_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanism</span></code></a>, and for the <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of each <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> listed in <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>.  A <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created that projects to each of these InputStates
 from the corresponding ProcessingInputState.  When the Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.execute" title="psyneulink.core.components.process.Process.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
 <a class="reference internal" href="#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method is called, each item of its <strong>inputs</strong> and <strong>targets</strong> arguments is assigned as
 the <code class="xref any docutils literal"><span class="pre">value</span></code> of a ProcessInputState, which is then conveyed to the
@@ -861,7 +861,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+165.gf7cea17',
+            VERSION:'0.5.0.0+166.g98bd258',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
