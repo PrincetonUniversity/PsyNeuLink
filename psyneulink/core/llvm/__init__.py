@@ -149,6 +149,7 @@ def init_builtins():
     with LLVMBuilderContext() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
+        builtins.setup_mersenne_twister(ctx)
 
 def cleanup():
     _cpu_engine.clean_module()
