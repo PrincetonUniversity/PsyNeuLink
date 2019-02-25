@@ -31,7 +31,7 @@ test_data = [
     (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
     (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var)),
     (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
-    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, None, np.maximum(RAND1 * (test_var - RAND2), RAND2, RAND3 * (test_var - RAND2))),
+    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, None, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
