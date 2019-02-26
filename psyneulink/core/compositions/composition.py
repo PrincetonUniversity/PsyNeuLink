@@ -2361,6 +2361,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_color='red',
                    input_and_output_color='brown',
                    model_based_optimizer_color='blue',
+                   composition_color='pink',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
                    ):
@@ -2433,6 +2434,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_and_output_color : keyword : default 'brown'
             specifies the display color of nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
 
+        input_and_output_color : keyword : default 'brown'
+            specifies the display color of nodes that represented nested Compositions.
+
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
 
@@ -2475,7 +2479,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
-            # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
+            # If recvr is ObjectiveMechanism for Composition's model_based_optimizer,
+            #    break and handle in _assign_control_components()
             elif (isinstance(rcvr, ObjectiveMechanism)
                     and self.model_based_optimizer
                     and rcvr is self.model_based_optimizer.objective_mechanism):
@@ -2483,7 +2488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             else:
                 rcvr_rank = 'same'
-                # Set rcvr color and penwidth info based on node type
+                # Set rcvr color and penwidth based on node type
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
@@ -2520,6 +2525,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_color = output_color
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = output_rank
+
+                elif isinstance(rcvr, Composition):
+                    if rcvr in active_items:
+                        if active_color is BOLD:
+                            rcvr_color = composition_color
+                        else:
+                            rcvr_color = active_color
+                        rcvr_penwidth = str(bold_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        rcvr_color = composition_color
+                        rcvr_penwidth = str(bold_width)
+
                 elif rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = default_node_color
