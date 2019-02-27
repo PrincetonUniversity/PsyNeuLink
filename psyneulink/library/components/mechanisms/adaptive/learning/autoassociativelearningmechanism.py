@@ -111,6 +111,12 @@ output_state_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
+def _autoassociative_learning_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
+    if hasattr(owning_component, "function") and owning_component.function:
+        if hasattr(owning_component.function, "learning_rate"):
+            owning_component.function.learning_rate = value
+    return value
+
 class AutoAssociativeLearningMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -309,7 +315,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                     :type: `ModulationParam`
 
         """
-        learning_rate = Parameter(None, modulable=True)
+        learning_rate = Parameter(None, modulable=True, setter=_autoassociative_learning_mechanism_learning_rate_setter)
         learning_signals = None
         modulation = ModulationParam.ADDITIVE
 
@@ -367,6 +373,13 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         return variable
+    
+    def _instantiate_attributes_after_function(self, context=None):
+        super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
+        # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
+        # rate value passed into RecurrentTransfermechanism
+        if self.learning_rate:
+            self.function.learning_rate = self.learning_rate
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.

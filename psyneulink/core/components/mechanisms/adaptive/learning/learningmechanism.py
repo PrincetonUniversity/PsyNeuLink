@@ -1316,14 +1316,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self._learning_enabled = assignment
 
     @property
-    def learning_rate(self):
-        return self.function.learning_rate
-
-    @learning_rate.setter
-    def learning_rate(self, assignment):
-        self.function.learning_rate = assignment
-
-    @property
     def input_source(self):
         try:
             return self.input_states[ACTIVATION_INPUT].path_afferents[0].sender.owner
