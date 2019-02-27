@@ -11,8 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -144,6 +144,8 @@ agent_comp.add_projection(c)
 
 # **************************************  CONOTROL APPRATUS ************************************************************
 
+from psyneulink.core.components.functions.objectivefunctions import NORMED_L0_SIMILARITY
+
 difference = Distance(metric=DIFFERENCE)
 #   function for ObjectiveMechanism
 
@@ -160,7 +162,9 @@ ocm = OptimizationControlMechanism(name='EVC',
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
                                    function=GridSearch(direction=MAXIMIZE, save_values=True),
                                    objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
-                                                                          function=objective_function,
+                                                                          # function=objective_function,
+                                                                          function=Distance(
+                                                                                  metric=NORMED_L0_SIMILARITY),
                                                                           monitor=[action_mech, optimal_action_mech]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,

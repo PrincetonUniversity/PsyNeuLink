@@ -28,7 +28,10 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+from psyneulink.core.globals.keywords import \
+    CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, NORMED_L0_SIMILARITY, \
+    OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
@@ -36,7 +39,6 @@ from psyneulink.core.globals.utilities import is_iterable
 
 
 __all__ = ['ObjectiveFunction', 'Stability', 'Distance']
-
 
 class ObjectiveFunction(Function_Base):
     """Abstract class of `Function` used for evaluating states.
@@ -634,6 +636,21 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, abs_val)
         builder.store(new_acc, acc)
 
+    def __gen_llvm_normed_L0_similarity(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        sub = builder.fsub(val1, val2)
+        ltz = builder.fcmp_ordered("<", sub, ctx.float_ty(0))
+        abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
+        acc_val = builder.load(acc)
+        acc_sum = builder.fadd(acc_val, abs_val)
+        acc_norm = builder.fdiv(acc_sum, 4)
+        new_acc = builder.fsub(1, acc_norm)
+        builder.store(new_acc, acc)
+
     def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
@@ -750,6 +767,8 @@ class Distance(ObjectiveFunction):
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
         if self.metric == DIFFERENCE:
             inner = functools.partial(self.__gen_llvm_difference, **kwargs)
+        elif self.metric == NORMED_L0_SIMILARITY:
+            inner = functools.partial(self.__gen_llvm_normed_L0_similarity, **kwargs)
         elif self.metric == EUCLIDEAN:
             inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
         elif self.metric == CROSS_ENTROPY:
@@ -890,6 +909,10 @@ class Distance(ObjectiveFunction):
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
+
+        # Similarity (used specifically for testing Compilation of Predator-Prey Model)
+        elif self.metric is NORMED_L0_SIMILARITY:
+            result = 1-np.sum(np.abs(v1 - v2))/4
 
         # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:
