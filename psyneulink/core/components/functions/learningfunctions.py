@@ -999,8 +999,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         """
         variable = Parameter(np.array([0, 0]), read_only=True)
-
-    default_learning_rate = 0.05
+        learning_rate = Parameter()
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1084,10 +1083,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
         learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
-        if learning_rate is None:
-            learning_rate = self.defaults.learning_rate
-
-        # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
+        # learning_rate = self.learning_rate
+        # if learning_rate is None:
+        #     learning_rate = self.defaults.learning_rate
+        #
+        # # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
         learning_rate_dim = None
         if learning_rate is not None:
             learning_rate_dim = np.array(learning_rate).ndim
@@ -1520,8 +1520,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
-
-    default_learning_rate = 0.05
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
