@@ -41,12 +41,14 @@ following Composition methods:
     - `add_nodes <Composition.add_nodes>`
         Adds mutiple nodes to the Composition
     - `add_projection <Composition.add_projection>`
-        Connects two nodes in the Composition via a Projection
+        Adds a connection between a pair of nodes in the Composition
+    - `add_projections <Composition.add_projections>`
+        Adds connection between multiple pairs of nodes in the Composition
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
         Adds and connects a list of nodes and/or Projections to the Composition; Inserts a default Projection between any adjacent Nodes
 
 .. note::
-  Only Nodes and Projections added to a Composition via the four methods above constitute a Composition, even if
+  Only Nodes and Projections added to a Composition via the methods above constitute a Composition, even if
   other Nodes and/or Projections are constructed in the same script.
 
 In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
@@ -575,9 +577,9 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AFTER, ALL, BEFORE, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, \
-    IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, \
-    ROLES, SOFT_CLAMP, VALUES
+from psyneulink.core.globals.keywords import \
+    AFTER, ALL, BEFORE, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, MATRIX_KEYWORD_VALUES, \
+    MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
@@ -1483,6 +1485,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _add_projection(self, projection):
         self.projections.append(projection)
 
+    def add_projections(self, projections=None):
+        '''
+            Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
+            Projection must have its `sender <Projection.sender>` and `receiver <Projection.receiver>` already
+            specified.
+
+            Arguments
+            ---------
+
+            projections : list of Projections
+                list of Projections to be added to the Composition
+
+        '''
+
+        if isinstance(projections, list):
+            for projection in projections:
+                if isinstance(projection, Projection) and \
+                        hasattr(projection, "sender") and \
+                        hasattr(projection, "receiver"):
+                    self.add_projection(projection)
+                else:
+                    raise CompositionError("Invalid projections specification for {}. The add_projections method of "
+                                           "Composition requires a list of Projections, each of which must have a "
+                                           "sender and a receiver.".format(self.name))
+        else:
+            raise CompositionError("Invalid projections specification for {}. The add_projections method of "
+                                   "Composition requires a list of Projections, each of which must have a "
+                                   "sender and a receiver.".format(self.name))
+
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
         if projection in [vertex.component for vertex in self.graph.vertices]:
@@ -1923,7 +1954,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          default_variable=self.input_CIM.defaults.variable,
                                                          function=InterfaceStateMap(
                                                              corresponding_input_state=interface_input_state),
-                                                         name="INPUT_CIM_" + node.name + "_" + OutputState.__name__)
+                                                         name="INPUT_CIM_" + node.name + "_" + input_state.name)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
 
@@ -2048,16 +2079,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
 
+    @tc.typecheck
     def show_structure(self,
                        # direction = 'BT',
-                       show_functions=False,
-                       show_values=False,
-                       use_labels=False,
-                       show_headers=False,
-                       show_role=False,
+                       show_functions:bool=False,
+                       show_values:bool=False,
+                       use_labels:bool=False,
+                       show_headers:bool=False,
+                       show_role:bool=False,
                        system=None,
                        composition=None,
-                       output_fmt='pdf'
+                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
+                       output_fmt:tc.enum('pdf','struct')='pdf'
                        ):
         """Generate a detailed display of a the structure of a Mechanism.
 
@@ -2089,7 +2122,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
             (shown in caps).
 
-        show_role : boofl : default False
+        show_role : bool : default False
             specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
             in the **system** argument (shown in caps and enclosed in square brackets);
             if **system** is not specified, show_roles is ignored.
@@ -2097,6 +2130,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
             if this is not specified, the **show_role** argument is ignored.
+
+        composition : Composition : default None
+            specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
+            if this is not specified, the **show_role** argument is ignored.
+
+        compact_cim : *INPUT* or *OUTUPT* : default None
+            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
@@ -2181,7 +2221,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         mech = mech_string(self)
 
         # Construct InputStates specification
-        if len(self.input_states):
+        if len(self.input_states) and compact_cim is not INPUT:
             if show_headers:
                 input_states = input_states_header + pipe + states_string(self.input_states,
                                                                           InputState,
@@ -2199,7 +2239,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_states = ''
 
         # Construct OutputStates specification
-        if len(self.output_states):
+        if len(self.output_states) and compact_cim is not OUTPUT:
             if show_headers:
                 output_states = states_string(self.output_states,
                                               OutputState,
@@ -2330,6 +2370,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_color='red',
                    input_and_output_color='brown',
                    model_based_optimizer_color='blue',
+                   composition_color='pink',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
                    ):
@@ -2402,6 +2443,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_and_output_color : keyword : default 'brown'
             specifies the display color of nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
 
+        input_and_output_color : keyword : default 'brown'
+            specifies the display color of nodes that represented nested Compositions.
+
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
 
@@ -2444,7 +2488,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
-            # if recvr is ObjectiveMechanism for Composition's model_based_optimizer, break and handle below
+            # If recvr is ObjectiveMechanism for Composition's model_based_optimizer,
+            #    break and handle in _assign_control_components()
             elif (isinstance(rcvr, ObjectiveMechanism)
                     and self.model_based_optimizer
                     and rcvr is self.model_based_optimizer.objective_mechanism):
@@ -2452,7 +2497,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             else:
                 rcvr_rank = 'same'
-                # Set rcvr color and penwidth info based on node type
+                # Set rcvr color and penwidth based on node type
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
@@ -2489,6 +2534,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_color = output_color
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = output_rank
+
+                elif isinstance(rcvr, Composition):
+                    if rcvr in active_items:
+                        if active_color is BOLD:
+                            rcvr_color = composition_color
+                        else:
+                            rcvr_color = active_color
+                        rcvr_penwidth = str(bold_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        rcvr_color = composition_color
+                        rcvr_penwidth = str(bold_width)
+
                 elif rcvr in active_items:
                     if active_color is BOLD:
                         rcvr_color = default_node_color
@@ -2623,7 +2681,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(cim_label,
-                           cim.show_structure(**node_struct_args),
+                           cim.show_structure(**node_struct_args, compact_cim=True),
                            color=cim_color,
                            rank=cim_rank,
                            penwidth=cim_penwidth)
