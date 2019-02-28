@@ -28,7 +28,10 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+from psyneulink.core.globals.keywords import \
+    CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
+    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
