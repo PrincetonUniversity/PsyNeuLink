@@ -294,6 +294,7 @@ class DistanceMetrics:
         self.MAX_ABS_DIFF = MAX_ABS_DIFF
         self.DIFFERENCE = DIFFERENCE
         self.L0 = L0
+        self.NORMED_L0_SIMILARITY = NORMED_L0_SIMILARITY
         self.EUCLIDEAN = EUCLIDEAN
         self.L1 = L1
         self.ANGLE = ANGLE
