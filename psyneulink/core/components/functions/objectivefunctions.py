@@ -634,6 +634,21 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, abs_val)
         builder.store(new_acc, acc)
 
+    def __gen_llvm_normed_L0_similarity(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        sub = builder.fsub(val1, val2)
+        ltz = builder.fcmp_ordered("<", sub, ctx.float_ty(0))
+        abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
+        acc_val = builder.load(acc)
+        acc_sum = builder.fadd(acc_val, abs_val)
+        acc_norm = builder.fdiv(acc_sum, ctx.float_ty(4))
+        new_acc = builder.fsub(ctx.float_ty(1), acc_norm)
+        builder.store(new_acc, acc)
+
     def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
