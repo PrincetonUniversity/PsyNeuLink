@@ -647,8 +647,8 @@ class Distance(ObjectiveFunction):
         abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
         acc_val = builder.load(acc)
         acc_sum = builder.fadd(acc_val, abs_val)
-        acc_norm = builder.fdiv(acc_sum, 4)
-        new_acc = builder.fsub(1, acc_norm)
+        acc_norm = builder.fdiv(acc_sum, ctx.float_ty(4))
+        new_acc = builder.fsub(ctx.float_ty(1), acc_norm)
         builder.store(new_acc, acc)
 
     def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
