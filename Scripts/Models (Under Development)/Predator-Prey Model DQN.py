@@ -124,7 +124,9 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
 # Action Mechanism
 #    Use ddqn's eval function to compute action for a given observation
 #    note: unitization is done in main loop, to allow compilation of LinearCombination function in ObjectiveMech) (TBI)
-action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]], function=get_action, name='ACTION')
+action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]],
+                                  function=get_action, name='ACTION',
+                                  output_states='agent action')
 
 # ************************************** BASIC COMPOSITION *************************************************************
 
