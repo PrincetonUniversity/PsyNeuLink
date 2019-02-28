@@ -768,6 +768,8 @@ class Distance(ObjectiveFunction):
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
         if self.metric == DIFFERENCE:
             inner = functools.partial(self.__gen_llvm_difference, **kwargs)
+        elif self.metric == NORMED_L0_SIMILARITY:
+            inner = functools.partial(self.__gen_llvm_normed_L0_similarity, **kwargs)
         elif self.metric == EUCLIDEAN:
             inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
         elif self.metric == CROSS_ENTROPY:
