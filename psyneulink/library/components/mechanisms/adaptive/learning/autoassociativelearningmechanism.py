@@ -111,12 +111,6 @@ output_state_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
-def _autoassociative_learning_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
-    if hasattr(owning_component, "function") and owning_component.function:
-        if hasattr(owning_component.function, "learning_rate"):
-            owning_component.function.learning_rate = value
-    return value
-
 class AutoAssociativeLearningMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -315,7 +309,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                     :type: `ModulationParam`
 
         """
-        learning_rate = Parameter(None, modulable=True, setter=_autoassociative_learning_mechanism_learning_rate_setter)
         learning_signals = None
         modulation = ModulationParam.ADDITIVE
 

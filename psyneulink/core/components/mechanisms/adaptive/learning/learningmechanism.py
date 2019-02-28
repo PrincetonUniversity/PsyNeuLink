@@ -670,6 +670,11 @@ def _error_signal_getter(owning_component=None, execution_id=None):
     except (TypeError, IndexError):
         return None
 
+def _learning_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
+    if hasattr(owning_component, "function") and owning_component.function:
+        if hasattr(owning_component.function.parameters, "learning_rate"):
+            owning_component.function.parameters.learning_rate.set(value, execution_id)
+    return value
 
 class LearningMechanism(AdaptiveMechanism_Base):
     """
@@ -965,6 +970,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
+        learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
 
         learning_enabled = True
 
@@ -1285,7 +1291,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-
             variable[ERROR_OUTPUT_INDEX] = error_signal_input
             learning_signal, error_signal = super()._execute(
                 variable=variable,
