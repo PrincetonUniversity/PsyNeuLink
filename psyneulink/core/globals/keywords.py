@@ -323,6 +323,7 @@ class DistanceMetrics:
 METRIC = 'metric'
 DIFFERENCE = 'difference'
 L0 = DIFFERENCE
+NORMED_L0_SIMILARITY = 'normed_L0_similarity'
 MAX_ABS_DIFF = 'max_abs_diff'
 EUCLIDEAN = 'euclidean'
 L1 = EUCLIDEAN
