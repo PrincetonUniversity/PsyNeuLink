@@ -999,8 +999,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         """
         variable = Parameter(np.array([0, 0]), read_only=True)
-        learning_rate = Parameter()
-
+        learning_rate = Parameter(0.05, modulable=True)
+    default_learning_rate = 0.05
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
@@ -1084,8 +1084,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         # If learning_rate was not specified for instance or composition, use default value
         learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
         # learning_rate = self.learning_rate
-        # if learning_rate is None:
-        #     learning_rate = self.defaults.learning_rate
+        if learning_rate is None:
+            learning_rate = self.defaults.learning_rate
         #
         # # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
         learning_rate_dim = None
