@@ -828,6 +828,19 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
+    def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
+        """ Update value for each InputState in self.input_states:
+
+        Call execute method for all (MappingProjection) Projections in InputState.path_afferents
+        Aggregate results (using InputState execute method)
+        Update InputState.value
+        """
+        for i in range(len(self.input_states)):
+            state = self.input_states[i]
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
+
+        return [state.parameters.value.get(execution_id) for state in self.input_states]
+
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
