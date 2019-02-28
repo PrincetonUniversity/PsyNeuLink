@@ -911,6 +911,10 @@ class Distance(ObjectiveFunction):
         elif self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
 
+        # Similarity (used specifically for testing Compilation of Predator-Prey Model)
+        elif self.metric is NORMED_L0_SIMILARITY:
+            result = 1-np.sum(np.abs(v1 - v2))/4
+
         # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:
             result = np.linalg.norm(v2 - v1)
