@@ -638,21 +638,6 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, abs_val)
         builder.store(new_acc, acc)
 
-    def __gen_llvm_normed_L0_similarity(self, builder, index, ctx, v1, v2, acc):
-        ptr1 = builder.gep(v1, [index])
-        ptr2 = builder.gep(v2, [index])
-        val1 = builder.load(ptr1)
-        val2 = builder.load(ptr2)
-
-        sub = builder.fsub(val1, val2)
-        ltz = builder.fcmp_ordered("<", sub, ctx.float_ty(0))
-        abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
-        acc_val = builder.load(acc)
-        acc_sum = builder.fadd(acc_val, abs_val)
-        acc_norm = builder.fdiv(acc_sum, ctx.float_ty(4))
-        new_acc = builder.fsub(ctx.float_ty(1), acc_norm)
-        builder.store(new_acc, acc)
-
     def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
@@ -767,10 +752,8 @@ class Distance(ObjectiveFunction):
         builder.store(ctx.float_ty(0), acc_ptr)
 
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
-        if self.metric == DIFFERENCE:
+        if self.metric == DIFFERENCE or self.metric == NORMED_L0_SIMILARITY:
             inner = functools.partial(self.__gen_llvm_difference, **kwargs)
-        elif self.metric == NORMED_L0_SIMILARITY:
-            inner = functools.partial(self.__gen_llvm_normed_L0_similarity, **kwargs)
         elif self.metric == EUCLIDEAN:
             inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
         elif self.metric == CROSS_ENTROPY:
@@ -813,7 +796,10 @@ class Distance(ObjectiveFunction):
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
         fabs = ctx.get_builtin("fabs", [ctx.float_ty])
         ret = builder.load(acc_ptr)
-        if self.metric == EUCLIDEAN:
+        if self.metric == NORMED_L0_SIMILARITY:
+            ret = builder.fdiv(ret, ret.type(4))
+            ret = builder.fsub(ret.type(1), ret)
+        elif self.metric == EUCLIDEAN:
             ret = builder.call(sqrt, [ret])
         elif self.metric == MAX_ABS_DIFF:
             ret = builder.load(max_diff_ptr)
