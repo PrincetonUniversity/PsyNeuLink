@@ -50,7 +50,7 @@ from the OutputState to that InputState.  The **monitor** argument takes a list 
 include any of the `forms of specification <InputState_Specification>` used in a standard **input_states** argument.
 For the **monitor** argument, this is usually a list of OutputStates to be monitored.  However, as with a standard
 **input_states** argument, the **monitor** argument can include Mechanisms (in which case their `primary Outputstate
-<OutputState_Primary>` is used) or other the `InputState(s) <InputState>` of other Mechanisms (in which case the
+<OutputState_Primary>` is used) or the `InputState(s) <InputState>` of other Mechanisms (in which case the
 ObjectiveMechanism will be assigned Projections from all of the OutputStates that project to the specified InputState
 -- that is, it will `shadow their inputs <InputState_Shadow_Inputs>`). Items in the *monitor* argument can also be
 used to specify attributes of the InputState and/or MappingProjection(s) to it, that the ObjectiveMechanism creates to
@@ -496,8 +496,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         corresponding `InputState` listed in the `input_states <ObjectiveMechanism.input_states>` attribute
 
         .. note::
-           If any of the ObjectiveMechanism's `input_states <ObjectiveMechanism.input_states>` were specified to
-           `shadow the InputState <InputState_Shadow_Input>` of another Mechanism, and any of those shadowed InputStates
+           If any of the ObjectiveMechanism's `input_states <ObjectiveMechanism.input_states>` were specified to `shadow
+           the InputState <InputState_Shadow_Inputs>` of another Mechanism, and any of those shadowed InputStates
            receives more than one `Projection`, then the list of monitored OutputStates in `monitor` will be longer
            than the list of the ObjectiveMechanism's `input_states <ObjectiveMechanisms.input_states>`.
 
@@ -710,7 +710,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         return self.add_to_monitor(monitored_output_states_specs, context=None)
 
-
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
 
@@ -866,6 +865,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             super()._dependent_components,
             self.monitor,
         ))
+
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):

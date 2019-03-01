@@ -477,12 +477,12 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   if either of those is specified.  If the `variable <InputState.variable>` and/or `value <InputState.value>`
   is `explicitly specified for an InputState <InputState_Variable_and_Value>` in the **input_states** argument or
   *INPUT_STATES* entry of a **params** dictionary, it must be compatible with the value of the corresponding
-  item **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
-  InputState is used to specify the format of its `variable <InputState.variable>` (e.g., the InputState is
+  item of **default_variable**; otherwise, the format of the item in **default_variable** corresponding to the
+  InputState is used to specify the format of the InputState's `variable <InputState.variable>` (e.g., the InputState is
   `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
-  **default_variable** is not specified, a default value is specified by the Mechanism. An InputState may also be
-  specified by the InputState of another Node in the Composition. In this case, a new InputState is created that
-  "shadows" the one specified, meaning that it receives projections from all of the same senders.
+  **default_variable** is not specified, a default value is specified by the Mechanism.  InputStates can also be
+  specifed that `shadow the inputs <InputState_Shadow_Inputs>` of other InputStates and/or Mechanisms; that is, receive
+  Projections from all of the same `senders <Projection.sender>` as those specified.
 
 COMMENT:
 *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
@@ -2747,10 +2747,8 @@ class Mechanism_Base(Mechanism):
             elif isinstance(os_in_spec, list) and len(os_in_spec) == 1 and isinstance(os_in_spec[0], tuple) and os_in_spec[0][0] == OWNER_VALUE:
                 os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
             else:
-                #TODO: support more options
-                print(value.type)
-                print(os_in_spec)
-                assert False
+                #TODO: support more spec options
+                assert False, "Unsupported output state spec: {} ({})".format(os_in_spec, value.type)
 
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
@@ -2857,16 +2855,18 @@ class Mechanism_Base(Mechanism):
 
         print("- output: {}".format(output_string))
 
+    @tc.typecheck
     def show_structure(self,
                        # direction = 'BT',
-                       show_functions=False,
-                       show_values=False,
-                       use_labels=False,
-                       show_headers=False,
-                       show_role=False,
+                       show_functions:bool=False,
+                       show_values:bool=False,
+                       use_labels:bool=False,
+                       show_headers:bool=False,
+                       show_role:bool=False,
                        system=None,
                        composition=None,
-                       output_fmt='pdf'
+                       compact_cim:bool=False,
+                       output_fmt:tc.enum('pdf','struct')='pdf'
                        ):
         """Generate a detailed display of a the structure of a Mechanism.
 
@@ -2907,6 +2907,13 @@ class Mechanism_Base(Mechanism):
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
             if this is not specified, the **show_role** argument is ignored.
 
+        composition : Composition : default None
+            specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
+            if this is not specified, the **show_role** argument is ignored.
+
+        compact_cim : bool : default False
+            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
+
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
@@ -2934,6 +2941,7 @@ class Mechanism_Base(Mechanism):
             else:
                 mech_header = ''
             mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
+
             mech_role = ''
             if system and show_role:
                 try:
@@ -2989,7 +2997,7 @@ class Mechanism_Base(Mechanism):
         mech = mech_string(self)
 
         # Construct InputStates specification
-        if len(self.input_states):
+        if len(self.input_states) and (not compact_cim or self is not composition.input_CIM):
             if show_headers:
                 input_states = input_states_header + pipe + states_string(self.input_states,
                                                                           InputState,
@@ -3023,7 +3031,7 @@ class Mechanism_Base(Mechanism):
             parameter_states = ''
 
         # Construct OutputStates specification
-        if len(self.output_states):
+        if len(self.output_states) and (not compact_cim or self is not composition.output_CIM):
             if show_headers:
                 output_states = states_string(self.output_states,
                                               OutputState,

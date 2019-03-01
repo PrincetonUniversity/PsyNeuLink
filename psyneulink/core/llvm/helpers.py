@@ -14,7 +14,7 @@ from contextlib import contextmanager
 @contextmanager
 def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
-    assert(start.type is stop.type)
+    assert start.type is stop.type
     index_var = builder.alloca(stop.type)
     builder.store(start, index_var)
 
@@ -233,6 +233,5 @@ class ConditionGenerator:
 
             # Return: target.calls % N == 0 AND me.last_time < target.last_time
             return builder.and_(completedNruns, ran_after_me)
-        else:
-            print("ERROR: Unsupported scheduling condition: ", condition)
-            assert False
+
+        assert False, "Unsupported scheduling condition: {}".format(condition)

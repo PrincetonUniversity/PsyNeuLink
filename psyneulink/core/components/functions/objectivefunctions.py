@@ -28,7 +28,10 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+from psyneulink.core.globals.keywords import \
+    CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
+    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
@@ -394,6 +397,7 @@ COMMENT
         # Transfer Function if configured
         trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
         if self.transfer_fct is not None:
+            #FIXME: implement this
             assert False
         else:
             builder.store(builder.load(dot_out), trans_out)
@@ -621,7 +625,7 @@ class Distance(ObjectiveFunction):
         denom = np.sqrt(np.sum(v1_norm ** 2) * np.sum(v2_norm ** 2)) or EPSILON
         return np.sum(v1_norm * v2_norm) / denom
 
-    def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
+    def __gen_llvm_sum_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
         val1 = builder.load(ptr1)
@@ -634,7 +638,7 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, abs_val)
         builder.store(new_acc, acc)
 
-    def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
+    def __gen_llvm_sum_diff_squares(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
         val1 = builder.load(ptr1)
@@ -660,29 +664,16 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fsub(acc_val, prod)
         builder.store(new_acc, acc)
 
-    def __gen_llvm_energy(self, builder, index, ctx, v1, v2, acc):
+    def __gen_llvm_sum_product(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
         val1 = builder.load(ptr1)
         val2 = builder.load(ptr2)
 
         prod = builder.fmul(val1, val2)
-        prod = builder.fmul(prod, ctx.float_ty(0.5))
 
         acc_val = builder.load(acc)
-        new_acc = builder.fsub(acc_val, prod)
-        builder.store(new_acc, acc)
-
-    def __gen_llvm_correlate(self, builder, index, ctx, v1, v2, acc):
-        ptr1 = builder.gep(v1, [index])
-        ptr2 = builder.gep(v2, [index])
-        val1 = builder.load(ptr1)
-        val2 = builder.load(ptr2)
-
-        # This should be conjugate, but we don't deal with complex numbers
-        mul = builder.fmul(val1, val2)
-        acc_val = builder.load(acc)
-        new_acc = builder.fadd(acc_val, mul)
+        new_acc = builder.fadd(acc_val, prod)
         builder.store(new_acc, acc)
 
     def __gen_llvm_max_diff(self, builder, index, ctx, v1, v2, max_diff_ptr):
@@ -748,14 +739,14 @@ class Distance(ObjectiveFunction):
         builder.store(ctx.float_ty(0), acc_ptr)
 
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
-        if self.metric == DIFFERENCE:
-            inner = functools.partial(self.__gen_llvm_difference, **kwargs)
+        if self.metric == DIFFERENCE or self.metric == NORMED_L0_SIMILARITY:
+            inner = functools.partial(self.__gen_llvm_sum_difference, **kwargs)
         elif self.metric == EUCLIDEAN:
-            inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
+            inner = functools.partial(self.__gen_llvm_sum_diff_squares, **kwargs)
+        elif self.metric == ENERGY:
+            inner = functools.partial(self.__gen_llvm_sum_product, **kwargs)
         elif self.metric == CROSS_ENTROPY:
             inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
-        elif self.metric == ENERGY:
-            inner = functools.partial(self.__gen_llvm_energy, **kwargs)
         elif self.metric == MAX_ABS_DIFF:
             del kwargs['acc']
             max_diff_ptr = builder.alloca(ctx.float_ty)
@@ -792,7 +783,12 @@ class Distance(ObjectiveFunction):
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
         fabs = ctx.get_builtin("fabs", [ctx.float_ty])
         ret = builder.load(acc_ptr)
-        if self.metric == EUCLIDEAN:
+        if self.metric == NORMED_L0_SIMILARITY:
+            ret = builder.fdiv(ret, ret.type(4))
+            ret = builder.fsub(ret.type(1), ret)
+        elif self.metric == ENERGY:
+            ret = builder.fmul(ret, ret.type(-0.5))
+        elif self.metric == EUCLIDEAN:
             ret = builder.call(sqrt, [ret])
         elif self.metric == MAX_ABS_DIFF:
             ret = builder.load(max_diff_ptr)
@@ -890,6 +886,10 @@ class Distance(ObjectiveFunction):
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
+
+        # Similarity (used specifically for testing Compilation of Predator-Prey Model)
+        elif self.metric is NORMED_L0_SIMILARITY:
+            result = 1-np.sum(np.abs(v1 - v2))/4
 
         # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:
