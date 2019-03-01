@@ -316,6 +316,11 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
 
     return value
 
+def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
+    if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
+        owning_component.learning_mechanism.parameters.learning_rate.set(value, execution_id)
+    return value
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
@@ -897,7 +902,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
         learning_function = Parameter(Hebbian, stateful=False, loggable=False)
-        learning_rate = Parameter(None, modulable=True)
+        learning_rate = Parameter(None, modulable=True, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
