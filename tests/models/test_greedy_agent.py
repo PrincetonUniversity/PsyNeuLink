@@ -13,7 +13,7 @@ from psyneulink.core.components.functions.transferfunctions import GaussianDisto
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.inputstate import SHADOW_INPUTS
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.keywords import EUCLIDEAN, VARIANCE
+from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agent")
@@ -167,25 +167,12 @@ def test_predator_prey(benchmark, mode):
 
     # ControlMechanism
 
-    #   function for ObjectiveMechanism
-    dist = Distance(metric=EUCLIDEAN)
-    def dist_diff_fct(variable):
-        # Get difference in distance of player to predator vs. prey
-        if variable is None:
-            return 0
-        player_coord = variable[0]
-        predator_coord = variable[1]
-        prey_coord = variable[2]
-        dist_to_predator = dist([player_coord, predator_coord])
-        dist_to_prey = dist([player_coord, prey_coord])
-        return dist_to_predator - dist_to_prey
-
     ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
                                        agent_rep=agent_comp,
                                        function=GridSearch(direction=MINIMIZE,
                                                            save_values=True),
 
-                                       objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
+                                       objective_mechanism=ObjectiveMechanism(function=Distance(metric=NORMED_L0_SIMILARITY),
                                                                               monitor=[player_obs,
                                                                                        predator_obs,
                                                                                        prey_obs]),
@@ -207,6 +194,6 @@ def test_predator_prey(benchmark, mode):
     run_results = agent_comp.run(inputs=input_dict, bin_execute=mode)
     
     assert np.allclose(run_results[0], [[-1.76601584, -0.43178307]])
-    assert np.allclose(run_results[1], [[-0.20619361]])
+    assert np.allclose(run_results[1], [[0.43076779]])
 
     benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)
