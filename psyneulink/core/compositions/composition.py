@@ -4020,8 +4020,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert par_proj in state.mod_afferents
                     projection_idx = state.mod_afferents.index(par_proj)
                 else:
-                    # Unknown state
-                    assert False
+                    assert False, "State neither an input state nor a parameter state"
 
                 assert state_idx < len(m_in.type.pointee)
                 assert projection_idx < len(m_in.type.pointee.elements[state_idx])

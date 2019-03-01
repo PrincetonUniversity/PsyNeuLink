@@ -2,11 +2,18 @@ import pytest
 import numpy as np
 import psyneulink as pnl
 
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.adaptive.control import OptimizationControlMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
 from psyneulink.core.components.functions.transferfunctions import GaussianDistort
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.states.inputstate import SHADOW_INPUTS
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agent")
@@ -112,3 +119,81 @@ def test_simplified_greedy_agent_random(benchmark, mode):
         player:[[619,177]],
         prey:[[419,69]],
         }, 'bin_execute':mode})
+
+@pytest.mark.this
+@pytest.mark.model
+@pytest.mark.benchmark(group="Predator Prey")
+@pytest.mark.parametrize("mode", ['Python'])
+def test_predator_prey(benchmark, mode):
+    # These should probably be replaced by reference to ForagerEnv constants:
+    obs_len = 3
+    obs_coords = 2
+    action_len = 2
+    player_idx = 0
+    player_obs_start_idx = player_idx * obs_len
+    player_value_idx = player_idx * obs_len + obs_coords
+    player_coord_slice = slice(player_obs_start_idx,player_value_idx)
+    predator_idx = 1
+    predator_obs_start_idx = predator_idx * obs_len
+    predator_value_idx = predator_idx * obs_len + obs_coords
+    predator_coord_slice = slice(predator_obs_start_idx,predator_value_idx)
+    prey_idx = 2
+    prey_obs_start_idx = prey_idx * obs_len
+    prey_value_idx = prey_idx * obs_len + obs_coords
+    prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
+
+    player_len = prey_len = predator_len = obs_coords
+
+    # Perceptual Mechanisms
+    player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
+    prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
+    predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
+    # Value and Reward Mechanisms (not yet used;  for future use)
+    values = TransferMechanism(size=3, name="AGENT VALUES")
+    reward = TransferMechanism(name="REWARD")
+
+    # Action Mechanism
+    #    Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
+    #    note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
+    greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
+
+    # Create Composition
+    agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
+    agent_comp.add_node(player_obs)
+    agent_comp.add_node(predator_obs)
+    agent_comp.add_node(prey_obs)
+    agent_comp.add_node(greedy_action_mech)
+
+
+    # ControlMechanism
+
+    ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
+                                       agent_rep=agent_comp,
+                                       function=GridSearch(direction=MINIMIZE,
+                                                           save_values=True),
+
+                                       objective_mechanism=ObjectiveMechanism(function=Distance(metric=NORMED_L0_SIMILARITY),
+                                                                              monitor=[player_obs,
+                                                                                       predator_obs,
+                                                                                       prey_obs]),
+                                       control_signals=[ControlSignal(projections=(VARIANCE,player_obs),
+                                                                      allocation_samples=[0, 10]),
+                                                        ControlSignal(projections=(VARIANCE,predator_obs),
+                                                                      allocation_samples=[0, 10]),
+                                                        ControlSignal(projections=(VARIANCE,prey_obs),
+                                                                      allocation_samples=[0, 10]),
+                                                        ],
+                                       )
+    agent_comp.add_model_based_optimizer(ocm)
+    agent_comp.enable_model_based_optimizer = True
+
+    input_dict = {player_obs:[[1.1576537,  0.60782117]],
+                                         predator_obs:[[-0.03479106, -0.47666293]],
+                                         prey_obs:[[-0.60836214,  0.1760381 ]],
+                                         }
+    run_results = agent_comp.run(inputs=input_dict, bin_execute=mode)
+    
+    assert np.allclose(run_results[0], [[-1.76601584, -0.43178307]])
+    assert np.allclose(run_results[1], [[0.43076779]])
+
+    benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)
