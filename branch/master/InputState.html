@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputState &mdash; PsyNeuLink 0.5.2.0+1.g8d7d417 documentation</title>
+  <title>InputState &mdash; PsyNeuLink 0.5.2.0+2.gfa5d042 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.2.0+1.g8d7d417 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.2.0+2.gfa5d042 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="ParameterState" href="ParameterState.html"/>
         <link rel="prev" title="States" href="State.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.2.0+1
+                0.5.2.0+2
               </div>
             
           
@@ -298,11 +298,10 @@ should project to the InputState. Each of these is described below:</p>
 <blockquote>
 <div><p id="inputstate-direct-specification"><strong>Direct Specification of an InputState</strong></p>
 <ul class="simple">
-<li>existing <strong>InputState object</strong> or the name of one – it can not already belong to another Mechanism and, if used
-to specify an InputState in the constructor for a Mechanism, its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must be compatible
-with the corresponding item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="Mechanism.html#mechanism-inputstate-specification"><span class="std std-ref">Mechanism
-InputState specification</span></a> and <a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">InputState variable: Compatibility and Constraints</span></a>
-below).</li>
+<li>existing <strong>InputState object</strong> or the name of one – If this is used to specify an InputState in the
+constructor for a Mechanism, its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must be compatible with the corresponding item of
+the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="Mechanism.html#mechanism-inputstate-specification"><span class="std std-ref">Mechanism InputState specification</span></a> and <a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">InputState variable: Compatibility and Constraints</span></a> below).  If the InputState
+belongs to another Mechanism, then an InputState is created along with Projections(s) that <a class="reference internal" href="#inputstate-shadow-inputs"><span class="std std-ref">shadow the inputs</span></a> to the specified InputState.</li>
 </ul>
 <ul class="simple">
 <li><strong>InputState class</strong>, <strong>keyword</strong> <em>INPUT_STATE</em>, or a <strong>string</strong> – this creates a default InputState; if used
@@ -355,7 +354,7 @@ this takes precedence over any specification in the <strong>exponent</strong> ar
 to it, as described below.  Specifying an InputState in this way creates both the InputState and any of the
 specified or implied Projection(s) to it (if they don’t already exist). <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
 are assigned to the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.path_afferents" title="psyneulink.core.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute, and <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.mod_afferents" title="psyneulink.core.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. Any of the following can be used
-to specify an InputState by the Components that projection to it (see <a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">below</span></a> for an explanation of the relationship between the <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of these
+to specify an InputState by the Components that projection to it (see <a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">below</span></a> for an explanation of the relationship between the <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of these
 Components and the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>):</p>
 <ul class="simple">
 <li><strong>OutputState, GatingSignal, Mechanism, or list with any of these</strong> – creates an InputState with Projection(s)
@@ -433,6 +432,33 @@ Projection cannot be assigned more than one <a class="reference internal" href="
 </li>
 </ul>
 </div></blockquote>
+</li>
+</ul>
+<ul id="inputstate-shadow-inputs">
+<li><p class="first"><strong>InputStates of Mechanisms to shadow</strong> – either of the following can be used to create InputStates that
+receive the same inputs as (“shadow”) the ones specified:</p>
+<ul class="simple">
+<li><em>InputState or [InputState, …]</em> – each InputState must belong to an existing Mechanism; creates a new
+InputState for each one specified, along with Projections to it that parallel those of the one specified
+(see below).</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><em>{SHADOW_INPUTS: &lt;InputState or Mechanism or [&lt;InputState or Mechanism&gt;,…]&gt;}</em> – any InputStates specified
+must belong to an existing Mechanism;  creates a new InputState for each one specified, and for each of the
+InputStates belonging to any Mechanisms specified, along with Projections to them that parallel those of the
+one(s) specified (see below).</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>For each InputState specified, and all of the InputStates belonging to any Mechanisms specified using the formats
+above, a new InputState is created along with Projections to it that parallel those received by the
+corresponding InputState –  that is, that have the same <code class="xref any docutils literal"><span class="pre">senders</span></code> as those that project to
+the specified InputState, but that project to the one being created.  Thus, for each InputState specified,
+a new one is created that receives exactly the same inputs; that is, “shadows” it.</p>
 </li>
 </ul>
 </div></blockquote>
@@ -523,7 +549,7 @@ of the cases above), then a <a class="reference internal" href="Keywords.html#ps
 </div>
 <ul class="simple">
 <li><strong>GatingProjection, GatingSignal or GatingMechanism</strong> – any of these can be used to specify an InputState;
-their <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> does not need to be compatible with the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, however
+their <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> does not need to be compatible with the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, however
 it does have to be compatible with the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">modulatory parameter</span></a> of the InputState’s
 <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 </ul>
@@ -795,7 +821,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.2.0+1.g8d7d417',
+            VERSION:'0.5.2.0+2.gfa5d042',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
