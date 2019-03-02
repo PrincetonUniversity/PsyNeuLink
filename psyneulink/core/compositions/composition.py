@@ -2581,8 +2581,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if proj.sender.owner is not rcvr:
                             continue
                         if show_node_structure:
-                            sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            sndr_proj_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.sender))
+                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
                         else:
                             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                         if show_projection_labels:

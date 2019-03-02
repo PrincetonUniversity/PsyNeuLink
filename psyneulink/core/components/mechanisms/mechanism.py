@@ -3084,7 +3084,6 @@ class Mechanism_Base(Mechanism):
                             use_labels:bool=False,
                             show_headers:bool=False,
                             show_role:bool=False,
-                            system=None,
                             composition=None,
                             compact_cim:bool=False,
                             output_fmt:tc.enum('pdf','struct')='pdf'
@@ -3141,135 +3140,188 @@ class Mechanism_Base(Mechanism):
             'struct': return a string that specifies the structure of the record shape,
             for use in a GraphViz node specification.
 
+        Template for HTML:
+        
+        <<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">          <- MAIN TABLE
+
+        <tr>                                                                      <- BEGIN OUTPUTSTATES
+            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- OUTPUTSTATES OUTER TABLE
+                <tr> 
+                    <td colspan="1"><b>OutputStates</b></td>                      <- OUTPUTSTATES HEADER
+                </tr>
+                <tr> 
+                    <td><table border="0" cellborder="1">                         <- OUTPUTSTATE CELLS TABLE
+                        <tr> 
+                            <td port="OutputStatePort1">OutputState 1<br/><i>function 1</i><br/><i>=value</i></td>
+                            <td port="OutputStatePort2">OutputState 2<br/><i>function 2</i><br/><i>=value</i></td>
+                        </tr> 
+                    </table></td> 
+                </tr>
+            </table></td> 
+        </tr>
+
+        <tr>                                                                      <- BEGIN MECHANISM & PARAMETERSTATES
+            <td port="Mech name"><b>Mech name</b><br/><i>Roles</i></td>           <- MECHANISM CELL (OUTERMOST TABLE)
+            <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- PARAMETERSTATES OUTER TABLE
+                <tr> 
+                    <td><b>ParameterStates</b></td>                               <- PARAMETERSTATES HEADER
+                </tr> 
+                <tr> 
+                    <td><table border="0" cellborder="1">                         <- PARAMETERSTATE CELLS TABLE
+                        <tr><td port="ParamPort1">Param 1<br/><i>function 1</i><br/><i>= value</i></td></tr>
+                        <tr><td port="ParamPort1">Param 2<br/><i>function 2</i><br/><i>= value</i></td></tr>
+                    </table></td> 
+                </tr> 
+            </table></td> 
+        </tr>
+
+        <tr>                                                                      <- BEGIN INPUTSTATES
+            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- INPUTSTATES OUTER TABLE
+                <tr> 
+                    <td colspan="1"><b>InputStates</b></td>                       <- INPUTSTATES HEADER
+                </tr>
+                <tr> 
+                    <td><table border="0" cellborder="1">                         <- INPUTSTATE CELLS TABLE
+                        <tr> 
+                            <td port="InputStatePort1">InputState 1<br/><i>function 1</i><br/><i>= value</i></td>
+                            <td port="InputStatePort2">InputState 2<br/><i>function 2</i><br/><i>= value</i></td>
+                        </tr> 
+                    </table></td> 
+                </tr>
+            </table></td> 
+        </tr>
+
+        </table>>
+
+
+
         """
-        if composition:
-            system = composition
-        open_bracket = '<td>'
-        pipe = '</td><td>'
-        close_bracket = '</td>'
-        mechanism_header = 'MECHANISM:<br/>'
-        input_states_header = '______INPUTSTATES______<br/>' \
-                  '/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
-        parameter_states_header = 'PARAMETERSTATES:'
-        output_states_header = '\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
-                               '<br/>OUTPUTSTATES'
 
-        def mech_string(mech):
-            '''Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure '''
+        def mech_cell():
+            '''Return html with name of Mechanism, possibly with function and/or value
+            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
+            mechanism_header = ''
             if show_headers:
-                mech_header = mechanism_header
-            else:
-                mech_header = ''
-            mech_name = '<td port=\'{0}\'> {1}{0}</td>'.format(mech.name, mech_header)
+                mech_header = '<b>MECHANISM<b>:<br/>'
+            mech_name = f'{mech_header}<b>{self.name}<b/>'
 
-            mech_role = ''
-            if system and show_role:
-                try:
-                    mech_role = r'<br/>[{}]'.format(self.systems[system])
-                except KeyError:
-                    # # mech_role = r'\n[{}]'.format(self.system)
-                    # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-                    from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-                    if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
-                        mech_role = r'\n[CONTROLLER]'
-                    elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
-                        mech_role = r'\n[{}]'.format(mech._role)
-                    else:
-                        mech_role = ""
-
+            mech_roles = ''
+            if composition and show_role:
+                from psyneulink.core.components.system import System
+                if isinstance(composition, System):
+                    try:
+                        mech_roles = r'<br/>[{}]'.format(self.systems[composition])
+                    except KeyError:
+                        # # mech_roles = r'\n[{}]'.format(self.system)
+                        # mech_roles = r'\n[CONTROLLER]'
+                        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+                        from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+                        if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
+                            mech_roles = r'\n[CONTROLLER]'
+                        elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
+                            mech_roles = r'\n[{}]'.format(mech._role)
+                        else:
+                            mech_roles = ""
+                else:
+                    roles = [role.name for role in list(composition.nodes_to_roles[self])]
+                    mech_roles = f'<br/><i>{",".join(roles)}</i>'
 
             mech_function = ''
             if show_functions:
-                mech_function = r'<br/>({})'.format(mech.function.__class__.__name__)
+                mech_function = f'<br/>({self.function.__class__.__name__})'
             mech_value = ''
             if show_values:
-                mech_value = r'<br/>={}'.format(mech.value)
-            return mech_name + mech_role + mech_function + mech_value
+                mech_value = f'<br/>={self.value}'
+            return f'<td port="{self.name}">' + mech_name + mech_roles + mech_function + mech_value + '</td>'
+        
+        @tc.typecheck
+        def state_table(state_list:ContentAddressableList,
+                        state_type:tc.any(InputState, ParameterState, OutputState)):
 
-        def states_string(state_list:ContentAddressableList,
-                          state_type,
-                          include_function:bool=False,
-                          include_value:bool=False,
-                          use_label:bool=False):
-            '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
-            states = open_bracket
-            for i, state in enumerate(state_list):
-                if i:
-                    states += pipe
+            '''Return html with table for each state in state_list, including functions and/or values as specified
+            
+            Each table has a header cell and and inner table with cells for each state in the list
+            InputState and OutputState cells are aligned horizontally;  ParameterState cells are aligned vertically.
+            Use show_functions, show_values and include_labels arguments from call to show_structure()
+            See show_structure docstring for full template.
+            '''
+
+            def state_cell(state, include_function:bool=False, include_value:bool=False, use_label:bool=False):
+                '''Return html for cell in state inner table
+                Format:  <td port="StatePort">StateName<br/><i>function 1</i><br/><i>=value</i></td>
+                '''
+
                 function = ''
                 if include_function:
-                    function = r'<br/>({})'.format(state.function.__class__.__name__)
-                value = ''
+                    function = state.function__class__.__name__
+                value=''
                 if include_value:
                     if use_label:
-                        value = r'<br/>={}'.format(state.label)
+                        value = f'<br/>={state.label}'
                     else:
-                        value = r'<br/>={}'.format(state.value)
-                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
-                                                        state.name,
-                                                        function,
-                                                        value)
-            states += close_bracket
-            return states
+                        value = f'<br/>={state.value}'
+                return f'<td port="{self._get_port_name(state)}">{state.name}{function}{value}</td>'
+            
 
+            input_states_header = '<tr><td colspan="1"><b>{}s</b></td><tr>'.format(InputState.__name__)
+            parameter_states_header = '<tr><td><b>{}s</b></td><tr>'.format(ParameterState.__name__)
+            output_states_header = '<tr><td colspan="1"><b>{}s</b></td><tr>'.format(OutputState.__name__)
+
+            num_states = len(state_list)
+            outer_table_spec = '<table border="0" cellborder="0" bgcolor="tan">'
+            inner_table_spec = '<table border="0" cellborder="0">'
+
+            states_header = ''
+
+            # InputStates and OutputStates
+            if isinstance(state_type, (InputState, OutputState)):
+                if show_headers:
+                    if isinstance(state_type, InputState):
+                        states_header = input_states_header
+                    else:
+                        states_header = output_states_header
+                table = f'<td colspan="{num_states}"{outer_table_spec}{states_header}<tr><td>{inner_table_spec}<tr>'
+                for state in state_list:
+                    table += state_cell(state, show_functions, show_values, use_labels)
+                table += '</tr></table></td></tr></table></td>'
+
+            # ParameterStates
+            else:
+                states_header = parameter_states_header
+                table = f'<td {outer_table_spec}{states_header}<tr><td>{inner_table_spec}<tr>'
+                for state in state_list:
+                    table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
+                table += '</table></td></tr></table></td>'
+
+            return table
+
+
+        # FIX: REDO THIS:
         # Construct Mechanism specification
-        mech = mech_string(self)
+        # mech = mech_string(self)
+        mech = mech_cell()
 
         # Construct InputStates specification
         if len(self.input_states) and (not compact_cim or self is not composition.input_CIM):
-            if show_headers:
-                input_states = input_states_header + pipe + states_string(self.input_states,
-                                                                          InputState,
-                                                                          include_function=show_functions,
-                                                                          include_value=show_values,
-                                                                          use_label=use_labels)
-            else:
-                input_states = states_string(self.input_states,
-                                             InputState,
-                                             include_function=show_functions,
-                                             include_value=show_values,
-                                             use_label=use_labels)
-            input_states = pipe + input_states
+            input_states_table = state_table(self.input_states, InputState)
+
         else:
             input_states = ''
 
         # Construct ParameterStates specification
         if len(self.parameter_states):
-            if show_headers:
-                parameter_states = parameter_states_header + pipe + states_string(self.parameter_states,
-                                                                                  ParameterState,
-                                                                                  include_function=show_functions,
-                                                                                  include_value=show_values)
-            else:
-                parameter_states = states_string(self.parameter_states,
-                                                 ParameterState,
-                                                 include_function=show_functions,
-                                                 include_value=show_values)
-            parameter_states = pipe + parameter_states
+            parameter_states_table = state_table(self.parameter_states, ParameterState)
         else:
             parameter_states = ''
 
         # Construct OutputStates specification
         if len(self.output_states) and (not compact_cim or self is not composition.output_CIM):
-            if show_headers:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels) + pipe + output_states_header
-            else:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels)
+            output_states_table = state_table(self.output_states, OutputState)
 
-            output_states = output_states + pipe
         else:
             output_states = ''
 
+        # FIX: REDO THIS:
         m_node_struct = open_bracket + \
                         output_states + \
                         open_bracket + mech + parameter_states + close_bracket + \

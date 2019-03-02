@@ -4770,7 +4770,7 @@ class System(System_Base):
 
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_mechanism_structure, (list, tuple, set)):
-            mech_struct_args = {'system':self,
+            mech_struct_args = {'composition':self,
                                 'show_role':any(key in show_mechanism_structure for key in {ROLES, ALL}),
                                 'show_functions':any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
                                 'show_values':any(key in show_mechanism_structure for key in {VALUES, ALL}),
@@ -4778,7 +4778,7 @@ class System(System_Base):
                                 'show_headers':show_headers,
                                 'output_fmt':'struct'}
         else:
-            mech_struct_args = {'system':self,
+            mech_struct_args = {'composition':self,
                                 'show_role':show_mechanism_structure in {ROLES, ALL},
                                 'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
                                 'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
