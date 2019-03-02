@@ -2086,7 +2086,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        show_values:bool=False,
                        use_labels:bool=False,
                        show_headers:bool=False,
-                       show_role:bool=False,
+                       show_roles:bool=False,
                        system=None,
                        composition=None,
                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
@@ -2122,18 +2122,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
             (shown in caps).
 
-        show_role : bool : default False
+        show_roles : bool : default False
             specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
             in the **system** argument (shown in caps and enclosed in square brackets);
             if **system** is not specified, show_roles is ignored.
 
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         composition : Composition : default None
             specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         compact_cim : *INPUT* or *OUTUPT* : default None
             specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
@@ -2165,7 +2165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 mech_header = ''
             mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
             mech_role = ''
-            if system and show_role:
+            if system and show_roles:
                 try:
                     mech_role = r'\n[{}]'.format(self.systems[system])
                 except KeyError:
@@ -2957,7 +2957,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
-                                'show_role': any(key in show_node_structure for key in {ROLES, ALL}),
+                                'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
@@ -2965,7 +2965,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'output_fmt': 'struct'}
         else:
             node_struct_args = {'composition': self,
-                                'show_role': show_node_structure in {ROLES, ALL},
+                                'show_roles': show_node_structure in {ROLES, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},

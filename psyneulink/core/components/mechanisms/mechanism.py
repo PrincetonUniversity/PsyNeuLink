@@ -2858,13 +2858,13 @@ class Mechanism_Base(Mechanism):
         print("- output: {}".format(output_string))
 
     @tc.typecheck
-    def show_structure(self,
+    def show_structure_OLD(self,
                        # direction = 'BT',
                        show_functions:bool=False,
                        show_values:bool=False,
                        use_labels:bool=False,
                        show_headers:bool=False,
-                       show_role:bool=False,
+                       show_roles:bool=False,
                        system=None,
                        composition=None,
                        compact_cim:bool=False,
@@ -2900,18 +2900,18 @@ class Mechanism_Base(Mechanism):
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
             (shown in caps).
 
-        show_role : boofl : default False
+        show_roles : boofl : default False
             specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
             in the **system** argument (shown in caps and enclosed in square brackets);
             if **system** is not specified, show_roles is ignored.
 
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         composition : Composition : default None
             specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         compact_cim : bool : default False
             specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
@@ -2945,7 +2945,7 @@ class Mechanism_Base(Mechanism):
             mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
 
             mech_role = ''
-            if system and show_role:
+            if system and show_roles:
                 try:
                     mech_role = r'\n[{}]'.format(self.systems[system])
                 except KeyError:
@@ -3076,14 +3076,14 @@ class Mechanism_Base(Mechanism):
             return m
 
     @tc.typecheck
-    def show_structure_html(self,
+    def show_structure(self,
     # def show_structure_html(self,
                             # direction = 'BT',
                             show_functions:bool=False,
                             show_values:bool=False,
                             use_labels:bool=False,
                             show_headers:bool=False,
-                            show_role:bool=False,
+                            show_roles:bool=False,
                             composition=None,
                             compact_cim:bool=False,
                             output_fmt:tc.enum('pdf','struct')='pdf'
@@ -3118,18 +3118,18 @@ class Mechanism_Base(Mechanism):
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
             (shown in caps).
 
-        show_role : boofl : default False
+        show_roles : boofl : default False
             specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
             in the **system** argument (shown in caps and enclosed in square brackets);
             if **system** is not specified, show_roles is ignored.
 
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         composition : Composition : default None
             specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         compact_cim : bool : default False
             specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
@@ -3193,10 +3193,7 @@ class Mechanism_Base(Mechanism):
 
         </table>>
 
-
-
         """
-
         def mech_cell():
             '''Return html with name of Mechanism, possibly with function and/or value
             Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
@@ -3206,7 +3203,7 @@ class Mechanism_Base(Mechanism):
             mech_name = f'{mech_header}<b>{self.name}<b/>'
 
             mech_roles = ''
-            if composition and show_role:
+            if composition and show_roles:
                 from psyneulink.core.components.system import System
                 if isinstance(composition, System):
                     try:
@@ -3236,7 +3233,7 @@ class Mechanism_Base(Mechanism):
         
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
-                        state_type:tc.any(InputState, ParameterState, OutputState)):
+                        state_type:tc.enum(InputState, ParameterState, OutputState)):
 
             '''Return html with table for each state in state_list, including functions and/or values as specified
             
@@ -3263,24 +3260,24 @@ class Mechanism_Base(Mechanism):
                 return f'<td port="{self._get_port_name(state)}">{state.name}{function}{value}</td>'
             
 
-            input_states_header = '<tr><td colspan="1"><b>{}s</b></td><tr>'.format(InputState.__name__)
-            parameter_states_header = '<tr><td><b>{}s</b></td><tr>'.format(ParameterState.__name__)
-            output_states_header = '<tr><td colspan="1"><b>{}s</b></td><tr>'.format(OutputState.__name__)
+            input_states_header = f'<tr><td colspan="1"><b>{InputState.__name__}s</b></td></tr>'
+            parameter_states_header = f'<tr><td><b>{ParameterState.__name__}s</b></td></tr>'
+            output_states_header = f'<tr><td colspan="1"><b>{OutputState.__name__}s</b></td></tr>'
 
             num_states = len(state_list)
-            outer_table_spec = '<table border="0" cellborder="0" bgcolor="tan">'
-            inner_table_spec = '<table border="0" cellborder="0">'
+            outer_table_spec = 'table border="0" cellborder="0" bgcolor="tan"'
+            inner_table_spec = 'table border="0" cellborder="0"'
 
             states_header = ''
 
             # InputStates and OutputStates
-            if isinstance(state_type, (InputState, OutputState)):
+            if state_type in {InputState, OutputState}:
                 if show_headers:
-                    if isinstance(state_type, InputState):
+                    if state_type is InputState:
                         states_header = input_states_header
                     else:
                         states_header = output_states_header
-                table = f'<td colspan="{num_states}"{outer_table_spec}{states_header}<tr><td>{inner_table_spec}<tr>'
+                table = f'<td colspan="{num_states}" {outer_table_spec}>{states_header}<tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
                 table += '</tr></table></td></tr></table></td>'
@@ -3288,7 +3285,7 @@ class Mechanism_Base(Mechanism):
             # ParameterStates
             else:
                 states_header = parameter_states_header
-                table = f'<td {outer_table_spec}{states_header}<tr><td>{inner_table_spec}<tr>'
+                table = f'<td {outer_table_spec}> {states_header}<tr><td>{inner_table_spec}'
                 for state in state_list:
                     table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
                 table += '</table></td></tr></table></td>'
@@ -3296,37 +3293,32 @@ class Mechanism_Base(Mechanism):
             return table
 
 
-        # FIX: REDO THIS:
-        # Construct Mechanism specification
-        # mech = mech_string(self)
-        mech = mech_cell()
-
-        # Construct InputStates specification
+        # Construct InputStates table
         if len(self.input_states) and (not compact_cim or self is not composition.input_CIM):
             input_states_table = state_table(self.input_states, InputState)
 
         else:
-            input_states = ''
+            input_states_table = ''
 
-        # Construct ParameterStates specification
+        # Construct ParameterStates table
         if len(self.parameter_states):
             parameter_states_table = state_table(self.parameter_states, ParameterState)
         else:
-            parameter_states = ''
+            parameter_states_table = ''
 
-        # Construct OutputStates specification
+        # Construct OutputStates table
         if len(self.output_states) and (not compact_cim or self is not composition.output_CIM):
             output_states_table = state_table(self.output_states, OutputState)
 
         else:
-            output_states = ''
+            output_states_table = ''
 
-        # FIX: REDO THIS:
-        m_node_struct = open_bracket + \
-                        output_states + \
-                        open_bracket + mech + parameter_states + close_bracket + \
-                        input_states + \
-                        close_bracket
+        # Construct full table
+        m_node_struct = f'<<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">' \
+                        f'<tr>{output_states_table}</tr>'                                   \
+                        f'<tr>{mech_cell()}{parameter_states_table}</tr>'                   \
+                        f'<tr>{input_states_table}</tr>'                                    \
+                        f'</table>>'
 
         if output_fmt == 'struct':
             # return m.node
