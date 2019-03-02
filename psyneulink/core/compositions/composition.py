@@ -2619,10 +2619,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for proj in projs:
                         # if proj.receiver.owner == rcvr:
                         if show_node_structure:
-                            sndr_proj_label = '{}:{}-{}'. \
-                                format(sndr_label, OutputState.__name__, proj.sender.name)
-                            proc_mech_rcvr_label = '{}:{}-{}'. \
-                                format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
+                            sndr_proj_label = '{}:{}'. \
+                                format(sndr_label, sndr._get_port_name(proj.sender))
+                            proc_mech_rcvr_label = '{}:{}'. \
+                                format(rcvr_label, sndr._get_port_name(proj.receiver))
                             # format(rcvr_label, InputState.__name__, proj.receiver.name)
                         else:
                             sndr_proj_label = sndr_label
@@ -2754,10 +2754,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Construct edge name
                             output_mech_label = self._get_graph_node_label(output_mech, show_dimensions)
                             if show_node_structure:
-                                cim_proj_label = '{}:{}-{}'. \
-                                    format(cim_label, InputState.__name__, proj.receiver.name)
-                                proc_mech_sndr_label = '{}:{}-{}'.\
-                                    format(output_mech_label, proj.sender.__class__.__name__, proj.sender.name)
+                                cim_proj_label = '{}:{}'. \
+                                    format(cim_label, cim._get_port_name(proj.receiver))
+                                proc_mech_sndr_label = '{}:{}'.\
+                                    format(output_mech_label, cim._get_port_name(proj.sender))
                                     # format(output_mech_label, OutputState.__name__, proj.sender.name)
                             else:
                                 cim_proj_label = cim_label
@@ -2856,8 +2856,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 edge_label = ''
             if show_node_structure:
-                obj_to_ctrl_label = objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name
-                ctlr_from_obj_label = ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name
+                obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
+                ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
@@ -2883,9 +2883,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         edge_label = ''
                     if show_node_structure:
-                        ctl_sndr_label = ctlr_label + ':' + OutputState.__name__ + '-' + control_signal.name
+                        ctl_sndr_label = ctlr_label + ':' + model_based_optimizer._get_port_name(control_signal)
                         proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + ParameterState.__name__ + '-' + ctl_proj.receiver.name
+                            proc_mech_label + ':' + model_based_optimizer._get_port_name(ctl_proj.receiver)
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
@@ -2911,8 +2911,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj_width = str(default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
-                                          ':' + OutputState.__name__ + '-' + projection.sender.name
-                        objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
+                                          ':' + objmech._get_port_name(projection.sender)
+                        objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_state)
                     else:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
                         objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
