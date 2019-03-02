@@ -3199,8 +3199,8 @@ class Mechanism_Base(Mechanism):
             Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
             mechanism_header = ''
             if show_headers:
-                mech_header = '<b>MECHANISM<b>:<br/>'
-            mech_name = f'{mech_header}<b>{self.name}<b/>'
+                mech_header = '<b>MECHANISM</b>:<br/>'
+            mech_name = f'{mech_header}<b>{self.name}</b>'
 
             mech_roles = ''
             if composition and show_roles:
@@ -3213,10 +3213,10 @@ class Mechanism_Base(Mechanism):
                         # mech_roles = r'\n[CONTROLLER]'
                         from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
                         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-                        if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
+                        if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
                             mech_roles = r'\n[CONTROLLER]'
-                        elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
-                            mech_roles = r'\n[{}]'.format(mech._role)
+                        elif isinstance(self, ObjectiveMechanism) and hasattr(self, '_role'):
+                            mech_roles = r'\n[{}]'.format(self._role)
                         else:
                             mech_roles = ""
                 else:
@@ -3265,8 +3265,8 @@ class Mechanism_Base(Mechanism):
             output_states_header = f'<tr><td colspan="1"><b>{OutputState.__name__}s</b></td></tr>'
 
             num_states = len(state_list)
-            outer_table_spec = 'table border="0" cellborder="0" bgcolor="tan"'
-            inner_table_spec = 'table border="0" cellborder="0"'
+            outer_table_spec = '<table border="0" cellborder="0" bgcolor="tan">'
+            inner_table_spec = '<table border="0" cellborder="0">'
 
             states_header = ''
 
@@ -3277,7 +3277,7 @@ class Mechanism_Base(Mechanism):
                         states_header = input_states_header
                     else:
                         states_header = output_states_header
-                table = f'<td colspan="{num_states}" {outer_table_spec}>{states_header}<tr><td>{inner_table_spec}<tr>'
+                table = f'<td colspan="{num_states}"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
                 table += '</tr></table></td></tr></table></td>'
@@ -3285,7 +3285,7 @@ class Mechanism_Base(Mechanism):
             # ParameterStates
             else:
                 states_header = parameter_states_header
-                table = f'<td {outer_table_spec}> {states_header}<tr><td>{inner_table_spec}'
+                table = f'<td> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}'
                 for state in state_list:
                     table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
                 table += '</table></td></tr></table></td>'
