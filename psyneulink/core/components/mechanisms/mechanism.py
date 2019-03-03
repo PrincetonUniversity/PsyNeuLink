@@ -3055,14 +3055,14 @@ class Mechanism_Base(Mechanism):
     #
     #             function = ''
     #             if include_function:
-    #                 function = state.function__class__.__name__
+    #                 function = state.function.__class__.__name__
     #             value=''
     #             if include_value:
-    #                 if use_label:
-    #                     value = f'<br/>={state.label}'
+    #                 if use_label and not isinstance(state, ParameterState):
+    #                     value = '<br/>={}'.format(state.label)
     #                 else:
-    #                     value = f'<br/>={state.value}'
-    #             return f'<td port="{self._get_port_name(state)}">{state.name}{function}{value}</td>'
+    #                     value = '<br/>={}'.format(state.value)
+    #             return '<td port="{}">{}{}{}</td>'.format(self._get_port_name(state),state.name,function,value)
     #
     #         states_header = ''
     #         # num_states = len(state_list)
@@ -3316,8 +3316,12 @@ class Mechanism_Base(Mechanism):
                         else:
                             mech_roles = ""
                 else:
-                    roles = [role.name for role in list(composition.nodes_to_roles[self])]
-                    mech_roles = '<br/><i>{}</i>'.format(",".join(roles))
+                    from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
+                    if self is composition.model_based_optimizer:
+                        mech_roles = '<br/><i>{}</i>'.format(NodeRole.MODEL_BASED_OPTIMIZER.name)
+                    elif not isinstance(self, CompositionInterfaceMechanism):
+                        roles = [role.name for role in list(composition.nodes_to_roles[self])]
+                        mech_roles = '<br/><i>{}</i>'.format(",".join(roles))
 
             mech_function = ''
             if show_functions:
@@ -3351,10 +3355,10 @@ class Mechanism_Base(Mechanism):
 
                 function = ''
                 if include_function:
-                    function = state.function__class__.__name__
+                    function = state.function.__class__.__name__
                 value=''
                 if include_value:
-                    if use_label:
+                    if use_label and not isinstance(state, ParameterState):
                         value = '<br/>={}'.format(state.label)
                     else:
                         value = '<br/>={}'.format(state.value)

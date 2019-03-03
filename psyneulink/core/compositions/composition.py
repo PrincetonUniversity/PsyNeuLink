@@ -2931,7 +2931,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
         INITIAL_FRAME = "INITIAL_FRAME"
-        ALL = "ALL"
+        # ALL = "ALL"
 
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
