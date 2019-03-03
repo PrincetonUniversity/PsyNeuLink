@@ -3094,9 +3094,14 @@ class Mechanism_Base(Mechanism):
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        Displays the structure of a Mechanism using the GraphViz `record
-        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
-        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
+        # Deprecated 3/3/19:
+        # Displays the structure of a Mechanism using the GraphViz `record
+        # <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
+        # by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
+
+        Displays the structure of a Mechanism using html table format and shape='plaintext'.
+        This method is called by `Composition.show_graph` if its **show_mechanism_structure** argument is specified as
+        `True` when it is called.
 
         Arguments
         ---------
@@ -3137,7 +3142,7 @@ class Mechanism_Base(Mechanism):
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
-            'struct': return a string that specifies the structure of the record shape,
+            'struct': return a string that specifies the structure of the Mechanism using html table format
             for use in a GraphViz node specification.
 
         Template for HTML:
@@ -3194,6 +3199,7 @@ class Mechanism_Base(Mechanism):
         </table>>
 
         """
+
         def mech_cell():
             '''Return html with name of Mechanism, possibly with function and/or value
             Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
@@ -3332,11 +3338,13 @@ class Mechanism_Base(Mechanism):
 
         # Make node
         import graphviz as gv
+        struct_shape = 'plaintext' # assumes html is used to specify structure in m_node_struct
+
         m = gv.Digraph(#'mechanisms',
                        #filename='mechanisms_revisited.gv',
-                       node_attr={'shape': 'record'},
+                       node_attr={'shape': struct_shape},
                        )
-        m.node(self.name, m_node_struct, shape='record')
+        m.node(self.name, m_node_struct, shape=struct_shape)
 
         if output_fmt == 'pdf':
             m.view(self.name.replace(" ", "-"), cleanup=True)

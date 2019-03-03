@@ -2141,7 +2141,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
-            'struct': return a string that specifies the structure of the record shape,
+            'struct': return a string that specifies the structure of a mechanism,
             for use in a GraphViz node specification.
 
         """
@@ -2565,7 +2565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_node_structure:
                     g.node(rcvr_label,
                            rcvr.show_structure(**node_struct_args),
-                           shape='plaintext',
+                           shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
                            penwidth=rcvr_penwidth)
@@ -2683,7 +2683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_node_structure:
                     g.node(cim_label,
                            cim.show_structure(**node_struct_args, compact_cim=True),
-                           shape='plaintext',
+                           shape=struct_shape,
                            color=cim_color,
                            rank=cim_rank,
                            penwidth=cim_penwidth)
@@ -2834,14 +2834,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if show_node_structure:
                 g.node(ctlr_label,
                        model_based_optimizer.show_structure(**node_struct_args),
-                       shape='plaintext',
+                       shape=struct_shape,
                        color=ctlr_color,
                        penwidth=ctlr_width,
                        rank=control_rank
                        )
                 g.node(objmech_label,
                        objmech.show_structure(**node_struct_args),
-                       shape='plaintext',
+                       shape=struct_shape,
                        color=objmech_color,
                        penwidth=ctlr_width,
                        rank=control_rank
@@ -2979,6 +2979,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         default_node_color = 'black'
         node_shape = 'oval'
         cim_shape = 'rectangle'
+        struct_shape = 'plaintext' # assumes use of html
 
         bold_width = 3
         default_width = 1
