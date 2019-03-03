@@ -2459,7 +2459,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Returns
         -------
 
-        display of system : `pdf` or Graphviz graph object
+        display of Composition : `pdf` or Graphviz graph object
             'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
             Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
 
