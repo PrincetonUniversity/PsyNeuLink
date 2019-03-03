@@ -2582,7 +2582,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
                         if show_node_structure:
                             sndr_proj_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.sender))
-                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
+                            proc_mech_rcvr_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
                         else:
                             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                         if show_projection_labels:
@@ -2622,7 +2622,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             sndr_proj_label = '{}:{}'. \
                                 format(sndr_label, sndr._get_port_name(proj.sender))
                             proc_mech_rcvr_label = '{}:{}'. \
-                                format(rcvr_label, sndr._get_port_name(proj.receiver))
+                                format(rcvr_label, rcvr._get_port_name(proj.receiver))
                             # format(rcvr_label, InputState.__name__, proj.receiver.name)
                         else:
                             sndr_proj_label = sndr_label
@@ -2757,7 +2757,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 cim_proj_label = '{}:{}'. \
                                     format(cim_label, cim._get_port_name(proj.receiver))
                                 proc_mech_sndr_label = '{}:{}'.\
-                                    format(output_mech_label, cim._get_port_name(proj.sender))
+                                    format(output_mech_label, output_mech._get_port_name(proj.sender))
                                     # format(output_mech_label, OutputState.__name__, proj.sender.name)
                             else:
                                 cim_proj_label = cim_label
