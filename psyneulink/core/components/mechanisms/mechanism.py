@@ -3335,11 +3335,11 @@ class Mechanism_Base(Mechanism):
             output_states_table = ''
 
         # Construct full table
-        m_node_struct = f'<{node_table_spec}' \
-                        f'{output_states_table}'                              \
-                        f'<tr>{mech_cell()}{parameter_states_table}</tr>'     \
-                        f'{input_states_table}'                               \
-                        f'</table>>'
+        m_node_struct = '<' + node_table_spec + \
+                        output_states_table + \
+                        '<tr>' + mech_cell() + parameter_states_table + '</tr>' + \
+                        input_states_table + \
+                        '</table>>'
 
         if output_fmt == 'struct':
             # return m.node
