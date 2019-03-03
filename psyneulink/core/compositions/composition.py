@@ -3041,6 +3041,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
 
+        # for string in G.body:
+        #     if '<tr></tr>' in string:
+        #         print(string)
+
         # Show as pdf
         if output_fmt == 'pdf':
             # G.format = 'svg'

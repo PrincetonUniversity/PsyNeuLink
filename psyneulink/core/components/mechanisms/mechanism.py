@@ -3295,7 +3295,7 @@ class Mechanism_Base(Mechanism):
 
         # Construct InputStates table
         if len(self.input_states) and (not compact_cim or self is not composition.input_CIM):
-            input_states_table = state_table(self.input_states, InputState)
+            input_states_table = f'<tr>{state_table(self.input_states, InputState)}</tr>'
 
         else:
             input_states_table = ''
@@ -3308,16 +3308,16 @@ class Mechanism_Base(Mechanism):
 
         # Construct OutputStates table
         if len(self.output_states) and (not compact_cim or self is not composition.output_CIM):
-            output_states_table = state_table(self.output_states, OutputState)
+            output_states_table = f'<tr>{state_table(self.output_states, OutputState)}</tr>'
 
         else:
             output_states_table = ''
 
         # Construct full table
         m_node_struct = f'<<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">' \
-                        f'<tr>{output_states_table}</tr>'                                   \
+                        f'{output_states_table}'                                            \
                         f'<tr>{mech_cell()}{parameter_states_table}</tr>'                   \
-                        f'<tr>{input_states_table}</tr>'                                    \
+                        f'{input_states_table}'                                             \
                         f'</table>>'
 
         if output_fmt == 'struct':
