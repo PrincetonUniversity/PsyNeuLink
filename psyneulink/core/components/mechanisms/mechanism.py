@@ -3020,12 +3020,16 @@ class Mechanism_Base(Mechanism):
     #                     else:
     #                         mech_roles = ""
     #             else:
-    #                 roles = [role.name for role in list(composition.nodes_to_roles[self])]
-    #                 mech_roles = f'<br/><i>{",".join(roles)}</i>'
+    #                 from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
+    #                 if self is composition.model_based_optimizer:
+    #                     mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+    #                 elif not isinstance(self, CompositionInterfaceMechanism):
+    #                     roles = [role.name for role in list(composition.nodes_to_roles[self])]
+    #                     mech_roles = f'<br/><i>{",".join(roles)}</i>'
     #
     #         mech_function = ''
     #         if show_functions:
-    #             mech_function = f'<br/>({self.function.__class__.__name__})'
+    #             mech_function = f'<br/>{self.function.__class__.__name__}()'
     #         mech_value = ''
     #         if show_values:
     #             mech_value = f'<br/>={self.value}'
@@ -3055,7 +3059,7 @@ class Mechanism_Base(Mechanism):
     #
     #             function = ''
     #             if include_function:
-    #                 function = state.function.__class__.__name__
+    #                 function = f'<br/>{state.function.__class__.__name__}()'
     #             value=''
     #             if include_value:
     #                 if use_label and not isinstance(state, ParameterState):
@@ -3325,7 +3329,7 @@ class Mechanism_Base(Mechanism):
 
             mech_function = ''
             if show_functions:
-                mech_function = '<br/>({})'.format(self.function.__class__.__name__)
+                mech_function = '<br/>{}()'.format(self.function.__class__.__name__)
             mech_value = ''
             if show_values:
                 mech_value = '<br/>={}'.format(self.value)
@@ -3355,7 +3359,7 @@ class Mechanism_Base(Mechanism):
 
                 function = ''
                 if include_function:
-                    function = state.function.__class__.__name__
+                    function = '<br/>{}()'.format(state.function.__class__.__name__)
                 value=''
                 if include_value:
                     if use_label and not isinstance(state, ParameterState):
