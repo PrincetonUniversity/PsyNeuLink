@@ -3204,15 +3204,15 @@ class Mechanism_Base(Mechanism):
         node_table_spec = '<table border="1" cellborder="0" cellspacing="0" bgcolor="white">'
 
         # Header of Mechanism cell:
-        mech_header = '<b>MECHANISM</b>:<br/>'
+        mech_header = f'<b><i>{Mechanism.__name__}</i></b>:<br/>'
 
         # Outer State table:
         outer_table_spec = '<table border="1" cellborder="0" bgcolor="white">'
 
         # Header cell of outer State table:
-        input_states_header = f'<tr><td colspan="1"><b>{InputState.__name__}s</b></td></tr>'
-        parameter_states_header = f'<tr><td><b>{ParameterState.__name__}s</b></td></tr>'
-        output_states_header = f'<tr><td colspan="1"><b>{OutputState.__name__}s</b></td></tr>'
+        input_states_header = f'<tr><td colspan="1" valign="middle"><b><i>{InputState.__name__}s</i></b></td></tr>'
+        parameter_states_header = f'<tr><td><b><i>{ParameterState.__name__}s</i></b></td></tr>'
+        output_states_header = f'<tr><td colspan="1" valign="middle"><b><i>{OutputState.__name__}s</i></b></td></tr>'
 
         # Inner State table (i.e., that contains individual states in each cell):
         inner_table_spec = '<table border="0" cellborder="1">'
