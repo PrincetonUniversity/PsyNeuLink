@@ -3264,9 +3264,10 @@ class Mechanism_Base(Mechanism):
             parameter_states_header = f'<tr><td><b>{ParameterState.__name__}s</b></td></tr>'
             output_states_header = f'<tr><td colspan="1"><b>{OutputState.__name__}s</b></td></tr>'
 
-            num_states = len(state_list)
-            outer_table_spec = '<table border="0" cellborder="0" bgcolor="tan">'
-            inner_table_spec = '<table border="0" cellborder="0">'
+            # num_states = len(state_list)
+            num_states = 2
+            outer_table_spec = '<table border="1" cellborder="0">'
+            inner_table_spec = '<table border="0" cellborder="1">'
 
             states_header = ''
 
@@ -3314,7 +3315,7 @@ class Mechanism_Base(Mechanism):
             output_states_table = ''
 
         # Construct full table
-        m_node_struct = f'<<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">' \
+        m_node_struct = f'<<table border="0" cellborder="0" cellspacing="0">' \
                         f'{output_states_table}'                                            \
                         f'<tr>{mech_cell()}{parameter_states_table}</tr>'                   \
                         f'{input_states_table}'                                             \
