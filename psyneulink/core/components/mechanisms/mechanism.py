@@ -2747,10 +2747,8 @@ class Mechanism_Base(Mechanism):
             elif isinstance(os_in_spec, list) and len(os_in_spec) == 1 and isinstance(os_in_spec[0], tuple) and os_in_spec[0][0] == OWNER_VALUE:
                 os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
             else:
-                #TODO: support more options
-                print(value.type)
-                print(os_in_spec)
-                assert False
+                #TODO: support more spec options
+                assert False, "Unsupported output state spec: {} ({})".format(os_in_spec, value.type)
 
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])

@@ -233,6 +233,5 @@ class ConditionGenerator:
 
             # Return: target.calls % N == 0 AND me.last_time < target.last_time
             return builder.and_(completedNruns, ran_after_me)
-        else:
-            print("ERROR: Unsupported scheduling condition: ", condition)
-            assert False
+
+        assert False, "Unsupported scheduling condition: {}".format(condition)
