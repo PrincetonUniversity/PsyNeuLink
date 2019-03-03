@@ -2565,6 +2565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_node_structure:
                     g.node(rcvr_label,
                            rcvr.show_structure(**node_struct_args),
+                           shape='plaintext',
                            color=rcvr_color,
                            rank=rcvr_rank,
                            penwidth=rcvr_penwidth)
@@ -2682,6 +2683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_node_structure:
                     g.node(cim_label,
                            cim.show_structure(**node_struct_args, compact_cim=True),
+                           shape='plaintext',
                            color=cim_color,
                            rank=cim_rank,
                            penwidth=cim_penwidth)
@@ -2831,17 +2833,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                        model_based_optimizer.show_structure(**node_struct_args),
-                        color=ctlr_color,
-                        penwidth=ctlr_width,
-                        rank=control_rank
-                        )
+                       model_based_optimizer.show_structure(**node_struct_args),
+                       shape='plaintext',
+                       color=ctlr_color,
+                       penwidth=ctlr_width,
+                       rank=control_rank
+                       )
                 g.node(objmech_label,
-                        objmech.show_structure(**node_struct_args),
-                        color=objmech_color,
-                        penwidth=ctlr_width,
-                        rank=control_rank
-                        )
+                       objmech.show_structure(**node_struct_args),
+                       shape='plaintext',
+                       color=objmech_color,
+                       penwidth=ctlr_width,
+                       rank=control_rank
+                       )
             else:
                 g.node(ctlr_label,
                         color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
@@ -3040,10 +3044,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             G.body.insert(len(G.body),G.body.pop(i))
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
-
-        # for string in G.body:
-        #     if '<tr></tr>' in string:
-        #         print(string)
 
         # Show as pdf
         if output_fmt == 'pdf':

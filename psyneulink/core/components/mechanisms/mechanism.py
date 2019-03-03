@@ -3320,7 +3320,7 @@ class Mechanism_Base(Mechanism):
             output_states_table = ''
 
         # Construct full table
-        m_node_struct = f'<<table border="0" cellborder="0" cellspacing="0">' \
+        m_node_struct = f'<<table border="1" cellborder="0" cellspacing="0">' \
                         f'{output_states_table}'                                            \
                         f'<tr>{mech_cell()}{parameter_states_table}</tr>'                   \
                         f'{input_states_table}'                                             \
