@@ -3198,13 +3198,32 @@ class Mechanism_Base(Mechanism):
 
         """
 
+        # Table / cell specifications:
+
+        # Overall node table:
+        node_table_spec = '<table border="1" cellborder="0" cellspacing="0" bgcolor="white">'
+
+        # Header of Mechanism cell:
+        mech_header = '<b>MECHANISM</b>:<br/>'
+
+        # Outer State table:
+        outer_table_spec = '<table border="1" cellborder="0" bgcolor="white">'
+
+        # Header cell of outer State table:
+        input_states_header = f'<tr><td colspan="1"><b>{InputState.__name__}s</b></td></tr>'
+        parameter_states_header = f'<tr><td><b>{ParameterState.__name__}s</b></td></tr>'
+        output_states_header = f'<tr><td colspan="1"><b>{OutputState.__name__}s</b></td></tr>'
+
+        # Inner State table (i.e., that contains individual states in each cell):
+        inner_table_spec = '<table border="0" cellborder="1">'
+
         def mech_cell():
             '''Return html with name of Mechanism, possibly with function and/or value
             Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
-            mechanism_header = ''
+            header = ''
             if show_headers:
-                mech_header = '<b>MECHANISM</b>:<br/>'
-            mech_name = f'{mech_header}<b>{self.name}</b>'
+                header = mech_header
+            mech_name = f'{header}<b>{self.name}</b>'
 
             mech_roles = ''
             if composition and show_roles:
@@ -3267,18 +3286,10 @@ class Mechanism_Base(Mechanism):
                     else:
                         value = f'<br/>={state.value}'
                 return f'<td port="{self._get_port_name(state)}">{state.name}{function}{value}</td>'
-            
-
-            input_states_header = f'<tr><td colspan="1"><b>{InputState.__name__}s</b></td></tr>'
-            parameter_states_header = f'<tr><td><b>{ParameterState.__name__}s</b></td></tr>'
-            output_states_header = f'<tr><td colspan="1"><b>{OutputState.__name__}s</b></td></tr>'
-
-            # num_states = len(state_list)
-            num_states = 2
-            outer_table_spec = '<table border="1" cellborder="0">'
-            inner_table_spec = '<table border="0" cellborder="1">'
 
             states_header = ''
+            # num_states = len(state_list)
+            num_states = 2
 
             # InputStates and OutputStates
             if state_type in {InputState, OutputState}:
@@ -3324,7 +3335,7 @@ class Mechanism_Base(Mechanism):
             output_states_table = ''
 
         # Construct full table
-        m_node_struct = f'<<table border="1" cellborder="0" cellspacing="0">' \
+        m_node_struct = f'<{node_table_spec}' \
                         f'{output_states_table}'                              \
                         f'<tr>{mech_cell()}{parameter_states_table}</tr>'     \
                         f'{input_states_table}'                               \
