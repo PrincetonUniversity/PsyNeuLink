@@ -1547,6 +1547,7 @@ class NodeRole(Enum):
     INPUT = 11
     OUTPUT = 12
     RESULT = 13
+    MODEL_BASED_OPTIMIZER = 14
 
 
 def unproxy_weakproxy(proxy):

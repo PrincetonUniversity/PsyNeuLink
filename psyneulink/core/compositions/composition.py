@@ -2086,7 +2086,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        show_values:bool=False,
                        use_labels:bool=False,
                        show_headers:bool=False,
-                       show_role:bool=False,
+                       show_roles:bool=False,
                        system=None,
                        composition=None,
                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
@@ -2122,18 +2122,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
             (shown in caps).
 
-        show_role : bool : default False
+        show_roles : bool : default False
             specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
             in the **system** argument (shown in caps and enclosed in square brackets);
             if **system** is not specified, show_roles is ignored.
 
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         composition : Composition : default None
             specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_role** argument is ignored.
+            if this is not specified, the **show_roles** argument is ignored.
 
         compact_cim : *INPUT* or *OUTUPT* : default None
             specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
@@ -2141,7 +2141,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
-            'struct': return a string that specifies the structure of the record shape,
+            'struct': return a string that specifies the structure of a mechanism,
             for use in a GraphViz node specification.
 
         """
@@ -2165,7 +2165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 mech_header = ''
             mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
             mech_role = ''
-            if system and show_role:
+            if system and show_roles:
                 try:
                     mech_role = r'\n[{}]'.format(self.systems[system])
                 except KeyError:
@@ -2459,7 +2459,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Returns
         -------
 
-        display of system : `pdf` or Graphviz graph object
+        display of Composition : `pdf` or Graphviz graph object
             'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
             Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
 
@@ -2565,6 +2565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_node_structure:
                     g.node(rcvr_label,
                            rcvr.show_structure(**node_struct_args),
+                           shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
                            penwidth=rcvr_penwidth)
@@ -2581,8 +2582,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if proj.sender.owner is not rcvr:
                             continue
                         if show_node_structure:
-                            sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                            proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            sndr_proj_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.sender))
+                            proc_mech_rcvr_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
                         else:
                             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                         if show_projection_labels:
@@ -2619,10 +2620,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for proj in projs:
                         # if proj.receiver.owner == rcvr:
                         if show_node_structure:
-                            sndr_proj_label = '{}:{}-{}'. \
-                                format(sndr_label, OutputState.__name__, proj.sender.name)
-                            proc_mech_rcvr_label = '{}:{}-{}'. \
-                                format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
+                            sndr_proj_label = '{}:{}'. \
+                                format(sndr_label, sndr._get_port_name(proj.sender))
+                            proc_mech_rcvr_label = '{}:{}'. \
+                                format(rcvr_label, rcvr._get_port_name(proj.receiver))
                             # format(rcvr_label, InputState.__name__, proj.receiver.name)
                         else:
                             sndr_proj_label = sndr_label
@@ -2682,6 +2683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_node_structure:
                     g.node(cim_label,
                            cim.show_structure(**node_struct_args, compact_cim=True),
+                           shape=struct_shape,
                            color=cim_color,
                            rank=cim_rank,
                            penwidth=cim_penwidth)
@@ -2754,10 +2756,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Construct edge name
                             output_mech_label = self._get_graph_node_label(output_mech, show_dimensions)
                             if show_node_structure:
-                                cim_proj_label = '{}:{}-{}'. \
-                                    format(cim_label, InputState.__name__, proj.receiver.name)
-                                proc_mech_sndr_label = '{}:{}-{}'.\
-                                    format(output_mech_label, proj.sender.__class__.__name__, proj.sender.name)
+                                cim_proj_label = '{}:{}'. \
+                                    format(cim_label, cim._get_port_name(proj.receiver))
+                                proc_mech_sndr_label = '{}:{}'.\
+                                    format(output_mech_label, output_mech._get_port_name(proj.sender))
                                     # format(output_mech_label, OutputState.__name__, proj.sender.name)
                             else:
                                 cim_proj_label = cim_label
@@ -2831,17 +2833,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                        model_based_optimizer.show_structure(**node_struct_args),
-                        color=ctlr_color,
-                        penwidth=ctlr_width,
-                        rank=control_rank
-                        )
+                       model_based_optimizer.show_structure(**node_struct_args),
+                       shape=struct_shape,
+                       color=ctlr_color,
+                       penwidth=ctlr_width,
+                       rank=control_rank
+                       )
                 g.node(objmech_label,
-                        objmech.show_structure(**node_struct_args),
-                        color=objmech_color,
-                        penwidth=ctlr_width,
-                        rank=control_rank
-                        )
+                       objmech.show_structure(**node_struct_args),
+                       shape=struct_shape,
+                       color=objmech_color,
+                       penwidth=ctlr_width,
+                       rank=control_rank
+                       )
             else:
                 g.node(ctlr_label,
                         color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
@@ -2856,8 +2860,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 edge_label = ''
             if show_node_structure:
-                obj_to_ctrl_label = objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name
-                ctlr_from_obj_label = ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name
+                obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
+                ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
@@ -2883,9 +2887,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         edge_label = ''
                     if show_node_structure:
-                        ctl_sndr_label = ctlr_label + ':' + OutputState.__name__ + '-' + control_signal.name
+                        ctl_sndr_label = ctlr_label + ':' + model_based_optimizer._get_port_name(control_signal)
                         proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + ParameterState.__name__ + '-' + ctl_proj.receiver.name
+                            proc_mech_label + ':' + model_based_optimizer._get_port_name(ctl_proj.receiver)
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
@@ -2911,8 +2915,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj_width = str(default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
-                                          ':' + OutputState.__name__ + '-' + projection.sender.name
-                        objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
+                                          ':' + objmech._get_port_name(projection.sender)
+                        objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_state)
                     else:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
                         objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
@@ -2927,7 +2931,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
         INITIAL_FRAME = "INITIAL_FRAME"
-        ALL = "ALL"
+        # ALL = "ALL"
 
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
@@ -2957,7 +2961,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
-                                'show_role': any(key in show_node_structure for key in {ROLES, ALL}),
+                                'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
@@ -2965,7 +2969,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'output_fmt': 'struct'}
         else:
             node_struct_args = {'composition': self,
-                                'show_role': show_node_structure in {ROLES, ALL},
+                                'show_roles': show_node_structure in {ROLES, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
@@ -2975,6 +2979,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         default_node_color = 'black'
         node_shape = 'oval'
         cim_shape = 'rectangle'
+        struct_shape = 'plaintext' # assumes use of html
 
         bold_width = 3
         default_width = 1

@@ -182,7 +182,11 @@ agent_comp.model_based_optimizer_mode = BEFORE
 if SHOW_GRAPH:
     # agent_comp.show_graph()
     # agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+    agent_comp.show_graph(show_model_based_optimizer=True,
+                          show_cim=True,
+                          show_node_structure=ALL,
+                          show_headers=True,
+                          )
 
 
 # *********************************************************************************************************************
