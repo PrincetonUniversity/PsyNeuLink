@@ -3229,7 +3229,12 @@ class Mechanism_Base(Mechanism):
             mech_value = ''
             if show_values:
                 mech_value = f'<br/>={self.value}'
-            return f'<td port="{self.name}">' + mech_name + mech_roles + mech_function + mech_value + '</td>'
+            # Mech cell should span full width if there are no ParameterStates
+            cols = 1
+            if not len(self.parameter_states):
+                cols = 2
+            return f'<td port="{self.name}" colspan="{cols}">' \
+                   + mech_name + mech_roles + mech_function + mech_value + '</td>'
         
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
