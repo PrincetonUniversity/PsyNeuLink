@@ -42,8 +42,6 @@ comp.add_model_based_optimizer(optimizer=OptimizationControlMechanism(name='OCM'
 
 comp.enable_model_based_optimizer = True
 
-# comp._analyze_graph()
-
 stim_list_dict = {
     Input: [0.5, 0.123],
     reward: [20, 20]
