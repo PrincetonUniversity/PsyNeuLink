@@ -944,7 +944,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type
-from psyneulink.core.components.functions.function import FunctionOutputType
+from psyneulink.core.components.functions.function import FunctionOutputType, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputState
@@ -2993,6 +2993,8 @@ class Mechanism_Base(Mechanism):
         # Inner State table (i.e., that contains individual states in each cell):
         inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
 
+        show_function_params = True
+
         def mech_cell():
             '''Return html with name of Mechanism, possibly with function and/or value
             Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
@@ -3027,8 +3029,15 @@ class Mechanism_Base(Mechanism):
                         mech_roles = '<br/><i>{}</i>'.format(",".join(roles))
 
             mech_function = ''
+            fct_params = ''
             if show_functions:
-                mech_function = '<br/><i>{}()</i>'.format(self.function.__class__.__name__)
+                if show_function_params:
+                    fct_params = []
+                    for param in [param for param in self.function_parameters
+                                  if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
+                        fct_params.append('{}={}'.format(param.name, param.get()))
+                    fct_params = ", ".join(fct_params)
+                mech_function = '<br/><i>{}({})</i>'.format(self.function.__class__.__name__, fct_params)
             mech_value = ''
             if show_values:
                 mech_value = '<br/>={}'.format(self.value)
@@ -3057,8 +3066,15 @@ class Mechanism_Base(Mechanism):
                 '''
 
                 function = ''
+                function_params = ''
                 if include_function:
-                    function = '<br/><i>{}</i>()'.format(state.function.__class__.__name__)
+                    if show_function_params:
+                        fct_params = []
+                        for param in [param for param in self.function_parameters
+                                      if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
+                            fct_params.append('{}={}'.format(param.name, param.get()))
+                        fct_params = ", ".join(fct_params)
+                    function = '<br/><i>{}({})</i>'.format(state.function.__class__.__name__, fct_params)
                 value=''
                 if include_value:
                     if use_label and not isinstance(state, ParameterState):
