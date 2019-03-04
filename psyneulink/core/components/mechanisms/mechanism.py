@@ -2867,6 +2867,7 @@ class Mechanism_Base(Mechanism):
                        show_roles:bool=False,
                        composition=None,
                        compact_cim:bool=False,
+                       node_border:str="1",
                        output_fmt:tc.enum('pdf','struct')='pdf'
                        ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -2977,8 +2978,8 @@ class Mechanism_Base(Mechanism):
 
         # Table / cell specifications:
 
-        # Overall node table:
-        node_table_spec = '<table border="3" cellborder="0" cellspacing="1" bgcolor="#FFFFF0">'  # NEAR LIGHTYELLOW
+        # Overall node table:                                               NEAR LIGHTYELLOW
+        node_table_spec = '<table border={} cellborder="0" cellspacing="1" bgcolor="#FFFFF0">'.format(repr(node_border))
 
         # Header of Mechanism cell:
         mech_header = '<b><i>{}</i></b>:<br/>'.format(Mechanism.__name__)
@@ -3000,7 +3001,7 @@ class Mechanism_Base(Mechanism):
             header = ''
             if show_headers:
                 header = mech_header
-            mech_name = '<b>{}{}</b>'.format(header, self.name)
+            mech_name = '<b>{}<font point-size="16" >{}</font></b>'.format(header, self.name)
 
             mech_roles = ''
             if composition and show_roles:
@@ -3101,7 +3102,8 @@ class Mechanism_Base(Mechanism):
 
             # ParameterStates
             else:
-                states_header = parameter_states_header
+                if show_headers:
+                    states_header = parameter_states_header
                 table = '<td> {} {}<tr><td>{}'.format(outer_table_spec, states_header, inner_table_spec)
                 for state in state_list:
                     table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'

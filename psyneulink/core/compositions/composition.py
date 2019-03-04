@@ -2572,7 +2572,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(rcvr_label,
-                           rcvr.show_structure(**node_struct_args),
+                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth),
                            shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
@@ -2690,7 +2690,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(cim_label,
-                           cim.show_structure(**node_struct_args, compact_cim=True),
+                           cim.show_structure(**node_struct_args, node_border=cim_penwidth, compact_cim=True),
                            shape=struct_shape,
                            color=cim_color,
                            rank=cim_rank,
@@ -2841,14 +2841,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       model_based_optimizer.show_structure(**node_struct_args),
+                       model_based_optimizer.show_structure(**node_struct_args, node_border=ctlr_width),
                        shape=struct_shape,
                        color=ctlr_color,
                        penwidth=ctlr_width,
                        rank=control_rank
                        )
                 g.node(objmech_label,
-                       objmech.show_structure(**node_struct_args),
+                       objmech.show_structure(**node_struct_args, node_border=ctlr_width),
                        shape=struct_shape,
                        color=objmech_color,
                        penwidth=ctlr_width,
