@@ -2859,6 +2859,8 @@ class Mechanism_Base(Mechanism):
     def show_structure(self,
                        # direction = 'BT',
                        show_functions:bool=False,
+                       show_mech_function_params:bool=False,
+                       show_state_function_params:bool=False,
                        show_values:bool=False,
                        use_labels:bool=False,
                        show_headers:bool=False,
@@ -2881,30 +2883,29 @@ class Mechanism_Base(Mechanism):
         ---------
 
         show_functions : bool : default False
-            specifies whether or not to show the `function <Component.function>` of the Mechanism and each of its
-            States in the record (enclosed in parentheses).
+            show the `function <Component.function>` of the Mechanism and each of its States.
+
+        show_mech_function_params : bool : default False
+            show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
+
+        show_state_function_params : bool : default False
+            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
+            True).
 
         show_values : bool : default False
-            specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
-            in the record (prefixed by "=").
+            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
 
         use_labels : bool : default False
-            specifies whether or not to use labels for values if **show_values** is `True`; labels must be specified
-            in the `input_labels_dict <Mechanism.input_labels_dict>` (for InputState values) and
-            `output_labels_dict <Mechanism.output_labels_dict>` (for OutputState values), otherwise the value is used.
+            use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
+            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
+            <Mechanism.output_labels_dict>` (for OutputState values), otherwise the value is used.
 
         show_headers : bool : default False
-            specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
-            (shown in caps).
+            show the Mechanism, InputState, ParameterState and OutputState headers.
 
-        show_roles : boofl : default False
-            specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
-            in the **system** argument (shown in caps and enclosed in square brackets);
-            if **system** is not specified, show_roles is ignored.
-
-        system : System : default None
-            specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
+        show_roles : bool : default False
+            show the `roles <Composition.NodeRoles>` of the Mechanism in the `Composition` specified in the
+            **composition** argument (**composition** is not specified, show_roles is ignored).
 
         composition : Composition : default None
             specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
@@ -2993,8 +2994,6 @@ class Mechanism_Base(Mechanism):
         # Inner State table (i.e., that contains individual states in each cell):
         inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
 
-        show_function_params = True
-
         def mech_cell():
             '''Return html with name of Mechanism, possibly with function and/or value
             Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
@@ -3031,7 +3030,7 @@ class Mechanism_Base(Mechanism):
             mech_function = ''
             fct_params = ''
             if show_functions:
-                if show_function_params:
+                if show_mech_function_params:
                     fct_params = []
                     for param in [param for param in self.function_parameters
                                   if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
@@ -3068,7 +3067,7 @@ class Mechanism_Base(Mechanism):
                 function = ''
                 function_params = ''
                 if include_function:
-                    if show_function_params:
+                    if show_state_function_params:
                         fct_params = []
                         for param in [param for param in self.function_parameters
                                       if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:

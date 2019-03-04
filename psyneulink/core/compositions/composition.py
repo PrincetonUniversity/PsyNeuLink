@@ -2106,26 +2106,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         show_functions : bool : default False
-            specifies whether or not to show the `function <Component.function>` of the Mechanism and each of its
-            States in the record (enclosed in parentheses).
+            show the `function <Component.function>` of the Mechanism and each of its States.
+
+        show_mech_function_params : bool : default False
+            show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
+
+        show_state_function_params : bool : default False
+            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
+            True).
 
         show_values : bool : default False
-            specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
-            in the record (prefixed by "=").
+            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
 
         use_labels : bool : default False
-            specifies whether or not to use labels for values if **show_values** is `True`; labels must be specified
-            in the `input_labels_dict <Mechanism.input_labels_dict>` (for InputState values) and
-            `output_labels_dict <Mechanism.output_labels_dict>` (for OutputState values), otherwise the value is used.
+            use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
+            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
+            <Mechanism.output_labels_dict>` (for OutputState values); otherwise it is ignored.
 
         show_headers : bool : default False
-            specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
-            (shown in caps).
+            show the Mechanism, InputState, ParameterState and OutputState headers.
 
         show_roles : bool : default False
-            specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
-            in the **system** argument (shown in caps and enclosed in square brackets);
-            if **system** is not specified, show_roles is ignored.
+            show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
 
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
@@ -2136,7 +2138,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if this is not specified, the **show_roles** argument is ignored.
 
         compact_cim : *INPUT* or *OUTUPT* : default None
-            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM
+            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
@@ -2385,28 +2387,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         show_node_structure : bool, VALUES, FUNCTIONS or ALL : default False
-            specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
-            `States`;  can have the following settings:
+            show a detailed representation of each `Mechanism` in the graph, including its `States`;  can have the
+            following settings:
 
-            * `True` -- shows States of Mechanism, but not information about the `value
+            * `True` -- show States of Mechanism, but not information about the `value
               <Component.value>` or `function <Component.function>` of the Mechanism or its States.
 
-            * *VALUES* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
+            * *VALUES* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
               <State_Base.value>` of each of its States.
 
-            * *LABELS* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
+            * *LABELS* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
               <State_Base.value>` of each of its States, using any labels for the values of InputStates and
               OutputStates specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
               `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
 
-            * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
+            * *FUNCTIONS* -- show the `function <Mechanism_Base.function>` of the Mechanism and the `function
               <State_Base.function>` of its InputStates and OutputStates.
 
-            * *ROLES* -- shows the `role <System_Mechanisms>` of the Mechanism in the System in square brackets
+            * *MECH_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
+              Mechanism in the Composition (only applies if *FUNCTIONS* is True).
+
+            * *STATE_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
+              State of each Mechanism in the Composition (only applies if *FUNCTIONS* is True).
+
+            * *ROLES* -- show the `role <Composition.NodeRoles>` of the Mechanism in the Composition
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
-            * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
-              its States (using labels for the values, if specified;  see above).
+            * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
+              Mechanisms in the `Composition` and their `States` (using labels for the values, if specified;  see above).
 
             Any combination of the settings above can also be specified in a list that is assigned to
             show_node_structure
@@ -2931,6 +2939,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
         INITIAL_FRAME = "INITIAL_FRAME"
+        MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
+        STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
         # ALL = "ALL"
 
         if execution_id is NotImplemented:
@@ -2963,6 +2973,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_struct_args = {'composition': self,
                                 'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
+                                'show_mech_function_params': any(key in show_node_structure
+                                                                 for key in {MECH_FUNCTION_PARAMS, ALL}),
+                                'show_state_function_params': any(key in show_node_structure
+                                                                  for key in {STATE_FUNCTION_PARAMS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
                                 'show_headers': show_headers,
@@ -2971,6 +2985,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_struct_args = {'composition': self,
                                 'show_roles': show_node_structure in {ROLES, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
+                                'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
+                                'show_state_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
