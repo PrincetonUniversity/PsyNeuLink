@@ -93,8 +93,6 @@ player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), 
 predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort(), name="PREDATOR PERCEPT")
 prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), name="PREY PERCEPT")
 
-extra_mech = ProcessingMechanism(size=prey_len, name="PREY PERCEPT")
-
 # Mechanism used to encode optimal action from call to Run
 optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION")
 
@@ -138,14 +136,9 @@ agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
 a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
 b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
-# c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
-# agent_comp.add_projections([a,b,c])
-agent_comp.add_projections([a,b])
+c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+agent_comp.add_projections([a,b,c])
 
-agent_comp.add_node(extra_mech)
-x = MappingProjection(sender=prey_percept, receiver=extra_mech)
-y = MappingProjection(sender=extra_mech, receiver=action_mech.input_states[2])
-agent_comp.add_projections([x,y])
 
 
 # **************************************  CONOTROL APPRATUS ************************************************************
@@ -188,12 +181,12 @@ agent_comp.model_based_optimizer_mode = BEFORE
 if SHOW_GRAPH:
     # agent_comp.show_graph()
     # agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True,
-    #                       show_cim=True,
-    #                       show_node_structure=ALL,
-    #                       show_headers=True,
-    #                       )
+    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+    agent_comp.show_graph(show_model_based_optimizer=True,
+                          show_cim=True,
+                          show_node_structure=ALL,
+                          show_headers=True,
+                          )
 
 
 # *********************************************************************************************************************
