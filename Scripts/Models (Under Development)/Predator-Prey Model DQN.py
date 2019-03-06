@@ -11,8 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -161,6 +161,7 @@ ocm = OptimizationControlMechanism(name='EVC',
                                    objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
                                                                           function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
+                                   compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,

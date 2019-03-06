@@ -347,8 +347,9 @@ import threading
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, Composition_Base, System_Base
@@ -357,7 +358,9 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
+    CONTROL_SIGNAL, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, \
+    OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, EUCLIDEAN
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -392,18 +395,37 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
+def _reconfiguration_cost_getter(owning_component=None, execution_id=None):
+    try:
+        c = owning_component
+        if c.compute_reconfiguration_cost:
+            allocation = c.parameters.value.get(execution_id)
+            # prev_allocation = c.parameters.value.get_previous(execution_id)
+            prev_allocation = c.parameters.value.history[execution_id][-2]
+            return c.compute_reconfiguration_cost([allocation, prev_allocation])
+        else:
+            return 0
+    except:
+        return 0
+
+
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
     try:
-        return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
-                for c in owning_component.control_signals]
+        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
+                 for c in owning_component.control_signals]
+        if owning_component.compute_reconfiguration_cost:
+            costs.append(owning_component.parameters.reconfiguration_cost.get(execution_id))
+        return costs
     except TypeError:
         return None
+
 
 def _outcome_getter(owning_component=None, execution_id=None):
     try:
         return owning_component.parameters.variable.get(execution_id)[0]
     except TypeError:
         return None
+
 
 def _net_outcome_getter(owning_component=None, execution_id=None):
     try:
@@ -413,21 +435,23 @@ def _net_outcome_getter(owning_component=None, execution_id=None):
     except TypeError:
         return [0]
 
-# class ControlMechanism(Mechanism_Base):
+
 class ControlMechanism(AdaptiveMechanism_Base):
     """
-    ControlMechanism(                              \
-        system=None                                \
-        objective_mechanism=None,                  \
-        origin_objective_mechanism=False           \
-        terminal_objective_mechanism=False         \
-        function=Linear,                           \
-        combine_costs=np.sum,             \
-        compute_net_outcome=lambda x,y:x-y,        \
-        control_signals=None,                      \
-        modulation=ModulationParam.MULTIPLICATIVE  \
-        params=None,                               \
-        name=None,                                 \
+    ControlMechanism(                                            \
+        system=None                                              \
+        monitor_for_control=None,                                \
+        objective_mechanism=None,                                \
+        origin_objective_mechanism=False                         \
+        terminal_objective_mechanism=False                       \
+        function=Linear,                                         \
+        control_signals=None,                                    \
+        modulation=ModulationParam.MULTIPLICATIVE                \
+        combine_costs=np.sum,                                    \
+        compute_reconfiguration_cost=None,                       \
+        compute_net_outcome=lambda x,y:x-y,                      \
+        params=None,                                             \
+        name=None,                                               \
         prefs=None)
 
     Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that modulates the parameter(s)
@@ -480,6 +504,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         specifies the `System` to which the ControlMechanism should be assigned as its `controller
         <System.controller>`.
 
+    monitor_for_control : List[OutputState or Mechanism] : default None
+        specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism` specified in the
+        **objective_mechanism** argument; for any Mechanisms specified, their `primary OutputState
+        <OutputState_Primary>` are used.
+
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
         should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
@@ -514,16 +543,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
 
-    combine_costs : Function, function or method : default np.sum
-        specifies function used to combine the `cost <ControlSignal.cost>` of the ControlMechanism's `control_signals
-        <ControlMechanism.control_signals>`;  must take a list or 1d array of scalar values as its argument and
-        return a list or array with a single scalar value.
-
-    compute_net_outcome : Function, function or method : default lambda outcome, cost: outcome-cost
-        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
-        <ControlMechanism.costs>` attributes;  must take two 1d arrays (outcome and cost) with scalar values as its
-        arguments and return an array with a single scalar value.
-
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
@@ -531,6 +550,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
+
+    combine_costs : Function, function or method : default np.sum
+        specifies function used to combine the `cost <ControlSignal.cost>` of the ControlMechanism's `control_signals
+        <ControlMechanism.control_signals>`;  must take a list or 1d array of scalar values as its argument and
+        return a list or array with a single scalar value.
+
+    compute_reconfiguration_cost : Function, function or method : default None
+        specifies function used to compute the ControlMechanism's `reconfiguration_cost
+        <ControlMechanism.reconfiguration_cost>`; must take a list or 2d array containing two lists or 1d arrays,
+        both with the same shape as the ControlMechanism's control_allocation attribute, and return a scalar value.
+
+    compute_net_outcome : Function, function or method : default lambda outcome, cost: outcome-cost
+        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
+        <ControlMechanism.costs>` attributes;  must take two 1d arrays (outcome and cost) with scalar values as its
+        arguments and return an array with a single scalar value.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
@@ -618,6 +652,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
 
+    compute_reconfiguration_cost : Function, function or method
+        function used to compute the ControlMechanism's `reconfiguration_cost  <ControlMechanism.reconfiguration_cost>`;
+        result is a scalar value representing the difference — defined by the function — between the values of the
+        ControlMechanism's current and last `control_alloction <ControlMechanism.control_allocation>`, that can be
+        accessed by `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` attribute.
+
+    reconfiguration_cost : 1d array
+        result of the ControlMechanism's `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
+        function.
+
     costs : list
         current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
         for each using its `compute_costs <ControlSignals.compute_costs>` method.
@@ -635,7 +679,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
           for its `control_signals <ControlMechanism.control_signals>`.
 
     combined_costs : 1d array
-        result of the ControlMechanism's `combine_costs <ControlMechanism.combine_costs>` function;
+        result of the ControlMechanism's `combine_costs <ControlMechanism.combine_costs>` function.
 
     compute_net_outcome : Function, function or method
         function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
@@ -701,6 +745,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :type:
                     :read only: True
 
+                compute_reconfiguration_cost
+                     see 'compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
+
+                reconfiguration_cost
+                     see 'reconfiguration_cost <ControlMechanism.reconfiguration_cost>`
+
                 combine_costs
                     see `combine_costs <ControlMechanism.combine_costs>`
 
@@ -740,6 +790,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         outcome = Parameter(None, read_only=True, getter=_outcome_getter)
 
+        compute_reconfiguration_cost = Parameter(None, stateful=False, loggable=False)
+        reconfiguration_cost = Parameter(None, read_only=True, getter=_reconfiguration_cost_getter)
+
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True)
@@ -766,19 +819,28 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  function=None,
-                 combine_costs:is_function_type=np.sum,
-                 compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 combine_costs:is_function_type=np.sum,
+                 compute_reconfiguration_cost:tc.optional(is_function_type)=None,
+                 compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
+
+        if kwargs:
+                for i in kwargs.keys():
+                    raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
+                                                format(self.__class__.__name__, repr(i)))
 
         control_signals = control_signals or []
         if not isinstance(control_signals, list):
             control_signals = [control_signals]
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
+        self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(system=system,
