@@ -432,12 +432,17 @@ class UserDefinedFunction(Function_Base):
         if default_variable is None:
             default_variable = cust_fct_variable
         elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
-            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} ({}) "
-                                "conflicts with specification of first argument in constructor for {} itself ({})".
-                                format(self.__class__.__name__, custom_function.__name__,
-                                       owner.name, default_variable, custom_function.__name__, cust_fct_variable))
+            owner_name = ' ({})'.format(owner.name) if owner else ''
+            cust_fct_name = repr(custom_function.__name__)
+            raise FunctionError("Value passed as \'default_variable\' for {} {} ({}) conflicts with specification of "
+                                "first argument in constructor for {} itself ({}). "
+                                "Try modifying specification of \'default_variable\' "
+                                "for object to which {} is being assigned{}, and/or insuring that "
+                                "the first argument of {} is at least a 2d array".
+                                format(self.__class__.__name__, cust_fct_name, default_variable,
+                                       cust_fct_name, cust_fct_variable, cust_fct_name, owner_name, cust_fct_name))
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(custom_function=custom_function,
                                                   params=params,
                                                   defaults=defaults,
