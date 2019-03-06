@@ -3835,8 +3835,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
+        output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
 
+        if self.model_based_optimizer is not None:
+            controller_output = ctx.get_output_struct_type(self.model_based_optimizer)
+            output_type_list.append(controller_output)
         data = [pnlvm.ir.LiteralStructType(output_type_list)]
         for node in self.nodes:
             nested_data = ctx.get_data_struct_type(node)
@@ -3854,7 +3857,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self, execution_id=None):
-        output = ((os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes)
+        output = [(os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes]
+        if self.model_based_optimizer is not None:
+            controller_data = (os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states)
+            output.append(controller_data)
         data = [output]
         for node in self.nodes:
             nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node,
@@ -3926,6 +3932,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._compilation_data.ptx_execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
+        assert node is not self.model_based_optimizer
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -3992,10 +3999,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert output_s in par_mech.output_states
                 if par_mech in self._all_nodes:
                     par_idx = self._get_node_index(par_mech)
+                elif par_mech is self.model_based_optimizer:
+                    par_idx = len(list(self._all_nodes))
                 else:
                     comp = par_mech.composition
                     assert par_mech is comp.output_CIM
                     par_idx = self.nodes.index(comp)
+
                 output_state_idx = par_mech.output_states.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                                 ctx.int32_ty(0),

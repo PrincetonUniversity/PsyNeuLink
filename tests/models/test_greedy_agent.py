@@ -120,10 +120,13 @@ def test_simplified_greedy_agent_random(benchmark, mode):
         prey:[[419,69]],
         }, 'bin_execute':mode})
 
-@pytest.mark.this
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
-@pytest.mark.parametrize("mode", ['Python'])
+@pytest.mark.parametrize("mode", ['Python',
+    pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+])
 def test_predator_prey(benchmark, mode):
     # These should probably be replaced by reference to ForagerEnv constants:
     obs_len = 3
