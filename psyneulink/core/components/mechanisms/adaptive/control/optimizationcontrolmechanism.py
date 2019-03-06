@@ -436,15 +436,22 @@ class OptimizationControlMechanismError(Exception):
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(            \
     objective_mechanism=None,                   \
+    monitor_for_control=None,                   \
+    objective_mechanism=None,                   \
+    origin_objective_mechanism=False            \
+    terminal_objective_mechanism=False          \
     features=None,                              \
     feature_function=None,                      \
+    function=None,                              \
     agent_rep=None,                             \
     search_function=None,                       \
     search_termination_function=None,           \
     search_space=None,                          \
-    function=None,                              \
     control_signals=None,                       \
     modulation=ModulationParam.MULTIPLICATIVE,  \
+    combine_costs=np.sum,                       \
+    compute_reconfiguration_cost=None,          \
+    compute_net_outcome=lambda x,y:x-y,         \
     params=None,                                \
     name=None,                                  \
     prefs=None)
@@ -689,8 +696,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  num_estimates: int = 1,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
-                 params=None, name=None,
-                 prefs: is_pref_set = None,
+                 params=None,
                  **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
 
@@ -708,8 +714,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super().__init__(system=None,
                          params=params,
-                         name=name,
-                         prefs=prefs,
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
