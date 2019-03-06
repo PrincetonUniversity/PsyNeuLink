@@ -432,10 +432,11 @@ class UserDefinedFunction(Function_Base):
         if default_variable is None:
             default_variable = cust_fct_variable
         elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
-            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} ({}) "
+            owner_name = lambda : ' assigned to '.format(owner.name) if owner else ''
+            raise FunctionError("Value passed as \'default_variable\' for {} ({}){}({}) "
                                 "conflicts with specification of first argument in constructor for {} itself ({})".
                                 format(self.__class__.__name__, custom_function.__name__,
-                                       owner.name, default_variable, custom_function.__name__, cust_fct_variable))
+                                       owner_name(), default_variable, custom_function.__name__, cust_fct_variable))
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(custom_function=custom_function,
