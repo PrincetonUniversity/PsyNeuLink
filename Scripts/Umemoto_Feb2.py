@@ -1,5 +1,5 @@
 import psyneulink as pnl
-
+import numpy as np
 
 # here we implement a test demo as in the EVC paper example:
 #in v2 we add control signals and a EVC mechanism to the model
@@ -7,7 +7,7 @@ import psyneulink as pnl
 # EVC params for Umemoto et al
 
 w_t = 0.065
-w_d = 0.065 # made negative here to match -1 values for distractor
+w_d = 0.065#0.065 # made negative here to match -1 values for distractor
 f_t = 1
 f_d = 1
 
@@ -26,7 +26,7 @@ reconfCostParam1 = 5
 
 
 # Control Parameters
-signalSearchRange = pnl.SampleSpec(start=0.0, stop=0.5, step=0.2)
+signalSearchRange = pnl.SampleSpec(start=1.8, stop=2.2, step=0.2)
 # signalSearchRange = pnl.SampleSpec(start=0.0, stop=0.4, step=0.2)
 
 # Stimulus Mechanisms
@@ -51,6 +51,9 @@ Distractor_Rep.set_log_conditions('mod_slope')#, log_condition=pnl.PROCESSING)
 # Processing Mechanism (Automatic)
 Automatic_Component = pnl.TransferMechanism(name='Automatic Component')
 
+Distactor_Component = pnl.TransferMechanism(name='Distactor Component')
+
+
 Automatic_Component.set_log_conditions('value')#, log_condition=pnl.PROCESSING)
 
 # Decision Mechanisms
@@ -73,24 +76,29 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
 Decision.set_log_conditions('InputState-0')#, log_condition=pnl.PROCESSING)
-
+Decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
+print(Decision.loggable_items)
 # Outcome Mechanisms:
 Reward = pnl.TransferMechanism(name='Reward')
 
 # Composition
 Umemoto_comp = pnl.Composition(name="Umemoto_System")
 
+#weights
+
+Distractor_weight = pnl.MappingProjection(matrix=np.matrix([[-1]]),
+                                     name='DISTRACTOR_WEIGHTS')
 # ADD pathways
 TargetControl_pathway = [Target_Stim, Target_Rep, Decision]
 Umemoto_comp.add_linear_processing_pathway(TargetControl_pathway)
 
-FlankerControl_pathway = [Distractor_Stim, Distractor_Rep, Decision]
+FlankerControl_pathway = [Distractor_Stim, Distractor_Rep, Distactor_Component, Distractor_weight, Decision]
 Umemoto_comp.add_linear_processing_pathway(FlankerControl_pathway)
 
-TargetAutomatic_pathway = [Target_Stim, Automatic_Component, Decision]
+TargetAutomatic_pathway = [Target_Stim, Decision]
 Umemoto_comp.add_linear_processing_pathway(TargetAutomatic_pathway)
 
-FlankerAutomatic_pathway = [Distractor_Stim, Automatic_Component, Decision]
+FlankerAutomatic_pathway = [Distractor_Stim, Distactor_Component]
 Umemoto_comp.add_linear_processing_pathway(FlankerAutomatic_pathway)
 
 Reward_pathway = [Reward]
@@ -106,15 +114,15 @@ Target_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Re
                                      variable=1.0,
                                      cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
                                      intensity_cost_function=pnl.Exponential(scale=1, rate=1),
-                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
+                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=0),#offset = -1
                                      allocation_samples=signalSearchRange)
 
 Distractor_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Distractor_Rep)],
                                      function=pnl.Linear,
                                      variable=1.0,
                                      cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-                                     intensity_cost_function=pnl.Exponential(rate=0.8046),
-                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
+                                     intensity_cost_function=pnl.Exponential(scale=1, rate=1),#0.8046),
+                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=0), #offset = -1
                                      allocation_samples=signalSearchRange)
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=Umemoto_comp,
@@ -123,17 +131,20 @@ Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanis
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
                                                                                                                                                  (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
                                                                                                                              ),
-                                                                                  function=pnl.GridSearch(),
+                                                                                  function=pnl.GridSearch(save_values=True),
                                                                                   control_signals=[Target_Rep_Control_Signal, Distractor_Rep_Control_Signal]
                                                                                   )
                                                                                 )
 Umemoto_comp.enable_model_based_optimizer = True
-Umemoto_comp.model_based_optimizer.set_log_conditions('value')
+# Umemoto_comp.model_based_optimizer.set_log_conditions('value')
 
-nTrials = 2
+
+
+print(Target_Rep.loggable_items)
+nTrials = 3
 targetFeatures = [w_t]
 flankerFeatures_inc = [w_d]
-reward = [100]
+reward = [0]#[100]
 
 targetInputList = targetFeatures
 flankerInputList = flankerFeatures_inc
@@ -155,10 +166,14 @@ Umemoto_comp.run(num_trials=nTrials,
 # Target_Rep.log.print_entries()
 # print("\n\n---------  AUTOMATIC COMPONENT  ---------")
 # Automatic_Component.log.print_entries()
-print("\n\n---------  DECISION  ---------")
-Decision.log.print_entries()
+# print("\n\n---------  DECISION  ---------")
+# Decision.log.print_entries()
+#
 # print("\n\n---------  MODEL BASED OPTIMIZER  ---------")
 # Umemoto_comp.model_based_optimizer.log.print_entries()
 # print("\n\n---------  Target_Stim  ---------")
 #
 # Target_Stim.log.print_entries()
+
+print(Umemoto_comp.model_based_optimizer.saved_samples)
+print(Umemoto_comp.model_based_optimizer.saved_values)
