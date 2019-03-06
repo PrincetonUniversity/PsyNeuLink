@@ -114,15 +114,18 @@ Target_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Re
                                      variable=1.0,
                                      cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
                                      intensity_cost_function=pnl.Exponential(scale=1, rate=1),
-                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=0),#offset = -1
+                                     compute_reconfiguration_cost=pnl.Distance(metric=pnl.EUCLIDEAN),
+                                     # adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),#offset = -1
                                      allocation_samples=signalSearchRange)
 
 Distractor_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Distractor_Rep)],
                                      function=pnl.Linear,
                                      variable=1.0,
                                      cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-                                     intensity_cost_function=pnl.Exponential(scale=1, rate=1),#0.8046),
-                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=0), #offset = -1
+                                     intensity_cost_function=pnl.Exponential(scale=1, rate=1),
+                                     compute_reconfiguration_cost=pnl.Distance(metric=pnl.EUCLIDEAN),#0.8046),
+                                     # adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
+                                                  #offset = -1
                                      allocation_samples=signalSearchRange)
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=Umemoto_comp,
