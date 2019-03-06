@@ -413,8 +413,8 @@ def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
     try:
         costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
                  for c in owning_component.control_signals]
-        if owning_component.compute_reconfiguration_cost:
-            costs.append(owning_component.parameters.reconfiguration_cost.get(execution_id))
+        # if owning_component.compute_reconfiguration_cost:
+        #     costs.append(owning_component.parameters.reconfiguration_cost.get(execution_id))
         return costs
     except TypeError:
         return None

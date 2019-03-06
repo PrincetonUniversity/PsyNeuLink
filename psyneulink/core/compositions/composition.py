@@ -4271,11 +4271,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         # Assign control_allocation current being sampled
+
+        base_control_allocation = self.model_based_optimizer.parameters.value.get(execution_id)
+        candidate_control_allocation = control_allocation
+        reconfiguration_cost = 0.
+        if callable(self.model_based_optimizer.compute_reconfiguration_cost):
+            reconfiguration_cost = self.model_based_optimizer.compute_reconfiguration_cost([candidate_control_allocation,
+                                                                                        base_control_allocation])
+
+        # Assign control_allocation currently being sampled
         if control_allocation is not None:
             self.model_based_optimizer.apply_control_allocation(control_allocation,
                                                                 execution_id=execution_id,
                                                                 runtime_params=runtime_params,
                                                                 context=context)
+        all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
+        combined_costs = self.model_based_optimizer.combine_costs(all_costs)
 
         net_control_allocation_outcomes = []
         # FIX: the indexing below for predicted_input is not correct
@@ -4312,8 +4323,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
 
             outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
-            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
-            combined_costs = self.model_based_optimizer.combine_costs(all_costs)
             # KAM Modified 12/5/18 to use OCM's compute_net_outcome fn rather than hard-coded difference
             net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, combined_costs)
             net_control_allocation_outcomes.append(net_outcome)
