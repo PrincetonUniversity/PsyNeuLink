@@ -3453,8 +3453,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
         output_values = []
-        for i in range(0, len(self.output_CIM.output_states)):
-            output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
+        for state in self.output_CIM.output_states:
+            output_values.append(state.parameters.value.get(execution_id))
 
         return output_values
 
