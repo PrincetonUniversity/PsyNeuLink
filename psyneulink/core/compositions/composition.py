@@ -3223,13 +3223,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
-        if self.model_based_optimizer_mode is BEFORE:
+        if (self.enable_model_based_optimizer and
+            self.model_based_optimizer_mode is BEFORE):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
-                    and self.enable_model_based_optimizer
             ):
                 if self.model_based_optimizer:
                     self.model_based_optimizer.parameters.context.get(
@@ -3428,13 +3428,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
-        if self.model_based_optimizer_mode is AFTER:
+        if (self.enable_model_based_optimizer and
+            self.model_based_optimizer_mode == AFTER):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
-                    and self.enable_model_based_optimizer
             ):
                 if self.model_based_optimizer:
                     self.model_based_optimizer.parameters.context.get(
