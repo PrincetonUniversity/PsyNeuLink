@@ -789,7 +789,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
+
+        if kwargs:
+                for i in kwargs.keys():
+                    raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
+                                                format(self.__class__.__name__, repr(i)))
 
         control_signals = control_signals or []
         if not isinstance(control_signals, list):
