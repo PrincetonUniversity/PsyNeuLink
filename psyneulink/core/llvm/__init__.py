@@ -56,7 +56,6 @@ class LLVMBinaryFunction:
     def _init_host_func_type(self):
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
-        assert(isinstance(f, ir.Function))
 
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
         params = []
