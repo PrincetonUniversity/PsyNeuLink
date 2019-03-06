@@ -772,7 +772,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
+
+        if kwargs:
+                for i in kwargs.keys():
+                    raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
+                                                format(self.__class__.__name__, repr(i)))
 
         control_signals = control_signals or []
         if not isinstance(control_signals, list):
