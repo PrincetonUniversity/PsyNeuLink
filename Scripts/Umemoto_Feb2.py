@@ -114,7 +114,7 @@ Target_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Re
                                      variable=1.0,
                                      cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
                                      intensity_cost_function=pnl.Exponential(scale=1, rate=1),
-                                     compute_reconfiguration_cost=pnl.Distance(metric=pnl.EUCLIDEAN),
+                                     # compute_reconfiguration_cost=pnl.Distance(metric=pnl.EUCLIDEAN),
                                      # adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),#offset = -1
                                      allocation_samples=signalSearchRange)
 
@@ -123,7 +123,6 @@ Distractor_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Distr
                                      variable=1.0,
                                      cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
                                      intensity_cost_function=pnl.Exponential(scale=1, rate=1),
-                                     compute_reconfiguration_cost=pnl.Distance(metric=pnl.EUCLIDEAN),#0.8046),
                                      # adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
                                                   #offset = -1
                                      allocation_samples=signalSearchRange)
@@ -135,7 +134,9 @@ Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanis
                                                                                                                                                  (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
                                                                                                                              ),
                                                                                   function=pnl.GridSearch(save_values=True),
-                                                                                  control_signals=[Target_Rep_Control_Signal, Distractor_Rep_Control_Signal]
+                                                                                  control_signals=[Target_Rep_Control_Signal, Distractor_Rep_Control_Signal],
+                                                                                  compute_reconfiguration_cost=pnl.Distance(
+                                                                                      metric=pnl.EUCLIDEAN)  # 0.8046),
                                                                                   )
                                                                                 )
 Umemoto_comp.enable_model_based_optimizer = True
