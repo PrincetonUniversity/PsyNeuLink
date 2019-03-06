@@ -692,7 +692,8 @@ class OptimizationControlMechanism(ControlMechanism):
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
                  control_signals: tc.optional(tc.any(is_iterable, ParameterState, ControlSignal)) = None,
                  modulation: tc.optional(_is_modulation_param) = ModulationParam.MULTIPLICATIVE, params=None, name=None,
-                 prefs: is_pref_set = None, **kwargs):
+                 prefs: is_pref_set = None,
+                 **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
 
         if kwargs:
