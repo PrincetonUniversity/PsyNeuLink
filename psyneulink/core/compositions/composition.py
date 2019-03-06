@@ -3428,12 +3428,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
-        # extract result here
-        if bin_execute:
-            _comp_ex.freeze_values()
-            _comp_ex.execute_node(self.output_CIM)
-            return _comp_ex.extract_node_output(self.output_CIM)
-
         if self.model_based_optimizer_mode is AFTER:
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
@@ -3448,6 +3442,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
                     self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+
+        # extract result here
+        if bin_execute:
+            _comp_ex.freeze_values()
+            _comp_ex.execute_node(self.output_CIM)
+            return _comp_ex.extract_node_output(self.output_CIM)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
