@@ -3866,16 +3866,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         proj_params = (tuple(p._get_param_initializer(execution_id)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
+    def _get_flattened_controller_output(self, execution_id):
+        controller_data = [os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states]
+        # This is an ugly hack to remove 2d arrays
+        try:
+            controller_data = [[c[0][0]] for c in controller_data]
+        except:
+            pass
+        return controller_data
+
     def _get_data_initializer(self, execution_id=None):
         output = [(os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes]
         if self.model_based_optimizer is not None:
-            controller_data = [os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states]
-            # This is an ugly hack to remove 2d arrays
-            try:
-                controller_data = [[c[0][0]] for c in controller_data]
-            except:
-                pass
-            output.append(controller_data)
+            output.append(self._get_flattened_controller_output(execution_id))
         data = [output]
         for node in self.nodes:
             nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node,
