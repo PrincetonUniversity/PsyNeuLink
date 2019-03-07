@@ -674,6 +674,7 @@ class OptimizationControlMechanism(ControlMechanism):
         feature_function = Parameter(None, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
+        comp_execution_mode = Parameter('Python', stateful=False, loggable=False)
 
         agent_rep = Parameter(None, stateful=False, loggable=False)
 
@@ -927,7 +928,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                              self.parameters.num_estimates.get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=sim_execution_id,
-                                             context=self.function.parameters.context.get(execution_id)
+                                             context=self.function.parameters.context.get(execution_id),
+                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id)
             )
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
@@ -947,13 +949,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.agent_rep>`.
         '''
 
-        value = self.parameters.value.get(execution_id)
-        if value is None:
-            value = copy.deepcopy(self.defaults.value)
-
-        for i in range(len(control_allocation)):
-            value[i] = np.atleast_1d(control_allocation[i])
-
+        value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value.set(value, execution_id)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)

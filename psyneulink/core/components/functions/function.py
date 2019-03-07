@@ -845,8 +845,7 @@ class Function_Base(Function):
         for p in self._get_compilation_params(execution_id):
             param = p.get(execution_id)
             try:
-                self.owner.parameter_states[p.name]
-                param = [param]
+                param = self.owner.parameter_states[p.name]._instance_defaults.value
             except (AttributeError, TypeError):
                 pass
             if not np.isscalar(param) and param is not None:
