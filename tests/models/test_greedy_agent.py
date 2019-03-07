@@ -22,6 +22,7 @@ from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
     pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent(benchmark, mode):
     # These should probably be replaced by reference to ForagerEnv constants:
@@ -76,6 +77,7 @@ def test_simplified_greedy_agent(benchmark, mode):
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
     pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent_random(benchmark, mode):
     # These should probably be replaced by reference to ForagerEnv constants:
@@ -126,6 +128,9 @@ def test_simplified_greedy_agent_random(benchmark, mode):
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 def test_predator_prey(benchmark, mode):
     # These should probably be replaced by reference to ForagerEnv constants:
