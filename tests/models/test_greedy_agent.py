@@ -187,6 +187,7 @@ def test_predator_prey(benchmark, mode):
                                        )
     agent_comp.add_model_based_optimizer(ocm)
     agent_comp.enable_model_based_optimizer = True
+    ocm.comp_execution_mode = mode
 
     input_dict = {player_obs:[[1.1576537,  0.60782117]],
                                          predator_obs:[[-0.03479106, -0.47666293]],

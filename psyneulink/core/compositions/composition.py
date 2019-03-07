@@ -3859,7 +3859,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_data_initializer(self, execution_id=None):
         output = [(os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes]
         if self.model_based_optimizer is not None:
-            controller_data = (os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states)
+            controller_data = [os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states]
+            # This is an ugly hack to remove 2d arrays
+            try:
+                controller_data = [[c[0][0]] for c in controller_data]
+            except:
+                pass
             output.append(controller_data)
         data = [output]
         for node in self.nodes:
