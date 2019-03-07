@@ -4244,7 +4244,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             base_execution_id=None,
             execution_id=None,
-            context=None
+            context=None,
+            execution_mode=False,
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
@@ -4286,7 +4287,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.run(inputs=inputs,
                      execution_id=execution_id,
                      runtime_params=runtime_params,
-                     context=context)
+                     context=context,
+                     bin_execute=execution_mode)
 
             # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
             if context.initialization_status != ContextFlags.INITIALIZING:
