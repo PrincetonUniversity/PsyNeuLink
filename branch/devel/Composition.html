@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.0.0+187.g9f9dea1 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.0.0+207.g7855655 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+187.g9f9dea1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+207.g7855655 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+187
+                0.5.0.0+207
               </div>
             
           
@@ -373,7 +373,7 @@ five inputs are provided for each INPUT Node, and num_trials is not specified, t
 <p>The number of inputs specified <strong>must</strong> be the same for all Nodes in the input dictionary (except for any Nodes for
 which only one input is specified). In other words, all of the values in the input dictionary must have the same length
 as each other (or length 1).</p>
-<p>If num_trials is in use, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
+<p>If num_trials is in use, <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Node, and num_trials = 7, the system executes seven times. The input values from trials 0
 and 1 are used again on trials 5 and 6, respectively.</p>
 <table border="1" class="docutils">
@@ -839,7 +839,7 @@ as unlabeled arrows.</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x107e37ac8&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x107414160&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1045,7 +1045,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – <p>When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
 means that each Projections within the cycle actually passes to its receiver its sender’s value from
@@ -1113,7 +1113,7 @@ specified.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>system=None</em>, <em>composition=None</em>, <em>compact_cim: &lt;typecheck.framework.optional object at 0x107e37c50&gt; = None</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x107e37c88&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_structure" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>system=None</em>, <em>composition=None</em>, <em>compact_cim: &lt;typecheck.framework.optional object at 0x107e26be0&gt; = None</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x107e26c18&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_structure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1324,7 +1324,7 @@ a <a class="reference internal" href="Condition.html"><span class="doc">Conditio
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>predicted_input=None</em>, <em>control_allocation=None</em>, <em>num_trials=1</em>, <em>runtime_params=None</em>, <em>base_execution_id=None</em>, <em>execution_id=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>predicted_input=None</em>, <em>control_allocation=None</em>, <em>num_trials=1</em>, <em>runtime_params=None</em>, <em>base_execution_id=None</em>, <em>execution_id=None</em>, <em>context=None</em>, <em>execution_mode=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs a simulation of the <a class="reference internal" href="#"><span class="doc">Composition</span></a>, with the specified control_allocation, excluding its
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer" title="psyneulink.core.compositions.composition.Composition.model_based_optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">model_based_optimizer</span></code></a> in order to return the
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> of the Composition, according to its
@@ -1453,7 +1453,7 @@ by checking whether any of its nodes are stateful.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+187.g9f9dea1',
+            VERSION:'0.5.0.0+207.g7855655',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
