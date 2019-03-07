@@ -436,15 +436,22 @@ class OptimizationControlMechanismError(Exception):
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(            \
     objective_mechanism=None,                   \
+    monitor_for_control=None,                   \
+    objective_mechanism=None,                   \
+    origin_objective_mechanism=False            \
+    terminal_objective_mechanism=False          \
     features=None,                              \
     feature_function=None,                      \
+    function=None,                              \
     agent_rep=None,                             \
     search_function=None,                       \
     search_termination_function=None,           \
     search_space=None,                          \
-    function=None,                              \
     control_signals=None,                       \
     modulation=ModulationParam.MULTIPLICATIVE,  \
+    combine_costs=np.sum,                       \
+    compute_reconfiguration_cost=None,          \
+    compute_net_outcome=lambda x,y:x-y,         \
     params=None,                                \
     name=None,                                  \
     prefs=None)
@@ -687,19 +694,13 @@ class OptimizationControlMechanism(ControlMechanism):
                  agent_rep=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
-                 objective_mechanism: tc.optional(tc.any(ObjectiveMechanism, list)) = None,
-                 function: tc.optional(tc.any(is_function_type)) = None, num_estimates: int = 1,
+                 num_estimates: int = 1,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
-                 control_signals: tc.optional(tc.any(is_iterable, ParameterState, ControlSignal)) = None,
-                 modulation: tc.optional(_is_modulation_param) = ModulationParam.MULTIPLICATIVE, params=None, name=None,
-                 prefs: is_pref_set = None, **kwargs):
+                 params=None,
+                 **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
 
-        if kwargs:
-                for i in kwargs.keys():
-                    raise OptimizationControlMechanismError("Unrecognized arg in constructor for {}: {}".
-                                                            format(self.__class__.__name__, repr(i)))
         self.agent_rep = agent_rep
         self.search_function = search_function
         self.search_termination_function = search_termination_function
@@ -713,14 +714,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   params=params)
 
         super().__init__(system=None,
-                         # monitor_for_control=monitor_for_control,
-                         objective_mechanism=objective_mechanism,
-                         function=function,
-                         control_signals=control_signals,
-                         modulation=modulation,
                          params=params,
-                         name=name,
-                         prefs=prefs)
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Insure that specification of ObjectiveMechanism has projections to it'''
