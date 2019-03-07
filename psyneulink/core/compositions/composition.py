@@ -4093,7 +4093,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if node not in self.scheduler_processing.condition_set.conditions:
             cond.append(Always())
         else:
-            cond += self.scheduler_processing.condition_set.conditions[node]
+            node_conds = self.scheduler_processing.condition_set.conditions[node]
+            cond.append(node_conds)
 
         return All(*cond)
 
