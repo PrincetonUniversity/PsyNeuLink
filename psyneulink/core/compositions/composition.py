@@ -3884,7 +3884,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return pnlvm._tupleize(data)
 
     def _get_node_index(self, node):
-        return list(self._all_nodes).index(node)
+        node_list = list(self._all_nodes)
+        if node is self.model_based_optimizer:
+            return len(node_list)
+        return node_list.index(node)
 
     def _get_node_wrapper(self, node):
         if node not in self.__generated_node_wrappers:
@@ -4012,10 +4015,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
-                if par_mech in self._all_nodes:
+                if par_mech in self._all_nodes or par_mech is self.model_based_optimizer:
                     par_idx = self._get_node_index(par_mech)
-                elif par_mech is self.model_based_optimizer:
-                    par_idx = len(list(self._all_nodes))
                 else:
                     comp = par_mech.composition
                     assert par_mech is comp.output_CIM
