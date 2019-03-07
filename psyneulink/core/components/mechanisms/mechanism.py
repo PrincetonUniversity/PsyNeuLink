@@ -2312,9 +2312,7 @@ class Mechanism_Base(Mechanism):
             execution_id=execution_id,
         )
 
-        # MODIFIED 7/14/18 NEW:
         self._update_previous_value(execution_id)
-        # MODIFIED 7/14/18 END
 
         # UPDATE VARIABLE and INPUT STATE(S)
 
