@@ -954,13 +954,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.agent_rep>`.
         '''
 
-        value = self.parameters.value.get(execution_id)
-        if value is None:
-            value = copy.deepcopy(self.defaults.value)
-
-        for i in range(len(control_allocation)):
-            value[i] = np.atleast_1d(control_allocation[i])
-
+        value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value.set(value, execution_id)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)
