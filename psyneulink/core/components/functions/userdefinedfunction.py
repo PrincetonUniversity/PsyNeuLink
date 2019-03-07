@@ -35,10 +35,10 @@ class UserDefinedFunction(Function_Base):
     A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
     as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a `Component
     <Component>`.  This is done automatically if a Python function or method is assigned as the `function
-    <Component.function>` attribute of a Component.  A Python function or method can also be wrapped on its own,
-    by calling the UserDefinedFunction constructor, and assigning the Python function or method as its
-    **custom_function** argument.  The Python function or method must obey the following conventions to be treated
-    correctly as a UserDefinedFunction (UDF):
+    <Component.function>` attribute of a Component.  A Python function or method can also be wrapped explicitly,
+    using the UserDefinedFunction constructor, and assigning the Python function or method to its **custom_function**
+    argument.  A Python function or method wrapped as a UDF must obey the following conventions to be treated
+    correctly:
 
     .. _UDF_Variable:
 
@@ -65,9 +65,11 @@ class UserDefinedFunction(Function_Base):
     ..
     .. _UDF_Params_Context:
 
-    * It may include **context** and **params** arguments;  these are not required, but can be included to receive
-      information about the current conditions of execution.  When the function or method is called, an initial attempt
-      is made to do so with these arguments; if that fails, it is called again without them.
+    * It may include **self**, **owner**, **execution_id**, **context** and/or **params** arguments;  none of these are
+      required, but can be included to gain access to the standard `Function` parameters (such as the history of its
+      parameter values), those of the `Component` to which it has been assigned (i.e., its `owner <Function.owner>`,
+      and/or receive information about the current conditions of execution.   When the function or method is called,
+      an initial attempt is made to pass these arguments; if that fails, it is called again without them.
     ..
     .. _UDF_Modulatory_Params:
 
