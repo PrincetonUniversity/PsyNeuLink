@@ -3243,8 +3243,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bin_execute = False
 
         if bin_execute:
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
+            # Exec mode skips mbo invocation so we can't use it if mbo is
+            # present and active
+            can_exec = not self.enable_model_based_optimizer or execution_phase == ContextFlags.SIMULATION
             try:
-                if str(bin_execute).endswith('Exec'):
+                if str(bin_execute).endswith('Exec') and can_exec:
                     if bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [execution_id])
                         _comp_ex.execute(inputs)
@@ -3641,7 +3645,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
-        if str(bin_execute).endswith('Run'):
+        execution_context = self.parameters.context.get(execution_id)
+        # Run mode skips mbo invocation so we can't use it if mbo is
+        # present and active
+        can_run = (not self.enable_model_based_optimizer or
+                   (execution_context is not None and
+                    execution_context.execution_phase == ContextFlags.SIMULATION))
+        if str(bin_execute).endswith('Run') and can_run:
             # initialize from base context but don't overwrite any values already set for this execution_id
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
