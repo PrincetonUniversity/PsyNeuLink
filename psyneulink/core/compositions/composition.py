@@ -3237,6 +3237,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
                     self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+                if bin_execute:
+                    data = self._get_flattened_controller_output(execution_id)
+                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
 
 
         if bin_execute == 'Python':
@@ -3446,6 +3449,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
                     self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+                if bin_execute:
+                    data = self._get_flattened_controller_output(execution_id)
+                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
 
         # extract result here
         if bin_execute:

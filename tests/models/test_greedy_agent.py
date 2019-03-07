@@ -200,10 +200,10 @@ def test_predator_prey(benchmark, mode):
                                          predator_obs:[[-0.03479106, -0.47666293]],
                                          prey_obs:[[-0.60836214,  0.1760381 ]],
                                          }
-    run_results = agent_comp.run(inputs=input_dict, bin_execute=mode)
+    run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
     
-    assert np.allclose(run_results[0], [[-1.76601584, -0.43178307]])
-    assert np.allclose(run_results[1], [[0.43076779]])
+    assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
+    assert np.allclose(run_results[1], [[-7.95925672]])
     assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
                                             [-0.03479106, -0.47666293],
                                             [-0.60836214,  0.1760381 ]])
