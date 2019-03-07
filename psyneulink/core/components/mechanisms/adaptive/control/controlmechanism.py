@@ -395,18 +395,18 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
-def _reconfiguration_cost_getter(owning_component=None, execution_id=None):
-    try:
-        c = owning_component
-        if c.compute_reconfiguration_cost:
-            allocation = c.parameters.value.get(execution_id)
-            # prev_allocation = c.parameters.value.get_previous(execution_id)
-            prev_allocation = c.parameters.value.history[execution_id][-2]
-            return c.compute_reconfiguration_cost([allocation, prev_allocation])
-        else:
-            return 0
-    except:
-        return 0
+# def _reconfiguration_cost_getter(owning_component=None, execution_id=None):
+#     try:
+#         c = owning_component
+#         if c.compute_reconfiguration_cost:
+#             allocation = c.parameters.value.get(execution_id)
+#             # prev_allocation = c.parameters.value.get_previous(execution_id)
+#             prev_allocation = c.parameters.value.history[execution_id][-2]
+#             return c.compute_reconfiguration_cost([allocation, prev_allocation])
+#         else:
+#             return 0
+#     except:
+#         return 0
 
 
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
@@ -658,10 +658,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         ControlMechanism's current and last `control_alloction <ControlMechanism.control_allocation>`, that can be
         accessed by `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` attribute.
 
-    reconfiguration_cost : 1d array
-        result of the ControlMechanism's `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
-        function.
-
     costs : list
         current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
         for each using its `compute_costs <ControlSignals.compute_costs>` method.
@@ -748,9 +744,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 compute_reconfiguration_cost
                      see 'compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
 
-                reconfiguration_cost
-                     see 'reconfiguration_cost <ControlMechanism.reconfiguration_cost>`
-
                 combine_costs
                     see `combine_costs <ControlMechanism.combine_costs>`
 
@@ -791,7 +784,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         outcome = Parameter(None, read_only=True, getter=_outcome_getter)
 
         compute_reconfiguration_cost = Parameter(None, stateful=False, loggable=False)
-        reconfiguration_cost = Parameter(None, read_only=True, getter=_reconfiguration_cost_getter)
+        # reconfiguration_cost = Parameter(None, read_only=True, getter=_reconfiguration_cost_getter)
 
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)

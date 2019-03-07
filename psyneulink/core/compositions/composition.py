@@ -4274,20 +4274,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         base_control_allocation = self.model_based_optimizer.parameters.value.get(execution_id)
         candidate_control_allocation = control_allocation
-        reconfiguration_cost = 0.
+
+        # Get reconfiguration cost
+        reconfiguration_cost = None
         if callable(self.model_based_optimizer.compute_reconfiguration_cost):
             reconfiguration_cost = self.model_based_optimizer.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                         base_control_allocation])
 
-        # Assign control_allocation currently being sampled
+        # Apply candidate control to signal(s) for the upcoming simulation
         if control_allocation is not None:
             self.model_based_optimizer.apply_control_allocation(control_allocation,
                                                                 execution_id=execution_id,
                                                                 runtime_params=runtime_params,
                                                                 context=context)
-        all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
+        # Get control signal costs
+        if reconfiguration_cost is not None:
+            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
+        else:
+            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
+
+        # Compute a total for the candidate control signal(s)
         combined_costs = self.model_based_optimizer.combine_costs(all_costs)
 
+        # Run the simulation with the candidate control signal
         net_control_allocation_outcomes = []
         # FIX: the indexing below for predicted_input is not correct
         for i in range(num_trials):
