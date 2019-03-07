@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.5.0.0+207.g7855655 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.5.0.0+208.g0876d26 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+207.g7855655 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+208.g0876d26 documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="TransferFunctions" href="TransferFunctions.html"/>
         <link rel="prev" title="Functions" href="Functions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+207
+                0.5.0.0+208
               </div>
             
           
@@ -91,11 +91,35 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="Functions.html">Functions</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">UserDefinedFunction</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="TransferFunctions.html">TransferFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="CombinationFunctions.html">CombinationFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SelectionFunctions.html">SelectionFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DistributionFunctions.html">DistributionFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="StatefulFunctions.html">StatefulFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ObjectiveFunctions.html">ObjectiveFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="OptimizationFunctions.html">OptimizationFunctions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="LearningFunctions.html">LearningFunctions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -176,10 +200,10 @@
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.userdefinedfunction.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>custom_function=None</em>, <em>default_variable=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p id="udf-description">A UserDefinedFunction (UDF) is used to “wrap” a Python function or method, including a lamdba function,
-as a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, so that it can be used as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.  This is done automatically if a Python function or method is assigned as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of a Component.  A Python function or method can also be wrapped on its own,
-by calling the UserDefinedFunction constructor, and assigning the Python function or method as its
-<strong>custom_function</strong> argument.  The Python function or method must obey the following conventions to be treated
-correctly as a UserDefinedFunction (UDF):</p>
+as a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, so that it can be used as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.  This is done automatically if a Python function or method is assigned as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of a Component.  A Python function or method can also be wrapped explicitly,
+using the UserDefinedFunction constructor, and assigning the Python function or method to its <strong>custom_function</strong>
+argument.  A Python function or method wrapped as a UDF must obey the following conventions to be treated
+correctly:</p>
 <ul class="simple" id="udf-variable">
 <li>It must have <strong>at least one argument</strong> (that can be a positional or a keyword argument);  this will be treated
 as the <code class="xref any docutils literal"><span class="pre">variable</span></code> attribute of the UDF’s <code class="xref any docutils literal"><span class="pre">function</span></code>.
@@ -202,9 +226,11 @@ with these parameters by their name and with their current values (i.e., as dete
 <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> assigned to them).</li>
 </ul>
 <ul class="simple" id="udf-params-context">
-<li>It may include <strong>context</strong> and <strong>params</strong> arguments;  these are not required, but can be included to receive
-information about the current conditions of execution.  When the function or method is called, an initial attempt
-is made to do so with these arguments; if that fails, it is called again without them.</li>
+<li>It may include <strong>self</strong>, <strong>owner</strong>, <strong>execution_id</strong>, <strong>context</strong> and/or <strong>params</strong> arguments;  none of these are
+required, but can be included to gain access to the standard <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> parameters (such as the history of its
+parameter values), those of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which it has been assigned (i.e., its <code class="xref any docutils literal"><span class="pre">owner</span></code>,
+and/or receive information about the current conditions of execution.   When the function or method is called,
+an initial attempt is made to pass these arguments; if that fails, it is called again without them.</li>
 </ul>
 <ul id="udf-modulatory-params">
 <li><p class="first">The parameters of a UDF can be specified as <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> in a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the <strong>params</strong> argument of the constructor for either the Python
@@ -454,7 +480,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+207.g7855655',
+            VERSION:'0.5.0.0+208.g0876d26',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
