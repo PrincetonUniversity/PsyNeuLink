@@ -636,29 +636,26 @@ class InputState(State_Base):
         **projections** is specified, then `variable <InputState.variable>` is assigned the `value
         <Projection.value>` of the Projection(s) or its `sender <Projection.sender>`.
 
-    function : CombinationFunction : default LinearCombination(operation=SUM))
-        performs an element-wise (Hadamard) aggregation of the `value <Projection_Base.value>` of each Projection
-        received by the InputState, under the possible influence of any `GatingProjections <GatingProjection>` received
-        by the InputState.
-
     function : Function
-        combines the `values <Projection_Base.value>` of the `PathwayProjections <PathwayProjection>`
-        (e.g., `MappingProjections <MappingProjection>`) received by the InputState  (listed in its `path_afferents
-        <InputState.path_afferents>` attribute), under the possible influence of `GatingProjections <GatingProjection>`
-        received by the InputState (listed in its `mod_afferents <InputState.mod_afferents>` attribute).  The result
-        is assigned to the InputState's `value <InputState.value>` attribute.
-
-
-
-
+        If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
+        <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the InputState  (listed in
+        its `path_afferents <InputState.path_afferents>` attribute), under the possible influence of
+        `GatingProjections <GatingProjection>` received by the InputState (listed in its `mod_afferents
+        <InputState.mod_afferents>` attribute). The result is assigned to the InputState's `value
+        <InputState.value>` attribute. For example, the default (`LinearCombination` with *SUM* as it **operation**)
+        performs an element-wise (Hadamard) sum of its Projection `values <Projection_Base.value>`, and assigns to
+        `value <InputState.value>` an array that is of the same length as each of the Projection `values
+        <Projection_Base.value>`.  If the InputState receives only one Projection, then any other function can be
+        applied and it will generate a value that is the same length as the Projection's `value <Projection.value>`.
+        However, if the InputState receives more than one Projection and uses a function other than a
+        CombinationFunction, a warning is generated and only the `value <Projection.value>` of the first Projection
+        list in `path_afferents <InputState.path_afferents>` is used by the function, which may generate unexpected
+        results when executing the Mechanism or Composition to which it belongs.
 
     value : value or ndarray
-        the output of the InputState's `function <InputState.function>`, which is the aggregated value of the
-        `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
-        InputState (and listed in its `path_afferents <InputState.path_afferents>` attribute), possibly `modulated
-        <ModulatorySignal_Modulation>` by any `GatingProjections <GatingProjection>` it receives (listed in its
-        `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
-        assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
+        the output of the InputState's `function <InputState.function>`, that is assigned to an item of the owner
+        Mechanism's `variable <Mechanism_Base.variable>` attribute.
+
 
     label : string or number
         the string label that represents the current `value <InputState.value>` of the InputState, according to the
