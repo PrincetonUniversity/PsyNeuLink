@@ -25,7 +25,7 @@ class TestInputStateSpec:
     # InputState SPECIFICATIONS
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 1
+    # TEST 1a
     # Match of default_variable and specification of multiple InputStates by value and string
 
     def test_match_with_default_variable(self):
@@ -39,6 +39,20 @@ class TestInputStateSpec:
         assert T.input_states[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
         # my_mech_2.execute()
+
+    # ------------------------------------------------------------------------------------------------
+    # # TEST 1b
+    # # Match of default_variable and specification of multiple InputStates by value and string
+    #
+    # def test_match_with_default_variable(self):
+    #
+    #     T = TransferMechanism(
+    #         default_variable=[[0], [0]],
+    #         input_states=[[32, 24], 'HELLO']
+    #     )
+    #     assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+    #     assert len(T.input_states) == 2
+    #     assert T.input_states[1].name == 'HELLO'
 
     # # ------------------------------------------------------------------------------------------------
     # # TEST 2

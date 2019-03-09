@@ -928,9 +928,12 @@ class InputState(State_Base):
 
         reference_value is the item of the owner Mechanism's variable to which the InputState is assigned
         """
+        # MODIFIED 3/9/19 OLD:
+        # if reference_value is not None and not iscompatible(reference_value, self.defaults.value):
+        # MODIFIED 3/9/19 NEW: [JDC]
         match_len_option = {kwCompatibilityLength:False}
         if reference_value is not None and not iscompatible(reference_value, self.defaults.value, **match_len_option):
-        # if reference_value is not None and not iscompatible(reference_value, self.defaults.value):
+        # MODIFIED 3/9/19 END
             name = self.name or ""
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
