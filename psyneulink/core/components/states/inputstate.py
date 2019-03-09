@@ -950,6 +950,11 @@ class InputState(State_Base):
             function = LinearCombination(operation=self.combine_function_args[0])
             del self.combine_function_args
         super()._instantiate_function(function=function, context=context)
+        # MODIFIED 3/9/18 NEW: [JDC]
+        self._use_2d_varible = False
+        if isinstance(self.function, CombinationFunction):
+            self._use_2d_variable = True
+        # MODIFIED 3/9/18 END
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -963,7 +968,8 @@ class InputState(State_Base):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
-        If there were no PathwayProjections, ignore and return None
+        If variable is None there are no active PathwayProjections in the Composition being run,
+        return None so that it is ignored in execute method (i.e., not combined with base_value)
         """
 
         if variable is not None:
@@ -971,24 +977,25 @@ class InputState(State_Base):
                                     execution_id=execution_id,
                                     runtime_params=runtime_params,
                                     context=context)
-        # If there were any PathwayProjections:
         else:
             path_proj_values = []
-            for pa in self.path_afferents:
-                if self.afferents_info[pa].is_active_in_composition(self.parameters.context.get(execution_id).composition):
-                    path_proj_values.append(pa.parameters.value.get(execution_id))
+            # Check for Projections that are active in the Composition being run
+            for proj in self.path_afferents:
+                if self.afferents_info[proj].is_active_in_composition(self.parameters.context.get(
+                        execution_id).composition):
+                    path_proj_values.append(proj.parameters.value.get(execution_id))
 
+            # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
+
                 # Combine Projection values
                 variable = np.asarray(path_proj_values)
-                # print('{0} ({2}): {1}'.format(self, variable, self.owner))
                 combined_values = super()._execute(variable=variable,
                                                    execution_id=execution_id,
                                                    runtime_params=runtime_params,
-                                                   context=context
-                                                   )
-
+                                                   context=context)
                 return combined_values
+
             # There were no Projections
             else:
                 # mark combined_values as none, so that (after being assigned to value)
