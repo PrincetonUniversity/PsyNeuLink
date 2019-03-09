@@ -3658,7 +3658,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 input_node_names = ", ".join([i.name for i in input_nodes])
                 raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary with each of its {} INPUT nodes as the keys ({})".
+                    "Inputs to {} must be specified in a dictionary "
+                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
                     format(self.name, len(input_nodes), input_node_names))
         if not callable(inputs):
             # Currently, no validation if 'inputs' arg is a function
