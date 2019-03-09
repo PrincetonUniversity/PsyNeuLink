@@ -1011,7 +1011,6 @@ class InputState(State_Base):
                     path_proj_values.append(proj.parameters.value.get(execution_id))
             # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
-
                 # Combine Projection values
                 variable = np.asarray(path_proj_values)
                 combined_values = super()._execute(variable=variable,
