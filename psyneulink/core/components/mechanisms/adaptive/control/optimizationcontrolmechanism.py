@@ -1005,13 +1005,13 @@ class OptimizationControlMechanism(ControlMechanism):
         #    to insure that their functions are allowed to be other than CombinationFunction,
         #    and that they only receive on MappingProjection each
         #        (since they might not be CombinationFunctions, can only accept variable with one item).
-        for feature in parsed_features:
-            if isinstance(feature, dict):
-                feature['state_type'] = FeatureInputState
-            else:
-                if not isinstance(feature, FeatureInputState):
-                    raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
-                                                            .format(self.name, feature))
+        # for feature in parsed_features:
+        #     if isinstance(feature, dict):
+        #         feature['state_type'] = FeatureInputState
+        #     else:
+        #         if not isinstance(feature, FeatureInputState):
+        #             raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
+        #                                                     .format(self.name, feature))
         return parsed_features
 
     @property

@@ -484,7 +484,8 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombinationFunction
+from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
@@ -940,7 +941,7 @@ class InputState(State_Base):
 
     def _validate_function(self, function):
         # Insure that function is Function.LinearCombination
-        if not is_instance_or_subclass(function, (LinearCombination, Linear, Reduce)):
+        if not is_instance_or_subclass(function, (LinearCombination, Linear, Buffer, Reduce)):
             raise StateError(
                 "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
                     FUNCTION,
