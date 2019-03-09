@@ -641,6 +641,17 @@ class InputState(State_Base):
         received by the InputState, under the possible influence of any `GatingProjections <GatingProjection>` received
         by the InputState.
 
+    function : Function
+        combines the `values <Projection_Base.value>` of the `PathwayProjections <PathwayProjection>`
+        (e.g., `MappingProjections <MappingProjection>`) received by the InputState  (listed in its `path_afferents
+        <InputState.path_afferents>` attribute), under the possible influence of `GatingProjections <GatingProjection>`
+        received by the InputState (listed in its `mod_afferents <InputState.mod_afferents>` attribute).  The result
+        is assigned to the InputState's `value <InputState.value>` attribute.
+
+
+
+
+
     value : value or ndarray
         the output of the InputState's `function <InputState.function>`, which is the aggregated value of the
         `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
