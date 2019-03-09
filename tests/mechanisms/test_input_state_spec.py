@@ -37,16 +37,35 @@ class TestInputStateSpec:
         # # PROBLEM WITH input FOR RUN:
         # my_mech_2.execute()
 
+    # # ------------------------------------------------------------------------------------------------
+    # # TEST 2
+    # # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+    #
+    # # Deprecated this test as length of variable of each InputState should be allowed to vary from
+    # # corresponding item of Mechanism's default variable, so long as each is 1d and then number of InputStates
+    # # is consistent with number of items in Mechanism's default_variable (i.e., its length in axis 0).
+    #
+    # def test_mismatch_with_default_variable_error(self):
+    #
+    #     with pytest.raises(InputStateError) as error_text:
+    #         TransferMechanism(
+    #             default_variable=[[0], [0]],
+    #             input_states=[[32, 24], 'HELLO']
+    #         )
+    #     assert mismatches_default_variable_format_error_text in str(error_text.value)
+
     # ------------------------------------------------------------------------------------------------
     # TEST 2
     # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
 
+    # Replacement for original TEST 2, which insures that the number InputStates specified corresponds to the
+    # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
     def test_mismatch_with_default_variable_error(self):
 
         with pytest.raises(InputStateError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
-                input_states=[[32, 24], 'HELLO']
+                input_states=[[32], [24], 'HELLO']
             )
         assert mismatches_default_variable_format_error_text in str(error_text.value)
 

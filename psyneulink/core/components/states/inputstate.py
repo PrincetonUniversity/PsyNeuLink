@@ -497,7 +497,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible, kwCompatibilityLength
+    append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityType
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords', 'SHADOW_INPUTS',
@@ -930,6 +930,7 @@ class InputState(State_Base):
         """
         match_len_option = {kwCompatibilityLength:False}
         if reference_value is not None and not iscompatible(reference_value, self.defaults.value, **match_len_option):
+        # if reference_value is not None and not iscompatible(reference_value, self.defaults.value):
             name = self.name or ""
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
