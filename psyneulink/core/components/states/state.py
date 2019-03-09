@@ -1546,12 +1546,9 @@ class State_Base(State):
                     self.function.defaults.variable = np.array([self.defaults.variable])
                 elif self.function.defaults.variable.shape != self.defaults.variable.shape:
                     warnings.warn(
-                        'Adding a projection to {0}, but its function {1} defaults.variable '
-                        'cannot be modified to accomodate the new projection'.format(
-                            self,
-                            self.function
-                        )
-                    )
+                        'Adding a projection to {} of {}, but the default variable ({}, len={}) of its function ({}) '
+                        'cannot be modified to accomodate the additional projection (which now must be len={})'.
+                            format(self.name, self.owner.name,self.function.defaults.variable,len(self.function.defaults.variable),self.function, len(projs)))
 
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)

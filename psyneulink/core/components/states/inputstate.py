@@ -482,6 +482,7 @@ import collections
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
@@ -963,6 +964,9 @@ class InputState(State_Base):
         self._use_1d_variable = False
         if not isinstance(self.function, CombinationFunction):
             self._use_1d_variable = True
+            self.function._default_variable_flexibility = DefaultsFlexibility.RIGID
+        else:
+            self.function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
         # MODIFIED 3/9/18 END
 
     def _instantiate_projections(self, projections, context=None):
