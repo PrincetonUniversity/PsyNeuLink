@@ -1010,7 +1010,8 @@ class InputState(State_Base):
             if self._use_1d_variable:
                 return np.array(variable[0])
         except:
-            return variable
+            pass
+        return variable
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
