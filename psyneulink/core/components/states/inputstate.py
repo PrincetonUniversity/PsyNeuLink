@@ -484,7 +484,7 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination
+from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombinationFunction
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
@@ -951,9 +951,9 @@ class InputState(State_Base):
             del self.combine_function_args
         super()._instantiate_function(function=function, context=context)
         # MODIFIED 3/9/18 NEW: [JDC]
-        self._use_2d_varible = False
-        if isinstance(self.function, CombinationFunction):
-            self._use_2d_variable = True
+        self._use_1d_variable = False
+        if not isinstance(self.function, CombinationFunction):
+            self._use_1d_variable = True
         # MODIFIED 3/9/18 END
 
     def _instantiate_projections(self, projections, context=None):
@@ -972,11 +972,14 @@ class InputState(State_Base):
         return None so that it is ignored in execute method (i.e., not combined with base_value)
         """
 
+        # Variable was passed in so use that
         if variable is not None:
             return super()._execute(variable,
                                     execution_id=execution_id,
                                     runtime_params=runtime_params,
                                     context=context)
+
+        # Get variable from Projections
         else:
             path_proj_values = []
             # Check for Projections that are active in the Composition being run
@@ -984,7 +987,6 @@ class InputState(State_Base):
                 if self.afferents_info[proj].is_active_in_composition(self.parameters.context.get(
                         execution_id).composition):
                     path_proj_values.append(proj.parameters.value.get(execution_id))
-
             # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
 
@@ -996,11 +998,19 @@ class InputState(State_Base):
                                                    context=context)
                 return combined_values
 
-            # There were no Projections
+            # There were no active Projections
             else:
                 # mark combined_values as none, so that (after being assigned to value)
                 #    it is ignored in execute method (i.e., not combined with base_value)
                 return None
+
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
+        variable = super()._parse_function_variable(variable, execution_id, context)
+        try:
+            if self._use_1d_variable:
+                return np.array(variable[0])
+        except:
+            return variable
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
