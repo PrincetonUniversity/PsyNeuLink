@@ -15,6 +15,9 @@ from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
+mismatches_more_input_states_than_default_variable_error_text = 'There are more InputStates specified'
+mismatches_fewer_input_states_than_default_variable_error_text = 'There are fewer InputStates specified'
+
 
 class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
@@ -55,19 +58,64 @@ class TestInputStateSpec:
     #     assert mismatches_default_variable_format_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 2
+    # TEST 2a
     # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
 
     # Replacement for original TEST 2, which insures that the number InputStates specified corresponds to the
     # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
-    def test_mismatch_with_default_variable_error(self):
+    def test_fewer_input_states_than_default_variable_error(self):
 
-        with pytest.raises(InputStateError) as error_text:
+        with pytest.raises(StateError) as error_text:
+            TransferMechanism(
+                default_variable=[[0], [0]],
+                input_states=['HELLO']
+            )
+        assert mismatches_fewer_input_states_than_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2b
+    # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+
+    # Replacement for original TEST 2, which insures that the number InputStates specified corresponds to the
+    # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
+    def test_more_input_states_than_default_variable_error(self):
+
+        with pytest.raises(StateError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_states=[[32], [24], 'HELLO']
             )
-        assert mismatches_default_variable_format_error_text in str(error_text.value)
+        assert mismatches_more_input_states_than_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2c
+    # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+
+    # Replacement for original TEST 2, which insures that the number InputStates specified corresponds to the
+    # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
+    def test_mismatch_num_input_states_with_default_variable_error(self):
+
+        with pytest.raises(MechanismError) as error_text:
+            TransferMechanism(
+                default_variable=[[0], [0]],
+                input_states=[[32]]
+            )
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2d
+    # Mismatch between dimensionality of InputState variable owner Mechanism's variable
+
+    # FIX: This needs to be handled better in State._parse_state_spec (~Line 3018):
+    #      seems to be adding the two axis2 values
+    def test_mismatch_dim_input_states_with_default_variable_error(self):
+
+        with pytest.raises(StateError) as error_text:
+            TransferMechanism(
+                default_variable=[[0], [0]],
+                input_states=[[[32],[24]],'HELLO']
+            )
+        assert 'State value' in str(error_text.value) and 'does not match reference_value' in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
