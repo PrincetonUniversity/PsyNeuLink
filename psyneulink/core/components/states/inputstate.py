@@ -939,17 +939,19 @@ class InputState(State_Base):
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
 
-    def _validate_function(self, function):
-        # Insure that function is Function.LinearCombination
-        if not is_instance_or_subclass(function, (LinearCombination, Linear, Buffer, Reduce)):
-            raise StateError(
-                "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
-                    FUNCTION,
-                    self.name,
-                    self.owner.name,
-                    function.componentName
-                )
-            )
+    # # MODIFIED 3/9/18 OLD: [JDC]
+    # def _validate_function(self, function):
+    #     # Insure that function is Function.LinearCombination
+    #     if not is_instance_or_subclass(function, (LinearCombination, Linear, Buffer, Reduce)):
+    #         raise StateError(
+    #             "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
+    #                 FUNCTION,
+    #                 self.name,
+    #                 self.owner.name,
+    #                 function.componentName
+    #             )
+    #         )
+    # # MODIFIED 3/9/18 END
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
