@@ -567,18 +567,19 @@ class InputState(State_Base):
         if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function or method : default LinearCombination(operation=SUM)
-        specifies the function applied to the variable. In most cases, this function aggregates the `values
-        <Projection_Base.value>` of the `Projections <Projection>` received by the InputState, under the possible
-        influence of `GatingProjections <GatingProjection>` received by the InputState.  It must produce a result that
-        has the same format (number and type of elements) as the item of its owner Mechanism's `variable
-        <Mechanism_Base.variable>` to which the InputState has been assigned.
+        specifies the function applied to the variable. The default value combines the `values
+        <Projection_Base.value>` of the `Projections <Projection>` received by the InputState.  Any function
+        can be assigned, however:  a) it must produce a result that has the same format (number and type of elements)
+        as the item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been
+        assigned;  b) if it is not a CombinationFunction, it may produce unpredictable results if the InputState
+        receives more than one Projection (see `function <InputState.function>`.
 
     combine : SUM or PRODUCT : default None
         specifies the **operation** argument used by the default `LinearCombination` function, which determines how the
         `value <Projection.value>` of the InputState's `projections <InputState.projections>` are combined.  This is a
-        convenience argument, that **operation** to be specified without having to specify the function's constructor;
-        accordingly, it assumes that LinearCombination (the default) is used as the InputState's function -- if it
-        conflicts with a specification of **function** an error is generated.
+        convenience argument, that allows the **operation** to be specified without having to specify the
+        LinearCombination function; it assumes that LinearCombination (the default) is used as the InputState's function
+        -- if it conflicts with a specification of **function** an error is generated.
 
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
