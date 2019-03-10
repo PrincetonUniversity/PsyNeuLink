@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
-from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec, OptimizationFunctionError
+from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
+from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 class TestControlMechanisms:
 
     def test_lvoc(self):
