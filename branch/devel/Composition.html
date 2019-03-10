@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.0.0+209.gcc393db documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.0.0+210.g7a45ed1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.0.0+209.gcc393db documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.0.0+210.g7a45ed1 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.0.0+209
+                0.5.0.0+210
               </div>
             
           
@@ -275,7 +275,7 @@ other Nodes and/or Projections are constructed in the same script.</p>
 <span id="id1"></span><h2>Running a Composition<a class="headerlink" href="#running-a-composition" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="inputs">
 <span id="run-inputs"></span><h3><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the INPUT Nodes in
+<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method presents the inputs for each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the INPUT Nodes in
 the <a class="reference internal" href="Run.html#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These input values are specified in the <strong>inputs</strong> argument of a
 Composition’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
 <p>The standard way to specificy inputs is a Python dictionary in which each key is an <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Node and each value is a
@@ -373,7 +373,7 @@ five inputs are provided for each INPUT Node, and num_trials is not specified, t
 <p>The number of inputs specified <strong>must</strong> be the same for all Nodes in the input dictionary (except for any Nodes for
 which only one input is specified). In other words, all of the values in the input dictionary must have the same length
 as each other (or length 1).</p>
-<p>If num_trials is in use, <a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.run" title="psyneulink.core.scheduling.scheduler.Scheduler.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
+<p>If num_trials is in use, <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Node, and num_trials = 7, the system executes seven times. The input values from trials 0
 and 1 are used again on trials 5 and 6, respectively.</p>
 <table border="1" class="docutils">
@@ -716,8 +716,8 @@ See <a class="reference internal" href="Run.html#run-execution-contexts-init"><s
 <div class="section" id="timing">
 <span id="run-timing"></span><h3><em>Timing</em><a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
 <p>When <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is called by a Composition, it calls that Composition’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method once for each
-<a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
-execution.  For each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
+<a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
+execution.  For each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
 executing the Components it specifies in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, until every Component has been executed at least once or
 another <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination condition</span></a> is met.  The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used in combination
 with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute different Components at different time scales.</p>
@@ -839,7 +839,7 @@ as unlabeled arrows.</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x107512a58&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x107ea4c18&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1045,7 +1045,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – <p>When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
 means that each Projections within the cycle actually passes to its receiver its sender’s value from
@@ -1113,7 +1113,7 @@ specified.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>system=None</em>, <em>composition=None</em>, <em>compact_cim: &lt;typecheck.framework.optional object at 0x107e28c88&gt; = None</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x107e28cc0&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_structure" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>system=None</em>, <em>composition=None</em>, <em>compact_cim: &lt;typecheck.framework.optional object at 0x107ea4da0&gt; = None</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x107ea4dd8&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_structure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1270,7 +1270,7 @@ to receive and execute sets of nodes that are eligible to run until termination 
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list } or { <a class="reference internal" href="#"><span class="doc">Composition</span></a> : list }) – a dictionary containing a key-value pair for each Node in the composition that receives inputs from
 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-list corresponds to a certain <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
+list corresponds to a certain <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
 <li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of
 this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
 <li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the Learning execution of
@@ -1285,8 +1285,8 @@ or use default inputs, and select a number of trials with num_trials.</li>
 <li><strong>call_after_time_step</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
 <li><strong>call_before_pass</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
 <li><strong>call_after_pass</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
-<li><strong>call_before_trial</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
-<li><strong>call_after_trial</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
+<li><strong>call_before_trial</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
+<li><strong>call_after_trial</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
 <li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Node: Node Value</em><em>]</em>) – sets the values of nodes before the start of the run. This is useful in cases where a node’s value is
 used before that node executes for the first time (usually due to recurrence or control).</li>
 <li><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>]</em>) – <p>nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
@@ -1453,7 +1453,7 @@ by checking whether any of its nodes are stateful.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.0.0+209.gcc393db',
+            VERSION:'0.5.0.0+210.g7a45ed1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
