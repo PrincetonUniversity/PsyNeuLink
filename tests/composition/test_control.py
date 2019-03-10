@@ -4,7 +4,7 @@ import pytest
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
-from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
+from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator, SampleIteratorError
 class TestControlMechanisms:
 
     def test_lvoc(self):
@@ -504,7 +504,7 @@ class TestSampleIterator:
         assert next(sample_iterator, None) is None
 
     def test_neither_num_nor_step(self):
-        with pytest.raises(OptimizationFunctionError) as error_text:
+        with pytest.raises(SampleIteratorError) as error_text:
             SampleSpec(start=0,
                        stop=10)
         assert "Must specify one of 'step', 'num' or 'function'" in str(error_text.value)

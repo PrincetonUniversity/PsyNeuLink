@@ -18,11 +18,8 @@
 import numpy as np
 
 import typecheck as tc
-from collections import Iterator
+from collections import Iterator, Callable
 from decimal import Decimal, getcontext
-
-
-from psyneulink.core.components.functions.function import is_function_type
 
 
 __all__ = ['SampleSpec', 'SampleIterator']
@@ -32,7 +29,7 @@ __all__ = ['SampleSpec', 'SampleIterator']
 SAMPLE_SPEC_PRECISION = 16
 
 
-class SampleGeneratorError(Exception):
+class SampleIteratorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -123,13 +120,14 @@ class SampleSpec():
         Function to be called on each iteration. Must return one sample.
 
     '''
+
     @tc.typecheck
     def __init__(self,
                  start:tc.optional(tc.any(int, float))=None,
                  stop:tc.optional(tc.any(int, float))=None,
                  step:tc.optional(tc.any(int, float))=None,
                  num:tc.optional(int)=None,
-                 function:tc.optional(is_function_type)=None,
+                 function:tc.optional(callable)=None,
                  precision:tc.optional(int)=None
                  ):
 
@@ -141,7 +139,7 @@ class SampleSpec():
 
         if function is None:
             if start is None or stop is None:
-                raise SampleGeneratorError("If 'function' is not specified, then 'start' and 'stop' must be "
+                raise SampleIteratorError("If 'function' is not specified, then 'start' and 'stop' must be "
                                                 "specified.")
             if num is None and step is not None:
                 num = int(Decimal(1.0) + Decimal(stop - start) / Decimal(step))
@@ -149,22 +147,22 @@ class SampleSpec():
             elif step is None and num is not None:
                 step = (Decimal(stop) - Decimal(start)) / (num - 1)
             elif num is None and step is None:
-                raise SampleGeneratorError("Must specify one of {}, {} or {}."
+                raise SampleIteratorError("Must specify one of {}, {} or {}."
                                                 .format(repr('step'), repr('num'), repr('function')))
             else:
                 if not np.isclose(num, 1.0 + (stop - start) / step):
-                    raise SampleGeneratorError("The {} ({}) and {} ({}} values specified are not comaptible."
+                    raise SampleIteratorError("The {} ({}) and {} ({}} values specified are not comaptible."
                                                     .format(repr('step'), step, repr('num'), num))
 
-        elif is_function_type(function):
+        elif callable(function):
             if start is not None:
-                raise SampleGeneratorError("Only one of {} ({}) and {} ({}} may be specified."
+                raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
                                                 .format(repr('start'), start, repr('function'), function))
             if step is not None:
-                raise SampleGeneratorError("Only one of {} ({}) and {} ({}} may be specified."
+                raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
                                                 .format(repr('step'), step, repr('function'), function))
         else:
-            raise SampleGeneratorError("{} is not a valid SampleSpec function."
+            raise SampleIteratorError("{} is not a valid SampleSpec function."
                                             .format(function))
 
         # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
@@ -285,7 +283,7 @@ class SampleIterator(Iterator):
                     getcontext().prec = _global_precision
                     return return_value
 
-            elif is_function_type(specification.function):
+            elif callable(specification.function):
                 self.start = 0
                 self.stop = None
                 self.step = 1

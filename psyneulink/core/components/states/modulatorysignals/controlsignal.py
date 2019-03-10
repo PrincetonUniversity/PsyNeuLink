@@ -324,7 +324,7 @@ from psyneulink.core.globals.parameters import Parameter, get_validator_by_funct
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
-from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
+from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
@@ -755,7 +755,6 @@ class ControlSignal(ModulatorySignal):
     })
     #endregion
 
-
     @tc.typecheck
     def __init__(self,
                  owner=None,
@@ -894,6 +893,7 @@ class ControlSignal(ModulatorySignal):
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
         if ALLOCATION_SAMPLES in request_set:
+
             allocation_samples = request_set[ALLOCATION_SAMPLES]
             if isinstance(allocation_samples, list):
                 if iscompatible(allocation_samples, **{kwCompatibilityType: list,
@@ -934,6 +934,7 @@ class ControlSignal(ModulatorySignal):
 
     def _instantiate_allocation_samples(self, context=None):
         '''Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
+
         a = self.paramsCurrent[ALLOCATION_SAMPLES]
 
         # KDM 12/14/18: below is a temporary fix that exists to bypass a validation loop
