@@ -18,8 +18,10 @@
 import numpy as np
 
 import typecheck as tc
-from collections import Iterator, Callable
+from collections import Iterator
+from inspect import isclass
 from decimal import Decimal, getcontext
+from numbers import Number
 
 
 __all__ = ['SampleSpec', 'SampleIterator']
@@ -32,6 +34,21 @@ SAMPLE_SPEC_PRECISION = 16
 class SampleIteratorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+def _validate_function(source, function):
+    '''Ensure function specification is appropriate for SampleIterator'''
+    source_name = source.__class__.__name__
+    try:
+        result = function()
+    except:
+        raise SampleIteratorError("Specification of function for {} ({}) could not be called as a function".
+                                  format(source_name, function.__class__.__name__))
+    if result is None:
+        raise SampleIteratorError("Function specified for {} ({}) does not return a result)".
+                                  format(source_name, repr(function)))
+    if not isinstance(result, Number):
+        raise SampleIteratorError("Function specified for {} ({}) does not return a number)".
+                                  format(source_name, repr(function)))
 
 
 class SampleSpec():
@@ -155,6 +172,8 @@ class SampleSpec():
                                                     .format(repr('step'), step, repr('num'), num))
 
         elif callable(function):
+            _validate_function(self, function)
+
             if start is not None:
                 raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
                                                 .format(repr('start'), start, repr('function'), function))
@@ -162,8 +181,8 @@ class SampleSpec():
                 raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
                                                 .format(repr('step'), step, repr('function'), function))
         else:
-            raise SampleIteratorError("{} is not a valid SampleSpec function."
-                                            .format(function))
+            raise SampleIteratorError("{} is not a valid function for {}."
+                                            .format(function, self.__name__))
 
         # FIX: ELIMINATE WHEN UPGRADING TO PYTHON 3.5.2 OR 3.6, (AND USING ONE OF THE TYPE VERSIONS COMMENTED OUT ABOVE)
         # Validate entries of specification
@@ -178,22 +197,29 @@ class SampleSpec():
         getcontext().prec = _global_precision
 
 
+allowable_specs = (list, np.array, range, np.arange, callable, SampleSpec)
+
 class SampleIterator(Iterator):
     """
     SampleIterator(               \
     specification                 \
     )
 
-    Creates an iterator that returns the next sample from a sequence on each call to `next <SampleIterator.__next__>`.
+    Create an iterator that returns the next sample from a sequence on each call to `next <SampleIterator.__next__>`.
+    (e.g., when next(<SampleIterator>) is called)
 
-    The pattern of the sequence depends on the **specification**, which may be a list, nparray, or SampleSpec. Most of
-    the patterns depend on the "current_step," which is incremented on each iteration, and set to zero when the
-    iterator is reset.
+    The pattern of the sequence depends on the **specification**, which may be a list, nparray, range,
+    function, or a SampleSpec. Most of the patterns depend on the "current_step," which is incremented on each
+    iteration, and set to zero when the iterator is reset.
 
     +--------------------------------+-------------------------------------------+------------------------------------+
     | **Specification**              |  **what happens on each iteration**       | **StopIteration condition**        |
     +--------------------------------+-------------------------------------------+------------------------------------+
-    | list, nparray                  | look up the item with index current_step  | list/array ends                    |
+    | list, nparray                  | look up the item with index current_step  | list/array                         |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | range, np.arange               | start + step*current_step                 | range stop value is reached        |
+    +--------------------------------+-------------------------------------------+------------------------------------+
+    | callable                       | call callable                             | iteration does not stop            |
     +--------------------------------+-------------------------------------------+------------------------------------+
     | SampleSpec(start, stop, step)  | start + step*current_step                 | current_step = num or value > stop |
     +--------------------------------+-------------------------------------------+------------------------------------+
@@ -213,13 +239,14 @@ class SampleIterator(Iterator):
 
     @tc.typecheck
     def __init__(self,
-                 specification:tc.any(list, np.ndarray, range, SampleSpec)):
+                 specification:tc.any(*allowable_specs)):
+                 # specification:tc.any(list, np.array, range, callable, SampleSpec)):
         '''
 
         Arguments
         ---------
 
-        specification : list or SampleSpec
+        specification : list, array, range, callable or SampleSpec
             specifies what to use for `generate_current_value <SampleIterator.generate_current_value>`.
 
         Attributes
@@ -251,6 +278,13 @@ class SampleIterator(Iterator):
 
         if isinstance(specification, range):
             specification = list(specification)
+
+        elif callable(specification):
+            if isclass(specification):
+                specification = specification()
+            _validate_function(self, specification)
+
+            specification = SampleSpec(function=specification)
 
         if isinstance(specification, list):
             self.start = specification[0]
@@ -302,8 +336,9 @@ class SampleIterator(Iterator):
 
 
         else:
-            assert False, 'PROGRAM ERROR: {} argument of {} must be a list or {}'.\
-                          format(repr('specification'), self.__class__.__name__, SampleSpec.__name__)
+            assert False, 'PROGRAM ERROR: {} argument of {} must be one of the following: {}'.\
+                          format(repr('specification'), self.__class__.__name__,
+                                 (', ').join([i.__name__ for i in allowable_specs]))
 
         self.current_step = 0
         self.head = self.start
