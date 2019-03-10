@@ -535,7 +535,7 @@ class TestSampleIterator:
         spec = SampleSpec(function=fun)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589]
+        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
 
         for i in range(5):
             assert np.allclose(next(sample_iterator), expected[i])
@@ -546,7 +546,7 @@ class TestSampleIterator:
                           num=4)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967]
+        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
 
         for i in range(4):
             assert np.allclose(next(sample_iterator), expected[i])
