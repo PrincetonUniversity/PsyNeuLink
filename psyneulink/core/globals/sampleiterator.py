@@ -31,10 +31,6 @@ __all__ = ['SampleSpec', 'SampleIterator']
 SAMPLE_SPEC_PRECISION = 16
 
 
-class SampleIteratorError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
 def _validate_function(source, function):
     '''Ensure function specification is appropriate for SampleIterator'''
     source_name = source.__class__.__name__
@@ -49,6 +45,11 @@ def _validate_function(source, function):
     if not isinstance(result, Number):
         raise SampleIteratorError("Function specified for {} ({}) does not return a number)".
                                   format(source_name, repr(function)))
+
+
+class SampleIteratorError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
 
 class SampleSpec():
