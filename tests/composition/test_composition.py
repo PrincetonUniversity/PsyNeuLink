@@ -454,9 +454,6 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.ORIGIN)
         assert A in comp.get_nodes_by_role(NodeRole.TERMINAL)
         assert B in comp.get_nodes_by_role(NodeRole.TERMINAL)
-        # KAM 1/25/19 removed CYCLE and RECURRENT_INIT roles from _analyze_graph and docs
-        # assert A in comp.get_nodes_by_role(NodeRole.CYCLE)
-        # assert B in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
     # (A)->(B)<->(C)<-(D)
     @pytest.mark.skip
@@ -477,9 +474,6 @@ class TestAnalyzeGraph:
         comp._analyze_graph()
         assert A in comp.get_nodes_by_role(NodeRole.ORIGIN)
         assert D in comp.get_nodes_by_role(NodeRole.ORIGIN)
-        assert B in comp.get_nodes_by_role(NodeRole.CYCLE)
-        assert C in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
-
 
 class TestGraphCycles:
 
@@ -1464,15 +1458,12 @@ class TestGetMechanismsByRole:
         comp._add_node_role(mechs[0], NodeRole.ORIGIN)
         comp._add_node_role(mechs[1], NodeRole.INTERNAL)
         comp._add_node_role(mechs[2], NodeRole.INTERNAL)
-        comp._add_node_role(mechs[3], NodeRole.CYCLE)
 
         for role in list(NodeRole):
             if role is NodeRole.ORIGIN:
                 assert comp.get_nodes_by_role(role) == [mechs[0]]
             elif role is NodeRole.INTERNAL:
                 assert comp.get_nodes_by_role(role) == [mechs[1], mechs[2]]
-            elif role is NodeRole.CYCLE:
-                assert comp.get_nodes_by_role(role) == [mechs[3]]
             else:
                 assert comp.get_nodes_by_role(role) == []
 

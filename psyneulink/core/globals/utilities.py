@@ -1531,24 +1531,16 @@ class NodeRole(Enum):
         A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
         Composition may have many `OUTPUT` Nodes.
 
+    - INTERNAL
+        A Node that is neither `ORIGIN` nor `TERMINAL`
+
 
     """
     ORIGIN = 0
-    INTERNAL = 1
-    CYCLE = 2
-    INITIALIZE_CYCLE = 3
-    TERMINAL = 4
-    SINGLETON = 5
-    MONITORED = 6
-    LEARNING = 7
-    TARGET = 8
-    RECURRENT_INIT = 9
-    OBJECTIVE = 10
-    INPUT = 11
-    OUTPUT = 12
-    RESULT = 13
-    MODEL_BASED_OPTIMIZER = 14
-
+    INPUT = 1
+    TERMINAL = 2
+    OUTPUT = 3
+    INTERNAL = 4
 
 def unproxy_weakproxy(proxy):
     """
