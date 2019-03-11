@@ -28,6 +28,8 @@ import itertools
 import numpy as np
 import typecheck as tc
 
+import elfi
+
 from typing import Iterator
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
@@ -40,6 +42,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import call_with_pruned_args
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
+           'ParamEstimationFunction',
            'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',
            'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE', 'SampleSpec'
            ]
@@ -1989,3 +1992,246 @@ class GaussianProcess(OptimizationFunction):
         # FRED: YOUR CODE HERE;    THIS IS THE search_termination_function METHOD OF OptimizationControlMechanism (
         # i.e., PARENT)
         return iteration==2# [BOOLEAN, SPECIFIYING WHETHER TO END THE SEARCH/SAMPLING PROCESS]
+
+
+class ParamEstimationFunction(OptimizationFunction):
+    """
+    ParamEstimationFunction(                 \
+        default_variable=None,       \
+        objective_function=None,     \
+        direction=MAXIMIZE,          \
+        max_iterations=1000,         \
+        save_samples=False,          \
+        save_values=False,           \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None                   \
+        )
+
+    Use likelihood free inference to estimate values of parameters for a composition
+    so that it best matches some provided ground truth data.
+
+    Arguments
+    ---------
+
+    default_variable : list or ndarray : default None
+        specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
+        `objective_function <ParamEstimationFunction.objective_function>`.
+
+    objective_function : function or method
+        specifies function used to evaluate sample in each iteration of the `optimization process
+        <ParamEstimationFunction_Procedure>`; it must be specified and must return a scalar value.
+
+    search_space : list or array
+        specifies bounds of the samples used to evaluate `objective_function <ParamEstimationFunction.objective_function>`
+        along each dimension of `variable <ParamEstimationFunction.variable>`;  each item must be a tuple the first element
+        of which specifies the lower bound and the second of which specifies the upper bound.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        specifies the direction of optimization:  if *MAXIMIZE*, the highest value of `objective_function
+        <ParamEstimationFunction.objective_function>` is sought;  if *MINIMIZE*, the lowest value is sought.
+
+    max_iterations : int : default 1000
+        specifies the maximum number of times the `optimization process<ParamEstimationFunction_Procedure>` is allowed to
+        iterate; if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
+
+    save_samples : bool
+        specifies whether or not to return all of the samples used to evaluate `objective_function
+        <ParamEstimationFunction.objective_function>` in the `optimization process <ParamEstimationFunction_Procedure>`
+        (i.e., a copy of the `search_space <ParamEstimationFunction.search_space>`.
+
+    save_values : bool
+        specifies whether or not to save and return the values of `objective_function <ParamEstimationFunction.objective_function>`
+        for all samples evaluated in the `optimization process <ParamEstimationFunction_Procedure>`.
+
+    Attributes
+    ----------
+
+    variable : ndarray
+        template for sample evaluated by `objective_function <ParamEstimationFunction.objective_function>`.
+
+    objective_function : function or method
+        function used to evaluate sample in each iteration of the `optimization process <ParamEstimationFunction_Procedure>`.
+
+    search_space : list or array
+        contains tuples specifying bounds within which each dimension of `variable <ParamEstimationFunction.variable>` is
+        sampled, and used to evaluate `objective_function <ParamEstimationFunction.objective_function>` in iterations of the
+        `optimization process <ParamEstimationFunction_Procedure>`.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        determines the direction of optimization:  if *MAXIMIZE*, the greatest value of `objective_function
+        <ParamEstimationFunction.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+
+    iteration : int
+        the currention iteration of the `optimization process <ParamEstimationFunction_Procedure>`.
+
+    max_iterations : int
+        determines the maximum number of times the `optimization process<ParamEstimationFunction_Procedure>` is allowed to iterate;
+        if exceeded, a warning is issued and the function returns the optimal sample of those evaluated.
+
+    save_samples : True
+        determines whether or not to save and return all samples evaluated by the `objective_function
+        <ParamEstimationFunction.objective_function>` in the `optimization process <ParamEstimationFunction_Procedure>` (if the process
+        completes, this should be identical to `search_space <ParamEstimationFunction.search_space>`.
+
+    save_values : bool
+        determines whether or not to save and return the value of `objective_function
+        <ParamEstimationFunction.objective_function>` for all samples evaluated in the `optimization process <ParamEstimationFunction_Procedure>`.
+    """
+
+    componentName = "ParamEstimationFunction"
+
+    class Parameters(OptimizationFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ParamEstimationFunction.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+                    :read only: True
+
+                direction
+                    see `direction <ParamEstimationFunction.direction>`
+
+                    :default value: `MAXIMIZE`
+                    :type: str
+
+                save_samples
+                    see `save_samples <ParamEstimationFunction.save_samples>`
+
+                    :default value: True
+                    :type: bool
+
+                save_values
+                    see `save_values <ParamEstimationFunction.save_values>`
+
+                    :default value: True
+                    :type: bool
+
+        """
+        variable = Parameter([[0], [0]], read_only=True)
+        save_samples = True
+        save_values = True
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 search_space=None,
+                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
+                 save_values:tc.optional(bool)=False,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 **kwargs):
+
+        self._return_values = save_values
+        self._return_samples = save_values
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(params=params)
+
+        super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         search_function=None,
+                         search_space=search_space,
+                         search_termination_function=None,
+                         save_samples=True,
+                         save_values=True,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
+
+    def _make_simulator_function(self):
+
+        if self.objective_function is None:
+            return None
+
+        if type(self.objective_function(np.array([0]))) is int:
+            return None
+
+        def simulator(**kwargs):
+
+            # If kwargs None then the simulator has been called without keyword argumets.
+            # This means something has gone wrong because our arguments are the parameters
+            # (or control signals in PsyNeuLink lingo) we are trying to estimate.
+            if kwargs is None:
+                raise ValueError("No arguments passed to simulator!")
+
+            # Get the batch size and random state. ELFI passes these arguments around
+            # for controlling the number of simulation samples to generate (batch_size)
+            # and the numpy random state (random_state) to use during generation.
+            batch_size = kwargs.pop('batch_size', 1)
+            random_state = kwargs.pop('batch_size', None)
+
+            # Make sure we still have some arguments after popping ELFI's crap (batch_size, randon_state)
+            if not kwargs:
+                raise ValueError("No arguments passed to simulator!")
+
+            # The control signals (parameter values) of the composition are passed
+            # in as arguments. We must set these parameter values before running the
+            # simulation\composition. The order of the arguments is the same as the
+            # order for the control signals. So the simulator function will have the
+            # same argument order as the control signals as well. Note: this will not
+            # work in Python 3.5 because dict's have pseudo-random order.
+            control_allocation = list(kwargs.values())
+
+            # Run batch_size simulations of the PsyNeuLink composition
+            results = []
+            for i in range(batch_size):
+                result = self.objective_function(control_allocation)
+                results.append(result)
+
+            # Turn this list of numpy arrays into a single numpy array with batch_size rows.
+            # This assumes only one result per simulation run.
+            results = np.stack([result[0] for result in results])
+            return results
+
+        return simulator
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the sample that yields the optimal value of `objective_function <ParamEstimationFunction.objective_function>`,
+        and possibly all samples evaluated and their corresponding values.
+
+        Optimal value is defined by `direction <ParamEstimationFunction.direction>`:
+        - if *MAXIMIZE*, returns greatest value
+        - if *MINIMIZE*, returns least value
+
+        Returns
+        -------
+
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <ParamEstimationFunction.objective_function>`, depending on `direction <ParamEstimationFunction.direction>`, and the
+            second array contains the value of the function for that sample. If `save_samples
+            <ParamEstimationFunction.save_samples>` is `True`, first list contains all the values sampled in the order they were
+            evaluated; otherwise it is empty.  If `save_values <ParamEstimationFunction.save_values>` is `True`, second list
+            contains the values returned by `objective_function <ParamEstimationFunction.objective_function>` for all the
+            samples in the order they were evaluated; otherwise it is empty.
+        '''
+
+        return_all_samples = return_all_values = []
+
+        return_optimal_sample = (0.2, 0.6)
+        return_optimal_value= 0.0
+
+        sim_func = self._make_simulator_function()
+
+        if sim_func is None:
+            return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
+
+        return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
