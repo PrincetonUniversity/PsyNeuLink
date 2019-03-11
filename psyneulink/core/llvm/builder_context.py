@@ -196,7 +196,7 @@ class LLVMBuilderContext:
             cond_gen.get_condition_struct_type().as_pointer()))
         llvm_func = ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
-        context, params, comp_in, data, cond = llvm_func.args
+        context, params, comp_in, data_arg, cond = llvm_func.args
         for a in llvm_func.args:
             a.attributes.add('nonnull')
             a.attributes.add('noalias')
@@ -210,6 +210,13 @@ class LLVMBuilderContext:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             params = builder.alloca(const_params.type)
             builder.store(const_params, params)
+
+        if "alloca_data" in debug_env:
+            data = builder.alloca(data_arg.type.pointee)
+            data_vals = builder.load(data_arg)
+            builder.store(data_vals, data)
+        else:
+            data = data_arg
 
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM);
@@ -311,6 +318,10 @@ class LLVMBuilderContext:
         output_cim_w = composition._get_node_wrapper(composition.output_CIM);
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.call(output_cim_f, [context, params, comp_in, data, data])
+
+        if "alloca_data" in debug_env:
+            data_vals = builder.load(data)
+            builder.store(data_vals, data_arg)
 
         # Bump run counter
         cond_gen.bump_ts(builder, cond, (1, 0, 0))
