@@ -13,10 +13,12 @@ Welcome to PsyNeuLink |logo|
 ============================
 
 * `Purpose`
+* `What PsyNeuLink IS <What_PsyNeuLink_IS>`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
 * `Overview`
 * `Installation`
 * `Tutorial`
+* `Help and Issues <Help_and_Issues>`
 * `Contributors`
 * `Indices_and_Tables`
 
@@ -46,7 +48,12 @@ concise, executable, and easy to interpret form, that can be shared, and compare
 community.
 
 
-PsyNeuLink is:
+.. _What_PsyNeuLink_IS:
+
+What PsyNeuLink **IS**
+----------------------
+
+It is:
 
  - *open source*, freeing users of the costs or restrictions associated with proprietary software.
  ..
@@ -59,9 +66,9 @@ PsyNeuLink is:
  - *extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
    individual components, such as:
 
-    * Neuron (biophysically realistic models of neuronal function)
-    * TensorFlow (ODE's, deep learning);
+    * Neuron and Nengo (biophysically realistic models of neuronal function)
     * Emergent (broad class of neurally-plausible connectionist models);
+    * Pytorch and TensorFlow (ODE's, deep learning);
     * ACT-R (symbolic, production system models).
 
 .. note::
@@ -74,33 +81,37 @@ PsyNeuLink is:
 What PsyNeuLink is **NOT**
 --------------------------
 
-PsyNeuLink is well suited to the creation of simple to moderately complex models, and for the integration of
-disparate existing models into a single, integrated system in which interactions among them can be examined.
-While it is fully general, and can be used to implement virtually any type of model, in its current form it is
-less well suited to certain kinds of efforts, that involve massively large computations and/or specialized functions
-and data types that it currently does not support, such as:
+The longterm goal of PsyNeuLink is to provide an environment that integrates comptutational modeling of brain function
+and behavior at all levels of analysis.  While it is designed to be fully general, and can in principle be used to
+implement models at any level, it is still under development, and current efficiency consideration make it more
+suitable for some of forms of modeling than others. In its present form, it is well suited to the creation of
+simple to moderately complex models, and for the integration of disparate models into a single envinroment, while in
+it is presently less well suited to efforts involving massively large computations, such as:
 
  - extensive model fitting
  - large scale simulations
- - biophysically-realistic models of individual neurons
+ - highly detailed biophysical models of neurons or neuronal populations
 
-Other packages that are better suited to such applications are:
-`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ and
-`TensorFlow <https://www.tensorflow.org>`_ (for neural network models);
+Other packages currently better suited to such applications are:
+`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ for biologically-inspired neural network models
+`Pytorch <https://pytorch.org>`_ and `TensorFlow <https://www.tensorflow.org>`_ (for deep learning models);
 `HDDM <http://ski.clps.brown.edu/hddm_docs/>`_ (for Drift Diffusion Models);
 `ACT-R <http://act-r.psy.cmu.edu>`_ (for production system models);
 `Genesis <http://www.genesis-sim.org>`_,
 `Neuron <https://www.neuron.yale.edu/neuron/>`_,
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
 
-These packages are good for elaborate and detailed models of a particular form.
-In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
-possible, with the ability to integrate components constructed in other packages (including some of the ones listed
-above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Three priorities for continued
-development are the acceleration of PsyNeuLink, using just-in-time compilation methods, parallelization and adaptation
-to FPGA hardware; integration of tools for model analysis (such as those implemented in HDDM); and the implementation
- of a graphic interface for the construction of models and realtime display of their execution.
+These packages are good for elaborate and detailed models of a particular form. In contrast, the focus in designing
+PsyNeuLink has been to make it as flexible and easy to use as possible, with the ability to integrate components
+constructed in other packages (including some of the ones listed above) into a single environment.  These are
+characteristics that are often (at least in the initial stages of development) in tension with efficiency (think:
+interpreted vs. compiled).
+
+That said, priorities for ongoing development of PsyNeuLink are:  i) acceleration, using just-in-time
+compilation methods and parallelization; ii) enhancement of the API to facilitate wrapping modules from
+other packages for integration into the PsyNeuLink environment (examples currently exist for Pytorch and Emergent); iii)
+integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the
+ construction of models and realtime display of their execution.
 
 .. _Overview:
 
@@ -142,6 +153,7 @@ If you have trouble installing the package, or run into other problems, please c
 
 .. _Tutorial:
 
+
 Tutorial
 --------
 
@@ -182,11 +194,22 @@ Once the notebook opens in your browser, navigate to the location where you save
 click on "PsyNeuLink Tutorial.ipynb".
 
 
+.. _Help_and_Issues:
+
+Help and Issue Reporting
+------------------------
+
+Help is available at psyneulinkhelp@princeton.edu.
+
+Issues can be reported at https://github.com/PrincetonUniversity/PsyNeuLink/issues.
+
 
 .. _Contributors:
 
 Contributors
 ------------
+
+*(in alphabetical order)*
 
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
