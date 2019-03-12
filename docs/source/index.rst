@@ -44,8 +44,7 @@ integrate them to simluate system-level interactions.  It provides a suite of co
 implementing models of various forms of processing, learning, and control, and its Library includes examples that
 combine these components to implement published models.  As an open source project, its suite of components is meant
 to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
-concise, executable, and easy to interpret form, that can be shared, and compared by the scientific
-community.
+concise, executable, and easy to interpret form, that can be shared, compared, and extended by the scientific community.
 
 
 .. _What_PsyNeuLink_IS:
