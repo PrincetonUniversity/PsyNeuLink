@@ -3652,12 +3652,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary with the INPUT node({}) "
-                    "as its only key".format(self.name, next(iter(input_nodes)).name))
+                    "Inputs to {} must be specified in a list or in a dictionary "
+                    "with the INPUT node ({}) as its only key".
+                        format(self.name, next(iter(input_nodes)).name))
             else:
+                input_node_names = ", ".join([i.name for i in input_nodes])
                 raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
-                    "nodes.".format(self.name, len(input_nodes)))
+                    "Inputs to {} must be specified in a dictionary "
+                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
+                    format(self.name, len(input_nodes), input_node_names))
         if not callable(inputs):
             # Currently, no validation if 'inputs' arg is a function
             inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
