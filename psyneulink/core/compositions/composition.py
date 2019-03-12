@@ -1657,21 +1657,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        # First check for ORIGIN nodes:
+        # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
+
         # Nodes at the beginning of the consideration queue are ORIGIN
         if len(self.scheduler_processing.consideration_queue) > 0:
 
             for node in self.scheduler_processing.consideration_queue[0]:
                 self._add_node_role(node, NodeRole.ORIGIN)
 
-        # First check for TERMINAL nodes:
-        # Nodes at the beginning of the consideration queue are TERMINAL
-
+        # Nodes at the end of the consideration queue are TERMINAL
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
                 self._add_node_role(node, NodeRole.TERMINAL)
 
-        # loop over all nodes in the Composition to identify additional roles
+        # Loop over all nodes in the Composition to identify additional NodeRoles
         for node in self.nodes:
 
             # Second check for ORIGIN nodes:
