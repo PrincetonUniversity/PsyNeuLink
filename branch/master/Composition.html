@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.2.0+2.gfa5d042 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.2.1+1.g62f9a09 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.2.0+2.gfa5d042 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.5.2.1+1.g62f9a09 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="LearningFunctions" href="LearningFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.5.2.0+2
+                0.5.2.1+1
               </div>
             
           
@@ -275,7 +275,7 @@ other Nodes and/or Projections are constructed in the same script.</p>
 <span id="id1"></span><h2>Running a Composition<a class="headerlink" href="#running-a-composition" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="inputs">
 <span id="run-inputs"></span><h3><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the INPUT Nodes in
+<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method presents the inputs for each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the INPUT Nodes in
 the <a class="reference internal" href="Run.html#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These input values are specified in the <strong>inputs</strong> argument of a
 Composition’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
 <p>The standard way to specificy inputs is a Python dictionary in which each key is an <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Node and each value is a
@@ -373,7 +373,7 @@ five inputs are provided for each INPUT Node, and num_trials is not specified, t
 <p>The number of inputs specified <strong>must</strong> be the same for all Nodes in the input dictionary (except for any Nodes for
 which only one input is specified). In other words, all of the values in the input dictionary must have the same length
 as each other (or length 1).</p>
-<p>If num_trials is in use, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
+<p>If num_trials is in use, <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Node, and num_trials = 7, the system executes seven times. The input values from trials 0
 and 1 are used again on trials 5 and 6, respectively.</p>
 <table border="1" class="docutils">
@@ -716,8 +716,8 @@ See <a class="reference internal" href="Run.html#run-execution-contexts-init"><s
 <div class="section" id="timing">
 <span id="run-timing"></span><h3><em>Timing</em><a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
 <p>When <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is called by a Composition, it calls that Composition’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method once for each
-<a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
-execution.  For each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
+<a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
+execution.  For each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
 executing the Components it specifies in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, until every Component has been executed at least once or
 another <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination condition</span></a> is met.  The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used in combination
 with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute different Components at different time scales.</p>
@@ -839,7 +839,7 @@ as unlabeled arrows.</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x107d191d0&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>model_based_optimizer=None</em>, <em>enable_model_based_optimizer=None</em>, <em>model_based_optimizer_mode: &lt;typecheck.tc_predicates.enum object at 0x1074471d0&gt; = 'after'</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1045,7 +1045,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="MaskedMappingProjection.html#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – <p>When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
 means that each Projections within the cycle actually passes to its receiver its sender’s value from
@@ -1113,7 +1113,7 @@ specified.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions=False</em>, <em>show_values=False</em>, <em>use_labels=False</em>, <em>show_headers=False</em>, <em>show_role=False</em>, <em>system=None</em>, <em>composition=None</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_structure" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>system=None</em>, <em>composition=None</em>, <em>compact_cim: &lt;typecheck.framework.optional object at 0x107447358&gt; = None</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x107447390&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_structure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1127,23 +1127,22 @@ by <a class="reference internal" href="System.html#psyneulink.core.components.sy
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>show_functions</strong> (<em>bool : default False</em>) – specifies whether or not to show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and each of its
-States in the record (enclosed in parentheses).</li>
-<li><strong>show_values</strong> (<em>bool : default False</em>) – specifies whether or not to show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States
-in the record (prefixed by “=”).</li>
-<li><strong>use_labels</strong> (<em>bool : default False</em>) – specifies whether or not to use labels for values if <strong>show_values</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>; labels must be specified
-in the <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> (for InputState values) and
-<code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code> (for OutputState values), otherwise the value is used.</li>
-<li><strong>show_headers</strong> (<em>bool : default False</em>) – specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
-(shown in caps).</li>
-<li><strong>show_role</strong> (<em>boofl : default False</em>) – specifies whether or not to show the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> of the Mechanism in the <a class="reference internal" href="System.html"><span class="doc">System</span></a> specified
-in the <strong>system</strong> argument (shown in caps and enclosed in square brackets);
-if <strong>system</strong> is not specified, show_roles is ignored.</li>
+<li><strong>show_functions</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and each of its States.</li>
+<li><strong>show_mech_function_params</strong> (<em>bool : default False</em>) – show the parameters of the Mechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if <strong>show_functions</strong> is True.</li>
+<li><strong>show_state_function_params</strong> (<em>bool : default False</em>) – show parameters for the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism’s States if <strong>show_functions</strong> is
+True).</li>
+<li><strong>show_values</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States (prefixed by “=”).</li>
+<li><strong>use_labels</strong> (<em>bool : default False</em>) – use labels for values if <strong>show_values</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>; labels must be specified in the <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> (for InputState values) and <code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code> (for OutputState values); otherwise it is ignored.</li>
+<li><strong>show_headers</strong> (<em>bool : default False</em>) – show the Mechanism, InputState, ParameterState and OutputState headers.</li>
+<li><strong>show_roles</strong> (<em>bool : default False</em>) – show the <code class="xref any docutils literal"><span class="pre">roles</span></code> of each Mechanism in the <a class="reference internal" href="#"><span class="doc">Composition</span></a>.</li>
 <li><strong>system</strong> (<em>System : default None</em>) – specifies the <a class="reference internal" href="System.html"><span class="doc">System</span></a> (to which the Mechanism must belong) for which to show its role (see <strong>roles</strong>);
-if this is not specified, the <strong>show_role</strong> argument is ignored.</li>
+if this is not specified, the <strong>show_roles</strong> argument is ignored.</li>
+<li><strong>composition</strong> (<em>Composition : default None</em>) – specifies the <a class="reference internal" href="#"><span class="doc">Composition</span></a> (to which the Mechanism must belong) for which to show its role (see <strong>roles</strong>);
+if this is not specified, the <strong>show_roles</strong> argument is ignored.</li>
+<li><strong>compact_cim</strong> (<em>INPUT</em> or <em>OUTUPT</em> : default None) – specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.</li>
 <li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – <p>‘pdf’: generate and open a pdf with the visualization;</p>
 <p>’jupyter’: return the object (ideal for working in jupyter/ipython notebooks)</p>
-<p>’struct’: return a string that specifies the structure of the record shape,
+<p>’struct’: return a string that specifies the structure of a mechanism,
 for use in a GraphViz node specification.</p>
 </li>
 </ul>
@@ -1167,19 +1166,23 @@ for use in a GraphViz node specification.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>show_node_structure</strong> (<em>bool</em><em>, </em><em>VALUES</em><em>, </em><em>FUNCTIONS</em><em> or </em><em>ALL : default False</em>) – <p>specifies whether or not to show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the graph, including its
-<code class="xref any docutils literal"><span class="pre">States</span></code>;  can have the following settings:</p>
+<li><strong>show_node_structure</strong> (<em>bool</em><em>, </em><em>VALUES</em><em>, </em><em>FUNCTIONS</em><em> or </em><em>ALL : default False</em>) – <p>show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the graph, including its <code class="xref any docutils literal"><span class="pre">States</span></code>;  can have the
+following settings:</p>
 <ul>
-<li><code class="xref any docutils literal"><span class="pre">True</span></code> – shows States of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its States.</li>
-<li><em>VALUES</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States.</li>
-<li><em>LABELS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States, using any labels for the values of InputStates and
+<li><code class="xref any docutils literal"><span class="pre">True</span></code> – show States of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its States.</li>
+<li><em>VALUES</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States.</li>
+<li><em>LABELS</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States, using any labels for the values of InputStates and
 OutputStates specified in the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> and
 <code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code>, respectively.</li>
-<li><em>FUNCTIONS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its InputStates and OutputStates.</li>
-<li><em>ROLES</em> – shows the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> of the Mechanism in the System in square brackets
+<li><em>FUNCTIONS</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its InputStates and OutputStates.</li>
+<li><em>MECH_FUNCTION_PARAMS_</em> – show the parameters of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for each
+Mechanism in the Composition (only applies if <em>FUNCTIONS</em> is True).</li>
+<li><em>STATE_FUNCTION_PARAMS_</em> – show the parameters of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for each
+State of each Mechanism in the Composition (only applies if <em>FUNCTIONS</em> is True).</li>
+<li><em>ROLES</em> – show the <code class="xref any docutils literal"><span class="pre">role</span></code> of the Mechanism in the Composition
 (but not any of the other information;  use <em>ALL</em> to show ROLES with other information).</li>
-<li><em>ALL</em> – shows both <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and
-its States (using labels for the values, if specified;  see above).</li>
+<li><em>ALL</em> – shows the role, <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
+Mechanisms in the <a class="reference internal" href="#"><span class="doc">Composition</span></a> and their <code class="xref any docutils literal"><span class="pre">States</span></code> (using labels for the values, if specified;  see above).</li>
 </ul>
 <p>Any combination of the settings above can also be specified in a list that is assigned to
 show_node_structure</p>
@@ -1204,7 +1207,7 @@ by GraphViz, or the keyword <em>BOLD</em>.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>display of system</strong> – ‘pdf’ (placed in current directory) if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘pdf’;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>display of Composition</strong> – ‘pdf’ (placed in current directory) if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘pdf’;
 Graphviz graph object if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘jupyter’.</p>
 </td>
 </tr>
@@ -1267,7 +1270,7 @@ to receive and execute sets of nodes that are eligible to run until termination 
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list } or { <a class="reference internal" href="#"><span class="doc">Composition</span></a> : list }) – a dictionary containing a key-value pair for each Node in the composition that receives inputs from
 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-list corresponds to a certain <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
+list corresponds to a certain <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
 <li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of
 this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
 <li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the Learning execution of
@@ -1282,8 +1285,8 @@ or use default inputs, and select a number of trials with num_trials.</li>
 <li><strong>call_after_time_step</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
 <li><strong>call_before_pass</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
 <li><strong>call_after_pass</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
-<li><strong>call_before_trial</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
-<li><strong>call_after_trial</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
+<li><strong>call_before_trial</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
+<li><strong>call_after_trial</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
 <li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Node: Node Value</em><em>]</em>) – sets the values of nodes before the start of the run. This is useful in cases where a node’s value is
 used before that node executes for the first time (usually due to recurrence or control).</li>
 <li><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>]</em>) – <p>nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
@@ -1321,7 +1324,7 @@ a <a class="reference internal" href="Condition.html"><span class="doc">Conditio
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>predicted_input=None</em>, <em>control_allocation=None</em>, <em>num_trials=1</em>, <em>runtime_params=None</em>, <em>base_execution_id=None</em>, <em>execution_id=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>predicted_input=None</em>, <em>control_allocation=None</em>, <em>num_trials=1</em>, <em>runtime_params=None</em>, <em>base_execution_id=None</em>, <em>execution_id=None</em>, <em>context=None</em>, <em>execution_mode=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs a simulation of the <a class="reference internal" href="#"><span class="doc">Composition</span></a>, with the specified control_allocation, excluding its
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.model_based_optimizer" title="psyneulink.core.compositions.composition.Composition.model_based_optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">model_based_optimizer</span></code></a> in order to return the
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> of the Composition, according to its
@@ -1450,7 +1453,7 @@ by checking whether any of its nodes are stateful.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.2.0+2.gfa5d042',
+            VERSION:'0.5.2.1+1.g62f9a09',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

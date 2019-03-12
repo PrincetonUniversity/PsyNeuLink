@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to PsyNeuLink &mdash; PsyNeuLink 0.5.2.0+2.gfa5d042 documentation</title>
+  <title>Welcome to PsyNeuLink &mdash; PsyNeuLink 0.5.2.1+1.g62f9a09 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.2.0+2.gfa5d042 documentation" href="#"/>
+    <link rel="top" title="PsyNeuLink 0.5.2.1+1.g62f9a09 documentation" href="#"/>
         <link rel="next" title="Basics and Sampler" href="BasicsAndSampler.html"/> 
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.5.2.0+2
+                0.5.2.1+1
               </div>
             
           
@@ -163,10 +163,12 @@
 <h1>Welcome to PsyNeuLink <a class="reference external" href="http://psyneulink.org"><img alt="logo" src="_images/PsyNeuLink_logo_no_text.svg" width="20%" /></a><a class="headerlink" href="#welcome-to-psyneulink-logo" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="index_logo_with_text.html#purpose"><span class="std std-ref">Purpose</span></a></li>
+<li><a class="reference internal" href="#what-psyneulink-is"><span class="std std-ref">What PsyNeuLink IS</span></a></li>
 <li><a class="reference internal" href="index_logo_with_text.html#what-psyneulink-is-not"><span class="std std-ref">What PsyNeuLink is NOT</span></a></li>
 <li><a class="reference internal" href="index_logo_with_text.html#overview"><span class="std std-ref">Environment Overview</span></a></li>
 <li><a class="reference internal" href="index_logo_with_text.html#installation"><span class="std std-ref">Installation</span></a></li>
 <li><a class="reference internal" href="index_logo_with_text.html#tutorial"><span class="std std-ref">Tutorial</span></a></li>
+<li><a class="reference internal" href="#help-and-issues"><span class="std std-ref">Help and Issues</span></a></li>
 <li><a class="reference internal" href="index_logo_with_text.html#contributors"><span class="std std-ref">Contributors</span></a></li>
 <li><a class="reference internal" href="index_logo_with_text.html#indices-and-tables"><span class="std std-ref">Indices and tables</span></a></li>
 </ul>
@@ -186,9 +188,11 @@ integrate them to simluate system-level interactions.  It provides a suite of co
 implementing models of various forms of processing, learning, and control, and its Library includes examples that
 combine these components to implement published models.  As an open source project, its suite of components is meant
 to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
-concise, executable, and easy to interpret form, that can be shared, and compared by the scientific
-community.</p>
-<p>PsyNeuLink is:</p>
+concise, executable, and easy to interpret form, that can be shared, compared, and extended by the scientific community.</p>
+</div>
+<div class="section" id="what-psyneulink-is">
+<span id="id2"></span><h2>What PsyNeuLink <strong>IS</strong><a class="headerlink" href="#what-psyneulink-is" title="Permalink to this headline">¶</a></h2>
+<p>It is:</p>
 <blockquote>
 <div><ul class="simple">
 <li><em>open source</em>, freeing users of the costs or restrictions associated with proprietary software.</li>
@@ -206,9 +210,9 @@ neural populations to functional subsystems and abstract cognitive functions) an
 individual components, such as:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Neuron (biophysically realistic models of neuronal function)</li>
-<li>TensorFlow (ODE’s, deep learning);</li>
+<li>Neuron and Nengo (biophysically realistic models of neuronal function)</li>
 <li>Emergent (broad class of neurally-plausible connectionist models);</li>
+<li>Pytorch and TensorFlow (ODE’s, deep learning);</li>
 <li>ACT-R (symbolic, production system models).</li>
 </ul>
 </div></blockquote>
@@ -223,36 +227,39 @@ modification.  Please report any bugs and/or suggestions for development to <a c
 </div>
 </div>
 <div class="section" id="what-psyneulink-is-not">
-<span id="id2"></span><h2>What PsyNeuLink is <strong>NOT</strong><a class="headerlink" href="#what-psyneulink-is-not" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink is well suited to the creation of simple to moderately complex models, and for the integration of
-disparate existing models into a single, integrated system in which interactions among them can be examined.
-While it is fully general, and can be used to implement virtually any type of model, in its current form it is
-less well suited to certain kinds of efforts, that involve massively large computations and/or specialized functions
-and data types that it currently does not support, such as:</p>
+<span id="id3"></span><h2>What PsyNeuLink is <strong>NOT</strong><a class="headerlink" href="#what-psyneulink-is-not" title="Permalink to this headline">¶</a></h2>
+<p>The longterm goal of PsyNeuLink is to provide an environment that integrates comptutational modeling of brain function
+and behavior at all levels of analysis.  While it is designed to be fully general, and can in principle be used to
+implement models at any level, it is still under development, and current efficiency consideration make it more
+suitable for some of forms of modeling than others. In its present form, it is well suited to the creation of
+simple to moderately complex models, and for the integration of disparate models into a single envinroment, while in
+it is presently less well suited to efforts involving massively large computations, such as:</p>
 <blockquote>
 <div><ul class="simple">
 <li>extensive model fitting</li>
 <li>large scale simulations</li>
-<li>biophysically-realistic models of individual neurons</li>
+<li>highly detailed biophysical models of neurons or neuronal populations</li>
 </ul>
 </div></blockquote>
-<p>Other packages that are better suited to such applications are:
-<a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Main_Page">Emergent</a> and
-<a class="reference external" href="https://www.tensorflow.org">TensorFlow</a> (for neural network models);
+<p>Other packages currently better suited to such applications are:
+<a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Main_Page">Emergent</a> for biologically-inspired neural network models
+<a class="reference external" href="https://pytorch.org">Pytorch</a> and <a class="reference external" href="https://www.tensorflow.org">TensorFlow</a> (for deep learning models);
 <a class="reference external" href="http://ski.clps.brown.edu/hddm_docs/">HDDM</a> (for Drift Diffusion Models);
 <a class="reference external" href="http://act-r.psy.cmu.edu">ACT-R</a> (for production system models);
 <a class="reference external" href="http://www.genesis-sim.org">Genesis</a>,
 <a class="reference external" href="https://www.neuron.yale.edu/neuron/">Neuron</a>,
 and <a class="reference external" href="http://www.nengo.ca">Nengo</a>  (for biophysically-realistic models of neuronal function).</p>
-<p>These packages are good for elaborate and detailed models of a particular form.
-In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
-possible, with the ability to integrate components constructed in other packages (including some of the ones listed
-above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Three priorities for continued
-development are the acceleration of PsyNeuLink, using just-in-time compilation methods, parallelization and adaptation
-to FPGA hardware; integration of tools for model analysis (such as those implemented in HDDM); and the implementation</p>
+<p>These packages are good for elaborate and detailed models of a particular form. In contrast, the focus in designing
+PsyNeuLink has been to make it as flexible and easy to use as possible, with the ability to integrate components
+constructed in other packages (including some of the ones listed above) into a single environment.  These are
+characteristics that are often (at least in the initial stages of development) in tension with efficiency (think:
+interpreted vs. compiled).</p>
+<p>That said, priorities for ongoing development of PsyNeuLink are:  i) acceleration, using just-in-time
+compilation methods and parallelization; ii) enhancement of the API to facilitate wrapping modules from
+other packages for integration into the PsyNeuLink environment (examples currently exist for Pytorch and Emergent); iii)
+integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the</p>
 <blockquote>
-<div>of a graphic interface for the construction of models and realtime display of their execution.</div></blockquote>
+<div>construction of models and realtime display of their execution.</div></blockquote>
 </div>
 <div class="section" id="environment-overview">
 <span id="overview"></span><h2>Environment Overview<a class="headerlink" href="#environment-overview" title="Permalink to this headline">¶</a></h2>
@@ -264,7 +271,7 @@ construction of models using PsyNeuLink.  <a class="reference internal" href="Co
 <a class="reference internal" href="Library.html"><span class="doc">Library</span></a> contains extensions, including speciality components, implemented compositions, and published models.</p>
 </div>
 <div class="section" id="installation">
-<span id="id3"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is compatible with python versions &gt;= 3.5, and is available through <a class="reference external" href="https://pypi.python.org/pypi/PsyNeuLink">PyPI</a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">psyneulink</span>
 </pre></div>
@@ -280,7 +287,7 @@ stored in pip-style <code class="xref any docutils literal"><span class="pre">re
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
 <div class="section" id="tutorial">
-<span id="id4"></span><h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">PsyNeuLink</span> <span class="pre">Tutorial.ipynb</span></code></a></p>
 <p>PsyNeuLink includes a <a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial</span></code></a>, that provides examples of how to create basic Components
 in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
@@ -304,8 +311,14 @@ mentioned above, download the <a class="reference download internal" href="_down
 <p>Once the notebook opens in your browser, navigate to the location where you saved the tutorial notebook, and
 click on “PsyNeuLink Tutorial.ipynb”.</p>
 </div>
+<div class="section" id="help-and-issue-reporting">
+<span id="help-and-issues"></span><h2>Help and Issue Reporting<a class="headerlink" href="#help-and-issue-reporting" title="Permalink to this headline">¶</a></h2>
+<p>Help is available at <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
+<p>Issues can be reported at <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink/issues">https://github.com/PrincetonUniversity/PsyNeuLink/issues</a>.</p>
+</div>
 <div class="section" id="contributors">
-<span id="id5"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<span id="id6"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<p><em>(in alphabetical order)</em></p>
 <ul class="simple">
 <li><strong>Allie Burton</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</li>
@@ -526,7 +539,7 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<span id="id6"></span><h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<span id="id7"></span><h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
@@ -577,7 +590,7 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.5.2.0+2.gfa5d042',
+            VERSION:'0.5.2.1+1.g62f9a09',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
