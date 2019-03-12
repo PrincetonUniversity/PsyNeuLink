@@ -2800,9 +2800,11 @@ class Component(object, metaclass=ComponentsMeta):
             )
         )
 
+        # Specification is the function of a (non-instantiated?) Function class
         # KDM 11/12/18: parse an instance of a Function's .function method to itself
         # (not sure how worth it this is, but it existed in Scripts/Examples/Reinforcement-Learning REV)
         # purposely not attempting to parse a class Function.function
+        # JDC 3/6/19:  ?what about parameter states for its parameters (see python function problem below)?
         if isinstance(function, types.MethodType):
             try:
                 if isinstance(function.__self__, Function):
@@ -2810,31 +2812,32 @@ class Component(object, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
+        # Specification is a standard python function, so wrap as a UserDefnedFunction
+        # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
         if isinstance(function, types.FunctionType):
-            self.function = UserDefinedFunction(
-                default_variable=function_variable,
-                custom_function=function,
-                context=context
-            )
-            self.function_params = dict(self.function.cust_fct_params)
+            self.function = UserDefinedFunction(default_variable=function_variable,
+                                                custom_function=function,
+                                                context=context)
+            self.function_params = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+            for param_name in self.function.cust_fct_params:
+                self.function_params.__additem__(param_name, self.function.cust_fct_params[param_name])
+
+        # Specification is an already implemented Function
         elif isinstance(function, Function):
             if not iscompatible(function_variable, function.defaults.variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
                     raise ComponentError(
-                        'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                        ' of the component {3} to which it is being assigned'.format(
-                            function.defaults.variable,
-                            function,
-                            function_variable,
-                            self
-                        )
+                            'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
+                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
+                            format(function.defaults.variable, function, function_variable, self)
                     )
                 elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
                     if not iscompatible(function_variable, function_increased_dim):
                         raise ComponentError(
                             'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                            ' of the component {3} to which it is being assigned'.format(
+                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
+                                format(
                                 function.defaults.variable,
                                 function,
                                 function_variable,
@@ -2860,6 +2863,9 @@ class Component(object, metaclass=ComponentsMeta):
             self.function._instantiate_value(context)
 
             self.function.context.initialization_status = ContextFlags.INITIALIZED
+
+        # Specification is Function class
+        # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
         elif inspect.isclass(function) and issubclass(function, Function):
             kwargs_to_instantiate = function.class_defaults.values().copy()
             if function_params is not None:
@@ -2883,6 +2889,7 @@ class Component(object, metaclass=ComponentsMeta):
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
             self.function = function(default_variable=function_variable, **kwargs)
+
         else:
             raise ComponentError('Unsupported function type: {0}, function={1}'.format(type(function), function))
 

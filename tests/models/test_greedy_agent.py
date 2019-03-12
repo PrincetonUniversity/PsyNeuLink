@@ -22,6 +22,7 @@ from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
     pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent(benchmark, mode):
     # These should probably be replaced by reference to ForagerEnv constants:
@@ -76,6 +77,7 @@ def test_simplified_greedy_agent(benchmark, mode):
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
     pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent_random(benchmark, mode):
     # These should probably be replaced by reference to ForagerEnv constants:
@@ -120,10 +122,16 @@ def test_simplified_greedy_agent_random(benchmark, mode):
         prey:[[419,69]],
         }, 'bin_execute':mode})
 
-@pytest.mark.this
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
-@pytest.mark.parametrize("mode", ['Python'])
+@pytest.mark.parametrize("mode", ['Python',
+    pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
 def test_predator_prey(benchmark, mode):
     # These should probably be replaced by reference to ForagerEnv constants:
     obs_len = 3
@@ -186,14 +194,18 @@ def test_predator_prey(benchmark, mode):
                                        )
     agent_comp.add_model_based_optimizer(ocm)
     agent_comp.enable_model_based_optimizer = True
+    ocm.comp_execution_mode = mode
 
     input_dict = {player_obs:[[1.1576537,  0.60782117]],
                                          predator_obs:[[-0.03479106, -0.47666293]],
                                          prey_obs:[[-0.60836214,  0.1760381 ]],
                                          }
-    run_results = agent_comp.run(inputs=input_dict, bin_execute=mode)
+    run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
     
-    assert np.allclose(run_results[0], [[-1.76601584, -0.43178307]])
-    assert np.allclose(run_results[1], [[0.43076779]])
+    assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
+    assert np.allclose(run_results[1], [[-7.95925672]])
+    assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
+                                            [-0.03479106, -0.47666293],
+                                            [-0.60836214,  0.1760381 ]])
 
     benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)

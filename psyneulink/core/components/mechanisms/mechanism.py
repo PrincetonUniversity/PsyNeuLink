@@ -2028,6 +2028,7 @@ class Mechanism_Base(Mechanism):
             udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
 
             _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function)
+            self._parse_param_state_sources()
         except AttributeError:
             pass
 
@@ -2311,9 +2312,7 @@ class Mechanism_Base(Mechanism):
             execution_id=execution_id,
         )
 
-        # MODIFIED 7/14/18 NEW:
         self._update_previous_value(execution_id)
-        # MODIFIED 7/14/18 END
 
         # UPDATE VARIABLE and INPUT STATE(S)
 
