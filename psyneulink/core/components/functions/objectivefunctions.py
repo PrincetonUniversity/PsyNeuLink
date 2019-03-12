@@ -732,6 +732,11 @@ class Distance(ObjectiveFunction):
         builder.store(acc_y2_val, acc_y2)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+        # FIXME python version also ignores other vectors
+        assert arg_in.type.pointee.count >= 2
+
         v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
@@ -770,10 +775,6 @@ class Distance(ObjectiveFunction):
             inner = functools.partial(self.__gen_llvm_pearson, **kwargs)
         else:
             raise RuntimeError('Unsupported metric')
-
-        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
-        assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
-        assert arg_in.type.pointee.count == 2
 
         input_length = arg_in.type.pointee.element.count
         vector_length = ctx.int32_ty(input_length)
@@ -852,6 +853,10 @@ class Distance(ObjectiveFunction):
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
+        # Get rid of nesting
+        # TODO: fix this properly
+        while arg_out.type.pointee != ret.type:
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(ret, arg_out)
 
         return builder

@@ -830,6 +830,8 @@ class ParameterState(State_Base):
         if variable is not None:
             return super()._execute(variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         else:
+            # variable = getattr(self.owner.function.parameters, self.name).get(execution_id)
+            # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
             variable = getattr(self.source.parameters, self.name).get(execution_id)
             return super()._execute(
                 variable=variable,
@@ -1123,7 +1125,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
                 owner._parameter_states[function_param_name] = state
                 # will be parsed on assignment of function
                 # FIX: if the function is manually changed after assignment,
-                # the source will remain pointing to the original Function
+                # FIX: the source will remain pointing to the original Function
                 state.source = FUNCTION
 
     elif _is_legal_param_value(owner, param_value):

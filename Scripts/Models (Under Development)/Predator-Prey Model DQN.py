@@ -11,8 +11,13 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
+<<<<<<< HEAD
+RUN = True
+SHOW_GRAPH = False
+=======
 RUN = False
 SHOW_GRAPH = True
+>>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -137,9 +142,14 @@ agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
 b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
 c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+<<<<<<< HEAD
+agent_comp.add_projections([a,b,c])
+
+=======
 agent_comp.add_projection(a)
 agent_comp.add_projection(b)
 agent_comp.add_projection(c)
+>>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
 
 
 # **************************************  CONOTROL APPRATUS ************************************************************
@@ -162,6 +172,10 @@ ocm = OptimizationControlMechanism(name='EVC',
                                    objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
                                                                           function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
+<<<<<<< HEAD
+                                   compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
+=======
+>>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
@@ -182,7 +196,16 @@ agent_comp.model_based_optimizer_mode = BEFORE
 if SHOW_GRAPH:
     # agent_comp.show_graph()
     # agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
+<<<<<<< HEAD
+    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+    agent_comp.show_graph(show_model_based_optimizer=True,
+                          show_cim=True,
+                          show_node_structure=ALL,
+                          show_headers=True,
+                          )
+=======
     agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+>>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
 
 
 # *********************************************************************************************************************

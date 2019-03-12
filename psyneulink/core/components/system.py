@@ -3718,11 +3718,11 @@ class System(System_Base):
     def recordSimulationPref(self, setting):
         self.prefs.recordSimulationPref = setting
 
-    def _get_label(self, item, show_dimensions=None, show_role=None):
+    def _get_label(self, item, show_dimensions=None, show_roles=None):
 
         # For Mechanisms, show length of each InputState and OutputState
         if isinstance(item, Mechanism):
-            if show_role:
+            if show_roles:
                 try:
                     role = item.systems[self]
                     role = role or ""
@@ -4770,16 +4770,16 @@ class System(System_Base):
 
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_mechanism_structure, (list, tuple, set)):
-            mech_struct_args = {'system':self,
-                                'show_role':any(key in show_mechanism_structure for key in {ROLES, ALL}),
+            mech_struct_args = {'composition':self,
+                                'show_roles':any(key in show_mechanism_structure for key in {ROLES, ALL}),
                                 'show_functions':any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
                                 'show_values':any(key in show_mechanism_structure for key in {VALUES, ALL}),
                                 'use_labels':any(key in show_mechanism_structure for key in {LABELS, ALL}),
                                 'show_headers':show_headers,
                                 'output_fmt':'struct'}
         else:
-            mech_struct_args = {'system':self,
-                                'show_role':show_mechanism_structure in {ROLES, ALL},
+            mech_struct_args = {'composition':self,
+                                'show_roles':show_mechanism_structure in {ROLES, ALL},
                                 'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
                                 'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
                                 'use_labels':show_mechanism_structure in {LABELS, ALL},

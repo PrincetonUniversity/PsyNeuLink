@@ -393,12 +393,11 @@ from collections import Iterable, namedtuple
 from typing import NamedTuple
 
 from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, SampleIterator
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.components.states.featureinputstate import FeatureInputState
 from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
@@ -411,6 +410,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
+from psyneulink.core.globals.sampleiterator import SampleIterator
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -436,15 +436,22 @@ class OptimizationControlMechanismError(Exception):
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(            \
     objective_mechanism=None,                   \
+    monitor_for_control=None,                   \
+    objective_mechanism=None,                   \
+    origin_objective_mechanism=False            \
+    terminal_objective_mechanism=False          \
     features=None,                              \
     feature_function=None,                      \
+    function=None,                              \
     agent_rep=None,                             \
     search_function=None,                       \
     search_termination_function=None,           \
     search_space=None,                          \
-    function=None,                              \
     control_signals=None,                       \
     modulation=ModulationParam.MULTIPLICATIVE,  \
+    combine_costs=np.sum,                       \
+    compute_reconfiguration_cost=None,          \
+    compute_net_outcome=lambda x,y:x-y,         \
     params=None,                                \
     name=None,                                  \
     prefs=None)
@@ -667,6 +674,7 @@ class OptimizationControlMechanism(ControlMechanism):
         feature_function = Parameter(None, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
+        comp_execution_mode = Parameter('Python', stateful=False, loggable=False)
 
         agent_rep = Parameter(None, stateful=False, loggable=False)
 
@@ -686,19 +694,13 @@ class OptimizationControlMechanism(ControlMechanism):
                  agent_rep=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
-                 objective_mechanism: tc.optional(tc.any(ObjectiveMechanism, list)) = None,
-                 function: tc.optional(tc.any(is_function_type)) = None, num_estimates: int = 1,
+                 num_estimates: int = 1,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
-                 control_signals: tc.optional(tc.any(is_iterable, ParameterState, ControlSignal)) = None,
-                 modulation: tc.optional(_is_modulation_param) = ModulationParam.MULTIPLICATIVE, params=None, name=None,
-                 prefs: is_pref_set = None, **kwargs):
+                 params=None,
+                 **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
 
-        if kwargs:
-                for i in kwargs.keys():
-                    raise OptimizationControlMechanismError("Unrecognized arg in constructor for {}: {}".
-                                                            format(self.__class__.__name__, repr(i)))
         self.agent_rep = agent_rep
         self.search_function = search_function
         self.search_termination_function = search_termination_function
@@ -712,14 +714,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   params=params)
 
         super().__init__(system=None,
-                         # monitor_for_control=monitor_for_control,
-                         objective_mechanism=objective_mechanism,
-                         function=function,
-                         control_signals=control_signals,
-                         modulation=modulation,
                          params=params,
-                         name=name,
-                         prefs=prefs)
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Insure that specification of ObjectiveMechanism has projections to it'''
@@ -777,9 +773,10 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             if len(state.path_afferents) > 1:
-                raise OptimizationControlMechanismError("Invalid FeatureInputState on {}. {} should receive exactly one"
+                raise OptimizationControlMechanismError("Invalid {} on {}. {} should receive exactly one"
                                                         " projection, but it receives {} projections."
-                                                        .format(self.name, state.name, len(state.path_afferents)))
+                                                        .format(InputState.__name__, self.name, state.name,
+                                                                len(state.path_afferents)))
 
         # KAM Removed the exception below 11/6/2018 because it was rejecting valid
         # monitored_output_state spec on ObjectiveMechanism
@@ -932,7 +929,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                              self.parameters.num_estimates.get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=sim_execution_id,
-                                             context=self.function.parameters.context.get(execution_id)
+                                             context=self.function.parameters.context.get(execution_id),
+                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id)
             )
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
@@ -952,13 +950,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.agent_rep>`.
         '''
 
-        value = self.parameters.value.get(execution_id)
-        if value is None:
-            value = copy.deepcopy(self.defaults.value)
-
-        for i in range(len(control_allocation)):
-            value[i] = np.atleast_1d(control_allocation[i])
-
+        value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value.set(value, execution_id)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)
@@ -992,7 +984,6 @@ class OptimizationControlMechanism(ControlMechanism):
         Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
         Assign functions specified in **feature_function** to InputStates for all features
-        Convert state_type of all entries to FeatureInputState (to allow functions other than LinearCombination)
         Return list of InputState specification dictionaries
         """
 
@@ -1010,17 +1001,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
-        # Convert state_type of InputStates used to shadow into state_type to FeatureInputState
-        #    to insure that their functions are allowed to be other than CombinationFunction,
-        #    and that they only receive on MappingProjection each
-        #        (since they might not be CombinationFunctions, can only accept variable with one item).
-        for feature in parsed_features:
-            if isinstance(feature, dict):
-                feature['state_type'] = FeatureInputState
-            else:
-                if not isinstance(feature, FeatureInputState):
-                    raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
-                                                            .format(self.name, feature))
         return parsed_features
 
     @property

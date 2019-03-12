@@ -124,37 +124,38 @@ Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanis
                                                                                 )
 Umemoto_comp.enable_model_based_optimizer = True
 Umemoto_comp.model_based_optimizer.set_log_conditions('value')
+Umemoto_comp.show_graph()
 
-nTrials = 2
-targetFeatures = [w_t]
-flankerFeatures_inc = [w_d]
-reward = [100]
-
-targetInputList = targetFeatures
-flankerInputList = flankerFeatures_inc
-rewardList = reward
-
-stim_list_dict = {
-    Target_Stim: targetInputList,
-    Distractor_Stim: flankerInputList,
-     Reward: rewardList
-}
-
-def print_statement():
-    print('Ran a trial\n')
-
-Umemoto_comp.run(num_trials=nTrials,
-             inputs=stim_list_dict,
-                 call_after_trial=print_statement)
-
-print("\n\n---------  DISTRACTOR REP  ---------")
-Distractor_Rep.log.print_entries()
-print("\n\n---------  TARGET REP  ---------")
-Target_Rep.log.print_entries()
-print("\n\n---------  AUTOMATIC COMPONENT  ---------")
-Automatic_Component.log.print_entries()
-print("\n\n---------  DECISION  ---------")
-Decision.log.print_entries()
-print("\n\n---------  MODEL BASED OPTIMIZER  ---------")
-Umemoto_comp.model_based_optimizer.log.print_entries()
-
+# nTrials = 2
+# targetFeatures = [w_t]
+# flankerFeatures_inc = [w_d]
+# reward = [100]
+#
+# targetInputList = targetFeatures
+# flankerInputList = flankerFeatures_inc
+# rewardList = reward
+#
+# stim_list_dict = {
+#     Target_Stim: targetInputList,
+#     Distractor_Stim: flankerInputList,
+#      Reward: rewardList
+# }
+#
+# def print_statement():
+#     print('Ran a trial\n')
+#
+# Umemoto_comp.run(num_trials=nTrials,
+#              inputs=stim_list_dict,
+#                  call_after_trial=print_statement)
+#
+# print("\n\n---------  DISTRACTOR REP  ---------")
+# Distractor_Rep.log.print_entries()
+# print("\n\n---------  TARGET REP  ---------")
+# Target_Rep.log.print_entries()
+# print("\n\n---------  AUTOMATIC COMPONENT  ---------")
+# Automatic_Component.log.print_entries()
+# print("\n\n---------  DECISION  ---------")
+# Decision.log.print_entries()
+# print("\n\n---------  MODEL BASED OPTIMIZER  ---------")
+# Umemoto_comp.model_based_optimizer.log.print_entries()
+#
