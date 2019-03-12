@@ -5,6 +5,14 @@ python:
     - 3.6
     - 3.7
 
+branches:
+  only:
+    - master
+    - devel
+    - /devel-.*/
+    - /travis.*/
+
+
 install:
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
   - pip install git+https://github.com/benureau/leabra.git@master

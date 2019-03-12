@@ -393,7 +393,7 @@ from collections import Iterable, namedtuple
 from typing import NamedTuple
 
 from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, SampleIterator
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -410,6 +410,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
+from psyneulink.core.globals.sampleiterator import SampleIterator
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
