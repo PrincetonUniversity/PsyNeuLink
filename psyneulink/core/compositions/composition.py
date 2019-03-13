@@ -1667,8 +1667,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Nodes at the end of the consideration queue are TERMINAL
         if len(self.scheduler_processing.consideration_queue) > 0:
-            for node in self.scheduler_processing.consideration_queue[-1]:
-                self._add_node_role(node, NodeRole.TERMINAL)
+            for node in list(self.scheduler_processing.consideration_queue)[-1]:
+                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
+                    for previous_node in self.scheduler_processing.consideration_queue[-2]:
+                        self._add_node_role(previous_node, NodeRole.TERMINAL)
 
         # Loop over all nodes in the Composition to identify additional NodeRoles
         for node in self.nodes:
@@ -1694,7 +1698,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Second check for TERMINAL nodes:
             # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
-                self._add_node_role(node, NodeRole.TERMINAL)
+                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
+                        self._add_node_role(previous_node, NodeRole.TERMINAL)
+
 
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
@@ -2625,6 +2633,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for output_state in sndr.output_states:
                     projs = output_state.efferents
                     for proj in projs:
+                        # Skip any projections to ObjectiveMechanism for model_based_optimizer
+                        #   (those are handled in _assign_control_components)
+                        if proj.receiver.owner is self.model_based_optimizer.objective_mechanism:
+                            continue
                         # if proj.receiver.owner == rcvr:
                         if show_node_structure:
                             sndr_proj_label = '{}:{}'. \
@@ -2636,11 +2648,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             sndr_proj_label = sndr_label
                             proc_mech_rcvr_label = rcvr_label
                         selected_proj = proj
-                # # MODIFIED 2/24/18 OLD:
-                # edge_label = self._get_graph_node_label(proj, show_dimensions)
-                # MODIFIED 2/24/18 NEW: [JDC]
                 edge_label = self._get_graph_node_label(selected_proj, show_dimensions)
-                # MODIFIED 2/24/18 END
 
                 # Render projections
                 if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
@@ -3651,12 +3659,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary with the INPUT node({}) "
-                    "as its only key".format(self.name, next(iter(input_nodes)).name))
+                    "Inputs to {} must be specified in a list or in a dictionary "
+                    "with the INPUT node ({}) as its only key".
+                        format(self.name, next(iter(input_nodes)).name))
             else:
+                input_node_names = ", ".join([i.name for i in input_nodes])
                 raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
-                    "nodes.".format(self.name, len(input_nodes)))
+                    "Inputs to {} must be specified in a dictionary "
+                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
+                    format(self.name, len(input_nodes), input_node_names))
         if not callable(inputs):
             # Currently, no validation if 'inputs' arg is a function
             inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
