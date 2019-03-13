@@ -153,8 +153,8 @@ mySystem.controller.show()
 # mySystem.show_graph(show_control=True, show_projection_labels=False)
 # mySystem.show_graph(show_control=True, show_processes=True, show_headers=False)
 # mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False)
-mySystem.show_graph(show_control=True, show_mechanism_structure=pnl.VALUES)
-# mySystem.show_graph(show_control=True, show_mechanism_structure=pnl.ALL, show_headers=False)
+# mySystem.show_graph(show_control=True, show_mechanism_structure=pnl.VALUES)
+mySystem.show_graph(show_control=True, show_mechanism_structure=pnl.ALL, show_headers=False)
 
 # configure EVC components
 mySystem.controller.control_signals[0].intensity_cost_function = psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.8046).function
