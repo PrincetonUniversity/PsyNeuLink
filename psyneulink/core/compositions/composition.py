@@ -1668,8 +1668,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Nodes at the beginning of the consideration queue are TERMINAL
 
         if len(self.scheduler_processing.consideration_queue) > 0:
-            for node in self.scheduler_processing.consideration_queue[-1]:
-                self._add_node_role(node, NodeRole.TERMINAL)
+            for node in list(self.scheduler_processing.consideration_queue)[-1]:
+                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
+                    for previous_node in self.scheduler_processing.consideration_queue[-2]:
+                        self._add_node_role(previous_node, NodeRole.TERMINAL)
 
         # loop over all nodes in the Composition to identify additional roles
         for node in self.nodes:
@@ -1695,7 +1699,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Second check for TERMINAL nodes:
             # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
-                self._add_node_role(node, NodeRole.TERMINAL)
+                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
+                        self._add_node_role(previous_node, NodeRole.TERMINAL)
+
 
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
