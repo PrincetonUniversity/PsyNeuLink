@@ -2626,6 +2626,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for output_state in sndr.output_states:
                     projs = output_state.efferents
                     for proj in projs:
+                        # Skip any projections to ObjectiveMechanism for model_based_optimizer
+                        #   (those are handled in _assign_control_components)
+                        if proj.receiver.owner is self.model_based_optimizer.objective_mechanism:
+                            continue
                         # if proj.receiver.owner == rcvr:
                         if show_node_structure:
                             sndr_proj_label = '{}:{}'. \
@@ -2637,11 +2641,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             sndr_proj_label = sndr_label
                             proc_mech_rcvr_label = rcvr_label
                         selected_proj = proj
-                # # MODIFIED 2/24/18 OLD:
-                # edge_label = self._get_graph_node_label(proj, show_dimensions)
-                # MODIFIED 2/24/18 NEW: [JDC]
                 edge_label = self._get_graph_node_label(selected_proj, show_dimensions)
-                # MODIFIED 2/24/18 END
 
                 # Render projections
                 if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):

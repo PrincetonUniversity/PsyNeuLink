@@ -1539,10 +1539,8 @@ class State_Base(State):
                 # assign identical default variable to function if it can be modified
                 if self.function._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                     self.function.defaults.variable = self.defaults.variable.copy()
-                elif (
-                    self.function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
-                    and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape
-                ):
+                elif (self.function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
+                      and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape):
                     self.function.defaults.variable = np.array([self.defaults.variable])
                 elif self.function.defaults.variable.shape != self.defaults.variable.shape:
                     from psyneulink.core.compositions.composition import Composition
