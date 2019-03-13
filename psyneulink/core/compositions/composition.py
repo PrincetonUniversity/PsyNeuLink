@@ -2715,10 +2715,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  not NodeRole.INPUT in self.nodes_to_roles[input_mech])
                                     and (proj.receiver.shadow_inputs in self.nodes_to_roles and
                                          not NodeRole.INPUT in self.nodes_to_roles[proj.receiver.shadow_inputs])):
-                                raise CompositionError("Projection from input_CIM of {} to node {} "
-                                                       "that is not an {} node or shadowing its {}".
-                                                       format(self.name, input_mech,
-                                                              NodeRole.INPUT.name, NodeRole.INPUT.name.lower()))
+                                raise CompositionError(f'Projection from input_CIM of {self.name} ' \
+                                                           f'to node {input_mech} ' \
+                                                           f'that is not an {NodeRole.INPUT.name} node ' \
+                                                           f'or shadowing its {NodeRole.INPUT.name.lower()}.')
                             # Construct edge name
                             input_mech_label = self._get_graph_node_label(input_mech, show_dimensions)
                             if show_node_structure:
@@ -2757,10 +2757,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Validate the Projection is from an OUTPUT node
                             output_mech = proj.sender.owner
                             if not NodeRole.OUTPUT in self.nodes_to_roles[output_mech]:
-                                raise CompositionError("Projection to output_CIM of {} from node {} "
-                                                       "that is not an {} node".
-                                                       format(self.name, output_mech,
-                                                              NodeRole.OUTPUT.name, NodeRole.OUTPUT.name.lower()))
+                                raise CompositionError(f'Projection to output_CIM of {self.name} ' \
+                                                           f'from node {output_mech} ' \
+                                                           f'that is not an {NodeRole.OUTPUT.name} node.')
                             # Construct edge name
                             output_mech_label = self._get_graph_node_label(output_mech, show_dimensions)
                             if show_node_structure:
@@ -2807,8 +2806,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
-                      "can't be used in its show_graph() method\n".format(self.name))
+                print(f'\nWARNING: {self.name} has not been assigned a \'model_based_optimizer\', ' \
+                          f'so \'show_model_based_optimizer\' option can\'t be used in its show_graph() method\n')
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism

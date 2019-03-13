@@ -1546,18 +1546,12 @@ class State_Base(State):
                     self.function.defaults.variable = np.array([self.defaults.variable])
                 elif self.function.defaults.variable.shape != self.defaults.variable.shape:
                     from psyneulink.core.compositions.composition import Composition
-                    warnings.warn('A {} from {} is being added to an {} of {} ({}) that already receives other '
-                                  'Projections, but does not use a {}; unexpected results may occur when the {} '
-                                  'or {} to which it belongs is executed.'.
-                                  format(Projection.__name__, projection.sender.owner.name, self.__class__.__name__,
-                                         self.owner.name, self.name, CombinationFunction.__name__, Mechanism.__name__,
-                                         Composition.__name__))
-                            # f'A {Projection.__name__} from {projection.sender.owner.name} is being added ' \
-                            #     f'to an {self.__class__.__name__} of {self.owner.name} ({self.name}) ' \
-                            #     f'that already receives other Projections, ' \
-                            #     f'but does not use a {CombinationFunction.__name__}; ' \
-                            #     f'unexpected results may occur when the {Mechanism.__name__} ' \
-                            #     f'or {Composition.__name__} to which it belongs is executed.')
+                    warnings.warn(f'A {Projection.__name__} from {projection.sender.owner.name} is being added ' \
+                                      f'to an {self.__class__.__name__} of {self.owner.name} ({self.name}) ' \
+                                      f'that already receives other {Projection.__name__}s, ' \
+                                      f'but does not use a {CombinationFunction.__name__}; ' \
+                                      f'unexpected results may occur when the {Mechanism.__name__} ' \
+                                      f'or {Composition.__name__} to which it belongs is executed.')
 
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
