@@ -3026,7 +3026,7 @@ class Mechanism_Base(Mechanism):
                     elif not isinstance(self, CompositionInterfaceMechanism):
                         roles = [role.name for role in list(composition.nodes_to_roles[self])]
                         # MODIFIED 3/19/18 NEW [JDC]:
-                        # FIX: TEMPORARY FIX UNTIL THIS ROLE IS ASSIGNED DIRECTLY BY COMPOSITION
+                        # FIX: TEMPORARY FIX UNTIL THIS ROLE IS ASSIGNED DIRECTLY BY COMPOSITION;
                         #      REPLACE WITH ASSERTION WHEN THAT IS DONE
                         if not len(roles):
                             roles = ['INTERNAL']
