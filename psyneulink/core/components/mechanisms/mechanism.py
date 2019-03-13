@@ -3126,7 +3126,7 @@ class Mechanism_Base(Mechanism):
 
         # Construct OutputStates table
         if len(self.output_states) and (not compact_cim or self is not composition.output_CIM):
-            output_states_table = '<tr>{state_table(self.output_states, OutputState}</tr>'
+            output_states_table = '<tr>{state_table(self.output_states, OutputState)}</tr>'
 
         else:
             output_states_table = ''

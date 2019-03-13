@@ -173,10 +173,12 @@ inputs = {inputLayer: INPUT, stimulusInfo: stimulusInput}
 stabilityFlexibility.add_model_based_optimizer(meta_controller)
 stabilityFlexibility.enable_model_based_optimizer = True
 
-print("Beginning of Run")
-for i in range(1, len(stabilityFlexibility.model_based_optimizer.input_states)):
-	stabilityFlexibility.model_based_optimizer.input_states[i].function.reinitialize()
+stabilityFlexibility.show_graph(show_node_structure=True)
 
-	stabilityFlexibility.run(inputs)
-
-	activation.log.print_entries()
+# print("Beginning of Run")
+# for i in range(1, len(stabilityFlexibility.model_based_optimizer.input_states)):
+# 	stabilityFlexibility.model_based_optimizer.input_states[i].function.reinitialize()
+#
+# 	stabilityFlexibility.run(inputs)
+#
+# 	activation.log.print_entries()
