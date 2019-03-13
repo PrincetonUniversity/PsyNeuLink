@@ -1,9 +1,16 @@
 language: python
 
 python:
-    - 3.5
     - 3.6
     - 3.7
+
+branches:
+  only:
+    - master
+    - devel
+    - /devel-.*/
+    - /travis.*/
+
 
 install:
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
@@ -22,17 +29,6 @@ cache:
 
 matrix:
   include:
-  - os: osx
-    python: 3.5
-    language: minimal
-    env:
-        - PYTHON=3.5.4
-        - PYTHON_PKG_VERSION=macosx10.6
-    # Cache installed python virtual env and homebrew downloads
-    cache:
-        directories:
-          - $HOME/Library/Caches
-
   - os: osx
     python: 3.6
     language: minimal
