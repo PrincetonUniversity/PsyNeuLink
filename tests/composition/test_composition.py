@@ -204,31 +204,6 @@ comp = Composition()
         logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
                     format(count, t, 's' if count != 1 else ''))
 
-    def test_model_based_optimizer_objective_mech_not_terminal(self):
-        comp = Composition()
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        comp.add_linear_processing_pathway([A, B])
-
-        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features=[A.input_state],
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
-                                                                                      function=pnl.LinearCombination(
-                                                                                          operation=pnl.PRODUCT),
-                                                                                      monitor=[A]),
-                                                                                  function=pnl.GridSearch(),
-                                                                                  control_signals=[("slope", B)]
-                                                                                  )
-                                       )
-        comp._analyze_graph()
-        assert comp.model_based_optimizer.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
-
-        # disable controller
-        comp.enable_model_based_optimizer = False
-        comp._analyze_graph()
-        assert comp.model_based_optimizer.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
-
-
 class TestAddProjection:
 
     def test_add_once(self):
@@ -504,6 +479,54 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.CYCLE)
         assert C in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
+    def test_model_based_optimizer_objective_mech_not_terminal(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                                                  features=[A.input_state],
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                      function=pnl.LinearCombination(
+                                                                                          operation=pnl.PRODUCT),
+                                                                                      monitor=[A]),
+                                                                                  function=pnl.GridSearch(),
+                                                                                  control_signals=[("slope", B)]
+                                                                                  )
+                                       )
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+        # disable controller
+        comp.enable_model_based_optimizer = False
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+    def test_model_based_optimizer_objective_mech_not_terminal_fall_back(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                                                  features=[A.input_state],
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                      function=pnl.LinearCombination(
+                                                                                          operation=pnl.PRODUCT),
+                                                                                      monitor=[A, B]),
+                                                                                  function=pnl.GridSearch(),
+                                                                                  control_signals=[("slope", B)]
+                                                                                  )
+                                       )
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # disable controller
+        comp.enable_model_based_optimizer = False
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 class TestGraphCycles:
 
