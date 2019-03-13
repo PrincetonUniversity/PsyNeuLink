@@ -2978,18 +2978,18 @@ class Mechanism_Base(Mechanism):
         # Table / cell specifications:
 
         # Overall node table:                                               NEAR LIGHTYELLOW
-        node_table_spec = '<table border={repr(node_border)} cellborder="0" cellspacing="1" bgcolor="#FFFFF0">'
+        node_table_spec = f'<table border={repr(node_border)} cellborder="0" cellspacing="1" bgcolor="#FFFFF0">'
 
         # Header of Mechanism cell:
-        mech_header = '<b><i>{Mechanism.__name__}</i></b>:<br/>'
+        mech_header = f'<b><i>{Mechanism.__name__}</i></b>:<br/>'
 
         # Outer State table:
         outer_table_spec = '<table border="0" cellborder="0" bgcolor="#FAFAD0">' # NEAR LIGHTGOLDENRODYELLOW
 
         # Header cell of outer State table:
-        input_states_header = '<tr><td colspan="1" valign="middle"><b><i>{InputState.__name__}s</i></b></td></tr>'
-        parameter_states_header = '<tr><td><b><i>{ParameterState.__name__}s</i></b></td></tr>'
-        output_states_header = '<tr><td colspan="1" valign="middle"><b><i>{OutputState.__name__}s</i></b></td></tr>'
+        input_states_header = f'<tr><td colspan="1" valign="middle"><b><i>{InputState.__name__}s</i></b></td></tr>'
+        parameter_states_header = f'<tr><td><b><i>{ParameterState.__name__}s</i></b></td></tr>'
+        output_states_header = f'<tr><td colspan="1" valign="middle"><b><i>{OutputState.__name__}s</i></b></td></tr>'
 
         # Inner State table (i.e., that contains individual states in each cell):
         inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
@@ -3000,32 +3000,32 @@ class Mechanism_Base(Mechanism):
             header = ''
             if show_headers:
                 header = mech_header
-            mech_name = '<b>{header}<font point-size="16" >{self.name}</font></b>'
+            mech_name = f'<b>{header}<font point-size="16" >{self.name}</font></b>'
 
             mech_roles = ''
             if composition and show_roles:
                 from psyneulink.core.components.system import System
                 if isinstance(composition, System):
                     try:
-                        mech_roles = r'<br/>[{composition}]'
+                        mech_roles = f'<br/>[{composition}]'
                     except KeyError:
                         # # mech_roles = r'\n[{self.system}]'
                         # mech_roles = r'\n[CONTROLLER]'
                         from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
                         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
                         if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
-                            mech_roles = r'\n[CONTROLLER]'
+                            mech_roles = '\n[CONTROLLER]'
                         elif isinstance(self, ObjectiveMechanism) and hasattr(self, '_role'):
-                            mech_roles = r'\n[{self._role}]'
+                            mech_roles = f'\n[{self._role}]'
                         else:
                             mech_roles = ""
                 else:
                     from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
                     if self is composition.model_based_optimizer:
-                        mech_roles = '<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+                        mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
                     elif not isinstance(self, CompositionInterfaceMechanism):
                         roles = [role.name for role in list(composition.nodes_to_roles[self])]
-                        mech_roles = '<br/><i>{",".join(roles)}</i>'
+                        mech_roles = f'<br/><i>{",".join(roles)}</i>'
 
             mech_function = ''
             fct_params = ''
@@ -3034,17 +3034,17 @@ class Mechanism_Base(Mechanism):
                     fct_params = []
                     for param in [param for param in self.function_parameters
                                   if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
-                        fct_params.append('{param.name}={param.get()}')
+                        fct_params.append(f'{param.name}={param.get()}')
                     fct_params = ", ".join(fct_params)
-                mech_function = '<br/><i>{self.function.__class__.__name__}({fct_params})</i>'
+                mech_function = f'<br/><i>{self.function.__class__.__name__}({fct_params})</i>'
             mech_value = ''
             if show_values:
-                mech_value = '<br/>={self.value}'
+                mech_value = f'<br/>={self.value}'
             # Mech cell should span full width if there are no ParameterStates
             cols = 1
             if not len(self.parameter_states):
                 cols = 2
-            return '<td port="{self.name}" colspan="{cols}">' \
+            return f'<td port="{self.name}" colspan="{cols}">' \
                    + mech_name + mech_roles + mech_function + mech_value + '</td>'
 
         @tc.typecheck
@@ -3073,14 +3073,14 @@ class Mechanism_Base(Mechanism):
                                       if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
                             fct_params.append(f'{param.name}={param.get()}')
                         fct_params = ", ".join(fct_params)
-                    function = '<br/><i>{state.function.__class__.__name__}({fct_params})</i>'
+                    function = f'<br/><i>{state.function.__class__.__name__}({fct_params})</i>'
                 value=''
                 if include_value:
                     if use_label and not isinstance(state, ParameterState):
-                        value = '<br/>={state.label}'
+                        value = f'<br/>={state.label}'
                     else:
-                        value = '<br/>={state.value}'
-                return '<td port="{self._get_port_name(state)}"><b>{state.name}</b>{function}{value}</td>'
+                        value = f'<br/>={state.value}'
+                return f'<td port="{self._get_port_name(state)}"><b>{state.name}</b>{function}{value}</td>'
 
             states_header = ''
             # num_states = len(state_list)
@@ -3093,17 +3093,16 @@ class Mechanism_Base(Mechanism):
                         states_header = input_states_header
                     else:
                         states_header = output_states_header
-                table = '<td colspan="{}"> {} {}<tr><td>{}<tr>'.\
-                                format(num_states, outer_table_spec, states_header, inner_table_spec)
+                table = f'<td colspan="{num_states}"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
-                table += '</tr></table></td></tr></table></td>'
+                table += f'</tr></table></td></tr></table></td>'
 
             # ParameterStates
             else:
                 if show_headers:
                     states_header = parameter_states_header
-                table = '<td> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}'
+                table = f'<td> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}'
                 for state in state_list:
                     table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
                 table += '</table></td></tr></table></td>'
@@ -3113,7 +3112,7 @@ class Mechanism_Base(Mechanism):
 
         # Construct InputStates table
         if len(self.input_states) and (not compact_cim or self is not composition.input_CIM):
-            input_states_table = '<tr>{state_table(self.input_states, InputState)}</tr>'
+            input_states_table = f'<tr>{state_table(self.input_states, InputState)}</tr>'
 
         else:
             input_states_table = ''
@@ -3126,7 +3125,7 @@ class Mechanism_Base(Mechanism):
 
         # Construct OutputStates table
         if len(self.output_states) and (not compact_cim or self is not composition.output_CIM):
-            output_states_table = '<tr>{state_table(self.output_states, OutputState)}</tr>'
+            output_states_table = f'<tr>{state_table(self.output_states, OutputState)}</tr>'
 
         else:
             output_states_table = ''
@@ -3167,8 +3166,8 @@ class Mechanism_Base(Mechanism):
         elif isinstance(state, OutputState):
             state_type = OutputState.__name__
         else:
-            assert False, 'Mechanism._get_port_name() must be called with an {}, {} or {}'.\
-                format(InputState.__name__, ParameterState.__name__, OutputState.__name__)
+            assert False, f'Mechanism._get_port_name() must be called with an ' \
+                f'{InputState.__name__}, {ParameterState.__name__} or {OutputState.__name__}'
         return state_type + '-' + state.name
 
     def plot(self, x_range=None):
