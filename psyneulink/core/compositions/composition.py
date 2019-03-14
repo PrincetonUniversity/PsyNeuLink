@@ -1657,6 +1657,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
+        objective_mechanism = None
+        if self.model_based_optimizer and self.enable_model_based_optimizer:
+            objective_mechanism = self.model_based_optimizer.objective_mechanism
+            self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
+
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
 
         # Nodes at the beginning of the consideration queue are ORIGIN
@@ -1668,7 +1673,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Nodes at the end of the consideration queue are TERMINAL
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in list(self.scheduler_processing.consideration_queue)[-1]:
-                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                if node != objective_mechanism:
                     self._add_node_role(node, NodeRole.TERMINAL)
                 elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
                     for previous_node in self.scheduler_processing.consideration_queue[-2]:
@@ -1698,9 +1703,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Second check for TERMINAL nodes:
             # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
-                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                if node != objective_mechanism:
                     self._add_node_role(node, NodeRole.TERMINAL)
                 elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
+                    for previous_node in self.scheduler_processing.consideration_queue[-2]:
                         self._add_node_role(previous_node, NodeRole.TERMINAL)
 
 
@@ -1747,7 +1753,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for shadow_projection in input_state.path_afferents:
                         if shadow_projection.sender not in original_senders:
                             self.remove_projection(shadow_projection)
-
+            # If the node does not have any roles, it is internal
+            if len(self.get_roles_by_node(node)) == 0:
+                self._add_node_role(node, NodeRole.INTERNAL)
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
