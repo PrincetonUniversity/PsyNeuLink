@@ -380,7 +380,7 @@ Class Reference
 ---------------
 
 """
-import aenum
+import enum
 import inspect
 import warnings
 
@@ -402,7 +402,7 @@ __all__ = [
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
 
-class LogCondition(aenum.IntFlag):
+class LogCondition(enum.IntFlag):
     """Used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
 
     .. note::
@@ -1055,7 +1055,7 @@ class Log:
         if not entries:
             return None
 
-        class options(aenum.IntFlag):
+        class options(enum.IntFlag):
             NONE = 0
             TIME = 2
             CONTEXT = 4
