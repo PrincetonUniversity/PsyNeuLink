@@ -32,7 +32,14 @@ node_dict = {percept: None for percept in ALL_PERCEPTS}
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="BiPercept")
-@pytest.mark.parametrize("mode", ['Python'])
+@pytest.mark.parametrize("mode", ['Python',
+    pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
 def test_bi_precepts(benchmark, mode):
     excit_level = 1
     inhib_level = 1
