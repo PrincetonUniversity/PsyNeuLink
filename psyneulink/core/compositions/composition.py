@@ -1629,15 +1629,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in the Composition.".format(projection, receiver))
 
-    def _receives_mod_projections_only(self, node):
-        if len(node.path_afferents) == 0:
-            return True
+    def _get_original_senders(self, input_state, projections):
+        original_senders = set()
+        for original_projection in projections:
+            if original_projection in self.projections:
+                original_senders.add(original_projection.sender)
+                correct_sender = original_projection.sender
+                shadow_found = False
+                for shadow_projection in input_state.path_afferents:
+                    if shadow_projection.sender == correct_sender:
+                        shadow_found = True
+                        break
+                if not shadow_found:
+                    # TBI - Shadow projection type? Matrix value?
+                    new_projection = MappingProjection(sender=correct_sender,
+                                                       receiver=input_state)
+                    self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
+        return original_senders
 
-        for proj in node.path_afferents:
-            if not proj.sender.owner is self.input_CIM:
-                return False
+    def _update_shadow_projections(self):
+        for node in self.nodes:
+            for input_state in node.input_states:
+                if input_state.shadow_inputs:
+                    original_senders = self._get_original_senders(input_state, input_state.shadow_inputs.path_afferents)
+                    for shadow_projection in input_state.path_afferents:
+                        if shadow_projection.sender not in original_senders:
+                            self.remove_projection(shadow_projection)
+
+            # If the node does not have any roles, it is internal
+            if len(self.get_roles_by_node(node)) == 0:
+                self._add_node_role(node, NodeRole.INTERNAL)
 
     def _analyze_consideration_queue(self, q, objective_mechanism):
+        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
+            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a model_based_optimizer
+            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead. """
         for node in q[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
 
@@ -1648,42 +1675,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for previous_node in q[-2]:
                     self._add_node_role(previous_node, NodeRole.TERMINAL)
 
-    def _analyze_graph(self, graph=None, context=None):
-        """
-        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
-
-        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
-        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
-        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
-
-        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
-        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
-        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
-        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
-        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
-
-
-        :param graph:
-        :param context:
-        :return:
-        """
-        if graph is None:
-            graph = self.graph_processing
-
-        # Clear old information
+    def _determine_node_roles(self):
+        # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
+        # Required Roles
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        objective_mechanism = self.model_based_optimizer.objective_mechanism if self.model_based_optimizer and self.enable_model_based_optimizer else None
-        if objective_mechanism:
+        objective_mechanism = None
+        if self.model_based_optimizer and self.enable_model_based_optimizer:
+            objective_mechanism = self.model_based_optimizer.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler_processing.consideration_queue:
             self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
 
+        # Required Roles
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
@@ -1705,31 +1714,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in terminal_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
 
+    def _analyze_graph(self):
+        """
+        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
+
+        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
+        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
+
+        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
+        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
+        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
+        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
+        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
+
+
+        :param graph:
+        :param context:
+        :return:
+        """
+
+        self._determine_node_roles()
         self._create_CIM_states()
-        for node in self.nodes:
-            for input_state in node.input_states:
-                if input_state.shadow_inputs is not None:
-                    original_senders = set()
-                    for original_projection in input_state.shadow_inputs.path_afferents:
-                        if original_projection in self.projections:
-                            original_senders.add(original_projection.sender)
-                            correct_sender = original_projection.sender
-                            shadow_found = False
-                            for shadow_projection in input_state.path_afferents:
-                                if shadow_projection.sender == correct_sender:
-                                    shadow_found = True
-                                    break
-                            if not shadow_found:
-                                # TBI - Shadow projection type? Matrix value?
-                                new_projection = MappingProjection(sender=correct_sender,
-                                                                   receiver=input_state)
-                                self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
-                    for shadow_projection in input_state.path_afferents:
-                        if shadow_projection.sender not in original_senders:
-                            self.remove_projection(shadow_projection)
-            # If the node does not have any roles, it is internal
-            if len(self.get_roles_by_node(node)) == 0:
-                self._add_node_role(node, NodeRole.INTERNAL)
+        self._update_shadow_projections()
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
