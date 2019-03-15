@@ -2630,49 +2630,53 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
-                # find edge name
+                # Iterate through all Projections from all OutputStates of sndr
                 for output_state in sndr.output_states:
-                    projs = output_state.efferents
-                    for proj in projs:
+                    for proj in output_state.efferents:
+
                         # Skip any projections to ObjectiveMechanism for model_based_optimizer
                         #   (those are handled in _assign_control_components)
-                        if proj.receiver.owner is self.model_based_optimizer.objective_mechanism:
+                        if (self.model_based_optimizer
+                                and proj.receiver.owner is self.model_based_optimizer.objective_mechanism):
                             continue
-                        # if proj.receiver.owner == rcvr:
-                        if show_node_structure:
-                            sndr_proj_label = '{}:{}'. \
-                                format(sndr_label, sndr._get_port_name(proj.sender))
-                            proc_mech_rcvr_label = '{}:{}'. \
-                                format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                            # format(rcvr_label, InputState.__name__, proj.receiver.name)
-                        else:
-                            sndr_proj_label = sndr_label
-                            proc_mech_rcvr_label = rcvr_label
-                        selected_proj = proj
-                edge_label = self._get_graph_node_label(selected_proj, show_dimensions)
 
-                # Render projections
-                if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
-                    if active_color is BOLD:
+                        # Only consider Projections to the rcvr
+                        if proj.receiver.owner == rcvr:
 
-                        proj_color = default_node_color
-                    else:
-                        proj_color = active_color
-                    proj_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
+                            if show_node_structure:
+                                sndr_proj_label = '{}:{}'. \
+                                    format(sndr_label, sndr._get_port_name(proj.sender))
+                                proc_mech_rcvr_label = '{}:{}'. \
+                                    format(rcvr_label, rcvr._get_port_name(proj.receiver))
+                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            else:
+                                sndr_proj_label = sndr_label
+                                proc_mech_rcvr_label = rcvr_label
 
-                else:
-                    proj_color = default_node_color
-                    proj_width = str(default_width)
-                proc_mech_label = edge_label
+                            edge_label = self._get_graph_node_label(proj, show_dimensions)
 
-                # Render Projection normally (as edge)
-                if show_projection_labels:
-                    label = proc_mech_label
-                else:
-                    label = ''
-                g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                       color=proj_color, penwidth=proj_width)
+                            # Check if Projection or its receiver is active
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                                if active_color is BOLD:
+
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            proc_mech_label = edge_label
+
+                            # Render Projection as edge
+                            if show_projection_labels:
+                                label = proc_mech_label
+                            else:
+                                label = ''
+                            g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
 
         def _assign_cim_components(g, cims):
 
