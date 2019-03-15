@@ -1629,6 +1629,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in the Composition.".format(projection, receiver))
 
+    def _receives_mod_projections_only(self, node):
+        if len(node.path_afferents) == 0:
+            return True
+
+        for proj in node.path_afferents:
+            if not proj.sender.owner is self.input_CIM:
+                return False
+
+    def _analyze_consideration_queue(self, q, objective_mechanism):
+        for node in q[0]:
+            self._add_node_role(node, NodeRole.ORIGIN)
+
+        for node in list(q)[-1]:
+            if node != objective_mechanism:
+                self._add_node_role(node, NodeRole.TERMINAL)
+            elif len(q[-1]) < 2:
+                for previous_node in q[-2]:
+                    self._add_node_role(previous_node, NodeRole.TERMINAL)
+
     def _analyze_graph(self, graph=None, context=None):
         """
         Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
@@ -1657,58 +1676,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        objective_mechanism = None
-        if self.model_based_optimizer and self.enable_model_based_optimizer:
-            objective_mechanism = self.model_based_optimizer.objective_mechanism
+        objective_mechanism = self.model_based_optimizer.objective_mechanism if self.model_based_optimizer and self.enable_model_based_optimizer else None
+        if objective_mechanism:
             self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
-
-        # Nodes at the beginning of the consideration queue are ORIGIN
-        if len(self.scheduler_processing.consideration_queue) > 0:
-
-            for node in self.scheduler_processing.consideration_queue[0]:
-                self._add_node_role(node, NodeRole.ORIGIN)
-
-        # Nodes at the end of the consideration queue are TERMINAL
-        if len(self.scheduler_processing.consideration_queue) > 0:
-            for node in list(self.scheduler_processing.consideration_queue)[-1]:
-                if node != objective_mechanism:
-                    self._add_node_role(node, NodeRole.TERMINAL)
-                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
-                    for previous_node in self.scheduler_processing.consideration_queue[-2]:
-                        self._add_node_role(previous_node, NodeRole.TERMINAL)
-
-        # Loop over all nodes in the Composition to identify additional NodeRoles
-        for node in self.nodes:
-
-            # Second check for ORIGIN nodes:
-            # Nodes that either (1) have no "parents" in the graph OR (2) only receive mod projections are ORIGIN
-            mod_only = False
-            if hasattr(node, "path_afferents"):
-                if len(node.path_afferents) == 0:
-                    mod_only = True
-                else:
-                    all_input = True
-                    for proj in node.path_afferents:
-                        if not proj.sender.owner is self.input_CIM:
-                            all_input = False
-                            break
-                    if all_input:
-                        mod_only = True
-            if graph.get_parents_from_component(node) == [] or mod_only:
-                # if not isinstance(node, ObjectiveMechanism):
-                self._add_node_role(node, NodeRole.ORIGIN)
-
-            # Second check for TERMINAL nodes:
-            # Nodes that have no "children" in the graph are TERMINAL
-            if graph.get_children_from_component(node) == []:
-                if node != objective_mechanism:
-                    self._add_node_role(node, NodeRole.TERMINAL)
-                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
-                    for previous_node in self.scheduler_processing.consideration_queue[-2]:
-                        self._add_node_role(previous_node, NodeRole.TERMINAL)
-
+        if self.scheduler_processing.consideration_queue:
+            self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
 
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
