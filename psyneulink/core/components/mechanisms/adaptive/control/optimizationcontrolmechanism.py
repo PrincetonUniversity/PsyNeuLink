@@ -393,12 +393,11 @@ from collections import Iterable, namedtuple
 from typing import NamedTuple
 
 from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, SampleIterator
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.components.states.featureinputstate import FeatureInputState
 from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
@@ -411,6 +410,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
+from psyneulink.core.globals.sampleiterator import SampleIterator
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -773,9 +773,10 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             if len(state.path_afferents) > 1:
-                raise OptimizationControlMechanismError("Invalid FeatureInputState on {}. {} should receive exactly one"
+                raise OptimizationControlMechanismError("Invalid {} on {}. {} should receive exactly one"
                                                         " projection, but it receives {} projections."
-                                                        .format(self.name, state.name, len(state.path_afferents)))
+                                                        .format(InputState.__name__, self.name, state.name,
+                                                                len(state.path_afferents)))
 
         # KAM Removed the exception below 11/6/2018 because it was rejecting valid
         # monitored_output_state spec on ObjectiveMechanism
@@ -983,7 +984,6 @@ class OptimizationControlMechanism(ControlMechanism):
         Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
         Assign functions specified in **feature_function** to InputStates for all features
-        Convert state_type of all entries to FeatureInputState (to allow functions other than LinearCombination)
         Return list of InputState specification dictionaries
         """
 
@@ -1001,17 +1001,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
-        # Convert state_type of InputStates used to shadow into state_type to FeatureInputState
-        #    to insure that their functions are allowed to be other than CombinationFunction,
-        #    and that they only receive on MappingProjection each
-        #        (since they might not be CombinationFunctions, can only accept variable with one item).
-        for feature in parsed_features:
-            if isinstance(feature, dict):
-                feature['state_type'] = FeatureInputState
-            else:
-                if not isinstance(feature, FeatureInputState):
-                    raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
-                                                            .format(self.name, feature))
         return parsed_features
 
     @property

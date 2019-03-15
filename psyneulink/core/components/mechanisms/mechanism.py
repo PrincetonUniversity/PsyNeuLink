@@ -2312,9 +2312,7 @@ class Mechanism_Base(Mechanism):
             execution_id=execution_id,
         )
 
-        # MODIFIED 7/14/18 NEW:
         self._update_previous_value(execution_id)
-        # MODIFIED 7/14/18 END
 
         # UPDATE VARIABLE and INPUT STATE(S)
 
@@ -3027,7 +3025,14 @@ class Mechanism_Base(Mechanism):
                         mech_roles = '<br/><i>{}</i>'.format(NodeRole.MODEL_BASED_OPTIMIZER.name)
                     elif not isinstance(self, CompositionInterfaceMechanism):
                         roles = [role.name for role in list(composition.nodes_to_roles[self])]
+                        # MODIFIED 3/19/18 NEW [JDC]:
+                        # FIX: TEMPORARY FIX UNTIL THIS ROLE IS ASSIGNED DIRECTLY BY COMPOSITION;
+                        #      REPLACE WITH ASSERTION WHEN THAT IS DONE
+                        if not len(roles):
+                            roles = ['INTERNAL']
+                        # MODIFIED 3/19/18 END
                         mech_roles = '<br/><i>{}</i>'.format(",".join(roles))
+                    assert True
 
             mech_function = ''
             fct_params = ''
@@ -3067,7 +3072,7 @@ class Mechanism_Base(Mechanism):
                 '''
 
                 function = ''
-                function_params = ''
+                fct_params = ''
                 if include_function:
                     if show_state_function_params:
                         fct_params = []

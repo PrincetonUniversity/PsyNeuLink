@@ -2812,14 +2812,12 @@ class Component(object, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-        # Specification is a standard python function
+        # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
         if isinstance(function, types.FunctionType):
-            self.function = UserDefinedFunction(
-                default_variable=function_variable,
-                custom_function=function,
-                context=context
-            )
+            self.function = UserDefinedFunction(default_variable=function_variable,
+                                                custom_function=function,
+                                                context=context)
             self.function_params = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
             for param_name in self.function.cust_fct_params:
                 self.function_params.__additem__(param_name, self.function.cust_fct_params[param_name])
