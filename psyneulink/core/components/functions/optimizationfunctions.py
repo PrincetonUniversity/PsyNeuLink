@@ -483,16 +483,8 @@ class OptimizationFunction(Function_Base):
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
-        sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        current_sample = sample
-
-        # KAM HACK - "INITIALIZING" signals to evaluate that this simulation result should NOT be recorded
-        stored_context = self.parameters.context.get(execution_id)
-        original_initialization_status = stored_context.initialization_status
-        stored_context.initialization_status = ContextFlags.INITIALIZING
-        current_value = call_with_pruned_args(self.objective_function, current_sample, execution_id=execution_id)
-        stored_context.initialization_status = original_initialization_status
+        current_sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        current_value = self.owner.objective_mechanism.parameters.value.get(execution_id) if self.owner else 0.
 
         samples = []
         values = []
