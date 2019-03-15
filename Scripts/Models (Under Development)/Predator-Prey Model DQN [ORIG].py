@@ -14,8 +14,8 @@ from gym_forager.envs.forager_env import ForagerEnv
 MPI_IMPLEMENTATION = True
 RENDER = False
 PNL_COMPILE = False
-RUN = True
-SHOW_GRAPH = False
+RUN = False
+SHOW_GRAPH = True
 # MODEL_PATH = '/Users/jdc/Dropbox (Princeton)/Documents (DropBox)/Python/double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
@@ -185,7 +185,7 @@ agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph(show_control=True)
+    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True)
 
 
 # *********************************************************************************************************************
