@@ -4326,13 +4326,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         base_control_allocation = self.model_based_optimizer.parameters.value.get(execution_id)
         candidate_control_allocation = control_allocation
+        print("Candidate Control Signals: ", candidate_control_allocation, "| Base Control Signals: ", tuple(base_control_allocation))
 
         # Get reconfiguration cost
-        reconfiguration_cost = None
+        reconfiguration_cost = 0.
         if callable(self.model_based_optimizer.compute_reconfiguration_cost):
             reconfiguration_cost = self.model_based_optimizer.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                         base_control_allocation])
-
         # Apply candidate control to signal(s) for the upcoming simulation
         if control_allocation is not None:
             self.model_based_optimizer.apply_control_allocation(control_allocation,
@@ -4340,10 +4340,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 runtime_params=runtime_params,
                                                                 context=context)
         # Get control signal costs
-        if reconfiguration_cost is not None:
-            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
-        else:
-            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
+        all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
+
 
         # Compute a total for the candidate control signal(s)
         combined_costs = self.model_based_optimizer.combine_costs(all_costs)
@@ -4385,8 +4383,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
 
             outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
+            print("\nOutcome: ", outcome)
+            print("\nCosts: ")
+            print("   Control Signal 1 Cost: ", all_costs[0])
+            print("   Control Signal 2 Cost: ", all_costs[1])
+            print("   Reconfiguration Cost (Candidate --> Base Distance): ", all_costs[2])
+            print("Total Cost = Control Signal 1 Cost + Control Signal 2 Cost + e^(Reconfiguration Cost) = ", combined_costs)
             # KAM Modified 12/5/18 to use OCM's compute_net_outcome fn rather than hard-coded difference
             net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, combined_costs)
+            print("\nNet Outcome = Outcome - Total Cost = ", net_outcome)
             net_control_allocation_outcomes.append(net_outcome)
 
         return net_control_allocation_outcomes
