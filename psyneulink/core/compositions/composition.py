@@ -2630,16 +2630,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
-                # find edge name
+                # Iterate through all Projections from all OutputStates of sndr
                 for output_state in sndr.output_states:
-                    projs = output_state.efferents
-                    for proj in projs:
+                    for proj in output_state.efferents:
+
                         # Skip any projections to ObjectiveMechanism for model_based_optimizer
                         #   (those are handled in _assign_control_components)
                         if (self.model_based_optimizer
                                 and proj.receiver.owner is self.model_based_optimizer.objective_mechanism):
                             continue
+
+                        # Only consider Projections to the rcvr
                         if proj.receiver.owner == rcvr:
+
                             if show_node_structure:
                                 sndr_proj_label = '{}:{}'. \
                                     format(sndr_label, sndr._get_port_name(proj.sender))
@@ -2667,7 +2670,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_width = str(default_width)
                             proc_mech_label = edge_label
 
-                            # Render Projection normally (as edge)
+                            # Render Projection as edge
                             if show_projection_labels:
                                 label = proc_mech_label
                             else:
