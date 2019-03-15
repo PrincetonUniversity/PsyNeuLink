@@ -2303,6 +2303,13 @@ class Component(object, metaclass=ComponentsMeta):
             if param.setter is not None:
                 param._initialize_from_context(execution_context, base_execution_context, override)
 
+    def _delete_context(self, execution_context):
+        for comp in self._dependent_components:
+            comp._delete_context(execution_context)
+
+        for p in self.stateful_parameters:
+            p.delete(execution_context)
+
     def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
         context_param = self.parameters.context.get(execution_id)
         if context_param is None:
