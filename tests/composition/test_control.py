@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
-from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec, OptimizationFunctionError
+from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
+from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator, SampleIteratorError
 class TestControlMechanisms:
 
     def test_lvoc(self):
@@ -503,7 +504,7 @@ class TestSampleIterator:
         assert next(sample_iterator, None) is None
 
     def test_neither_num_nor_step(self):
-        with pytest.raises(OptimizationFunctionError) as error_text:
+        with pytest.raises(SampleIteratorError) as error_text:
             SampleSpec(start=0,
                        stop=10)
         assert "Must specify one of 'step', 'num' or 'function'" in str(error_text.value)
@@ -534,7 +535,7 @@ class TestSampleIterator:
         spec = SampleSpec(function=fun)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589]
+        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
 
         for i in range(5):
             assert np.allclose(next(sample_iterator), expected[i])
@@ -545,7 +546,7 @@ class TestSampleIterator:
                           num=4)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967]
+        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
 
         for i in range(4):
             assert np.allclose(next(sample_iterator), expected[i])

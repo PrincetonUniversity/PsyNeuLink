@@ -8,6 +8,7 @@ from . import parameters
 from . import preferences
 from . import registry
 from . import utilities
+from . import sampleiterator
 
 from .context import *
 from .defaults import *
@@ -19,6 +20,7 @@ from .parameters import *
 from .preferences import *
 from .registry import *
 from .utilities import *
+from .sampleiterator import *
 
 __all__ = list(context.__all__)
 __all__.extend(defaults.__all__)
@@ -30,3 +32,4 @@ __all__.extend(parameters.__all__)
 __all__.extend(preferences.__all__)
 __all__.extend(registry.__all__)
 __all__.extend(utilities.__all__)
+__all__.extend(sampleiterator.__all__)

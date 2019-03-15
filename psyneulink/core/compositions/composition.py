@@ -1668,8 +1668,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Nodes at the beginning of the consideration queue are TERMINAL
 
         if len(self.scheduler_processing.consideration_queue) > 0:
-            for node in self.scheduler_processing.consideration_queue[-1]:
-                self._add_node_role(node, NodeRole.TERMINAL)
+            for node in list(self.scheduler_processing.consideration_queue)[-1]:
+                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
+                    for previous_node in self.scheduler_processing.consideration_queue[-2]:
+                        self._add_node_role(previous_node, NodeRole.TERMINAL)
 
         # loop over all nodes in the Composition to identify additional roles
         for node in self.nodes:
@@ -1695,7 +1699,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Second check for TERMINAL nodes:
             # Nodes that have no "children" in the graph are TERMINAL
             if graph.get_children_from_component(node) == []:
-                self._add_node_role(node, NodeRole.TERMINAL)
+                if (self.model_based_optimizer and node != self.model_based_optimizer.objective_mechanism) or self.model_based_optimizer is None or not self.enable_model_based_optimizer:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+                elif len(self.scheduler_processing.consideration_queue[-1]) < 2:
+                        self._add_node_role(previous_node, NodeRole.TERMINAL)
+
 
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
@@ -2622,49 +2630,53 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
-                # find edge name
+                # Iterate through all Projections from all OutputStates of sndr
                 for output_state in sndr.output_states:
-                    projs = output_state.efferents
-                    for proj in projs:
-                        # if proj.receiver.owner == rcvr:
-                        if show_node_structure:
-                            sndr_proj_label = '{}:{}'. \
-                                format(sndr_label, sndr._get_port_name(proj.sender))
-                            proc_mech_rcvr_label = '{}:{}'. \
-                                format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                            # format(rcvr_label, InputState.__name__, proj.receiver.name)
-                        else:
-                            sndr_proj_label = sndr_label
-                            proc_mech_rcvr_label = rcvr_label
-                        selected_proj = proj
-                # # MODIFIED 2/24/18 OLD:
-                # edge_label = self._get_graph_node_label(proj, show_dimensions)
-                # MODIFIED 2/24/18 NEW: [JDC]
-                edge_label = self._get_graph_node_label(selected_proj, show_dimensions)
-                # MODIFIED 2/24/18 END
+                    for proj in output_state.efferents:
 
-                # Render projections
-                if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
-                    if active_color is BOLD:
+                        # Skip any projections to ObjectiveMechanism for model_based_optimizer
+                        #   (those are handled in _assign_control_components)
+                        if (self.model_based_optimizer
+                                and proj.receiver.owner is self.model_based_optimizer.objective_mechanism):
+                            continue
 
-                        proj_color = default_node_color
-                    else:
-                        proj_color = active_color
-                    proj_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
+                        # Only consider Projections to the rcvr
+                        if proj.receiver.owner == rcvr:
 
-                else:
-                    proj_color = default_node_color
-                    proj_width = str(default_width)
-                proc_mech_label = edge_label
+                            if show_node_structure:
+                                sndr_proj_label = '{}:{}'. \
+                                    format(sndr_label, sndr._get_port_name(proj.sender))
+                                proc_mech_rcvr_label = '{}:{}'. \
+                                    format(rcvr_label, rcvr._get_port_name(proj.receiver))
+                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            else:
+                                sndr_proj_label = sndr_label
+                                proc_mech_rcvr_label = rcvr_label
 
-                # Render Projection normally (as edge)
-                if show_projection_labels:
-                    label = proc_mech_label
-                else:
-                    label = ''
-                g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                       color=proj_color, penwidth=proj_width)
+                            edge_label = self._get_graph_node_label(proj, show_dimensions)
+
+                            # Check if Projection or its receiver is active
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                                if active_color is BOLD:
+
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            proc_mech_label = edge_label
+
+                            # Render Projection as edge
+                            if show_projection_labels:
+                                label = proc_mech_label
+                            else:
+                                label = ''
+                            g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
 
         def _assign_cim_components(g, cims):
 
@@ -3244,13 +3256,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
-        if self.model_based_optimizer_mode is BEFORE:
+        if (self.enable_model_based_optimizer and
+            self.model_based_optimizer_mode is BEFORE):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
-                    and self.enable_model_based_optimizer
             ):
                 if self.model_based_optimizer:
                     self.model_based_optimizer.parameters.context.get(
@@ -3258,14 +3270,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
                     self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+                if bin_execute:
+                    data = self._get_flattened_controller_output(execution_id)
+                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
 
 
         if bin_execute == 'Python':
             bin_execute = False
 
         if bin_execute:
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
+            # Exec mode skips mbo invocation so we can't use it if mbo is
+            # present and active
+            can_exec = not self.enable_model_based_optimizer or execution_phase == ContextFlags.SIMULATION
             try:
-                if str(bin_execute).endswith('Exec'):
+                if str(bin_execute).endswith('Exec') and can_exec:
                     if bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [execution_id])
                         _comp_ex.execute(inputs)
@@ -3449,19 +3468,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
-        # extract result here
-        if bin_execute:
-            _comp_ex.freeze_values()
-            _comp_ex.execute_node(self.output_CIM)
-            return _comp_ex.extract_node_output(self.output_CIM)
-
-        if self.model_based_optimizer_mode is AFTER:
+        if (self.enable_model_based_optimizer and
+            self.model_based_optimizer_mode == AFTER):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
-                    and self.enable_model_based_optimizer
             ):
                 if self.model_based_optimizer:
                     self.model_based_optimizer.parameters.context.get(
@@ -3469,13 +3482,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
                     self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+                if bin_execute:
+                    data = self._get_flattened_controller_output(execution_id)
+                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
+
+        # extract result here
+        if bin_execute:
+            _comp_ex.freeze_values()
+            _comp_ex.execute_node(self.output_CIM)
+            return _comp_ex.extract_node_output(self.output_CIM)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
         output_values = []
-        for i in range(0, len(self.output_CIM.output_states)):
-            output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
+        for state in self.output_CIM.output_states:
+            output_values.append(state.parameters.value.get(execution_id))
 
         return output_values
 
@@ -3642,12 +3664,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary with the INPUT node({}) "
-                    "as its only key".format(self.name, next(iter(input_nodes)).name))
+                    "Inputs to {} must be specified in a list or in a dictionary "
+                    "with the INPUT node ({}) as its only key".
+                        format(self.name, next(iter(input_nodes)).name))
             else:
+                input_node_names = ", ".join([i.name for i in input_nodes])
                 raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
-                    "nodes.".format(self.name, len(input_nodes)))
+                    "Inputs to {} must be specified in a dictionary "
+                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
+                    format(self.name, len(input_nodes), input_node_names))
         if not callable(inputs):
             # Currently, no validation if 'inputs' arg is a function
             inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
@@ -3662,7 +3687,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
-        if str(bin_execute).endswith('Run'):
+        execution_context = self.parameters.context.get(execution_id)
+        # Run mode skips mbo invocation so we can't use it if mbo is
+        # present and active
+        can_run = (not self.enable_model_based_optimizer or
+                   (execution_context is not None and
+                    execution_context.execution_phase == ContextFlags.SIMULATION))
+        if str(bin_execute).endswith('Run') and can_run:
             # initialize from base context but don't overwrite any values already set for this execution_id
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
@@ -3856,8 +3887,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
+        output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
 
+        if self.model_based_optimizer is not None:
+            controller_output = ctx.get_output_struct_type(self.model_based_optimizer)
+            output_type_list.append(controller_output)
         data = [pnlvm.ir.LiteralStructType(output_type_list)]
         for node in self.nodes:
             nested_data = ctx.get_data_struct_type(node)
@@ -3874,8 +3908,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         proj_params = (tuple(p._get_param_initializer(execution_id)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
+    def _get_flattened_controller_output(self, execution_id):
+        controller_data = [os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states]
+        # This is an ugly hack to remove 2d arrays
+        try:
+            controller_data = [[c[0][0]] for c in controller_data]
+        except:
+            pass
+        return controller_data
+
     def _get_data_initializer(self, execution_id=None):
-        output = ((os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes)
+        output = [(os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes]
+        if self.model_based_optimizer is not None:
+            output.append(self._get_flattened_controller_output(execution_id))
         data = [output]
         for node in self.nodes:
             nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node,
@@ -3884,7 +3929,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return pnlvm._tupleize(data)
 
     def _get_node_index(self, node):
-        return list(self._all_nodes).index(node)
+        node_list = list(self._all_nodes)
+        if node is self.model_based_optimizer:
+            return len(node_list)
+        return node_list.index(node)
 
     def _get_node_wrapper(self, node):
         if node not in self.__generated_node_wrappers:
@@ -3947,6 +3995,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._compilation_data.ptx_execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
+        assert node is not self.model_based_optimizer
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -4011,12 +4060,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
-                if par_mech in self._all_nodes:
+                if par_mech in self._all_nodes or par_mech is self.model_based_optimizer:
                     par_idx = self._get_node_index(par_mech)
                 else:
                     comp = par_mech.composition
                     assert par_mech is comp.output_CIM
                     par_idx = self.nodes.index(comp)
+
                 output_state_idx = par_mech.output_states.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                                 ctx.int32_ty(0),
@@ -4089,7 +4139,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if node not in self.scheduler_processing.condition_set.conditions:
             cond.append(Always())
         else:
-            cond += self.scheduler_processing.condition_set.conditions[node]
+            node_conds = self.scheduler_processing.condition_set.conditions[node]
+            cond.append(node_conds)
 
         return All(*cond)
 
@@ -4255,7 +4306,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             base_execution_id=None,
             execution_id=None,
-            context=None
+            context=None,
+            execution_mode=False,
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
@@ -4317,7 +4369,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.run(inputs=inputs,
                      execution_id=execution_id,
                      runtime_params=runtime_params,
-                     context=context)
+                     context=context,
+                     bin_execute=execution_mode)
 
             # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
             if context.initialization_status != ContextFlags.INITIALIZING:
