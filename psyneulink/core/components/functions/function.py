@@ -815,8 +815,11 @@ class Function_Base(Function):
 
     def _get_context_initializer(self, execution_id):
         try:
-            vals = (getattr(self.parameters, sa).get(execution_id).tolist() for sa in self.stateful_attributes)
-            return pnlvm._tupleize(vals)
+            stateful = (getattr(self.parameters, sa).get(execution_id) for sa in self.stateful_attributes)
+            # Skip first element of random state (id string)
+            lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
+
+            return pnlvm._tupleize(lists)
         except AttributeError:
             return tuple([])
 

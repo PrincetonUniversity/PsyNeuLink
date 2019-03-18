@@ -1898,16 +1898,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _get_context_struct_type(self, ctx):
-        rand = pnlvm.builtins.get_mersenne_twister_state_struct(ctx)
-        return pnlvm.ir.LiteralStructType([rand])
-
-    def _get_context_initializer(self, execution_id):
-        random_state = self.get_current_function_param('random_state', execution_id)
-        # The array offset strips away numpy's 'MT19937' string identifier
-        rand_state = random_state.get_state()[1:]
-        return pnlvm.execution._tupleize([rand_state])
-
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])

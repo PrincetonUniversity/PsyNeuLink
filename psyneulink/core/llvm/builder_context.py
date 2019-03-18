@@ -16,6 +16,7 @@ import os, re
 
 from psyneulink.core.scheduling.time import TimeScale
 
+from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
 from .helpers import ConditionGenerator
 from llvmlite import ir
@@ -424,6 +425,8 @@ class LLVMBuilderContext:
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif t is None:
             return ir.LiteralStructType([])
+        elif isinstance(t, np.random.RandomState):
+            return pnlvm.builtins.get_mersenne_twister_state_struct(self)
 
         assert False, "Don't know how to convert {}".format(type(t))
 
