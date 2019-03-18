@@ -520,7 +520,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        initializer = initializer or []
+        initializer = initializer or {}
         self.distance_function = distance_function
         self.selection_function = selection_function
 
@@ -540,6 +540,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
+
+        if initializer is not None and len(initializer) != 0:
+            self.parameters.key_size.set(len(list(initializer.keys())[0]))
 
         self.has_initializers = True
 
