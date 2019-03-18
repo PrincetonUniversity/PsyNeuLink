@@ -34,7 +34,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
     BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
-from psyneulink.core.globals.utilities import all_within_range, parameter_spec
+from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -463,6 +463,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         maximum number of entries allowed in `dict <DND.dict>`;  if an attempt is made to add an additional entry
         an error is generated.
 
+    random_state: numpy.RandomState instance
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -493,6 +495,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
+        random_state = Parameter(None, modulable=False, stateful=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -516,6 +519,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  distance_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
                  selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
                  max_entries=1000,
+                 seed=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -524,6 +528,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         self.distance_function = distance_function
         self.selection_function = selection_function
 
+        if seed is None:
+            seed = get_global_seed()
+        random_state = np.random.RandomState(np.asarray([seed]))
+
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
@@ -531,6 +539,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                                   rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
+                                                  random_state=random_state,
                                                   params=params)
 
         super().__init__(
@@ -693,6 +702,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
 
+        # get random state
+        random_state = self.get_current_function_param('random_state', execution_id)
+
         # If this is an initialization run, leave dict empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
@@ -703,7 +715,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
             self.parameters.key_size.set(len(key), execution_id)
 
         # Retrieve value from current dict with key that best matches key
-        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
+        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
             ret_val = self.get_memory(key, execution_id)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
@@ -718,7 +730,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # Store variable to dict:
         if noise:
             key += noise
-        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
+        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, execution_id)
 
         return self.convert_output_type(ret_val)
