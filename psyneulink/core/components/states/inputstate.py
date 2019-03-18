@@ -482,21 +482,24 @@ import collections
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination
+from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
-    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
+from psyneulink.core.globals.utilities import \
+    append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityType
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords', 'SHADOW_INPUTS',
@@ -516,6 +519,7 @@ EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputState variable not yet defined, defer to Mechanism"
 SHADOW_INPUTS = 'shadow_inputs'
+SHADOW_INPUT_NAME = 'Shadowed input of '
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -563,18 +567,19 @@ class InputState(State_Base):
         if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function or method : default LinearCombination(operation=SUM)
-        specifies the function applied to the variable. In most cases, this function aggregates the `values
-        <Projection_Base.value>` of the `Projections <Projection>` received by the InputState, under the possible
-        influence of `GatingProjections <GatingProjection>` received by the InputState.  It must produce a result that
-        has the same format (number and type of elements) as the item of its owner Mechanism's `variable
-        <Mechanism_Base.variable>` to which the InputState has been assigned.
+        specifies the function applied to the variable. The default value combines the `values
+        <Projection_Base.value>` of the `Projections <Projection>` received by the InputState.  Any function
+        can be assigned, however:  a) it must produce a result that has the same format (number and type of elements)
+        as the item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been
+        assigned;  b) if it is not a CombinationFunction, it may produce unpredictable results if the InputState
+        receives more than one Projection (see `function <InputState.function>`.
 
     combine : SUM or PRODUCT : default None
         specifies the **operation** argument used by the default `LinearCombination` function, which determines how the
         `value <Projection.value>` of the InputState's `projections <InputState.projections>` are combined.  This is a
-        convenience argument, that **operation** to be specified without having to specify the function's constructor;
-        accordingly, it assumes that LinearCombination (the default) is used as the InputState's function -- if it
-        conflicts with a specification of **function** an error is generated.
+        convenience argument, that allows the **operation** to be specified without having to specify the
+        LinearCombination function; it assumes that LinearCombination (the default) is used as the InputState's function
+        -- if it conflicts with a specification of **function** an error is generated.
 
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
@@ -631,18 +636,26 @@ class InputState(State_Base):
         **projections** is specified, then `variable <InputState.variable>` is assigned the `value
         <Projection.value>` of the Projection(s) or its `sender <Projection.sender>`.
 
-    function : CombinationFunction : default LinearCombination(operation=SUM))
-        performs an element-wise (Hadamard) aggregation of the `value <Projection_Base.value>` of each Projection
-        received by the InputState, under the possible influence of any `GatingProjections <GatingProjection>` received
-        by the InputState.
+    function : Function
+        If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
+        <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the InputState  (listed in
+        its `path_afferents <InputState.path_afferents>` attribute), under the possible influence of
+        `GatingProjections <GatingProjection>` received by the InputState (listed in its `mod_afferents
+        <InputState.mod_afferents>` attribute). The result is assigned to the InputState's `value
+        <InputState.value>` attribute. For example, the default (`LinearCombination` with *SUM* as it **operation**)
+        performs an element-wise (Hadamard) sum of its Projection `values <Projection_Base.value>`, and assigns to
+        `value <InputState.value>` an array that is of the same length as each of the Projection `values
+        <Projection_Base.value>`.  If the InputState receives only one Projection, then any other function can be
+        applied and it will generate a value that is the same length as the Projection's `value <Projection.value>`.
+        However, if the InputState receives more than one Projection and uses a function other than a
+        CombinationFunction, a warning is generated and only the `value <Projection.value>` of the first Projection
+        list in `path_afferents <InputState.path_afferents>` is used by the function, which may generate unexpected
+        results when executing the Mechanism or Composition to which it belongs.
 
     value : value or ndarray
-        the output of the InputState's `function <InputState.function>`, which is the aggregated value of the
-        `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
-        InputState (and listed in its `path_afferents <InputState.path_afferents>` attribute), possibly `modulated
-        <ModulatorySignal_Modulation>` by any `GatingProjections <GatingProjection>` it receives (listed in its
-        `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
-        assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
+        the output of the InputState's `function <InputState.function>`, that is assigned to an item of the owner
+        Mechanism's `variable <Mechanism_Base.variable>` attribute.
+
 
     label : string or number
         the string label that represents the current `value <InputState.value>` of the InputState, according to the
@@ -926,22 +939,29 @@ class InputState(State_Base):
 
         reference_value is the item of the owner Mechanism's variable to which the InputState is assigned
         """
-        if reference_value is not None and not iscompatible(reference_value, self.defaults.value):
+        # MODIFIED 3/9/19 OLD:
+        # if reference_value is not None and not iscompatible(reference_value, self.defaults.value):
+        # MODIFIED 3/9/19 NEW: [JDC]
+        match_len_option = {kwCompatibilityLength:False}
+        if reference_value is not None and not iscompatible(reference_value, self.defaults.value, **match_len_option):
+        # MODIFIED 3/9/19 END
             name = self.name or ""
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
 
-    def _validate_function(self, function):
-        # Insure that function is Function.LinearCombination
-        if not is_instance_or_subclass(function, (LinearCombination, Linear, Reduce)):
-            raise StateError(
-                "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
-                    FUNCTION,
-                    self.name,
-                    self.owner.name,
-                    function.componentName
-                )
-            )
+    # # MODIFIED 3/9/18 OLD: [JDC]
+    # def _validate_function(self, function):
+    #     # Insure that function is Function.LinearCombination
+    #     if not is_instance_or_subclass(function, (LinearCombination, Linear, Buffer, Reduce)):
+    #         raise StateError(
+    #             "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
+    #                 FUNCTION,
+    #                 self.name,
+    #                 self.owner.name,
+    #                 function.componentName
+    #             )
+    #         )
+    # # MODIFIED 3/9/18 END
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
@@ -949,6 +969,14 @@ class InputState(State_Base):
             function = LinearCombination(operation=self.combine_function_args[0])
             del self.combine_function_args
         super()._instantiate_function(function=function, context=context)
+        # MODIFIED 3/9/18 NEW: [JDC]
+        self._use_1d_variable = False
+        if not isinstance(self.function, CombinationFunction):
+            self._use_1d_variable = True
+            self.function._default_variable_flexibility = DefaultsFlexibility.RIGID
+        else:
+            self.function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        # MODIFIED 3/9/18 END
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -962,37 +990,49 @@ class InputState(State_Base):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
-        If there were no PathwayProjections, ignore and return None
+        If variable is None there are no active PathwayProjections in the Composition being run,
+        return None so that it is ignored in execute method (i.e., not combined with base_value)
         """
 
+        # Variable was passed in so use that
         if variable is not None:
             return super()._execute(variable,
                                     execution_id=execution_id,
                                     runtime_params=runtime_params,
                                     context=context)
-        # If there were any PathwayProjections:
+
+        # Get variable from Projections
         else:
             path_proj_values = []
-            for pa in self.path_afferents:
-                if self.afferents_info[pa].is_active_in_composition(self.parameters.context.get(execution_id).composition):
-                    path_proj_values.append(pa.parameters.value.get(execution_id))
-
+            # Check for Projections that are active in the Composition being run
+            for proj in self.path_afferents:
+                if self.afferents_info[proj].is_active_in_composition(self.parameters.context.get(
+                        execution_id).composition):
+                    path_proj_values.append(proj.parameters.value.get(execution_id))
+            # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
                 # Combine Projection values
                 variable = np.asarray(path_proj_values)
-                # print('{0} ({2}): {1}'.format(self, variable, self.owner))
                 combined_values = super()._execute(variable=variable,
                                                    execution_id=execution_id,
                                                    runtime_params=runtime_params,
-                                                   context=context
-                                                   )
-
+                                                   context=context)
                 return combined_values
-            # There were no Projections
+
+            # There were no active Projections
             else:
                 # mark combined_values as none, so that (after being assigned to value)
                 #    it is ignored in execute method (i.e., not combined with base_value)
                 return None
+
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
+        variable = super()._parse_function_variable(variable, execution_id, context)
+        try:
+            if self._use_1d_variable:
+                return np.array(variable[0])
+        except:
+            pass
+        return variable
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
@@ -1226,7 +1266,7 @@ class InputState(State_Base):
     def _parse_self_state_type_spec(self, owner, input_state, context=None):
         '''Return InputState specification dictionary with projections that shadow inputs to input_state
 
-        Called by _parse_state_spec if input_state specified for a Mechanism belongs to a different Mechanism
+        Called by _parse_state_spec if InputState specified for a Mechanism belongs to a different Mechanism
         '''
 
         if not isinstance(input_state, InputState):
@@ -1235,7 +1275,8 @@ class InputState(State_Base):
                                   format(input_state))
 
         sender_output_states = [p.sender for p in input_state.path_afferents]
-        state_spec = {VARIABLE: np.zeros_like(input_state.variable),
+        state_spec = {NAME: SHADOW_INPUT_NAME + input_state.owner.name,
+                      VARIABLE: np.zeros_like(input_state.variable),
                       STATE_TYPE: InputState,
                       PROJECTIONS: sender_output_states,
                       PARAMS: {SHADOW_INPUTS: input_state},
@@ -1414,7 +1455,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     return state_list
 
 def _parse_shadow_inputs(owner, input_states):
-    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states'''
+    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict.'''
 
     input_states_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_states):

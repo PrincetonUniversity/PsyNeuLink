@@ -56,7 +56,6 @@ class LLVMBinaryFunction:
     def _init_host_func_type(self):
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
-        assert(isinstance(f, ir.Function))
 
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
         params = []
@@ -149,6 +148,7 @@ def init_builtins():
     with LLVMBuilderContext() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
+        builtins.setup_mersenne_twister(ctx)
 
 def cleanup():
     _cpu_engine.clean_module()

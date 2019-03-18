@@ -9,7 +9,7 @@ import pytest
 from itertools import product
 
 import psyneulink.core.llvm as pnlvm
-
+import psyneulink as pnl
 from psyneulink.core.components.functions.function import ModulationParam
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
@@ -96,6 +96,80 @@ class TestAddMechanism:
         comp.add_node(mech)
         comp.add_node(mech)
 
+    def test_add_multiple_projections_at_once(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = MappingProjection(sender=b, receiver=c, matrix=[[3.0]])
+        projections = [ab, bc]
+        comp.add_projections(projections)
+
+        comp.run(inputs={a: 1.0})
+
+        assert np.allclose(a.value, [[1.0]])
+        assert np.allclose(b.value, [[2.0]])
+        assert np.allclose(c.value, [[24.0]])
+        assert ab in comp.projections
+        assert bc in comp.projections
+
+    def test_add_multiple_projections_no_sender(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = MappingProjection(sender=b)
+        projections = [ab, bc]
+        with pytest.raises(CompositionError) as err:
+            comp.add_projections(projections)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+
+    def test_add_multiple_projections_no_receiver(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = MappingProjection(receiver=c)
+        projections = [ab, bc]
+        with pytest.raises(CompositionError) as err:
+            comp.add_projections(projections)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+
+    def test_add_multiple_projections_not_a_proj(self):
+        comp = Composition(name='comp')
+        a = TransferMechanism(name='a')
+        b = TransferMechanism(name='b',
+                              function=Linear(slope=2.0))
+        c = TransferMechanism(name='a',
+                              function=Linear(slope=4.0))
+        nodes = [a, b, c]
+        comp.add_nodes(nodes)
+
+        ab = MappingProjection(sender=a, receiver=b)
+        bc = [[3.0]]
+        projections = [ab, bc]
+        with pytest.raises(CompositionError) as err:
+            comp.add_projections(projections)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+
     def test_add_multiple_nodes_at_once(self):
         comp = Composition()
         a = TransferMechanism()
@@ -129,7 +203,6 @@ comp = Composition()
         print()
         logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
                     format(count, t, 's' if count != 1 else ''))
-
 
 class TestAddProjection:
 
@@ -406,6 +479,54 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.CYCLE)
         assert C in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
+    def test_model_based_optimizer_objective_mech_not_terminal(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                                                  features=[A.input_state],
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                      function=pnl.LinearCombination(
+                                                                                          operation=pnl.PRODUCT),
+                                                                                      monitor=[A]),
+                                                                                  function=pnl.GridSearch(),
+                                                                                  control_signals=[("slope", B)]
+                                                                                  )
+                                       )
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+        # disable controller
+        comp.enable_model_based_optimizer = False
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+    def test_model_based_optimizer_objective_mech_not_terminal_fall_back(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                                                  features=[A.input_state],
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                      function=pnl.LinearCombination(
+                                                                                          operation=pnl.PRODUCT),
+                                                                                      monitor=[A, B]),
+                                                                                  function=pnl.GridSearch(),
+                                                                                  control_signals=[("slope", B)]
+                                                                                  )
+                                       )
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # disable controller
+        comp.enable_model_based_optimizer = False
+        comp._analyze_graph()
+        assert comp.model_based_optimizer.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 class TestGraphCycles:
 

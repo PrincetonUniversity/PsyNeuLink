@@ -1,12 +1,19 @@
 language: python
 
 python:
-    - 3.5
     - 3.6
     - 3.7
 
+branches:
+  only:
+    - master
+    - devel
+    - /devel-.*/
+    - /travis.*/
+
+
 install:
-  - pip install coveralls
+  - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
@@ -22,17 +29,6 @@ cache:
 
 matrix:
   include:
-  - os: osx
-    python: 3.5
-    language: minimal
-    env:
-        - PYTHON=3.5.4
-        - PYTHON_PKG_VERSION=macosx10.6
-    # Cache installed python virtual env and homebrew downloads
-    cache:
-        directories:
-          - $HOME/Library/Caches
-
   - os: osx
     python: 3.6
     language: minimal
@@ -89,9 +85,15 @@ before_install: |
 
     HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
   fi
+  if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then
+        export PYTEST_COV="--cov=psyneulink"
+  else
+        export PYTEST_COV=""
+  fi
+
 
 script:
-  - python -m pytest -p no:logging --cov=psyneulink tests/
+  - python -m pytest -p no:logging $PYTEST_COV tests/
 
 after_script:
-  - coveralls
+  - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then coveralls; fi

@@ -823,6 +823,11 @@ class Function_Base(Function):
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params
         black_list = {'function', 'variable', 'value', 'context'}
+        try:
+            # Don't list stateful params, the are included in context
+            black_list.update(self.stateful_attributes)
+        except AttributeError:
+            pass
         def _is_compilation_param(p):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
                 val = p.get(execution_id)
@@ -840,8 +845,7 @@ class Function_Base(Function):
         for p in self._get_compilation_params(execution_id):
             param = p.get(execution_id)
             try:
-                self.owner.parameter_states[p.name]
-                param = [param]
+                param = self.owner.parameter_states[p.name]._instance_defaults.value
             except (AttributeError, TypeError):
                 pass
             if not np.isscalar(param) and param is not None:

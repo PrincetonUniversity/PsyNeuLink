@@ -913,6 +913,39 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
 
+    def test_recurrent_mech_change_learning_rate(self):
+        R = RecurrentTransferMechanism(size=4,
+                                       function=Linear,
+                                       enable_learning=True,
+                                       learning_rate=0.1
+                                       )
+
+        p = Process(pathway=[R])
+        s = System(processes=[p])
+        assert R.learning_rate == 0.1
+        assert R.learning_mechanism.learning_rate == 0.1
+        # assert R.learning_mechanism.function.learning_rate == 0.1
+
+        s.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
+        matrix_1 = [[0., 1.1, 1.1, 1.1],
+                    [1.1, 0., 1.1, 1.1],
+                    [1.1, 1.1, 0., 1.1],
+                    [1.1, 1.1, 1.1, 0.]]
+        assert np.allclose(R.recurrent_projection.mod_matrix, matrix_1)
+        print(R.recurrent_projection.mod_matrix)
+        R.learning_rate = 0.9
+
+        assert R.learning_rate == 0.9
+        assert R.learning_mechanism.learning_rate == 0.9
+        # assert R.learning_mechanism.function.learning_rate == 0.9
+        s.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
+        matrix_2 = [[0., 1.911125, 1.911125, 1.911125],
+                    [1.911125, 0., 1.911125, 1.911125],
+                    [1.911125, 1.911125, 0., 1.911125],
+                    [1.911125, 1.911125, 1.911125, 0.]]
+        # assert np.allclose(R.recurrent_projection.mod_matrix, matrix_2)
+        print(R.recurrent_projection.mod_matrix)
+
     def test_recurrent_mech_with_learning_warning(self):
         R = RecurrentTransferMechanism(size=2,
                                        function=Linear,
