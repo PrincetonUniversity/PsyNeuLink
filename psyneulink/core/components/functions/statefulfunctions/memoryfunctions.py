@@ -735,7 +735,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
         if len(key) != self.parameters.key_size.get(execution_id):
             raise FunctionError("Length of {} to store in {} must be same as others in the dict ({})".
-                                format(repr('key'), self.__class__.__name__, self._key_size))
+                                format(repr('key'), self.__class__.__name__, self.parameters.key_size.get(execution_id)))
 
     @tc.typecheck
     def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id):
