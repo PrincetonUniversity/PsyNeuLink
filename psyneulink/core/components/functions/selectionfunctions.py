@@ -39,6 +39,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+from psyneulink.core.globals.utilities import get_global_seed
 
 
 MAX_VS_NEXT = 'max_vs_next'
@@ -224,6 +225,7 @@ class OneHot(SelectionFunction):
 
         """
         mode = Parameter(MAX_VAL, stateful=False)
+        random_state = Parameter(None, stateful=True)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -242,12 +244,21 @@ class OneHot(SelectionFunction):
                  mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
                                MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
                                PROB, PROB_INDICATOR)=MAX_VAL,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState(np.asarray([seed]))
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["random_state"]
+
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(mode=mode,
+                                                  random_state=random_state,
                                                   params=params)
 
         reset_default_variable_flexibility = False
@@ -359,7 +370,8 @@ class OneHot(SelectionFunction):
             if not prob_dist.any():
                 return self.convert_output_type(v)
             cum_sum = np.cumsum(prob_dist)
-            random_value = np.random.uniform()
+            random_state = self.get_current_function_param("random_state", execution_id)
+            random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
             if self.mode is PROB:
