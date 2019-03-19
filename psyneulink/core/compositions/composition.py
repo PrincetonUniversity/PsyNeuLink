@@ -4298,6 +4298,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
+    def reshape_control_signal_if_needed(self,
+                                         arr):
+
+        current_shape = np.shape(arr)
+        if len(current_shape) > 2:
+            newshape = (current_shape[0], current_shape[1])
+            newarr = np.reshape(arr, newshape)
+            arr = tuple(newarr[i].item() for i in range(len(newarr)))
+
+        return np.array(arr)
+
     def evaluate(
             self,
             predicted_input=None,
@@ -4324,8 +4335,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         # Assign control_allocation current being sampled
 
-        base_control_allocation = self.model_based_optimizer.parameters.value.get(execution_id)
-        candidate_control_allocation = control_allocation
+        base_control_allocation = self.reshape_control_signal_if_needed(self.model_based_optimizer.parameters.value.get(execution_id))
+        candidate_control_allocation = self.reshape_control_signal_if_needed(control_allocation)
         print("Candidate Control Signals: ", candidate_control_allocation, "| Base Control Signals: ", tuple(base_control_allocation))
 
         # Get reconfiguration cost

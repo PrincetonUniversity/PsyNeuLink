@@ -861,17 +861,6 @@ class Distance(ObjectiveFunction):
 
         return builder
 
-    def reshape_if_needed(self,
-                          arr):
-
-        current_shape = np.shape(arr)
-        if len(current_shape) > 2:
-            print("before = ", arr)
-            newshape = (current_shape[0], current_shape[1])
-            newarr = np.reshape(arr, newshape)
-            arr = tuple(newarr[i].item() for i in range(len(newarr)))
-
-        return np.array(arr)
     def function(self,
                  variable=None,
                  execution_id=None,
@@ -909,10 +898,7 @@ class Distance(ObjectiveFunction):
 
         # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:
-            result = np.linalg.norm(self.reshape_if_needed(v2) - self.reshape_if_needed(v1))
-            # print("v2 = ", v2, " (", type(v2), ")")
-            # print("v1 = ", v1, " (", type(v1), ")")
-            # result = np.linalg.norm(v2 - v1)
+            result = np.linalg.norm(v2 - v1)
 
         # Cosine similarity of v1 and v2
         elif self.metric is COSINE:
