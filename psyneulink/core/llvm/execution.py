@@ -190,11 +190,12 @@ class CompExecution(CUDAExecution):
         self._bin_func = None
         self._debug_env = debug_env
 
-        # At least the input_CIM wrapper should be generated
-        input_cim_fn = composition._get_node_wrapper(composition.input_CIM)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
+            # At least the input_CIM wrapper should be generated
+            input_cim_fn = composition._get_node_wrapper(composition.input_CIM)._llvm_function
+
             # Input structures
             # TODO: Use the compiled version to get these
             c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
