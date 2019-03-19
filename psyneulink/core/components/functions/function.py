@@ -825,7 +825,7 @@ class Function_Base(Function):
 
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params
-        black_list = {'function', 'variable', 'value', 'context'}
+        black_list = {'function', 'variable', 'value', 'context', 'initializer'}
         try:
             # Don't list stateful params, the are included in context
             black_list.update(self.stateful_attributes)
