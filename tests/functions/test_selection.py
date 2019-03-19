@@ -52,7 +52,6 @@ def test_basic(func, variable, params, expected, benchmark):
     benchmark(f, variable)
 
 
-@pytest.mark.skip
 @pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.integrator_function
@@ -68,7 +67,6 @@ def test_llvm(func, variable, params, expected, benchmark):
     benchmark(m.execute, variable)
 
 
-@pytest.mark.skip
 @pytest.mark.llvm
 @pytest.mark.cuda
 @pytest.mark.function
@@ -76,7 +74,7 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_ptx_cuda(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName + params['name'];
+    benchmark.group = GROUP_PREFIX + func.componentName + params['mode'];
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
     m.cuda_execute(variable)
