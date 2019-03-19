@@ -860,6 +860,10 @@ class OptimizationControlMechanism(ControlMechanism):
         net_outcome = self.parameters.net_outcome.get(execution_id)
         # MODIFIED 1/23/19 END
         #
+        # freeze the values of current execution_id, because they can be changed in between simulations,
+        # and the simulations must start from the exact spot
+        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id)
+
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
@@ -871,6 +875,10 @@ class OptimizationControlMechanism(ControlMechanism):
             if not 'has no attribute \'adapt\'' in e.args[0]:
                 raise AttributeError(e.args[0])
 
+        # freeze the values of current execution_id, because they can be changed in between simulations,
+        # and the simulations must start from the exact spot
+        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id, override=True)
+
         # Get control_allocation that optmizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
@@ -878,6 +886,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       execution_id=execution_id,
                                                                                       runtime_params=runtime_params,
                                                                                       context=context)
+
+        # clean up frozen values after execution
+        self.agent_rep._delete_context(self._get_frozen_execution_id(execution_id))
+
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
@@ -894,6 +906,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # Return optimal control_allocation
         return optimal_control_allocation
 
+    def _get_frozen_execution_id(self, execution_id=None):
+        return f'{execution_id}-frozen'
+
     def _set_up_simulation(self, base_execution_id=None):
         sim_execution_id = self.get_next_sim_id(base_execution_id)
 
@@ -902,7 +917,7 @@ class OptimizationControlMechanism(ControlMechanism):
         except AttributeError:
             self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
 
-        self.agent_rep._initialize_from_context(sim_execution_id, base_execution_id, override=False)
+        self.agent_rep._initialize_from_context(sim_execution_id, self._get_frozen_execution_id(base_execution_id), override=False)
 
         return sim_execution_id
 
