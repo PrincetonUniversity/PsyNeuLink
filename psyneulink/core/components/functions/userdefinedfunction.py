@@ -491,7 +491,7 @@ class UserDefinedFunction(Function_Base):
 
         self._initialize_parameters()
 
-    def function(self, execution_id=None, **kwargs):
+    def function(self, variable, execution_id=None, **kwargs):
 
         # Update value of parms in cust_fct_params
         for param in self.cust_fct_params:
@@ -519,10 +519,10 @@ class UserDefinedFunction(Function_Base):
 
         try:
             # Try calling with full list of args (including context and params)
-            value = call_with_pruned_args(self.custom_function, **kwargs)
+            value = self.custom_function(variable, **kwargs)
         except TypeError:
             # Try calling with just variable and cust_fct_params
-            value = self.custom_function(kwargs[VARIABLE], **call_params)
+            value = self.custom_function(variable, **call_params)
 
         return self.convert_output_type(value)
 
