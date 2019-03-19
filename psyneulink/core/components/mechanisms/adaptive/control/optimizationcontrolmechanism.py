@@ -405,7 +405,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -907,7 +907,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return optimal_control_allocation
 
     def _get_frozen_execution_id(self, execution_id=None):
-        return f'{execution_id}-frozen'
+        return f'{execution_id}{EID_FROZEN}'
 
     def _set_up_simulation(self, base_execution_id=None):
         sim_execution_id = self.get_next_sim_id(base_execution_id)

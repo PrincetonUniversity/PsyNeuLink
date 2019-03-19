@@ -358,9 +358,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
-    CONTROL_SIGNAL, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, \
-    OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, EUCLIDEAN
+from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EID_SIMULATION, EUCLIDEAN, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1434,7 +1432,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 sim_num = 0
                 self._sim_counts[execution_id] = 1
 
-        return '{0}-sim-{1}'.format(execution_id, sim_num)
+        return '{0}{1}-{2}'.format(execution_id, EID_SIMULATION, sim_num)
 
     @property
     def _dependent_components(self):
