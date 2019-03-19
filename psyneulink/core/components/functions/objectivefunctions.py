@@ -780,7 +780,7 @@ class Distance(ObjectiveFunction):
             numer_acc = builder.alloca(ctx.float_ty)
             denom1_acc = builder.alloca(ctx.float_ty)
             denom2_acc = builder.alloca(ctx.float_ty)
-            for loc in numer_acc, denom1_acc, denom1_acc:
+            for loc in numer_acc, denom1_acc, denom2_acc:
                 builder.store(ctx.float_ty(0), loc)
             kwargs['numer_acc'] = numer_acc
             kwargs['denom1_acc'] = denom1_acc
