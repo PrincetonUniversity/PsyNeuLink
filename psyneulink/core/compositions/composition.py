@@ -590,7 +590,7 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
 ]
 
 logger = logging.getLogger(__name__)
@@ -874,6 +874,11 @@ class Graph(object):
         '''
 
         return list(self.comp_to_vertex[component].backward_sources)
+
+
+# Options for show_node_structure argument of show_graph()
+MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
+STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -2087,209 +2092,210 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
 
-    @tc.typecheck
-    def show_structure(self,
-                       # direction = 'BT',
-                       show_functions:bool=False,
-                       show_values:bool=False,
-                       use_labels:bool=False,
-                       show_headers:bool=False,
-                       show_roles:bool=False,
-                       system=None,
-                       composition=None,
-                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
-                       output_fmt:tc.enum('pdf','struct')='pdf'
-                       ):
-        """Generate a detailed display of a the structure of a Mechanism.
 
-        .. note::
-           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
-           (standard with PsyNeuLink pip install)
-
-        Displays the structure of a Mechanism using the GraphViz `record
-        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
-        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
-
-        Arguments
-        ---------
-
-        show_functions : bool : default False
-            show the `function <Component.function>` of the Mechanism and each of its States.
-
-        show_mech_function_params : bool : default False
-            show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
-
-        show_state_function_params : bool : default False
-            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
-            True).
-
-        show_values : bool : default False
-            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
-
-        use_labels : bool : default False
-            use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
-            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
-            <Mechanism.output_labels_dict>` (for OutputState values); otherwise it is ignored.
-
-        show_headers : bool : default False
-            show the Mechanism, InputState, ParameterState and OutputState headers.
-
-        show_roles : bool : default False
-            show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
-
-        system : System : default None
-            specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
-
-        composition : Composition : default None
-            specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
-
-        compact_cim : *INPUT* or *OUTUPT* : default None
-            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.
-
-        output_fmt : keyword : default 'pdf'
-            'pdf': generate and open a pdf with the visualization;\n
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
-            'struct': return a string that specifies the structure of a mechanism,
-            for use in a GraphViz node specification.
-
-        """
-        if composition:
-            system = composition
-        open_bracket = r'{'
-        pipe = r' | '
-        close_bracket = r'}'
-        mechanism_header = r'COMPOSITION:\n'
-        input_states_header = r'______CIMINPUTSTATES______\n' \
-                              r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
-        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
-                               r'\nCIMOUTPUTSTATES'
-
-        def mech_string(mech):
-            '''Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure '''
-            if show_headers:
-                mech_header = mechanism_header
-            else:
-                mech_header = ''
-            mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
-            mech_role = ''
-            if system and show_roles:
-                try:
-                    mech_role = r'\n[{}]'.format(self.systems[system])
-                except KeyError:
-                    # # mech_role = r'\n[{}]'.format(self.system)
-                    # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
-                        ControlMechanism
-                    from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-                        ObjectiveMechanism
-                    if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
-                        mech_role = r'\n[CONTROLLER]'
-                    elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
-                        mech_role = r'\n[{}]'.format(mech._role)
-                    else:
-                        mech_role = ""
-
-            mech_function = ''
-            if show_functions:
-                mech_function = r'\n({})'.format(mech.function.__class__.__name__)
-            mech_value = ''
-            if show_values:
-                mech_value = r'\n={}'.format(mech.value)
-            return mech_name + mech_role + mech_function + mech_value
-
-        from psyneulink.core.globals.utilities import ContentAddressableList
-        def states_string(state_list: ContentAddressableList,
-                          state_type,
-                          include_function: bool = False,
-                          include_value: bool = False,
-                          use_label: bool = False):
-            '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
-            states = open_bracket
-            for i, state in enumerate(state_list):
-                if i:
-                    states += pipe
-                function = ''
-                if include_function:
-                    function = r'\n({})'.format(state.function.__class__.__name__)
-                value = ''
-                if include_value:
-                    if use_label:
-                        value = r'\n={}'.format(state.label)
-                    else:
-                        value = r'\n={}'.format(state.value)
-                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
-                                                        state.name,
-                                                        function,
-                                                        value)
-            states += close_bracket
-            return states
-
-        # Construct Mechanism specification
-        mech = mech_string(self)
-
-        # Construct InputStates specification
-        if len(self.input_states) and compact_cim is not INPUT:
-            if show_headers:
-                input_states = input_states_header + pipe + states_string(self.input_states,
-                                                                          InputState,
-                                                                          include_function=show_functions,
-                                                                          include_value=show_values,
-                                                                          use_label=use_labels)
-            else:
-                input_states = states_string(self.input_states,
-                                             InputState,
-                                             include_function=show_functions,
-                                             include_value=show_values,
-                                             use_label=use_labels)
-            input_states = pipe + input_states
-        else:
-            input_states = ''
-
-        # Construct OutputStates specification
-        if len(self.output_states) and compact_cim is not OUTPUT:
-            if show_headers:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels) + pipe + output_states_header
-            else:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels)
-
-            output_states = output_states + pipe
-        else:
-            output_states = ''
-
-        m_node_struct = open_bracket + \
-                        output_states + \
-                        open_bracket + mech + close_bracket + \
-                        input_states + \
-                        close_bracket
-
-        if output_fmt == 'struct':
-            # return m.node
-            return m_node_struct
-
-        # Make node
-        import graphviz as gv
-        m = gv.Digraph(  # 'mechanisms',
-            # filename='mechanisms_revisited.gv',
-            node_attr={'shape': 'record'},
-        )
-        m.node(self.name, m_node_struct, shape='record')
-
-        if output_fmt == 'pdf':
-            m.view(self.name.replace(" ", "-"), cleanup=True)
-
-        elif output_fmt == 'jupyter':
-            return m
+    # @tc.typecheck
+    # def show_structure(self,
+    #                    # direction = 'BT',
+    #                    show_functions:bool=False,
+    #                    show_values:bool=False,
+    #                    use_labels:bool=False,
+    #                    show_headers:bool=False,
+    #                    show_roles:bool=False,
+    #                    system=None,
+    #                    composition=None,
+    #                    compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
+    #                    output_fmt:tc.enum('pdf','struct')='pdf'
+    #                    ):
+    #     """Generate a detailed display of a the structure of a Mechanism.
+    #
+    #     .. note::
+    #        This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
+    #        (standard with PsyNeuLink pip install)
+    #
+    #     Displays the structure of a Mechanism using the GraphViz `record
+    #     <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
+    #     by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
+    #
+    #     Arguments
+    #     ---------
+    #
+    #     show_functions : bool : default False
+    #         show the `function <Component.function>` of the Mechanism and each of its States.
+    #
+    #     show_mech_function_params : bool : default False
+    #         show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
+    #
+    #     show_state_function_params : bool : default False
+    #         show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
+    #         True).
+    #
+    #     show_values : bool : default False
+    #         show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
+    #
+    #     use_labels : bool : default False
+    #         use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
+    #         <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
+    #         <Mechanism.output_labels_dict>` (for OutputState values); otherwise it is ignored.
+    #
+    #     show_headers : bool : default False
+    #         show the Mechanism, InputState, ParameterState and OutputState headers.
+    #
+    #     show_roles : bool : default False
+    #         show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
+    #
+    #     system : System : default None
+    #         specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
+    #         if this is not specified, the **show_roles** argument is ignored.
+    #
+    #     composition : Composition : default None
+    #         specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
+    #         if this is not specified, the **show_roles** argument is ignored.
+    #
+    #     compact_cim : *INPUT* or *OUTUPT* : default None
+    #         specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.
+    #
+    #     output_fmt : keyword : default 'pdf'
+    #         'pdf': generate and open a pdf with the visualization;\n
+    #         'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
+    #         'struct': return a string that specifies the structure of a mechanism,
+    #         for use in a GraphViz node specification.
+    #
+    #     """
+    #     if composition:
+    #         system = composition
+    #     open_bracket = r'{'
+    #     pipe = r' | '
+    #     close_bracket = r'}'
+    #     mechanism_header = r'COMPOSITION:\n'
+    #     input_states_header = r'______CIMINPUTSTATES______\n' \
+    #                           r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
+    #     output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
+    #                            r'\nCIMOUTPUTSTATES'
+    #
+    #     def mech_string(mech):
+    #         '''Return string with name of mechanism possibly with function and/or value
+    #         Inclusion of role, function and/or value is determined by arguments of call to show_structure '''
+    #         if show_headers:
+    #             mech_header = mechanism_header
+    #         else:
+    #             mech_header = ''
+    #         mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
+    #         mech_role = ''
+    #         if system and show_roles:
+    #             try:
+    #                 mech_role = r'\n[{}]'.format(self.systems[system])
+    #             except KeyError:
+    #                 # # mech_role = r'\n[{}]'.format(self.system)
+    #                 # mech_role = r'\n[CONTROLLER]'
+    #                 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
+    #                     ControlMechanism
+    #                 from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+    #                     ObjectiveMechanism
+    #                 if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
+    #                     mech_role = r'\n[CONTROLLER]'
+    #                 elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
+    #                     mech_role = r'\n[{}]'.format(mech._role)
+    #                 else:
+    #                     mech_role = ""
+    #
+    #         mech_function = ''
+    #         if show_functions:
+    #             mech_function = r'\n({})'.format(mech.function.__class__.__name__)
+    #         mech_value = ''
+    #         if show_values:
+    #             mech_value = r'\n={}'.format(mech.value)
+    #         return mech_name + mech_role + mech_function + mech_value
+    #
+    #     from psyneulink.core.globals.utilities import ContentAddressableList
+    #     def states_string(state_list: ContentAddressableList,
+    #                       state_type,
+    #                       include_function: bool = False,
+    #                       include_value: bool = False,
+    #                       use_label: bool = False):
+    #         '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
+    #         states = open_bracket
+    #         for i, state in enumerate(state_list):
+    #             if i:
+    #                 states += pipe
+    #             function = ''
+    #             if include_function:
+    #                 function = r'\n({})'.format(state.function.__class__.__name__)
+    #             value = ''
+    #             if include_value:
+    #                 if use_label:
+    #                     value = r'\n={}'.format(state.label)
+    #                 else:
+    #                     value = r'\n={}'.format(state.value)
+    #             states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
+    #                                                     state.name,
+    #                                                     function,
+    #                                                     value)
+    #         states += close_bracket
+    #         return states
+    #
+    #     # Construct Mechanism specification
+    #     mech = mech_string(self)
+    #
+    #     # Construct InputStates specification
+    #     if len(self.input_states) and compact_cim is not INPUT:
+    #         if show_headers:
+    #             input_states = input_states_header + pipe + states_string(self.input_states,
+    #                                                                       InputState,
+    #                                                                       include_function=show_functions,
+    #                                                                       include_value=show_values,
+    #                                                                       use_label=use_labels)
+    #         else:
+    #             input_states = states_string(self.input_states,
+    #                                          InputState,
+    #                                          include_function=show_functions,
+    #                                          include_value=show_values,
+    #                                          use_label=use_labels)
+    #         input_states = pipe + input_states
+    #     else:
+    #         input_states = ''
+    #
+    #     # Construct OutputStates specification
+    #     if len(self.output_states) and compact_cim is not OUTPUT:
+    #         if show_headers:
+    #             output_states = states_string(self.output_states,
+    #                                           OutputState,
+    #                                           include_function=show_functions,
+    #                                           include_value=show_values,
+    #                                           use_label=use_labels) + pipe + output_states_header
+    #         else:
+    #             output_states = states_string(self.output_states,
+    #                                           OutputState,
+    #                                           include_function=show_functions,
+    #                                           include_value=show_values,
+    #                                           use_label=use_labels)
+    #
+    #         output_states = output_states + pipe
+    #     else:
+    #         output_states = ''
+    #
+    #     m_node_struct = open_bracket + \
+    #                     output_states + \
+    #                     open_bracket + mech + close_bracket + \
+    #                     input_states + \
+    #                     close_bracket
+    #
+    #     if output_fmt == 'struct':
+    #         # return m.node
+    #         return m_node_struct
+    #
+    #     # Make node
+    #     import graphviz as gv
+    #     m = gv.Digraph(  # 'mechanisms',
+    #         # filename='mechanisms_revisited.gv',
+    #         node_attr={'shape': 'record'},
+    #     )
+    #     m.node(self.name, m_node_struct, shape='record')
+    #
+    #     if output_fmt == 'pdf':
+    #         m.view(self.name.replace(" ", "-"), cleanup=True)
+    #
+    #     elif output_fmt == 'jupyter':
+    #         return m
 
     def _assign_execution_ids(self, execution_id=None):
         '''
@@ -2370,7 +2376,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
                    show_cim=False,
-                   show_headers=False,
+                   show_headers=True,
                    show_projection_labels=False,
                    show_nested=False,
                    direction='BT',
@@ -2394,9 +2400,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        show_node_structure : bool, VALUES, FUNCTIONS or ALL : default False
-            show a detailed representation of each `Mechanism` in the graph, including its `States`;  can have the
-            following settings:
+        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
+        or ALL : default False
+            show a detailed representation of each `Mechanism` in the graph, including its `States <State>`;  can
+            have any of the following settings alone or in a list:
 
             * `True` -- show States of Mechanism, but not information about the `value
               <Component.value>` or `function <Component.function>` of the Mechanism or its States.
@@ -2422,13 +2429,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
-              Mechanisms in the `Composition` and their `States` (using labels for the values, if specified;  see above).
-
-            Any combination of the settings above can also be specified in a list that is assigned to
-            show_node_structure
+              Mechanisms in the `Composition` and their `States <State>` (using labels for
+              the values, if specified -- see above), including parameters for all functions.
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
+
+        show_headers : bool : default True
+            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
+            **show_node_structure** is specified (see above).
 
         show_nested : bool : default False
             specifies whether nested Compositions are shown in details as inset graphs
@@ -2951,9 +2960,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
         INITIAL_FRAME = "INITIAL_FRAME"
-        MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
-        STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
-        # ALL = "ALL"
 
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
