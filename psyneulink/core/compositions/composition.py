@@ -2351,13 +2351,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TBI Show Dimensions
         name = item.name
 
-        if show_dimensions in {ALL, MECHANISMS}:
+        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_state.socket_width)
                                                   for input_state in item.input_states))
             output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
                                                     for output_state in item.output_states))
             return "{}\n{}\n{}".format(output_str, name, input_str)
-        if show_dimensions in {ALL, PROJECTIONS}:
+        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
             # MappingProjections use matrix
             if isinstance(item, MappingProjection):
                 value = np.array(item.matrix)
