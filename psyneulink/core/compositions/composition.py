@@ -522,7 +522,7 @@ However, there are options for displaying more detailed information:
     - **show_node_structure**
 
         +-------------------------------------------------------+-------------------------------------------------------+
-        |    >>> comp.show_graph(show_node_structure=True)      | .. figure:: _static/show_graph_show_mech_structure.svg|
+        |    >>> comp.show_graph(show_node_structure=True)      | .. figure:: _static/show_graph_show_node_structure.svg|
         +-------------------------------------------------------+-------------------------------------------------------+
         |    >>> comp.show_graph(show_node_structure=True,      | .. figure:: _static/headers_false.svg                 |
         |    ... show_headers=False)                            |                                                       |
