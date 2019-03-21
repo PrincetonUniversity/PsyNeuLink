@@ -1022,12 +1022,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:
                 self.objective_mechanism.add_monitored_output_states(
-                                                              monitored_output_states_specs=monitored_output_states,
+                                                              monitor=monitored_output_states,
                                                               context=context)
         # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_states
         else:
             try:
-                self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
+                self._objective_mechanism = ObjectiveMechanism(monitor=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
             except (ObjectiveMechanismError, FunctionError) as e:
