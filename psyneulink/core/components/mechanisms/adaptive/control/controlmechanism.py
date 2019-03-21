@@ -1022,7 +1022,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:
                 self.objective_mechanism.add_monitored_output_states(
-                                                              monitor=monitored_output_states,
+                                                              monitored_output_states_specs=monitored_output_states,
                                                               context=context)
         # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_states
         else:

@@ -505,7 +505,7 @@ Nested Compositions) and Projections in the Composition (based on the `Compositi
 <Composition.processing_graph>`).
 
 By default, Nodes are shown as ovals labeled by their `names <Mechanism_base.name>`, and Projections are shown
-as unlabeled arrows.
+as unlabeled arrows.  However, there are options for displaying more detailed information.
 
 
 +-------------------------------------------------------+-------------------------------------------------------+
