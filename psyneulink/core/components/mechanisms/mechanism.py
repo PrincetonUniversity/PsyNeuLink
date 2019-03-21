@@ -3093,17 +3093,35 @@ class Mechanism_Base(Mechanism):
             # num_states = len(state_list)
             num_states = 2
 
-            # InputStates and OutputStates
-            if state_type in {InputState, OutputState}:
+            # # InputStates and OutputStates
+            # if state_type in {InputState, OutputState}:
+            #     if show_headers:
+            #         if state_type is InputState:
+            #             states_header = input_states_header
+            #         else:
+            #             states_header = output_states_header
+            #     table = f'<td colspan="{num_states}"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
+            #     for state in state_list:
+            #         table += state_cell(state, show_functions, show_values, use_labels)
+            #     table += '</tr></table></td></tr></table></td>'
+
+            # InputStates
+            if state_type is InputState:
                 if show_headers:
-                    if state_type is InputState:
-                        states_header = input_states_header
-                    else:
-                        states_header = output_states_header
+                    states_header = input_states_header
                 table = f'<td colspan="{num_states}"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
                 table += '</tr></table></td></tr></table></td>'
+
+            # OutputStates
+            elif state_type is OutputState:
+                if show_headers:
+                    states_header = output_states_header
+                table = f'<td colspan="{num_states}"> {outer_table_spec} <tr><td>{inner_table_spec}<tr>'
+                for state in state_list:
+                    table += state_cell(state, show_functions, show_values, use_labels)
+                table += f'</tr></table></td></tr> {states_header} </table></td>'
 
             # ParameterStates
             else:
