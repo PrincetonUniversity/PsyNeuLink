@@ -3117,16 +3117,20 @@ class Mechanism_Base(Mechanism):
             #     for state in state_list:
             #         table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
             #     table += '</table></td></tr></table></td>'
+
             # MODIFIED 3/21/19 NEW: [JDC]
             # ParameterStates
             elif state_type is ParameterState:
-                # num_states = len(state_list)
                 if show_headers:
                     states_header = parameter_states_header
-                table = f'<td> {outer_table_spec} {states_header}<td>{inner_table_spec}'
+                else:
+                    states_header = '<tr>'
+                table = f'<td> {outer_table_spec} {states_header} <td> {inner_table_spec}'
                 for state in state_list:
                     table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
                 table += '</table></td></tr></table></td>'
+                assert True
+
             # MODIFIED 3/21/19 END
 
             # OutputStates
