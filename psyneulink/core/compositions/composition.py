@@ -505,8 +505,8 @@ Nested Compositions) and Projections in the Composition (based on the `Compositi
 <Composition.processing_graph>`).
 
 By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT`
-Mechanisms shown in green, its `OUTPUT` Mechanism is shown in red, and Projections shown as unlabeled arrows,
-as illustrated for the Composition in the example below:
+Mechanisms shown in green, its `OUTPUT` Mechanisms shown in red, and Projections shown as unlabeled arrows,
+as illustrated in the example below:
 
 
 COMMENT:
@@ -2442,7 +2442,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return name
 
     def show_graph(self,
-                   show_model_based_optimizer=False,
+                   show_controller=False,
                    show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
                    show_cim=False,
@@ -2459,6 +2459,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    composition_color='pink',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
+                   **kwargs,
                    ):
         """
         .. note::
@@ -3037,6 +3038,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
         #     return
 
+        # For backward compatibility
+        if 'show_model_based_optimizer' in kwargs:
+            show_controller = kwargs['show_model_based_optimizer']
+            del kwargs['show_model_based_optimizer']
+        if kwargs:
+            raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
+                                   f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
+
         if show_dimensions == True:
             show_dimensions = ALL
 
@@ -3128,8 +3137,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_cim:
             _assign_cim_components(G, [self.input_CIM, self.output_CIM])
 
-        # Add model-based-optimizer-related Components to graph if show_model_based_optimizer
-        if show_model_based_optimizer:
+        # Add model-based-optimizer-related Components to graph if show_controller
+        if show_controller:
             _assign_control_components(G)
 
         # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
@@ -3142,7 +3151,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if NodeRole.INPUT in roles:
                 i = get_list_index(node)
                 G.body.insert(0,G.body.pop(i))
-        if self.model_based_optimizer and show_model_based_optimizer:
+        if self.model_based_optimizer and show_controller:
             # i = get_list_index(self.model_based_optimizer.objective_mechanism)
             # G.body.insert(len(G.body),G.body.pop(i))
             i = get_list_index(self.model_based_optimizer)
