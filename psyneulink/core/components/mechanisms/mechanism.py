@@ -3093,32 +3093,18 @@ class Mechanism_Base(Mechanism):
                         value = f'<br/>={state.value}'
                 return f'<td port="{self._get_port_name(state)}"><b>{state.name}</b>{function}{value}</td>'
 
-            states_header = ''
-            # # MODIFIED 3/21/19 OLD:
-            # # num_states = len(state_list)
-            # num_states = 2
-            # MODIFIED 3/21/19 END
 
             # InputStates
             if state_type is InputState:
                 if show_headers:
                     states_header = input_states_header
+                else:
+                    states_header = ''
                 table = f'<td colspan="2"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
                 table += '</tr></table></td></tr></table></td>'
 
-            # # MODIFIED 3/21/19 OLD:
-            # # ParameterStates
-            # elif state_type is ParameterState:
-            #     if show_headers:
-            #         states_header = parameter_states_header
-            #     table = f'<td> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}'
-            #     for state in state_list:
-            #         table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
-            #     table += '</table></td></tr></table></td>'
-
-            # MODIFIED 3/21/19 NEW: [JDC]
             # ParameterStates
             elif state_type is ParameterState:
                 if show_headers:
@@ -3129,14 +3115,13 @@ class Mechanism_Base(Mechanism):
                 for state in state_list:
                     table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
                 table += '</table></td></tr></table></td>'
-                assert True
-
-            # MODIFIED 3/21/19 END
 
             # OutputStates
             elif state_type is OutputState:
                 if show_headers:
                     states_header = output_states_header
+                else:
+                    states_header = ''
                 table = f'<td colspan="2"> {outer_table_spec} <tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
