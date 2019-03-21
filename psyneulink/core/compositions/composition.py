@@ -504,10 +504,12 @@ The `show_graph <Composition.show_graph>` method generates a display of the grap
 Nested Compositions) and Projections in the Composition (based on the `Composition's processing graph
 <Composition.processing_graph>`).
 
-By default, Nodes are shown as ovals labeled by their `names <Mechanism_base.name>`, and Projections are shown
-as unlabeled arrows.  However, there are options for displaying more detailed information.
+By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT`
+Mechanisms shown in green, its `OUTPUT` Mechanism is shown in red, and Projections shown as unlabeled arrows,
+as illustrated for the Composition in the example below:
 
 
+COMMENT:
 +-------------------------------------------------------+-------------------------------------------------------+
 |    >>> import psyneulink as pnl                       | .. figure:: _static/show_graph_basic.svg              |
 |    >>> A = pnl.ProcessingMechanism(name='A')          |                                                       |
@@ -516,9 +518,63 @@ as unlabeled arrows.  However, there are options for displaying more detailed in
 |    >>> comp.add_linear_processing_pathway([A,B])      |                                                       |
 |    >>> comp.show_graph()                              |                                                       |
 +-------------------------------------------------------+-------------------------------------------------------+
+COMMENT
 
-However, there are options for displaying more detailed information:
 
++-----------------------------------------------------------+-------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/show_graph_basic.svg  |
+| >>> a = ProcessingMechanism(                              |                                           |
+|               name='A',                                   |                                           |
+| ...           size=3,                                     |                                           |
+| ...           output_states=[RESULTS, OUTPUT_MEAN]        |                                           |
+| ...           )                                           |                                           |
+| >>> b = ProcessingMechanism(                              |                                           |
+| ...           name='B',                                   |                                           |
+| ...           size=5                                      |                                           |
+| ...           )                                           |                                           |
+| >>> c = ProcessingMechanism(                              |                                           |
+| ...           name='C',                                   |                                           |
+| ...           size=2,                                     |                                           |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                           |
+| ...           )                                           |                                           |
+| >>> comp = Composition(                                   |                                           |
+| ...           name='Comp',                                |                                           |
+| ...           enable_model_based_optimizer=True           |                                           |
+| ...           )                                           |                                           |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                           |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                           |
+| >>> ctlr = OptimizationControlMechanism(                  |                                           |
+| ...            name='Controller',                         |                                           |
+| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                           |
+| ...            function=GridSearch,                       |                                           |
+| ...            control_signals=(GAIN, c),                 |                                           |
+| ...            agent_rep=comp                             |                                           |
+| ...            )                                          |                                           |
+| >>> comp.add_model_based_optimizer(ctlr)                  |                                           |
++-----------------------------------------------------------+-------------------------------------------+
+
+However, there are options for customizing the display in various ways, and/or showing more detailed information.
+The figure below shows several examples.
+
+.. _System_show_graph_figure:
+
+**Output of show_graph using different options**
+
+.. figure:: _static/show_graph_figure.svg
+   :alt: System graph examples
+   :scale: 150 %
+
+   Examples of renderings of the Composition used in the example above, generated using various options of its
+   `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   and its Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
+   Composition, and its associated `ObjectiveMechanmism` (displayed in blue).  **Panel C** adds the
+   Composition's `CompositionInterfaceMechanisms <CompositionInterfaceMechanisms>` using the **show_cim** option.
+   **Panel D** shows a detailed view of the Mechanisms, using the **show_node_structure** option, that includes their
+   `States <State>` and their `roles <NodeRoles>` in the Composition. **Panel E** show an even more detailed view using
+   **show_node_structure** as well as **show_cim**.
+
+
+COMMENT:
     - **show_node_structure**
 
         +-------------------------------------------------------+-------------------------------------------------------+
@@ -544,6 +600,20 @@ However, there are options for displaying more detailed information:
         |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
         |                                           |                                           |
         +-------------------------------------------+-------------------------------------------+
+COMMENT
+
+In addition, the **show_nested** argument can be used to show Compositions that are nested within others.
+For example, if two Compositions identical to* **comp** *above are added as the nodes of the linear processing pathway
+of a third* **comp** *, these can be shown as follows:
+
+        +-------------------------------------------+-------------------------------------------+
+        |    >>> comp.show_graph()                  | .. figure:: _static/nested.svg            |
+        +-------------------------------------------+-------------------------------------------+
+        |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
+        |                                           |                                           |
+        +-------------------------------------------+-------------------------------------------+
+
+
 
 .. _Composition_Class_Reference:
 
