@@ -2455,7 +2455,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
-                   model_based_optimizer_color='blue',
+                   controller_color='blue',
                    composition_color='pink',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
@@ -2516,9 +2516,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_cim : bool : default False
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
 
-        show_model_based_optimizer :  bool : default False
+        show_controller :  bool : default False
             specifies whether or not to show the Composition's model_based_optimizer and associated ObjectiveMechanism;
-            these are displayed in the color specified for **model_based_optimizer_color**.
+            these are displayed in the color specified for **controller_color**.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2889,17 +2889,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             model_based_optimizer = self.model_based_optimizer
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    ctlr_color = model_based_optimizer_color
+                    ctlr_color = controller_color
                 else:
                     ctlr_color = active_color
                 ctlr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                ctlr_color = model_based_optimizer_color
+                ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
+                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
                       "can't be used in its show_graph() method\n".format(self.name))
                 return
 
@@ -2907,26 +2907,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    objmech_ctlr_proj_color = model_based_optimizer_color
+                    objmech_ctlr_proj_color = controller_color
                 else:
                     objmech_ctlr_proj_color = active_color
                 objmech_ctlr_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_ctlr_proj_color = model_based_optimizer_color
+                objmech_ctlr_proj_color = controller_color
                 objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
                 if active_color is BOLD:
-                    objmech_color = model_based_optimizer_color
+                    objmech_color = controller_color
                 else:
                     objmech_color = active_color
                 objmech_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_color = model_based_optimizer_color
+                objmech_color = controller_color
                 objmech_width = str(default_width)
 
             ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
@@ -2974,13 +2974,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
                     if model_based_optimizer in active_items:
                         if active_color is BOLD:
-                            ctl_proj_color = model_based_optimizer_color
+                            ctl_proj_color = controller_color
                         else:
                             ctl_proj_color = active_color
                         ctl_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        ctl_proj_color = model_based_optimizer_color
+                        ctl_proj_color = controller_color
                         ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
@@ -3005,13 +3005,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for projection in input_state.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
-                            proj_color = model_based_optimizer_color
+                            proj_color = controller_color
                         else:
                             proj_color = active_color
                         proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        proj_color = model_based_optimizer_color
+                        proj_color = controller_color
                         proj_width = str(default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
