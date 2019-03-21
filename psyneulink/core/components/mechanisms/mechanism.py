@@ -2987,9 +2987,13 @@ class Mechanism_Base(Mechanism):
         outer_table_spec = '<table border="0" cellborder="0" bgcolor="#FAFAD0">' # NEAR LIGHTGOLDENRODYELLOW
 
         # Header cell of outer State table:
-        input_states_header = f'<tr><td colspan="1" valign="middle"><b><i>{InputState.__name__}s</i></b></td></tr>'
-        parameter_states_header = f'<tr><td><b><i>{ParameterState.__name__}s</i></b></td></tr>'
-        output_states_header = f'<tr><td colspan="1" valign="middle"><b><i>{OutputState.__name__}s</i></b></td></tr>'
+        input_states_header =     f'<tr><td colspan="1" valign="middle"><b><i>{InputState.__name__}s</i></b></td></tr>'
+        # # MODIFIED 3/21/19 OLD:
+        # parameter_states_header = f'<tr><td><b><i>{ParameterState.__name__}s</i></b></td></tr>'
+        # MODIFIED 3/21/19 NEW: [JDC]
+        parameter_states_header = f'<tr><td rowspan="1" valign="middle"><b><i>{ParameterState.__name__}s</i></b></td>'
+        # MODIFIED 3/21/19 END
+        output_states_header =    f'<tr><td colspan="1" valign="middle"><b><i>{OutputState.__name__}s</i></b></td></tr>'
 
         # Inner State table (i.e., that contains individual states in each cell):
         inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
@@ -3090,47 +3094,49 @@ class Mechanism_Base(Mechanism):
                 return f'<td port="{self._get_port_name(state)}"><b>{state.name}</b>{function}{value}</td>'
 
             states_header = ''
-            # num_states = len(state_list)
-            num_states = 2
-
-            # # InputStates and OutputStates
-            # if state_type in {InputState, OutputState}:
-            #     if show_headers:
-            #         if state_type is InputState:
-            #             states_header = input_states_header
-            #         else:
-            #             states_header = output_states_header
-            #     table = f'<td colspan="{num_states}"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
-            #     for state in state_list:
-            #         table += state_cell(state, show_functions, show_values, use_labels)
-            #     table += '</tr></table></td></tr></table></td>'
+            # # MODIFIED 3/21/19 OLD:
+            # # num_states = len(state_list)
+            # num_states = 2
+            # MODIFIED 3/21/19 END
 
             # InputStates
             if state_type is InputState:
                 if show_headers:
                     states_header = input_states_header
-                table = f'<td colspan="{num_states}"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
+                table = f'<td colspan="2"> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
                 table += '</tr></table></td></tr></table></td>'
+
+            # # MODIFIED 3/21/19 OLD:
+            # # ParameterStates
+            # elif state_type is ParameterState:
+            #     if show_headers:
+            #         states_header = parameter_states_header
+            #     table = f'<td> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}'
+            #     for state in state_list:
+            #         table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
+            #     table += '</table></td></tr></table></td>'
+            # MODIFIED 3/21/19 NEW: [JDC]
+            # ParameterStates
+            elif state_type is ParameterState:
+                # num_states = len(state_list)
+                if show_headers:
+                    states_header = parameter_states_header
+                table = f'<td> {outer_table_spec} {states_header}<td>{inner_table_spec}'
+                for state in state_list:
+                    table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
+                table += '</table></td></tr></table></td>'
+            # MODIFIED 3/21/19 END
 
             # OutputStates
             elif state_type is OutputState:
                 if show_headers:
                     states_header = output_states_header
-                table = f'<td colspan="{num_states}"> {outer_table_spec} <tr><td>{inner_table_spec}<tr>'
+                table = f'<td colspan="2"> {outer_table_spec} <tr><td>{inner_table_spec}<tr>'
                 for state in state_list:
                     table += state_cell(state, show_functions, show_values, use_labels)
                 table += f'</tr></table></td></tr> {states_header} </table></td>'
-
-            # ParameterStates
-            else:
-                if show_headers:
-                    states_header = parameter_states_header
-                table = f'<td> {outer_table_spec} {states_header}<tr><td>{inner_table_spec}'
-                for state in state_list:
-                    table += '<tr>' + state_cell(state, show_functions, show_values, use_labels) + '</tr>'
-                table += '</table></td></tr></table></td>'
 
             return table
 
