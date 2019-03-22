@@ -123,6 +123,7 @@ class FuncExecution(CUDAExecution):
         par_struct_ty, ctx_struct_ty, _, _ = self._bin_func.byref_arg_types
 
         if len(execution_ids) > 1:
+            self._bin_multirun = self._bin_func.get_multi_run()
             par_struct_ty = par_struct_ty * len(execution_ids)
             ctx_struct_ty = ctx_struct_ty * len(execution_ids)
 
@@ -157,14 +158,26 @@ class FuncExecution(CUDAExecution):
         return self._get_compilation_param('context_struct', '_get_context_initializer', 1, self._execution_ids[0])
 
     def execute(self, variable):
-        new_var = np.asfarray(variable)
         _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
-        ct_vi = new_var.ctypes.data_as(ctypes.POINTER(vi_ty))
+        if len(self._execution_ids) > 1:
+            vo_ty = vo_ty * len(self._execution_ids)
+            vi_ty = vi_ty * len(self._execution_ids)
         ct_vo = vo_ty()
+        new_variable = np.asfarray(variable)
 
-        self._bin_func(ctypes.byref(self._param_struct),
-                       ctypes.byref(self._context_struct),
-                       ct_vi, ctypes.byref(ct_vo))
+        if len(self._execution_ids) > 1:
+            # wrap_call casts the arguments so we only need contiguaous data
+            # layout
+            ct_vi = np.ctypeslib.as_ctypes(new_variable)
+            self._bin_multirun.wrap_call(self._param_struct,
+                                         self._context_struct,
+                                         ct_vi, ct_vo,
+                                         ctypes.c_int(len(self._execution_ids)))
+        else:
+            ct_vi = new_variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+            self._bin_func(ctypes.byref(self._param_struct),
+                           ctypes.byref(self._context_struct),
+                           ct_vi, ctypes.byref(ct_vo))
 
         return _convert_ctype_to_python(ct_vo)
 
