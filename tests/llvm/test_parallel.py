@@ -176,13 +176,16 @@ def test_nested_composition_run(benchmark, executions, mode):
     assert np.allclose(res, [expected for _ in range(executions)])
     assert len(res) == executions or executions == 1
 
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.parallel
+@pytest.mark.multirun
+@pytest.mark.nested
 @pytest.mark.composition
-@pytest.mark.benchmark(group="TransferMechanism nested composition parallel run multi")
-@pytest.mark.parametrize("executions", [1,5,100])
-def test_nested_transfer_mechanism_composition_run_multi_parallel(benchmark, executions):
+@pytest.mark.benchmark
+@pytest.mark.parametrize("executions", [1,10,100])
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
+    benchmark.group = "Nested Composition mutliple trials/inputs multirun {}".format(executions)
 
     # mechanisms
     A = ProcessingMechanism(name="A",
@@ -207,7 +210,21 @@ def test_nested_transfer_mechanism_composition_run_multi_parallel(benchmark, exe
     expected = [[[0.549833997312478]], [[0.617747874769249]], [[0.6529428177055896]], [[0.7044959416252289]]]
     if executions > 1:
         var = [var for _ in range(executions)]
-    res = e.cuda_run(var, 4, 2)
-    benchmark(e.cuda_run, var, 4, 2)
+    if mode == 'Python':
+        def f(v, num_trials, res=False):
+            results = []
+            for i in range(executions):
+                outer_comp.run(v[i], execution_id=i, num_trials=num_trials)
+                if res: # copy the results immediately, otherwise it's empty
+                    results.append(outer_comp.results.copy())
+            return results
+        res = f(var, 4, True) if executions > 1 else f([var], 4, True)
+        benchmark(f if executions > 1 else outer_comp.run, var, num_trials=4)
+    elif mode == 'LLVM':
+        res = e.run(var, 4, 2)
+        benchmark(e.run, var, 4, 2)
+    elif mode == 'PTX':
+        res = e.cuda_run(var, 4, 2)
+        benchmark(e.cuda_run, var, 4, 2)
     assert np.allclose(res, [expected for _ in range(executions)])
     assert len(res) == executions or executions == 1
