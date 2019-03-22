@@ -4309,7 +4309,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return np.array(arr)
 
-    def _apply_candidate_control_allocation(self, control_allocation, execution_id):
+    def _apply_candidate_control_allocation(self, control_allocation, execution_id, runtime_params, context):
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
             base_control_allocation = self.reshape_control_signal(self.model_based_optimizer.parameters.value.get(execution_id))
@@ -4363,7 +4363,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         combined_costs = 0.
 
         # Apply candidate control to signal(s) for the upcoming simulation
-        self._apply_candidate_control_allocation(control_allocation, execution_id)
+        self._apply_candidate_control_allocation(control_allocation, execution_id, runtime_params, context)
 
         inputs = self._build_predicted_inputs_dict(predicted_input)
 
