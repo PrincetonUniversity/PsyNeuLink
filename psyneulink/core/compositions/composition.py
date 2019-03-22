@@ -4309,7 +4309,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return np.array(arr)
 
-    def _apply_candidate_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+        total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
             base_control_allocation = self.reshape_control_signal(self.model_based_optimizer.parameters.value.get(execution_id))
@@ -4330,8 +4331,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Get control signal costs
             all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
             # Compute a total for the candidate control signal(s)
-            combined_costs = self.model_based_optimizer.combine_costs(all_costs)
-
+            total_cost = self.model_based_optimizer.combine_costs(all_costs)
+        return total_cost
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
         # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
@@ -4360,28 +4361,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
-        combined_costs = 0.
+        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
-        # Apply candidate control to signal(s) for the upcoming simulation
-        self._apply_candidate_control_allocation(control_allocation, execution_id, runtime_params, context)
-
+        # Build input dictionary for simulationn
         inputs = self._build_predicted_inputs_dict(predicted_input)
 
+        # Run Composition in "SIMULATION" context
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
-
-        # KAM commented out 3/22/19 -does not affect pytest. Not sure if these lines are still needed.
-        # for output_state in self.output_states:
-        #     for proj in output_state.efferents:
-        #         proj.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-
         self.run(inputs=inputs,
                  execution_id=execution_id,
                  runtime_params=runtime_params,
                  num_trials=num_simulation_trials,
                  context=context,
                  bin_execute=execution_mode)
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
-        # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
+        # Store simulation results on "base" composition
         if context.initialization_status != ContextFlags.INITIALIZING:
             try:
                 self.parameters.simulation_results.get(base_execution_id).append(
@@ -4389,13 +4385,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # need to update input states in order to get correct value for "outcome" (from objective mech)
+        # Update input states in order to get correct value for "outcome" (from objective mech)
         self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
-
         outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
 
-        net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, combined_costs)
+        # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
+        net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, total_cost)
 
         return net_outcome
 
