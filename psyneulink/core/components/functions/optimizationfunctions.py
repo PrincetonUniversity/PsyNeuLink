@@ -520,11 +520,9 @@ class OptimizationFunction(Function_Base):
 
             # Get next sample of sample
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
-            print("\n\n------------------------------------------------------ Simulation ", count, " ------------------------------------------------------")
             # Compute new value based on new sample
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
             self._report_value(new_value)
-            print("--------------------------------------------------------------------------------------------------------------------------\n\n")
             count += 1
             iteration += 1
             max_iterations = self.parameters.max_iterations.get(execution_id)
