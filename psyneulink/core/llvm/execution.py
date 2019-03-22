@@ -106,9 +106,9 @@ class CUDAExecution:
         # Copy the result from the device
         vo_ty = self._bin_func.byref_arg_types[3]
         if len(self._execution_ids) > 1:
-            vo_ty =  vo_ty * len(self._execution_ids)
+            vo_ty = vo_ty * len(self._execution_ids)
 
-        ct_res =  self.download_ctype(self._cuda_out_buf, vo_ty)
+        ct_res = self.download_ctype(self._cuda_out_buf, vo_ty)
         return _convert_ctype_to_python(ct_res)
 
 
