@@ -47,6 +47,7 @@ class CUDAExecution:
         self._uploaded_bytes = 0
         self._downloaded_bytes = 0
         self._debug_env = debug_env
+        self.__vo_ty = None
 
     def __del__(self):
         if "cuda_data" in self._debug_env:
@@ -56,6 +57,14 @@ class CUDAExecution:
                 name = self._composition.name
             print("{} CUDA uploaded: {}".format(name, self._uploaded_bytes))
             print("{} CUDA downloaded: {}".format(name, self._downloaded_bytes))
+
+    @property
+    def _vo_ty(self):
+        if self.__vo_ty is None:
+            self.__vo_ty = self._bin_func.byref_arg_types[3]
+            if len(self._execution_ids) > 1:
+                self.__vo_ty = self.__vo_ty * len(self._execution_ids)
+        return self.__vo_ty
 
     def _get_ctype_bytes(self, data):
         # Return dummy buffer. CUDA does not handle 0 size well.
@@ -87,8 +96,7 @@ class CUDAExecution:
     @property
     def _cuda_out_buf(self):
         if self.__cuda_out_buf is None:
-            vo_ty = self._bin_func.byref_arg_types[3] * len(self._execution_ids)
-            size = ctypes.sizeof(vo_ty)
+            size = ctypes.sizeof(self._vo_ty)
             self.__cuda_out_buf = jit_engine.pycuda.driver.mem_alloc(size)
         return self.__cuda_out_buf
 
@@ -104,11 +112,7 @@ class CUDAExecution:
                                  threads=len(self._execution_ids))
 
         # Copy the result from the device
-        vo_ty = self._bin_func.byref_arg_types[3]
-        if len(self._execution_ids) > 1:
-            vo_ty = vo_ty * len(self._execution_ids)
-
-        ct_res = self.download_ctype(self._cuda_out_buf, vo_ty)
+        ct_res = self.download_ctype(self._cuda_out_buf, self._vo_ty)
         return _convert_ctype_to_python(ct_res)
 
 
@@ -408,10 +412,7 @@ class CompExecution(CUDAExecution):
                            threads=len(self._execution_ids))
 
         # Copy the data struct from the device
-        vo_ty = self._bin_exec_func.byref_arg_types[3]
-        if len(self._execution_ids) > 1:
-            vo_ty = vo_ty * len(self._execution_ids)
-        self._data_struct = self.download_ctype(self._cuda_data_struct, vo_ty)
+        self._data_struct = self.download_ctype(self._cuda_data_struct, self._vo_ty)
 
     # Methods used to accelerate "Run"
 
