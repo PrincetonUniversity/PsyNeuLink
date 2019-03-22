@@ -120,17 +120,23 @@ class FuncExecution(CUDAExecution):
         self._execution_ids = execution_ids
         self._component = component
 
-        par_struct_ty, ctx_struct_ty, _, _ = self._bin_func.byref_arg_types
+        par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
         if len(execution_ids) > 1:
             self._bin_multirun = self._bin_func.get_multi_run()
             par_struct_ty = par_struct_ty * len(execution_ids)
             ctx_struct_ty = ctx_struct_ty * len(execution_ids)
+            vo_ty = vo_ty * len(execution_ids)
+            vi_ty = vi_ty * len(execution_ids)
 
             par_initializer = (component._get_param_initializer(ex_id) for ex_id in execution_ids)
             ctx_initializer = (component._get_context_initializer(ex_id) for ex_id in execution_ids)
             self.__param_struct = par_struct_ty(*par_initializer)
             self.__context_struct = ctx_struct_ty(*ctx_initializer)
+            self._ct_len = ctypes.c_int(len(execution_ids))
+
+        self._ct_vo = vo_ty()
+        self._vi_ty = vi_ty
 
     def _get_compilation_param(self, name, initializer, arg, execution_id):
         param = getattr(self._component._compilation_data, name)
@@ -158,11 +164,6 @@ class FuncExecution(CUDAExecution):
         return self._get_compilation_param('context_struct', '_get_context_initializer', 1, self._execution_ids[0])
 
     def execute(self, variable):
-        _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
-        if len(self._execution_ids) > 1:
-            vo_ty = vo_ty * len(self._execution_ids)
-            vi_ty = vi_ty * len(self._execution_ids)
-        ct_vo = vo_ty()
         new_variable = np.asfarray(variable)
 
         if len(self._execution_ids) > 1:
@@ -171,15 +172,14 @@ class FuncExecution(CUDAExecution):
             ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_multirun.wrap_call(self._param_struct,
                                          self._context_struct,
-                                         ct_vi, ct_vo,
-                                         ctypes.c_int(len(self._execution_ids)))
+                                         ct_vi, self._ct_vo, self._ct_len)
         else:
-            ct_vi = new_variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+            ct_vi = new_variable.ctypes.data_as(ctypes.POINTER(self._vi_ty))
             self._bin_func(ctypes.byref(self._param_struct),
                            ctypes.byref(self._context_struct),
-                           ct_vi, ctypes.byref(ct_vo))
+                           ct_vi, ctypes.byref(self._ct_vo))
 
-        return _convert_ctype_to_python(ct_vo)
+        return _convert_ctype_to_python(self._ct_vo)
 
 
 class MechExecution(FuncExecution):
