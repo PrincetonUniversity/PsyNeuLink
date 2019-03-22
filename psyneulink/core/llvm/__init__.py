@@ -122,6 +122,16 @@ class LLVMBinaryFunction:
             _binaries[name] = LLVMBinaryFunction(name)
         return _binaries[name]
 
+    def get_multi_run(self):
+        try:
+            multirun_llvm = _find_llvm_function(self.name + "_multirun")
+        except ValueError:
+            function = _find_llvm_function(self.name);
+            with LLVMBuilderContext() as ctx:
+                multirun_llvm = ctx.gen_multirun_wrapper(function)
+
+        return LLVMBinaryFunction.get(multirun_llvm.name)
+
 
 def _updateNativeBinaries(module, buffer):
     to_delete = []
