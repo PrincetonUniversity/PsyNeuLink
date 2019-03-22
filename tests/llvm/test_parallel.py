@@ -42,14 +42,16 @@ def test_function(benchmark, executions, mode):
     assert np.allclose(res, [expected for _ in range(executions)])
     assert executions == 1 or len(res) == executions
 
-@pytest.mark.llvm
-@pytest.mark.cuda
+@pytest.mark.multirun
 @pytest.mark.mechanism
-@pytest.mark.parallel
 @pytest.mark.transfer_mechanism
-@pytest.mark.benchmark(group="TransferMechanism parallel")
-@pytest.mark.parametrize("executions", [1,5,100])
-def test_transfer_mech_parallel(benchmark, executions):
+@pytest.mark.benchmark
+@pytest.mark.parametrize("executions", [1,10,100])
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_mechanism(benchmark, executions, mode):
+    benchmark.group = "TransferMechanism multirun {}".format(executions)
     variable = [0 for _ in range(SIZE)]
     T = TransferMechanism(
         name='T',
@@ -61,7 +63,13 @@ def test_transfer_mech_parallel(benchmark, executions):
     var = [[10.0 for _ in range(SIZE)] for _ in range(executions)]
     expected = [[8.0 for i in range(SIZE)]]
     e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)])
-    res = benchmark(e.cuda_execute, var)
+    if mode == 'Python':
+        f = lambda x : [T.execute(x[i]) for i in range(executions)]
+        res = benchmark(f if executions > 1 else T.execute, var)
+    elif mode == 'LLVM':
+        res = benchmark(e.execute, var)
+    elif mode == 'PTX':
+        res = benchmark(e.cuda_execute, var)
     if executions > 1:
         expected = [expected for _ in range(executions)]
 
