@@ -405,7 +405,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -825,6 +825,24 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
+    def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
+        """ Update value for each InputState in self.input_states:
+
+        Call execute method for all (MappingProjection) Projections in InputState.path_afferents
+        Aggregate results (using InputState execute method)
+        Update InputState.value
+        """
+        # "Outcome"
+        outcome_input_state = self.input_state
+        outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
+        state_values = [np.atleast_2d(outcome_input_state.parameters.value.get(execution_id))]
+        for i in range(1, len(self.input_states)):
+            state = self.input_states[i]
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state_values.append(state.parameters.value.get(execution_id))
+
+        return np.array(state_values)
+
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
@@ -907,7 +925,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return optimal_control_allocation
 
     def _get_frozen_execution_id(self, execution_id=None):
-        return f'{execution_id}-frozen'
+        return f'{execution_id}{EID_FROZEN}'
 
     def _set_up_simulation(self, base_execution_id=None):
         sim_execution_id = self.get_next_sim_id(base_execution_id)
