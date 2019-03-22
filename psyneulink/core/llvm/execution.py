@@ -201,6 +201,7 @@ class CompExecution(CUDAExecution):
         self._debug_env = debug_env
         self._execution_ids = execution_ids
         self.__bin_exec_func = None
+        self.__bin_exec_multi_func = None
         self.__bin_func = None
         self.__bin_run_func = None
         self.__frozen_vals = None
@@ -229,6 +230,7 @@ class CompExecution(CUDAExecution):
             self.__param_struct = c_param(*par_initializer)
             self.__data_struct = c_data(*data_initializer)
             self.__conds = None
+            self._ct_len = ctypes.c_int(len(execution_ids))
 
     @property
     def _bin_func(self):
@@ -380,10 +382,21 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_exec_func
 
+    @property
+    def _bin_exec_multi_func(self):
+        if self.__bin_exec_multi_func is None:
+            self.__bin_exec_multi_func = self._bin_exec_func.get_multi_run()
+
+        return self.__bin_exec_multi_func
+
     def execute(self, inputs):
         inputs = self._get_input_struct(inputs)
-        self._bin_exec_func.wrap_call(self._context_struct, self._param_struct,
-                           inputs, self._data_struct, self._conditions)
+        if len(self._execution_ids) > 1:
+            self._bin_exec_multi_func.wrap_call(self._context_struct, self._param_struct,
+                               inputs, self._data_struct, self._conditions, self._ct_len)
+        else:
+            self._bin_exec_func.wrap_call(self._context_struct, self._param_struct,
+                               inputs, self._data_struct, self._conditions)
 
     def cuda_execute(self, inputs):
         # Create input buffer
