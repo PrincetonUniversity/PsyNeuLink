@@ -15,7 +15,7 @@ from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
-from .builder_context import _type_cache
+from .builder_context import _type_cache, _all_modules
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -167,6 +167,7 @@ def cleanup():
 
     _modules.clear()
     _compiled_modules.clear()
+    _all_modules.clear()
     _type_cache.clear()
     init_builtins()
 
