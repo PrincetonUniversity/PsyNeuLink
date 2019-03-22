@@ -444,7 +444,7 @@ class LLVMBuilderContext:
                     offset = index
                     # #runs and #trials needs to be the same
                     if is_comp_run and i >= 5:
-                        offset = self.int32_ty(32)(0)
+                        offset = self.int32_ty(0)
                     # data arrays need special handling
                     elif is_comp_run and i == 4: # data_out
                         offset = builder.mul(index, builder.load(runs_count))

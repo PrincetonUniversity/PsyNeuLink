@@ -208,6 +208,7 @@ class CompExecution(CUDAExecution):
         self.__bin_exec_multi_func = None
         self.__bin_func = None
         self.__bin_run_func = None
+        self.__bin_run_multi_func = None
         self.__frozen_vals = None
 
 
@@ -449,14 +450,30 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_run_func
 
+    @property
+    def _bin_run_multi_func(self):
+        if self.__bin_run_multi_func is None:
+            self.__bin_run_multi_func = self._bin_run_func.get_multi_run()
+
+        return self.__bin_run_multi_func
+
     def run(self, inputs, runs, num_input_sets):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
-        outputs = (self._bin_run_func.byref_arg_types[4] * runs)()
+        ct_vo = self._bin_run_func.byref_arg_types[4] * runs
+        if len(self._execution_ids) > 1:
+            ct_vo = ct_vo * len(self._execution_ids)
+
+        outputs = ct_vo()
         runs_count = ctypes.c_int(runs)
         input_count = ctypes.c_int(num_input_sets)
-        self._bin_run_func.wrap_call(self._context_struct, self._param_struct,
-                                     self._data_struct, inputs, outputs,
-                                     runs_count, input_count)
+        if len(self._execution_ids) > 1:
+            self._bin_run_multi_func.wrap_call(self._context_struct, self._param_struct,
+                                         self._data_struct, inputs, outputs,
+                                         runs_count, input_count, self._ct_len)
+        else:
+            self._bin_run_func.wrap_call(self._context_struct, self._param_struct,
+                                         self._data_struct, inputs, outputs,
+                                         runs_count, input_count)
         return _convert_ctype_to_python(outputs)
 
     def cuda_run(self, inputs, runs, num_input_sets):
