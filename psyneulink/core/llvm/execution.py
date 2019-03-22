@@ -198,10 +198,12 @@ class CompExecution(CUDAExecution):
     def __init__(self, composition, execution_ids = [None]):
         super().__init__(buffers=['context_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
-        self.__frozen_vals = None
-        self._execution_ids = execution_ids
-        self._bin_func = None
         self._debug_env = debug_env
+        self._execution_ids = execution_ids
+        self.__bin_exec_func = None
+        self.__bin_func = None
+        self.__bin_run_func = None
+        self.__frozen_vals = None
 
 
         # TODO: Consolidate these
@@ -227,6 +229,16 @@ class CompExecution(CUDAExecution):
             self.__param_struct = c_param(*par_initializer)
             self.__data_struct = c_data(*data_initializer)
             self.__conds = None
+
+    @property
+    def _bin_func(self):
+        if self.__bin_func is not None:
+            assert len(self._execution_ids) == 1
+            return self.__bin_func
+        if self.__bin_exec_func is not None:
+            return self.__bin_exec_func
+        if self.__bin_run_func is not None:
+            return self.__bin_run_func
 
     @property
     def _conditions(self):
@@ -354,31 +366,36 @@ class CompExecution(CUDAExecution):
         assert inputs is not None or node is not self._composition.input_CIM
 
         assert node in self._composition._all_nodes
-        self._bin_func = self._composition._get_bin_node(node)
+        self.__bin_func = self._composition._get_bin_node(node)
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self._debug_env:
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
+    @property
+    def _bin_exec_func(self):
+        if self.__bin_exec_func is None:
+            self.__bin_exec_func = self._composition._get_bin_execution()
+
+        return self.__bin_exec_func
+
     def execute(self, inputs):
         inputs = self._get_input_struct(inputs)
-        self._bin_func = self._composition._get_bin_execution()
-        self._bin_func.wrap_call(self._context_struct, self._param_struct,
+        self._bin_exec_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self._data_struct, self._conditions)
 
     def cuda_execute(self, inputs):
-        self._bin_func = self._composition._get_bin_execution()
         # Create input buffer
         inputs = self._get_input_struct(inputs)
         data_in = self.upload_ctype(inputs)
 
-        self._bin_func.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
+        self._bin_exec_func.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
                            data_in, self._cuda_data_struct, self._cuda_conditions,
                            threads=len(self._execution_ids))
 
         # Copy the data struct from the device
-        vo_ty = self._bin_func.byref_arg_types[3]
+        vo_ty = self._bin_exec_func.byref_arg_types[3]
         if len(self._execution_ids) > 1:
             vo_ty = vo_ty * len(self._execution_ids)
         self._data_struct = self.download_ctype(self._cuda_data_struct, vo_ty)
@@ -411,25 +428,30 @@ class CompExecution(CUDAExecution):
 
         return c_input(*_tupleize(run_inputs))
 
+    @property
+    def _bin_run_func(self):
+        if self.__bin_run_func is None:
+            self.__bin_run_func = self._composition._get_bin_run()
+
+        return self.__bin_run_func
+
     def run(self, inputs, runs, num_input_sets):
-        self._bin_func = self._composition._get_bin_run()
         inputs = self._get_run_input_struct(inputs, num_input_sets)
-        outputs = (self._bin_func.byref_arg_types[4] * runs)()
+        outputs = (self._bin_run_func.byref_arg_types[4] * runs)()
         runs_count = ctypes.c_int(runs)
         input_count = ctypes.c_int(num_input_sets)
-        self._bin_func.wrap_call(self._context_struct, self._param_struct,
-                          self._data_struct, inputs, outputs, runs_count,
-                          input_count)
+        self._bin_run_func.wrap_call(self._context_struct, self._param_struct,
+                                     self._data_struct, inputs, outputs,
+                                     runs_count, input_count)
         return _convert_ctype_to_python(outputs)
 
     def cuda_run(self, inputs, runs, num_input_sets):
-        self._bin_func = self._composition._get_bin_run()
         # Create input buffer
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         data_in = self.upload_ctype(inputs)
 
         # Create output buffer
-        output_type = (self._bin_func.byref_arg_types[4] * runs)
+        output_type = (self._bin_run_func.byref_arg_types[4] * runs)
         if len(self._execution_ids) > 1:
             output_type = output_type * len(self._execution_ids)
         output_size = ctypes.sizeof(output_type)
@@ -439,9 +461,11 @@ class CompExecution(CUDAExecution):
         input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
         self._uploaded_bytes += 8 # runs_count + input_count
 
-        self._bin_func.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
-                          self._cuda_data_struct, data_in, data_out, runs_count,
-                          input_count, threads=len(self._execution_ids))
+        self._bin_run_func.cuda_call(self._cuda_context_struct,
+                                     self._cuda_param_struct,
+                                     self._cuda_data_struct,
+                                     data_in, data_out, runs_count, input_count,
+                                     threads=len(self._execution_ids))
 
         # Copy the data struct from the device
         ct_out = self.download_ctype(data_out, output_type)
