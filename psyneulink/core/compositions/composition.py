@@ -113,9 +113,9 @@ COMMENT:
     Nodes execute, but they do so in a "state" (history, parameter vals) corresponding to a particular execution id.
 COMMENT
 
-The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT` Node and each value is a
-list. The lists represent the inputs to the key `INPUT` Nodes, such that the i-th element of the list represents the
-input value to the key Node on trial i.
+The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT <NodeRole.INPUT>` Node and
+each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, such that the i-th
+element of the list represents the input value to the key Node on trial i.
 
 .. _Run_Inputs_Fig_States:
 
@@ -123,7 +123,7 @@ input value to the key Node on trial i.
    :alt: Example input specifications with input states
 
 
-Each input value must be compatible with the shape of the key `INPUT` Node's `external_input_values
+Each input value must be compatible with the shape of the key `INPUT <NodeRole.INPUT>` Node's `external_input_values
 <MechanismBase.external_input_values>`. As a result, each item in the list of inputs is typically a 2d list/array,
 though `some shorthand notations are allowed <Input_Specification_Examples>`.
 
@@ -184,8 +184,8 @@ which only one input is specified). In other words, all of the values in the inp
 as each other (or length 1).
 
 If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
-are provided for each `INPUT` Node, and num_trials = 7, the system executes seven times. The input values from trials 0
-and 1 are used again on trials 5 and 6, respectively.
+are provided for each `INPUT <NodeRole.INPUT>` Node, and num_trials = 7, the system executes seven times. The input
+values from trials 0 and 1 are used again on trials 5 and 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |5     |6     |
@@ -485,10 +485,11 @@ See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
 *Timing*
 ========
 
-When :keyword:`run` is called by a Composition, it calls that Composition's :keyword:`execute` method once for each
-`input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
-execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
-executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
+When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
+method once for each `input <Run_Inputs>`  (or set of inputs) specified in the call to `run <Composition.run>`,
+which constitutes a `TRIAL` of execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler
+<Scheduler_Execution>`, executing the Components it specifies in each `TIME_STEP`, until every Component has been
+executed at least once or
 another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
 with `Condition` specifications for individual Components to execute different Components at different time scales.
 
@@ -501,42 +502,72 @@ Visualizing a Composition
 -------------------------
 
 The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
-Nested Compositions) and Projections in the Composition (based on the `Composition's processing graph
+Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
 <Composition.processing_graph>`).
 
-By default, Nodes are shown as ovals labeled by their `names <Mechanism_base.name>`, and Projections are shown
-as unlabeled arrows.
+By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT
+<NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
+shown as unlabeled arrows, as illustrated for the Composition in the example below:
 
+.. _System_show_graph_basic_figure:
 
-+-------------------------------------------------------+-------------------------------------------------------+
-|    >>> import psyneulink as pnl                       | .. figure:: _static/show_graph_basic.svg              |
-|    >>> A = pnl.ProcessingMechanism(name='A')          |                                                       |
-|    >>> B = pnl.ProcessingMechanism(name='B')          |                                                       |
-|    >>> comp = pnl.Composition(name='comp')            |                                                       |
-|    >>> comp.add_linear_processing_pathway([A,B])      |                                                       |
-|    >>> comp.show_graph()                              |                                                       |
-+-------------------------------------------------------+-------------------------------------------------------+
++-----------------------------------------------------------+-------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/show_graph_basic.svg  |
+| >>> a = ProcessingMechanism(                              |                                           |
+|               name='A',                                   |                                           |
+| ...           size=3,                                     |                                           |
+| ...           output_states=[RESULTS, OUTPUT_MEAN]        |                                           |
+| ...           )                                           |                                           |
+| >>> b = ProcessingMechanism(                              |                                           |
+| ...           name='B',                                   |                                           |
+| ...           size=5                                      |                                           |
+| ...           )                                           |                                           |
+| >>> c = ProcessingMechanism(                              |                                           |
+| ...           name='C',                                   |                                           |
+| ...           size=2,                                     |                                           |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                           |
+| ...           )                                           |                                           |
+| >>> comp = Composition(                                   |                                           |
+| ...           name='Comp',                                |                                           |
+| ...           enable_model_based_optimizer=True           |                                           |
+| ...           )                                           |                                           |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                           |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                           |
+| >>> ctlr = OptimizationControlMechanism(                  |                                           |
+| ...            name='Controller',                         |                                           |
+| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                           |
+| ...            function=GridSearch,                       |                                           |
+| ...            control_signals=(GAIN, c),                 |                                           |
+| ...            agent_rep=comp                             |                                           |
+| ...            )                                          |                                           |
+| >>> comp.add_model_based_optimizer(ctlr)                  |                                           |
++-----------------------------------------------------------+-------------------------------------------+
 
-However, there are options for displaying more detailed information:
+Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
+can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
+method.  The figure below shows several examples.
 
-    - **show_node_structure**
+.. _System_show_graph_figure:
 
-        +-------------------------------------------------------+-------------------------------------------------------+
-        |    >>> comp.show_graph(show_node_structure=True)      | .. figure:: _static/show_graph_show_mech_structure.svg|
-        +-------------------------------------------------------+-------------------------------------------------------+
-        |    >>> comp.show_graph(show_node_structure=True,      | .. figure:: _static/headers_false.svg                 |
-        |    ... show_headers=False)                            |                                                       |
-        +-------------------------------------------------------+-------------------------------------------------------+
+**Output of show_graph using different options**
 
-    - **show_projection_labels**
+.. figure:: _static/show_graph_figure.svg
+   :alt: System graph examples
+   :scale: 150 %
 
-        +-------------------------------------------------------+-------------------------------------------------------+
-        |    >>> comp.show_graph(show_projection_labels=True)   | .. figure:: _static/projection_labels.svg             |
-        +-------------------------------------------------------+-------------------------------------------------------+
+   Displays of the Composition used in the `example above <System_show_graph_basic_figure>`, generated using various
+   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
+   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
+   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
+   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
+   using the **show_node_structure** option, that includes their `States <State>` and their `roles <NodeRole>` in the
+   Composition. **Panel E** show an even more detailed view using **show_node_structure** as well as **show_cim**.
 
-    - **show_nested**
-
-        *If two Compositions identical to* **comp** *above are added as the nodes of the linear processing pathway of a third* **comp** *:*
+If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
+**show_nested** option. For example, if two Compositions identical to **comp** in the `example above
+<System_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a third* **comp** *,
+these can be shown as follows:
 
         +-------------------------------------------+-------------------------------------------+
         |    >>> comp.show_graph()                  | .. figure:: _static/nested.svg            |
@@ -544,6 +575,8 @@ However, there are options for displaying more detailed information:
         |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
         |                                           |                                           |
         +-------------------------------------------+-------------------------------------------+
+
+
 
 .. _Composition_Class_Reference:
 
@@ -590,7 +623,7 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
 ]
 
 logger = logging.getLogger(__name__)
@@ -874,6 +907,11 @@ class Graph(object):
         '''
 
         return list(self.comp_to_vertex[component].backward_sources)
+
+
+# Options for show_node_structure argument of show_graph()
+MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
+STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -2087,210 +2125,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
 
-    @tc.typecheck
-    def show_structure(self,
-                       # direction = 'BT',
-                       show_functions:bool=False,
-                       show_values:bool=False,
-                       use_labels:bool=False,
-                       show_headers:bool=False,
-                       show_roles:bool=False,
-                       system=None,
-                       composition=None,
-                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
-                       output_fmt:tc.enum('pdf','struct')='pdf'
-                       ):
-        """Generate a detailed display of a the structure of a Mechanism.
-
-        .. note::
-           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
-           (standard with PsyNeuLink pip install)
-
-        Displays the structure of a Mechanism using the GraphViz `record
-        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
-        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
-
-        Arguments
-        ---------
-
-        show_functions : bool : default False
-            show the `function <Component.function>` of the Mechanism and each of its States.
-
-        show_mech_function_params : bool : default False
-            show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
-
-        show_state_function_params : bool : default False
-            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
-            True).
-
-        show_values : bool : default False
-            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
-
-        use_labels : bool : default False
-            use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
-            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
-            <Mechanism.output_labels_dict>` (for OutputState values); otherwise it is ignored.
-
-        show_headers : bool : default False
-            show the Mechanism, InputState, ParameterState and OutputState headers.
-
-        show_roles : bool : default False
-            show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
-
-        system : System : default None
-            specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
-
-        composition : Composition : default None
-            specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
-
-        compact_cim : *INPUT* or *OUTUPT* : default None
-            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.
-
-        output_fmt : keyword : default 'pdf'
-            'pdf': generate and open a pdf with the visualization;\n
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
-            'struct': return a string that specifies the structure of a mechanism,
-            for use in a GraphViz node specification.
-
-        """
-        if composition:
-            system = composition
-        open_bracket = r'{'
-        pipe = r' | '
-        close_bracket = r'}'
-        mechanism_header = r'COMPOSITION:\n'
-        input_states_header = r'______CIMINPUTSTATES______\n' \
-                              r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
-        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
-                               r'\nCIMOUTPUTSTATES'
-
-        def mech_string(mech):
-            '''Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure '''
-            if show_headers:
-                mech_header = mechanism_header
-            else:
-                mech_header = ''
-            mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
-            mech_role = ''
-            if system and show_roles:
-                try:
-                    mech_role = r'\n[{}]'.format(self.systems[system])
-                except KeyError:
-                    # # mech_role = r'\n[{}]'.format(self.system)
-                    # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
-                        ControlMechanism
-                    from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-                        ObjectiveMechanism
-                    if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
-                        mech_role = r'\n[CONTROLLER]'
-                    elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
-                        mech_role = r'\n[{}]'.format(mech._role)
-                    else:
-                        mech_role = ""
-
-            mech_function = ''
-            if show_functions:
-                mech_function = r'\n({})'.format(mech.function.__class__.__name__)
-            mech_value = ''
-            if show_values:
-                mech_value = r'\n={}'.format(mech.value)
-            return mech_name + mech_role + mech_function + mech_value
-
-        from psyneulink.core.globals.utilities import ContentAddressableList
-        def states_string(state_list: ContentAddressableList,
-                          state_type,
-                          include_function: bool = False,
-                          include_value: bool = False,
-                          use_label: bool = False):
-            '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
-            states = open_bracket
-            for i, state in enumerate(state_list):
-                if i:
-                    states += pipe
-                function = ''
-                if include_function:
-                    function = r'\n({})'.format(state.function.__class__.__name__)
-                value = ''
-                if include_value:
-                    if use_label:
-                        value = r'\n={}'.format(state.label)
-                    else:
-                        value = r'\n={}'.format(state.value)
-                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
-                                                        state.name,
-                                                        function,
-                                                        value)
-            states += close_bracket
-            return states
-
-        # Construct Mechanism specification
-        mech = mech_string(self)
-
-        # Construct InputStates specification
-        if len(self.input_states) and compact_cim is not INPUT:
-            if show_headers:
-                input_states = input_states_header + pipe + states_string(self.input_states,
-                                                                          InputState,
-                                                                          include_function=show_functions,
-                                                                          include_value=show_values,
-                                                                          use_label=use_labels)
-            else:
-                input_states = states_string(self.input_states,
-                                             InputState,
-                                             include_function=show_functions,
-                                             include_value=show_values,
-                                             use_label=use_labels)
-            input_states = pipe + input_states
-        else:
-            input_states = ''
-
-        # Construct OutputStates specification
-        if len(self.output_states) and compact_cim is not OUTPUT:
-            if show_headers:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels) + pipe + output_states_header
-            else:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels)
-
-            output_states = output_states + pipe
-        else:
-            output_states = ''
-
-        m_node_struct = open_bracket + \
-                        output_states + \
-                        open_bracket + mech + close_bracket + \
-                        input_states + \
-                        close_bracket
-
-        if output_fmt == 'struct':
-            # return m.node
-            return m_node_struct
-
-        # Make node
-        import graphviz as gv
-        m = gv.Digraph(  # 'mechanisms',
-            # filename='mechanisms_revisited.gv',
-            node_attr={'shape': 'record'},
-        )
-        m.node(self.name, m_node_struct, shape='record')
-
-        if output_fmt == 'pdf':
-            m.view(self.name.replace(" ", "-"), cleanup=True)
-
-        elif output_fmt == 'jupyter':
-            return m
-
     def _assign_execution_ids(self, execution_id=None):
         '''
             assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
@@ -2345,13 +2179,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TBI Show Dimensions
         name = item.name
 
-        if show_dimensions in {ALL, MECHANISMS}:
+        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_state.socket_width)
                                                   for input_state in item.input_states))
             output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
                                                     for output_state in item.output_states))
             return "{}\n{}\n{}".format(output_str, name, input_str)
-        if show_dimensions in {ALL, PROJECTIONS}:
+        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
             # MappingProjections use matrix
             if isinstance(item, MappingProjection):
                 value = np.array(item.matrix)
@@ -2366,11 +2200,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return name
 
     def show_graph(self,
-                   show_model_based_optimizer=False,
+                   show_controller=False,
                    show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
                    show_cim=False,
-                   show_headers=False,
+                   show_headers=True,
                    show_projection_labels=False,
                    show_nested=False,
                    direction='BT',
@@ -2379,10 +2213,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
-                   model_based_optimizer_color='blue',
+                   controller_color='blue',
                    composition_color='pink',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
+                   **kwargs,
                    ):
         """
         .. note::
@@ -2394,9 +2229,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        show_node_structure : bool, VALUES, FUNCTIONS or ALL : default False
-            show a detailed representation of each `Mechanism` in the graph, including its `States`;  can have the
-            following settings:
+        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
+        or ALL : default False
+            show a detailed representation of each `Mechanism` in the graph, including its `States <State>`;  can
+            have any of the following settings alone or in a list:
 
             * `True` -- show States of Mechanism, but not information about the `value
               <Component.value>` or `function <Component.function>` of the Mechanism or its States.
@@ -2422,13 +2258,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
-              Mechanisms in the `Composition` and their `States` (using labels for the values, if specified;  see above).
-
-            Any combination of the settings above can also be specified in a list that is assigned to
-            show_node_structure
+              Mechanisms in the `Composition` and their `States <State>` (using labels for
+              the values, if specified -- see above), including parameters for all functions.
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
+
+        show_headers : bool : default True
+            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
+            **show_node_structure** is specified (see above).
 
         show_nested : bool : default False
             specifies whether nested Compositions are shown in details as inset graphs
@@ -2436,9 +2274,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_cim : bool : default False
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
 
-        show_model_based_optimizer :  bool : default False
+        show_controller :  bool : default False
             specifies whether or not to show the Composition's model_based_optimizer and associated ObjectiveMechanism;
-            these are displayed in the color specified for **model_based_optimizer_color**.
+            these are displayed in the color specified for **controller_color**.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2451,13 +2289,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             by GraphViz, or the keyword *BOLD*.
 
         input_color : keyword : default 'green',
-            specifies the display color for `INPUT` Nodes in the Composition
+            specifies the display color for `INPUT <NodeRole.INPUT>` Nodes in the Composition
 
         output_color : keyword : default 'red',
             specifies the display color for `OUTPUT` Nodes in the Composition
 
         input_and_output_color : keyword : default 'brown'
-            specifies the display color of nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
+            specifies the display color of nodes that are both an `INPUT <NodeRole.INPUT>` and an `OUTPUT
+            <NodeRole.OUTPUT>` Node in the Composition
 
         input_and_output_color : keyword : default 'brown'
             specifies the display color of nodes that represented nested Compositions.
@@ -2809,17 +2648,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             model_based_optimizer = self.model_based_optimizer
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    ctlr_color = model_based_optimizer_color
+                    ctlr_color = controller_color
                 else:
                     ctlr_color = active_color
                 ctlr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                ctlr_color = model_based_optimizer_color
+                ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
             if model_based_optimizer is None:
-                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
+                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
                       "can't be used in its show_graph() method\n".format(self.name))
                 return
 
@@ -2827,26 +2666,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
             if model_based_optimizer in active_items:
                 if active_color is BOLD:
-                    objmech_ctlr_proj_color = model_based_optimizer_color
+                    objmech_ctlr_proj_color = controller_color
                 else:
                     objmech_ctlr_proj_color = active_color
                 objmech_ctlr_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_ctlr_proj_color = model_based_optimizer_color
+                objmech_ctlr_proj_color = controller_color
                 objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
                 if active_color is BOLD:
-                    objmech_color = model_based_optimizer_color
+                    objmech_color = controller_color
                 else:
                     objmech_color = active_color
                 objmech_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_color = model_based_optimizer_color
+                objmech_color = controller_color
                 objmech_width = str(default_width)
 
             ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
@@ -2894,13 +2733,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
                     if model_based_optimizer in active_items:
                         if active_color is BOLD:
-                            ctl_proj_color = model_based_optimizer_color
+                            ctl_proj_color = controller_color
                         else:
                             ctl_proj_color = active_color
                         ctl_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        ctl_proj_color = model_based_optimizer_color
+                        ctl_proj_color = controller_color
                         ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
@@ -2925,13 +2764,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for projection in input_state.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
-                            proj_color = model_based_optimizer_color
+                            proj_color = controller_color
                         else:
                             proj_color = active_color
                         proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        proj_color = model_based_optimizer_color
+                        proj_color = controller_color
                         proj_width = str(default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
@@ -2951,15 +2790,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
         INITIAL_FRAME = "INITIAL_FRAME"
-        MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
-        STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
-        # ALL = "ALL"
 
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
 
         # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
         #     return
+
+        # For backward compatibility
+        if 'show_model_based_optimizer' in kwargs:
+            show_controller = kwargs['show_model_based_optimizer']
+            del kwargs['show_model_based_optimizer']
+        if kwargs:
+            raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
+                                   f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
         if show_dimensions == True:
             show_dimensions = ALL
@@ -3052,8 +2896,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_cim:
             _assign_cim_components(G, [self.input_CIM, self.output_CIM])
 
-        # Add model-based-optimizer-related Components to graph if show_model_based_optimizer
-        if show_model_based_optimizer:
+        # Add model-based-optimizer-related Components to graph if show_controller
+        if show_controller:
             _assign_control_components(G)
 
         # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
@@ -3066,7 +2910,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if NodeRole.INPUT in roles:
                 i = get_list_index(node)
                 G.body.insert(0,G.body.pop(i))
-        if self.model_based_optimizer and show_model_based_optimizer:
+        if self.model_based_optimizer and show_controller:
             # i = get_list_index(self.model_based_optimizer.objective_mechanism)
             # G.body.insert(len(G.body),G.body.pop(i))
             i = get_list_index(self.model_based_optimizer)
@@ -3204,6 +3048,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         '''
 
+        if bin_execute == 'Python':
+            bin_execute = False
+
         nested = False
         if len(self.input_CIM.path_afferents) > 0:
             nested = True
@@ -3274,9 +3121,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     data = self._get_flattened_controller_output(execution_id)
                     _comp_ex.insert_node_output(self.model_based_optimizer, data)
 
-
-        if bin_execute == 'Python':
-            bin_execute = False
 
         if bin_execute:
             execution_phase = self.parameters.context.get(execution_id).execution_phase

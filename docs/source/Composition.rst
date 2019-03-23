@@ -9,4 +9,4 @@ Composition
 
 .. automodule:: psyneulink.core.compositions.composition
    :members:
-   :exclude-members: Parameters
+   :exclude-members: Parameters, show_structure
