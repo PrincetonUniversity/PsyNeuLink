@@ -3048,6 +3048,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         '''
 
+        if bin_execute == 'Python':
+            bin_execute = False
+
         nested = False
         if len(self.input_CIM.path_afferents) > 0:
             nested = True
@@ -3118,9 +3121,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     data = self._get_flattened_controller_output(execution_id)
                     _comp_ex.insert_node_output(self.model_based_optimizer, data)
 
-
-        if bin_execute == 'Python':
-            bin_execute = False
 
         if bin_execute:
             execution_phase = self.parameters.context.get(execution_id).execution_phase
