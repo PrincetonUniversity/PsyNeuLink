@@ -211,7 +211,7 @@ class TestModelBasedOptimizationControlMechanisms:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
                                                                                   features=[Input.input_state, reward.input_state],
                                                                                   feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
@@ -223,7 +223,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                                                    ("threshold", Decision)])
                                        )
 
-        comp.enable_model_based_optimizer = True
+        comp.enable_controller = True
 
         comp._analyze_graph()
 
@@ -347,7 +347,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                          (Decision.output_states[
                                                                               pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
         # Model Based OCM (formerly controller)
-        evc_gratton.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
+        evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
                                                                                          features=[target_stim.input_state,
                                                                                                    flanker_stim.input_state,
                                                                                                    reward.input_state],
@@ -358,7 +358,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                                          control_signals=[
                                                                                              target_rep_control_signal,
                                                                                              flanker_rep_control_signal]))
-        evc_gratton.enable_model_based_optimizer = True
+        evc_gratton.enable_controller = True
 
         targetFeatures = [1, 1, 1]
         flankerFeatures = [1, -1, 1]
@@ -467,7 +467,7 @@ class TestModelBasedOptimizationControlMechanisms:
         B = pnl.ProcessingMechanism(name='B')
 
         comp = pnl.Composition(name='comp',
-                               model_based_optimizer_mode=pnl.AFTER)
+                               controller_mode=pnl.AFTER)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -485,7 +485,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                control_signals=[control_signal])
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
-        comp.add_model_based_optimizer(ocm)
+        comp.add_controller(ocm)
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
@@ -500,7 +500,7 @@ class TestModelBasedOptimizationControlMechanisms:
         B = pnl.ProcessingMechanism(name='B')
 
         comp = pnl.Composition(name='comp',
-                               model_based_optimizer_mode=pnl.BEFORE)
+                               controller_mode=pnl.BEFORE)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -518,7 +518,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                control_signals=[control_signal])
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
-        comp.add_model_based_optimizer(ocm)
+        comp.add_controller(ocm)
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
@@ -533,7 +533,7 @@ class TestModelBasedOptimizationControlMechanisms:
         B = pnl.ProcessingMechanism(name='B')
 
         comp = pnl.Composition(name='comp',
-                               model_based_optimizer_mode=pnl.BEFORE)
+                               controller_mode=pnl.BEFORE)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -552,7 +552,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                control_signals=[control_signal])
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
-        comp.add_model_based_optimizer(ocm)
+        comp.add_controller(ocm)
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
@@ -687,7 +687,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # Composition Creation
 
-        stabilityFlexibility = pnl.Composition(model_based_optimizer_mode=pnl.BEFORE)
+        stabilityFlexibility = pnl.Composition(controller_mode=pnl.BEFORE)
 
         # Node Creation
         stabilityFlexibility.add_node(taskLayer)
@@ -735,12 +735,12 @@ class TestModelBasedOptimizationControlMechanisms:
                                                           function=pnl.GridSearch(),
                                                           control_signals=[signal])
 
-        stabilityFlexibility.add_model_based_optimizer(metaController)
-        stabilityFlexibility.enable_model_based_optimizer = True
+        stabilityFlexibility.add_controller(metaController)
+        stabilityFlexibility.enable_controller = True
         # stabilityFlexibility.model_based_optimizer_mode = pnl.BEFORE
 
-        for i in range(1, len(stabilityFlexibility.model_based_optimizer.input_states)):
-            stabilityFlexibility.model_based_optimizer.input_states[i].function.reinitialize()
+        for i in range(1, len(stabilityFlexibility.controller.input_states)):
+            stabilityFlexibility.controller.input_states[i].function.reinitialize()
 
         # END OF COMPOSITION CONSTRUCTION
 
@@ -790,7 +790,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                num_estimates=5,
                                                control_signals=[control_signal])
 
-        comp.add_model_based_optimizer(ocm)
+        comp.add_controller(ocm)
 
         inputs = {A: [[[1.0]]]}
 

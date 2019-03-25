@@ -3025,7 +3025,7 @@ class Mechanism_Base(Mechanism):
                             mech_roles = ""
                 else:
                     from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
-                    if self is composition.model_based_optimizer:
+                    if self is composition.controller:
                         mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
                     elif not isinstance(self, CompositionInterfaceMechanism):
                         roles = [role.name for role in list(composition.nodes_to_roles[self])]

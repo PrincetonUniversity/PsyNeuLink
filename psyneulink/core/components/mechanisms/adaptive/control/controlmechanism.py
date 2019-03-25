@@ -440,8 +440,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         system=None                                              \
         monitor_for_control=None,                                \
         objective_mechanism=None,                                \
-        origin_objective_mechanism=False                         \
-        terminal_objective_mechanism=False                       \
         function=Linear,                                         \
         control_signals=None,                                    \
         modulation=ModulationParam.MULTIPLICATIVE                \
@@ -512,32 +510,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
-    origin_objective_mechanism : Boolean : default False
-        specifies whether the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` may be an `ORIGIN`
-        node of `composition <LVOCControlMechanism.composition>`.
-
-        When False, even if the `ObjectiveMechanism` is an `ORIGIN` node according to the structure of the
-        Composition's `graph <Composition.graph>`, the ObjectiveMechanism is not marked as `ORIGIN`. If the
-        ObjectiveMechanism would be the only `ORIGIN` node, then the user must use `required_roles
-        <Composition.required_roles>` to assign another node as `ORIGIN`.
-
-        When True, if the ObjectiveMechanism is an `ORIGIN` node according to the structure of the Composition's `graph
-        <Composition.graph>`, it is treated normally. If the ObjectiveMechanism is not an `ORIGIN` node according to
-        the structure of the graph, then it takes on `ORIGIN` as a required role.
-
-    terminal_objective_mechanism : Boolean : default False
-        specifies whether the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` may be an `TERMINAL`
-        node of `composition <LVOCControlMechanism.composition>`.
-
-        When False, even if the ObjectiveMechanism is a `TERMINAL` node according to the structure of the Composition's
-        `graph <Composition.graph>`, the ObjectiveMechanism is not marked as `TERMINAL`. If the ObjectiveMechanism
-        was the only `TERMINAL` node, then the user must use `required_roles <Composition.required_roles>` to assign
-        another node as `TERMINAL` for the Composition.
-
-        When True, if the ObjectiveMechanism is a `TERMINAL` node according to the structure of the Composition's
-        `graph <Composition.graph>`, it is treated normally. If the ObjectiveMechanism is not a `TERMINAL` node
-        according to the structure of the graph, then it takes on `TERMINAL` as a required role.
-
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
 
@@ -589,28 +561,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *OUTCOME*
         `input_state <Mechanism_Base.input_state>`.
-
-    origin_objective_mechanism : Boolean
-        specifies whether the ObjectiveMechanism of a ControlMechanism may be an "origin" node of the Composition.
-
-        When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as origin. If the ObjectiveMechanism was the only origin node, then the
-        user must use required_roles to assign the origin role to another node.
-
-        When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
-        normally. If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
-        takes on origin as a required role.
-
-    terminal_objective_mechanism : Boolean
-        specifies whether the ObjectiveMechanism of a ControlMechanism may be a "terminal" node of the Composition.
-
-        When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as terminal. If the ObjectiveMechanism was the only terminal node, then the
-        user must use required_roles to assign the terminal role to another node.
-
-        When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
-        normally. If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
-        takes on terminal as a required role.
 
     monitor_for_control : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
@@ -809,8 +759,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
-                 origin_objective_mechanism=False,
-                 terminal_objective_mechanism=False,
                  function=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -839,8 +787,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
-                                                  origin_objective_mechanism=origin_objective_mechanism,
-                                                  terminal_objective_mechanism=terminal_objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
                                                   modulation=modulation,
@@ -1054,12 +1000,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
 
-        objective_roles = [NodeRole.OBJECTIVE]
-        if self.origin_objective_mechanism:
-            objective_roles.append(NodeRole.ORIGIN)
-        if self.terminal_objective_mechanism:
-            objective_roles.append(NodeRole.TERMINAL)
-        self.aux_components.append((self.objective_mechanism, objective_roles))
+        self.aux_components.append(self.objective_mechanism)
         self.aux_components.append((projection_from_objective, True))
         self._objective_projection = projection_from_objective
         self.monitor_for_control = self.monitored_output_states
