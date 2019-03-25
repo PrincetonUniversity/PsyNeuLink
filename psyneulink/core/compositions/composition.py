@@ -1081,6 +1081,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.nodes_to_roles = collections.OrderedDict()
 
+        self.feedback_senders = set()
+        self.feedback_receivers = set()
+
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self,
                                  **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
@@ -1517,6 +1520,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # TBI: Copy the projection type/matrix value of the projection that is being shadowed
                             self.add_projection(MappingProjection(sender=sender, receiver=input_state),
                                                 sender_mechanism, shadow)
+        if feedback:
+            self.feedback_senders.add(graph_sender)
+            self.feedback_receivers.add(graph_receiver)
 
         return projection
 
@@ -1729,6 +1735,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler_processing.consideration_queue:
             self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
+
+        # Cycles
+        for node in self.scheduler_processing.cycle_nodes:
+            self._add_node_role(node, NodeRole.CYCLE)
+
+        # "Feedback" projections
+        for node in self.feedback_senders:
+            self._add_node_role(node, NodeRole.FEEDBACK_SENDER)
+
+        for node in self.feedback_receivers:
+            self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
 
         # Required Roles
         for node_role_pair in self.required_node_roles:

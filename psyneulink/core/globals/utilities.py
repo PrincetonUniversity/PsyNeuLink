@@ -1546,6 +1546,9 @@ class NodeRole(Enum):
     OUTPUT = 3
     INTERNAL = 4
     OBJECTIVE = 5
+    FEEDBACK_SENDER = 6
+    FEEDBACK_RECEIVER = 7
+    CYCLE = 8
 
 def unproxy_weakproxy(proxy):
     """
