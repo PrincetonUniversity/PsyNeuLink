@@ -505,7 +505,6 @@ class OptimizationFunction(Function_Base):
             print("\n{} executing optimization process (one {} for each {}of {} samples): ".
                   format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
             _progress_bar_count = 0
-
         # Iterate optimization process
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
@@ -520,11 +519,9 @@ class OptimizationFunction(Function_Base):
 
             # Get next sample of sample
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
-
             # Compute new value based on new sample
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
             self._report_value(new_value)
-
             iteration += 1
             max_iterations = self.parameters.max_iterations.get(execution_id)
             if max_iterations and iteration > max_iterations:
