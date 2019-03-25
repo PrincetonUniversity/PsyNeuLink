@@ -529,7 +529,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | ...           )                                           |                                           |
 | >>> comp = Composition(                                   |                                           |
 | ...           name='Comp',                                |                                           |
-| ...           enable_model_based_optimizer=True           |                                           |
+| ...           enable_controller=True           |                                           |
 | ...           )                                           |                                           |
 | >>> comp.add_linear_processing_pathway([a,c])             |                                           |
 | >>> comp.add_linear_processing_pathway([b,c])             |                                           |
@@ -540,7 +540,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | ...            control_signals=(GAIN, c),                 |                                           |
 | ...            agent_rep=comp                             |                                           |
 | ...            )                                          |                                           |
-| >>> comp.add_model_based_optimizer(ctlr)                  |                                           |
+| >>> comp.add_controller(ctlr)                  |                                           |
 +-----------------------------------------------------------+-------------------------------------------+
 
 Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
@@ -923,14 +923,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         name: str
 
-        model_based_optimzer:   `OptimizationControlmechanism`
+        controller:   `OptimizationControlmechanism`
             Must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`.
 
-        enable_model_based_optimizer: bool
-            When set to True, executes the model_based_optimizer. When False, ignores the model_based_optimizer.
+        enable_controller: bool
+            When set to True, executes the controller. When False, ignores the controller.
 
-        model_based_optimizer_mode: AFTER
-            Determines whether the model_based_optimizer is executed before or after the rest of the `Composition`
+        controller_mode: AFTER
+            Determines whether the controller is executed before or after the rest of the `Composition`
             is executed in each trial.  Must be either the keyword BEFORE or AFTER.
 
         Attributes
@@ -968,17 +968,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             A dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
             `shadow <InputState_Shadow_Inputs>` the original Node's input.
 
-        model_based_optimizer : OptimizationControlMechanism
+        controller : OptimizationControlMechanism
             If the Composition contains an `OptimizationControlMechanism` that runs simulations of its own
             `Composition`, then the OCM is stored here.
 
-        enable_model_based_optimizer : bool
-            When True, executes the Composition's `model_based_optimizer <Composition.model_based_optimizer>` in
-            each trial (see model_based_optimizer_mode <Composition.model_based_optimizer_mode>` for timing of
+        enable_controller : bool
+            When True, executes the Composition's `controller <Composition.controller>` in
+            each trial (see controller_mode <Composition.controller_mode>` for timing of
             execution).
 
-        model_based_optimizer_mode :
-            Determines whether the model_based_optimizer is executed before or after the rest of the `Composition`
+        controller_mode :
+            Determines whether the controller is executed before or after the rest of the `Composition`
             is executed on each trial.
 
         default_execution_id
@@ -1034,9 +1034,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __init__(
             self,
             name=None,
-            model_based_optimizer=None,
-            enable_model_based_optimizer=None,
-            model_based_optimizer_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller=None,
+            enable_controller=None,
+            controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             **param_defaults
     ):
         # also sets name
@@ -1061,11 +1061,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM_states = {}
 
         self.shadows = {}
-        self.enable_model_based_optimizer = enable_model_based_optimizer
+        self.enable_controller = enable_controller
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
-        self.model_based_optimizer = model_based_optimizer
-        self.model_based_optimizer_mode = model_based_optimizer_mode
+        self.controller = controller
+        self.controller_mode = controller_mode
 
         self.projections = []
 
@@ -1277,34 +1277,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in nodes:
             self.add_node(node)
 
-    def add_model_based_optimizer(self, optimizer):
+    def add_controller(self, controller):
         """
-        Adds an `OptimizationControlMechanism` as the `model_based_optimizer
-        <Composition.model_based_optimizer>` of the Composition, which gives the OCM access to the
+        Adds an `OptimizationControlMechanism` as the `controller
+        <Composition.controller>` of the Composition, which gives the OCM access to the
         `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
         an optimal Control policy.
         """
 
-        self.model_based_optimizer = optimizer
-        self.model_based_optimizer.composition = self
-        self.add_node(self.model_based_optimizer.objective_mechanism)
-        self.enable_model_based_optimizer = True
+        self.controller = controller
+        self.controller.composition = self
+        self.add_node(self.controller.objective_mechanism)
+        self.enable_controller = True
 
-        for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
+        for proj in self.controller.objective_mechanism.path_afferents:
             self.add_projection(proj)
 
-        optimizer._activate_projections_for_compositions(self)
+        controller._activate_projections_for_compositions(self)
         self._analyze_graph()
-        self._update_shadows_dict(optimizer)
+        self._update_shadows_dict(controller)
 
-        for input_state in optimizer.input_states:
+        for input_state in controller.input_states:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
                         self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
                                             sender=sender.owner,
-                                            receiver=optimizer)
+                                            receiver=controller)
                         shadow_proj._activate_for_compositions(self)
                     else:
                         shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
@@ -1521,8 +1521,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             self.add_projection(MappingProjection(sender=sender, receiver=input_state),
                                                 sender_mechanism, shadow)
         if feedback:
-            self.feedback_senders.add(graph_sender)
-            self.feedback_receivers.add(graph_receiver)
+            self.feedback_senders.add(sender_mechanism)
+            self.feedback_receivers.add(receiver_mechanism)
 
         return projection
 
@@ -1706,7 +1706,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _analyze_consideration_queue(self, q, objective_mechanism):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
-            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a model_based_optimizer
+            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
             may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
             consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead. """
         for node in q[0]:
@@ -1728,8 +1728,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         objective_mechanism = None
-        if self.model_based_optimizer and self.enable_model_based_optimizer:
-            objective_mechanism = self.model_based_optimizer.objective_mechanism
+        if self.controller and self.enable_controller:
+            objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
@@ -2280,7 +2280,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
 
         show_controller :  bool : default False
-            specifies whether or not to show the Composition's model_based_optimizer and associated ObjectiveMechanism;
+            specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
             these are displayed in the color specified for **controller_color**.
 
         direction : keyword : default 'BT'
@@ -2309,8 +2309,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
 
-        model_based_optimizer_color : keyword : default `blue`
-            specifies the color in which the model_based_optimizer components are displayed
+        controller_color : keyword : default `blue`
+            specifies the color in which the controller components are displayed
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -2348,11 +2348,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
-            # If recvr is ObjectiveMechanism for Composition's model_based_optimizer,
+            # If recvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
             elif (isinstance(rcvr, ObjectiveMechanism)
-                    and self.model_based_optimizer
-                    and rcvr is self.model_based_optimizer.objective_mechanism):
+                    and self.controller
+                    and rcvr is self.controller.objective_mechanism):
                 return
 
             else:
@@ -2478,10 +2478,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for output_state in sndr.output_states:
                     for proj in output_state.efferents:
 
-                        # Skip any projections to ObjectiveMechanism for model_based_optimizer
+                        # Skip any projections to ObjectiveMechanism for controller
                         #   (those are handled in _assign_control_components)
-                        if (self.model_based_optimizer
-                                and proj.receiver.owner is self.model_based_optimizer.objective_mechanism):
+                        if (self.controller
+                                and proj.receiver.owner is self.controller.objective_mechanism):
                             continue
 
                         # Only consider Projections to the rcvr
@@ -2650,8 +2650,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_control_components(g):
             '''Assign control nodes and edges to graph '''
 
-            model_based_optimizer = self.model_based_optimizer
-            if model_based_optimizer in active_items:
+            controller = self.controller
+            if controller in active_items:
                 if active_color is BOLD:
                     ctlr_color = controller_color
                 else:
@@ -2662,14 +2662,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
-            if model_based_optimizer is None:
-                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_controller\' option "
+            if controller is None:
+                print("\nWARNING: {} has not been assigned a \'controller\', so \'show_controller\' option "
                       "can't be used in its show_graph() method\n".format(self.name))
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
-            objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
-            if model_based_optimizer in active_items:
+            objmech_ctlr_proj = controller.input_state.path_afferents[0]
+            if controller in active_items:
                 if active_color is BOLD:
                     objmech_ctlr_proj_color = controller_color
                 else:
@@ -2693,11 +2693,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 objmech_color = controller_color
                 objmech_width = str(default_width)
 
-            ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
+            ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       model_based_optimizer.show_structure(**node_struct_args, node_border=ctlr_width),
+                       controller.show_structure(**node_struct_args, node_border=ctlr_width),
                        shape=struct_shape,
                        color=ctlr_color,
                        penwidth=ctlr_width,
@@ -2718,7 +2718,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         color=objmech_color, penwidth=objmech_width, shape=node_shape,
                         rank=control_rank)
 
-            # objmech to model_based_optimizer edge
+            # objmech to controller edge
             if show_projection_labels:
                 edge_label = objmech_ctlr_proj.name
             else:
@@ -2732,11 +2732,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
                    color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
-            # outgoing edges (from model_based_optimizer to ProcessingMechanisms)
-            for control_signal in model_based_optimizer.control_signals:
+            # outgoing edges (from controller to ProcessingMechanisms)
+            for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
-                    if model_based_optimizer in active_items:
+                    if controller in active_items:
                         if active_color is BOLD:
                             ctl_proj_color = controller_color
                         else:
@@ -2751,9 +2751,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         edge_label = ''
                     if show_node_structure:
-                        ctl_sndr_label = ctlr_label + ':' + model_based_optimizer._get_port_name(control_signal)
+                        ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + model_based_optimizer._get_port_name(ctl_proj.receiver)
+                            proc_mech_label + ':' + controller._get_port_name(ctl_proj.receiver)
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
@@ -2901,7 +2901,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_cim:
             _assign_cim_components(G, [self.input_CIM, self.output_CIM])
 
-        # Add model-based-optimizer-related Components to graph if show_controller
+        # Add controller-related Components to graph if show_controller
         if show_controller:
             _assign_control_components(G)
 
@@ -2915,10 +2915,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if NodeRole.INPUT in roles:
                 i = get_list_index(node)
                 G.body.insert(0,G.body.pop(i))
-        if self.model_based_optimizer and show_controller:
-            # i = get_list_index(self.model_based_optimizer.objective_mechanism)
+        if self.controller and show_controller:
+            # i = get_list_index(self.controller.objective_mechanism)
             # G.body.insert(len(G.body),G.body.pop(i))
-            i = get_list_index(self.model_based_optimizer)
+            i = get_list_index(self.controller)
             G.body.insert(len(G.body),G.body.pop(i))
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
@@ -3108,30 +3108,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
-        if (self.enable_model_based_optimizer and
-            self.model_based_optimizer_mode is BEFORE):
+        if (self.enable_controller and
+            self.controller_mode is BEFORE):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
-                if self.model_based_optimizer:
-                    self.model_based_optimizer.parameters.context.get(
+                if self.controller:
+                    self.controller.parameters.context.get(
                         execution_id).execution_phase = ContextFlags.PROCESSING
-                    control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                    self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
+                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
                 if bin_execute:
                     data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
+                    _comp_ex.insert_node_output(self.controller, data)
 
 
         if bin_execute:
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             # Exec mode skips mbo invocation so we can't use it if mbo is
             # present and active
-            can_exec = not self.enable_model_based_optimizer or execution_phase == ContextFlags.SIMULATION
+            can_exec = not self.enable_controller or execution_phase == ContextFlags.SIMULATION
             try:
                 if str(bin_execute).endswith('Exec') and can_exec:
                     if bin_execute.startswith('LLVM'):
@@ -3231,7 +3231,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if bin_execute:
                         _comp_ex.execute_node(node)
                     else:
-                        if node is not self.model_based_optimizer:
+                        if node is not self.controller:
                             node.execute(
                                 execution_id=execution_id,
                                 runtime_params=execution_runtime_params,
@@ -3317,23 +3317,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
-        if (self.enable_model_based_optimizer and
-            self.model_based_optimizer_mode == AFTER):
+        if (self.enable_controller and
+            self.controller_mode == AFTER):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
-                if self.model_based_optimizer:
-                    self.model_based_optimizer.parameters.context.get(
+                if self.controller:
+                    self.controller.parameters.context.get(
                         execution_id).execution_phase = ContextFlags.PROCESSING
-                    control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                    self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
+                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
                 if bin_execute:
                     data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
+                    _comp_ex.insert_node_output(self.controller, data)
 
         # extract result here
         if bin_execute:
@@ -3539,7 +3539,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_context = self.parameters.context.get(execution_id)
         # Run mode skips mbo invocation so we can't use it if mbo is
         # present and active
-        can_run = (not self.enable_model_based_optimizer or
+        can_run = (not self.enable_controller or
                    (execution_context is not None and
                     execution_context.execution_phase == ContextFlags.SIMULATION))
         if str(bin_execute).endswith('Run') and can_run:
@@ -3696,7 +3696,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # def _get_predicted_input(self, execution_id=None, context=None):
     #     """
-    #     Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
+    #     Called by the `controller <Composition.controller>` of the `Composition` before any
     #     simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
     #     after all simulations are complete, and (3) set the number of trials of simulations.
     #     """
@@ -3738,8 +3738,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_data_struct_type(self, ctx):
         output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
 
-        if self.model_based_optimizer is not None:
-            controller_output = ctx.get_output_struct_type(self.model_based_optimizer)
+        if self.controller is not None:
+            controller_output = ctx.get_output_struct_type(self.controller)
             output_type_list.append(controller_output)
         data = [pnlvm.ir.LiteralStructType(output_type_list)]
         for node in self.nodes:
@@ -3758,7 +3758,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_flattened_controller_output(self, execution_id):
-        controller_data = [os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states]
+        controller_data = [os.parameters.value.get(execution_id) for os in self.controller.output_states]
         # This is an ugly hack to remove 2d arrays
         try:
             controller_data = [[c[0][0]] for c in controller_data]
@@ -3768,7 +3768,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_data_initializer(self, execution_id=None):
         output = [(os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes]
-        if self.model_based_optimizer is not None:
+        if self.controller is not None:
             output.append(self._get_flattened_controller_output(execution_id))
         data = [output]
         for node in self.nodes:
@@ -3779,7 +3779,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
-        if node is self.model_based_optimizer:
+        if node is self.controller:
             return len(node_list)
         return node_list.index(node)
 
@@ -3844,7 +3844,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._compilation_data.ptx_execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
-        assert node is not self.model_based_optimizer
+        assert node is not self.controller
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -3909,7 +3909,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
-                if par_mech in self._all_nodes or par_mech is self.model_based_optimizer:
+                if par_mech in self._all_nodes or par_mech is self.controller:
                     par_idx = self._get_node_index(par_mech)
                 else:
                     comp = par_mech.composition
@@ -4162,33 +4162,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
-            base_control_allocation = self.reshape_control_signal(self.model_based_optimizer.parameters.value.get(execution_id))
+            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value.get(execution_id))
 
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
 
             # Get reconfiguration cost for candidate control signal
             reconfiguration_cost = 0.
-            if callable(self.model_based_optimizer.compute_reconfiguration_cost):
-                reconfiguration_cost = self.model_based_optimizer.compute_reconfiguration_cost([candidate_control_allocation,
+            if callable(self.controller.compute_reconfiguration_cost):
+                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                                 base_control_allocation])
             # Apply candidate control signal
-            self.model_based_optimizer.apply_control_allocation(candidate_control_allocation,
+            self.controller.apply_control_allocation(candidate_control_allocation,
                                                                 execution_id=execution_id,
                                                                 runtime_params=runtime_params,
                                                                 context=context)
 
             # Get control signal costs
-            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
+            all_costs = self.controller.parameters.costs.get(execution_id) + [reconfiguration_cost]
             # Compute a total for the candidate control signal(s)
-            total_cost = self.model_based_optimizer.combine_costs(all_costs)
+            total_cost = self.controller.combine_costs(all_costs)
         return total_cost
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
         # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
         # If this is not a good assumption, we need another way to look up the feature InputStates
         # of the OCM and know which InputState maps to which predicted_input value
-        for j in range(len(self.model_based_optimizer.input_states) - 1):
-            input_state = self.model_based_optimizer.input_states[j + 1]
+        for j in range(len(self.controller.input_states) - 1):
+            input_state = self.controller.input_states[j + 1]
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 inputs[input_state.shadow_inputs.owner] = predicted_input[j]
 
@@ -4206,9 +4206,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_mode=False,
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
+           `controller <Composition.controller>` in order to return the
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
-           `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
+           `controller <Composition.controller>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
@@ -4235,11 +4235,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
         # Update input states in order to get correct value for "outcome" (from objective mech)
-        self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
-        outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
+        self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
+        outcome = self.controller.input_state.parameters.value.get(execution_id)
 
         # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
-        net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, total_cost)
+        net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
         return net_outcome
 
@@ -4355,5 +4355,5 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             [self.input_CIM, self.output_CIM],
             self.input_CIM.efferents,
             self.output_CIM.afferents,
-            [self.model_based_optimizer] if self.model_based_optimizer is not None else []
+            [self.controller] if self.controller is not None else []
         ))

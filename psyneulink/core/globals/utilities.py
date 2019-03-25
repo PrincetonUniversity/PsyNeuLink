@@ -1551,7 +1551,7 @@ class NodeRole(Enum):
 
     CYCLE
         A Node that belongs to a cycle.
-        
+
     """
     ORIGIN = 0
     INPUT = 1

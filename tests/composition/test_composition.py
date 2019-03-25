@@ -477,13 +477,13 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.CYCLE)
         assert C in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
-    def test_model_based_optimizer_objective_mech_not_terminal(self):
+    def test_controller_objective_mech_not_terminal(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         comp.add_linear_processing_pathway([A, B])
 
-        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
                                                                                   features=[A.input_state],
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(
                                                                                       function=pnl.LinearCombination(
@@ -494,20 +494,20 @@ class TestAnalyzeGraph:
                                                                                   )
                                        )
         comp._analyze_graph()
-        assert comp.model_based_optimizer.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
         # disable controller
-        comp.enable_model_based_optimizer = False
+        comp.enable_controller = False
         comp._analyze_graph()
-        assert comp.model_based_optimizer.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
-    def test_model_based_optimizer_objective_mech_not_terminal_fall_back(self):
+    def test_controller_objective_mech_not_terminal_fall_back(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         comp.add_linear_processing_pathway([A, B])
 
-        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
                                                                                   features=[A.input_state],
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(
                                                                                       function=pnl.LinearCombination(
@@ -518,12 +518,12 @@ class TestAnalyzeGraph:
                                                                                   )
                                        )
         comp._analyze_graph()
-        assert comp.model_based_optimizer.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
         # disable controller
-        comp.enable_model_based_optimizer = False
+        comp.enable_controller = False
         comp._analyze_graph()
-        assert comp.model_based_optimizer.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 class TestGraphCycles:
