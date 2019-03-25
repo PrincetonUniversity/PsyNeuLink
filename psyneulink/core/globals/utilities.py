@@ -1535,10 +1535,23 @@ class NodeRole(Enum):
         A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
         Composition may have many `OUTPUT` Nodes.
 
-    - INTERNAL
+    INTERNAL
         A Node that is neither `ORIGIN` nor `TERMINAL`
 
+    OBJECTIVE
+        A Node that is the ObjectiveMechanism of a controller.
 
+    FEEDBACK_SENDER
+        A Node with one or more outgoing projections marked as "feedback". This means that the Node is at the end of a
+        pathway which would otherwise form a cycle.
+
+    FEEDBACK_RECEIVER
+        A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
+         pathway which would otherwise form a cycle.
+
+    CYCLE
+        A Node that belongs to a cycle.
+        
     """
     ORIGIN = 0
     INPUT = 1
