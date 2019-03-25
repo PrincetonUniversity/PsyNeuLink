@@ -1,9 +1,3 @@
-branches:
-  only:
-    - master
-    - devel
-    - appveyor
-    - /.*-avy/
 version: '{build}'
 clone_depth: 25
 

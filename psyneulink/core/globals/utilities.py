@@ -1517,17 +1517,21 @@ def call_with_pruned_args(func, *args, **kwargs):
 
 class NodeRole(Enum):
     """
+    COMMENT:
+    Attributes
+    ----------
+    COMMENT
 
-    - ORIGIN
+    ORIGIN
         A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
 
-    - INPUT
+    INPUT
         A Node that receives external input. A Composition may have many `INPUT` Nodes.
 
-    - TERMINAL
+    TERMINAL
         A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
 
-    - OUTPUT
+    OUTPUT
         A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
         Composition may have many `OUTPUT` Nodes.
 

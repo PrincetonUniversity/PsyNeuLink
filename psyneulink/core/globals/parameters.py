@@ -898,6 +898,20 @@ class Parameter(types.SimpleNamespace):
         # set value
         self.values[execution_id] = value
 
+    def delete(self, execution_context=None):
+        execution_context = parse_execution_context(execution_context)
+        try:
+            del self.values[execution_context]
+        except KeyError:
+            pass
+
+        try:
+            del self.history[execution_context]
+        except KeyError:
+            pass
+
+        self.clear_log(execution_context)
+
     def _log_value(self, value, execution_id=None, context=None):
         # manual logging
         if context is ContextFlags.COMMAND_LINE:
