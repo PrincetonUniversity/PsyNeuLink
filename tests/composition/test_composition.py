@@ -204,6 +204,7 @@ comp = Composition()
         logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
                     format(count, t, 's' if count != 1 else ''))
 
+
 class TestAddProjection:
 
     def test_add_once(self):
@@ -1259,6 +1260,7 @@ class TestExecutionOrder:
         benchmark(comp1.run, inputs={A: [1.0, 2.0, 3.0]}, bin_execute=mode)
 
         assert np.allclose(comp1.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
+
 
 class TestGetMechanismsByRole:
 
@@ -2338,6 +2340,7 @@ class TestRun:
         assert np.allclose(val, [[0.49922843, 0.52838607]])
 
         benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+
 
 class TestCallBeforeAfterTimescale:
 
@@ -4532,6 +4535,7 @@ class TestInputSpecifications:
         assert np.allclose(C.get_output_values(comp), [[0.]])
         assert np.allclose(D.get_output_values(comp), [[4.]])
 
+
 class TestProperties:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', 'Fallback',
@@ -4549,6 +4553,7 @@ class TestProperties:
 
         res = comp.run(inputs=inputs, bin_execute=mode)
         assert np.allclose(res, [[20.0, 40.0], [60.0, 80.0]])
+
 
 class TestAuxComponents:
     def test_two_transfer_mechanisms(self):
@@ -4677,6 +4682,7 @@ class TestAuxComponents:
         for comp in expected_stateful_nodes:
             assert comp.stateful_nodes == expected_stateful_nodes[comp]
 
+
 class TestShadowInputs:
 
     def test_two_origins(self):
@@ -4784,3 +4790,45 @@ class TestShadowInputs:
                          B: 15.0})
         assert obj.value == [[25.0]]
 
+
+class TestNodeRoles:
+
+    def test_internal(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp.add_linear_processing_pathway([A, B, C])
+
+        comp._analyze_graph()
+
+        assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
+
+    def test_feedback(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp.add_linear_processing_pathway([A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=True)
+
+        comp._analyze_graph()
+
+        assert comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER) == [C]
+
+        assert comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER) == [A]
+
+    def test_cycle(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp.add_linear_processing_pathway([A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+
+        comp._analyze_graph()
+
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A, B, C}
