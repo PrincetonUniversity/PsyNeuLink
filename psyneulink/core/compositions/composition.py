@@ -4142,11 +4142,58 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
+    def reshape_control_signal(self,
+                                         arr):
+
+        current_shape = np.shape(arr)
+        if len(current_shape) > 2:
+            newshape = (current_shape[0], current_shape[1])
+            newarr = np.reshape(arr, newshape)
+            arr = tuple(newarr[i].item() for i in range(len(newarr)))
+
+        return np.array(arr)
+
+    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+        total_cost = 0.
+        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
+
+            base_control_allocation = self.reshape_control_signal(self.model_based_optimizer.parameters.value.get(execution_id))
+
+            candidate_control_allocation = self.reshape_control_signal(control_allocation)
+
+            # Get reconfiguration cost for candidate control signal
+            reconfiguration_cost = 0.
+            if callable(self.model_based_optimizer.compute_reconfiguration_cost):
+                reconfiguration_cost = self.model_based_optimizer.compute_reconfiguration_cost([candidate_control_allocation,
+                                                                                                base_control_allocation])
+            # Apply candidate control signal
+            self.model_based_optimizer.apply_control_allocation(candidate_control_allocation,
+                                                                execution_id=execution_id,
+                                                                runtime_params=runtime_params,
+                                                                context=context)
+
+            # Get control signal costs
+            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id) + [reconfiguration_cost]
+            # Compute a total for the candidate control signal(s)
+            total_cost = self.model_based_optimizer.combine_costs(all_costs)
+        return total_cost
+    def _build_predicted_inputs_dict(self, predicted_input):
+        inputs = {}
+        # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
+        # If this is not a good assumption, we need another way to look up the feature InputStates
+        # of the OCM and know which InputState maps to which predicted_input value
+        for j in range(len(self.model_based_optimizer.input_states) - 1):
+            input_state = self.model_based_optimizer.input_states[j + 1]
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+
+        return inputs
+
     def evaluate(
             self,
             predicted_input=None,
             control_allocation=None,
-            num_trials=1,
+            num_simulation_trials=1,
             runtime_params=None,
             base_execution_id=None,
             execution_id=None,
@@ -4158,64 +4205,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
+        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
-        # These attrs are set during composition.before_simulation
-        # reinitialize_values = self.sim_reinitialize_values
+        # Build input dictionary for simulationn
+        inputs = self._build_predicted_inputs_dict(predicted_input)
 
-        # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
-        #      (i.e., DOES IT ASSIGN THE SAME CONTROLSIGNAL VALUES FOR ALL SIMULATIONS?)
-        # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
-        #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
-        # Assign control_allocation current being sampled
-        if control_allocation is not None:
-            self.model_based_optimizer.apply_control_allocation(control_allocation,
-                                                                execution_id=execution_id,
-                                                                runtime_params=runtime_params,
-                                                                context=context)
+        # Run Composition in "SIMULATION" context
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
+        self.run(inputs=inputs,
+                 execution_id=execution_id,
+                 runtime_params=runtime_params,
+                 num_trials=num_simulation_trials,
+                 context=context,
+                 bin_execute=execution_mode)
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
-        net_control_allocation_outcomes = []
-        # FIX: the indexing below for predicted_input is not correct
-        for i in range(num_trials):
-            inputs = {}
-            # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
-            # If this is not a good assumption, we need another way to look up the feature InputStates
-            # of the OCM and know which InputState maps to which predicted_input value
-            for j in range(len(self.model_based_optimizer.input_states) - 1):
-                input_state = self.model_based_optimizer.input_states[j + 1]
-                if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+        # Store simulation results on "base" composition
+        if context.initialization_status != ContextFlags.INITIALIZING:
+            try:
+                self.parameters.simulation_results.get(base_execution_id).append(
+                    self.get_output_values(execution_id))
+            except AttributeError:
+                self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
-            for output_state in self.output_states:
-                for proj in output_state.efferents:
-                    proj.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        # Update input states in order to get correct value for "outcome" (from objective mech)
+        self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
+        outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
 
-            self.run(inputs=inputs,
-                     execution_id=execution_id,
-                     runtime_params=runtime_params,
-                     context=context,
-                     bin_execute=execution_mode)
+        # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
+        net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, total_cost)
 
-            # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
-            if context.initialization_status != ContextFlags.INITIALIZING:
-                try:
-                    self.parameters.simulation_results.get(base_execution_id).append(
-                        self.get_output_values(execution_id))
-                except AttributeError:
-                    self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
-
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-            # need to update input states in order to get correct value for "outcome" (from objective mech)
-            self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
-
-            outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
-            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
-            combined_costs = self.model_based_optimizer.combine_costs(all_costs)
-            # KAM Modified 12/5/18 to use OCM's compute_net_outcome fn rather than hard-coded difference
-            net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, combined_costs)
-            net_control_allocation_outcomes.append(net_outcome)
-
-        return net_control_allocation_outcomes
+        return net_outcome
 
     @property
     def input_states(self):

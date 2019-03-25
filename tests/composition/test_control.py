@@ -766,6 +766,42 @@ class TestModelBasedOptimizationControlMechanisms:
         decisionMaker.log.print_entries()
         print(pnl.BEFORE)
 
+    def test_model_based_num_estimates(self):
+
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B',
+                                    function=pnl.SimpleIntegrator(rate=1))
+
+        comp = pnl.Composition(name='comp')
+        comp.add_linear_processing_pathway([A, B])
+
+        search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
+        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+                                           function=pnl.Linear,
+                                           variable=1.0,
+                                           allocation_samples=search_range,
+                                           intensity_cost_function=pnl.Linear(slope=0.))
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                               features=[A.input_state],
+                                               objective_mechanism=objective_mech,
+                                               function=pnl.GridSearch(),
+                                               num_estimates=5,
+                                               control_signals=[control_signal])
+
+        comp.add_model_based_optimizer(ocm)
+
+        inputs = {A: [[[1.0]]]}
+
+        comp.run(inputs=inputs,
+                 num_trials=2)
+
+        assert np.allclose(comp.simulation_results,
+                           [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
+        assert np.allclose(comp.results,
+                           [[np.array([1.])], [np.array([1.75])]])
+
 
 class TestSampleIterator:
 
