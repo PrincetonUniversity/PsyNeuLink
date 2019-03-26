@@ -740,7 +740,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
@@ -1544,14 +1544,20 @@ class State_Base(State):
                     and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape
                 ):
                     self.function.defaults.variable = np.array([self.defaults.variable])
-                else:
-                    warnings.warn(
-                        'Adding a projection to {0}, but its function {1} defaults.variable '
-                        'cannot be modified to accomodate the new projection'.format(
-                            self,
-                            self.function
-                        )
-                    )
+                elif self.function.defaults.variable.shape != self.defaults.variable.shape:
+                    from psyneulink.core.compositions.composition import Composition
+                    warnings.warn('A {} from {} is being added to an {} of {} ({}) that already receives other '
+                                  'Projections, but does not use a {}; unexpected results may occur when the {} '
+                                  'or {} to which it belongs is executed.'.
+                                  format(Projection.__name__, projection.sender.owner.name, self.__class__.__name__,
+                                         self.owner.name, self.name, CombinationFunction.__name__, Mechanism.__name__,
+                                         Composition.__name__))
+                            # f'A {Projection.__name__} from {projection.sender.owner.name} is being added ' \
+                            #     f'to an {self.__class__.__name__} of {self.owner.name} ({self.name}) ' \
+                            #     f'that already receives other Projections, ' \
+                            #     f'but does not use a {CombinationFunction.__name__}; ' \
+                            #     f'unexpected results may occur when the {Mechanism.__name__} ' \
+                            #     f'or {Composition.__name__} to which it belongs is executed.')
 
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
@@ -3016,7 +3022,7 @@ def _parse_state_spec(state_type=None,
     #                                 state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
-        raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".
+        raise StateError("State value ({}) does not match reference_value ({}) for {} of {})".
                          format(state_dict[VALUE], state_dict[REFERENCE_VALUE], state_type.__name__, owner.name))
 
     return state_dict

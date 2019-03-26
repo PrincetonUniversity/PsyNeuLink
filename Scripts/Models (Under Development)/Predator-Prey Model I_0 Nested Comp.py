@@ -8,8 +8,8 @@ from gym_forager.envs.forager_env import ForagerEnv
 RENDER = False
 PNL_COMPILE = False
 PERCEPTUAL_DISTORT = False
-RUN = True
-SHOW_GRAPH = False
+RUN = False
+SHOW_GRAPH = True
 
 
 # *********************************************************************************************************************

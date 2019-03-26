@@ -380,7 +380,7 @@ Class Reference
 ---------------
 
 """
-import aenum
+import enum
 import inspect
 import warnings
 
@@ -391,7 +391,7 @@ import typecheck as tc
 
 from psyneulink.core.globals.context import ContextFlags, _get_time
 from psyneulink.core.globals.context import time as time_object
-from psyneulink.core.globals.keywords import ALL, CONTEXT, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
+from psyneulink.core.globals.keywords import ALL, CONTEXT, EID_SIMULATION, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
 from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
 
 __all__ = [
@@ -402,7 +402,7 @@ __all__ = [
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
 
-class LogCondition(aenum.IntFlag):
+class LogCondition(enum.IntFlag):
     """Used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
 
     .. note::
@@ -925,7 +925,7 @@ class Log:
             execution_id = parse_execution_context(execution_context)
             param._log_value(param.get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
 
-    def get_logged_entries(self, entries=ALL, execution_contexts=NotImplemented):
+    def get_logged_entries(self, entries=ALL, execution_contexts=NotImplemented, exclude_sims=False):
         from psyneulink.core.globals.parameters import parse_execution_context
         if entries is ALL:
             entries = self.all_items
@@ -949,7 +949,10 @@ class Log:
             eids = [parse_execution_context(eid) for eid in eids]
 
             for eid in eids:
-                if eid in log and len(log[eid]) > 0:
+                if (
+                    (eid in log and len(log[eid]) > 0)
+                    and (not exclude_sims or EID_SIMULATION not in str(eid))
+                ):
                     logged_entries[item][eid] = log[eid]
 
             if len(logged_entries[item]) == 0:
@@ -1013,6 +1016,7 @@ class Log:
                       width:int=120,
                       display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
                       execution_contexts=NotImplemented,
+                      exclude_sims=False,
                       # long_context=False
                       ):
         """
@@ -1048,6 +1052,12 @@ class Log:
             more space in each line of the display.
         COMMENT
 
+        exclude_sims
+            set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
+
+            :default value: False
+            :type: bool
+
         """
 
         entries = self._validate_entries_arg(entries, logged=True)
@@ -1055,7 +1065,7 @@ class Log:
         if not entries:
             return None
 
-        class options(aenum.IntFlag):
+        class options(enum.IntFlag):
             NONE = 0
             TIME = 2
             CONTEXT = 4
@@ -1092,7 +1102,7 @@ class Log:
         if option_flags & options.CONTEXT:
             c_width = 0
             for entry in entries:
-                logged_entries = self.get_logged_entries(execution_contexts=execution_contexts)[entry]
+                logged_entries = self.get_logged_entries(execution_contexts=execution_contexts, exclude_sims=exclude_sims)[entry]
                 for eid in logged_entries:
                     for datum in logged_entries[eid]:
                         c_width = max(c_width, len(datum.context))
@@ -1137,7 +1147,7 @@ class Log:
         # for entry_name in self.logged_entries:
         for entry_name in entry_names_sorted:
             try:
-                datum = self.get_logged_entries(execution_contexts=execution_contexts)[entry_name]
+                datum = self.get_logged_entries(execution_contexts=execution_contexts, exclude_sims=exclude_sims)[entry_name]
             except KeyError:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(entry_name, self.owner.name))
@@ -1180,6 +1190,7 @@ class Log:
                 header:bool=True,
                 owner_name:bool=False,
                 execution_contexts=NotImplemented,
+                exclude_sims=False,
                 ):
         """
         nparray(                 \
@@ -1234,6 +1245,12 @@ class Log:
             if it is True, the format of the header for each field is "<Owner name>[<entry name>]";
             otherwise, it is "<entry name>".
 
+        exclude_sims
+            set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
+
+            :default value: False
+            :type: bool
+
         Returns:
             2d np.array
         """
@@ -1253,6 +1270,9 @@ class Log:
         header = 1 if header is True else 0
 
         execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
+
+        if exclude_sims:
+            execution_ids = [eid for eid in execution_ids if EID_SIMULATION not in str(eid)]
 
         npa = [[self.execution_id_header]] if header else [[]]
 
@@ -1301,7 +1321,7 @@ class Log:
 
         return npa
 
-    def nparray_dictionary(self, entries=None, execution_contexts=NotImplemented):
+    def nparray_dictionary(self, entries=None, execution_contexts=NotImplemented, exclude_sims=False):
         """
         nparray_dictionary(                 \
             entries=None,        \
@@ -1355,6 +1375,12 @@ class Log:
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
             If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
+        exclude_sims
+            set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
+
+            :default value: False
+            :type: bool
+
         Returns:
             2d np.array
         """
@@ -1365,6 +1391,9 @@ class Log:
             return log_dict
 
         execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
+
+        if exclude_sims:
+            execution_ids = [eid for eid in execution_ids if EID_SIMULATION not in str(eid)]
 
         for eid in execution_ids:
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
@@ -1394,7 +1423,7 @@ class Log:
         return log_dict
 
     @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", execution_contexts=NotImplemented):
+    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", execution_contexts=NotImplemented, exclude_sims=False):
         """
         csv(                           \
             entries=None,              \
@@ -1440,6 +1469,12 @@ class Log:
             if specified with a string, that is used in place of single quotes to enclose *all* items;
             if `False` or `None`, single quotes are used for headers (the items in the first row), but no others.
 
+        exclude_sims
+            set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
+
+            :default value: False
+            :type: bool
+
         Returns:
             CSV-formatted string
         """
@@ -1456,11 +1491,14 @@ class Log:
         csv = "'" + "', '".join([str(x) for x in npaT[0]]) + "\'" + "\n"
 
         entries = self._validate_entries_arg(entries, logged=True)
-        execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
 
         for i in range(1, len(npaT)):
             # for each execution_id
             execution_id = npaT[i][0]
+
+            if exclude_sims and EID_SIMULATION in execution_id:
+                continue
+
             data = np.array(npaT[i][1], dtype=object).T
 
             if not quotes:

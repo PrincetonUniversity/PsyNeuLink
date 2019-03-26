@@ -1,7 +1,6 @@
 language: python
 
 python:
-    - 3.5
     - 3.6
     - 3.7
 
@@ -31,22 +30,10 @@ cache:
 matrix:
   include:
   - os: osx
-    python: 3.5
-    language: minimal
-    env:
-        - PYTHON=3.5.4
-        - PYTHON_PKG_VERSION=macosx10.6
-    # Cache installed python virtual env and homebrew downloads
-    cache:
-        directories:
-          - $HOME/Library/Caches
-
-  - os: osx
     python: 3.6
     language: minimal
     env:
         - PYTHON=3.6.8
-        - PYTHON_PKG_VERSION=macosx10.9
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
@@ -57,7 +44,6 @@ matrix:
     language: minimal
     env:
         - PYTHON=3.7.2
-        - PYTHON_PKG_VERSION=macosx10.9
         - PYTHONWARNINGS="ignore::DeprecationWarning"
     # Cache installed python virtual env and homebrew downloads
     cache:
@@ -71,7 +57,7 @@ addons:
 
 before_install: |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    FILE=python-$PYTHON-$PYTHON_PKG_VERSION.pkg
+    FILE=python-$PYTHON-macosx10.9.pkg
     if [ ! -f $HOME/Library/Caches/$FILE ]; then
       curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
     fi

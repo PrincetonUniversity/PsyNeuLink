@@ -398,7 +398,6 @@ from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism imp
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.components.states.featureinputstate import FeatureInputState
 from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
@@ -406,7 +405,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -774,9 +773,10 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             if len(state.path_afferents) > 1:
-                raise OptimizationControlMechanismError("Invalid FeatureInputState on {}. {} should receive exactly one"
+                raise OptimizationControlMechanismError("Invalid {} on {}. {} should receive exactly one"
                                                         " projection, but it receives {} projections."
-                                                        .format(self.name, state.name, len(state.path_afferents)))
+                                                        .format(InputState.__name__, self.name, state.name,
+                                                                len(state.path_afferents)))
 
         # KAM Removed the exception below 11/6/2018 because it was rejecting valid
         # monitored_output_state spec on ObjectiveMechanism
@@ -825,6 +825,24 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
+    def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
+        """ Update value for each InputState in self.input_states:
+
+        Call execute method for all (MappingProjection) Projections in InputState.path_afferents
+        Aggregate results (using InputState execute method)
+        Update InputState.value
+        """
+        # "Outcome"
+        outcome_input_state = self.input_state
+        outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
+        state_values = [np.atleast_2d(outcome_input_state.parameters.value.get(execution_id))]
+        for i in range(1, len(self.input_states)):
+            state = self.input_states[i]
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state_values.append(state.parameters.value.get(execution_id))
+
+        return np.array(state_values)
+
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
@@ -860,6 +878,10 @@ class OptimizationControlMechanism(ControlMechanism):
         net_outcome = self.parameters.net_outcome.get(execution_id)
         # MODIFIED 1/23/19 END
         #
+        # freeze the values of current execution_id, because they can be changed in between simulations,
+        # and the simulations must start from the exact spot
+        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id)
+
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
@@ -871,6 +893,10 @@ class OptimizationControlMechanism(ControlMechanism):
             if not 'has no attribute \'adapt\'' in e.args[0]:
                 raise AttributeError(e.args[0])
 
+        # freeze the values of current execution_id, because they can be changed in between simulations,
+        # and the simulations must start from the exact spot
+        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id, override=True)
+
         # Get control_allocation that optmizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
@@ -878,6 +904,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       execution_id=execution_id,
                                                                                       runtime_params=runtime_params,
                                                                                       context=context)
+
+        # clean up frozen values after execution
+        self.agent_rep._delete_context(self._get_frozen_execution_id(execution_id))
+
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
@@ -894,6 +924,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # Return optimal control_allocation
         return optimal_control_allocation
 
+    def _get_frozen_execution_id(self, execution_id=None):
+        return f'{execution_id}{EID_FROZEN}'
+
     def _set_up_simulation(self, base_execution_id=None):
         sim_execution_id = self.get_next_sim_id(base_execution_id)
 
@@ -902,7 +935,7 @@ class OptimizationControlMechanism(ControlMechanism):
         except AttributeError:
             self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
 
-        self.agent_rep._initialize_from_context(sim_execution_id, base_execution_id, override=False)
+        self.agent_rep._initialize_from_context(sim_execution_id, self._get_frozen_execution_id(base_execution_id), override=False)
 
         return sim_execution_id
 
@@ -984,7 +1017,6 @@ class OptimizationControlMechanism(ControlMechanism):
         Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
         Assign functions specified in **feature_function** to InputStates for all features
-        Convert state_type of all entries to FeatureInputState (to allow functions other than LinearCombination)
         Return list of InputState specification dictionaries
         """
 
@@ -1002,17 +1034,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
-        # Convert state_type of InputStates used to shadow into state_type to FeatureInputState
-        #    to insure that their functions are allowed to be other than CombinationFunction,
-        #    and that they only receive on MappingProjection each
-        #        (since they might not be CombinationFunctions, can only accept variable with one item).
-        for feature in parsed_features:
-            if isinstance(feature, dict):
-                feature['state_type'] = FeatureInputState
-            else:
-                if not isinstance(feature, FeatureInputState):
-                    raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
-                                                            .format(self.name, feature))
         return parsed_features
 
     @property
