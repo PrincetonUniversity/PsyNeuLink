@@ -1825,7 +1825,8 @@ class ParamEstimationFunction(OptimizationFunction):
         if self.objective_function is None:
             return None
 
-        if type(self.objective_function(np.array([0]))) is int:
+        # Call the objective_function and check its return type
+        if type(self.objective_function(np.zeros(len(self.search_space)))) is int:
             return None
 
         def simulator(**kwargs):
@@ -1895,12 +1896,14 @@ class ParamEstimationFunction(OptimizationFunction):
 
         return_all_samples = return_all_values = []
 
-        return_optimal_sample = (0.2, 0.6)
+        return_optimal_sample = np.zeros(len(self.search_space))
         return_optimal_value= 0.0
 
         sim_func = self._make_simulator_function()
 
         if sim_func is None:
             return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
+
+        results = sim_func(t1=0.5, t2=0.6, batch_size=200)
 
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
