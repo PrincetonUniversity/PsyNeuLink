@@ -600,6 +600,8 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
+from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -620,6 +622,7 @@ from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
 __all__ = [
 
@@ -1649,6 +1652,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
                                        .format(pathway[c]))
+
+    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, target_function=None):
+        learning_mechanism = LearningMechanism(function=ReinforcementLearning(learning_rate=learning_rate))
+        comparator_mechanism = ComparatorMechanism()
+        learning_projection = LearningProjection()
+        self.add_linear_processing_pathway(pathway + [comparator_mechanism, learning_mechanism])
+        self.add_projection(learning_mechanism)
 
     def _validate_projection(self,
                              projection,
