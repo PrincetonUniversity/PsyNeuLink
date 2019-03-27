@@ -601,9 +601,11 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Composition_Base
@@ -611,10 +613,11 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, MATRIX_KEYWORD_VALUES, \
-    MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
+    MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, SAMPLE, TARGET, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
@@ -1653,12 +1656,60 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
                                        .format(pathway[c]))
 
-    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, target_function=None):
-        learning_mechanism = LearningMechanism(function=ReinforcementLearning(learning_rate=learning_rate))
-        comparator_mechanism = ComparatorMechanism()
-        learning_projection = LearningProjection()
-        self.add_linear_processing_pathway(pathway + [comparator_mechanism, learning_mechanism])
-        self.add_projection(learning_mechanism)
+    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+
+        if not error_function:
+            error_function = LinearCombination(weights=[[-1], [1]])
+
+        # unpack processing components and add to composition
+        input_source, output_source = pathway[0], pathway[1]
+        learned_projection = MappingProjection(name="LEARNED PROJ", sender=input_source, receiver=output_source)
+
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+        print("COMP PROJS = ", self.projections)
+        for proj in self.projections:
+            print("     NAME = ", proj.name)
+        # Create learning components
+        target_mechanism = ProcessingMechanism(name='Target',
+                                               default_variable=output_source.output_states[0].value)
+        self.target_mechanism = target_mechanism
+
+        comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: [0.],
+                                                           WEIGHT: -1},
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: [0.],
+                                                           },
+                                                   function=error_function,
+                                                   output_states=[OUTCOME, "MSE"])
+
+        learning_mechanism = LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
+                                                                                        output_source.output_states[0].value,
+                                                                                        comparator_mechanism.output_states[0].value],
+
+                                                                      learning_rate=learning_rate),
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 comparator_mechanism.output_states[0].value],
+                                               )
+        target_projection = MappingProjection(sender=target_mechanism, receiver=comparator_mechanism.input_states[0])
+        sample_projection = MappingProjection(sender=output_source, receiver=comparator_mechanism.input_states[1])
+        outcome_projection = MappingProjection(name="Comparator Outcome to Learning Mech", sender=comparator_mechanism, receiver=learning_mechanism.input_states[0])
+
+        act_out_projection = MappingProjection(name="Act Out to Learning Mech", sender=output_source.output_states[0], receiver=learning_mechanism.input_states[1])
+        act_in_projection = MappingProjection(name="Act In to Learning Mech", sender=input_source.output_states[0], receiver=learning_mechanism.input_states[2])
+        # add all processing and learning components to the composition
+        self.add_nodes([target_mechanism, comparator_mechanism, learning_mechanism])
+        self.add_projections([target_projection,
+                              sample_projection,
+                              outcome_projection,
+                              act_out_projection,
+                              act_in_projection])
+        # learning_projection = LearningProjection(name="Learning Projection", sender=learning_mechanism,
+        #                                          receiver=learned_projection)
+        #
+        # self.add_projection(learning_projection, feedback=True)
 
     def _validate_projection(self,
                              projection,
