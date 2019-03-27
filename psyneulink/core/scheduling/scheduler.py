@@ -839,6 +839,22 @@ class Scheduler(object):
 
         return self.execution_list[execution_id]
 
+    def _dict_summary(self):
+        return {
+            'conditions': {
+                'termination': {
+                    str(k): str(v) for k, v in self.termination_conds.items()
+                },
+                'node': {
+                    n.name: str(self.condition_set[n]) for n in self.nodes if n in self.condition_set
+                }
+            }
+        }
+
+    def json_summary(self):
+        import json
+        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
+
     @property
     def clock(self):
         return self.clocks[self.default_execution_id]
