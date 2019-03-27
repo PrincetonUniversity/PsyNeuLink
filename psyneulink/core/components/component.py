@@ -400,10 +400,13 @@ It also contains:
 COMMENT
 
 """
+import base64
 import copy
+import dill
 import inspect
 import logging
 import numbers
+import re
 import types
 import warnings
 
@@ -417,11 +420,14 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
+from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
     FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
     LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
-    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY
+    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, FUNCTION_COMPONENT_CATEGORY, \
+    MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
+    MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
@@ -675,7 +681,7 @@ class ComponentsMeta(ABCMeta):
         return self.defaults
 
 
-class Component(object, metaclass=ComponentsMeta):
+class Component(JSONDumpable, metaclass=ComponentsMeta):
     """Base class for Component.
 
     .. note::
@@ -3321,36 +3327,152 @@ class Component(object, metaclass=ComponentsMeta):
         """
         self.log.log_values(entries)
 
+    @property
     def _dict_summary(self):
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.components.states.state import State
+        from psyneulink.core.components.states.outputstate import OutputState
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+
+        def parse_parameter_value(value):
+            if isinstance(value, (list, tuple)):
+                new_item = []
+                for item in value:
+                    new_item.append(parse_parameter_value(item))
+                value = type(value)(new_item)
+            elif isinstance(value, dict):
+                value = {
+                    parse_parameter_value(k): parse_parameter_value(v)
+                    for k, v in value.items()
+                }
+            elif isinstance(value, Composition):
+                value = value.name
+            elif isinstance(value, State):
+                if isinstance(value, OutputState):
+                    state_port_name = MODEL_SPEC_ID_OUTPUT_PORTS
+                else:
+                    state_port_name = MODEL_SPEC_ID_INPUT_PORTS
+
+                # assume we will use the identifier on reconstitution
+                value = '{0}.{1}.{2}'.format(
+                    value.owner.name,
+                    state_port_name,
+                    value.name
+                )
+            elif isinstance(value, Component):
+                # could potentially create duplicates when it should
+                # create a reference to an already existent Component like
+                # with Compositions, but in a vacuum the full specification
+                # is necessary.
+                # in fact this would happen unless the parser specifically
+                # handles it like ours does
+                value = value._dict_summary
+            elif isinstance(value, (types.FunctionType)):
+                value = base64.encodebytes(dill.dumps(value)).decode('utf-8')
+
+            return value
+
+        # attributes (and their values) included in top-level dict
         basic_attributes = ['name']
 
-        # lifted from LLVM
-        parameter_black_list = {'function', 'variable', 'value', 'context'}
+        # attributes that aren't Parameters but are psyneulink-specific
+        # and are stored in the PNL parameters section
+        implicit_parameter_attributes = ['node_ordering', 'required_node_roles']
+
         parameters_dict = {}
+        pnl_specific_parameters = {}
+        deferred_init_values = {}
+
+        if self.initialization_status is ContextFlags.DEFERRED_INIT:
+            deferred_init_values = copy.copy(self.init_args)
+            try:
+                deferred_init_values.update(deferred_init_values['params'])
+            except KeyError:
+                pass
+
+            # .parameters still refers to class parameters during deferred init
+            assert not _parameters_belongs_to_obj(self)
 
         for p in self.parameters:
-            if p.user and p.name not in parameter_black_list:
-                val = p._get(self.most_recent_context)
+            if p.name not in self._model_spec_parameter_blacklist:
+                if self.initialization_status is ContextFlags.DEFERRED_INIT:
+                    try:
+                        val = deferred_init_values[p.name]
+                    except KeyError:
+                        # class default
+                        val = p.default_value
+                else:
+                    # special handling because MappingProjection matrix just
+                    # refers to its function's matrix but its default values are
+                    # PNL-specific
+                    if (
+                        isinstance(self, MappingProjection)
+                        and p.name == 'matrix'
+                    ):
+                        val = self.function.defaults.matrix
+                    else:
+                        val = p.default_value
 
-                if isinstance(val, np.ndarray):
-                    val = f'numpy.array({val})'
-                elif not isinstance(val, numbers.Number) and val is not None:
-                    val = str(val)
+                val = parse_parameter_value(val)
 
-                parameters_dict[p.name] = val
+                try:
+                    matching_parameter_state = self.owner.parameter_states[p.name]
 
-        function_dict = {'function': self.function._dict_summary()} if (hasattr(self, 'function') and isinstance(self.function, Component)) else {}
+                    if matching_parameter_state.source is self:
+                        val = {
+                            MODEL_SPEC_ID_PARAMETER_SOURCE: '{0}.{1}.{2}'.format(
+                                self.owner.name,
+                                MODEL_SPEC_ID_INPUT_PORTS,
+                                p.name
+                            ),
+                            MODEL_SPEC_ID_PARAMETER_VALUE: val,
+                            MODEL_SPEC_ID_TYPE: type(val)
+                        }
+                # ContentAddressableList uses TypeError when key not found
+                except (AttributeError, TypeError):
+                    pass
+
+                # split parameters designated as PsyNeuLink-specific and
+                # parameters that are universal
+                if p.pnl_internal:
+                    pnl_specific_parameters[p.name] = val
+                else:
+                    parameters_dict[p.name] = val
+
+        for attr in implicit_parameter_attributes:
+            try:
+                pnl_specific_parameters[attr] = getattr(self, attr)
+            except AttributeError:
+                pass
+
+        if len(pnl_specific_parameters) > 0:
+            parameters_dict[MODEL_SPEC_ID_PSYNEULINK] = pnl_specific_parameters
+
+        function_dict = {}
+        try:
+            if isinstance(self.function, Component):
+                function_dict['functions'] = [self.function._dict_summary]
+        except AttributeError:
+            pass
+
+        type_dict = {}
+
+        if self._model_spec_class_name_is_generic:
+            type_dict[MODEL_SPEC_ID_GENERIC] = self.__class__.__name__
+        else:
+            if self._model_spec_generic_type_name is not NotImplemented:
+                type_dict[MODEL_SPEC_ID_GENERIC] = self._model_spec_generic_type_name
+            else:
+                type_dict[MODEL_SPEC_ID_GENERIC] = None
+
+            type_dict[MODEL_SPEC_ID_PSYNEULINK] = self.__class__.__name__
 
         return {
             **{attr: getattr(self, attr) for attr in basic_attributes},
-            **{'parameters': parameters_dict},
+            **{self._model_spec_id_parameters: parameters_dict},
             **function_dict,
-            **{'type': self.__class__.__name__}
+            **{MODEL_SPEC_ID_TYPE: type_dict}
         }
-
-    def json_summary(self):
-        import json
-        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
 
     @property
     def logged_items(self):

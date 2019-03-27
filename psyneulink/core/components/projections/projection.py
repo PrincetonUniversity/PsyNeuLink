@@ -399,7 +399,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_STATE, ADD_OUTPUT_STATE, PROJECTION_COMPONENT_CATEGORY
+from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_STATE, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_STATE, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, ADD_INPUT_STATE, ADD_OUTPUT_STATE, PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -1029,6 +1029,35 @@ class Projection_Base(Projection):
 
     def _delete_projection(projection):
         raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
+
+    @property
+    def _dict_summary(self):
+        # these may occur during deferred init
+        if not isinstance(self.sender, type):
+            sender_name = self.sender.name
+            sender_mech = self.sender.owner.name
+        else:
+            sender_name = None
+            sender_mech = None
+
+        if not isinstance(self.receiver, type):
+            receiver_name = self.receiver.name
+            receiver_mech = self.receiver.owner.name
+        else:
+            receiver_name = None
+            receiver_mech = None
+
+        socket_dict = {
+            MODEL_SPEC_ID_SENDER_STATE: sender_name,
+            MODEL_SPEC_ID_RECEIVER_STATE: receiver_name,
+            MODEL_SPEC_ID_SENDER_MECH: sender_mech,
+            MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
+        }
+
+        return {
+            **super()._dict_summary,
+            **socket_dict
+        }
 
 
 @tc.typecheck

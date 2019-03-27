@@ -1116,13 +1116,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, BOTH, \
-    COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CONDITIONS, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
-    SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+from psyneulink.core.globals.keywords import AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -7574,28 +7568,85 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return llvm_func
 
+    @property
     def _dict_summary(self):
         scheduler_dict = {
-            'schedulers': {
-                str(ContextFlags.PROCESSING): self.scheduler._dict_summary()
-            }
+            str(ContextFlags.PROCESSING): self.scheduler._dict_summary
         }
 
-        nodes_dict = {
-            'nodes': {n.name: n._dict_summary() for n in self.nodes}
-        }
+        super_summary = super()._dict_summary
 
-        projections_dict = {
-            'projections': {f'{p.sender.owner.name} to {p.receiver.owner.name}': p._dict_summary() for p in self.projections}
-        }
+        try:
+            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers'] = scheduler_dict
+        except KeyError:
+            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK] = {}
+            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers'] = scheduler_dict
+
+        nodes_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
+        projections_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
+
+        additional_projections = []
+        additional_nodes = (
+            [self.controller]
+            if self.controller is not None
+            else []
+        )
+
+        for n in list(self.nodes) + additional_nodes:
+            if not isinstance(n, CompositionInterfaceMechanism):
+                nodes_dict[n.name] = n._dict_summary
+
+            # consider making this more general in the future
+            try:
+                additional_projections.extend(n.control_projections)
+            except AttributeError:
+                pass
+
+        for p in list(self.projections) + additional_projections:
+            has_cim_sender = isinstance(
+                p.sender.owner,
+                CompositionInterfaceMechanism
+            )
+            has_cim_receiver = isinstance(
+                p.receiver.owner,
+                CompositionInterfaceMechanism
+            )
+
+            # filter projections to/from CIMs, unless they are to embedded
+            # compositions (any others should be automatically generated)
+            if (
+                (not has_cim_sender or p.sender.owner.composition in self.nodes)
+                and (
+                    not has_cim_receiver
+                    or p.receiver.owner.composition in self.nodes
+                )
+            ):
+                p_summary = p._dict_summary
+
+                if has_cim_sender:
+                    p_summary[MODEL_SPEC_ID_SENDER_MECH] = p.sender.owner.composition.name
+
+                if has_cim_receiver:
+                    p_summary[MODEL_SPEC_ID_RECEIVER_MECH] = p.receiver.owner.composition.name
+
+                projections_dict[p.name] = p_summary
+
+        if len(nodes_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
+            del nodes_dict[MODEL_SPEC_ID_PSYNEULINK]
+
+        if len(projections_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
+            del projections_dict[MODEL_SPEC_ID_PSYNEULINK]
 
         return {
-            **super()._dict_summary(),
-            **scheduler_dict,
-            **nodes_dict,
-            **projections_dict,
+            MODEL_SPEC_ID_COMPOSITION: [{
+                **super_summary,
+                **{
+                    MODEL_SPEC_ID_NODES: nodes_dict,
+                    MODEL_SPEC_ID_PROJECTIONS: projections_dict,
+                    'controller': self.controller,
+                }
+            }]
         }
-
 
     # ******************************************************************************************************************
     #                                           PROPERTIES

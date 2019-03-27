@@ -961,7 +961,8 @@ from psyneulink.core.globals.keywords import \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY, MECHANISM, WEIGHT, \
+    TARGET_LABELS_DICT, VALUE, VARIABLE, MECHANISM_COMPONENT_CATEGORY, \
+    MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, MECHANISM, WEIGHT, \
     EXPONENT, NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
@@ -3725,6 +3726,29 @@ class Mechanism_Base(Mechanism):
             self.output_states,
             self.parameter_states,
         ))
+
+    @property
+    def _dict_summary(self):
+        inputs_dict = {
+            MODEL_SPEC_ID_INPUT_PORTS: [
+                s._dict_summary for s in self.input_states
+            ]
+        }
+        inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(
+            [s._dict_summary for s in self.parameter_states]
+        )
+
+        outputs_dict = {
+            MODEL_SPEC_ID_OUTPUT_PORTS: [
+                s._dict_summary for s in self.output_states
+            ]
+        }
+
+        return {
+            **super()._dict_summary,
+            **inputs_dict,
+            **outputs_dict
+        }
 
 
 def _is_mechanism_spec(spec):

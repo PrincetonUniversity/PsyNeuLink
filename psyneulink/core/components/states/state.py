@@ -2364,6 +2364,16 @@ class State_Base(State):
             self.efferents,
         ))
 
+    @property
+    def _dict_summary(self):
+        return {
+            **super()._dict_summary,
+            **{
+                'shape': str(self.defaults.variable.shape),
+                'dtype': str(self.defaults.variable.dtype)
+            }
+        }
+
 
 def _instantiate_state_list(owner,
                             state_list,              # list of State specs, (state_spec, params) tuples, or None
