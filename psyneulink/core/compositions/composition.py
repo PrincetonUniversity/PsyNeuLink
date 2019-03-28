@@ -602,7 +602,7 @@ from psyneulink.core.components.component import Component, ComponentsMeta, func
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
@@ -625,7 +625,7 @@ from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 
 __all__ = [
 
@@ -1685,7 +1685,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            VARIABLE: [0.],
                                                            },
                                                    function=error_function,
-                                                   output_states=[OUTCOME, "MSE"])
+                                                   output_states=[OUTCOME, MSE])
 
         learning_mechanism = LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
                                                                                         output_source.output_states[0].value,
@@ -1695,13 +1695,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                default_variable=[input_source.output_states[0].value,
                                                                  output_source.output_states[0].value,
                                                                  comparator_mechanism.output_states[0].value],
-                                               )
+                                               error_sources=comparator_mechanism,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
         target_projection = MappingProjection(sender=target_mechanism, receiver=comparator_mechanism.input_states[0])
         sample_projection = MappingProjection(sender=output_source, receiver=comparator_mechanism.input_states[1])
         outcome_projection = MappingProjection(name="Comparator Outcome to Learning Mech", sender=comparator_mechanism, receiver=learning_mechanism.input_states[0])
-
-        act_out_projection = MappingProjection(name="Act Out to Learning Mech", sender=output_source.output_states[0], receiver=learning_mechanism.input_states[1])
-        act_in_projection = MappingProjection(name="Act In to Learning Mech", sender=input_source.output_states[0], receiver=learning_mechanism.input_states[2])
+        error_signal_projection = MappingProjection(name="Comparator Error Signal to Learning Mech", sender=comparator_mechanism.output_states[MSE], receiver=learning_mechanism.input_states[ERROR_SIGNAL])
+        act_out_projection = MappingProjection(name="Act Out to Learning Mech",
+                                               sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        act_in_projection = MappingProjection(name="Act In to Learning Mech",
+                                              sender=input_source.output_states[0],
+                                              receiver=learning_mechanism.input_states[2])
         # add all processing and learning components to the composition
         self.add_nodes([target_mechanism, comparator_mechanism, learning_mechanism])
         self.add_projections([target_projection,
@@ -3414,7 +3420,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
         for learning_projection in self.learning_projections:
-            learning_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
+            learning_projection.execute(variable=learning_projection.sender.value, execution_id=execution_id, context=ContextFlags.LEARNING)
 
         output_values = []
         for state in self.output_CIM.output_states:
