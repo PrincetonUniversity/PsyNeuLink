@@ -806,7 +806,7 @@ class Parameter(types.SimpleNamespace):
                 else:
                     return None
 
-    def get_previous(self, execution_context=None):
+    def get_previous(self, execution_context=None, index=1):
         """
             Gets the value set before the current value of this `Parameter` in the context of **execution_context**
 
@@ -815,9 +815,13 @@ class Parameter(types.SimpleNamespace):
 
                 execution_context : execution_id, Composition
                     the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+
+                index : int : 1
+                    how far back to look into the history. A value of 1 means the first previous value
+
         """
         try:
-            return self.history[execution_context][-1]
+            return self.history[execution_context][-1 * index]
         except (KeyError, IndexError):
             return None
 
