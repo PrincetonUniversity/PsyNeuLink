@@ -1,3 +1,5 @@
+import matplotlib
+# matplotlib.use('TkAgg')
 import psyneulink as pnl
 import numpy as np
 import pytest
@@ -30,114 +32,47 @@ class TestHebbian:
         assert np.allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])
 
 class TestReinforcement:
+    def test_ddm(self):
+        example_DDM = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=2.0,
+                                                                    rate=1.5),
+                              name='DDM')
+        example_DDM.log.set_log_conditions(items=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME])
+        comp = pnl.Composition(name='DDM_composition')
 
+        comp.add_node(example_DDM)
+
+        comp.run(inputs={example_DDM: [[[1.0]]]},
+                 num_trials=10,
+                 execution_id='execid')
+
+        example_DDM.log.print_entries()
+
+        log = example_DDM.log.nparray_dictionary()['execid']
+        decision_variables = log[pnl.DECISION_VARIABLE]
+        time_since_start = log[pnl.RESPONSE_TIME]
+
+        print(decision_variables)
+        print(time_since_start)
     def test_rl(self):
-            input_layer = pnl.TransferMechanism(
-                default_variable=[0, 0, 0],
-                name='Input Layer',
-            )
+            input_layer = pnl.TransferMechanism(size=2,
+                                                name='Input Layer')
 
-            action_selection = pnl.TransferMechanism(
-                default_variable=[0, 0, 0],
-                function=pnl.SoftMax(
-                    output=pnl.PROB,
-                    gain=1.0,
-                ),
-                name='Action Selection',
-            )
+            action_selection =  pnl.DDM(input_format=pnl.ARRAY,
+                                        function=pnl.DriftDiffusionAnalytical(),
+                                        output_states=[pnl.SELECTED_INPUT_ARRAY],
+                                        name='DDM')
 
-            reward_values = [10, 10, 10]
-            action_selection.output_state.value = [0, 0, 1]
-            reward = lambda: [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
             comp = pnl.Composition(name='comp')
             # comp.add_linear_processing_pathway([input_layer, action_selection])
-            comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
-                                                    learning_rate=0.05,
-                                                    # target=reward
-                                                    )
+            learned_projection = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
+                                                                         learning_rate=0.05)
+            learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
-
-            def print_header():
-                print("\n\n**** TIME: ", comp.scheduler_processing.clock.simple_time)
-
-            # def show_weights():
-            #     print('Reward prediction weights: \n',
-            #           action_selection.input_states[0].path_afferents[0].get_mod_matrix(s))
-            #     print('\nAction selected:  {}; predicted reward: {}'.format(
-            #         np.nonzero(action_selection.output_state.value)[0][0],
-            #         action_selection.output_state.value[np.nonzero(action_selection.output_state.value)[0][0]],
-            #     ))
-            #
-            inputs_dict = {input_layer: [[1, 1, 1]],
-                          comp.target_mechanism: [[0., 0., 10.]]}
-            #
-            comp._analyze_graph()
+            inputs_dict = {input_layer: [[1., 1.], [2., 2.], [3., 3.]],
+                           comp.target_mechanism: [[10., 20.], [30., 10.], [20., 30.]]
+                           }
+            print("\n\n\n\n\nRUN ---------------------------")
+            comp.run(inputs=inputs_dict)
             comp.show_graph()
-            print("\n\n\n\n", )
 
-            print("\n\n\n\n\nRUN:\n")
-            results = comp.run(
-                num_trials=3,
-                inputs=inputs_dict,
-                call_before_time_step=print_header
-            )
-
-            print("\n\nResults:\n")
-            print(results)
-            print("\n\nNodes:\n")
-            for node in comp.nodes:
-                print(node.name)
-            print("\n\nProjections:\n")
-            for proj in comp.projections:
-                print(proj.name)
-            #
-            # results_list = []
-            # for elem in comp.results:
-            #     for nested_elem in elem:
-            #         nested_elem = nested_elem.tolist()
-            #         try:
-            #             iter(nested_elem)
-            #         except TypeError:
-            #             nested_elem = [nested_elem]
-            #         results_list.extend(nested_elem)
-            #
-            # mech_objective_action = comp.nodes[2]
-            # mech_learning_input_to_action = comp.nodes[3]
-            #
-            # reward_prediction_weights = action_selection.input_states[0].path_afferents[0]
-            #
-            # expected_output = [
-            #     (input_layer.get_output_values(comp), [np.array([1., 1., 1.])]),
-            #     (action_selection.get_output_values(comp), [np.array([0., 0., 2.283625])]),
-            #     (pytest.helpers.expand_np_ndarray(mech_objective_action.get_output_values(comp)),
-            #      pytest.helpers.expand_np_ndarray([np.array([7.716375]), np.array(59.542443140625004)])),
-            #     (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.get_output_values(comp)),
-            #      pytest.helpers.expand_np_ndarray([
-            #          [np.array([0., 0., 0.38581875]), np.array([0., 0., 0.38581875])]
-            #      ])),
-            #     (reward_prediction_weights.get_mod_matrix(comp), np.array([
-            #         [1., 0., 0.],
-            #         [0., 3.38417298, 0.],
-            #         [0., 0., 2.66944375],
-            #     ])),
-            #     (results, [
-            #         [np.array([0., 1., 0.])],
-            #         [np.array([0., 1.45, 0.])],
-            #         [np.array([0., 1.8775, 0.])],
-            #         [np.array([0., 0., 1.])],
-            #         [np.array([0., 0., 1.45])],
-            #         [np.array([0., 2.283625, 0.])],
-            #         [np.array([0., 0., 1.8775])],
-            #         [np.array([0., 2.66944375, 0.])],
-            #         [np.array([0., 3.03597156, 0.])],
-            #         [np.array([0., 0., 2.283625])]
-            #     ]),
-            # ]
-            #
-            # for i in range(len(expected_output)):
-            #     val, expected = expected_output[i]
-            #     # setting absolute tolerance to be in accordance with reference_output precision
-            #     # if you do not specify, assert_allclose will use a relative tolerance of 1e-07,
-            #     # which WILL FAIL unless you gather higher precision values to use as reference
-            #     np.testing.assert_allclose(val, expected, atol=1e-08,
-            #                                err_msg='Failed on expected_output[{0}]'.format(i))
+            learned_projection.log.print_entries()
