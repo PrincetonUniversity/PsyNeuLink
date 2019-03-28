@@ -668,7 +668,6 @@ class LearningProjection(ModulatoryProjection_Base):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
-
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized

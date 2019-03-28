@@ -1074,6 +1074,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_mode = controller_mode
 
         self.projections = []
+        self.learning_projections = []
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -1459,6 +1460,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver_mechanism = receiver.owner_mech
             hebbian_learning = True
 
+        elif isinstance(sender, LearningMechanism):
+            receiver_mechanism = receiver.receiver.owner
+            hebbian_learning = True
+
         else:
             raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(receiver, self.name,
@@ -1664,11 +1669,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # unpack processing components and add to composition
         input_source, output_source = pathway[0], pathway[1]
         learned_projection = MappingProjection(name="LEARNED PROJ", sender=input_source, receiver=output_source)
+        self.add_nodes([input_source, output_source])
+        self.add_projection(learned_projection)
 
-        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
-        print("COMP PROJS = ", self.projections)
-        for proj in self.projections:
-            print("     NAME = ", proj.name)
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target',
                                                default_variable=output_source.output_states[0].value)
@@ -1706,10 +1709,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               outcome_projection,
                               act_out_projection,
                               act_in_projection])
-        # learning_projection = LearningProjection(name="Learning Projection", sender=learning_mechanism,
-        #                                          receiver=learned_projection)
-        #
-        # self.add_projection(learning_projection, feedback=True)
+
+        learning_projection = LearningProjection(name="Learning Projection",
+                                                 sender=learning_mechanism.learning_signals[0],
+                                                 receiver=learned_projection.parameter_states["matrix"])
+
+        self.add_projection(learning_projection, feedback=True)
+        self.learning_projections.append(learning_projection)
+        return learned_projection
 
     def _validate_projection(self,
                              projection,
@@ -3183,6 +3190,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+
                 if bin_execute:
                     data = self._get_flattened_controller_output(execution_id)
                     _comp_ex.insert_node_output(self.controller, data)
@@ -3404,6 +3412,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+
+        for learning_projection in self.learning_projections:
+            learning_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
 
         output_values = []
         for state in self.output_CIM.output_states:
