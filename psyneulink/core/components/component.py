@@ -2303,13 +2303,14 @@ class Component(object, metaclass=ComponentsMeta):
             if param.setter is not None:
                 param._initialize_from_context(execution_context, base_execution_context, override)
 
-    def _delete_contexts(self, *execution_contexts):
+    def _delete_contexts(self, *execution_contexts, check_simulation_storage=False):
         for comp in self._dependent_components:
-            comp._delete_contexts(*execution_contexts)
+            comp._delete_contexts(*execution_contexts, check_simulation_storage=check_simulation_storage)
 
         for param in self.stateful_parameters:
-            for execution_context in execution_contexts:
-                param.delete(execution_context)
+            if not check_simulation_storage or not param.retain_old_simulation_data:
+                for execution_context in execution_contexts:
+                    param.delete(execution_context)
 
     def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
         context_param = self.parameters.context.get(execution_id)

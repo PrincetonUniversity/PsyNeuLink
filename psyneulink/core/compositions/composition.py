@@ -3379,6 +3379,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
+            retain_old_simulation_data=False,
             context=None
     ):
         '''
@@ -3450,6 +3451,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       a `Condition`
 
                 See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            retain_old_simulation_data : bool
+                if True, all Parameter values generated during simulations will be saved for later inspection;
+                if False, simulation values will be deleted unless otherwise specified by individual Parameters
+
 
             Returns
             ---------
@@ -3632,6 +3638,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 results.append(result_copy)
+
+                if not retain_old_simulation_data:
+                    if self.controller is not None:
+                        self._delete_contexts(*self.controller.parameters.simulation_ids.get(execution_id), check_simulation_storage=True)
 
             # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
@@ -4067,7 +4077,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
 
             # excludes any input states marked "internal_only" (usually recurrent)
-            input_must_match = node.external_input_values
+            # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
+            input_must_match = [input_state.defaults.value for input_state in node.input_states if not input_state.internal_only]
 
             if input_must_match == []:
                 # all input states are internal_only
