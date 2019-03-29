@@ -515,7 +515,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
-                 initializer: tc.optional(dict)=None,
+                 initializer: dict={},
                  distance_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
                  selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
                  max_entries=1000,
@@ -524,7 +524,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        initializer = initializer or {}
         self.distance_function = distance_function
         self.selection_function = selection_function
 
@@ -550,7 +549,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        if initializer is not None and len(initializer) != 0:
+        if len(initializer) != 0:
             self.parameters.key_size.set(len(list(initializer.keys())[0]))
 
         self.has_initializers = True
@@ -609,7 +608,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                        selection_function))
 
     def _initialize_previous_value(self, initializer, execution_context=None):
-        initializer = initializer or []
         previous_value = OrderedDict(initializer)
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
