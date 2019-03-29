@@ -1700,8 +1700,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         target_projection = MappingProjection(sender=target_mechanism, receiver=comparator_mechanism.input_states[0])
         sample_projection = MappingProjection(sender=output_source, receiver=comparator_mechanism.input_states[1])
-        outcome_projection = MappingProjection(name="Comparator Outcome to Learning Mech", sender=comparator_mechanism, receiver=learning_mechanism.input_states[0])
-        error_signal_projection = MappingProjection(name="Comparator Error Signal to Learning Mech", sender=comparator_mechanism.output_states[MSE], receiver=learning_mechanism.input_states[ERROR_SIGNAL])
+        # outcome_projection = MappingProjection(name="Comparator Outcome to Learning Mech", sender=comparator_mechanism, receiver=learning_mechanism.input_states[0])
+        error_signal_projection = MappingProjection(name="Comparator Error Signal to Learning Mech", sender=comparator_mechanism.output_states[MSE], receiver=learning_mechanism.input_states[0])
         act_out_projection = MappingProjection(name="Act Out to Learning Mech",
                                                sender=output_source.output_states[0],
                                                receiver=learning_mechanism.input_states[1])
@@ -1712,7 +1712,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_nodes([target_mechanism, comparator_mechanism, learning_mechanism])
         self.add_projections([target_projection,
                               sample_projection,
-                              outcome_projection,
+                              # outcome_projection,
+                              error_signal_projection,
                               act_out_projection,
                               act_in_projection])
 
@@ -1722,7 +1723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.add_projection(learning_projection, feedback=True)
         self.learning_projections.append(learning_projection)
-        return learned_projection
+        return learned_projection, learning_mechanism, comparator_mechanism
 
     def _validate_projection(self,
                              projection,
