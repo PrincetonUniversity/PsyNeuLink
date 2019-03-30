@@ -3542,6 +3542,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
+        # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
+        # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
+        # called repeatedly (this init is repeated in Composition.execute)
+        # initialize from base context but don't overwrite any values already set for this execution_id
+        self._initialize_from_context(execution_id, base_execution_id, override=False)
+        self._assign_context_values(execution_id, composition=self)
+
         execution_context = self.parameters.context.get(execution_id)
         # Run mode skips mbo invocation so we can't use it if mbo is
         # present and active
@@ -3549,10 +3556,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    (execution_context is not None and
                     execution_context.execution_phase == ContextFlags.SIMULATION))
         if str(bin_execute).endswith('Run') and can_run:
-            # initialize from base context but don't overwrite any values already set for this execution_id
-            self._initialize_from_context(execution_id, base_execution_id, override=False)
-            self._assign_context_values(execution_id, composition=self)
-
             if bin_execute.startswith('LLVM'):
                 _comp_ex = pnlvm.CompExecution(self, [execution_id])
                 results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
