@@ -608,7 +608,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                        selection_function))
 
     def _initialize_previous_value(self, initializer, execution_context=None):
-        previous_value = OrderedDict(initializer)
+        vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
+        previous_value = np.asfarray(vals) if len(initializer) != 0 else np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
 
@@ -651,9 +652,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 "without any arguments, in which case the current initializer value will be used to "
                                 "reinitialize previous_value".format(args, self.name))
 
-        if reinitialization_value is None or reinitialization_value == []:
+        if reinitialization_value == []:
             self.get_previous_value(execution_context).clear()
-            value = dict()
+            value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         else:
             value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
@@ -709,7 +710,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
             return variable
 
         # Set key_size if this is the first entry
-        if not self.get_previous_value(execution_id):
+        if len(self.get_previous_value(execution_id)[0]) == 0:
             self.parameters.key_size.set(len(key), execution_id)
 
         # Retrieve value from current dict with key that best matches key
@@ -774,16 +775,16 @@ class DND(MemoryFunction):  # --------------------------------------------------
         self._validate_key(query_key, execution_id)
         # if no memory, return the zero vector
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
-        if len(self.dict) == 0:
-            return np.zeros_like(self.defaults.variable)
         # compute similarity(query_key, memory m ) for all m
         memory_dict = self.get_previous_value(execution_id)
-        distances = [self.distance_function([query_key, list(m)]) for m in memory_dict.keys()]
+        if len(memory_dict[0]) == 0:
+            return np.zeros_like(self.defaults.variable)
+        distances = [self.distance_function([query_key, list(m)]) for m in memory_dict[0]]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
         index_of_selected_item = int(np.flatnonzero(selection_array))
-        best_match_key = list(memory_dict.keys())[index_of_selected_item]
-        best_match_val = list(memory_dict.values())[index_of_selected_item]
+        best_match_key = memory_dict[0][index_of_selected_item]
+        best_match_val = memory_dict[1][index_of_selected_item]
 
         return [best_match_val, best_match_key]
 
@@ -803,12 +804,16 @@ class DND(MemoryFunction):  # --------------------------------------------------
         key = memory[0]
         val = memory[1]
 
-        d = self.get_previous_value(execution_id) or {}
+        d = self.get_previous_value(execution_id)
 
-        if len(d) > self.max_entries:
-            d.pop(list(d.keys())[len(d)-1])
+        if len(d[0]) >= self.max_entries:
+            d = np.delete(d, [0], axis=1)
 
-        d.update({tuple(key):val})
+        if key not in d[0]:
+            a = np.append(d[0], key).reshape(1, len(key))
+            b = np.append(d[1], val).reshape(1, len(val))
+            d = np.asfarray([a, b])
+
         self.parameters.previous_value.set(d,execution_id)
 
     @tc.typecheck
