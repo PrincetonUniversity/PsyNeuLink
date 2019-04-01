@@ -1664,7 +1664,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
 
         if not error_function:
-            error_function = LinearCombination(weights=[[-1], [1]])
+            error_function = LinearCombination()
 
         # unpack processing components and add to composition
         input_source, output_source = pathway[0], pathway[1]
@@ -1673,17 +1673,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_projection(learned_projection)
 
         # Create learning components
-        target_mechanism = ProcessingMechanism(name='Target',
-                                               default_variable=output_source.output_states[0].value)
+        target_mechanism = ProcessingMechanism(name='Target')
         self.target_mechanism = target_mechanism
 
         comparator_mechanism = ComparatorMechanism(name='Comparator',
-                                                   sample={NAME: SAMPLE,
-                                                           VARIABLE: [0.],
-                                                           WEIGHT: -1},
+                                                   # default_variable=[[0.], [0.]],
                                                    target={NAME: TARGET,
-                                                           VARIABLE: [0.],
-                                                           },
+                                                           VARIABLE: [0.]},
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: [0.], WEIGHT: -1},
                                                    function=error_function,
                                                    output_states=[OUTCOME, MSE])
 
@@ -1698,16 +1696,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                name="Learning Mechanism for " + learned_projection.name)
 
-        target_projection = MappingProjection(sender=target_mechanism, receiver=comparator_mechanism.input_states[0])
-        sample_projection = MappingProjection(sender=output_source, receiver=comparator_mechanism.input_states[1])
+        target_projection = MappingProjection(sender=target_mechanism, receiver=comparator_mechanism.input_states[1])
+        sample_projection = MappingProjection(sender=output_source, receiver=comparator_mechanism.input_states[0])
         # outcome_projection = MappingProjection(name="Comparator Outcome to Learning Mech", sender=comparator_mechanism, receiver=learning_mechanism.input_states[0])
-        error_signal_projection = MappingProjection(name="Comparator Error Signal to Learning Mech", sender=comparator_mechanism.output_states[MSE], receiver=learning_mechanism.input_states[0])
+        error_signal_projection = MappingProjection(name="Comparator Error Signal to Learning Mech", sender=comparator_mechanism.output_states[OUTCOME], receiver=learning_mechanism.input_states[2])
         act_out_projection = MappingProjection(name="Act Out to Learning Mech",
                                                sender=output_source.output_states[0],
                                                receiver=learning_mechanism.input_states[1])
         act_in_projection = MappingProjection(name="Act In to Learning Mech",
                                               sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[2])
+                                              receiver=learning_mechanism.input_states[0])
         # add all processing and learning components to the composition
         self.add_nodes([target_mechanism, comparator_mechanism, learning_mechanism])
         self.add_projections([target_projection,

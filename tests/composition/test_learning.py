@@ -44,14 +44,13 @@ class TestReinforcement:
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
             comp = pnl.Composition(name='comp')
-            # comp.add_linear_processing_pathway([input_layer, action_selection])
             learned_projection, learning_mechanism, comparator_mechanism = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                                                                    learning_rate=0.05)
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
             learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
             comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
-            inputs_dict = {input_layer: [[1., 1.], [1., 1.], [1., 1.]],
-                           comp.target_mechanism: [[0., 10.], [0., 15.], [0., 20.]]
+            inputs_dict = {input_layer: [[1., 1.]],
+                           comp.target_mechanism: [[10.]]
                            }
             print("\n\n\n\n\nRUN ---------------------------")
             comp.target_mechanism.log.set_log_conditions(items=pnl.VALUE)
