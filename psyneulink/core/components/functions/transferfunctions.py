@@ -2850,8 +2850,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return np.array(specification)
 
     def _get_output_struct_type(self, ctx):
-        # FIXME: self._instance_defaults.value reports incorrect shape
-        default_val = np.atleast_1d(self._instance_defaults.value)
+        # FIXME: self.defaults.value reports incorrect shape (scalar)
+        default_val = np.atleast_1d(self.defaults.value)
         return ctx.convert_python_struct_to_llvm_ir(default_val)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
