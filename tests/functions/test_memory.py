@@ -63,7 +63,7 @@ names = [
 GROUP_PREFIX="IntegratorFunction "
 
 @pytest.mark.function
-@pytest.mark.integrator_function
+@pytest.mark.memory_function
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(func, variable, params, expected, benchmark):
@@ -78,7 +78,7 @@ def test_basic(func, variable, params, expected, benchmark):
 
 @pytest.mark.llvm
 @pytest.mark.function
-@pytest.mark.integrator_function
+@pytest.mark.memory_function
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, expected, benchmark):
@@ -95,7 +95,7 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.llvm
 @pytest.mark.cuda
 @pytest.mark.function
-@pytest.mark.integrator_function
+@pytest.mark.memory_function
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_ptx_cuda(func, variable, params, expected, benchmark):
