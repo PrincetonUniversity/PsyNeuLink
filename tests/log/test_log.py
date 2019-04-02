@@ -1011,8 +1011,8 @@ class TestFiltering:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_model_based_optimizer(
-            optimizer=pnl.OptimizationControlMechanism(
+        comp.add_controller(
+            controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 features=[Input.input_state, reward.input_state],
                 feature_function=pnl.AdaptiveIntegrator(rate=0.5),
@@ -1032,7 +1032,7 @@ class TestFiltering:
             )
         )
 
-        comp.enable_model_based_optimizer = True
+        comp.enable_controller = True
 
         comp._analyze_graph()
 
