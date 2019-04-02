@@ -63,6 +63,12 @@ def fclamp(builder, val, min_val, max_val):
     cond = builder.fcmp_unordered(">", tmp, max_val)
     return builder.select(cond, max_val, tmp)
 
+def uint_min(builder, val, other):
+    other = other if isinstance(other, ir.Value) else val.type(other)
+
+    cond = builder.icmp_unsigned("<=", val, other)
+    return builder.select(cond, val, other)
+
 def load_extract_scalar_array_one(builder, ptr):
     val = builder.load(ptr)
     if isinstance(val.type, ir.ArrayType) and val.type.count == 1:
