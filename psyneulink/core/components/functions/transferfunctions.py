@@ -2261,6 +2261,9 @@ class SoftMax(TransferFunction):
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 self.__gen_llvm_exp_div(*args, **kwargs)
         elif output_type == MAX_VAL:
+            # zero out the output array
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
+                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.get_builtin("exp", [ctx.float_ty])
             orig_val = builder.load(ptri)
@@ -2269,6 +2272,9 @@ class SoftMax(TransferFunction):
             val = builder.fdiv(val, exp_sum)
             builder.store(val, ptro)
         elif output_type == MAX_INDICATOR:
+            # zero out the output array
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
+                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             builder.store(ctx.float_ty(1), ptro)
 
         return builder
