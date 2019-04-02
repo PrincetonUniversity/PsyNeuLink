@@ -387,10 +387,12 @@ class OneHot(SelectionFunction):
             else:
                 assert False, "Unsupported mode: {}".format(self.mode)
 
+            # Make sure other elements are zeroed
+            builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
 
             cmp_res = builder.fcmp_ordered(cmp_op, cmp_curr, cmp_prev)
             with builder.if_then(cmp_res):
-                builder.store(ctx.float_ty(0.0), prev_res_ptr)
+                builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
                 builder.store(val, cur_res_ptr)
                 builder.store(index, idx_ptr)
 
