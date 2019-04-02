@@ -39,7 +39,6 @@ All TransferFunctions have the following attributes:
 
 """
 
-import functools
 import numbers
 
 import numpy as np
@@ -156,11 +155,10 @@ class TransferFunction(Function_Base):
             arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "context":context}
-        inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
-            inner(*args)
+            self._gen_llvm_transfer(*args, **kwargs)
 
         return builder
 
@@ -2201,9 +2199,8 @@ class SoftMax(TransferFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
-    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
+    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
@@ -2237,21 +2234,22 @@ class SoftMax(TransferFunction):
 
     def __gen_llvm_apply(self, ctx, builder, params, _, arg_in, arg_out):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(0), exp_sum_ptr)
+        builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
         max_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(float('-inf')), max_ptr)
+        builder.store(max_ptr.type.pointee('-inf'), max_ptr)
 
         max_ind_ptr = builder.alloca(ctx.int32_ty)
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
+        builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
+        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
-        inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
-
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
-            inner(*args)
+            self.__gen_llvm_exp_sum_max(*args, ctx=ctx, vi=arg_in,
+                                        max_ptr=max_ptr, gain=gain,
+                                        max_ind_ptr=max_ind_ptr,
+                                        exp_sum_ptr=exp_sum_ptr)
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         exp_sum = builder.load(exp_sum_ptr)
@@ -2260,9 +2258,8 @@ class SoftMax(TransferFunction):
 
         if output_type == ALL:
             kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
-            inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
-                inner(*args)
+                self.__gen_llvm_exp_div(*args, **kwargs)
         elif output_type == MAX_VAL:
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.get_builtin("exp", [ctx.float_ty])
