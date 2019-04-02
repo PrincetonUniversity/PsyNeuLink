@@ -571,41 +571,46 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     def _validate(self):
         distance_function = self.distance_function
+        test_var = [self.defaults.variable[0], self.defaults.variable[0]]
         if isinstance(distance_function, type):
-            distance_function = distance_function()
+            distance_function = distance_function(default_variable=test_var)
             fct_msg = 'Function type'
         else:
+            distance_function.defaults.variable = test_var
+            distance_function._instantiate_value()
             fct_msg = 'Function'
         try:
-            test = [[0,0],[0,0]]
-            result = distance_function(test)
-            if not np.isscalar(result):
+            distance_result = distance_function(test_var)
+            if not np.isscalar(distance_result):
                 raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
-                                    format(repr(DISTANCE_FUNCTION), self.__name__.__class__, result))
+                                    format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
         except:
             raise FunctionError("{} specified for {} arg of {} ({}) "
                                 "must accept a list with two 1d arrays or a 2d array as its argument".
-                                format(fct_msg, repr(DISTANCE_FUNCTION), self.__name__.__class__,
+                                format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
                                        distance_function))
 
+        # Default to full memory dictionary
         selection_function = self.selection_function
+        test_var = np.asfarray([distance_result if i==0 else np.zeros_like(distance_result) for i in range(self.get_current_function_param('max_entries'))])
         if isinstance(selection_function, type):
-            selection_function = selection_function()
+            selection_function = selection_function(default_variable=test_var)
             fct_msg = 'Function type'
         else:
+            selection_function.defaults.variable = test_var
+            selection_function._instantiate_value()
             fct_msg = 'Function'
         try:
-            test = np.array([0,1,2,3])
-            result = np.array(selection_function(test))
-            if result.shape != test.shape or len(np.flatnonzero(result))>1:
-                raise FunctionError("Value returned by {} specified for {} ({}) "
-                                    "must return an array of the same length it receives with one nonzero value".
-                                    format(repr(SELECTION_FUNCTION), self.__name__.__class__, result))
-        except:
+            result = np.asarray(selection_function(test_var))
+        except e:
             raise FunctionError("{} specified for {} arg of {} ({}) must accept a 1d array "
                                 "must accept a list with two 1d arrays or a 2d array as its argument".
-                                format(fct_msg, repr(SELECTION_FUNCTION), self.__name__.__class__,
+                                format(fct_msg, repr(SELECTION_FUNCTION), self.__class__,
                                        selection_function))
+        if result.shape != test_var.shape or len(np.flatnonzero(result))>1:
+            raise FunctionError("Value returned by {} specified for {} ({}) "
+                                "must return an array of the same length it receives with one nonzero value".
+                                format(repr(SELECTION_FUNCTION), self.__class__, result))
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
