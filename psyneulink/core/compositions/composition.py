@@ -1694,26 +1694,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  output_source.output_states[0].value,
                                                                  comparator_mechanism.output_states[0].value],
                                                error_sources=comparator_mechanism,
+                                               in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
         target_projection = MappingProjection(sender=target_mechanism, receiver=comparator_mechanism.input_states[1])
         sample_projection = MappingProjection(sender=output_source, receiver=comparator_mechanism.input_states[0])
         # outcome_projection = MappingProjection(name="Comparator Outcome to Learning Mech", sender=comparator_mechanism, receiver=learning_mechanism.input_states[0])
-        error_signal_projection = MappingProjection(name="Comparator Error Signal to Learning Mech", sender=comparator_mechanism.output_states[OUTCOME], receiver=learning_mechanism.input_states[2])
-        act_out_projection = MappingProjection(name="Act Out to Learning Mech",
+        error_signal_projection = MappingProjection(name="PROJC",
+                                                    # name="Comparator Error Signal to Learning Mech",
+                                                    sender=comparator_mechanism.output_states[OUTCOME], receiver=learning_mechanism.input_states[2])
+
+        act_out_projection = MappingProjection(name="PROJB",
+                                               # name="Act Out to Learning Mech",
                                                sender=output_source.output_states[0],
                                                receiver=learning_mechanism.input_states[1])
-        act_in_projection = MappingProjection(name="Act In to Learning Mech",
+        act_in_projection = MappingProjection(name="PROJA",
+                                              # name="Act In to Learning Mech",
                                               sender=input_source.output_states[0],
                                               receiver=learning_mechanism.input_states[0])
         # add all processing and learning components to the composition
         self.add_nodes([target_mechanism, comparator_mechanism, learning_mechanism])
-        self.add_projections([target_projection,
+        projections = [target_projection,
                               sample_projection,
                               # outcome_projection,
                               error_signal_projection,
                               act_out_projection,
-                              act_in_projection])
+                              act_in_projection]
+        self.add_projections(projections)
 
         learning_projection = LearningProjection(name="Learning Projection",
                                                  sender=learning_mechanism.learning_signals[0],
