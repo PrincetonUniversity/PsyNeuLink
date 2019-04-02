@@ -639,7 +639,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retr = builder.load(retr_ptr)
         with builder.if_then(retr, likely=True):
             # Determine distances
-            results = builder.alloca(ctx.float_ty, entries)
             distance_f = ctx.get_llvm_function(self.distance_function)
             distance_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
             distance_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
