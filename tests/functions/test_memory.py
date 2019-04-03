@@ -22,9 +22,9 @@ test_data = [
        0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192 ]]),
     (Functions.DND, test_var, {'rate':RAND1, 'retrieval_prob':0.5},
        [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
-    (Functions.DND, test_var, {'rate':RAND1, 'storage_prob':0.5},
+    (Functions.DND, test_var, {'rate':RAND1, 'storage_prob':0.1},
        [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
-    (Functions.DND, test_var, {'rate':RAND1, 'retrieval_prob':0.5, 'storage_prob':0.8}, [[
+    (Functions.DND, test_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9}, [[
        0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777], [
        0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192 ]]),
     (Functions.DND, test_var, {'initializer':test_initializer, 'rate':RAND1}, [[

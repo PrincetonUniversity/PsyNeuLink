@@ -518,13 +518,18 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
                  initializer: dict={},
-                 distance_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
-                 selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
+                 distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
+                 selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
                  max_entries=1000,
                  seed=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        # It is necessary to create custom instances. Otherwise python would
+        # share the same default instance for all DND objects.
+        distance_function = distance_function or Distance(metric=COSINE)
+        selection_function = selection_function or OneHot(mode=MIN_VAL)
 
         self.distance_function = distance_function
         self.selection_function = selection_function
