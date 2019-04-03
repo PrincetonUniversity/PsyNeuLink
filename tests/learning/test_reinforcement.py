@@ -1,6 +1,8 @@
 import functools
 import numpy as np
 import pytest
+import psyneulink as pnl
+
 
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.transferfunctions import SoftMax
@@ -117,3 +119,29 @@ def test_reinforcement():
         # if you do not specify, assert_allclose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+def test_reinforcement_fixed_targets():
+    input_layer = TransferMechanism(size=2,
+                                    name='Input Layer',
+    )
+
+    action_selection = pnl.DDM(input_format=pnl.ARRAY,
+                               function=pnl.DriftDiffusionAnalytical(),
+                               output_states=[pnl.SELECTED_INPUT_ARRAY],
+                               name='DDM')
+
+    p = Process(pathway=[input_layer, action_selection],
+                learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)))
+
+    input_list = {input_layer: [[1, 1], [1, 1]]}
+
+    s = System(
+        processes=[p],
+        # learning_rate=0.05,
+    )
+    targets = [[10.], [10.]]
+
+    results = s.run(
+        inputs=input_list,
+        targets=targets
+    )
