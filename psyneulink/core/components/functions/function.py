@@ -848,7 +848,9 @@ class Function_Base(Function):
         for p in self._get_compilation_params(execution_id):
             param = p.get(execution_id)
             try:
-                self.owner.parameter_states[p.name].defaults.value
+                # Existence of parameter state changes the shape to array
+                # the base value should remain the same though
+                self.owner.parameter_states[p.name]
                 param = [param]
             except (AttributeError, TypeError):
                 pass
