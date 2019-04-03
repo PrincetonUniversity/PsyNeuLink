@@ -1554,7 +1554,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
-        print("learning function variable = ", variable)
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                  format(self.name, variable))
