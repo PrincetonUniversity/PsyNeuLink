@@ -2379,7 +2379,8 @@ class Mechanism_Base(Mechanism):
         if self.prefs.reportOutputPref and (self.parameters.context.get(execution_id).execution_phase &
                                             ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value.get(execution_id))
-
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            print("Name: ", self.name, " | Variable: ", variable, " | Value: ", value)
         return value
 
     def run(

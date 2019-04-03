@@ -1728,6 +1728,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.add_projection(learning_projection, feedback=True)
         self.learning_projections.append(learning_projection)
+        learned_projection.has_learning_projection = True
         return learned_projection, learning_mechanism, comparator_mechanism
 
     def _validate_projection(self,
@@ -3424,9 +3425,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
-
-        for learning_projection in self.learning_projections:
-            learning_projection.execute(variable=learning_projection.sender.value, execution_id=execution_id, context=ContextFlags.LEARNING)
 
         output_values = []
         for state in self.output_CIM.output_states:

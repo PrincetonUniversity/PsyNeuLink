@@ -995,6 +995,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
+                 in_composition=False,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -1009,6 +1010,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
+
+        self.in_composition = in_composition
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(error_sources=error_sources,
@@ -1162,7 +1165,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
-        if self.error_sources:
+        if self.error_sources and not self.in_composition:
             self.error_matrices = [None] * len(self.error_sources)
             for i, error_source in enumerate(self.error_sources):
                 self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
