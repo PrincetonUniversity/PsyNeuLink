@@ -658,7 +658,13 @@ class MappingProjection(PathwayProjection_Base):
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.parameters.context.get(execution_id).string = context
 
+        if self.has_learning_projection:
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+            
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+
         return super()._execute(
             variable=variable,
             execution_id=execution_id,
