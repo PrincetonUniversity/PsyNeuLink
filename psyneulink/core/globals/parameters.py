@@ -564,6 +564,12 @@ class Parameter(types.SimpleNamespace):
             if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter's default_value will be returned instead
 
             :default: False
+
+        retain_old_simulation_data
+            if False, the Parameter signals to other PNL objects that any values generated during simulations may be deleted after they
+            are no longer needed for computation; if True, the values should be saved for later inspection
+
+            :default: False
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -572,7 +578,7 @@ class Parameter(types.SimpleNamespace):
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
     _hidden_if_unset_attrs = {'aliases', 'getter', 'setter'}
-    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default'}
+    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
         **{k: lambda self, val: val is False for k in _hidden_if_false_attrs},
@@ -603,6 +609,7 @@ class Parameter(types.SimpleNamespace):
         history=None,
         history_max_length=1,
         fallback_default=False,
+        retain_old_simulation_data=False,
         _owner=None,
         _inherited=False,
         _user_specified=False,
@@ -636,6 +643,7 @@ class Parameter(types.SimpleNamespace):
             history=history,
             history_max_length=history_max_length,
             fallback_default=fallback_default,
+            retain_old_simulation_data=retain_old_simulation_data,
             _inherited=_inherited,
             _user_specified=_user_specified,
         )

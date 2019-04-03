@@ -691,3 +691,9 @@ def test_DDM_time():
         D.execute(10)
     time_12 = D.execute(10)[1][0]                              # t_12 = 2.7 + 0.2 = 2.9
     np.testing.assert_allclose(time_12, 2.9, atol=1e-08)
+
+
+def test_WhenFinished_DDM_Analytical():
+    D = DDM(function=DriftDiffusionAnalytical)
+    c = WhenFinished(D)
+    c.is_satisfied()

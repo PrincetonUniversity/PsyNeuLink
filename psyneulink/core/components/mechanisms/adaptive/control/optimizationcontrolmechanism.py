@@ -906,7 +906,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       context=context)
 
         # clean up frozen values after execution
-        self.agent_rep._delete_context(self._get_frozen_execution_id(execution_id))
+        self.agent_rep._delete_contexts(self._get_frozen_execution_id(execution_id))
 
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
