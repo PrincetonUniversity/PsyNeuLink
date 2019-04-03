@@ -46,7 +46,6 @@ def test_basic(variable, params, expected, benchmark):
     benchmark(m.execute, variable)
 
 
-@pytest.mark.skip
 @pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.memory_function
@@ -62,7 +61,6 @@ def test_llvm(variable, params, expected, benchmark):
     benchmark(e.execute, variable)
 
 
-@pytest.mark.skip
 @pytest.mark.llvm
 @pytest.mark.cuda
 @pytest.mark.function
