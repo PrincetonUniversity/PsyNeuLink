@@ -622,6 +622,16 @@ class DND(MemoryFunction):  # --------------------------------------------------
         var_key_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         var_val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
+        # Zero output
+        out_key_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        out_val_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        with pnlvm.helpers.array_ptr_loop(builder, out_key_ptr, "zero_key") as (b, i):
+            out_ptr = b.gep(out_key_ptr, [ctx.int32_ty(0), i])
+            b.store(out_ptr.type.pointee(0), out_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, out_val_ptr, "zero_val") as (b, i):
+            out_ptr = b.gep(out_val_ptr, [ctx.int32_ty(0), i])
+            b.store(out_ptr.type.pointee(0), out_ptr)
+
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
