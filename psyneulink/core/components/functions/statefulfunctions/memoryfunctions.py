@@ -626,7 +626,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
         retr_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
-        retr_prob = builder.load(retr_prob_ptr)
+        # Prob can be [x] if we are aprt of mechanism
+        retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
         retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
 
         entries = builder.load(count_ptr)
@@ -689,8 +690,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
         store_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
-        store_prob = builder.load(store_prob_ptr)
-        store_rand = builder.fcmp_ordered('<', store_prob, retr_prob.type(1.0))
+
+        # Prob can be [x] if we are aprt of mechanism
+        store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
+        store_rand = builder.fcmp_ordered('<', store_prob, store_prob.type(1.0))
 
         # The call to random function needs to be behind jump to match python
         # code
