@@ -585,13 +585,16 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         my_param_struct = self._get_param_values()
         my_params = ctx.convert_python_struct_to_llvm_ir(my_param_struct)
-        return pnlvm.ir.LiteralStructType([distance_params, selection_params, my_params])
+        elements = [e for e in my_params.elements]
+        elements.append(distance_params)
+        elements.append(selection_params)
+        return pnlvm.ir.LiteralStructType(elements)
 
     def _get_param_initializer(self, execution_id):
         distance_init = self.distance_function._get_param_initializer(execution_id)
         selection_init = self.selection_function._get_param_initializer(execution_id)
         my_init = super()._get_param_initializer(execution_id)
-        return tuple([distance_init, selection_init, my_init])
+        return tuple([*my_init, distance_init, selection_init])
 
     def _get_context_initializer(self, execution_id):
         distance_init = self.distance_function._get_context_initializer(execution_id)
@@ -619,13 +622,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         var_key_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         var_val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-        # Params
-        my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr, builder = ctx.get_param_ptr(self, builder, my_params, RETRIEVAL_PROB)
+        retr_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
         retr_prob = builder.load(retr_prob_ptr)
         retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
 
@@ -640,12 +640,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
             passed = builder.fcmp_ordered('<', rand, retr_prob)
             builder.store(passed, retr_ptr)
 
+        param_count = len(list(self._get_compilation_params()))
         # Retrieve
         retr = builder.load(retr_ptr)
         with builder.if_then(retr, likely=True):
             # Determine distances
             distance_f = ctx.get_llvm_function(self.distance_function)
-            distance_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            distance_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count)])
             distance_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
@@ -661,7 +662,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                     distance_arg_in, distance_arg_out])
 
             selection_f = ctx.get_llvm_function(self.selection_function)
-            selection_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            selection_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count + 1)])
             selection_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
@@ -687,7 +688,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr, builder = ctx.get_param_ptr(self, builder, my_params, STORAGE_PROB)
+        store_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
         store_prob = builder.load(store_prob_ptr)
         store_rand = builder.fcmp_ordered('<', store_prob, retr_prob.type(1.0))
 
