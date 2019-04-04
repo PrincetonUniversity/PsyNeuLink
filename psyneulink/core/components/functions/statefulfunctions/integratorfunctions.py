@@ -46,7 +46,7 @@ from psyneulink.core.globals.keywords import \
     OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, RATE, REST, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, \
     TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
-    INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
+    INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, ACCURACY_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
 from psyneulink.core.globals.context import ContextFlags
@@ -56,7 +56,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
            'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
-           'S_MINUS_L', 'L_MINUS_S'
+           'S_MINUS_L', 'L_MINUS_S', 'AccuracyIntegrator'
            ]
 
 
@@ -4299,4 +4299,248 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         return res
 
 
+
+class AccuracyIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------
+    """
+    SimpleIntegrator(           \
+        default_variable=None,  \
+        rate=1.0,               \
+        noise=0.0,              \
+        offset=0.0,             \
+        initializer=None,       \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _SimpleIntegrator:
+
+    `function <SimpleIntegrator.function>` returns:
+
+    .. math::
+
+        previous_value + rate * variable + noise + offset
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <SimpleIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <SimpleIntegrator.offset>`
+    |
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default class_defaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d array : default 1.0
+        specifies the rate of integration;  if it is a list or array, it must be the same length as
+        `variable <SimpleIntegrator.variable>` (see `rate <SimpleIntegrator.rate>` for details).
+
+    noise : float, function, list or 1d array : default 0.0
+        specifies random value added to integral in each call to `function <SimpleIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`
+        (see `noise <Integrator_Noise>` for details).
+
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <SimpleIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <SimpleIntegrator.variable>`
+        (see `offset <SimpleIntegrator.offset>` for details).
+
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration;  if it is a list or array, it must be the same length as
+        `default_variable <SimpleIntegrator.variable>` (see `initializer <Integrator_Initializer>`
+        for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        current input value some portion of which (determined by `rate <SimpleIntegrator.rate>`) will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    rate : float or 1d array
+        determines the rate of integration. If it is a float or has a single element, it is applied
+        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
+        is applied to the corresponding element of `variable <SimpleIntegrator.variable>`.  Serves as
+        *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function <SimpleIntegrator.function>`.
+
+    noise : float, Function or 1d array
+        random value added to integral in each call to `function <SimpleIntegrator.function>`
+        (see `noise <Integrator_Noise>` for details).
+
+    offset : float or 1d array
+        constant value added to integral in each call to `function <SimpleIntegrator.function>`. If `variable
+        <SimpleIntegrator.variable>` is an array and offset is a float, offset is applied to each element of the
+        integral;  if offset is a list or array, each of its elements is applied to each of the corresponding
+        elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for `modulation
+        <ModulatorySignal_Modulation>` of `function <SimpleIntegrator.function>`.
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value to which `previous_value
+        <SimpleIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+
+    previous_value : 1d array : default class_defaults.variable
+        stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = ACCURACY_INTEGRATOR_FUNCTION
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        RATE: None,
+        NOISE: None,
+        OFFSET: None
+    })
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    class Parameters(IntegratorFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                offset
+                    see `offset <SimpleIntegrator.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <SimpleIntegrator.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: parameter_spec = 1.0,
+                 noise=0.0,
+                 offset=None,
+                 initializer=None,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  noise=noise,
+                                                  offset=offset,
+                                                  initializer=initializer,
+                                                  params=params)
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
+        Arguments
+        ---------
+
+        variable : number, list or array : default class_defaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        previous_value = self.get_previous_value(execution_id)
+
+        # Unload contents of trialInformation
+        # Origin Node Inputs
+        taskInputs = variable[0]
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            return variable
+        stimulusInputs = variable[1]
+
+        # DDM Outputs
+        upperThreshold = variable[2]
+        lowerThreshold = variable[3]
+
+        # Keep Track of Accuracy
+        accuracy = 0
+
+        # Beginning of Accuracy Calculation
+        colorTrial = (taskInputs[0] == 1)
+        motionTrial = (taskInputs[1] == 1)
+
+        # Based on the task dimension information, decide which response is "correct"
+        # Obtain accuracy probability from DDM thresholds in "correct" direction
+        if colorTrial:
+            if stimulusInputs[0] == 1:
+                accuracy = upperThreshold[0]
+            elif stimulusInputs[0] == -1:
+                accuracy = lowerThreshold[0]
+
+        if motionTrial:
+            if stimulusInputs[1] == 1:
+                accuracy = upperThreshold[0]
+            elif stimulusInputs[1] == -1:
+                accuracy = lowerThreshold[0]
+
+        # Accounts for initialization runs that have no variable input
+        # if len(accuracy) == 0:
+        #     accuracy = [0]
+
+        print("Accuracy: ", accuracy)
+        print()
+
+        adjusted_value = accuracy + previous_value
+
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(adjusted_value, execution_id)
+
+        return self.convert_output_type(adjusted_value)
 
