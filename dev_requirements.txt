@@ -3,7 +3,7 @@ pytest-benchmark
 pytest-cov
 pytest-profiling
 pytest-helpers-namespace
-pytest-xdist
+pytest-xdist<1.28.0
 jupyter
 sphinx
 sphinx_rtd_theme
