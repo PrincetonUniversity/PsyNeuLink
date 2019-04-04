@@ -939,7 +939,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return sim_execution_id
 
-    def evaluation_function(self, control_allocation, execution_id=None):
+    def evaluation_function(self, control_allocation,
+                            execution_id=None,
+                            return_results=False):
         '''Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -957,23 +959,37 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep.runs_simulations:
             sim_execution_id = self._set_up_simulation(execution_id)
 
-            result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+            if not return_results:
+                outcome = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=sim_execution_id,
                                              context=self.function.parameters.context.get(execution_id),
-                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id)
-            )
+                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id))
+
+                return outcome
+            else:
+                outcome, results = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+                                                  control_allocation,
+                                                  self.parameters.num_estimates.get(execution_id),
+                                                  base_execution_id=execution_id,
+                                                  execution_id=sim_execution_id,
+                                                  context=self.function.parameters.context.get(execution_id),
+                                                  execution_mode=self.parameters.comp_execution_mode.get(execution_id),
+                                                  return_results=True)
+
+                return outcome, results
         else:
-            result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+            outcome = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              execution_id=execution_id,
                                              context=self.function.parameters.context.get(execution_id)
             )
 
-        return result
+            return outcome
+
 
     def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on

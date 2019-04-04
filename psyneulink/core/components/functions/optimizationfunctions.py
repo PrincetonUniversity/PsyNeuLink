@@ -1781,15 +1781,17 @@ class ParamEstimationFunction(OptimizationFunction):
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  search_space=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
-                 save_values:tc.optional(bool)=False,
                  params=None,
                  owner=None,
                  prefs=None,
                  **kwargs):
 
-        self._return_values = save_values
-        self._return_samples = save_values
+        # Has the ELFI model been setup yet.
+        self._is_model_initialized = False
+
+        # The simulator function we will pass to ELFI, this is really the objective_function
+        # with some stuff wrapped around it to massage its return values and arguments.
+        self._sim_func = None
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
@@ -1809,13 +1811,19 @@ class ParamEstimationFunction(OptimizationFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
-    def _make_simulator_function(self):
+    def _make_simulator_function(self, execution_id):
 
         if self.objective_function is None:
             return None
 
-        # Call the objective_function and check its return type
-        if type(self.objective_function(np.zeros(len(self.search_space)))) is int:
+        try:
+            # Call the objective_function and check its return type
+            zero_input = np.zeros(len(self.search_space))
+            ret = self.objective_function(zero_input, execution_id=execution_id, return_results=True)
+        except TypeError:
+            return None
+
+        if type(ret) is int:
             return None
 
         def simulator(**kwargs):
@@ -1844,18 +1852,45 @@ class ParamEstimationFunction(OptimizationFunction):
             # work in Python 3.5 because dict's have pseudo-random order.
             control_allocation = list(kwargs.values())
 
+            # FIXME: This doesn't work at the moment. Need to use for loop below.
+            # The batch_size is the number of estimates/simulations, set it on the
+            # optimization control mechanism.
+            # self.owner.parameters.num_estimates.set(batch_size, execution_id)
+
             # Run batch_size simulations of the PsyNeuLink composition
             results = []
             for i in range(batch_size):
-                result = self.objective_function(control_allocation)
-                results.append(result)
+                net_outcome, result = self.objective_function(control_allocation,
+                                                           execution_id=execution_id,
+                                                           return_results=True)
+                results.append(result[0])
 
-            # Turn this list of numpy arrays into a single numpy array with batch_size rows.
-            # This assumes only one result per simulation run.
-            results = np.stack([result[0] for result in results])
+            # Turn the list of simulation results into a 2D array of (batch_size, N)
+            results = np.stack(results, axis=0)
+
             return results
 
         return simulator
+
+    def _initialize_model(self, execution_id):
+        """
+
+        """
+
+        # If the model has not been initialized, try to do it.
+        if not self._is_model_initialized:
+
+            # Try to make the simulator function we will pass to ELFI, this will fail
+            # when we are in psyneulink intializaztion phases.
+            self._sim_func = self._make_simulator_function(execution_id=execution_id)
+
+            # If it did fail, we return early without initializing, hopefully next time.
+            if self._sim_func is None:
+                return
+
+            # Mark that we are initialized
+            self._is_model_initialized = True
+
 
     def function(self,
                  variable=None,
@@ -1883,16 +1918,24 @@ class ParamEstimationFunction(OptimizationFunction):
             samples in the order they were evaluated; otherwise it is empty.
         '''
 
+        # Initialize the list of all samples and values
         return_all_samples = return_all_values = []
 
+        # Intialize the optimial control allocation sample and value to zero.
         return_optimal_sample = np.zeros(len(self.search_space))
         return_optimal_value= 0.0
 
-        sim_func = self._make_simulator_function()
+        # Try to initialize the model if it hasn't been.
+        if not self._is_model_initialized:
+            self._initialize_model(execution_id)
 
-        if sim_func is None:
+        # Intialization can fail for reasons silenty, mainly that PsyNeuLink needs to
+        # invoke these functions multiple times during initialization. We only want
+        # to proceed if this is the real deal.
+        if not self._is_model_initialized:
             return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
-        results = sim_func(t1=0.5, t2=0.6, batch_size=200)
+
+
 
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
