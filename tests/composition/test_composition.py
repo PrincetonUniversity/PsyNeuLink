@@ -2341,6 +2341,18 @@ class TestRun:
 
         benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
+    def test_run_termination_condition_custom_execution_id(self):
+        D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
+        comp = pnl.Composition()
+
+        comp.add_node(node=D)
+
+        comp.run(
+            inputs={D: 0},
+            termination_processing={pnl.TimeScale.RUN: pnl.WhenFinished(D)},
+            execution_id='custom'
+        )
+
 
 class TestCallBeforeAfterTimescale:
 
@@ -2417,8 +2429,8 @@ class TestCallBeforeAfterTimescale:
                 B: [0, 10, 20, 30]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2, 4, 6],
-                B: [np.nan, 10, 20, 30]
+                A: [0, 2, 4, 6],
+                B: [0, 10, 20, 30]
             },
         }
 
@@ -2500,8 +2512,8 @@ class TestCallBeforeAfterTimescale:
                 ]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2],
-                B: [np.nan, 4]
+                A: [0, 2],
+                B: [0, 4]
             },
         }
 
@@ -2556,6 +2568,7 @@ class TestCallBeforeAfterTimescale:
                     except (TypeError, IndexError):
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
+
 
     # when self.sched is ready:
     # def test_run_default_scheduler(self):
@@ -2927,8 +2940,8 @@ class TestSystemComposition:
                 B: [0, 10, 20, 30]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2, 4, 6],
-                B: [np.nan, 10, 20, 30]
+                A: [0, 2, 4, 6],
+                B: [0, 10, 20, 30]
             },
         }
 
@@ -3011,8 +3024,8 @@ class TestSystemComposition:
                 ]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2],
-                B: [np.nan, 4]
+                A: [0, 2],
+                B: [0, 4]
             },
         }
 
