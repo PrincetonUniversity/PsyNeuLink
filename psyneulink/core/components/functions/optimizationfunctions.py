@@ -23,6 +23,8 @@ Functions that return the sample of a variable yielding the optimized value of a
 '''
 
 import warnings
+import random
+import sys
 # from fractions import Fraction
 import itertools
 import numpy as np
@@ -1778,6 +1780,11 @@ class ParamEstimationFunction(OptimizationFunction):
 
     @tc.typecheck
     def __init__(self,
+                 priors,
+                 observed,
+                 summary,
+                 discrepancy,
+                 seed=None,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  search_space=None,
@@ -1785,6 +1792,16 @@ class ParamEstimationFunction(OptimizationFunction):
                  owner=None,
                  prefs=None,
                  **kwargs):
+
+        self._priors = priors
+        self._observed = observed
+        self._summary = summary
+        self._discrepancy = discrepancy
+
+        if seed is None:
+            self._seed = random.randrange(sys.maxsize)
+        else:
+            self._seed = seed
 
         # Has the ELFI model been setup yet.
         self._is_model_initialized = False
@@ -1826,7 +1843,38 @@ class ParamEstimationFunction(OptimizationFunction):
         if type(ret) is int:
             return None
 
-        def simulator(**kwargs):
+        # FIXME: This is here if we want to test out things by cheating.
+        # That is, rather than invoke PsyNeuLink for the simulator, just
+        # call the underlying function.
+        def MA2(t1, t2, n_obs=100, batch_size=1, random_state=None):
+            """Generate a sequence of samples from the MA2 model.
+
+            The sequence is a moving average
+
+                x_i = w_i + \theta_1 w_{i-1} + \theta_2 w_{i-2}
+
+            where w_i are white noise ~ N(0,1).
+
+            Parameters
+            ----------
+            t1 : float, array_like
+            t2 : float, array_like
+            n_obs : int, optional
+            batch_size : int, optional
+            random_state : RandomState, optional
+
+            """
+            # Make inputs 2d arrays for broadcasting with w
+            t1 = np.asanyarray(t1).reshape((-1, 1))
+            t2 = np.asanyarray(t2).reshape((-1, 1))
+            random_state = random_state or np.random
+
+            # i.i.d. sequence ~ N(0,1)
+            w = random_state.randn(batch_size, n_obs + 2)
+            x = w[:, 2:] + t1 * w[:, 1:-1] + t2 * w[:, :-2]
+            return x
+
+        def simulator(*args, **kwargs):
 
             # If kwargs None then the simulator has been called without keyword argumets.
             # This means something has gone wrong because our arguments are the parameters
@@ -1850,7 +1898,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # order for the control signals. So the simulator function will have the
             # same argument order as the control signals as well. Note: this will not
             # work in Python 3.5 because dict's have pseudo-random order.
-            control_allocation = list(kwargs.values())
+            control_allocation = args
 
             # FIXME: This doesn't work at the moment. Need to use for loop below.
             # The batch_size is the number of estimates/simulations, set it on the
@@ -1887,6 +1935,22 @@ class ParamEstimationFunction(OptimizationFunction):
             # If it did fail, we return early without initializing, hopefully next time.
             if self._sim_func is None:
                 return
+
+            # FIXME: A lot of checking needs to happen, here. Correct order, valid elfi prior, etc.
+            # Construct the ELFI priors from the list of prior specifcations
+            elfi_priors = [elfi.Prior(*args, name=param_name) for param_name, args in self._priors.items()]
+
+            # Create the simulator, specifying the priors in proper order as arguments
+            Y = elfi.Simulator(self._sim_func, *elfi_priors, observed=self._observed)
+
+            # FIXME: This is a hack, we need to figure out a way to elegantly pass these
+            # Create the summary nodes
+            summary_nodes = [elfi.Summary(args[0], Y, *args[1:]) for args in self._summary]
+
+            # Create the discrepancy node.
+            d = elfi.Distance('euclidean', *summary_nodes)
+
+            self._sampler = elfi.Rejection(d, batch_size=1, seed=self._seed)
 
             # Mark that we are initialized
             self._is_model_initialized = True
@@ -1935,7 +1999,8 @@ class ParamEstimationFunction(OptimizationFunction):
         if not self._is_model_initialized:
             return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
+        result = self._sampler.sample(10, quantile=0.01)
 
-
+        result.summary()
 
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
