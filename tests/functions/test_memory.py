@@ -16,7 +16,7 @@ RAND2 = np.random.random()
 test_data = [
 # Default initializer does not work
 #    (Functions.Buffer, test_var, {'rate':RAND1}, [[0.0],[0.0]]),
-#    (Functions.Buffer, test_var[0], {'rate':RAND1, 'initializer':[test_var[0]]}, [[0.03841128, 0.05005587, 0.04218721, 0.0381362 , 0.02965146, 0.04520592, 0.03062659, 0.0624149 , 0.06744644, 0.02683695],[0.14519169, 0.18920736, 0.15946443, 0.1441519 , 0.11208025, 0.17087491, 0.11576615, 0.23592355, 0.25494239, 0.10144161]]),
+    (Functions.Buffer, test_var[0], {'history':512, 'rate':RAND1, 'initializer':[test_var[0]]}, [[0.03841128, 0.05005587, 0.04218721, 0.0381362 , 0.02965146, 0.04520592, 0.03062659, 0.0624149 , 0.06744644, 0.02683695],[0.14519169, 0.18920736, 0.15946443, 0.1441519 , 0.11208025, 0.17087491, 0.11576615, 0.23592355, 0.25494239, 0.10144161]]),
     (Functions.DND, test_var, {'rate':RAND1}, [[
        0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777], [
        0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192 ]]),
@@ -47,7 +47,7 @@ test_data = [
 
 # use list, naming function produces ugly names
 names = [
-#    "Buffer",
+    "Buffer",
 #    "Buffer Initializer",
     "DND",
     "DND Random Retrieval",
@@ -82,6 +82,8 @@ def test_basic(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, expected, benchmark):
+    if func is Functions.Buffer:
+        pytest.skip("Not implemented")
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
@@ -99,6 +101,8 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_ptx_cuda(func, variable, params, expected, benchmark):
+    if func is Functions.Buffer:
+        pytest.skip("Not implemented")
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
