@@ -1617,29 +1617,26 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
 
-        numerator = builder.load(ptri)
-        numerator = builder.fsub(bias, numerator)
-        numerator = builder.fmul(numerator, numerator)
-        numerator = builder.fneg(numerator)
+        var = builder.load(ptri)
+        exp_num = builder.fsub(var, bias)
+        exp_num = builder.fmul(exp_num, exp_num)
+        exp_num = builder.fsub(exp_num.type(0), exp_num)
 
-        denom = builder.fmul(standard_deviation, standard_deviation)
-        denom = builder.fmul(2, denom)
-        numerator = builder.fdiv(denom, numerator)
-        numerator = builder.call(exp_f, [numerator])
+        exp_denom = builder.fmul(standard_deviation, standard_deviation)
+        exp_denom = builder.fmul(exp_denom.type(2), exp_denom)
+        exp = builder.fdiv(exp_num, exp_denom)
+        numerator = builder.call(exp_f, [exp])
 
         from math import pi
-        denom = ctx.float_ty(2 * pi)
-        denom = builder.fmul(standard_deviation, denom)
-        denom = builder.sqrtpd(denom)
-        val = builder.fdiv(denom,numerator)
+        denom = builder.fmul(standard_deviation.type(2 * pi), standard_deviation)
+        denom = builder.call(sqrt_f, [denom])
+        val = builder.fdiv(numerator, denom)
 
         val = builder.fmul(scale, val)
         val = builder.fadd(offset, val)
-
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
 
         builder.store(val, ptro)
 

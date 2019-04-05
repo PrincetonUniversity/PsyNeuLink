@@ -4,7 +4,7 @@ import psyneulink.core.components.functions.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import pytest
 
-from math import e
+from math import e, pi, sqrt
 
 SIZE=5
 test_var = np.random.rand(SIZE)
@@ -24,6 +24,9 @@ softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 tanh_helper = -2*(RAND1 * (test_var + RAND2 - RAND3) + RAND4)
 tanh_helper = (1 - e**tanh_helper)/ (1 + e**tanh_helper)
 
+gaussian_helper = e**(-(test_var-RAND2)**2/(2*RAND1**2)) / sqrt(2*pi*RAND1)
+gaussian_helper = RAND3 * gaussian_helper + RAND4
+
 def gaussian_distort_helper(seed):
     state = np.random.RandomState(np.asarray([seed]))
     # compensate for construction
@@ -37,8 +40,7 @@ test_data = [
     (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
     (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'x_0':RAND3, 'offset':RAND4}, None, tanh_helper),
     (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, None, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))),
-# TODO: Add Gaussian
-# TODO: Add Gaussian global seed
+    (Functions.Gaussian, test_var, {'standard_deviation':RAND1, 'bias':RAND2, 'scale':RAND3, 'offset':RAND4}, None, gaussian_helper),
     (Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4 }, None, gaussian_distort_helper(0)),
     (Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4, 'seed':0 }, None, gaussian_distort_helper(0)),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
@@ -56,8 +58,7 @@ names = [
     "LOGISTIC",
     "TANH",
     "RELU",
-#    "GAUSIAN",
-#    "GAUSIAN GLOBAL SEED",
+    "GAUSIAN",
     "GAUSSIAN DISTORT GLOBAL SEED",
     "GAUSSIAN DISTORT",
     "SOFT_MAX ALL",
