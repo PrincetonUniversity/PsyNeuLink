@@ -326,8 +326,8 @@ class RegressionCFA(CompositionFunctionApproximator):
         predicted_outcome=0
 
         prediction_vector = self.parameters.prediction_vector.get(execution_id)
-
-        for i in range(num_estimates):
+        count = num_estimates if num_estimates else 1
+        for i in range(count):
             terms = self.prediction_terms
             vector = prediction_vector.compute_terms(control_allocation, execution_id=execution_id)
             # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
