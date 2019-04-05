@@ -1179,7 +1179,12 @@ class DDM(ProcessingMechanism_Base):
 
     def is_finished(self, execution_context=None):
         # find the single numeric entry in previous_value
-        single_value = self.function.get_previous_value(execution_context)
+        try:
+            single_value = self.function.get_previous_value(execution_context)
+        except AttributeError:
+            # Analytical function so fall back to more standard behavior
+            return super().is_finished(execution_context)
+
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
             while True:
