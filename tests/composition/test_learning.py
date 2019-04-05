@@ -47,22 +47,24 @@ class TestReinforcement:
             learned_projection, learning_mechanism, comparator_mechanism = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                                                                    learning_rate=0.05)
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
-            learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
-            comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+
             inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
                            comp.target_mechanism: [[10.], [10.]]
                            }
+            learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+            comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
 
             comp.target_mechanism.log.set_log_conditions(items=pnl.VALUE)
             comp.run(inputs=inputs_dict)
-            comp.show_graph()
+            # comp.show_graph()
 
+            # input_layer.log.print_entries()
+            # action_selection.log.print_entries()
+            # comparator_mechanism.log.print_entries()
+            # learning_mechanism.log.print_entries()
+            # learned_projection.log.print_entries()
 
-            input_layer.log.print_entries()
-            comp.target_mechanism.log.print_entries()
-            action_selection.log.print_entries()
-            comparator_mechanism.log.print_entries()
-            learning_mechanism.log.print_entries()
-            learned_projection.log.print_entries()
-
-            print(comp.results)
+            assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
+            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
+                                                        [2.08614798], [1.85006765], [2.30401336], [2.08614798],
+                                                        [1.85006765]])

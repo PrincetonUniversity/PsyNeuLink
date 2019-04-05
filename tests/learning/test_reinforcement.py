@@ -134,14 +134,23 @@ def test_reinforcement_fixed_targets():
                 learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)))
 
     input_list = {input_layer: [[1, 1], [1, 1]]}
-
     s = System(
         processes=[p],
         # learning_rate=0.05,
     )
     targets = [[10.], [10.]]
 
+    # logged_mechanisms = [input_layer, action_selection]
+    # for mech in s.learning_mechanisms:
+    #     logged_mechanisms.append(mech)
+    #
+    # for mech in logged_mechanisms:
+    #     mech.log.set_log_conditions(items=[pnl.VALUE])
+
     results = s.run(
         inputs=input_list,
         targets=targets
     )
+
+    assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
+                                                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])
