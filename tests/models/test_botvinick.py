@@ -31,10 +31,7 @@ import psyneulink.core.components.functions.transferfunctions
 
 def test_botvinick_model(benchmark, mode, reps):
     if reps > 1 and not pytest.config.getoption("--stress"):
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
         pytest.skip("not stressed")
-        return # This should not be reached
 
     benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
 

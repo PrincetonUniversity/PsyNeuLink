@@ -78,9 +78,7 @@ def test_basic(func, variable, params, fail, expected, benchmark):
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, fail, expected, benchmark):
     if fail is not None:
-        benchmark(lambda _:0, 0)
         pytest.xfail(fail)
-        return
 
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName;
@@ -98,7 +96,6 @@ def test_llvm(func, variable, params, fail, expected, benchmark):
 def test_ptx_cuda(func, variable, params, fail, expected, benchmark):
     if fail is not None:
         pytest.xfail(fail)
-        return
 
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName;

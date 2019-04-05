@@ -69,13 +69,10 @@ names = [
 @pytest.mark.benchmark
 def test_basic(variable, metric, normalize, fail, expected, benchmark):
     if fail is not None:
-        # This is a rather ugly hack to stop pytest benchmark complains
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
         pytest.xfail(fail)
-        return
-    f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
+
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
+    f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
@@ -87,13 +84,10 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
 @pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(variable, metric, normalize, fail, expected, benchmark):
-    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     if fail is not None:
-        # This is a rather ugly hack to stop pytest benchmark complains
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
         pytest.xfail(fail)
-        return
+
+    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
     e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.execute, variable)
@@ -107,13 +101,10 @@ def test_llvm(variable, metric, normalize, fail, expected, benchmark):
 @pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_ptx_cuda(variable, metric, normalize, fail, expected, benchmark):
-    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     if fail is not None:
-        # This is a rather ugly hack to stop pytest benchmark complains
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
         pytest.xfail(fail)
-        return
+
+    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
     e = pnlvm.execution.FuncExecution(f)
     res = benchmark(e.cuda_execute, variable)
