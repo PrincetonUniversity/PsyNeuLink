@@ -4212,7 +4212,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             predicted_input=None,
             control_allocation=None,
-            num_simulation_trials=1,
+            num_simulation_trials=None,
             runtime_params=None,
             base_execution_id=None,
             execution_id=None,
@@ -4227,7 +4227,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
-        # Build input dictionary for simulationn
+        # Build input dictionary for simulation
         inputs = self._build_predicted_inputs_dict(predicted_input)
 
         # Run Composition in "SIMULATION" context
