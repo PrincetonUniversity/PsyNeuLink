@@ -187,7 +187,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
                     item_idx = prediction_vector.idx[pv_enum_val]
                     net_outcome += np.sum(term_value.reshape(-1) * weights[item_idx])
             predicted_outcome+=net_outcome
-        predicted_outcome/=num_estimates
+        predicted_outcome/=count
         return predicted_outcome
 
     @property
