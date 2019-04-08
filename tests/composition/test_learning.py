@@ -44,17 +44,22 @@ class TestReinforcement:
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
             comp = pnl.Composition(name='comp')
-            learned_projection, learning_mechanism, comparator_mechanism = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
-                                                                                                                   learning_rate=0.05)
+            learning_components = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
+                                                                          learning_rate=0.05)
+            learned_projection = learning_components[pnl.LEARNED_PROJECTION]
+            learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
+            target_mechanism = learning_components[pnl.TARGET_MECHANISM]
+            comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
             inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
-                           comp.target_mechanism: [[10.], [10.]]
+                           target_mechanism: [[10.], [10.]]
                            }
             learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
             comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
 
-            comp.target_mechanism.log.set_log_conditions(items=pnl.VALUE)
+            target_mechanism.log.set_log_conditions(items=pnl.VALUE)
             comp.run(inputs=inputs_dict)
             # comp.show_graph()
 
@@ -68,3 +73,46 @@ class TestReinforcement:
             assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
                                                         [2.08614798], [1.85006765], [2.30401336], [2.08614798],
                                                         [1.85006765]])
+
+    def test_backprop(self):
+        # create processing components
+        input_layer = pnl.TransferMechanism(
+            name='input_layer',
+            function=pnl.Logistic,
+            size=2,
+        )
+
+        hidden_layer = pnl.TransferMechanism(
+            name='hidden_layer',
+            function=pnl.Logistic,
+            size=5
+        )
+
+        output_layer = pnl.TransferMechanism(
+            name='output_layer',
+            function=pnl.Logistic,
+            size=3
+        )
+
+        # assemble composition & create learning components
+        comp = pnl.Composition(name='back-prop-comp')
+        comp.add_linear_processing_pathway([input_layer, hidden_layer])
+        learning_components = comp.add_back_propagation_pathway([hidden_layer, output_layer])
+
+        # unpack learning components
+        learned_projection = learning_components[pnl.LEARNED_PROJECTION]
+        learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
+        target_mechanism = learning_components[pnl.TARGET_MECHANISM]
+        comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+
+        inputs_dict = {input_layer: [[1., 1.], [1., 1.], [1., 1.], [1., 1.], [1., 1.], [1., 1.]],
+                       target_mechanism: [[10.], [10.], [10.], [10.], [10.], [10.]]
+                       }
+        learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+        comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+
+        target_mechanism.log.set_log_conditions(items=pnl.VALUE)
+        comp.run(inputs=inputs_dict)
+
+        print(comp.results)
+
