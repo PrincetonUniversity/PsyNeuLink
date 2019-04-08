@@ -5,6 +5,7 @@ import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator, SampleIteratorError
+
 class TestControlMechanisms:
 
     def test_lvoc(self):
@@ -183,6 +184,7 @@ class TestControlMechanisms:
     #                               Ty: [4, 4]})
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
+
 
 class TestModelBasedOptimizationControlMechanisms:
 
@@ -550,7 +552,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
                                                control_signals=[control_signal])
-        # objective_mech.log.set_log_conditions(pnl.OUTCOME)
+        objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
 
@@ -560,8 +562,20 @@ class TestModelBasedOptimizationControlMechanisms:
             ocm.input_states[i].function.reinitialize()
         comp.run(inputs=inputs)
 
-        # objective_mech.log.print_entries(pnl.OUTCOME)
-        assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        log = objective_mech.log.nparray_dictionary()
+
+        # "outer" composition
+        assert np.allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
+
+        # First round of simulations is only one trial.
+        # (Even though the feature fn is a Buffer, there is no history yet)
+        for i in range(0, 3):
+            assert len(log["comp-sim-"+str(i)]["Trial"]) == 1
+
+        # Second and third rounds of simulations are two trials.
+        # (The buffer has history = 2)
+        for i in range(3, 9):
+            assert len(log["comp-sim-"+str(i)]["Trial"]) == 2
 
     def test_stability_flexibility_susan_and_sebastian(self):
 
