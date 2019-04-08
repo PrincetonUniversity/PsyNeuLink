@@ -3461,6 +3461,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
+            retain_old_simulation_data=False,
             context=None
     ):
         '''
@@ -3532,6 +3533,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       a `Condition`
 
                 See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            retain_old_simulation_data : bool
+                if True, all Parameter values generated during simulations will be saved for later inspection;
+                if False, simulation values will be deleted unless otherwise specified by individual Parameters
+
 
             Returns
             ---------
@@ -3618,6 +3624,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
+        # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
+        # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
+        # called repeatedly (this init is repeated in Composition.execute)
+        # initialize from base context but don't overwrite any values already set for this execution_id
+        self._initialize_from_context(execution_id, base_execution_id, override=False)
+        self._assign_context_values(execution_id, composition=self)
+
         execution_context = self.parameters.context.get(execution_id)
         # Run mode skips mbo invocation so we can't use it if mbo is
         # present and active
@@ -3625,10 +3638,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    (execution_context is not None and
                     execution_context.execution_phase == ContextFlags.SIMULATION))
         if str(bin_execute).endswith('Run') and can_run:
-            # initialize from base context but don't overwrite any values already set for this execution_id
-            self._initialize_from_context(execution_id, base_execution_id, override=False)
-            self._assign_context_values(execution_id, composition=self)
-
             if bin_execute.startswith('LLVM'):
                 _comp_ex = pnlvm.CompExecution(self, [execution_id])
                 results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
@@ -3714,6 +3723,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 results.append(result_copy)
+
+                if not retain_old_simulation_data:
+                    if self.controller is not None:
+                        self._delete_contexts(*self.controller.parameters.simulation_ids.get(execution_id), check_simulation_storage=True)
 
             # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
@@ -4149,7 +4162,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
 
             # excludes any input states marked "internal_only" (usually recurrent)
-            input_must_match = node.external_input_values
+            # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
+            input_must_match = [input_state.defaults.value for input_state in node.input_states if not input_state.internal_only]
 
             if input_must_match == []:
                 # all input states are internal_only
@@ -4280,7 +4294,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             predicted_input=None,
             control_allocation=None,
-            num_simulation_trials=1,
+            num_simulation_trials=None,
             runtime_params=None,
             base_execution_id=None,
             execution_id=None,
@@ -4295,7 +4309,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
-        # Build input dictionary for simulationn
+        # Build input dictionary for simulation
         inputs = self._build_predicted_inputs_dict(predicted_input)
 
         # Run Composition in "SIMULATION" context

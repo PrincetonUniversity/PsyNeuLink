@@ -611,11 +611,8 @@ def _get_time(component, context_flags, execution_id=None):
     # if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
         if component.prev_context:
             context_flags = component.prev_context.flags
-            execution_context = component.prev_context.string
         else:
             context_flags = ContextFlags.UNSET
-    else:
-        execution_context = component.context.string
 
     system = ref_mech.parameters.context.get(execution_id).composition
 

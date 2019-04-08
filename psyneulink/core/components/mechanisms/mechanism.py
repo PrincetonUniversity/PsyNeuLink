@@ -2483,7 +2483,7 @@ class Mechanism_Base(Mechanism):
     def _update_attribs_dicts(self, context=None):
         from psyneulink.core.globals.keywords import NOISE
         for state in self._parameter_states:
-            if NOISE in state.name and self.context.initialization_status == ContextFlags.INITIALIZING:
+            if NOISE in state.name and self.parameters.context.get().initialization_status == ContextFlags.INITIALIZING:
                 continue
             if state.name in self.user_params:
                 self.user_params.__additem__(state.name, state.value)

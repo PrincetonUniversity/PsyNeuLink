@@ -694,7 +694,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  agent_rep=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
-                 num_estimates: int = 1,
+                 num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
                  params=None,
@@ -906,7 +906,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       context=context)
 
         # clean up frozen values after execution
-        self.agent_rep._delete_context(self._get_frozen_execution_id(execution_id))
+        self.agent_rep._delete_contexts(self._get_frozen_execution_id(execution_id))
 
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
