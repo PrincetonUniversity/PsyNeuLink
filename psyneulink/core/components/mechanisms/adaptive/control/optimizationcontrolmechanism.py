@@ -874,8 +874,12 @@ class OptimizationControlMechanism(ControlMechanism):
         # except AttributeError:
         #     net_outcome = [0]
         # # FIX: END
-        # MODIFIED 1/23/19 NEW: [JDC]
+        # # MODIFIED 1/23/19 NEW: [JDC]
+        # net_outcome = self.parameters.net_outcome.get(execution_id)
+        # MODIFIED 4/8/19 NEWER: [JDC]
         net_outcome = self.parameters.net_outcome.get(execution_id)
+        if net_outcome is None:
+            net_outcome = [0]
         # MODIFIED 1/23/19 END
         #
         # freeze the values of current execution_id, because they can be changed in between simulations,

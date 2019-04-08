@@ -528,11 +528,11 @@ class BayesGLM(LearningFunction):
         ---------
 
         variable : 2d or 3d array : default class_defaults.variable
-           if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
-           be a 1d array containing the dependent variable to be predicted by the predictors;
-           if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
-           1d arrays of scalar predictors, and the second item be a 2d array containing 1d arrays each of which
-           contains a scalar dependent variable for the corresponding predictor vector.
+           If it is a 2d array, the first item must be a 1d array of scalar predictors,
+               and the second must be a 1d array containing the dependent variable to be predicted by the predictors.
+           If it is a 3d array, the first item in the outermost dimension must be a 2d array containing one or more
+               1d arrays of scalar predictors, and the second item must be a 2d array containing 1d arrays
+               each of which contains a scalar dependent variable for the corresponding predictor vector.
 
         params : Dict[param keyword: param value] : default None
            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the

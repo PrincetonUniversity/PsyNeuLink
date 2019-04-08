@@ -12,8 +12,12 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = None
+# SHOW_GRAPH = 'SIMPLE'
+# SHOW_GRAPH = 'CONTROL'
+# SHOW_GRAPH = 'NODE STRUCTURE'
+# SHOW_GRAPH = 'FULL'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -182,10 +186,13 @@ agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
 
-if SHOW_GRAPH:
-    # agent_comp.show_graph()
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+if SHOW_GRAPH is 'SIMPLE':
+    agent_comp.show_graph(show_cim=True)
+if SHOW_GRAPH is 'CONTROL':
+    agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
+if SHOW_GRAPH is 'NODE STRUCTURE':
+    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+if SHOW_GRAPH is 'FULL':
     agent_comp.show_graph(show_model_based_optimizer=True,
                           show_cim=True,
                           show_node_structure=ALL,
