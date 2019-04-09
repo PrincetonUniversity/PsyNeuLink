@@ -1,6 +1,8 @@
 import functools
 import numpy as np
 import pytest
+import psyneulink as pnl
+
 
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.transferfunctions import SoftMax
@@ -87,27 +89,27 @@ def test_reinforcement():
 
     expected_output = [
         (input_layer.get_output_values(s), [np.array([1., 1., 1.])]),
-        (action_selection.get_output_values(s), [np.array([0.      , 0.      , 2.283625])]),
-        (pytest.helpers.expand_np_ndarray(mech_objective_action.get_output_values(s)), pytest.helpers.expand_np_ndarray([np.array([7.716375]), np.array(59.542443140625004)])),
+        (action_selection.get_output_values(s), [np.array([0.      , 3.71496434      , 0.])]),
+        (pytest.helpers.expand_np_ndarray(mech_objective_action.get_output_values(s)), pytest.helpers.expand_np_ndarray([np.array([6.28503566484375]), np.array(39.50167330835792)])),
         (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.get_output_values(s)), pytest.helpers.expand_np_ndarray([
-            [np.array([0.        , 0.        , 0.38581875]), np.array([0.        , 0.        , 0.38581875])]
+            [np.array([0.        , 0.31425178324218755 , 0.]), np.array([0.        , 0.31425178324218755 , 0. ])]
         ])),
         (reward_prediction_weights.get_mod_matrix(s), np.array([
             [1.,         0.,         0.        ],
-            [0.,         3.38417298, 0.        ],
-            [0.,         0.,         2.66944375],
+            [0.,         4.02921612, 0.        ],
+            [0.,         0.,         1.8775    ],
         ])),
         (results, [
             [np.array([0., 1., 0.])],
             [np.array([0.  , 1.45, 0.  ])],
-            [np.array([0.    , 1.8775, 0.    ])],
             [np.array([0., 0., 1.])],
-            [np.array([0.  , 0.  , 1.45])],
+            [np.array([0.    , 1.8775, 0.    ])],
             [np.array([0.      , 2.283625, 0.      ])],
-            [np.array([0.    , 0.    , 1.8775])],
             [np.array([0.        , 2.66944375, 0.        ])],
+            [np.array([0.  , 0.  , 1.45])],
             [np.array([0.        , 3.03597156, 0.        ])],
-            [np.array([0.      , 0.      , 2.283625])]
+            [np.array([0.      , 3.38417298, 0.])],
+            [np.array([0.      , 3.71496434, 0.])],
         ]),
     ]
 
@@ -117,3 +119,38 @@ def test_reinforcement():
         # if you do not specify, assert_allclose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+def test_reinforcement_fixed_targets():
+    input_layer = TransferMechanism(size=2,
+                                    name='Input Layer',
+    )
+
+    action_selection = pnl.DDM(input_format=pnl.ARRAY,
+                               function=pnl.DriftDiffusionAnalytical(),
+                               output_states=[pnl.SELECTED_INPUT_ARRAY],
+                               name='DDM')
+
+    p = Process(pathway=[input_layer, action_selection],
+                learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)))
+
+    input_list = {input_layer: [[1, 1], [1, 1]]}
+    s = System(
+        processes=[p],
+        # learning_rate=0.05,
+    )
+    targets = [[10.], [10.]]
+
+    # logged_mechanisms = [input_layer, action_selection]
+    # for mech in s.learning_mechanisms:
+    #     logged_mechanisms.append(mech)
+    #
+    # for mech in logged_mechanisms:
+    #     mech.log.set_log_conditions(items=[pnl.VALUE])
+
+    results = s.run(
+        inputs=input_list,
+        targets=targets
+    )
+
+    assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
+                                                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])

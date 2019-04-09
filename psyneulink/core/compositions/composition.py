@@ -600,8 +600,12 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
+from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Composition_Base
@@ -609,10 +613,13 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, MATRIX_KEYWORD_VALUES, \
-    MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, \
+    LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, \
+    PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, \
+    WEIGHT, OUTCOME
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
@@ -620,6 +627,7 @@ from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 
 __all__ = [
 
@@ -1068,6 +1076,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_mode = controller_mode
 
         self.projections = []
+        self.learning_projections = []
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -1453,6 +1462,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver_mechanism = receiver.owner_mech
             hebbian_learning = True
 
+        elif isinstance(sender, LearningMechanism):
+            receiver_mechanism = receiver.receiver.owner
+            hebbian_learning = True
+
         else:
             raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(receiver, self.name,
@@ -1649,6 +1662,192 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
                                        .format(pathway[c]))
+
+    def _create_learning_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
+        # Create learning components
+        target_mechanism = ProcessingMechanism(name='Target')
+
+        comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: [0.]},
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: [0.], WEIGHT: -1},
+                                                   function=error_function,
+                                                   output_states=[OUTCOME, MSE])
+
+        learning_mechanism = LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
+                                                                                        output_source.output_states[0].value,
+                                                                                        comparator_mechanism.output_states[0].value],
+
+                                                                      learning_rate=learning_rate),
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 comparator_mechanism.output_states[0].value],
+                                               error_sources=comparator_mechanism,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_backprop_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
+        # Create learning components
+        target_mechanism = ProcessingMechanism(name='Target',
+                                               default_variable=output_source.output_states[0].value)
+
+        comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: target_mechanism.output_states[0].value},
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: output_source.output_states[0].value,
+                                                           WEIGHT: -1},
+                                                   function=error_function,
+                                                   output_states=[OUTCOME, MSE]
+                                                   )
+
+        learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
+                                                              output_source.output_states[0].value,
+                                                              comparator_mechanism.output_states[0].value],
+                                            activation_derivative_fct=output_source.function.derivative,
+                                            learning_rate=learning_rate)
+
+        learning_mechanism = LearningMechanism(function=learning_function,
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 comparator_mechanism.output_states[0].value],
+                                               error_sources=comparator_mechanism,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
+        # construct learning related mapping projections
+        target_projection = MappingProjection(sender=target,
+                                              receiver=comparator.input_states[1])
+        sample_projection = MappingProjection(sender=output_source,
+                                              receiver=comparator.input_states[0])
+        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
+                                                    receiver=learning_mechanism.input_states[2])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        act_in_projection = MappingProjection(sender=input_source.output_states[0],
+                                              receiver=learning_mechanism.input_states[0])
+        return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
+
+    def _create_learning_projection(self, learning_mechanism, learned_projection):
+
+        learning_projection = LearningProjection(name="Learning Projection",
+                                                 sender=learning_mechanism.learning_signals[0],
+                                                 receiver=learned_projection.parameter_states["matrix"])
+        self.learning_projections.append(learning_projection)
+        learned_projection.has_learning_projection = True
+
+        return learning_projection
+
+    def _unpack_processing_components_of_learning_pathway(self, processing_pathway):
+        # unpack processing components and add to composition
+        if len(processing_pathway) == 3:
+            input_source, learned_projection, output_source = processing_pathway
+        elif len(processing_pathway) == 2:
+            input_source, output_source = processing_pathway
+            learned_projection = MappingProjection(sender=input_source, receiver=output_source)
+        else:
+            raise CompositionError(f"Too many components in learning pathway: {pathway}. Only single-layer learning "
+                                   f"is supported by this method. See AutodiffComposition for other learning models.")
+        return input_source, output_source, learned_projection
+
+    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+        """
+        Arguments
+        ---------
+
+            pathway: List
+                list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+                specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+                automatically generated for the learned projection.
+
+            learning_rate: float (default = 0.05)
+                learning rate of the ReinforcementLearning function
+
+            error_function: function (default = LinearCombination
+                function of the ComparatorMechanism
+        Returns
+        --------
+
+            A dictionary of components that were automatically generated and added to the Composition in order to
+            implement ReinforcementLearning along the pathway.
+
+            {LEARNING_MECHANISM: learning_mechanism,
+             COMPARATOR_MECHANISM: comparator,
+             TARGET_MECHANISM: target,
+             LEARNED_PROJECTION: learned_projection}
+
+        """
+
+        if not error_function:
+            error_function = LinearCombination()
+
+        # Processing Components
+        input_source, output_source, learned_projection = self._unpack_processing_components_of_learning_pathway(pathway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+
+        # Learning Components
+        target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
+                                                                                          output_source,
+                                                                                          error_function,
+                                                                                          learned_projection,
+                                                                                          learning_rate)
+        self.add_nodes([target, comparator, learning_mechanism])
+
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target,
+                                                                                 comparator,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection)
+
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
+                                       COMPARATOR_MECHANISM: comparator,
+                                       TARGET_MECHANISM: target,
+                                       LEARNED_PROJECTION: learned_projection}
+
+        return learning_related_components
+
+    def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None):
+        if not error_function:
+            error_function = LinearCombination()
+
+        # Processing Components
+        input_source, output_source, learned_projection = self._unpack_processing_components_of_learning_pathway(pathway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+
+        # Learning Components
+        target, comparator, learning_mechanism = self._create_backprop_related_mechanisms(input_source,
+                                                                                          output_source,
+                                                                                          error_function,
+                                                                                          learned_projection,
+                                                                                          learning_rate)
+        self.add_nodes([target, comparator, learning_mechanism])
+
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target,
+                                                                                 comparator,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, feedback=True)
+
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
+                                       COMPARATOR_MECHANISM: comparator,
+                                       TARGET_MECHANISM: target,
+                                       LEARNED_PROJECTION: learned_projection}
+
+        return learning_related_components
 
     def _validate_projection(self,
                              projection,
@@ -3122,6 +3321,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+
                 if bin_execute:
                     data = self._get_flattened_controller_output(execution_id)
                     _comp_ex.insert_node_output(self.controller, data)
