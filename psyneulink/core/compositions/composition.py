@@ -3645,7 +3645,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not retain_old_simulation_data:
                     if self.controller is not None:
                         self._delete_contexts(*self.controller.parameters.simulation_ids.get(execution_id), check_simulation_storage=True)
-
+                        self.controller.parameters.simulation_ids.get(execution_id).clear()
             # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
             execution_targets = {}

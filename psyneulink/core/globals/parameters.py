@@ -968,11 +968,11 @@ class Parameter(types.SimpleNamespace):
             self.log.clear()
             return
 
-        try:
+        if type(execution_ids) is list:
             for eid in execution_ids:
                 self.log.pop(eid, None)
-        except TypeError:
-                self.log.pop(execution_ids, None)
+        else:
+            self.log.pop(execution_ids, None)
 
     def _initialize_from_context(self, execution_context=None, base_execution_context=None, override=True):
         from psyneulink.core.components.component import Component
