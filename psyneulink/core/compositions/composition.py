@@ -1757,6 +1757,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return input_source, output_source, learned_projection
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+        """
+        Arguments
+        ---------
+
+            pathway: List
+                list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+                specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+                automatically generated for the learned projection.
+
+            learning_rate: float (default = 0.05)
+                learning rate of the ReinforcementLearning function
+
+            error_function: function (default = LinearCombination
+                function of the ComparatorMechanism
+        Returns
+        --------
+
+            A dictionary of components that were automatically generated and added to the Composition in order to
+            implement ReinforcementLearning along the pathway.
+
+            {LEARNING_MECHANISM: learning_mechanism,
+             COMPARATOR_MECHANISM: comparator,
+             TARGET_MECHANISM: target,
+             LEARNED_PROJECTION: learned_projection}
+
+        """
 
         if not error_function:
             error_function = LinearCombination()
@@ -1781,7 +1807,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_projections(learning_related_projections)
 
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, feedback=True)
+        self.add_projection(learning_projection)
 
         learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
                                        COMPARATOR_MECHANISM: comparator,
