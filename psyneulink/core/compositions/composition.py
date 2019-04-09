@@ -1701,7 +1701,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            VARIABLE: output_source.output_states[0].value,
                                                            WEIGHT: -1},
                                                    function=error_function,
-                                                   # output_states=[MSE]
+                                                   output_states=[OUTCOME, MSE]
                                                    )
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
@@ -1757,6 +1757,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return input_source, output_source, learned_projection
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+
         if not error_function:
             error_function = LinearCombination()
 
