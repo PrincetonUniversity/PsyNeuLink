@@ -976,6 +976,30 @@ class TestClearLog:
         assert np.allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[0], [1]]))
 
+    @pytest.mark.parametrize(
+        'insertion_eids, deletion_eids, log_is_empty',
+        [
+            (['execution_id'], 'execution_id', True),     # fails if string handling not correct due to str being Iterable
+            (['execution_id'], ['execution_id'], True),
+        ]
+    )
+    def test_clear_log_arguments(self, insertion_eids, deletion_eids, log_is_empty):
+        t = pnl.TransferMechanism()
+        c = pnl.Composition()
+        c.add_node(t)
+
+        t.parameters.value.log_condition = True
+
+        for eid in insertion_eids:
+            c.run({t: 0}, execution_id=eid)
+
+        t.parameters.value.clear_log(deletion_eids)
+
+        if log_is_empty:
+            assert len(t.parameters.value.log) == 0
+        else:
+            assert len(t.parameters.value.log) != 0
+
 
 class TestFiltering:
 
@@ -1043,7 +1067,7 @@ class TestFiltering:
 
         Input.parameters.value.log_condition = True
 
-        comp.run(inputs=stim_list_dict)
+        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
 
         return Input
 
