@@ -1111,6 +1111,8 @@ class GridSearch(OptimizationFunction):
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
                  save_values:tc.optional(bool)=False,
+                 tolerance=0.,
+                 select_randomly_from_optimal_values=False,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -1122,6 +1124,8 @@ class GridSearch(OptimizationFunction):
         self._return_samples = save_values
         self.num_iterations = 1
         self.direction = direction
+        self.tolerance = tolerance
+        self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
@@ -1310,12 +1314,9 @@ class GridSearch(OptimizationFunction):
                 params=params,
                 context=context
             )
-            # return_optimal_value = max(all_values)
-            # return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
 
-            # Evaluate objective_function for current sample
+            value_sample_pairs = list(zip(all_values, all_samples))
 
-            # Evaluate for optimal value
             if self.direction is MAXIMIZE:
                 value_optimal = max(all_values)
             elif self.direction is MINIMIZE:
@@ -1323,7 +1324,15 @@ class GridSearch(OptimizationFunction):
             else:
                 assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
                     format(repr(DIRECTION),self.name,self.direction)
-            sample_optimal = all_samples[all_values.index(value_optimal)]
+
+            within_tolerance = []
+            for value, sample in value_sample_pairs:
+                if np.isclose(value_optimal, value, self.tolerance):
+                    within_tolerance.append((value, sample))
+            if self.select_randomly_from_optimal_values:
+                value_optimal, sample_optimal = within_tolerance[np.random.randint(0, len(within_tolerance))]
+            else:
+                value_optimal, sample_optimal = within_tolerance[0]
             if self._return_samples:
                 return_all_samples = all_samples
             if self._return_values:
