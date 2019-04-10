@@ -3846,6 +3846,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if self.controller is not None:
                         self._delete_contexts(*self.controller.parameters.simulation_ids.get(execution_id), check_simulation_storage=True)
 
+                        # if any other special parameters store simulation info that needs to be cleaned up
+                        # consider dedicating a function to it here
+                        # this will not be caught above because it resides in the base context (execution_id)
+                        if not self.parameters.simulation_results.retain_old_simulation_data:
+                            self.parameters.simulation_results.get(execution_id).clear()
+
+                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                            self.controller.parameters.simulation_ids.get(execution_id).clear()
+
             # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
             execution_targets = {}

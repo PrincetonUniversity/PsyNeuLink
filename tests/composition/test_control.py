@@ -234,7 +234,7 @@ class TestModelBasedOptimizationControlMechanisms:
             reward: [20, 20]
         }
 
-        comp.run(inputs=stim_list_dict)
+        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
 
         # Note: Removed decision variable OutputState from simulation results because sign is chosen randomly
         expected_sim_results_array = [
