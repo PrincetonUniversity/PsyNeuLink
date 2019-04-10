@@ -147,7 +147,7 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_output_struct_type'):
             return component._get_output_struct_type(self)
 
-        default_val = component._instance_defaults.value
+        default_val = component.defaults.value
         return self.convert_python_struct_to_llvm_ir(default_val)
 
     def get_param_struct_type(self, component):
