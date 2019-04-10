@@ -27,6 +27,7 @@ __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_N
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import \
     Function, Function_Base, MULTIPLICATIVE_PARAM, FunctionError, ADDITIVE_PARAM
@@ -299,6 +300,103 @@ class OneHot(SelectionFunction):
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+
+    def _gen_llvm_function_body(self, ctx, builder, _1, state, arg_in, arg_out):
+        idx_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(ctx.int32_ty(0), idx_ptr)
+
+        if self.mode in {PROB, PROB_INDICATOR}:
+            rng_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+            dice_ptr = builder.alloca(ctx.float_ty)
+            mt_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.call(rng_f, [mt_state, dice_ptr])
+            dice = builder.load(dice_ptr)
+            sum_ptr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty(-0.0), sum_ptr)
+            prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (builder, index):
+            idx = builder.load(idx_ptr)
+            prev_ptr = builder.gep(arg_in, [ctx.int32_ty(0), idx])
+            current_ptr = builder.gep(arg_in, [ctx.int32_ty(0), index])
+            prev = builder.load(prev_ptr)
+            current = builder.load(current_ptr)
+
+            prev_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), idx])
+            cur_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), index])
+            if self.mode not in {PROB, PROB_INDICATOR}:
+                fabs = ctx.get_builtin("fabs", [current.type])
+            if self.mode is MAX_VAL:
+                cmp_op = ">="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current
+            elif self.mode is MAX_ABS_VAL:
+                cmp_op = ">="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current
+            elif self.mode is MAX_INDICATOR:
+                cmp_op = ">="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current.type(1.0)
+            elif self.mode is MAX_ABS_INDICATOR:
+                cmp_op = ">="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current.type(1.0)
+            elif self.mode is MIN_VAL:
+                cmp_op = "<="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current
+            elif self.mode is MIN_ABS_VAL:
+                cmp_op = "<="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current
+            elif self.mode is MIN_INDICATOR:
+                cmp_op = "<="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current.type(1.0)
+            elif self.mode is MIN_ABS_INDICATOR:
+                cmp_op = "<="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current.type(1.0)
+            elif self.mode in {PROB, PROB_INDICATOR}:
+                # Update prefix sum
+                current_prob_ptr = builder.gep(prob_in, [ctx.int32_ty(0), index])
+                sum_old = builder.load(sum_ptr)
+                sum_new = builder.fadd(sum_old, builder.load(current_prob_ptr))
+                builder.store(sum_new, sum_ptr)
+
+                old_below = builder.fcmp_ordered("<=", sum_old, dice)
+                new_above = builder.fcmp_ordered("<", dice, sum_new)
+                cond = builder.and_(new_above, old_below)
+                cmp_prev = ctx.float_ty(1.0)
+                cmp_curr = builder.select(cond, cmp_prev, ctx.float_ty(0.0))
+                cmp_op = "=="
+                if self.mode is PROB:
+                    val = current
+                else:
+                    val = ctx.float_ty(1.0)
+            else:
+                assert False, "Unsupported mode: {}".format(self.mode)
+
+            # Make sure other elements are zeroed
+            builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
+
+            cmp_res = builder.fcmp_ordered(cmp_op, cmp_curr, cmp_prev)
+            with builder.if_then(cmp_res):
+                builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
+                builder.store(val, cur_res_ptr)
+                builder.store(index, idx_ptr)
+
+        return builder
 
     def function(self,
                  variable=None,

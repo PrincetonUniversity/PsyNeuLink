@@ -1,5 +1,3 @@
-import matplotlib
-# matplotlib.use('TkAgg')
 import psyneulink as pnl
 import numpy as np
 import pytest
