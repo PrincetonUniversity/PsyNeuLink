@@ -180,11 +180,10 @@ class Identity(InterfaceFunction):  # ------------------------------------------
 
     def _get_output_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its defaults shape
-        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-        if isinstance(self.owner, CompositionInterfaceMechanism):
-            return ctx.get_input_struct_type(self)
-        return ctx.get_output_struct_type(super())
+        #       does not update its defaults shape
+        #       Standalone function works OK with defaults as well as this
+        #       workaround.
+        return ctx.get_input_struct_type(self)
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         val = builder.load(arg_in)
