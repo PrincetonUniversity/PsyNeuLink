@@ -176,7 +176,8 @@ class Identity(InterfaceFunction):  # ------------------------------------------
                 variable = tuple(variable)
 
             return ctx.convert_python_struct_to_llvm_ir(variable)
-        return ctx.get_input_struct_type(super())
+        default_var = self.defaults.variable
+        return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def _get_output_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
