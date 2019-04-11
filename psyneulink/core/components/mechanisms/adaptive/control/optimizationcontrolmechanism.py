@@ -865,23 +865,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
 
         # Assign default net_outcome if it is not yet specified (presumably first trial)
-        # # MODIFIED 1/23/19 OLD:
-        # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-        #          self.control_signals]
-        # try:
-        #     net_outcome = variable[0] - self.combine_costs(costs)
-        # except AttributeError:
-        #     net_outcome = [0]
-        # # FIX: END
-        # # MODIFIED 1/23/19 NEW: [JDC]
-        # net_outcome = self.parameters.net_outcome.get(execution_id)
-        # MODIFIED 4/8/19 NEWER: [JDC]
         net_outcome = self.parameters.net_outcome.get(execution_id)
-        if net_outcome is None:
-            net_outcome = [0]
-        # MODIFIED 1/23/19 END
-        #
+        assert net_outcome != None, f'PROGRAM ERROR: net_outcome is returning None for {self.name}'
+
         # freeze the values of current execution_id, because they can be changed in between simulations,
         # and the simulations must start from the exact spot
         self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id)
