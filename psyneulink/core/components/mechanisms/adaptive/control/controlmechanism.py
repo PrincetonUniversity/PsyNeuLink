@@ -740,8 +740,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
         net_outcome = Parameter(None, read_only=True,
-                                # getter=_net_outcome_getter
-                                )
+                                getter=_net_outcome_getter)
 
         simulation_ids = Parameter([], user=False)
 

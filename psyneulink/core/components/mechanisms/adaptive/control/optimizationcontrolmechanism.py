@@ -863,8 +863,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
             # have an adapt method, we also don't need to call the net_outcome getter
             net_outcome = self.parameters.net_outcome.get(execution_id)
-            if net_outcome is None:
-                net_outcome = [0]
+ 
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
                                  control_allocation,
                                  net_outcome,
