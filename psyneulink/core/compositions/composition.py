@@ -3272,6 +3272,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        execution_context = self.parameters.context.get(execution_id)
+
         # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
         # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
         # for example:
@@ -3281,7 +3283,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
         if self.most_recent_execution_context != execution_id or self.env is None:
             # initialize from base context but don't overwrite any values already set for this execution_id
-            if not nested:
+            if (
+                not nested
+                or execution_context is None
+                and execution_context.execution_phase is not ContextFlags.SIMULATION
+            ):
                 self._initialize_from_context(execution_id, base_execution_id, override=False)
 
             self._assign_context_values(execution_id, composition=self)
@@ -3742,14 +3748,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
+        execution_context = self.parameters.context.get(execution_id)
+
         # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        self._initialize_from_context(execution_id, base_execution_id, override=False)
-        self._assign_context_values(execution_id, composition=self)
+        if (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION):
+            self._initialize_from_context(execution_id, base_execution_id, override=False)
+            self._assign_context_values(execution_id, composition=self)
 
-        execution_context = self.parameters.context.get(execution_id)
         # Run mode skips mbo invocation so we can't use it if mbo is
         # present and active
         can_run = (not self.enable_controller or
