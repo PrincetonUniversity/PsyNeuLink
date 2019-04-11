@@ -84,9 +84,7 @@ RAND2_S = np.random.rand()
 RAND3_S = np.random.rand()
 
 def linear_combination_function(variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
-    if weights is not None and not np.isscalar(weights) and  len(variable) != len(weights):
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
+    if weights is not None and not np.isscalar(weights) and len(variable) != len(weights):
         pytest.skip("variable/weights mismatch")
 
     f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=variable,

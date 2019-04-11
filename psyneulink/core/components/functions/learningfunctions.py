@@ -1554,7 +1554,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
-
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                  format(self.name, variable))
@@ -1636,7 +1635,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
-
         return [error_array, error_array]
 
 
