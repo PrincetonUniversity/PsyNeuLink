@@ -694,7 +694,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  agent_rep=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
-                 num_estimates: int = 1,
+                 num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
                  params=None,
