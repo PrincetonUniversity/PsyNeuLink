@@ -862,8 +862,6 @@ class OptimizationControlMechanism(ControlMechanism):
             control_allocation = [c.defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
-        # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
-
         # Assign default net_outcome if it is not yet specified (presumably first trial)
         net_outcome = self.parameters.net_outcome.get(execution_id)
         assert net_outcome != None, f'PROGRAM ERROR: net_outcome is returning None for {self.name}'
