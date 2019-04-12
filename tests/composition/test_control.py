@@ -234,7 +234,7 @@ class TestModelBasedOptimizationControlMechanisms:
             reward: [20, 20]
         }
 
-        comp.run(inputs=stim_list_dict)
+        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
 
         # Note: Removed decision variable OutputState from simulation results because sign is chosen randomly
         expected_sim_results_array = [
@@ -560,7 +560,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for i in range(1, len(ocm.input_states)):
             ocm.input_states[i].function.reinitialize()
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, retain_old_simulation_data=True)
 
         log = objective_mech.log.nparray_dictionary()
 
