@@ -877,10 +877,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # MODIFIED 1/23/19 NEW: [JDC]
         net_outcome = self.parameters.net_outcome.get(execution_id)
         # MODIFIED 1/23/19 END
-        #
-        # freeze the values of current execution_id, because they can be changed in between simulations,
-        # and the simulations must start from the exact spot
-        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id)
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
