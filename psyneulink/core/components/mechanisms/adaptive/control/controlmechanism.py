@@ -392,28 +392,13 @@ class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-
-# def _reconfiguration_cost_getter(owning_component=None, execution_id=None):
-#     try:
-#         c = owning_component
-#         if c.compute_reconfiguration_cost:
-#             allocation = c.parameters.value.get(execution_id)
-#             # prev_allocation = c.parameters.value.get_previous(execution_id)
-#             prev_allocation = c.parameters.value.history[execution_id][-2]
-#             return c.compute_reconfiguration_cost([allocation, prev_allocation])
-#         else:
-#             return 0
-#     except:
-#         return 0
-
-
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
+    # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
         costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
                  for c in owning_component.control_signals]
-        # if owning_component.compute_reconfiguration_cost:
-        #     costs.append(owning_component.parameters.reconfiguration_cost.get(execution_id))
         return costs
+
     except TypeError:
         return None
 
@@ -426,6 +411,9 @@ def _outcome_getter(owning_component=None, execution_id=None):
 
 
 def _net_outcome_getter(owning_component=None, execution_id=None):
+    # NOTE: In cases where there is a reconfiguration_cost,
+    # that cost is not included in the net_outcome
+    
     try:
         c = owning_component
         return c.compute_net_outcome(c.parameters.outcome.get(execution_id),
