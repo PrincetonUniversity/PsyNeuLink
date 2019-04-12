@@ -3199,6 +3199,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             targets=None,
             runtime_params=None,
+            skip_initialization=False,
             bin_execute=False,
             context=None
     ):
@@ -3284,7 +3285,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.most_recent_execution_context != execution_id or self.env is None:
             # initialize from base context but don't overwrite any values already set for this execution_id
             if (
-                not nested
+                not skip_initialization
+                and not nested
                 or execution_context is None
                 and execution_context.execution_phase is not ContextFlags.SIMULATION
             ):
@@ -3836,6 +3838,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         base_execution_id=base_execution_id,
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params,
+                                        skip_initialization=True,
                                         bin_execute=bin_execute)
 
             # ---------------------------------------------------------------------------------
