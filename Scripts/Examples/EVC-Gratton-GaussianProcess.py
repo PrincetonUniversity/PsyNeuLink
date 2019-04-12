@@ -51,20 +51,20 @@ comp.add_node(Decision, required_roles=[pnl.NodeRole.TERMINAL])
 task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
 comp.add_linear_processing_pathway(task_execution_pathway)
 
-ocm = pnl.OptimizationControlMechanism(features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]},
+ocm = pnl.OptimizationControlMechanism(features=[Input, Reward],
                                        feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                        agent_rep=comp,
                                        # function=pnl.GaussianProcessOptimization,
-                                       function=pnl.GaussianProcessOptimization,
+                                       function=pnl.GridSearch,
                                        control_signals=[("drift_rate", Decision), ("threshold", Decision)],
                                        objective_mechanism=pnl.ObjectiveMechanism(
                                                                          monitor_for_control=[
                                                                                  Reward,
                                                                                  Decision.PROBABILITY_UPPER_THRESHOLD,
                                                                                  (Decision.RESPONSE_TIME, -1, 1)]))
-comp.add_model_based_optimizer(optimizer=ocm)
+comp.add_controller(controller=ocm)
 
-comp.enable_model_based_optimizer = True
+comp.enable_controller = True
 
 # Stimuli
 comp._analyze_graph()
@@ -74,5 +74,5 @@ stim_list_dict = {
     Reward: [20, 20]
 }
 # print("- - - - - - - - RUN - - - - - - - -")
-# comp.show_graph()
-print (comp.run(inputs=stim_list_dict))
+comp.show_graph()
+# print (comp.run(inputs=stim_list_dict))

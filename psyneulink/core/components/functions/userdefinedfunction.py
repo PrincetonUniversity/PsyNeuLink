@@ -506,7 +506,7 @@ class UserDefinedFunction(Function_Base):
         call_params = self.cust_fct_params.copy()
 
         # # MODIFIED 3/6/19 NEW: [JDC]
-        # Add any of these that were includedin the definition of the custom function:
+        # Add any of these that were included in the definition of the custom function:
         if self.self_arg:
             call_params[SELF] = self
         if self.owner_arg:

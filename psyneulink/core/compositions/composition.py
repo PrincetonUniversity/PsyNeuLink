@@ -4477,6 +4477,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return net_outcome
 
+    def _dict_summary(self):
+        scheduler_dict = {
+            'schedulers': {
+                str(ContextFlags.PROCESSING): self.scheduler_processing._dict_summary()
+            }
+        }
+
+        nodes_dict = {
+            'nodes': {n.name: n._dict_summary() for n in self.nodes}
+        }
+
+        projections_dict = {
+            'projections': {f'{p.sender.owner.name} to {p.receiver.owner.name}': p._dict_summary() for p in self.projections}
+        }
+
+        return {
+            **super()._dict_summary(),
+            **scheduler_dict,
+            **nodes_dict,
+            **projections_dict,
+        }
+
     @property
     def input_states(self):
         """Returns all InputStates that belong to the Input CompositionInterfaceMechanism"""

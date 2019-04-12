@@ -3298,6 +3298,37 @@ class Component(object, metaclass=ComponentsMeta):
         """
         self.log.log_values(entries)
 
+    def _dict_summary(self):
+        basic_attributes = ['name']
+
+        # lifted from LLVM
+        parameter_black_list = {'function', 'variable', 'value', 'context'}
+        parameters_dict = {}
+
+        for p in self.parameters:
+            if p.user and p.name not in parameter_black_list:
+                val = p.get(self.most_recent_execution_context)
+
+                if isinstance(val, np.ndarray):
+                    val = f'numpy.array({val})'
+                elif not isinstance(val, numbers.Number) and val is not None:
+                    val = str(val)
+
+                parameters_dict[p.name] = val
+
+        function_dict = {'function': self.function._dict_summary()} if (hasattr(self, 'function') and isinstance(self.function, Component)) else {}
+
+        return {
+            **{attr: getattr(self, attr) for attr in basic_attributes},
+            **{'parameters': parameters_dict},
+            **function_dict,
+            **{'type': self.__class__.__name__}
+        }
+
+    def json_summary(self):
+        import json
+        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
+
     @property
     def logged_items(self):
         """Dictionary of all items that have entries in the log, and their currently assigned `ContextFlags`\\s
