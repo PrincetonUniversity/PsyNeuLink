@@ -1325,17 +1325,22 @@ class GridSearch(OptimizationFunction):
 
             for i in range(1, len(value_sample_pairs)):
                 value, sample = value_sample_pairs[i]
-                if (value > value_optimal and self.direction is MAXIMIZE) or \
+                if self.select_randomly_from_optimal_values and np.allclose(value, value_optimal):
+                    optimal_value_count += 1
+
+                    # swap with probability = 1/optimal_value_count in order to achieve
+                    # uniformly random selection from identical outcomes
+                    probability = 1/optimal_value_count
+                    random_value = np.random.random()
+
+                    if random_value < probability:
+                        value_optimal, sample_optimal = value, sample
+
+                elif (value > value_optimal and self.direction is MAXIMIZE) or \
                         (value < value_optimal and self.direction is MINIMIZE):
                     value_optimal, sample_optimal = value, sample
                     optimal_value_count = 1
-                elif self.select_randomly_from_optimal_values and np.allclose(value, value_optimal):
-                    optimal_value_count += 1
-                    # swap with probability = 1/optimal_value_count in order to achieve
-                    # uniformly random selection from identical outcomes
-                    if np.random.randint(0, optimal_value_count) == 0:
-                        value_optimal, sample_optimal = value, sample
-
+                    
             if self._return_samples:
                 return_all_samples = all_samples
             if self._return_values:
