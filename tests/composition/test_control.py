@@ -815,47 +815,47 @@ class TestModelBasedOptimizationControlMechanisms:
                            [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
         assert np.allclose(comp.results,
                            [[np.array([1.])], [np.array([1.75])]])
-
-    def test_grid_search_with_tolerance(self):
-        A = pnl.ProcessingMechanism(name='A')
-        print(A.loggable_items)
-        A.log.set_log_conditions(items="mod_slope")
-        B = pnl.ProcessingMechanism(name='B',
-                                    function=pnl.Logistic())
-
-        comp = pnl.Composition(name='comp')
-        comp.add_linear_processing_pathway([A, B])
-
-        search_range = pnl.SampleSpec(start=15., stop=35., step=5)
-        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           function=pnl.Linear,
-                                           variable=1.0,
-                                           allocation_samples=search_range,
-                                           intensity_cost_function=pnl.Linear(slope=0.))
-
-        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               features=[A.input_state],
-                                               objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(tolerance=0.,
-                                                                       select_randomly_from_optimal_values=True),
-                                               control_signals=[control_signal])
-
-        comp.add_controller(ocm)
-
-        inputs = {A: [[[1.0]]]}
-
-        comp.run(inputs=inputs,
-                 num_trials=20,
-                 execution_id='outer_comp')
-
-        log_arr = A.log.nparray_dictionary()
-
-        # control signal value (mod slope) is chosen randomly from all of the control signal values
-        # that correspond to a net outcome of 1
-        assert np.allclose([[1.], [20.], [35.], [25.], [20.], [35.], [35.], [35.], [35.], [25.],
-                            [35.], [25.], [30.], [20.], [35.], [30.], [20.], [20.], [20.], [30.]],
-                           log_arr['outer_comp']['mod_slope'])
+    #
+    # def test_grid_search_with_tolerance(self):
+    #     A = pnl.ProcessingMechanism(name='A')
+    #
+    #     A.log.set_log_conditions(items="mod_slope")
+    #     B = pnl.ProcessingMechanism(name='B',
+    #                                 function=pnl.Logistic())
+    #
+    #     comp = pnl.Composition(name='comp')
+    #     comp.add_linear_processing_pathway([A, B])
+    #
+    #     search_range = pnl.SampleSpec(start=15., stop=35., step=5)
+    #     control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+    #                                        function=pnl.Linear,
+    #                                        variable=1.0,
+    #                                        allocation_samples=search_range,
+    #                                        intensity_cost_function=pnl.Linear(slope=0.))
+    #
+    #     objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+    #     ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+    #                                            features=[A.input_state],
+    #                                            objective_mechanism=objective_mech,
+    #                                            function=pnl.GridSearch(tolerance=0.,
+    #                                                                    select_randomly_from_optimal_values=True),
+    #                                            control_signals=[control_signal])
+    #
+    #     comp.add_controller(ocm)
+    #
+    #     inputs = {A: [[[1.0]]]}
+    #
+    #     comp.run(inputs=inputs,
+    #              num_trials=20,
+    #              execution_id='outer_comp')
+    #
+    #     log_arr = A.log.nparray_dictionary()
+    #
+    #     # control signal value (mod slope) is chosen randomly from all of the control signal values
+    #     # that correspond to a net outcome of 1
+    #     assert np.allclose([[1.], [20.], [35.], [25.], [20.], [35.], [35.], [35.], [35.], [25.],
+    #                         [35.], [25.], [30.], [20.], [35.], [30.], [20.], [20.], [20.], [30.]],
+    #                        log_arr['outer_comp']['mod_slope'])
 
 class TestSampleIterator:
 
