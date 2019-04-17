@@ -3199,6 +3199,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             targets=None,
             runtime_params=None,
+            skip_initialization=False,
             bin_execute=False,
             context=None
     ):
@@ -3272,6 +3273,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        execution_context = self.parameters.context.get(execution_id)
+
         # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
         # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
         # for example:
@@ -3281,7 +3284,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
         if self.most_recent_execution_context != execution_id or self.env is None:
             # initialize from base context but don't overwrite any values already set for this execution_id
-            if not nested:
+            if (
+                not skip_initialization
+                and not nested
+                or execution_context is None
+                and execution_context.execution_phase is not ContextFlags.SIMULATION
+            ):
                 self._initialize_from_context(execution_id, base_execution_id, override=False)
 
             self._assign_context_values(execution_id, composition=self)
@@ -3742,14 +3750,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
+        execution_context = self.parameters.context.get(execution_id)
+
         # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        self._initialize_from_context(execution_id, base_execution_id, override=False)
-        self._assign_context_values(execution_id, composition=self)
+        if (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION):
+            self._initialize_from_context(execution_id, base_execution_id, override=False)
+            self._assign_context_values(execution_id, composition=self)
 
-        execution_context = self.parameters.context.get(execution_id)
         # Run mode skips mbo invocation so we can't use it if mbo is
         # present and active
         can_run = (not self.enable_controller or
@@ -3828,6 +3838,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         base_execution_id=base_execution_id,
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params,
+                                        skip_initialization=True,
                                         bin_execute=bin_execute)
 
             # ---------------------------------------------------------------------------------
@@ -3845,6 +3856,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not retain_old_simulation_data:
                     if self.controller is not None:
                         self._delete_contexts(*self.controller.parameters.simulation_ids.get(execution_id), check_simulation_storage=True)
+
+                        # if any other special parameters store simulation info that needs to be cleaned up
+                        # consider dedicating a function to it here
+                        # this will not be caught above because it resides in the base context (execution_id)
+                        if not self.parameters.simulation_results.retain_old_simulation_data:
+                            self.parameters.simulation_results.get(execution_id).clear()
+
+                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                            self.controller.parameters.simulation_ids.get(execution_id).clear()
 
             # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
@@ -4456,6 +4476,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
         return net_outcome
+
+    def _dict_summary(self):
+        scheduler_dict = {
+            'schedulers': {
+                str(ContextFlags.PROCESSING): self.scheduler_processing._dict_summary()
+            }
+        }
+
+        nodes_dict = {
+            'nodes': {n.name: n._dict_summary() for n in self.nodes}
+        }
+
+        projections_dict = {
+            'projections': {f'{p.sender.owner.name} to {p.receiver.owner.name}': p._dict_summary() for p in self.projections}
+        }
+
+        return {
+            **super()._dict_summary(),
+            **scheduler_dict,
+            **nodes_dict,
+            **projections_dict,
+        }
 
     @property
     def input_states(self):
