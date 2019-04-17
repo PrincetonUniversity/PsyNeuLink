@@ -1340,8 +1340,7 @@ class GridSearch(OptimizationFunction):
                         (value < value_optimal and self.direction is MINIMIZE):
                     value_optimal, sample_optimal = value, sample
                     optimal_value_count = 1
-
-
+                    
             if self._return_samples:
                 return_all_samples = all_samples
             if self._return_values:
