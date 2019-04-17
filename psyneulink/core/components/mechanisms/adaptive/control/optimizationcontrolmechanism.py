@@ -627,6 +627,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
 
+                comp_execution_mode
+                    see `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>`
+
+                    :default value: `PYTHON`
+                    :type: str
+
                 control_allocation_search_space
                     see `control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>`
 

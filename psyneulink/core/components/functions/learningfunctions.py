@@ -997,6 +997,12 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     :type: numpy.ndarray
                     :read only: True
 
+                learning_rate
+                    see `learning_rate <Hebbian.learning_rate>`
+
+                    :default value: 0.05
+                    :type: float
+
         """
         variable = Parameter(np.array([0, 0]), read_only=True)
         learning_rate = Parameter(0.05, modulable=True)

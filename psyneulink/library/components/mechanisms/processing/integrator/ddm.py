@@ -789,7 +789,7 @@ class DDM(ProcessingMechanism_Base):
                 function
                     see `function <DDM.function>`
 
-                    :default value: `DriftDiffusionAnalytical`(bias=0.5, drift_rate=1.0, noise=0.5, starting_point=0.0, t0=0.2, threshold=1.0)
+                    :default value: `DriftDiffusionAnalytical`
                     :type: `Function`
 
                 initializer

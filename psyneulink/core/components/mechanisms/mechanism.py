@@ -1334,12 +1334,6 @@ class Mechanism_Base(Mechanism):
                     :default value: `Linear`
                     :type: `Function`
 
-                has_initializers
-                    see `has_initializers <Mechanism_Base.has_initializers>`
-
-                    :default value: False
-                    :type: bool
-
                 previous_value
                     see `previous_value <Mechanism_Base.previous_value>`
 

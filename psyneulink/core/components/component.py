@@ -871,6 +871,12 @@ class Component(object, metaclass=ComponentsMeta):
                     :type: numpy.ndarray
                     :read only: True
 
+                has_initializers
+                    see `has_initializers <Component.has_initializers>`
+
+                    :default value: False
+                    :type: bool
+
         """
         variable = Parameter(np.array([0]), read_only=True)
         value = Parameter(np.array([0]), read_only=True)
