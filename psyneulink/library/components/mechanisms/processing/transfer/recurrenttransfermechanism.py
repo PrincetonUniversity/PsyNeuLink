@@ -834,7 +834,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 convergence_function
                     see `convergence_function <RecurrentTransferMechanism.convergence_function>`
 
-                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
+                    :default value: `Distance`(metric=max_abs_diff)
                     :type: `Function`
 
                 enable_learning

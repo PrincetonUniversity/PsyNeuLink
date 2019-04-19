@@ -39,7 +39,6 @@ All TransferFunctions have the following attributes:
 
 """
 
-import functools
 import numbers
 
 import numpy as np
@@ -156,11 +155,10 @@ class TransferFunction(Function_Base):
             arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "context":context}
-        inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
-            inner(*args)
+            self._gen_llvm_transfer(*args, **kwargs)
 
         return builder
 
@@ -1138,24 +1136,23 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
         x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
         offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        val = builder.load(ptri)
-        val = builder.fadd(val, bias)
-        val = builder.fsub(val, x_0)
-        val = builder.fmul(val, gain)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fmul(val, scale)
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
+        exp_val = builder.load(ptri)
+        exp_val = builder.fadd(exp_val, bias)
+        exp_val = builder.fsub(exp_val, x_0)
+        exp_val = builder.fmul(exp_val, gain)
+        exp_val = builder.fadd(exp_val, offset)
+        exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+        val = builder.call(exp_f, [exp_val])
+        val1 = builder.fsub(val.type(1), val)
+        val2 = builder.fadd(val.type(1), val)
+        val = builder.fdiv(val1, val2)
 
         builder.store(val, ptro)
 
@@ -1620,29 +1617,26 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
 
-        numerator = builder.load(ptri)
-        numerator = builder.fsub(bias, numerator)
-        numerator = builder.fmul(numerator, numerator)
-        numerator = builder.fneg(numerator)
+        var = builder.load(ptri)
+        exp_num = builder.fsub(var, bias)
+        exp_num = builder.fmul(exp_num, exp_num)
+        exp_num = builder.fsub(exp_num.type(0), exp_num)
 
-        denom = builder.fmul(standard_deviation, standard_deviation)
-        denom = builder.fmul(2, denom)
-        numerator = builder.fdiv(denom, numerator)
-        numerator = builder.call(exp_f, [numerator])
+        exp_denom = builder.fmul(standard_deviation, standard_deviation)
+        exp_denom = builder.fmul(exp_denom.type(2), exp_denom)
+        exp = builder.fdiv(exp_num, exp_denom)
+        numerator = builder.call(exp_f, [exp])
 
         from math import pi
-        denom = ctx.float_ty(2 * pi)
-        denom = builder.fmul(standard_deviation, denom)
-        denom = builder.sqrtpd(denom)
-        val = builder.fdiv(denom,numerator)
+        denom = builder.fmul(standard_deviation.type(2 * pi), standard_deviation)
+        denom = builder.call(sqrt_f, [denom])
+        val = builder.fdiv(numerator, denom)
 
         val = builder.fmul(scale, val)
         val = builder.fadd(offset, val)
-
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
 
         builder.store(val, ptro)
 
@@ -1828,36 +1822,35 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <GaussianDistort.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: 0.0
+                    :type: float
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
+                offset
+                    see `offset <GaussianDistort.offset>`
 
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
-                gain
-                    see `gain <SoftMax.gain>`
+                random_state
+                    see `random_state <GaussianDistort.random_state>`
+
+                    :default value: None
+                    :type:
+
+                scale
+                    see `scale <GaussianDistort.scale>`
+
+                    :default value: 0.0
+                    :type: float
+
+                variance
+                    see `variance <GaussianDistort.variance>`
 
                     :default value: 1.0
                     :type: float
-
-                output
-                    see `output <SoftMax.output>`
-
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
 
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -1897,16 +1890,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
-
-    def _get_context_struct_type(self, ctx):
-        rand = pnlvm.builtins.get_mersenne_twister_state_struct(ctx)
-        return pnlvm.ir.LiteralStructType([rand])
-
-    def _get_context_initializer(self, execution_id):
-        random_state = self.get_current_function_param('random_state', execution_id)
-        # The array offset strips away numpy's 'MT19937' string identifier
-        rand_state = random_state.get_state()[1:]
-        return pnlvm.execution._tupleize([rand_state])
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2211,9 +2194,8 @@ class SoftMax(TransferFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
-    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
+    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
@@ -2247,21 +2229,22 @@ class SoftMax(TransferFunction):
 
     def __gen_llvm_apply(self, ctx, builder, params, _, arg_in, arg_out):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(0), exp_sum_ptr)
+        builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
         max_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(float('-inf')), max_ptr)
+        builder.store(max_ptr.type.pointee('-inf'), max_ptr)
 
         max_ind_ptr = builder.alloca(ctx.int32_ty)
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
+        builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
+        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
-        inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
-
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
-            inner(*args)
+            self.__gen_llvm_exp_sum_max(*args, ctx=ctx, vi=arg_in,
+                                        max_ptr=max_ptr, gain=gain,
+                                        max_ind_ptr=max_ind_ptr,
+                                        exp_sum_ptr=exp_sum_ptr)
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         exp_sum = builder.load(exp_sum_ptr)
@@ -2270,10 +2253,12 @@ class SoftMax(TransferFunction):
 
         if output_type == ALL:
             kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
-            inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
-                inner(*args)
+                self.__gen_llvm_exp_div(*args, **kwargs)
         elif output_type == MAX_VAL:
+            # zero out the output array
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
+                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.get_builtin("exp", [ctx.float_ty])
             orig_val = builder.load(ptri)
@@ -2282,6 +2267,9 @@ class SoftMax(TransferFunction):
             val = builder.fdiv(val, exp_sum)
             builder.store(val, ptro)
         elif output_type == MAX_INDICATOR:
+            # zero out the output array
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
+                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             builder.store(ctx.float_ty(1), ptro)
 
         return builder
@@ -2858,6 +2846,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 return matrix
         else:
             return np.array(specification)
+
+    def _get_output_struct_type(self, ctx):
+        # FIXME: self.defaults.value reports incorrect shape (scalar)
+        default_val = np.atleast_1d(self.defaults.value)
+        return ctx.convert_python_struct_to_llvm_ir(default_val)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays

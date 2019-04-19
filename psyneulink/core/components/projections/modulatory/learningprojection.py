@@ -432,7 +432,7 @@ class LearningProjection(ModulatoryProjection_Base):
                 error_function
                     see `error_function <LearningProjection.error_function>`
 
-                    :default value: `LinearCombination`(offset=0.0, operation=sum, scale=1.0, weights=numpy.array([[-1], [ 1]]))
+                    :default value: `LinearCombination`(weights=numpy.array([[-1], [ 1]]))
                     :type: `Function`
 
                 function
@@ -602,8 +602,8 @@ class LearningProjection(ModulatoryProjection_Base):
         #    the LearningSignal's value
         super()._instantiate_sender(self.sender, context=context)
 
-        if self.sender.learning_rate is not None:
-            self.learning_rate = self.sender.learning_rate
+        if self.sender.owner.learning_rate is not None:
+            self.learning_rate = self.sender.owner.learning_rate
 
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatible with the output of function
@@ -668,7 +668,6 @@ class LearningProjection(ModulatoryProjection_Base):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
-
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized

@@ -1334,12 +1334,6 @@ class Mechanism_Base(Mechanism):
                     :default value: `Linear`
                     :type: `Function`
 
-                has_initializers
-                    see `has_initializers <Mechanism_Base.has_initializers>`
-
-                    :default value: False
-                    :type: bool
-
                 previous_value
                     see `previous_value <Mechanism_Base.previous_value>`
 
@@ -2379,9 +2373,11 @@ class Mechanism_Base(Mechanism):
         if self.prefs.reportOutputPref and (self.parameters.context.get(execution_id).execution_phase &
                                             ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value.get(execution_id))
+
         if "Objective" in self.name:
             print(self.name, "Value = ", round(value[0][0], 10))
             print()
+
         return value
 
     def run(
@@ -3028,7 +3024,8 @@ class Mechanism_Base(Mechanism):
                 else:
                     from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
                     if self is composition.controller:
-                        mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+                        # mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+                        mech_roles = f'<br/><i>CONTROLLER</i>'
                     elif not isinstance(self, CompositionInterfaceMechanism):
                         roles = [role.name for role in list(composition.nodes_to_roles[self])]
                         # MODIFIED 3/19/18 NEW [JDC]:

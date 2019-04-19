@@ -659,7 +659,7 @@ class ControlSignal(ModulatorySignal):
                 combine_costs_function
                     see `combine_costs_function <ControlSignal.combine_costs_function>`
 
-                    :default value: `Reduce`(offset=0.0, operation=sum, scale=1.0)
+                    :default value: `Reduce`
                     :type: `Function`
 
                 cost

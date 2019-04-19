@@ -627,6 +627,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
 
+                comp_execution_mode
+                    see `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>`
+
+                    :default value: `PYTHON`
+                    :type: str
+
                 control_allocation_search_space
                     see `control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>`
 
@@ -694,7 +700,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  agent_rep=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
-                 num_estimates: int = 1,
+                 num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
                  params=None,
@@ -850,10 +856,6 @@ class OptimizationControlMechanism(ControlMechanism):
             return defaultControlAllocation
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
-        # # FIX: SHOULD get_feature_values BE A METHOD OF THE agent_rep OR THE OCM?
-        # # Get feature_values based on agent_rep
-        # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
-
         self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
@@ -862,36 +864,16 @@ class OptimizationControlMechanism(ControlMechanism):
             control_allocation = [c.defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
-        # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
-
-        # Assign default net_outcome if it is not yet specified (presumably first trial)
-        # # MODIFIED 1/23/19 OLD:
-        # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-        #          self.control_signals]
-        # try:
-        #     net_outcome = variable[0] - self.combine_costs(costs)
-        # except AttributeError:
-        #     net_outcome = [0]
-        # # FIX: END
-        # MODIFIED 1/23/19 NEW: [JDC]
-        net_outcome = self.parameters.net_outcome.get(execution_id)
-        # MODIFIED 1/23/19 END
-        #
-        # freeze the values of current execution_id, because they can be changed in between simulations,
-        # and the simulations must start from the exact spot
-        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id)
-
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
-        try:
+        if hasattr(self.agent_rep, "adapt"):
+            # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
+            # have an adapt method, we also don't need to call the net_outcome getter
+            net_outcome = self.parameters.net_outcome.get(execution_id)
+ 
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
                                  control_allocation,
                                  net_outcome,
                                  execution_id=execution_id)
-        except AttributeError as e:
-            # If error is due to absence of adapt method, OK; otherwise, raise exception
-            if not 'has no attribute \'adapt\'' in e.args[0]:
-                raise AttributeError(e.args[0])
 
         # freeze the values of current execution_id, because they can be changed in between simulations,
         # and the simulations must start from the exact spot
@@ -914,13 +896,6 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.function.save_values:
             self.saved_values = saved_values
 
-        # Give agent_rep a chance to clean up
-        try:
-            self.agent_rep._after_agent_rep_execution(context=context)
-        except AttributeError as e:
-            # If error is due to absence of adapt method, OK; otherwise, raise exception
-            if not 'has no attribute \'_after_agent_rep_execution\'' in e.args[0]:
-                raise AttributeError(e.args[0])
         # Return optimal control_allocation
         return optimal_control_allocation
 

@@ -739,8 +739,9 @@ class Projection_Base(Projection):
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.input_state
 
-        if self not in self.receiver.afferents_info:
-            self.receiver.afferents_info[self] = ConnectionInfo()
+        if hasattr(self.receiver, "afferents_info"):
+            if self not in self.receiver.afferents_info:
+                self.receiver.afferents_info[self] = ConnectionInfo()
 
        # Validate variable, function and params, and assign params to paramInstanceDefaults
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
@@ -930,7 +931,6 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-
         if variable is None:
             variable = self.sender.parameters.value.get(execution_id)
 

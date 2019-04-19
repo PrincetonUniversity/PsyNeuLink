@@ -7,12 +7,17 @@ from double_dqn import DoubleDQNAgent
 # *********************************************** CONSTANTS ***********************************************************
 # *********************************************************************************************************************
 
+#region
 # Runtime switches:
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = None
+# SHOW_GRAPH = 'SIMPLE'
+# SHOW_GRAPH = 'CONTROL'
+# SHOW_GRAPH = 'NODE STRUCTURE'
+# SHOW_GRAPH = 'FULL'
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -30,8 +35,9 @@ VERBOSE = STANDARD_REPORTING
 COST_RATE = -.05
 COST_BIAS = -3
 ALLOCATION_SAMPLES = [0, 500]
+#endregion
 
-
+#region
 # Environment coordinates
 # (these should probably be replaced by reference to ForagerEnv constants)
 obs_len = 2
@@ -54,7 +60,7 @@ prey_value_idx = prey_idx * obs_len + obs_coords
 prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
-
+#endregion
 
 # **********************************************************************************************************************
 # **************************************  CREATE COMPOSITION ***********************************************************
@@ -62,7 +68,7 @@ player_len = prey_len = predator_len = obs_coords
 
 # ************************************** DOUBLE_DQN AGENT **************************************************************
 
-# ddqn_agent = DoubleDQNAgent(env=env, model_load_path='', eval_mode=True)
+#region
 ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
                             eval_mode=True,
                             # render=False
@@ -85,6 +91,7 @@ def get_optimal_action(observation):
               f'\nVERIDICAL STATE: {veridical_state.reshape(12,)}'
               f'\nOPTIMAL ACTION: {optimal_action}')
     return optimal_action
+#endregion
 
 # **************************************  PROCESSING MECHANISMS ********************************************************
 
@@ -98,6 +105,7 @@ optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION"
 
 actual_agent_frame_buffer = None
 
+# User Defined Function assigned to action_mech
 def get_action(variable=[[0,0],[0,0],[0,0]]):
     global actual_agent_frame_buffer
     # Convert variable to observation:
@@ -140,7 +148,6 @@ c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
 agent_comp.add_projections([a,b,c])
 
 
-
 # **************************************  CONOTROL APPRATUS ************************************************************
 
 difference = Distance(metric=DIFFERENCE)
@@ -179,15 +186,18 @@ agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
 
-if SHOW_GRAPH:
-    # agent_comp.show_graph()
+if SHOW_GRAPH is 'SIMPLE':
+    agent_comp.show_graph(show_cim=True)
+if SHOW_GRAPH is 'CONTROL':
     agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True,
-    #                       show_cim=True,
-    #                       show_node_structure=ALL,
-    #                       show_headers=True,
-    #                       )
+if SHOW_GRAPH is 'NODE STRUCTURE':
+    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+if SHOW_GRAPH is 'FULL':
+    agent_comp.show_graph(show_model_based_optimizer=True,
+                          show_cim=True,
+                          show_node_structure=ALL,
+                          show_headers=True,
+                          )
 
 
 # *********************************************************************************************************************
