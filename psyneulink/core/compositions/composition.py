@@ -4229,9 +4229,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Build input dictionary for simulationn
         inputs = self._build_predicted_inputs_dict(predicted_input)
+        # print(inputs)
+
+        print("\nNew Simulation: ", control_allocation, " ------------------------------------------------------- ")
+        for key in inputs:
+            print(key.name, " inputs = ", inputs[key])
+            length = len(inputs[key])
+
+        print()
 
         # Run Composition in "SIMULATION" context
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
+        num_simulation_trials = length
+
         self.run(inputs=inputs,
                  execution_id=execution_id,
                  runtime_params=runtime_params,
