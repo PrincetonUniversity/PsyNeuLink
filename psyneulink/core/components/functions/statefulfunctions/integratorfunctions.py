@@ -1087,7 +1087,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
         # Get the only context member -- previous value
-        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
@@ -4069,17 +4069,17 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         return previous_v, previous_w, previous_time
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         zero_i32 = ctx.int32_ty(0)
 
         # Get rid of 2d array. When part of a Mechanism the input,
-        # (and output, and context) are 2d arrays.
+        # (and output, and state) are 2d arrays.
         arg_in = ctx.unwrap_2d_array(builder, arg_in)
-        # Load context values
+        # Load state values
         prev = {}
-        for idx, ctx_el in enumerate(self.stateful_attributes):
-            val = builder.gep(context, [zero_i32, ctx.int32_ty(idx)])
-            prev[ctx_el] = ctx.unwrap_2d_array(builder, val)
+        for state_el in self.stateful_attributes:
+            ptr = ctx.get_state_ptr(self, builder, state, state_el)
+            prev[state_el] = ctx.unwrap_2d_array(builder, ptr)
 
         # Output locations
         out = {}
@@ -4115,9 +4115,9 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                 raise FunctionError("Invalid integration method ({}) selected for {}".
                                     format(method, self.name))
 
-        # Save context
+        # Save state
         result = builder.load(arg_out)
-        builder.store(result, context)
+        builder.store(result, state)
         return builder
 
     def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
