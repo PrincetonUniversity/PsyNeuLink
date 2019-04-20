@@ -1112,16 +1112,14 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Get rid of 2d array.
-        # When part of a Mechanism the input, and output are 2d arrays.
+        # When part of a Mechanism, the input and output are 2d arrays.
         arg_in = ctx.unwrap_2d_array(builder, arg_in)
         arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
-        inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
-            inner(*args)
+            self.__gen_llvm_integrate(*args, ctx, arg_in, arg_out, params, state)
 
         return builder
 
