@@ -1073,9 +1073,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             raise FunctionError(rate_value_msg.format(rate, self.name))
 
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-        rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
-        offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
+        rate_p = ctx.get_param_ptr(self, builder, params, RATE)
+        offset_p = ctx.get_param_ptr(self, builder, params, OFFSET)
+        noise_p = ctx.get_param_ptr(self, builder, params, NOISE)
 
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
 
@@ -4093,7 +4093,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # Load parameters
         param_vals = {}
         for p in self._get_param_ids():
-            param_ptr, builder = ctx.get_param_ptr(self, builder, params, p)
+            param_ptr = ctx.get_param_ptr(self, builder, params, p)
             param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
                                             builder, param_ptr)
 

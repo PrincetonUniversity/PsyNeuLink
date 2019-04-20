@@ -305,8 +305,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr, builder = ctx.get_param_ptr(self, builder, params, SLOPE)
-        intercept_ptr, builder = ctx.get_param_ptr(self, builder, params, INTERCEPT)
+        slope_ptr = ctx.get_param_ptr(self, builder, params, SLOPE)
+        intercept_ptr = ctx.get_param_ptr(self, builder, params, INTERCEPT)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
@@ -559,10 +559,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr, builder = ctx.get_param_ptr(self, builder, params, RATE)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        rate_ptr = ctx.get_param_ptr(self, builder, params, RATE)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -831,11 +831,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1132,10 +1132,10 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1395,9 +1395,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        leak_ptr, builder = ctx.get_param_ptr(self, builder, params, LEAK)
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        leak_ptr = ctx.get_param_ptr(self, builder, params, LEAK)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1607,10 +1607,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        standard_deviation_ptr, builder = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        standard_deviation_ptr = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1896,10 +1896,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        variance_ptr, builder = ctx.get_param_ptr(self, builder, params, VARIANCE)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        variance_ptr = ctx.get_param_ptr(self, builder, params, VARIANCE)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -2238,7 +2238,7 @@ class SoftMax(TransferFunction):
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
@@ -2857,7 +2857,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Restrict to 1d arrays
         assert self.defaults.variable.ndim == 1
 
-        matrix, builder = ctx.get_param_ptr(self, builder, params, MATRIX)
+        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])

@@ -635,8 +635,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
-        # Prob can be [x] if we are aprt of mechanism
+        retr_prob_ptr = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
+
+        # Prob can be [x] if we are part of a mechanism
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
         retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
 
@@ -699,9 +700,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
+        store_prob_ptr = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
 
-        # Prob can be [x] if we are aprt of mechanism
+        # Prob can be [x] if we are part of a mechanism
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
         store_rand = builder.fcmp_ordered('<', store_prob, store_prob.type(1.0))
 
