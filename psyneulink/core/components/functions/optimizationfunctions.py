@@ -1111,6 +1111,8 @@ class GridSearch(OptimizationFunction):
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
                  save_values:tc.optional(bool)=False,
+                 # tolerance=0.,
+                 select_randomly_from_optimal_values=False,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -1122,6 +1124,8 @@ class GridSearch(OptimizationFunction):
         self._return_samples = save_values
         self.num_iterations = 1
         self.direction = direction
+        # self.tolerance = tolerance
+        self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
@@ -1304,26 +1308,39 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
+            if self.direction != MAXIMIZE and self.direction != MINIMIZE:
+                assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}". \
+                    format(repr(DIRECTION), self.name, self.direction)
+
             last_sample, last_value, all_samples, all_values = super().function(
                 variable=variable,
                 execution_id=execution_id,
                 params=params,
                 context=context
             )
-            # return_optimal_value = max(all_values)
-            # return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
 
-            # Evaluate objective_function for current sample
+            value_sample_pairs = list(zip(all_values, all_samples))
+            optimal_value_count = 1
+            value_optimal, sample_optimal = value_sample_pairs[0]
 
-            # Evaluate for optimal value
-            if self.direction is MAXIMIZE:
-                value_optimal = max(all_values)
-            elif self.direction is MINIMIZE:
-                value_optimal = min(all_values)
-            else:
-                assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
-                    format(repr(DIRECTION),self.name,self.direction)
-            sample_optimal = all_samples[all_values.index(value_optimal)]
+            for i in range(1, len(value_sample_pairs)):
+                value, sample = value_sample_pairs[i]
+                if self.select_randomly_from_optimal_values and np.allclose(value, value_optimal):
+                    optimal_value_count += 1
+
+                    # swap with probability = 1/optimal_value_count in order to achieve
+                    # uniformly random selection from identical outcomes
+                    probability = 1/optimal_value_count
+                    random_value = np.random.random()
+
+                    if random_value < probability:
+                        value_optimal, sample_optimal = value, sample
+
+                elif (value > value_optimal and self.direction is MAXIMIZE) or \
+                        (value < value_optimal and self.direction is MINIMIZE):
+                    value_optimal, sample_optimal = value, sample
+                    optimal_value_count = 1
+                    
             if self._return_samples:
                 return_all_samples = all_samples
             if self._return_values:

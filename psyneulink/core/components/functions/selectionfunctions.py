@@ -224,6 +224,12 @@ class OneHot(SelectionFunction):
                     :default value: `MAX_VAL`
                     :type: str
 
+                random_state
+                    see `random_state <OneHot.random_state>`
+
+                    :default value: None
+                    :type:
+
         """
         mode = Parameter(MAX_VAL, stateful=False)
         random_state = Parameter(None, stateful=True)

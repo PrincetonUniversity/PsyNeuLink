@@ -184,6 +184,17 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
 
     class Parameters(ProcessingMechanism_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <EpisodicMemoryMechanism.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+
+        """
         variable = Parameter([[0],[0]])
 
     def __init__(self,

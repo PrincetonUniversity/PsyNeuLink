@@ -396,6 +396,13 @@ class Condition(object):
 
         self._owner = None
 
+    def __str__(self):
+        return '{0}({1}{2})'.format(
+            self.__class__.__name__,
+            ', '.join([str(arg) for arg in self.args]) if len(self.args) > 0 else '',
+            ', {0}'.format(self.kwargs) if len(self.kwargs) > 0 else ''
+        )
+
     @property
     def owner(self):
         return self._owner

@@ -377,6 +377,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
                     :default value: numpy.array([0.5])
                     :type: numpy.ndarray
 
+                value
+                    see `value <GatingMechanism.value>`
+
+                    :default value: numpy.array([[0]])
+                    :type: numpy.ndarray
+
         """
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = np.array(defaultGatingPolicy)

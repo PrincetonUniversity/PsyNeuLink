@@ -957,6 +957,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     :default value: True
                     :type: bool
 
+                learning_rate
+                    see `learning_rate <LearningMechanism.learning_rate>`
+
+                    :default value: None
+                    :type:
+
                 learning_signal
                     see `learning_signal <LearningMechanism.learning_signal>`
 

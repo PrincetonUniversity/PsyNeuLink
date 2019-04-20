@@ -1822,36 +1822,35 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <GaussianDistort.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: 0.0
+                    :type: float
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
+                offset
+                    see `offset <GaussianDistort.offset>`
 
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
-                gain
-                    see `gain <SoftMax.gain>`
+                random_state
+                    see `random_state <GaussianDistort.random_state>`
+
+                    :default value: None
+                    :type:
+
+                scale
+                    see `scale <GaussianDistort.scale>`
+
+                    :default value: 0.0
+                    :type: float
+
+                variance
+                    see `variance <GaussianDistort.variance>`
 
                     :default value: 1.0
                     :type: float
-
-                output
-                    see `output <SoftMax.output>`
-
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
 
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])

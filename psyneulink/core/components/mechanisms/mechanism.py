@@ -1334,12 +1334,6 @@ class Mechanism_Base(Mechanism):
                     :default value: `Linear`
                     :type: `Function`
 
-                has_initializers
-                    see `has_initializers <Mechanism_Base.has_initializers>`
-
-                    :default value: False
-                    :type: bool
-
                 previous_value
                     see `previous_value <Mechanism_Base.previous_value>`
 
@@ -3025,7 +3019,8 @@ class Mechanism_Base(Mechanism):
                 else:
                     from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
                     if self is composition.controller:
-                        mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+                        # mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+                        mech_roles = f'<br/><i>CONTROLLER</i>'
                     elif not isinstance(self, CompositionInterfaceMechanism):
                         roles = [role.name for role in list(composition.nodes_to_roles[self])]
                         # MODIFIED 3/19/18 NEW [JDC]:

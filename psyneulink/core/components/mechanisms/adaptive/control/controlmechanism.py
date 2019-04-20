@@ -392,28 +392,13 @@ class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-
-# def _reconfiguration_cost_getter(owning_component=None, execution_id=None):
-#     try:
-#         c = owning_component
-#         if c.compute_reconfiguration_cost:
-#             allocation = c.parameters.value.get(execution_id)
-#             # prev_allocation = c.parameters.value.get_previous(execution_id)
-#             prev_allocation = c.parameters.value.history[execution_id][-2]
-#             return c.compute_reconfiguration_cost([allocation, prev_allocation])
-#         else:
-#             return 0
-#     except:
-#         return 0
-
-
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
+    # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
         costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
                  for c in owning_component.control_signals]
-        # if owning_component.compute_reconfiguration_cost:
-        #     costs.append(owning_component.parameters.reconfiguration_cost.get(execution_id))
         return costs
+
     except TypeError:
         return None
 
@@ -426,6 +411,9 @@ def _outcome_getter(owning_component=None, execution_id=None):
 
 
 def _net_outcome_getter(owning_component=None, execution_id=None):
+    # NOTE: In cases where there is a reconfiguration_cost,
+    # that cost is not included in the net_outcome
+    
     try:
         c = owning_component
         return c.compute_net_outcome(c.parameters.outcome.get(execution_id),
@@ -682,28 +670,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
-                outcome
-                    see `outcome <ControlMechanism.outcome>
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                compute_reconfiguration_cost
-                     see 'compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
-
                 combine_costs
                     see `combine_costs <ControlMechanism.combine_costs>`
 
                     :default value: numpy.core.fromnumeric.sum
                     :type: <class 'function'>
-
-                costs
-                    see `costs <ControlMechanism.costs>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
 
                 compute_net_outcome
                     see `compute_net_outcome <ControlMechanism.compute_net_outcome>`
@@ -711,8 +682,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: lambda outcome, cost: outcome - cost
                     :type: <class 'function'>
 
-                net_outcome
-                    see `net_outcome <ControlMechanism.net_outcome>
+                compute_reconfiguration_cost
+                    see `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
+
+                    :default value: None
+                    :type:
+
+                control_signal_costs
+                    see `control_signal_costs <ControlMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                costs
+                    see `costs <ControlMechanism.costs>`
 
                     :default value: None
                     :type:
@@ -723,6 +707,20 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
                     :default value: ModulationParam.MULTIPLICATIVE
                     :type: `ModulationParam`
+
+                net_outcome
+                    see `net_outcome <ControlMechanism.net_outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                outcome
+                    see `outcome <ControlMechanism.outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
@@ -740,8 +738,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
         net_outcome = Parameter(None, read_only=True,
-                                # getter=_net_outcome_getter
-                                )
+                                getter=_net_outcome_getter)
 
         simulation_ids = Parameter([], user=False)
 
