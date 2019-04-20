@@ -3439,12 +3439,6 @@ class Component(object, metaclass=ComponentsMeta):
         """
         return self.__class__.defaults
 
-    # left in for compatibility with llvm, see note in builder_context.py (search for <_instance_defaults_note>)
-    # DEPRECATED
-    @property
-    def _instance_defaults(self):
-        return self.defaults
-
     @property
     def is_pnl_inherent(self):
         try:

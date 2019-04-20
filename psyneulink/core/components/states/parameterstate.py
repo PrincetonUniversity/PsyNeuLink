@@ -895,7 +895,7 @@ class ParameterState(State_Base):
                 assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
 
             if name is not None:
-                f_mod_param_ptr, builder = ctx.get_param_ptr(self.function, builder, f_params, name)
+                f_mod_param_ptr = ctx.get_param_ptr(self.function, builder, f_params, name)
                 builder.store(f_mod, f_mod_param_ptr)
 
 

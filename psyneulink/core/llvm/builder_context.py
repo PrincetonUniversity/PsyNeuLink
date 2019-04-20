@@ -135,19 +135,14 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_input_struct_type'):
             return component._get_input_struct_type(self)
 
-        # KDM 12/28/18: <_instance_defaults_note> left _instance_defaults in place so that this code could use it.
-        # Ideally this would be simply .defaults. After going through the special handler above, component becomes a
-        # super() object, which seems to return the .defaults attr of the class associated with the super() object,
-        # whereas _instance_defaults retuns the .defaults attr of the instance associated. I don't know whether
-        # is a design or a convenience measure for workarounds, so I left this in place.
-        default_var = component._instance_defaults.variable
+        default_var = component.defaults.variable
         return self.convert_python_struct_to_llvm_ir(default_var)
 
     def get_output_struct_type(self, component):
         if hasattr(component, '_get_output_struct_type'):
             return component._get_output_struct_type(self)
 
-        default_val = component._instance_defaults.value
+        default_val = component.defaults.value
         return self.convert_python_struct_to_llvm_ir(default_val)
 
     def get_param_struct_type(self, component):
@@ -175,8 +170,11 @@ class LLVMBuilderContext:
 
     def get_param_ptr(self, component, builder, params_ptr, param_name):
         idx = self.int32_ty(component._get_param_ids().index(param_name))
-        ptr = builder.gep(params_ptr, [self.int32_ty(0), idx])
-        return ptr, builder
+        return builder.gep(params_ptr, [self.int32_ty(0), idx])
+
+    def get_state_ptr(self, component, builder, state_ptr, state_name):
+        idx = self.int32_ty(component.stateful_attributes.index(state_name))
+        return builder.gep(state_ptr, [self.int32_ty(0), idx])
 
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
