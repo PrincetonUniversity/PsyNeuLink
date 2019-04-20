@@ -172,6 +172,10 @@ class LLVMBuilderContext:
         idx = self.int32_ty(component._get_param_ids().index(param_name))
         return builder.gep(params_ptr, [self.int32_ty(0), idx])
 
+    def get_state_ptr(self, component, builder, state_ptr, state_name):
+        idx = self.int32_ty(component.stateful_attributes.index(state_name))
+        return builder.gep(state_ptr, [self.int32_ty(0), idx])
+
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
             assert element.type.pointee.count == 1
