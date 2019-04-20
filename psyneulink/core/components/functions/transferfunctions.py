@@ -143,7 +143,7 @@ class TransferFunction(Function_Base):
     def additive(self, val):
         setattr(self, self.additive_param, val)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -154,7 +154,7 @@ class TransferFunction(Function_Base):
             arg_in = builder.bitcast(arg_in, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
             arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "context":context}
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state":state}
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
@@ -302,7 +302,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = ctx.get_param_ptr(self, builder, params, SLOPE)
@@ -555,7 +555,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -827,7 +827,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1128,7 +1128,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1391,7 +1391,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         return self.convert_output_type(result)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1603,7 +1603,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1892,7 +1892,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1907,9 +1907,9 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        rand_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
         normal_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_normal")
-        builder.call(normal_f, [rand_state, rvalp])
+        builder.call(normal_f, [rand_state_ptr, rvalp])
 
         rval = builder.load(rvalp)
         rval = builder.fmul(rval, variance)
