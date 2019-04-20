@@ -25,7 +25,6 @@ Functions that integrate current value of input with previous value.
 
 '''
 
-import functools
 import itertools
 import numbers
 import warnings
@@ -4106,16 +4105,15 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # stateless and considered an inherent feature of the function. Changing parameter
         # to stateful=False accordingly. If it should be stateful, need to pass an execution_id here
         method = self.get_current_function_param("integration_method")
-        if method == "RK4":
-            func = functools.partial(self.__gen_llvm_rk4_body, **inner_args)
-        elif method == "EULER":
-            func = functools.partial(self.__gen_llvm_euler_body, **inner_args)
-        else:
-            raise FunctionError("Invalid integration method ({}) selected for {}".
-                                format(method, self.name))
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
-            func(*args)
+            if method == "RK4":
+                self.__gen_llvm_rk4_body(*args, **inner_args)
+            elif method == "EULER":
+                self.__gen_llvm_euler_body(*args, **inner_args)
+            else:
+                raise FunctionError("Invalid integration method ({}) selected for {}".
+                                    format(method, self.name))
 
         # Save context
         result = builder.load(arg_out)
