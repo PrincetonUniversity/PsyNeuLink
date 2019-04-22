@@ -2666,7 +2666,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #   variable (sender): width/cols/outer index
                         #   kwReceiver param: height/rows/inner index
 
-                        weight_matrix = np.matrix(param_value)
+                        weight_matrix = np.atleast_2d(param_value)
                         if 'U' in repr(weight_matrix.dtype):
                             raise FunctionError("Non-numeric entry in MATRIX "
                                                 "specification ({}) for the {} "
@@ -2727,7 +2727,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                     elif isinstance(param_value, str):
                         try:
-                            param_value = np.matrix(param_value)
+                            param_value = np.atleast_2d(param_value)
                         except (ValueError, TypeError) as error_msg:
                             raise FunctionError("Error in string specification ({}) of the matrix "
                                                 "for the {} function of {}: {})".
