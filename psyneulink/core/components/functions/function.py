@@ -457,7 +457,7 @@ class Function_Base(Function):
                     :read only: True
 
         """
-        variable = Parameter(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True)
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
@@ -962,7 +962,7 @@ class EVCAuxiliaryFunction(Function_Base):
                     :read only: True
 
         """
-        variable = None
+        variable = Parameter(None, pnl_internal=True)
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',

@@ -217,7 +217,7 @@ class OneHot(SelectionFunction):
 
         """
         mode = Parameter(MAX_VAL, stateful=False)
-        random_state = Parameter(None, stateful=True)
+        random_state = Parameter(None, stateful=True, pnl_internal=True)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,

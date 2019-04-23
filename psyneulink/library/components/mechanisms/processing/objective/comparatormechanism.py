@@ -343,7 +343,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         """
         # By default, ComparatorMechanism compares two 1D np.array input_states
-        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True)
         function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
         sample = None
         target = None

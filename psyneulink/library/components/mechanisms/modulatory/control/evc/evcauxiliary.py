@@ -92,7 +92,7 @@ class EVCAuxiliaryFunction(Function_Base):
                     :type: int
 
         """
-        variable = Parameter(None, read_only=True)
+        variable = Parameter(None, read_only=True, pnl_internal=True)
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'ValueFunctionCustomClassPreferences',

@@ -186,7 +186,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :type: list
 
         """
-        variable = Parameter([[0]])
+        variable = Parameter([[0]], pnl_internal=True)
 
     def __init__(self,
                  content_size:int=1,

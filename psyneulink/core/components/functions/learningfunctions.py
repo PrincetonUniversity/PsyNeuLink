@@ -134,7 +134,7 @@ class LearningFunction(Function_Base):
                     :type: float
 
         """
-        variable = Parameter(np.array([0, 0, 0]), read_only=True)
+        variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True)
         learning_rate = Parameter(0.05, modulable=True)
 
     def _validate_learning_rate(self, learning_rate, type=None):
@@ -405,8 +405,8 @@ class BayesGLM(LearningFunction):
                     :type: int
 
         """
-        variable = Parameter([np.array([0, 0, 0]), np.array([0])], read_only=True)
-        value = Parameter(np.array([0]), read_only=True, aliases=['sample_weights'])
+        variable = Parameter([np.array([0, 0, 0]), np.array([0])], read_only=True, pnl_internal=True)
+        value = Parameter(np.array([0]), read_only=True, aliases=['sample_weights'], pnl_internal=True)
 
         Lambda_0 = 0
         Lambda_prior = 0
@@ -732,7 +732,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                     :type: str
 
         """
-        variable = Parameter([[0, 0], [0, 0], np.array([[0, 0], [0, 0]])], read_only=True)
+        variable = Parameter([[0, 0], [0, 0], np.array([[0, 0], [0, 0]])], read_only=True, pnl_internal=True)
         distance_function = Parameter(GAUSSIAN, stateful=False)
 
         def _validate_distance_function(self, distance_function):
@@ -1012,7 +1012,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     :type: float
 
         """
-        variable = Parameter(np.array([0, 0]), read_only=True)
+        variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True)
         learning_rate = Parameter(0.05, modulable=True)
     default_learning_rate = 0.05
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -1244,7 +1244,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                     :read only: True
 
         """
-        variable = Parameter(np.array([0, 0]), read_only=True)
+        variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True)
 
     default_learning_rate = 0.05
 
@@ -1532,7 +1532,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                     :read only: True
 
         """
-        variable = Parameter(np.array([[0], [0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True)
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
@@ -1874,7 +1874,7 @@ class BackPropagation(LearningFunction):
                     :type: float
 
         """
-        variable = Parameter(np.array([[0], [0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True)
         learning_rate = Parameter(1.0, modulable=True)
 
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)

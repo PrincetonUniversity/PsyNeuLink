@@ -2007,7 +2007,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(0.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-        random_state = Parameter(None, modulable=False)
+        random_state = Parameter(None, modulable=False, pnl_internal=True)
 
     @tc.typecheck
     def __init__(self,
@@ -2287,11 +2287,11 @@ class SoftMax(TransferFunction):
                     :type: bool
 
         """
-        variable = Parameter(np.array(0.0), read_only=True)
+        variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True)
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
-        per_item = True
+        per_item = Parameter(True, pnl_internal=True)
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}

@@ -775,7 +775,7 @@ class Distance(ObjectiveFunction):
                     :type: str
 
         """
-        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True)
         metric = Parameter(DIFFERENCE, stateful=False)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()

@@ -870,7 +870,7 @@ class System(System_Base):
                     :type:
 
         """
-        variable = None
+        variable = Parameter(None, pnl_internal=True)
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -5021,8 +5021,8 @@ class SystemInputState(OutputState):
 
         """
         # just grabs input from the process
-        variable = Parameter(np.array([0]), read_only=True)
-        value = Parameter(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True)
+        value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
 
     def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway

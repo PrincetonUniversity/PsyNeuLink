@@ -374,7 +374,7 @@ class LearningSignal(ModulatorySignal):
                     :type:
 
         """
-        value = Parameter(np.array([0]), read_only=True, aliases=['learning_signal'])
+        value = Parameter(np.array([0]), read_only=True, aliases=['learning_signal'], pnl_internal=True)
         learning_rate = None
 
     @tc.typecheck

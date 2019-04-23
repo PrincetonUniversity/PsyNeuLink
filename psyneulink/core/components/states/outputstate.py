@@ -977,7 +977,7 @@ class OutputState(State_Base):
                     :read only: True
 
         """
-        variable = Parameter(np.array([0]), read_only=True, getter=_output_state_variable_getter)
+        variable = Parameter(np.array([0]), read_only=True, getter=_output_state_variable_getter, pnl_internal=True)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,

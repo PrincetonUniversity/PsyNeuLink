@@ -208,8 +208,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         """
         rate = Parameter(1.0, modulable=True, function_arg=True)
         noise = Parameter(0.0, modulable=True, function_arg=True)
-        previous_value = np.array([0])
-        initializer = np.array([0])
+        previous_value = Parameter(np.array([0]), pnl_internal=True)
+        initializer = Parameter(np.array([0]), pnl_internal=True)
 
     paramClassDefaults = StatefulFunction.paramClassDefaults.copy()
 
@@ -1543,8 +1543,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_rate = Parameter(0.1, modulable=True, function_arg=True)
         operation = PRODUCT
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
-        previous_short_term_avg = None
-        previous_long_term_avg = None
+        previous_short_term_avg = Parameter(None, pnl_internal=True)
+        previous_long_term_avg = Parameter(None, pnl_internal=True)
         short_term_logistic = None
         long_term_logistic = None
 
@@ -2405,7 +2405,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         starting_point = 0.0
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = None
+        previous_time = Parameter(None, pnl_internal=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -2753,7 +2753,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
-        previous_time = 0.0
+        previous_time = Parameter(0.0, pnl_internal=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -3640,7 +3640,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        variable = Parameter(np.array([1.0]), read_only=True)
+        variable = Parameter(np.array([1.0]), read_only=True, pnl_internal=True)
         time_step_size = Parameter(0.05, modulable=True)
         a_v = Parameter(1.0 / 3, modulable=True)
         b_v = Parameter(0.0, modulable=True)
@@ -3663,9 +3663,9 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         initial_w = np.array([1.0])
         initial_v = np.array([1.0])
         t_0 = 0.0
-        previous_w = np.array([1.0])
-        previous_v = np.array([1.0])
-        previous_time = 0.0
+        previous_w = Parameter(np.array([1.0]), pnl_internal=True)
+        previous_v = Parameter(np.array([1.0]), pnl_internal=True)
+        previous_time = Parameter(0.0, pnl_internal=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

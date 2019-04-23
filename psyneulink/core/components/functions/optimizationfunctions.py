@@ -319,21 +319,21 @@ class OptimizationFunction(Function_Base):
                     :type: <class 'function'>
 
         """
-        variable = Parameter(np.array([0, 0, 0]), read_only=True)
+        variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True)
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
 
-        save_samples = False
-        save_values = False
+        save_samples = Parameter(False, pnl_internal=True)
+        save_values = Parameter(False, pnl_internal=True)
 
         # these are created as parameter states, but should they be?
         max_iterations = Parameter(None, modulable=True)
 
-        saved_samples = Parameter([], read_only=True)
-        saved_values = Parameter([], read_only=True)
+        saved_samples = Parameter([], read_only=True, pnl_internal=True)
+        saved_values = Parameter([], read_only=True, pnl_internal=True)
 
     @tc.typecheck
     def __init__(self,
@@ -830,11 +830,11 @@ class GradientOptimization(OptimizationFunction):
                     :type: float
 
         """
-        variable = Parameter([[0], [0]], read_only=True)
+        variable = Parameter([[0], [0]], read_only=True, pnl_internal=True)
 
         # these should be removed and use switched to .get_previous()
-        previous_variable = Parameter([[0], [0]], read_only=True)
-        previous_value = Parameter([[0], [0]], read_only=True)
+        previous_variable = Parameter([[0], [0]], read_only=True, pnl_internal=True)
+        previous_value = Parameter([[0], [0]], read_only=True, pnl_internal=True)
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
         step_size = Parameter(1.0, modulable=True)
@@ -843,7 +843,7 @@ class GradientOptimization(OptimizationFunction):
         max_iterations = Parameter(1000, modulable=True)
 
         direction = ASCENT
-        convergence_criterion = VALUE
+        convergence_criterion = Parameter(VALUE, pnl_internal=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1243,9 +1243,9 @@ class GridSearch(OptimizationFunction):
 
         """
         grid = Parameter(None)
-        save_samples = True
-        save_values = True
-        random_state = Parameter(None, modulable=False, stateful=True)
+        save_samples = Parameter(True, pnl_internal=True)
+        save_values = Parameter(True, pnl_internal=True)
+        random_state = Parameter(None, modulable=False, stateful=True, pnl_internal=True)
 
         direction = MAXIMIZE
 
@@ -1908,7 +1908,7 @@ class GaussianProcess(OptimizationFunction):
                     :type: bool
 
         """
-        variable = Parameter([[0], [0]], read_only=True)
+        variable = Parameter([[0], [0]], read_only=True, pnl_internal=True)
 
         save_samples = True
         save_values = True

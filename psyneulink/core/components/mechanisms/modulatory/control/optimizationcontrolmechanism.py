@@ -695,14 +695,14 @@ class OptimizationControlMechanism(ControlMechanism):
         feature_function = Parameter(None, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
-        comp_execution_mode = Parameter('Python', stateful=False, loggable=False)
+        comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
         search_statefulness = Parameter(True, stateful=False, loggable=False)
 
-        agent_rep = Parameter(None, stateful=False, loggable=False)
+        agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
-        feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
+        feature_values = Parameter(_parse_feature_values_from_variable([defaultControlAllocation]), user=False, pnl_internal=True)
 
-        features = None
+        features = Parameter(None, pnl_internal=True)
         num_estimates = 1
         # search_space = None
         control_allocation_search_space = None
