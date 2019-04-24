@@ -1185,13 +1185,13 @@ class DDM(ProcessingMechanism_Base):
             # Analytical function so fall back to more standard behavior
             return super().is_finished(execution_context)
 
-        # indexing into a matrix doesn't reduce dimensionality
-        if not isinstance(single_value, (np.matrix, str)):
-            while True:
-                try:
-                    single_value = single_value[0]
-                except (IndexError, TypeError):
-                    break
+        # # indexing into a matrix doesn't reduce dimensionality
+        # if not isinstance(single_value, str):
+        #     while True:
+        #         try:
+        #             single_value = single_value[0]
+        #         except (IndexError, TypeError):
+        #             break
 
         if (
             abs(single_value) >= self.function.get_current_function_param(THRESHOLD, execution_context)

@@ -1591,7 +1591,7 @@ class Process(Process_Base):
                 # Projection spec is a matrix spec, a keyword for one, or a (matrix, LearningProjection) tuple
                 # Note: this is tested above by call to _is_projection_spec()
                 elif (
-                    isinstance(item, (np.matrix, str, tuple))
+                    isinstance(item, (str, tuple))
                     or (isinstance(item, np.ndarray) and item.ndim == 2)
                 ):
                     # If a LearningProjection is explicitly specified for this Projection, use it

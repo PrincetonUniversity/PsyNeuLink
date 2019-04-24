@@ -491,7 +491,7 @@ class KohonenMechanism(TransferMechanism):
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
-                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
+                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray))=None,
                            learned_projection:tc.optional(MappingProjection)=None,
                            context=None):
         """Provide user-accessible-interface to _instantiate_learning_mechanism

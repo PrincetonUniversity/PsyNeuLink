@@ -229,7 +229,7 @@ class MaskedMappingProjection(MappingProjection):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
-                 mask:tc.optional(tc.any(int,float,list,np.ndarray,np.matrix))=None,
+                 mask:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  mask_operation:tc.enum(ADD, MULTIPLY, EXPONENTIATE)=MULTIPLY,
                  function=None,
                  params=None,
