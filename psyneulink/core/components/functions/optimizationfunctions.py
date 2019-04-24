@@ -1328,12 +1328,11 @@ class GridSearch(OptimizationFunction):
                 context=context
             )
 
-            value_sample_pairs = list(zip(all_values, all_samples))
             optimal_value_count = 1
-            value_optimal, sample_optimal = value_sample_pairs[0]
+            value_sample_pairs = zip(all_values, all_samples)
+            value_optimal, sample_optimal = next(value_sample_pairs)
 
-            for i in range(1, len(value_sample_pairs)):
-                value, sample = value_sample_pairs[i]
+            for value, sample in value_sample_pairs:
                 if self.select_randomly_from_optimal_values and np.allclose(value, value_optimal):
                     optimal_value_count += 1
 
