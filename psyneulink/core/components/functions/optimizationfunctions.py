@@ -40,6 +40,9 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 from psyneulink.core.globals.sampleiterator import SampleIterator
 
+from psyneulink.core import llvm as pnlvm
+import contextlib
+
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',
            'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE']
@@ -1191,6 +1194,91 @@ class GridSearch(OptimizationFunction):
         for s in self.search_space:
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
+
+    def _get_search_dim(self, ctx, d):
+        if isinstance(d.generator, list):
+            return ctx.convert_python_struct_to_llvm_ir(d.generator)
+        assert False, "Unsupported dimension type"
+
+    def _get_param_struct_type(self, ctx):
+        search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
+        space = pnlvm.ir.LiteralStructType(search_space)
+        obj_func_param = ctx.get_param_struct_type(self.objective_function)
+        return pnlvm.ir.LiteralStructType([obj_func_param, space])
+
+    def _get_search_dim_init(self, execution_id, d):
+        if isinstance(d.generator, list):
+            return tuple(d.generator)
+        assert False, "Unsupported dimension type"
+
+    def _get_param_initializer(self, execution_id):
+        grid_init = [self._get_search_dim_init(execution_id, d) for d in self.search_space]
+        return tuple([self.objective_function._get_param_initializer(execution_id), tuple(grid_init)])
+
+    def _get_context_struct_type(self, ctx):
+        obj_state = ctx.get_context_struct_type(self.objective_function)
+        # Get random state
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
+        return pnlvm.ir.LiteralStructType([obj_state, random_state_struct])
+
+    def _get_context_initializer(self, execution_id):
+        obj_init = self.objective_function._get_context_initializer(execution_id)
+        random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
+        return tuple([obj_init, pnlvm._tupleize(random_state)])
+
+    def _get_output_struct_type(self, ctx):
+        val = self.defaults.value
+        # we should never return 'all values'
+        new_val = tuple([val[0], val[1]])
+        return ctx.convert_python_struct_to_llvm_ir(new_val)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        obj_func = ctx.get_llvm_function(self.objective_function)
+        sample_t = obj_func.args[2].type.pointee
+        value_t = obj_func.args[3].type.pointee
+        min_sample_ptr = builder.alloca(sample_t)
+        min_value_ptr = builder.alloca(value_t)
+        sample_ptr = builder.alloca(sample_t)
+        value_ptr = builder.alloca(value_t)
+
+        obj_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        obj_state_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+        # Use NaN here. fcmp_unordered below returns true if one of the
+        # operands is a NaN. This makes sure we always set min_*
+        # in the first iteration
+        builder.store(min_value_ptr.type.pointee("NaN"), min_value_ptr)
+
+        b = builder
+        with contextlib.ExitStack() as stack:
+            for i in range(len(self.search_space)):
+                array = b.gep(my_params, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                assert isinstance(array.type.pointee,  pnlvm.ir.ArrayType)
+                arg_elem = b.gep(sample_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, array, "loop_"+str(i)))
+                array_elem = b.gep(array, [ctx.int32_ty(0), idx])
+                b.store(b.load(array_elem), arg_elem)
+
+            # We are in the inner most loop now with sample_ptr setup for execution
+            b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
+            value = b.load(value_ptr)
+            min_value = b.load(min_value_ptr)
+            direction = "<" if self.direction is MINIMIZE else ">"
+            replace = b.fcmp_unordered(direction, value, min_value)
+
+            with b.if_then(replace):
+                b.store(value, min_value_ptr)
+                b.store(b.load(sample_ptr), min_sample_ptr)
+
+            builder = b
+
+        out_sample_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        out_value_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        builder.store(builder.load(min_sample_ptr), out_sample_ptr)
+        builder.store(builder.load(min_value_ptr), out_value_ptr)
+        return builder
 
     def function(self,
                  variable=None,
