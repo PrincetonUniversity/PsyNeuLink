@@ -64,7 +64,7 @@ its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingP
 following ways:
 
   * **List, array or matrix**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
-    it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+    it must be a 2d np.array or list.  In each case, the outer dimension (outer list items, array axis 0,
     or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
     (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>` (the number of which
@@ -373,7 +373,7 @@ class MappingProjection(PathwayProjection_Base):
        specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>`
        before combining it with others (see `exponent <MappingProjection.exponent>` for additional details).
 
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
         of its `receiver <MappingProjection.receiver>`.
@@ -508,12 +508,8 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
-        # Assign matrix to function_params for use as matrix param of MappingProjection.function
-        # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
-        # it wasn't working.
-        if isinstance(matrix, (np.matrix, list)):
-            matrix = np.array(matrix)
+        # if isinstance(matrix, list):
+        #     matrix = np.array(matrix)
 
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
                                                   params=params)
@@ -684,11 +680,10 @@ class MappingProjection(PathwayProjection_Base):
 
     @matrix.setter
     def matrix(self, matrix):
-        if not (isinstance(matrix, np.matrix) or
-                    (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
-                    (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
+        if not ((isinstance(matrix, np.ndarray) and matrix.ndim == 2) or
+                (isinstance(matrix, list) and np.array(matrix).ndim == 2)):
             raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
-                               "an np.matrix, a 2d np.array, or a correspondingly configured list".
+                               "an a 2d np.array, or a correspondingly configured list".
                                format(self.name, matrix))
 
         matrix = np.array(matrix)

@@ -289,15 +289,11 @@ def is_matrix(m):
 
     if is_matrix_spec(m):
         return True
-    if isinstance(m, (list, np.ndarray, np.matrix)):
+    if isinstance(m, (list, np.ndarray)):
         return True
     if m is None or isinstance(m, (Component, dict, set)) or (inspect.isclass(m) and issubclass(m, Component)):
         return False
-    try:
-        m2 = np.matrix(m)
-        return is_matrix(m2)
-    except:
-        pass
+
     if callable(m):
         try:
             return is_matrix(m())
@@ -490,12 +486,9 @@ def iscompatible(candidate, reference=None, **kargs):
         if number_only:
             if isinstance(candidate, np.ndarray) and candidate.ndim ==0 and np.isreal(candidate):
                 return True
-            if not isinstance(candidate, (list, tuple, np.ndarray, np.matrix)):
+            if not isinstance(candidate, (list, tuple, np.ndarray)):
                 return False
             def recursively_check_elements_for_numeric(value):
-                # Matrices can't be checked recursively, so convert to array
-                if isinstance(value, np.matrix):
-                    value = value.A
                 if isinstance(value, (list, np.ndarray)):
                     for item in value:
                         if not recursively_check_elements_for_numeric(item):
@@ -527,10 +520,6 @@ def iscompatible(candidate, reference=None, **kargs):
                     if reference is None:
                         return True
                     # Otherwise, carry out recursive elementwise comparison
-                    if isinstance(candidate, np.matrix):
-                        candidate = np.asarray(candidate)
-                    if isinstance(reference, np.matrix):
-                        reference = np.asarray(reference)
                     cr = zip(candidate, reference)
                     if all(iscompatible(c, r, **kargs) for c, r in cr):
                         return True
@@ -1377,12 +1366,6 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
     if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
         return np.array(arr)
-
-    if isinstance(arr, np.matrix):
-        if arr.dtype == object:
-            return np.asarray([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
-        else:
-            return arr
 
     subarr = [convert_all_elements_to_np_array(x, cast_from, cast_to) for x in arr]
 

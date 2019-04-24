@@ -2444,7 +2444,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies a template for the value to be transformed; length must equal the number of rows of `matrix
         <LinearMatrix.matrix>`.
 
-    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
+    matrix : number, list, 1d or 2d np.ndarray, function, or matrix keyword : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
@@ -2490,7 +2490,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         matrix used to transform `variable <LinearMatrix.variable>`.
         Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
-            * list of arrays, 2d array or np.matrix - assigned as the value of :keyword:`matrix`;
+            * list of arrays or 2d array - assigned as the value of :keyword:`matrix`;
             * matrix keyword - see `MatrixKeywords` for list of options.
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
@@ -2532,15 +2532,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
         matrix = Parameter(None, modulable=True)
         bounds = None
-
-    # def is_matrix_spec(m):
-    #     if m is None:
-    #         return True
-    #     if m in MATRIX_KEYWORD_VALUES:
-    #         return True
-    #     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-    #         return True
-    #     return False
 
     @tc.typecheck
     def __init__(self,
@@ -2661,7 +2652,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         continue
 
                     # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                    elif isinstance(param_value, (list, np.ndarray, np.matrix)):
+                    elif isinstance(param_value, (list, np.ndarray)):
                         # get dimensions specified by:
                         #   variable (sender): width/cols/outer index
                         #   kwReceiver param: height/rows/inner index
@@ -2724,25 +2715,15 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                     # format(param_value, self.__class__.__name__, error_msg))
                                     format(param_value, self.name, self.owner_name, error_msg))
 
-                    # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
-                    elif isinstance(param_value, str):
-                        try:
-                            param_value = np.atleast_2d(param_value)
-                        except (ValueError, TypeError) as error_msg:
-                            raise FunctionError("Error in string specification ({}) of the matrix "
-                                                "for the {} function of {}: {})".
-                                                # format(param_value, self.__class__.__name__, error_msg))
-                                                format(param_value, self.name, self.owner_name, error_msg))
-
                     # function so:
                     # - assume it uses random.rand()
                     # - call with two args as place markers for cols and rows
-                    # -  validate that it returns an array or np.matrix
+                    # -  validate that it returns an array
                     elif isinstance(param_value, function_type):
                         test = param_value(1, 1)
-                        if not isinstance(test, (np.ndarray, np.matrix)):
+                        if not isinstance(test, np.ndarray):
                             raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
-                                                "that returns a value ({}) that is neither a matrix nor an array".
+                                                "that returns a value ({}) that is not an array".
                                                 # format(param_value, self.__class__.__name__, test))
                                                 format(self.name, self.owner_name, param_value, test))
 
@@ -2771,7 +2752,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 param_value = param_set[MATRIX]
 
                 # numeric value specified; verify that it is compatible with variable
-                if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
+                if isinstance(param_value, (float, list, np.ndarray)):
                     param_size = np.size(np.atleast_2d(param_value), 0)
                     param_shape = np.shape(np.atleast_2d(param_value))
                     variable_size = np.size(np.atleast_2d(self.defaults.variable),1)
@@ -2787,8 +2768,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                         "may only be used to specify the matrix parameter of a Projection's "
                                         "LinearMatrix function. When the LinearMatrix function is implemented in a "
                                         "mechanism, such as {}, the correct matrix cannot be determined from a "
-                                        "keyword. Instead, the matrix must be fully specified as a float, list, "
-                                        "np.ndarray, or np.matrix".
+                                        "keyword. Instead, the matrix must be fully specified as a float, list, or "
+                                        "np.ndarray".
                                         format(param_value, self.name, self.owner.name))
 
                 # The only remaining valid option is matrix = None (sorted out in instantiate_attribs_before_fn)
@@ -2820,10 +2801,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
         from psyneulink.core.components.projections.projection import Projection
         if isinstance(self.owner, Projection):
-            # Matrix provided (and validated in _validate_params); convert to array
-            if isinstance(specification, np.matrix):
-                return np.array(specification)
-
             sender = self.defaults.variable
             sender_len = sender.shape[0]
             try:
@@ -2929,17 +2906,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         receiver_len = len(owner.receiver.defaults.variable)
         return function(sender_len, receiver_len)
 
-
-# def is_matrix_spec(m):
-#     if m is None:
-#         return True
-#     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-#         return True
-#     if m in MATRIX_KEYWORD_VALUES:
-#         return True
-#     return False
-
-
 def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
@@ -2959,7 +2925,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     """
 
     # Matrix provided (and validated in _validate_params); convert to array
-    if isinstance(specification, (list, np.matrix)):
+    if isinstance(specification, list):
         specification = np.array(specification)
 
     if isinstance(specification, np.ndarray):
@@ -2999,16 +2965,6 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
     if isinstance(specification, function_type):
         return specification(rows, cols)
-
-    # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
-    # specify 'matrix' as a string (e.g. r = RecurrentTransferMechanism(matrix='1 2; 3 4'))
-    if type(specification) == str:
-        try:
-            return np.array(np.matrix(specification))
-        except (ValueError, NameError, TypeError):
-            # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
-            #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
-            pass
 
     # Specification not recognized
     return None
