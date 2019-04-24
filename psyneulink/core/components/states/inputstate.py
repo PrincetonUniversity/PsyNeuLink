@@ -1362,15 +1362,6 @@ class InputState(State_Base):
         """
         import inspect
 
-        if (
-                (
-                    (inspect.isclass(function) and issubclass(function, LinearCombination))
-                    or isinstance(function, LinearCombination)
-                )
-                and isinstance(variable, np.matrix)
-        ):
-            variable = [variable]
-
         # if function is None, use State's default function
         function = function or InputState.defaults.function
 

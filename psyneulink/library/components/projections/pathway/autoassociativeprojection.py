@@ -180,7 +180,7 @@ class AutoAssociativeProjection(MappingProjection):
         `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <AutoAssociativeProjection.function>` (default: `LinearCombination`) to transform
         the value of the `sender <AutoAssociativeProjection.sender>`.
 
@@ -441,9 +441,8 @@ def get_hetero_matrix(raw_hetero, size):
         if len(raw_hetero) != 1:
             return None
         return get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero[0]
-    elif (isinstance(raw_hetero, np.matrix) or
-              (isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 2) or
-              (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 2)):
+    elif (isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 2) \
+            or (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 2):
         np.fill_diagonal(raw_hetero, 0)
         return np.array(raw_hetero)
     else:
@@ -462,9 +461,8 @@ def get_auto_matrix(raw_auto, size):
             if len(raw_auto) != size:
                 return None
             return np.diag(raw_auto)
-    elif (isinstance(raw_auto, np.matrix) or
-              (isinstance(raw_auto, np.ndarray) and raw_auto.ndim == 2) or
-              (isinstance(raw_auto, list) and np.array(raw_auto).ndim == 2)):
+    elif (isinstance(raw_auto, np.ndarray) and raw_auto.ndim == 2) \
+            or (isinstance(raw_auto, list) and np.array(raw_auto).ndim == 2):
         # we COULD add a validation here to ensure raw_auto is diagonal, but it would slow stuff down.
         return np.array(raw_auto)
     else:

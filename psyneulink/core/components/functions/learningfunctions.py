@@ -1963,7 +1963,7 @@ class BackPropagation(LearningFunction):
 
             from psyneulink.core.components.states.parameterstate import ParameterState
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+            if not isinstance(error_matrix, (list, np.ndarray, ParameterState, MappingProjection)):
                 raise FunctionError("The {} arg for {} ({}) must be a list, 2d np.array, ParamaterState or "
                                     "MappingProjection".format(ERROR_MATRIX, self.__class__.__name__, error_matrix))
 

@@ -1033,7 +1033,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
         return
     # (7/19/17 CW) added this if statement below while adding `hetero` and `auto` and AutoAssociativeProjections: this
     # allows `hetero` to be specified as a matrix, while still generating a ParameterState
-    elif isinstance(param_value, np.ndarray) or isinstance(param_value, np.matrix):
+    elif isinstance(param_value, np.ndarray):
         pass
     # Exclude all others
     else:

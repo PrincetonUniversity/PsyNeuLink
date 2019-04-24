@@ -954,7 +954,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             # Defer determination until Component has parsed size of Mechanism's variable
             self.recurrent_size = None
 
-        if isinstance(hetero, (list, np.matrix)):
+        if isinstance(hetero, list):
             hetero = np.array(hetero)
 
         self._learning_enabled = enable_learning
@@ -1047,7 +1047,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             elif isinstance(matrix_param, str):
                 matrix = get_matrix(matrix_param, rows=self.recurrent_size, cols=self.recurrent_size)
 
-            elif isinstance(matrix_param, (np.matrix, list)):
+            elif isinstance(matrix_param, list):
                 matrix = np.array(matrix_param)
 
             else:
@@ -1094,15 +1094,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
-            if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
+            if hetero_param is not None and not isinstance(hetero_param, (np.ndarray, list, numbers.Number)):
                 raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
                                              "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
-                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
+                if isinstance(hetero_param, (np.ndarray, list)) and hetero_shape[0] != self.size[0]:
                     raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
                                                  "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
-                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
+                if isinstance(hetero_param, (np.ndarray, list)) and hetero_shape[0] != hetero_shape[1]:
                     raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 
         # Validate DECAY
@@ -1465,7 +1465,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
-                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
+                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray))=None,
                            learning_condition:tc.any(Condition, TimeScale,
                                                      tc.enum(UPDATE, CONVERGENCE))=None,
                            context=None):

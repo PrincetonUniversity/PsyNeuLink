@@ -1361,7 +1361,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Manage Projection spec ----------------------------------------------
 
-        if isinstance(projection, (np.ndarray, np.matrix, list)):
+        if isinstance(projection, (np.ndarray, list)):
             projection = MappingProjection(matrix=projection, name=name)
         elif isinstance(projection, str):
             if projection in MATRIX_KEYWORD_VALUES:
@@ -1640,7 +1640,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         pathway[c],
                                         feedback=feedback)
             # if the current item is a Projection
-            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
+            elif isinstance(pathway[c], (Projection, np.ndarray, str, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
@@ -1648,7 +1648,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)) \
                         and isinstance(pathway[c + 1], (Mechanism, Composition)):
                     proj = pathway[c]
-                    if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
+                    if isinstance(pathway[c], (np.ndarray, list)):
                         proj = MappingProjection(sender=pathway[c - 1],
                                                  matrix=pathway[c],
                                                  receiver=pathway[c + 1])

@@ -1270,7 +1270,6 @@ class State_Base(State):
 
     def _instantiate_function(self, function, function_params=None, context=None):
 
-        var_is_matrix = False
         # If variable is a 2d array or matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
@@ -1281,21 +1280,8 @@ class State_Base(State):
         # FIX: UPDATE WITH MODULATION_MODS REMOVE THE FOLLOWING COMMENT:
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
         #         (that is handled by the individual State subclasses (e.g., ADD is enforced for MATRIX ParameterState)
-        if (
-            (
-                (inspect.isclass(function) and issubclass(function, LinearCombination))
-                or isinstance(function, LinearCombination)
-            )
-            and isinstance(self.defaults.variable, np.matrix)
-        ):
-            self.defaults.variable = [self.defaults.variable]
-            var_is_matrix = True
 
         super()._instantiate_function(function=function, function_params=function_params, context=context)
-
-        # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
-        if var_is_matrix:
-            self.defaults.variable = self.defaults.variable[0]
 
     # FIX: PROJECTION_REFACTOR
     #      - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
