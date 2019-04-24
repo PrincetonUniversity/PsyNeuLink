@@ -273,7 +273,7 @@ class TestRecurrentTransferMechanismMatrix:
         np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
         np.testing.assert_allclose(R.recurrent_projection.matrix, get_matrix(matrix, R.size[0], R.size[0]))
 
-    @pytest.mark.parametrize("matrix", [np.matrix('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4'])
+    @pytest.mark.parametrize("matrix", [np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]]])
     def test_recurrent_mech_matrix_other_spec(self, matrix):
 
         R = RecurrentTransferMechanism(
