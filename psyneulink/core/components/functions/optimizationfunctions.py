@@ -1317,8 +1317,8 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            if self.direction != MAXIMIZE and self.direction != MINIMIZE:
-                assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}". \
+            assert self.direction is MAXIMIZE or self.direction is MINIMIZE, \
+                "PROGRAM ERROR: bad value for {} arg of {}: {}". \
                     format(repr(DIRECTION), self.name, self.direction)
 
             last_sample, last_value, all_samples, all_values = super().function(
