@@ -508,9 +508,6 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # if isinstance(matrix, list):
-        #     matrix = np.array(matrix)
-
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
                                                   params=params)
 
