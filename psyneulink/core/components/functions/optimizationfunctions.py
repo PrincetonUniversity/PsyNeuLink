@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import call_with_pruned_args
+from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 from psyneulink.core.globals.sampleiterator import SampleIterator
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
@@ -1099,6 +1099,7 @@ class GridSearch(OptimizationFunction):
         grid = Parameter(None)
         save_samples = True
         save_values = True
+        random_state = Parameter(None, modulable=False, stateful=True)
 
         direction = MAXIMIZE
 
@@ -1113,6 +1114,7 @@ class GridSearch(OptimizationFunction):
                  save_values:tc.optional(bool)=False,
                  # tolerance=0.,
                  select_randomly_from_optimal_values=False,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -1127,8 +1129,13 @@ class GridSearch(OptimizationFunction):
         # self.tolerance = tolerance
         self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
+        if seed is None:
+            seed = get_global_seed()
+        random_state = np.random.RandomState(np.asarray([seed]))
+
         # Assign args to params and functionParams dicts 
-        params = self._assign_args_to_param_dicts(params=params)
+        params = self._assign_args_to_param_dicts(params=params,
+                                                  random_state=random_state)
 
         super().__init__(default_variable=default_variable,
                          objective_function=objective_function,
@@ -1141,6 +1148,8 @@ class GridSearch(OptimizationFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+        self.stateful_attributes = ["random_state"]
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1331,7 +1340,8 @@ class GridSearch(OptimizationFunction):
                     # swap with probability = 1/optimal_value_count in order to achieve
                     # uniformly random selection from identical outcomes
                     probability = 1/optimal_value_count
-                    random_value = np.random.random()
+                    random_state = self.get_current_function_param("random_state", execution_id)
+                    random_value = random_state.rand()
 
                     if random_value < probability:
                         value_optimal, sample_optimal = value, sample

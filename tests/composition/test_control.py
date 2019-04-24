@@ -834,7 +834,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        assert np.allclose([[1.], [15.], [20.], [15.], [35.], [20.], [15.], [30.], [15.], [30.]],
+        assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                            log_arr['outer_comp']['mod_slope'])
 
 class TestSampleIterator:
