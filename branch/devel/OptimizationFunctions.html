@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.5.0.0+354.g1c1f726 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.5.0.0+355.g3636782 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.0.0+354.g1c1f726',
+              VERSION:'0.5.0.0+355.g3636782',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.0.0+354
+                0.5.0.0+355
               </div>
             
           
@@ -381,7 +381,7 @@ for all the samples in the order they were evaluated; otherwise it is empty.</td
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">GradientOptimization</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_function=None</em>, <em>direction=ASCENT</em>, <em>step=1.0</em>, <em>annealing_function=None</em>, <em>convergence_criterion=VALUE</em>, <em>convergence_threshold=.001</em>, <em>max_iterations=1000</em>, <em>save_samples=False</em>, <em>save_values=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.optimizationfunctions.</code><code class="descname">GradientOptimization</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_function=None</em>, <em>gradient_function=None</em>, <em>direction=ASCENT</em>, <em>step=1.0</em>, <em>annealing_function=None</em>, <em>convergence_criterion=VALUE</em>, <em>convergence_threshold=.001</em>, <em>max_iterations=1000</em>, <em>save_samples=False</em>, <em>save_values=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample variable by following gradient with respect to the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> it generates, and return the sample that generates either the
 highest (<a href="#id1"><span class="problematic" id="id2">**</span></a>direction=*ASCENT*) or lowest (<a href="#id3"><span class="problematic" id="id4">**</span></a>direction=*DESCENT*) value.</p>
 <p id="gradientoptimization-procedure"><strong>Optimization Procedure</strong></p>
@@ -428,6 +428,8 @@ generate <a class="reference internal" href="#psyneulink.core.components.functio
 <li><strong>objective_function</strong> (<a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method</em>) – specifies function used to evaluate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;
 it must be specified and it must return a scalar value.</li>
+<li><strong>gradient_function</strong> (<a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a>) – specifies function used to compute the gradient in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;  if it is not specified, an attempt is made to compute it using
+<a class="reference external" href="https://github.com/HIPS/autograd">autograd.grad</a>.</li>
 <li><strong>direction</strong> (<em>ASCENT</em><em> or </em><em>DESCENT : default ASCENT</em>) – specifies the direction of gradient optimization: if <em>ASCENT</em>, movement is attempted in the positive direction
 (i.e., “up” the gradient);  if <em>DESCENT</em>, movement is attempted in the negative direction (i.e. “down”
 the gradient).</li>
