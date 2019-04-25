@@ -847,7 +847,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 convergence_function
                     see `convergence_function <TransferMechanism.convergence_function>`
 
-                    :default value: `Distance`(metric=difference, normalize=False)
+                    :default value: `Distance`
                     :type: `Function`
 
                 initial_value

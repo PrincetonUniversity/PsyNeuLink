@@ -3341,8 +3341,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # present and active
             can_exec = not self.enable_controller or execution_phase == ContextFlags.SIMULATION
             try:
-                if str(bin_execute).endswith('Exec') and can_exec:
-                    if bin_execute.startswith('LLVM'):
+                # Try running in Exec mode first
+                if (bin_execute is True or str(bin_execute).endswith('Exec')) and can_exec:
+                    if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [execution_id])
                         _comp_ex.execute(inputs)
                         return _comp_ex.extract_node_output(self.output_CIM)
@@ -3352,6 +3353,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         __execution.cuda_execute(inputs)
                         return __execution.extract_node_output(self.output_CIM)
 
+                # Exec failed for some reason, we can still try node level bin_execute
                 # Filter out mechanisms. Nested compositions are not executed in this mode
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
@@ -3363,7 +3365,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 bin_execute = True
             except Exception as e:
-                if bin_execute[:4] == 'LLVM':
+                if bin_execute.endswith('Exec'):
                     raise e
 
                 string = "Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e))
@@ -3765,26 +3767,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         can_run = (not self.enable_controller or
                    (execution_context is not None and
                     execution_context.execution_phase == ContextFlags.SIMULATION))
-        if str(bin_execute).endswith('Run') and can_run:
-            if bin_execute.startswith('LLVM'):
-                _comp_ex = pnlvm.CompExecution(self, [execution_id])
-                results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-            elif bin_execute.startswith('PTX'):
-                self.__ptx_initialize(execution_id)
-                EX = self._compilation_data.ptx_execution.get(execution_id)
-                results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
+        if (bin_execute is True or str(bin_execute).endswith('Run')) and can_run:
+            try:
+                if bin_execute is True or bin_execute.startswith('LLVM'):
+                    _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
+                elif bin_execute.startswith('PTX'):
+                    self.__ptx_initialize(execution_id)
+                    EX = self._compilation_data.ptx_execution.get(execution_id)
+                    results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
-            full_results = self.parameters.results.get(execution_id)
-            if full_results is None:
-                full_results = results
-            else:
-                full_results.extend(results)
+                full_results = self.parameters.results.get(execution_id)
+                if full_results is None:
+                    full_results = results
+                else:
+                    full_results.extend(results)
 
-            self.parameters.results.set(full_results, execution_id)
-            # KAM added the [-1] index after changing Composition run()
-            # behavior to return only last trial of run (11/7/18)
-            self.most_recent_execution_context = execution_id
-            return full_results[-1]
+                self.parameters.results.set(full_results, execution_id)
+                # KAM added the [-1] index after changing Composition run()
+                # behavior to return only last trial of run (11/7/18)
+                self.most_recent_execution_context = execution_id
+                return full_results[-1]
+
+            except Exception as e:
+                if str(bin_execute).endswith('Run'):
+                    raise e
+
+                print("WARNING: Failed to Run execution `{}': {}".format(
+                      self.name, str(e)))
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL

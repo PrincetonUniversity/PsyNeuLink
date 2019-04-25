@@ -432,7 +432,7 @@ class LearningProjection(ModulatoryProjection_Base):
                 error_function
                     see `error_function <LearningProjection.error_function>`
 
-                    :default value: `LinearCombination`(offset=0.0, operation=sum, scale=1.0, weights=numpy.array([[-1], [ 1]]))
+                    :default value: `LinearCombination`(weights=numpy.array([[-1], [ 1]]))
                     :type: `Function`
 
                 function

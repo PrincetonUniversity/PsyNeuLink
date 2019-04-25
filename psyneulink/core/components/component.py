@@ -871,6 +871,12 @@ class Component(object, metaclass=ComponentsMeta):
                     :type: numpy.ndarray
                     :read only: True
 
+                has_initializers
+                    see `has_initializers <Component.has_initializers>`
+
+                    :default value: False
+                    :type: bool
+
         """
         variable = Parameter(np.array([0]), read_only=True)
         value = Parameter(np.array([0]), read_only=True)
@@ -3432,12 +3438,6 @@ class Component(object, metaclass=ComponentsMeta):
             Refers to the defaults of this object's class
         """
         return self.__class__.defaults
-
-    # left in for compatibility with llvm, see note in builder_context.py (search for <_instance_defaults_note>)
-    # DEPRECATED
-    @property
-    def _instance_defaults(self):
-        return self.defaults
 
     @property
     def is_pnl_inherent(self):

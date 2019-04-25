@@ -162,6 +162,29 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     componentName = BUFFER_FUNCTION
 
     class Parameters(StatefulFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                history
+                    see `history <Buffer.history>`
+
+                    :default value: None
+                    :type:
+
+                noise
+                    see `noise <Buffer.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <Buffer.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
@@ -490,6 +513,59 @@ class DND(MemoryFunction):  # --------------------------------------------------
     componentName = DND_FUNCTION
 
     class Parameters(StatefulFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <DND.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+
+                key_size
+                    see `key_size <DND.key_size>`
+
+                    :default value: 1
+                    :type: int
+
+                max_entries
+                    see `max_entries <DND.max_entries>`
+
+                    :default value: 1000
+                    :type: int
+
+                noise
+                    see `noise <DND.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                random_state
+                    see `random_state <DND.random_state>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <DND.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                retrieval_prob
+                    see `retrieval_prob <DND.retrieval_prob>`
+
+                    :default value: 1.0
+                    :type: float
+
+                storage_prob
+                    see `storage_prob <DND.storage_prob>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         variable = Parameter([[0],[0]])
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -635,8 +711,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
-        # Prob can be [x] if we are aprt of mechanism
+        retr_prob_ptr = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
+
+        # Prob can be [x] if we are part of a mechanism
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
         retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
 
@@ -699,9 +776,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr, builder = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
+        store_prob_ptr = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
 
-        # Prob can be [x] if we are aprt of mechanism
+        # Prob can be [x] if we are part of a mechanism
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
         store_rand = builder.fcmp_ordered('<', store_prob, store_prob.type(1.0))
 

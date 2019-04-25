@@ -281,7 +281,7 @@ class GatingProjection(ModulatoryProjection_Base):
                 function
                     see `function <GatingProjection.function>`
 
-                    :default value: `Linear`(intercept=0.0, slope=1.0)
+                    :default value: `Linear`
                     :type: `Function`
 
                 gating_signal

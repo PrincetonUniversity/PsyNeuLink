@@ -224,6 +224,12 @@ class OneHot(SelectionFunction):
                     :default value: `MAX_VAL`
                     :type: str
 
+                random_state
+                    see `random_state <OneHot.random_state>`
+
+                    :default value: None
+                    :type:
+
         """
         mode = Parameter(MAX_VAL, stateful=False)
         random_state = Parameter(None, stateful=True)
@@ -301,15 +307,15 @@ class OneHot(SelectionFunction):
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
 
-    def _gen_llvm_function_body(self, ctx, builder, _1, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out):
         idx_ptr = builder.alloca(ctx.int32_ty)
         builder.store(ctx.int32_ty(0), idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
             rng_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
             dice_ptr = builder.alloca(ctx.float_ty)
-            mt_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.call(rng_f, [mt_state, dice_ptr])
+            mt_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
+            builder.call(rng_f, [mt_state_ptr, dice_ptr])
             dice = builder.load(dice_ptr)
             sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty(-0.0), sum_ptr)

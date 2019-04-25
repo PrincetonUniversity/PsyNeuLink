@@ -378,7 +378,7 @@ COMMENT
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
         my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        matrix, builder = ctx.get_param_ptr(self, builder, my_params, MATRIX)
+        matrix = ctx.get_param_ptr(self, builder, my_params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
