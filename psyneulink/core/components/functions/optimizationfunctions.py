@@ -1150,6 +1150,7 @@ class GridSearch(OptimizationFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
         self.stateful_attributes = ["random_state"]
+        self.num_iterations = np.product([i.num for i in self.search_space])
 
     def _validate_params(self, request_set, target_set=None, context=None):
 

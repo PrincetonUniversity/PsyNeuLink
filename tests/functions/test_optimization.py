@@ -15,21 +15,21 @@ results = {
     Functions.Stability: {
         kw.ENERGY: {
             True: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -0.45, [], []),
+                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -1.8, [], []),
                 OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -0.45, [], []),
             },
             False: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -45.0, [], []),
+                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -180.0, [], []),
                 OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -45.0, [], []),
             },
         },
         kw.ENTROPY: {
             True: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -2.197224577336219, [], []),
+                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -5.78074351579233, [], []),
                 OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -2.197224577336219, [], []),
             },
             False: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -21.972245773362193, [], []),
+                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -57.8074351579233, [], []),
                 OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -21.972245773362193, [], []),
             },
         },
@@ -50,7 +50,8 @@ def test_basic(obj_func, metric, normalize, direction, benchmark):
 
     of = obj_func(default_variable=variable, metric=metric, normalize=normalize)
     f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable, search_space=search_space, direction=direction)
-    res = benchmark(f.function, variable)
+    res = f.function(variable)
+    benchmark(f.function, variable)
 
     assert np.allclose(res[0], result[0])
     assert np.allclose(res[1], result[1])
@@ -75,7 +76,8 @@ def test_llvm(obj_func, metric, normalize, direction, benchmark):
     of = obj_func(default_variable=variable, metric=metric, normalize=normalize)
     f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable, search_space=search_space, direction=direction)
     e = pnlvm.execution.FuncExecution(f)
-    res = benchmark(e.execute, variable)
+    res = e.execute(variable)
+    benchmark(e.execute, variable)
 
     assert np.allclose(res[0], result[0])
     assert np.allclose(res[1], result[1])
