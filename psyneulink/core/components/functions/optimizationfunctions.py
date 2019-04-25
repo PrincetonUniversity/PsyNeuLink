@@ -609,12 +609,12 @@ class GradientOptimization(OptimizationFunction):
     **Gradient Calculation**
 
     The gradient is evaluated by `gradient_function <GradientOptimization.gradient_function>`,
-    which is the derivative of the `objective_function <GradientOptimization.objective_function>`
+    which should be the derivative of the `objective_function <GradientOptimization.objective_function>`
     with respect to `variable <GradientOptimization.variable>` at its current value:
-    :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`
-
-    `Autograd's <https://github.com/HIPS/autograd>`_ `grad <autograd.grad>` method is used to
-    generate `gradient_function <GradientOptimization.gradient_function>`.
+    :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
+    constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
+    <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
+    a warning is issued, and gradients are not calculated.
 
 
     Arguments
