@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.5.0.0+355.g3636782 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.5.0.0+356.g3f5b6e3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.0.0+355.g3636782',
+              VERSION:'0.5.0.0+356.g3f5b6e3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.0.0+355
+                0.5.0.0+356
               </div>
             
           
@@ -413,11 +413,11 @@ the value of the function, as well as lists that may contain all of the samples 
 depending on whether <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_vales</span></code></a> are <code class="xref any docutils literal"><span class="pre">True</span></code>, respectively.</p>
 <p id="gradientoptimization-gradient-calculation"><strong>Gradient Calculation</strong></p>
 <p>The gradient is evaluated by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function"><code class="xref any py py-attr docutils literal"><span class="pre">gradient_function</span></code></a>,
-which is the derivative of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
+which should be the derivative of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
 with respect to <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> at its current value:
-<span class="math">\(\frac{d(objective\_function(variable))}{d(variable)}\)</span></p>
-<p><a class="reference external" href="https://github.com/HIPS/autograd">Autograd’s</a> <code class="xref any docutils literal"><span class="pre">grad</span></code> method is used to
-generate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function"><code class="xref any py py-attr docutils literal"><span class="pre">gradient_function</span></code></a>.</p>
+<span class="math">\(\frac{d(objective\_function(variable))}{d(variable)}\)</span>.  If the <a href="#id5"><span class="problematic" id="id6">**</span></a>gradient_function* argument of the
+constructor is not specified, then an attempt is made to use <a class="reference external" href="https://github.com/HIPS/autograd">Autograd’s</a> <code class="xref any docutils literal"><span class="pre">grad</span></code> method to generate <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.gradient_function"><code class="xref any py py-attr docutils literal"><span class="pre">gradient_function</span></code></a>.  If that fails,
+a warning is issued, and gradients are not calculated.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -680,13 +680,13 @@ and evaluated by the  <a class="reference internal" href="#psyneulink.core.compo
 <dl class="method">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reinitialize">
 <code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reinitialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign size of <a href="#id5"><span class="problematic" id="id6">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
+<dd><p>Assign size of <a href="#id7"><span class="problematic" id="id8">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset_grid">
 <code class="descname">reset_grid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset iterators in <a href="#id7"><span class="problematic" id="id8">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
+<dd><p>Reset iterators in <a href="#id9"><span class="problematic" id="id10">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
 </dd></dl>
 
 <dl class="method">
