@@ -442,6 +442,8 @@ class Function_Base(Function):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
+    _model_spec_id_parameters = 'args'
+
     class Parameters(Function.Parameters):
         """
             Attributes
@@ -701,6 +703,12 @@ class Function_Base(Function):
         # the Function's output will be the same as its input
         # Used to bypass execute when unnecessary
         return False
+
+    @property
+    def _model_spec_parameter_blacklist(self):
+        return super()._model_spec_parameter_blacklist.union({
+            'multiplicative_param', 'additive_param',
+        })
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 

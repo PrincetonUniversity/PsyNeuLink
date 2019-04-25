@@ -1280,6 +1280,16 @@ class OptimizationControlMechanism(ControlMechanism):
         """Return list of SampleIterators for allocation_samples of control_signals"""
         return [c.allocation_samples for c in self.control_signals]
 
+    @property
+    def _model_spec_parameter_blacklist(self):
+        # default_variable is hidden in constructor arguments,
+        # and anyway assigning it is problematic because it is modified
+        # several times when creating input states, and assigning function that
+        # fits the control allocation
+        return super()._model_spec_parameter_blacklist.union({
+            'variable',
+        })
+
     # ******************************************************************************************************************
     # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep
     # ******************************************************************************************************************

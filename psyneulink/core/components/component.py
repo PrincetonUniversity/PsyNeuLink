@@ -862,6 +862,22 @@ class Component(object, metaclass=ComponentsMeta):
 
     standard_constructor_args = [REINITIALIZE_WHEN]
 
+    # helper attributes for JSON model spec
+    _model_spec_id_parameters = 'parameters'
+
+    _model_spec_generic_type_name = NotImplemented
+    """
+        string describing this class's generic type in universal model
+        specification,
+        if it exists and is different than the class name
+    """
+
+    _model_spec_class_name_is_generic = False
+    """
+        True if the class name is the class's generic type in universal model specification,
+        False otherwise
+    """
+
     class Parameters(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
@@ -3490,6 +3506,14 @@ class Component(object, metaclass=ComponentsMeta):
     @most_recent_context.setter
     def most_recent_context(self, value):
         self._most_recent_context = value
+
+    @property
+    def _model_spec_parameter_blacklist(self):
+        """
+            A set of Parameter names that should not be added to the generated
+            constructor string
+        """
+        return {'function', 'value'}
 
 
 COMPONENT_BASE_CLASS = Component

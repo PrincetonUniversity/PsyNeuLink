@@ -1591,6 +1591,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     componentType = 'Composition'
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
+    _model_spec_generic_type_name = 'graph'
+
     class Parameters(ParametersBase):
         """
             Attributes

@@ -397,6 +397,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
+    _model_spec_class_name_is_generic = True
+
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -906,6 +908,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
     bounds = (0, 1)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    _model_spec_class_name_is_generic = True
 
     class Parameters(TransferFunction.Parameters):
         """
