@@ -623,7 +623,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
-from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
+from psyneulink.core.scheduling.condition import Condition, All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -941,6 +941,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Determines whether the controller is executed before or after the rest of the `Composition`
             is executed in each trial.  Must be either the keyword BEFORE or AFTER.
 
+        controller_condition: None
+            Determines whether the controller is executed in a given trial. Must be a `Condition`.
+
         Attributes
         ----------
 
@@ -986,6 +989,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution).
 
         controller_mode :
+            Determines whether the controller is executed before or after the rest of the `Composition`
+            is executed on each trial.
+
+        controller_condition :
             Determines whether the controller is executed before or after the rest of the `Composition`
             is executed on each trial.
 
@@ -1045,6 +1052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_condition:tc.optional(Condition)=None,
             **param_defaults
     ):
         # also sets name
@@ -1074,6 +1082,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.execution_ids = {self.default_execution_id}
         self.controller = controller
         self.controller_mode = controller_mode
+        self.controller_conditon = controller_condition
 
         self.projections = []
         self.learning_projections = []
