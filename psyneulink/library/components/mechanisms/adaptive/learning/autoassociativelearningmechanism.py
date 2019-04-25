@@ -290,12 +290,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             Attributes
             ----------
 
-                learning_rate
-                    see `learning_rate <AutoAssociativeLearningMechanism.learning_rate>`
-
-                    :default value: None
-                    :type:
-
                 learning_signals
                     see `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`
 

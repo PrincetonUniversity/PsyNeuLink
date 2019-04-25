@@ -670,28 +670,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
-                outcome
-                    see `outcome <ControlMechanism.outcome>
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                compute_reconfiguration_cost
-                     see 'compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
-
                 combine_costs
                     see `combine_costs <ControlMechanism.combine_costs>`
 
                     :default value: numpy.core.fromnumeric.sum
                     :type: <class 'function'>
-
-                costs
-                    see `costs <ControlMechanism.costs>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
 
                 compute_net_outcome
                     see `compute_net_outcome <ControlMechanism.compute_net_outcome>`
@@ -699,8 +682,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: lambda outcome, cost: outcome - cost
                     :type: <class 'function'>
 
-                net_outcome
-                    see `net_outcome <ControlMechanism.net_outcome>
+                compute_reconfiguration_cost
+                    see `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
+
+                    :default value: None
+                    :type:
+
+                control_signal_costs
+                    see `control_signal_costs <ControlMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                costs
+                    see `costs <ControlMechanism.costs>`
 
                     :default value: None
                     :type:
@@ -711,6 +707,20 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
                     :default value: ModulationParam.MULTIPLICATIVE
                     :type: `ModulationParam`
+
+                net_outcome
+                    see `net_outcome <ControlMechanism.net_outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                outcome
+                    see `outcome <ControlMechanism.outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)

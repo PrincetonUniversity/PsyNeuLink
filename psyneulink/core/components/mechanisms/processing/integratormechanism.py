@@ -192,7 +192,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                 function
                     see `function <IntegratorMechanism.function>`
 
-                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), noise=0.0, offset=0.0, previous_value=numpy.array([0]), rate=0.5)
+                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
                     :type: `Function`
 
         """

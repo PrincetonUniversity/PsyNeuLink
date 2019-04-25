@@ -1994,7 +1994,8 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition Vector")
-    @pytest.mark.parametrize("mode, vector_length", product(('Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)), [2**x for x in range(1)]))
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("vector_length", [2**x for x in range(1)])
     def test_run_composition_vector(self, benchmark, mode, vector_length):
         var = [1.0 for x in range(vector_length)];
         comp = Composition()

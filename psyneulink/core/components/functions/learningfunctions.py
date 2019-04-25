@@ -869,8 +869,8 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         if learning_rate_dim == 1:
             variable = variable * learning_rate
 
-        input_pattern = np.array(np.matrix(variable[0]).T)
-        activities = np.array(np.matrix(variable[1]).T)
+        input_pattern = np.atleast_2d(variable[0]).transpose()
+        activities = np.atleast_2d(variable[1]).transpose()
         matrix = variable[2]
         measure = self.distance_function
 
@@ -883,7 +883,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         distances = np.zeros_like(activities)
         for i, item in enumerate(activities):
             distances[i]=self.distance_function(self.measure, abs(i-index_of_max))
-        distances = 1-np.array(np.matrix(distances).T)
+        distances = 1-np.atleast_2d(distances).transpose()
 
         # Multiply distances by differences and learning_rate
         weight_change_matrix = distances * differences * learning_rate
@@ -997,6 +997,12 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     :type: numpy.ndarray
                     :read only: True
 
+                learning_rate
+                    see `learning_rate <Hebbian.learning_rate>`
+
+                    :default value: 0.05
+                    :type: float
+
         """
         variable = Parameter(np.array([0, 0]), read_only=True)
         learning_rate = Parameter(0.05, modulable=True)
@@ -1106,7 +1112,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         # Generate the column array from the variable
         # col = variable.reshape(len(variable),1)
-        col = np.array(np.matrix(variable).T)
+        col = np.atleast_2d(variable).transpose()
 
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
@@ -1340,7 +1346,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
         # Generate the column array from the variable
         # col = variable.reshape(len(variable),1)
-        col = np.array(np.matrix(variable).T)
+        col = np.atleast_2d(variable).transpose()
 
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
