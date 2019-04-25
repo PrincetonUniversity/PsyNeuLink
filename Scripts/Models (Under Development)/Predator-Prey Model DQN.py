@@ -11,8 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -24,11 +24,11 @@ ACTION = AGENT_ACTION
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = STANDARD_REPORTING
+VERBOSE = ACTION_REPORTING
 
 # ControlSignal parameters
 COST_RATE = -.05
-COST_BIAS = -3
+COST_BIAS = 1
 ALLOCATION_SAMPLES = [0, 500]
 
 

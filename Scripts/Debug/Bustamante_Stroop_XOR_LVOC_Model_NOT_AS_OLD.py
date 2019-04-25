@@ -8,9 +8,6 @@
 
 # ********************************************* Bustamante_Stroop_XOR_LVOC_Model ***************************************
 
-# along with str cast in log line 1516 vv
-# next_eid_entry_data += ", \'" + "\', \'".join(str(i[0]) if isinstance(i, list) else i for i in data[0]) + "\'"
-
 '''
 Implements a model of the `Stroop XOR task
 <https://scholar.google.com/scholar?hl=en&as_sdt=0%2C31&q=laura+bustamante+cohen+musslick&btnG=>`_
