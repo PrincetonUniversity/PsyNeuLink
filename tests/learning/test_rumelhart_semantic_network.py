@@ -90,7 +90,7 @@ class TestRumelhartSemanticNetwork:
                                   rel_act_proc])
         # S.show_graph(show_learning=pnl.ALL, show_dimensions=True)
         validate_learning_mechs(S)
-        
+
         print(S.origin_mechanisms)
         print(S.terminal_mechanisms)
         S.run(inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],

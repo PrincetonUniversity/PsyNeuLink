@@ -1188,7 +1188,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             else:
                 output_states.append(additional_output_states)
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   minus_phase_termination_condition=minus_phase_termination_condition,
                                                   minus_phase_termination_criterion=minus_phase_termination_criterion,

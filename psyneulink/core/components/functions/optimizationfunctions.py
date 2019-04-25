@@ -372,7 +372,7 @@ class OptimizationFunction(Function_Base):
         else:
             self.search_space = search_space
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(save_samples=save_samples,
                                                   save_values=save_values,
                                                   max_iterations=max_iterations,
@@ -852,7 +852,7 @@ class GradientOptimization(OptimizationFunction):
             self.direction = -1
         self.annealing_function = annealing_function
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(step=step,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
@@ -1141,7 +1141,7 @@ class GridSearch(OptimizationFunction):
         # self.tolerance = tolerance
         self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
@@ -1354,7 +1354,7 @@ class GridSearch(OptimizationFunction):
                         (value < value_optimal and self.direction is MINIMIZE):
                     value_optimal, sample_optimal = value, sample
                     optimal_value_count = 1
-                    
+
             if self._return_samples:
                 return_all_samples = all_samples
             if self._return_values:
@@ -1558,7 +1558,7 @@ class GaussianProcess(OptimizationFunction):
         self._return_samples = save_values
         self.direction = direction
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,

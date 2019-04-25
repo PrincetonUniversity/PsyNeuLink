@@ -147,7 +147,7 @@ class KohonenMechanism(TransferMechanism):
 
     integrator_function : IntegratorFunction : default AdaptiveIntegrator
         specifies `IntegratorFunction` to use in `integration_mode <KohonenMechanism.integration_mode>`.
-    
+
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
         `integration_rate <KohonenMechanism.integration_rate>` is not 1.0).

@@ -330,7 +330,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_signals=learning_signals,
                                                   params=params)
@@ -359,7 +359,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         return variable
-    
+
     def _instantiate_attributes_after_function(self, context=None):
         super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
         # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
