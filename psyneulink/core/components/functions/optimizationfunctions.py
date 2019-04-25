@@ -554,8 +554,9 @@ class GradientOptimization(OptimizationFunction):
     GradientOptimization(            \
         default_variable=None,       \
         objective_function=None,     \
+        gradient_function=None,      \
         direction=ASCENT,            \
-        step=1.0,               \
+        step=1.0,                    \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -627,6 +628,11 @@ class GradientOptimization(OptimizationFunction):
         specifies function used to evaluate `variable <GradientOptimization.variable>`
         in each iteration of the `optimization process  <GradientOptimization_Procedure>`;
         it must be specified and it must return a scalar value.
+
+    gradient_function : function
+        specifies function used to compute the gradient in each iteration of the `optimization process
+        <GradientOptimization_Procedure>`;  if it is not specified, an attempt is made to compute it using
+        `autograd.grad <https://github.com/HIPS/autograd>`_.
 
     direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization: if *ASCENT*, movement is attempted in the positive direction
@@ -743,6 +749,12 @@ class GradientOptimization(OptimizationFunction):
                     :type: list
                     :read only: True
 
+                gradient_function
+                    see `gradient_function <GradientOptimization.gradient_function>`
+
+                    :default value: None
+                    :type:
+
                 annealing_function
                     see `annealing_function <GradientOptimization.annealing_function>`
 
@@ -800,6 +812,7 @@ class GradientOptimization(OptimizationFunction):
         previous_variable = Parameter([[0], [0]], read_only=True)
         previous_value = Parameter([[0], [0]], read_only=True)
 
+        gradient_function = Parameter(None, stateful=False, loggable=False)
         annealing_function = Parameter(None, stateful=False, loggable=False)
 
         step = Parameter(1.0, modulable=True)
@@ -815,6 +828,7 @@ class GradientOptimization(OptimizationFunction):
     def __init__(self,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
+                 gradient_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
                  step:tc.optional(tc.any(int, float))=1.0,
                  annealing_function:tc.optional(is_function_type)=None,
@@ -828,9 +842,9 @@ class GradientOptimization(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
+        self.gradient_function = gradient_function
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
-        self.gradient_function = None
 
         if direction is ASCENT:
             self.direction = 1
