@@ -24,7 +24,7 @@ ACTION = AGENT_ACTION
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = ACTION_REPORTING
+VERBOSE = SIMULATION_REPORTING
 
 # ControlSignal parameters
 COST_RATE = -.05
@@ -178,6 +178,7 @@ ocm = OptimizationControlMechanism(name='EVC',
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
+agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
@@ -230,7 +231,7 @@ def main():
             if VERBOSE >= ACTION_REPORTING:
                 print(f'\nOUTER LOOP OPTIMAL ACTION:{optimal_action}')
 
-            # Get agent's action based on perceptual distoration of observation (and application of control)
+            # Get agent's action based on perceptual distortion of observation (and application of control)
             run_results = agent_comp.run(inputs={player_percept:[observation[player_coord_slice]],
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],

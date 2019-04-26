@@ -623,7 +623,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
-from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
+from psyneulink.core.scheduling.condition import Condition, All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -932,14 +932,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         name: str
 
         controller:   `OptimizationControlmechanism`
-            Must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`.
+            must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`.
 
         enable_controller: bool
-            When set to True, executes the controller. When False, ignores the controller.
+            when set to True, executes the controller. When False, ignores the controller.
 
         controller_mode: AFTER
-            Determines whether the controller is executed before or after the rest of the `Composition`
+            specifies whether the controller is executed before or after the rest of the `Composition`
             is executed in each trial.  Must be either the keyword BEFORE or AFTER.
+
+        controller_condition: Always
+            specifies whether the controller is executed in a given trial. Must be a `Condition`.
 
         Attributes
         ----------
@@ -985,9 +988,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             each trial (see controller_mode <Composition.controller_mode>` for timing of
             execution).
 
-        controller_mode :
+        controller_mode :  BEFORE or AFTER
             Determines whether the controller is executed before or after the rest of the `Composition`
             is executed on each trial.
+
+        controller_condition : Condition
+            Specifies whether the controller is executed in a given trial.  The default is `Always`, which
+            executes the controller on every trial.
 
         default_execution_id
             if no *execution_id* is specified in a call to run, this *execution_id* is used.
@@ -1045,6 +1052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_condition:Condition=Always(),
             **param_defaults
     ):
         # also sets name
@@ -1074,6 +1082,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.execution_ids = {self.default_execution_id}
         self.controller = controller
         self.controller_mode = controller_mode
+        self.controller_condition = controller_condition
+        self.controller_condition.owner = self.controller
 
         self.projections = []
         self.learning_projections = []
@@ -3316,7 +3326,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_scheduler = scheduler_processing
 
         if (self.enable_controller and
-            self.controller_mode is BEFORE):
+            self.controller_mode is BEFORE and
+            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                   execution_context=execution_id)
+        ):
+
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
@@ -3324,8 +3338,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and execution_phase != ContextFlags.SIMULATION
             ):
                 if self.controller:
-                    self.controller.parameters.context.get(
-                        execution_id).execution_phase = ContextFlags.PROCESSING
+                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
@@ -3528,7 +3541,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
         if (self.enable_controller and
-            self.controller_mode == AFTER):
+                self.controller_mode == AFTER and
+                self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                       execution_context=execution_id)
+        ):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
