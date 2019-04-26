@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.5.0.0+356.g3f5b6e3 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.5.0.0+357.g02617bc documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.0.0+356.g3f5b6e3',
+              VERSION:'0.5.0.0+357.g02617bc',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.0.0+356
+                0.5.0.0+357
               </div>
             
           
@@ -337,6 +337,12 @@ satisfied any time during the specified <a class="reference internal" href="Log.
 satisfied any time after the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> occurs.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="psyneulink.core.scheduling.condition.AfterNTrials"><code class="xref any py py-class docutils literal"><span class="pre">AfterNTrials</span></code></a> (int[, TimeScale])
 satisfied any time after the specified number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s has occurred.</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRun" title="psyneulink.core.scheduling.condition.AtRun"><code class="xref any py py-class docutils literal"><span class="pre">AtRun</span></code></a> (int)
+satisfied any time during the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>.</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterRun" title="psyneulink.core.scheduling.condition.AfterRun"><code class="xref any py py-class docutils literal"><span class="pre">AfterRun</span></code></a> (int)
+satisfied any time after the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> occurs.</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="psyneulink.core.scheduling.condition.AfterNRuns"><code class="xref any py py-class docutils literal"><span class="pre">AfterNRuns</span></code></a> (int)
+satisfied any time after the specified number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s has occurred.</li>
 </ul>
 </div></blockquote>
 <p id="conditions-component-based"><strong>Component-Based Conditions</strong> (based on the execution or state of other Components):</p>
@@ -1020,6 +1026,64 @@ etc.).</li>
 <blockquote>
 <div><ul class="simple">
 <li>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s have occured  within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AtRun">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtRun</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRun" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>exactly n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s have occurred.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AfterRun">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AfterRun</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterRun" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>at least n+1 <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s have occurred.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AfterNRuns">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AfterNRuns</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="Permalink to this definition">¶</a></dt>
+<dd><p>AfterNTrials</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s have occured.</li>
 </ul>
 </div></blockquote>
 </dd></dl>
