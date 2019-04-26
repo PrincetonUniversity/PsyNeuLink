@@ -1127,7 +1127,7 @@ class GridSearch(OptimizationFunction):
         search_termination_function = self._grid_complete
         self._return_values = save_values
         self._return_samples = save_values
-        self.num_iterations = 1
+        self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
         self.direction = direction
         # self.tolerance = tolerance
         self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
@@ -1153,7 +1153,6 @@ class GridSearch(OptimizationFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
         self.stateful_attributes = ["random_state"]
-        self.num_iterations = np.product([i.num for i in self.search_space])
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
