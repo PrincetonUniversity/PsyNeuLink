@@ -812,11 +812,11 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
-                                           OBJECTIVE_FUNCTION: self.evaluation_function,
-                                           # SEARCH_FUNCTION: self.search_function,
-                                           # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
-                                           SEARCH_SPACE: self.control_allocation_search_space
-                                           })
+                                    OBJECTIVE_FUNCTION: self.evaluation_function,
+                                    # SEARCH_FUNCTION: self.search_function,
+                                    # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
+                                    SEARCH_SPACE: self.control_allocation_search_space
+                                    })
 
         # test_local_search_space = self._get_control_allocation_grid_space
 
