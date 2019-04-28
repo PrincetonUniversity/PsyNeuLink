@@ -498,11 +498,11 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, bin_execute=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
-        benchmark(comp.run, inputs)
+        benchmark(comp.run, inputs, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -539,11 +539,11 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, bin_execute=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
-        benchmark(comp.run, inputs)
+        benchmark(comp.run, inputs, bin_execute=mode)
 
     def test_model_based_ocm_with_buffer(self):
 
