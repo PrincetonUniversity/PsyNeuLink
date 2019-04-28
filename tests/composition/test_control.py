@@ -463,7 +463,14 @@ class TestModelBasedOptimizationControlMechanisms:
                                # Note: Skip decision variable OutputState
                                evc_gratton.simulation_results[simulation][1:])
 
-    def test_model_based_ocm_after(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_after(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -495,8 +502,16 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs)
 
-    def test_model_based_ocm_before(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_before(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -528,6 +543,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs)
 
     def test_model_based_ocm_with_buffer(self):
 
