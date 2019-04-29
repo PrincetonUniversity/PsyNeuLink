@@ -656,19 +656,6 @@ class RunError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
-class MonitoredOutputStatesOption(AutoNumber):
-    """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
-    ONLY_SPECIFIED_OUTPUT_STATES = ()
-    """Only monitor explicitly specified Outputstates."""
-    PRIMARY_OUTPUT_STATES = ()
-    """Monitor only the `primary OutputState <OutputState_Primary>` of a Mechanism."""
-    ALL_OUTPUT_STATES = ()
-    """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
-    NUM_MONITOR_STATES_OPTIONS = ()
-
-
 # Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
 OUTPUT_STATE_INDEX = 0
 WEIGHT_INDEX = 1
@@ -3266,6 +3253,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute == 'Python':
             bin_execute = False
 
+        # KAM Note 4/29/19
+        # The nested var is set to True if this Composition is nested in another Composition, otherwise False
+        # Later on, this is used to determine:
+        #   (1) whether to initialize from context
+        #   (2) whether to assign values to CIM from
         nested = False
         if len(self.input_CIM.path_afferents) > 0:
             nested = True
@@ -3418,6 +3410,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_before_time_step:
                 call_with_pruned_args(call_before_time_step, execution_context=execution_id)
 
+            # Store all node values *before* the start of each timestep
+            # If nodes within a timestep are connected by projections, those projections must pass their senders'
+            # values from the beginning of the timestep (i.e. their "frozen values")
+            # This ensures that the order in which nodes execute does not affect the results of this timestep
             frozen_values = {}
             new_values = {}
             if bin_execute:
