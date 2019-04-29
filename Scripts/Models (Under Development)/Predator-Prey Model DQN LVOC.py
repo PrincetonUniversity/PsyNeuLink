@@ -26,10 +26,21 @@ SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
 VERBOSE = SIMULATION_REPORTING
 
+
 # ControlSignal parameters
 COST_RATE = -.05
 COST_BIAS = 1
 ALLOCATION_SAMPLES = [0, 500]
+
+
+# Condition for executing controller
+new_episode_flag = True
+def get_new_episode_flag():
+    return new_episode_flag
+
+CONTROLLER_CONDITION = Condition(func=get_new_episode_flag)
+# FEATURE_FUNCTION = Buffer(history=3)
+FEATURE_FUNCTION = IntegratorMechanism()
 
 
 # Environment coordinates
@@ -74,7 +85,9 @@ ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
 def new_episode():
     # Start new episode with veridical state
 
+    global new_episode_flag
     initial_observation = ddqn_agent.env.reset()
+    new_episode_flag = True
 
     # Initialize both states to verdical state based on first observation
     perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
@@ -145,8 +158,7 @@ c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
 agent_comp.add_projections([a,b,c])
 
 
-
-# **************************************  CONOTROL APPRATUS ************************************************************
+# **************************************  CONOTROL APPARATUS ***********************************************************
 
 difference = Distance(metric=DIFFERENCE)
 #   function for ObjectiveMechanism
@@ -154,11 +166,11 @@ difference = Distance(metric=DIFFERENCE)
 ocm = OptimizationControlMechanism(name='EVC',
                                    # features={SHADOW_INPUTS:[trial_type_input_mech]},
                                    features=trial_type_input_mech,  #<- SHOULD WORK TO USE OUTPUTSTATE AS FEATURE?
-                                   # feature_function=IntegratorMechanism(),  # Implement for testing but not training
+                                   feature_function=FEATURE_FUNCTION,
                                    agent_rep=RegressionCFA(
                                            update_weights=BayesGLM(mu_0=-0.17, sigma_0=9.0909), # -0.17,
                                                                # 9.0909 precision = 0.11; 1/p = v
-                                           prediction_terms=[PV.FC, PV.COST]
+                                           prediction_terms=[PV.F, PV.C, PV.COST]
                                    ),
                                    function=GradientOptimization(
                                            convergence_criterion=VALUE,
@@ -186,7 +198,7 @@ ocm = OptimizationControlMechanism(name='EVC',
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
-agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
+agent_comp.controller_condition=CONTROLLER_CONDITION
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
@@ -206,6 +218,8 @@ if SHOW_GRAPH:
 num_episodes = 1
 
 def main():
+
+    global new_episode_flag
 
     if RENDER:
         ddqn_agent.env.render()  # If visualization is desired
@@ -305,7 +319,7 @@ def main():
 
             print(f'\nAction Taken (using {ACTION}): {action}')
 
-
+            new_episode_flag = False
             steps += 1
             if done:
                 break
