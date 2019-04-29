@@ -3565,7 +3565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute:
             _comp_ex.freeze_values()
             _comp_ex.execute_node(self.output_CIM)
-            return _comp_ex.extract_node_output(self.output_CIM)
+            return _comp_ex.extract_node_output(zzself.output_CIM)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
