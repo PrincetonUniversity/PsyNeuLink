@@ -7,30 +7,31 @@ import psyneulink.core.globals.keywords as kw
 from psyneulink.core.globals.sampleiterator import SampleIterator
 import pytest
 
-SIZE=10
+SIZE=5
 # Some metrics (CROSS_ENTROPY) don't like 0s
 test_var = np.random.rand(SIZE) + Function.EPSILON
-search_space = [SampleIterator([1.0, 2.0]) for _ in range(SIZE)]
+EPS = float(Function.EPSILON)
+search_space = [SampleIterator([EPS, 1.0]) for i in range(SIZE)]
 results = {
     Functions.Stability: {
         kw.ENERGY: {
             True: {
-                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -1.8, [], []),
-                OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -0.45, [], []),
+                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -0.4, [], []),
+                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, EPS), -1.9721522630525296e-32, [], []),
             },
             False: {
-                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -180.0, [], []),
-                OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -45.0, [], []),
+                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -10.0, [], []),
+                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, EPS), -4.930380657631324e-31, [], []),
             },
         },
         kw.ENTROPY: {
             True: {
-                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -5.78074351579233, [], []),
-                OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -2.197224577336219, [], []),
+                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -1.3862943611198906, [], []),
+                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, 1.0), 6.931471805599453, [], []),
             },
             False: {
-                OPTFunctions.MINIMIZE: ((2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0), -57.8074351579233, [], []),
-                OPTFunctions.MAXIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), -21.972245773362193, [], []),
+                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -6.931471805599453, [], []),
+                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, 1.0), 34.657359027997266, [], []),
             },
         },
     },
