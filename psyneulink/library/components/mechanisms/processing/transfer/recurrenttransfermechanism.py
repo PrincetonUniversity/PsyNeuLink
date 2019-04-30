@@ -1247,6 +1247,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=self.matrix,
                                                                                context=context)
+        self.aux_components.append(self.recurrent_projection)
+
         if self.learning_enabled:
             self.configure_learning(context=context)
 
