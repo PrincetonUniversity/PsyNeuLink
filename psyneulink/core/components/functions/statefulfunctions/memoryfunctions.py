@@ -1103,8 +1103,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
             d = np.delete(d, [0], axis=1)
 
         if key not in d[0]:
-            a = np.append(d[0], key).reshape(1, len(key))
-            b = np.append(d[1], val).reshape(1, len(val))
+            a = np.append(d[0], key).reshape(len(d[0])+1, len(key))
+            b = np.append(d[1], val).reshape(len(d[1])+1, len(val))
             d = np.asfarray([a, b])
 
         self.parameters.previous_value.set(d,execution_id)
