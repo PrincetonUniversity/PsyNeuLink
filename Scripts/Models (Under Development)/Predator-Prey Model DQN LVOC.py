@@ -21,10 +21,9 @@ AGENT_ACTION = 'AGENT_ACTION'
 ACTION = AGENT_ACTION
 
 # Verbosity levels for console printout
-ACTION_REPORTING = 3
-SIMULATION_REPORTING = 2
+ACTION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = SIMULATION_REPORTING
+VERBOSE = ACTION_REPORTING
 
 
 # ControlSignal parameters
@@ -223,6 +222,7 @@ def main():
     else:
         print('\nRunning simulation... ')
 
+    reward = 0
     steps = 0
     start_time = timeit.default_timer()
     for _ in range(num_episodes):
@@ -262,11 +262,7 @@ def main():
             agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             
             def print_controller():
-                if VERBOSE >= SIMULATION_REPORTING:
-                    print('\nSIMULATION RESULTS:')
-                    for sample, value in zip(ocm.saved_samples, ocm.saved_values):
-                        print(f'\t\tSample: {sample} Value: {value}')
-                # print(f'\nOCM Allocation:\n\t{repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))})
+
                 print(f'\nOCM:'
                       f'\n\tControlSignals:'
                       f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(execution_id)}'

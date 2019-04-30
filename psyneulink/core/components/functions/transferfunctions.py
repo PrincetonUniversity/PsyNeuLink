@@ -1953,8 +1953,16 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = self.get_current_function_param(OFFSET, execution_id)
         random_state = self.get_current_function_param('random_state', execution_id)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        result = scale * random_state.normal(variable+bias, variance) + offset
+        # result = scale * random_state.normal(variable+bias, variance) + offset
+        try:
+            # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+            result = scale * random_state.normal(variable+bias, variance) + offset
+        except ValueError as e:
+            if variance > 0:
+                raise FunctionError(f'variance {variance} in call to {self.name} of {self.owner.name} '
+                                    f'can\'t be a negative value.')
+            else:
+                assert False, f'Error in call to random_state.normal by {self.name} of {self.owner.name}: {repr(e)}'
 
         return self.convert_output_type(result)
 
