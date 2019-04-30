@@ -11,8 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -40,7 +40,7 @@ def get_new_episode_flag():
 
 CONTROLLER_CONDITION = Condition(func=get_new_episode_flag)
 # FEATURE_FUNCTION = Buffer(history=3)
-FEATURE_FUNCTION = IntegratorMechanism()
+FEATURE_FUNCTION = AdaptiveIntegrator(rate=0.5)
 
 
 # Environment coordinates
@@ -159,9 +159,6 @@ agent_comp.add_projections([a,b,c])
 
 
 # **************************************  CONOTROL APPARATUS ***********************************************************
-
-difference = Distance(metric=DIFFERENCE)
-#   function for ObjectiveMechanism
 
 ocm = OptimizationControlMechanism(name='EVC',
                                    # features={SHADOW_INPUTS:[trial_type_input_mech]},
