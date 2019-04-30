@@ -1528,7 +1528,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_graph_processing = True
         self.needs_update_scheduler_processing = True
         self.needs_update_scheduler_learning = True
-        self.projections.append(projection)
 
         projection._activate_for_compositions(self)
         for comp in subcompositions:
@@ -2325,7 +2324,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         name=proj_name
                     )
                     proj._activate_for_compositions(self)
-                    self._add_projection(proj)
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
