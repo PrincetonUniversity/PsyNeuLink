@@ -16,22 +16,46 @@ results = {
     Functions.Stability: {
         kw.ENERGY: {
             True: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -0.4, [], []),
-                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, EPS), -1.9721522630525296e-32, [], []),
+                OPTFunctions.MINIMIZE: {
+                    'FIRST': ((1.0, 1.0, 1.0, 1.0, 1.0), -0.4, [], []),
+                    'RANDOM': ((1.0, 1.0, 1.0, 1.0, 1.0), -0.4, [], []),
+                },
+                OPTFunctions.MAXIMIZE: {
+                    'FIRST': ((EPS, EPS, EPS, EPS, EPS), -1.9721522630525296e-32, [], []),
+                    'RANDOM': ((1.0, EPS, EPS, EPS, EPS), -1.9721522630525296e-32, [], []),
+                },
             },
             False: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -10.0, [], []),
-                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, EPS), -4.930380657631324e-31, [], []),
+                OPTFunctions.MINIMIZE: {
+                    'FIRST': ((1.0, 1.0, 1.0, 1.0, 1.0), -10.0, [], []),
+                    'RANDOM': ((1.0, 1.0, 1.0, 1.0, 1.0), -10.0, [], []),
+                },
+                OPTFunctions.MAXIMIZE: {
+                    'FIRST': ((EPS, EPS, EPS, EPS, EPS), -4.930380657631324e-31, [], []),
+                    'RANDOM': ((1.0, EPS, EPS, EPS, EPS), -4.930380657631324e-31, [], []),
+                },
             },
         },
         kw.ENTROPY: {
             True: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -1.3862943611198906, [], []),
-                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, 1.0), 6.931471805599453, [], []),
+                OPTFunctions.MINIMIZE: {
+                    'FIRST': ((1.0, 1.0, 1.0, 1.0, 1.0), -1.3862943611198906, [], []),
+                    'RANDOM': ((1.0, 1.0, 1.0, 1.0, 1.0), -1.3862943611198906, [], []),
+                },
+                OPTFunctions.MAXIMIZE: {
+                    'FIRST': ((EPS, EPS, EPS, EPS, 1.0), 6.931471805599453, [], []),
+                    'RANDOM': ((EPS, EPS, 1.0, EPS, EPS), 6.931471805599453, [], []),
+                },
             },
             False: {
-                OPTFunctions.MINIMIZE: ((1.0, 1.0, 1.0, 1.0, 1.0), -6.931471805599453, [], []),
-                OPTFunctions.MAXIMIZE: ((EPS, EPS, EPS, EPS, 1.0), 34.657359027997266, [], []),
+                OPTFunctions.MINIMIZE: {
+                    'FIRST': ((1.0, 1.0, 1.0, 1.0, 1.0), -6.931471805599453, [], []),
+                    'RANDOM': ((1.0, 1.0, 1.0, 1.0, 1.0), -6.931471805599453, [], []),
+                },
+                OPTFunctions.MAXIMIZE: {
+                    'FIRST': ((EPS, EPS, EPS, EPS, 1.0), 34.657359027997266, [], []),
+                    'RANDOM': ((EPS, EPS, 1.0, EPS, EPS), 34.657359027997266, [], []),
+                },
             },
         },
     },
@@ -40,17 +64,21 @@ results = {
 @pytest.mark.function
 @pytest.mark.benchmark
 @pytest.mark.optimization_function
+@pytest.mark.parametrize("selection", ['FIRST', 'RANDOM'])
 @pytest.mark.parametrize("direction", [OPTFunctions.MINIMIZE, OPTFunctions.MAXIMIZE])
 @pytest.mark.parametrize("normalize", [True, False])
 @pytest.mark.parametrize("metric", [kw.ENERGY, kw.ENTROPY])
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
-def test_basic(obj_func, metric, normalize, direction, benchmark):
+def test_basic(obj_func, metric, normalize, direction, selection, benchmark):
     variable = test_var
-    result = results[obj_func][metric][normalize][direction]
+    result = results[obj_func][metric][normalize][direction][selection]
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
 
     of = obj_func(default_variable=variable, metric=metric, normalize=normalize)
-    f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable, search_space=search_space, direction=direction)
+    f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable,
+                                search_space=search_space, direction=direction,
+                                select_randomly_from_optimal_values=(selection=='RANDOM'),
+                                seed = 0)
     res = f.function(variable)
     benchmark(f.function, variable)
 
@@ -70,7 +98,7 @@ def test_basic(obj_func, metric, normalize, direction, benchmark):
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
 def test_llvm(obj_func, metric, normalize, direction, benchmark):
     variable = test_var
-    result = results[obj_func][metric][normalize][direction]
+    result = results[obj_func][metric][normalize][direction]['FIRST']
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
 
     of = obj_func(default_variable=variable, metric=metric, normalize=normalize)
@@ -94,7 +122,7 @@ def test_llvm(obj_func, metric, normalize, direction, benchmark):
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
 def test_ptx_cuda(obj_func, metric, normalize, direction, benchmark):
     variable = test_var
-    result = results[obj_func][metric][normalize][direction]
+    result = results[obj_func][metric][normalize][direction]['FIRST']
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
 
     of = obj_func(default_variable=variable, metric=metric, normalize=normalize)
