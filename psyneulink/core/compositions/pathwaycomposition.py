@@ -79,7 +79,6 @@ class PathwayComposition(Composition):
         inputs=None,
         autodiff_stimuli=None,
         scheduler_processing=None,
-        scheduler_learning=None,
         termination_processing=None,
         termination_learning=None,
         call_before_time_step=None,
@@ -99,7 +98,6 @@ class PathwayComposition(Composition):
             inputs = {self.get_mechanisms_by_role(NodeRole.ORIGIN).pop(): inputs}
 
         output = super(PathwayComposition, self).execute(inputs, scheduler_processing=scheduler_processing,
-                                                         scheduler_learning=scheduler_learning,
                                                          termination_processing=termination_processing,
                                                          termination_learning=termination_learning,
                                                          call_before_time_step=call_before_time_step,

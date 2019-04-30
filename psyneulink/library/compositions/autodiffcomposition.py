@@ -711,7 +711,6 @@ class AutodiffComposition(Composition):
                 autodiff_stimuli=None,
                 do_logging=False,
                 scheduler_processing=None,
-                scheduler_learning=None,
                 termination_processing=None,
                 termination_learning=None,
                 call_before_time_step=None,
@@ -760,7 +759,6 @@ class AutodiffComposition(Composition):
         # learning not enabled. execute as a normal composition
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler_processing=scheduler_processing,
-                                                        scheduler_learning=scheduler_learning,
                                                         termination_processing=termination_processing,
                                                         termination_learning=termination_learning,
                                                         call_before_time_step=call_before_time_step,
@@ -782,7 +780,6 @@ class AutodiffComposition(Composition):
         inputs=None,
         do_logging=False,
         scheduler_processing=None,
-        scheduler_learning=None,
         termination_processing=None,
         termination_learning=None,
         execution_id=None,
@@ -826,7 +823,6 @@ class AutodiffComposition(Composition):
         else:
             return super(AutodiffComposition, self).run(inputs=inputs,
                                                     scheduler_processing=scheduler_processing,
-                                                    scheduler_learning=scheduler_learning,
                                                     termination_processing=termination_processing,
                                                     termination_learning=termination_learning,
                                                     execution_id=execution_id,
