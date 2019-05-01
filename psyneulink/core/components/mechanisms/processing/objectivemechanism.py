@@ -810,6 +810,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
+
     @property
     def monitor(self):
         if not isinstance(self.input_states, ContentAddressableList):

@@ -180,7 +180,6 @@ def test_linear_combination_function_in_mechanism(operation, input, input_states
 
     assert np.allclose(res, expected)
 
-@pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.combination_function
 @pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
