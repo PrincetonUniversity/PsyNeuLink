@@ -200,10 +200,11 @@ dnd.ASSOC_INPUT = [1,2,3,4,5]
 print(dnd.input_values)
 print(dnd.output_values)
 
-dnd.insert_memory({0,1})
+# dnd.function.insert_memories([[[100,101,102,103,104],[23,24,25,26,27]]], execution_id=5)
+# assert True
 
-dnd.dict.insert_memory({0,1})
-
-dnd.get_memory(0)
+# dnd.dict.insert_memory({0,1})
+#
+# dnd.get_memory(0)
 
 """cant figure out get&store memory functions"""
