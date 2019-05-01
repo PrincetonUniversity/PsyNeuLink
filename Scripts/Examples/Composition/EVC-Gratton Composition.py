@@ -63,19 +63,19 @@ objective_mech = ObjectiveMechanism(name='EVC Objective Mechanism', function=Lin
                                                                  (Decision.output_states[
                                                                       PROBABILITY_UPPER_THRESHOLD], 1, -1)])
 # Model Based OCM (formerly controller)
-evc_gratton.add_model_based_optimizer(optimizer=OptimizationControlMechanism(name='EVC OCM',
-                                                                             agent_rep=evc_gratton,
-                                                                             features=[target_stim.input_state,
-                                                                                       flanker_stim.input_state,
-                                                                                       reward.input_state],
-                                                                             feature_function=AdaptiveIntegrator(
-                                                                                     rate=1.0),
-                                                                             objective_mechanism=objective_mech,
-                                                                             function=GridSearch(),
-                                                                             control_signals=[
-                                                                                 target_rep_control_signal,
-                                                                                 flanker_rep_control_signal]))
-evc_gratton.enable_model_based_optimizer = True
+evc_gratton.add_controller(controller=OptimizationControlMechanism(name='EVC OCM',
+                                                                  agent_rep=evc_gratton,
+                                                                  features=[target_stim.input_state,
+                                                                            flanker_stim.input_state,
+                                                                            reward.input_state],
+                                                                  feature_function=AdaptiveIntegrator(
+                                                                          rate=1.0),
+                                                                  objective_mechanism=objective_mech,
+                                                                  function=GridSearch(),
+                                                                  control_signals=[
+                                                                      target_rep_control_signal,
+                                                                      flanker_rep_control_signal]))
+evc_gratton.enable_controller = True
 
 targetFeatures = [1, 1, 1]
 flankerFeatures = [1, -1, 1]
@@ -85,7 +85,8 @@ stim_list_dict = {target_stim: targetFeatures,
                   flanker_stim: flankerFeatures,
                   reward: rewardValues}
 
-evc_gratton.show_graph(show_model_based_optimizer=True)
+evc_gratton.show_graph(show_model_based_optimizer=True,
+                       show_node_structure=ALL)
 # evc_gratton.show_graph(show_model_based_optimizer=True, show_node_structure=ALL)
 
 # evc_gratton.run(inputs=stim_list_dict)

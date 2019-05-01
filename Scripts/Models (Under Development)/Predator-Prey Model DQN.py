@@ -11,13 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-<<<<<<< HEAD
 RUN = True
 SHOW_GRAPH = False
-=======
-RUN = False
-SHOW_GRAPH = True
->>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -29,11 +24,11 @@ ACTION = AGENT_ACTION
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = STANDARD_REPORTING
+VERBOSE = SIMULATION_REPORTING
 
 # ControlSignal parameters
 COST_RATE = -.05
-COST_BIAS = -3
+COST_BIAS = 1
 ALLOCATION_SAMPLES = [0, 500]
 
 
@@ -142,14 +137,8 @@ agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
 b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
 c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
-<<<<<<< HEAD
 agent_comp.add_projections([a,b,c])
 
-=======
-agent_comp.add_projection(a)
-agent_comp.add_projection(b)
-agent_comp.add_projection(c)
->>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
 
 
 # **************************************  CONOTROL APPRATUS ************************************************************
@@ -172,10 +161,7 @@ ocm = OptimizationControlMechanism(name='EVC',
                                    objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
                                                                           function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
-<<<<<<< HEAD
                                    compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
-=======
->>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
@@ -189,23 +175,20 @@ ocm = OptimizationControlMechanism(name='EVC',
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS))])
 # Add controller to Composition
-agent_comp.add_model_based_optimizer(ocm)
-agent_comp.enable_model_based_optimizer = True
-agent_comp.model_based_optimizer_mode = BEFORE
+agent_comp.add_controller(ocm)
+agent_comp.enable_controller = True
+agent_comp.controller_mode = BEFORE
+agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-<<<<<<< HEAD
+    agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
     # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
-    agent_comp.show_graph(show_model_based_optimizer=True,
-                          show_cim=True,
-                          show_node_structure=ALL,
-                          show_headers=True,
-                          )
-=======
-    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
->>>>>>> fa5d0428a56b01c030f01a4a971bdee278b50bb2
+    # agent_comp.show_graph(show_model_based_optimizer=True,
+    #                       show_cim=True,
+    #                       show_node_structure=ALL,
+    #                       show_headers=True,
+    #                       )
 
 
 # *********************************************************************************************************************
@@ -248,7 +231,7 @@ def main():
             if VERBOSE >= ACTION_REPORTING:
                 print(f'\nOUTER LOOP OPTIMAL ACTION:{optimal_action}')
 
-            # Get agent's action based on perceptual distoration of observation (and application of control)
+            # Get agent's action based on perceptual distortion of observation (and application of control)
             run_results = agent_comp.run(inputs={player_percept:[observation[player_coord_slice]],
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],
@@ -279,7 +262,7 @@ def main():
                 print(f'OUTER LOOP AGENT ACTION:{agent_action}')
 
             if VERBOSE >= STANDARD_REPORTING:
-                if agent_comp.model_based_optimizer_mode is BEFORE:
+                if agent_comp.controller_mode is BEFORE:
                     print_controller()
                 print(f'\nObservations:'
                       f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
@@ -291,7 +274,7 @@ def main():
                       f'\n\nActions:\n\tAgent: {agent_action}\n\tOptimal: {optimal_action}'
                       f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
                       )
-                if agent_comp.model_based_optimizer_mode is AFTER:
+                if agent_comp.controller_mode is AFTER:
                     print_controller()
 
             # Restore frame buffer to state after optimal action taken (at beginning of trial)

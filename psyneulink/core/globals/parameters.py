@@ -564,6 +564,12 @@ class Parameter(types.SimpleNamespace):
             if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter's default_value will be returned instead
 
             :default: False
+
+        retain_old_simulation_data
+            if False, the Parameter signals to other PNL objects that any values generated during simulations may be deleted after they
+            are no longer needed for computation; if True, the values should be saved for later inspection
+
+            :default: False
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -572,7 +578,7 @@ class Parameter(types.SimpleNamespace):
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
     _hidden_if_unset_attrs = {'aliases', 'getter', 'setter'}
-    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default'}
+    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
         **{k: lambda self, val: val is False for k in _hidden_if_false_attrs},
@@ -603,6 +609,7 @@ class Parameter(types.SimpleNamespace):
         history=None,
         history_max_length=1,
         fallback_default=False,
+        retain_old_simulation_data=False,
         _owner=None,
         _inherited=False,
         _user_specified=False,
@@ -636,6 +643,7 @@ class Parameter(types.SimpleNamespace):
             history=history,
             history_max_length=history_max_length,
             fallback_default=fallback_default,
+            retain_old_simulation_data=retain_old_simulation_data,
             _inherited=_inherited,
             _user_specified=_user_specified,
         )
@@ -806,7 +814,7 @@ class Parameter(types.SimpleNamespace):
                 else:
                     return None
 
-    def get_previous(self, execution_context=None):
+    def get_previous(self, execution_context=None, index=1):
         """
             Gets the value set before the current value of this `Parameter` in the context of **execution_context**
 
@@ -815,9 +823,13 @@ class Parameter(types.SimpleNamespace):
 
                 execution_context : execution_id, Composition
                     the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+
+                index : int : 1
+                    how far back to look into the history. A value of 1 means the first previous value
+
         """
         try:
-            return self.history[execution_context][-1]
+            return self.history[execution_context][-1 * index]
         except (KeyError, IndexError):
             return None
 
@@ -898,6 +910,20 @@ class Parameter(types.SimpleNamespace):
         # set value
         self.values[execution_id] = value
 
+    def delete(self, execution_context=None):
+        execution_context = parse_execution_context(execution_context)
+        try:
+            del self.values[execution_context]
+        except KeyError:
+            pass
+
+        try:
+            del self.history[execution_context]
+        except KeyError:
+            pass
+
+        self.clear_log(execution_context)
+
     def _log_value(self, value, execution_id=None, context=None):
         # manual logging
         if context is ContextFlags.COMMAND_LINE:
@@ -942,11 +968,14 @@ class Parameter(types.SimpleNamespace):
             self.log.clear()
             return
 
+        if isinstance(execution_ids, str):
+            execution_ids = [execution_ids]
+
         try:
             for eid in execution_ids:
                 self.log.pop(eid, None)
         except TypeError:
-                self.log.pop(execution_ids, None)
+            self.log.pop(execution_ids, None)
 
     def _initialize_from_context(self, execution_context=None, base_execution_context=None, override=True):
         from psyneulink.core.components.component import Component

@@ -789,7 +789,7 @@ class DDM(ProcessingMechanism_Base):
                 function
                     see `function <DDM.function>`
 
-                    :default value: `DriftDiffusionAnalytical`(bias=0.5, drift_rate=1.0, noise=0.5, starting_point=0.0, t0=0.2, threshold=1.0)
+                    :default value: `DriftDiffusionAnalytical`
                     :type: `Function`
 
                 initializer
@@ -1179,7 +1179,12 @@ class DDM(ProcessingMechanism_Base):
 
     def is_finished(self, execution_context=None):
         # find the single numeric entry in previous_value
-        single_value = self.function.get_previous_value(execution_context)
+        try:
+            single_value = self.function.get_previous_value(execution_context)
+        except AttributeError:
+            # Analytical function so fall back to more standard behavior
+            return super().is_finished(execution_context)
+
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
             while True:

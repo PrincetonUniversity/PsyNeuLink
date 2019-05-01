@@ -405,6 +405,8 @@ class Scheduler(object):
         }
         self.termination_conds = termination_conds
 
+        self.cycle_nodes = set()
+
         if system is not None:
             self.nodes = [m for m in system.execution_list]
             self._init_consideration_queue_from_system(system)
@@ -476,7 +478,7 @@ class Scheduler(object):
         removed_dependencies = {}           # stores dependencies that were removed in order to flatten cycles
         flattened_cycles = {}               # flattened_cycles[node] = [all cycles to which node belongs]
         visual_graph = collections.OrderedDict()
-
+        self.cycle_nodes = set()
         # Loop through the existing composition graph, considering "forward" projections only
         # If a cycle is found, "flatten" it by bringing all nodes into the same execution set
         for vert in graph.vertices:
@@ -513,6 +515,7 @@ class Scheduler(object):
                     # (3) copy the dependencies of the node that "started" the cycle onto all other cycle nodes
                     for i in range(len(cycle) - 1):
                         node_a = cycle[i]
+                        self.cycle_nodes.add(node_a)
                         node_b = cycle[i + 1]
                         if node_a not in flattened_cycles:
                             flattened_cycles[node_a] = []
@@ -835,6 +838,22 @@ class Scheduler(object):
             self.date_last_run_end = datetime.datetime.now()
 
         return self.execution_list[execution_id]
+
+    def _dict_summary(self):
+        return {
+            'conditions': {
+                'termination': {
+                    str(k): str(v) for k, v in self.termination_conds.items()
+                },
+                'node': {
+                    n.name: str(self.condition_set[n]) for n in self.nodes if n in self.condition_set
+                }
+            }
+        }
+
+    def json_summary(self):
+        import json
+        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
 
     @property
     def clock(self):

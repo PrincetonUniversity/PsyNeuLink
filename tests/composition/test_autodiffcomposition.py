@@ -811,7 +811,7 @@ class TestTrainingTime:
                              targets={and_out:and_targets},
                              epochs=eps,
                              learning_rate=0.1,
-                             optimizer=opt)
+                             controller=opt)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -944,7 +944,7 @@ class TestTrainingTime:
                          targets={xor_out:xor_targets},
                          epochs=eps,
                          learning_rate=0.1,
-                         optimizer=opt)
+                         controller=opt)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -1242,7 +1242,7 @@ class TestTrainingTime:
                              targets=targets_dict,
                              epochs=eps,
                              learning_rate=0.1,
-                             optimizer=opt)
+                             controller=opt)
         end = timeit.default_timer()
         comp_time = end - start
 

@@ -14,7 +14,7 @@
 Overview
 --------
 
-A EpisodicMemoryMechanism is an `IntegratorFunction` Function that can store and retrieve cue-associate pairs.
+A EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve cue-associate pairs.
 
 .. _EpisodicMemoryMechanism_Creation:
 
@@ -37,12 +37,16 @@ function can be specified, so long as it meets the following requirements:
 
     * It must accept a 2d array as its first argument, the first item of which is the cue and the second the associate.
     ..
-    * It must retur a 2d array, the first item of which is the retrieved associate and the cue with which it is
-      associated in the `function <EpisodicMemoryMechanism.function>`\\'s memory.
+    * It must retur a 2d array, the first item of which is the retrieved associate and the second of which is the cue
+      with which it is associated in the `function <EpisodicMemoryMechanism.function>`\\'s `memory
+      <EpisodicMemoryMechanism.memory>`.
     ..
-    * It may also implement `storage_prob` and `retrieval_prob` attributes;  if it does, they are assigned the values
+    * It may also implement `storage_prob` and/or `retrieval_prob` attributes;  if it does, they are assigned the values
       specified in the corresponding arguments of the EpisodicMemoryMechanism's constructor, otherwise those are
       ignored.
+    ..
+    * It may also implement a `memory` attribute;  if it does, it can be accesses by the EpisodicMemoryMechanism's
+      `memory <EpisodicMemoryMechanism.memory>` attribute.
 
 .. _EpisodicMemoryMechanism_Execution:
 
@@ -52,14 +56,14 @@ Execution
 When an EpisodicMemoryMechanism is executed, its `function <EpisodicMemoryMechanism.function>` carries out
 the following operations:
 
-    * retrieve an item from its memory based on the `value <InputState.value>` of its *CUE_INPUT* `InputState`
+    * retrieves an item from its memory based on the `value <InputState.value>` of its *CUE_INPUT* `InputState`
       and `retrieval_prob <EpisodicMemory.storage_prob>`;  if no retrieval is made, appropriately shaped zero-valued
       arrays are assigned to the `value <OutputState.value>` of the *ASSOC_OUTPUT* and *CUE_OUTPUT* OutputStates.
     ..
-    * store the `value <InputState.value>` of its *CUE_INPUT* and *ASSOC_INPUT* `InputStates <InputState>` in
+    * stores the `value <InputState.value>` of its *CUE_INPUT* and *ASSOC_INPUT* `InputStates <InputState>` in
       its memory, based on its `storage_prob <EpisodicMemoryMechanism.storage_prob>`.
     ..
-    * assign the value of the retrieved item's assoc in the EpisodicMemoryMechanism's  *ASSOC_OUTPUT* `OutputState`,
+    * assigns the value of the retrieved item's assoc in the EpisodicMemoryMechanism's  *ASSOC_OUTPUT* `OutputState`,
       and the value of the cue of the retrieved item in the *CUE_OUTPUT* OutputState.
 
     .. note::
@@ -78,6 +82,7 @@ Class Reference
 
 
 """
+import warnings
 
 import numpy as np
 
@@ -160,17 +165,20 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    storage_prob : float : default 1.0
+    storage_prob : float
         probability that cue and assoc are stored in the `function <EpisodicMemoryMechanism.function>`\s memory.
 
-    retrieval_prob : float : default 1.0
+    retrieval_prob : float
         probability that cue and assoc are retrieved from the `function <EpisodicMemoryMechanism.function>`\s memory;
         if no retrieval is made, appropriately-shaped zero-valued arrays are assigned to the the `value
         <OutputState.value>` of the *ASSOC_OUTPUT* and *CUE_OUTPUT* OutputStates (see <Structure
         <EpisodicMemoryMechanism_Structure>`.
 
-    function : function : default DND
+    function : function
         function that implements storage and retrieval from a memory.
+
+    memory : 3d array
+        array containing key-value pairs stored in the function's `memory` attribute (if it has one).
 
     name : str
         the name of the EpisodicMemoryMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -184,6 +192,17 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
 
     class Parameters(ProcessingMechanism_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <EpisodicMemoryMechanism.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+
+        """
         variable = Parameter([[0],[0]])
 
     def __init__(self,
@@ -240,3 +259,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                                   execution_id=execution_id,
                                   runtime_params=runtime_params,
                                   context=context)
+
+    @property
+    def memory(self):
+        try:
+            return self.function.memory
+        except:
+            warnings.warning(f'Function of {self.name} (self.function.name) has no memory attribute')

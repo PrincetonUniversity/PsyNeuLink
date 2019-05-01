@@ -597,11 +597,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if MONITORED_OUTPUT_STATES in kwargs:
             if monitor:
-                raise ObjectiveMechanismError("Can't specifiy both {} ({}) and {} ({}) args of {} specified; pick one!".
-                                              format(repr(MONITOR), monitor,
-                                                     repr(MONITORED_OUTPUT_STATES), kwargs[MONITORED_OUTPUT_STATES]))
-            warnings.warn('Use of {} as arg of {} is deprecated;  use {} instead'.
-                          format(repr(MONITORED_OUTPUT_STATES), self.__class__.__name__, repr(MONITOR)))
+                raise ObjectiveMechanismError(f'Can\'t specifiy both {repr(MONITOR)} ({monitor}) '
+                                              f'and {repr(MONITORED_OUTPUT_STATES)} ({kwargs[MONITORED_OUTPUT_STATES]})'
+                                              f' args of {self.name} specified; pick one!')
+            warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
+                          f'use {repr(MONITOR)} instead')
             monitor = kwargs[MONITORED_OUTPUT_STATES]
 
         monitor = monitor or None # deal with possibility of empty list

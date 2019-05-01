@@ -658,6 +658,17 @@ class MappingProjection(PathwayProjection_Base):
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.parameters.context.get(execution_id).string = context
 
+        # KAM 4/5/19 added hack below
+        # Should only be "if self.has_learning_projection" but need other checks because some types of learning
+        # (System and Hebbian) have already updated their matrix parameter state by this point
+        if self.has_learning_projection and self.context.composition \
+                and hasattr(self.context.composition, "scheduler_learning") \
+                and not self.context.composition.scheduler_learning \
+                and self.sender.owner != self.receiver.owner:
+
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+            self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
         return super()._execute(
             variable=variable,

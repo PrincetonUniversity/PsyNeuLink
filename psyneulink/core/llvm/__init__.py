@@ -15,7 +15,7 @@ from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
-from .builder_context import _type_cache
+from .builder_context import _type_cache, _all_modules
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -122,6 +122,16 @@ class LLVMBinaryFunction:
             _binaries[name] = LLVMBinaryFunction(name)
         return _binaries[name]
 
+    def get_multi_run(self):
+        try:
+            multirun_llvm = _find_llvm_function(self.name + "_multirun")
+        except ValueError:
+            function = _find_llvm_function(self.name);
+            with LLVMBuilderContext() as ctx:
+                multirun_llvm = ctx.gen_multirun_wrapper(function)
+
+        return LLVMBinaryFunction.get(multirun_llvm.name)
+
 
 def _updateNativeBinaries(module, buffer):
     to_delete = []
@@ -157,6 +167,7 @@ def cleanup():
 
     _modules.clear()
     _compiled_modules.clear()
+    _all_modules.clear()
     _type_cache.clear()
     init_builtins()
 

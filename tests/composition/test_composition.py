@@ -9,7 +9,7 @@ import pytest
 from itertools import product
 
 import psyneulink.core.llvm as pnlvm
-
+import psyneulink as pnl
 from psyneulink.core.components.functions.function import ModulationParam
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
@@ -454,9 +454,6 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.ORIGIN)
         assert A in comp.get_nodes_by_role(NodeRole.TERMINAL)
         assert B in comp.get_nodes_by_role(NodeRole.TERMINAL)
-        # KAM 1/25/19 removed CYCLE and RECURRENT_INIT roles from _analyze_graph and docs
-        # assert A in comp.get_nodes_by_role(NodeRole.CYCLE)
-        # assert B in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
     # (A)->(B)<->(C)<-(D)
     @pytest.mark.skip
@@ -480,6 +477,54 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.CYCLE)
         assert C in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
+    def test_controller_objective_mech_not_terminal(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                                                  features=[A.input_state],
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                      function=pnl.LinearCombination(
+                                                                                          operation=pnl.PRODUCT),
+                                                                                      monitor=[A]),
+                                                                                  function=pnl.GridSearch(),
+                                                                                  control_signals=[("slope", B)]
+                                                                                  )
+                                       )
+        comp._analyze_graph()
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+        # disable controller
+        comp.enable_controller = False
+        comp._analyze_graph()
+        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+
+    def test_controller_objective_mech_not_terminal_fall_back(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                                                  features=[A.input_state],
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                      function=pnl.LinearCombination(
+                                                                                          operation=pnl.PRODUCT),
+                                                                                      monitor=[A, B]),
+                                                                                  function=pnl.GridSearch(),
+                                                                                  control_signals=[("slope", B)]
+                                                                                  )
+                                       )
+        comp._analyze_graph()
+        assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        # disable controller
+        comp.enable_controller = False
+        comp._analyze_graph()
+        assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert B not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 class TestGraphCycles:
 
@@ -1217,240 +1262,6 @@ class TestExecutionOrder:
         assert np.allclose(comp1.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
 
-
-# class TestValidateFeedDict:
-#
-#     def test_empty_feed_dicts(self):
-#         comp = Composition()
-#         A = TransferMechanism(name='composition-pytests-A')
-#         B = TransferMechanism(name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {}
-#         feed_dict_terminal = {}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_origin_and_terminal_with_mapping(self):
-#         comp = Composition()
-#         A = TransferMechanism(name='composition-pytests-A')
-#         B = TransferMechanism(name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0]]}
-#         feed_dict_terminal = {B: [[0]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_origin_and_terminal_with_swapped_feed_dicts_1(self):
-#         comp = Composition()
-#         A = TransferMechanism(name='composition-pytests-A')
-#         B = TransferMechanism(name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {B: [[0]]}
-#         feed_dict_terminal = {A: [[0]]}
-#         with pytest.raises(ValueError):
-#             comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#
-#     def test_origin_and_terminal_with_swapped_feed_dicts_2(self):
-#         comp = Composition()
-#         A = TransferMechanism(name='composition-pytests-A')
-#         B = TransferMechanism(name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {B: [[0]]}
-#         feed_dict_terminal = {A: [[0]]}
-#         with pytest.raises(ValueError):
-#             comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_multiple_origin_mechs(self):
-#         comp = Composition()
-#         A = TransferMechanism(name='composition-pytests-A')
-#         B = TransferMechanism(name='composition-pytests-B')
-#         C = TransferMechanism(name='composition-pytests-C')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_node(C)
-#         comp.add_projection(A, MappingProjection(), C)
-#         comp.add_projection(B, MappingProjection(), C)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0]], B: [[0]]}
-#         feed_dict_terminal = {C: [[0]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_multiple_origin_mechs_only_one_in_feed_dict(self):
-#         comp = Composition()
-#         A = TransferMechanism(name='composition-pytests-A')
-#         B = TransferMechanism(name='composition-pytests-B')
-#         C = TransferMechanism(name='composition-pytests-C')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_node(C)
-#         comp.add_projection(A, MappingProjection(), C)
-#         comp.add_projection(B, MappingProjection(), C)
-#         comp._analyze_graph()
-#         feed_dict_origin = {B: [[0]]}
-#         feed_dict_terminal = {C: [[0]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_input_state_len_3(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0, 1, 2]]}
-#         feed_dict_terminal = {B: [[0, 1, 2]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_input_state_len_3_feed_dict_len_2(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0, 1]]}
-#         feed_dict_terminal = {B: [[0]]}
-#         with pytest.raises(ValueError):
-#             comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#
-#     def test_input_state_len_2_feed_dict_len_3(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0, 1], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[0, 1], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0, 1, 2]]}
-#         feed_dict_terminal = {B: [[0]]}
-#         with pytest.raises(ValueError):
-#             comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#
-#     def test_feed_dict_includes_mechs_of_correct_and_incorrect_types(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0]], B: [[0]]}
-#         with pytest.raises(ValueError):
-#             comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#
-#     def test_input_state_len_3_brackets_extra_1(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[[0, 1, 2]]]}
-#         feed_dict_terminal = {B: [[[0, 1, 2]]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_input_state_len_3_brackets_missing_1(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A:  [0, 1, 2]}
-#         feed_dict_terminal = {B: [[0]]}
-#         with pytest.raises(TypeError):
-#             comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#
-#     def test_empty_feed_dict_for_empty_type(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0]]}
-#         feed_dict_monitored = {}
-#         comp._validate_feed_dict(feed_dict_monitored, comp.get_nodes_by_role(MechanismRole.MONITORED), "monitored")
-#
-#     def test_mech_in_feed_dict_for_empty_type(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0])
-#         B = TransferMechanism(name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0]]}
-#         feed_dict_monitored = {B: [[0]]}
-#         with pytest.raises(ValueError):
-#             comp._validate_feed_dict(feed_dict_monitored, comp.get_nodes_by_role(MechanismRole.MONITORED), "monitored")
-#
-#     def test_one_mech_1(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0])
-#         comp.add_node(A)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0]]}
-#         feed_dict_terminal = {A: [[0]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#
-#     def test_one_mech_2(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[0])
-#         comp.add_node(A)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0]]}
-#         feed_dict_terminal = {A: [[0]]}
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_multiple_time_steps_1(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[0, 1, 2], [0, 1, 2]]}
-#         feed_dict_terminal = {B: [[0, 1, 2]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-#
-#     def test_multiple_time_steps_2(self):
-#         comp = Composition()
-#         A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
-#         B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
-#         comp.add_node(A)
-#         comp.add_node(B)
-#         comp.add_projection(A, MappingProjection(), B)
-#         comp._analyze_graph()
-#         feed_dict_origin = {A: [[[0, 1, 2]], [[0, 1, 2]]]}
-#         feed_dict_terminal = {B: [[0, 1, 2]]}
-#         comp._validate_feed_dict(feed_dict_origin, comp.get_nodes_by_role(MechanismRole.ORIGIN), "origin")
-#         comp._validate_feed_dict(feed_dict_terminal, comp.get_nodes_by_role(MechanismRole.TERMINAL), "terminal")
-
-
 class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
@@ -1464,15 +1275,12 @@ class TestGetMechanismsByRole:
         comp._add_node_role(mechs[0], NodeRole.ORIGIN)
         comp._add_node_role(mechs[1], NodeRole.INTERNAL)
         comp._add_node_role(mechs[2], NodeRole.INTERNAL)
-        comp._add_node_role(mechs[3], NodeRole.CYCLE)
 
         for role in list(NodeRole):
             if role is NodeRole.ORIGIN:
                 assert comp.get_nodes_by_role(role) == [mechs[0]]
             elif role is NodeRole.INTERNAL:
                 assert comp.get_nodes_by_role(role) == [mechs[1], mechs[2]]
-            elif role is NodeRole.CYCLE:
-                assert comp.get_nodes_by_role(role) == [mechs[3]]
             else:
                 assert comp.get_nodes_by_role(role) == []
 
@@ -2186,7 +1994,8 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition Vector")
-    @pytest.mark.parametrize("mode, vector_length", product(('Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)), [2**x for x in range(1)]))
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("vector_length", [2**x for x in range(1)])
     def test_run_composition_vector(self, benchmark, mode, vector_length):
         var = [1.0 for x in range(vector_length)];
         comp = Composition()
@@ -2533,6 +2342,19 @@ class TestRun:
 
         benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
+    def test_run_termination_condition_custom_execution_id(self):
+        D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
+        comp = pnl.Composition()
+
+        comp.add_node(node=D)
+
+        comp.run(
+            inputs={D: 0},
+            termination_processing={pnl.TimeScale.RUN: pnl.WhenFinished(D)},
+            execution_id='custom'
+        )
+
+
 class TestCallBeforeAfterTimescale:
 
     def test_call_before_record_timescale(self):
@@ -2608,8 +2430,8 @@ class TestCallBeforeAfterTimescale:
                 B: [0, 10, 20, 30]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2, 4, 6],
-                B: [np.nan, 10, 20, 30]
+                A: [0, 2, 4, 6],
+                B: [0, 10, 20, 30]
             },
         }
 
@@ -2691,8 +2513,8 @@ class TestCallBeforeAfterTimescale:
                 ]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2],
-                B: [np.nan, 4]
+                A: [0, 2],
+                B: [0, 4]
             },
         }
 
@@ -2747,6 +2569,7 @@ class TestCallBeforeAfterTimescale:
                     except (TypeError, IndexError):
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
+
 
     # when self.sched is ready:
     # def test_run_default_scheduler(self):
@@ -3118,8 +2941,8 @@ class TestSystemComposition:
                 B: [0, 10, 20, 30]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2, 4, 6],
-                B: [np.nan, 10, 20, 30]
+                A: [0, 2, 4, 6],
+                B: [0, 10, 20, 30]
             },
         }
 
@@ -3202,8 +3025,8 @@ class TestSystemComposition:
                 ]
             },
             TimeScale.TRIAL: {
-                A: [np.nan, 2],
-                B: [np.nan, 4]
+                A: [0, 2],
+                B: [0, 4]
             },
         }
 
@@ -4726,6 +4549,7 @@ class TestInputSpecifications:
         assert np.allclose(C.get_output_values(comp), [[0.]])
         assert np.allclose(D.get_output_values(comp), [[4.]])
 
+
 class TestProperties:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', 'Fallback',
@@ -4743,6 +4567,7 @@ class TestProperties:
 
         res = comp.run(inputs=inputs, bin_execute=mode)
         assert np.allclose(res, [[20.0, 40.0], [60.0, 80.0]])
+
 
 class TestAuxComponents:
     def test_two_transfer_mechanisms(self):
@@ -4871,6 +4696,7 @@ class TestAuxComponents:
         for comp in expected_stateful_nodes:
             assert comp.stateful_nodes == expected_stateful_nodes[comp]
 
+
 class TestShadowInputs:
 
     def test_two_origins(self):
@@ -4978,3 +4804,45 @@ class TestShadowInputs:
                          B: 15.0})
         assert obj.value == [[25.0]]
 
+
+class TestNodeRoles:
+
+    def test_internal(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp.add_linear_processing_pathway([A, B, C])
+
+        comp._analyze_graph()
+
+        assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
+
+    def test_feedback(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp.add_linear_processing_pathway([A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=True)
+
+        comp._analyze_graph()
+
+        assert comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER) == [C]
+
+        assert comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER) == [A]
+
+    def test_cycle(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp.add_linear_processing_pathway([A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+
+        comp._analyze_graph()
+
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A, B, C}

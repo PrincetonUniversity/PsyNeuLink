@@ -483,16 +483,8 @@ class OptimizationFunction(Function_Base):
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
-        sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        current_sample = sample
-
-        # KAM HACK - "INITIALIZING" signals to evaluate that this simulation result should NOT be recorded
-        stored_context = self.parameters.context.get(execution_id)
-        original_initialization_status = stored_context.initialization_status
-        stored_context.initialization_status = ContextFlags.INITIALIZING
-        current_value = call_with_pruned_args(self.objective_function, current_sample, execution_id=execution_id)
-        stored_context.initialization_status = original_initialization_status
+        current_sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        current_value = self.owner.objective_mechanism.parameters.value.get(execution_id) if self.owner else 0.
 
         samples = []
         values = []
@@ -513,7 +505,6 @@ class OptimizationFunction(Function_Base):
             print("\n{} executing optimization process (one {} for each {}of {} samples): ".
                   format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
             _progress_bar_count = 0
-
         # Iterate optimization process
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
@@ -528,11 +519,9 @@ class OptimizationFunction(Function_Base):
 
             # Get next sample of sample
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
-
             # Compute new value based on new sample
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
             self._report_value(new_value)
-
             iteration += 1
             max_iterations = self.parameters.max_iterations.get(execution_id)
             if max_iterations and iteration > max_iterations:
@@ -565,8 +554,9 @@ class GradientOptimization(OptimizationFunction):
     GradientOptimization(            \
         default_variable=None,       \
         objective_function=None,     \
+        gradient_function=None,      \
         direction=ASCENT,            \
-        step=1.0,               \
+        step=1.0,                    \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -619,12 +609,12 @@ class GradientOptimization(OptimizationFunction):
     **Gradient Calculation**
 
     The gradient is evaluated by `gradient_function <GradientOptimization.gradient_function>`,
-    which is the derivative of the `objective_function <GradientOptimization.objective_function>`
+    which should be the derivative of the `objective_function <GradientOptimization.objective_function>`
     with respect to `variable <GradientOptimization.variable>` at its current value:
-    :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`
-
-    `Autograd's <https://github.com/HIPS/autograd>`_ `grad <autograd.grad>` method is used to
-    generate `gradient_function <GradientOptimization.gradient_function>`.
+    :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
+    constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
+    <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
+    a warning is issued, and gradients are not calculated.
 
 
     Arguments
@@ -638,6 +628,11 @@ class GradientOptimization(OptimizationFunction):
         specifies function used to evaluate `variable <GradientOptimization.variable>`
         in each iteration of the `optimization process  <GradientOptimization_Procedure>`;
         it must be specified and it must return a scalar value.
+
+    gradient_function : function
+        specifies function used to compute the gradient in each iteration of the `optimization process
+        <GradientOptimization_Procedure>`;  if it is not specified, an attempt is made to compute it using
+        `autograd.grad <https://github.com/HIPS/autograd>`_.
 
     direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization: if *ASCENT*, movement is attempted in the positive direction
@@ -754,6 +749,12 @@ class GradientOptimization(OptimizationFunction):
                     :type: list
                     :read only: True
 
+                gradient_function
+                    see `gradient_function <GradientOptimization.gradient_function>`
+
+                    :default value: None
+                    :type:
+
                 annealing_function
                     see `annealing_function <GradientOptimization.annealing_function>`
 
@@ -811,6 +812,7 @@ class GradientOptimization(OptimizationFunction):
         previous_variable = Parameter([[0], [0]], read_only=True)
         previous_value = Parameter([[0], [0]], read_only=True)
 
+        gradient_function = Parameter(None, stateful=False, loggable=False)
         annealing_function = Parameter(None, stateful=False, loggable=False)
 
         step = Parameter(1.0, modulable=True)
@@ -826,6 +828,7 @@ class GradientOptimization(OptimizationFunction):
     def __init__(self,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
+                 gradient_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
                  step:tc.optional(tc.any(int, float))=1.0,
                  annealing_function:tc.optional(is_function_type)=None,
@@ -839,9 +842,9 @@ class GradientOptimization(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
+        self.gradient_function = gradient_function
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
-        self.gradient_function = None
 
         if direction is ASCENT:
             self.direction = 1
@@ -1122,6 +1125,8 @@ class GridSearch(OptimizationFunction):
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
                  save_values:tc.optional(bool)=False,
+                 # tolerance=0.,
+                 select_randomly_from_optimal_values=False,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -1133,6 +1138,8 @@ class GridSearch(OptimizationFunction):
         self._return_samples = save_values
         self.num_iterations = 1
         self.direction = direction
+        # self.tolerance = tolerance
+        self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(params=params)
@@ -1315,26 +1322,39 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
+            if self.direction != MAXIMIZE and self.direction != MINIMIZE:
+                assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}". \
+                    format(repr(DIRECTION), self.name, self.direction)
+
             last_sample, last_value, all_samples, all_values = super().function(
                 variable=variable,
                 execution_id=execution_id,
                 params=params,
                 context=context
             )
-            # return_optimal_value = max(all_values)
-            # return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
 
-            # Evaluate objective_function for current sample
+            value_sample_pairs = list(zip(all_values, all_samples))
+            optimal_value_count = 1
+            value_optimal, sample_optimal = value_sample_pairs[0]
 
-            # Evaluate for optimal value
-            if self.direction is MAXIMIZE:
-                value_optimal = max(all_values)
-            elif self.direction is MINIMIZE:
-                value_optimal = min(all_values)
-            else:
-                assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
-                    format(repr(DIRECTION),self.name,self.direction)
-            sample_optimal = all_samples[all_values.index(value_optimal)]
+            for i in range(1, len(value_sample_pairs)):
+                value, sample = value_sample_pairs[i]
+                if self.select_randomly_from_optimal_values and np.allclose(value, value_optimal):
+                    optimal_value_count += 1
+
+                    # swap with probability = 1/optimal_value_count in order to achieve
+                    # uniformly random selection from identical outcomes
+                    probability = 1/optimal_value_count
+                    random_value = np.random.random()
+
+                    if random_value < probability:
+                        value_optimal, sample_optimal = value, sample
+
+                elif (value > value_optimal and self.direction is MAXIMIZE) or \
+                        (value < value_optimal and self.direction is MINIMIZE):
+                    value_optimal, sample_optimal = value, sample
+                    optimal_value_count = 1
+                    
             if self._return_samples:
                 return_all_samples = all_samples
             if self._return_values:

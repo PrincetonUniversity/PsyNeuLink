@@ -113,9 +113,9 @@ COMMENT:
     Nodes execute, but they do so in a "state" (history, parameter vals) corresponding to a particular execution id.
 COMMENT
 
-The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT` Node and each value is a
-list. The lists represent the inputs to the key `INPUT` Nodes, such that the i-th element of the list represents the
-input value to the key Node on trial i.
+The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT <NodeRole.INPUT>` Node and
+each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, such that the i-th
+element of the list represents the input value to the key Node on trial i.
 
 .. _Run_Inputs_Fig_States:
 
@@ -123,7 +123,7 @@ input value to the key Node on trial i.
    :alt: Example input specifications with input states
 
 
-Each input value must be compatible with the shape of the key `INPUT` Node's `external_input_values
+Each input value must be compatible with the shape of the key `INPUT <NodeRole.INPUT>` Node's `external_input_values
 <MechanismBase.external_input_values>`. As a result, each item in the list of inputs is typically a 2d list/array,
 though `some shorthand notations are allowed <Input_Specification_Examples>`.
 
@@ -184,8 +184,8 @@ which only one input is specified). In other words, all of the values in the inp
 as each other (or length 1).
 
 If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
-are provided for each `INPUT` Node, and num_trials = 7, the system executes seven times. The input values from trials 0
-and 1 are used again on trials 5 and 6, respectively.
+are provided for each `INPUT <NodeRole.INPUT>` Node, and num_trials = 7, the system executes seven times. The input
+values from trials 0 and 1 are used again on trials 5 and 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |5     |6     |
@@ -485,10 +485,11 @@ See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
 *Timing*
 ========
 
-When :keyword:`run` is called by a Composition, it calls that Composition's :keyword:`execute` method once for each
-`input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
-execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
-executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
+When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
+method once for each `input <Run_Inputs>`  (or set of inputs) specified in the call to `run <Composition.run>`,
+which constitutes a `TRIAL` of execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler
+<Scheduler_Execution>`, executing the Components it specifies in each `TIME_STEP`, until every Component has been
+executed at least once or
 another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
 with `Condition` specifications for individual Components to execute different Components at different time scales.
 
@@ -501,42 +502,72 @@ Visualizing a Composition
 -------------------------
 
 The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
-Nested Compositions) and Projections in the Composition (based on the `Composition's processing graph
+Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
 <Composition.processing_graph>`).
 
-By default, Nodes are shown as ovals labeled by their `names <Mechanism_base.name>`, and Projections are shown
-as unlabeled arrows.
+By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT
+<NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
+shown as unlabeled arrows, as illustrated for the Composition in the example below:
 
+.. _System_show_graph_basic_figure:
 
-+-------------------------------------------------------+-------------------------------------------------------+
-|    >>> import psyneulink as pnl                       | .. figure:: _static/show_graph_basic.svg              |
-|    >>> A = pnl.ProcessingMechanism(name='A')          |                                                       |
-|    >>> B = pnl.ProcessingMechanism(name='B')          |                                                       |
-|    >>> comp = pnl.Composition(name='comp')            |                                                       |
-|    >>> comp.add_linear_processing_pathway([A,B])      |                                                       |
-|    >>> comp.show_graph()                              |                                                       |
-+-------------------------------------------------------+-------------------------------------------------------+
++-----------------------------------------------------------+-------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/show_graph_basic.svg  |
+| >>> a = ProcessingMechanism(                              |                                           |
+|               name='A',                                   |                                           |
+| ...           size=3,                                     |                                           |
+| ...           output_states=[RESULTS, OUTPUT_MEAN]        |                                           |
+| ...           )                                           |                                           |
+| >>> b = ProcessingMechanism(                              |                                           |
+| ...           name='B',                                   |                                           |
+| ...           size=5                                      |                                           |
+| ...           )                                           |                                           |
+| >>> c = ProcessingMechanism(                              |                                           |
+| ...           name='C',                                   |                                           |
+| ...           size=2,                                     |                                           |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                           |
+| ...           )                                           |                                           |
+| >>> comp = Composition(                                   |                                           |
+| ...           name='Comp',                                |                                           |
+| ...           enable_controller=True           |                                           |
+| ...           )                                           |                                           |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                           |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                           |
+| >>> ctlr = OptimizationControlMechanism(                  |                                           |
+| ...            name='Controller',                         |                                           |
+| ...            monitor_for_control=[(pnl.OUTPUT_MEAN, a)],|                                           |
+| ...            function=GridSearch,                       |                                           |
+| ...            control_signals=(GAIN, c),                 |                                           |
+| ...            agent_rep=comp                             |                                           |
+| ...            )                                          |                                           |
+| >>> comp.add_controller(ctlr)                  |                                           |
++-----------------------------------------------------------+-------------------------------------------+
 
-However, there are options for displaying more detailed information:
+Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
+can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
+method.  The figure below shows several examples.
 
-    - **show_node_structure**
+.. _System_show_graph_figure:
 
-        +-------------------------------------------------------+-------------------------------------------------------+
-        |    >>> comp.show_graph(show_node_structure=True)      | .. figure:: _static/show_graph_show_mech_structure.svg|
-        +-------------------------------------------------------+-------------------------------------------------------+
-        |    >>> comp.show_graph(show_node_structure=True,      | .. figure:: _static/headers_false.svg                 |
-        |    ... show_headers=False)                            |                                                       |
-        +-------------------------------------------------------+-------------------------------------------------------+
+**Output of show_graph using different options**
 
-    - **show_projection_labels**
+.. figure:: _static/show_graph_figure.svg
+   :alt: System graph examples
+   :scale: 150 %
 
-        +-------------------------------------------------------+-------------------------------------------------------+
-        |    >>> comp.show_graph(show_projection_labels=True)   | .. figure:: _static/projection_labels.svg             |
-        +-------------------------------------------------------+-------------------------------------------------------+
+   Displays of the Composition used in the `example above <System_show_graph_basic_figure>`, generated using various
+   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
+   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
+   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
+   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
+   using the **show_node_structure** option, that includes their `States <State>` and their `roles <NodeRole>` in the
+   Composition. **Panel E** show an even more detailed view using **show_node_structure** as well as **show_cim**.
 
-    - **show_nested**
-
-        *If two Compositions identical to* **comp** *above are added as the nodes of the linear processing pathway of a third* **comp** *:*
+If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
+**show_nested** option. For example, if two Compositions identical to **comp** in the `example above
+<System_show_graph_basic_figure>` are added as the nodes of the linear processing pathway of a third* **comp** *,
+these can be shown as follows:
 
         +-------------------------------------------+-------------------------------------------+
         |    >>> comp.show_graph()                  | .. figure:: _static/nested.svg            |
@@ -544,6 +575,8 @@ However, there are options for displaying more detailed information:
         |    >>> comp.show_graph(show_nested=True)  | .. figure:: _static/show_nested.svg       |
         |                                           |                                           |
         +-------------------------------------------+-------------------------------------------+
+
+
 
 .. _Composition_Class_Reference:
 
@@ -567,8 +600,12 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
+from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Composition_Base
@@ -576,21 +613,25 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, MATRIX_KEYWORD_VALUES, \
-    MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, \
+    LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, \
+    PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, \
+    WEIGHT, OUTCOME
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
-from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
+from psyneulink.core.scheduling.condition import Condition, All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
 ]
 
 logger = logging.getLogger(__name__)
@@ -876,6 +917,11 @@ class Graph(object):
         return list(self.comp_to_vertex[component].backward_sources)
 
 
+# Options for show_node_structure argument of show_graph()
+MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
+STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
+
+
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     '''
         Composition
@@ -885,15 +931,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         name: str
 
-        model_based_optimzer:   `OptimizationControlmechanism`
-            Must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`.
+        controller:   `OptimizationControlmechanism`
+            must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`.
 
-        enable_model_based_optimizer: bool
-            When set to True, executes the model_based_optimizer. When False, ignores the model_based_optimizer.
+        enable_controller: bool
+            when set to True, executes the controller. When False, ignores the controller.
 
-        model_based_optimizer_mode: AFTER
-            Determines whether the model_based_optimizer is executed before or after the rest of the `Composition`
+        controller_mode: AFTER
+            specifies whether the controller is executed before or after the rest of the `Composition`
             is executed in each trial.  Must be either the keyword BEFORE or AFTER.
+
+        controller_condition: Always
+            specifies whether the controller is executed in a given trial. Must be a `Condition`.
 
         Attributes
         ----------
@@ -930,18 +979,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             A dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
             `shadow <InputState_Shadow_Inputs>` the original Node's input.
 
-        model_based_optimizer : OptimizationControlMechanism
+        controller : OptimizationControlMechanism
             If the Composition contains an `OptimizationControlMechanism` that runs simulations of its own
             `Composition`, then the OCM is stored here.
 
-        enable_model_based_optimizer : bool
-            When True, executes the Composition's `model_based_optimizer <Composition.model_based_optimizer>` in
-            each trial (see model_based_optimizer_mode <Composition.model_based_optimizer_mode>` for timing of
+        enable_controller : bool
+            When True, executes the Composition's `controller <Composition.controller>` in
+            each trial (see controller_mode <Composition.controller_mode>` for timing of
             execution).
 
-        model_based_optimizer_mode :
-            Determines whether the model_based_optimizer is executed before or after the rest of the `Composition`
+        controller_mode :  BEFORE or AFTER
+            Determines whether the controller is executed before or after the rest of the `Composition`
             is executed on each trial.
+
+        controller_condition : Condition
+            Specifies whether the controller is executed in a given trial.  The default is `Always`, which
+            executes the controller on every trial.
 
         default_execution_id
             if no *execution_id* is specified in a call to run, this *execution_id* is used.
@@ -996,9 +1049,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __init__(
             self,
             name=None,
-            model_based_optimizer=None,
-            enable_model_based_optimizer=None,
-            model_based_optimizer_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller=None,
+            enable_controller=None,
+            controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_condition:Condition=Always(),
             **param_defaults
     ):
         # also sets name
@@ -1023,13 +1077,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM_states = {}
 
         self.shadows = {}
-        self.enable_model_based_optimizer = enable_model_based_optimizer
+        self.enable_controller = enable_controller
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
-        self.model_based_optimizer = model_based_optimizer
-        self.model_based_optimizer_mode = model_based_optimizer_mode
+        self.controller = controller
+        self.controller_mode = controller_mode
+        self.controller_condition = controller_condition
+        self.controller_condition.owner = self.controller
 
         self.projections = []
+        self.learning_projections = []
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -1042,6 +1099,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
         self.nodes_to_roles = collections.OrderedDict()
+
+        self.feedback_senders = set()
+        self.feedback_receivers = set()
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self,
@@ -1236,34 +1296,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in nodes:
             self.add_node(node)
 
-    def add_model_based_optimizer(self, optimizer):
+    def add_controller(self, controller):
         """
-        Adds an `OptimizationControlMechanism` as the `model_based_optimizer
-        <Composition.model_based_optimizer>` of the Composition, which gives the OCM access to the
+        Adds an `OptimizationControlMechanism` as the `controller
+        <Composition.controller>` of the Composition, which gives the OCM access to the
         `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
         an optimal Control policy.
         """
 
-        self.model_based_optimizer = optimizer
-        self.model_based_optimizer.composition = self
-        self.add_node(self.model_based_optimizer.objective_mechanism)
-        self.enable_model_based_optimizer = True
+        self.controller = controller
+        self.controller.composition = self
+        self.add_node(self.controller.objective_mechanism)
+        self.enable_controller = True
 
-        for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
+        for proj in self.controller.objective_mechanism.path_afferents:
             self.add_projection(proj)
 
-        optimizer._activate_projections_for_compositions(self)
+        controller._activate_projections_for_compositions(self)
         self._analyze_graph()
-        self._update_shadows_dict(optimizer)
+        self._update_shadows_dict(controller)
 
-        for input_state in optimizer.input_states:
+        for input_state in controller.input_states:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
                         self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
                                             sender=sender.owner,
-                                            receiver=optimizer)
+                                            receiver=controller)
                         shadow_proj._activate_for_compositions(self)
                     else:
                         shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
@@ -1412,6 +1472,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver_mechanism = receiver.owner_mech
             hebbian_learning = True
 
+        elif isinstance(sender, LearningMechanism):
+            receiver_mechanism = receiver.receiver.owner
+            hebbian_learning = True
+
         else:
             raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(receiver, self.name,
@@ -1479,6 +1543,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # TBI: Copy the projection type/matrix value of the projection that is being shadowed
                             self.add_projection(MappingProjection(sender=sender, receiver=input_state),
                                                 sender_mechanism, shadow)
+        if feedback:
+            self.feedback_senders.add(sender_mechanism)
+            self.feedback_receivers.add(receiver_mechanism)
 
         return projection
 
@@ -1606,6 +1673,192 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
                                        .format(pathway[c]))
 
+    def _create_learning_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
+        # Create learning components
+        target_mechanism = ProcessingMechanism(name='Target')
+
+        comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: [0.]},
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: [0.], WEIGHT: -1},
+                                                   function=error_function,
+                                                   output_states=[OUTCOME, MSE])
+
+        learning_mechanism = LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
+                                                                                        output_source.output_states[0].value,
+                                                                                        comparator_mechanism.output_states[0].value],
+
+                                                                      learning_rate=learning_rate),
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 comparator_mechanism.output_states[0].value],
+                                               error_sources=comparator_mechanism,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_backprop_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
+        # Create learning components
+        target_mechanism = ProcessingMechanism(name='Target',
+                                               default_variable=output_source.output_states[0].value)
+
+        comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: target_mechanism.output_states[0].value},
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: output_source.output_states[0].value,
+                                                           WEIGHT: -1},
+                                                   function=error_function,
+                                                   output_states=[OUTCOME, MSE]
+                                                   )
+
+        learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
+                                                              output_source.output_states[0].value,
+                                                              comparator_mechanism.output_states[0].value],
+                                            activation_derivative_fct=output_source.function.derivative,
+                                            learning_rate=learning_rate)
+
+        learning_mechanism = LearningMechanism(function=learning_function,
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 comparator_mechanism.output_states[0].value],
+                                               error_sources=comparator_mechanism,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
+        # construct learning related mapping projections
+        target_projection = MappingProjection(sender=target,
+                                              receiver=comparator.input_states[1])
+        sample_projection = MappingProjection(sender=output_source,
+                                              receiver=comparator.input_states[0])
+        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
+                                                    receiver=learning_mechanism.input_states[2])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        act_in_projection = MappingProjection(sender=input_source.output_states[0],
+                                              receiver=learning_mechanism.input_states[0])
+        return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
+
+    def _create_learning_projection(self, learning_mechanism, learned_projection):
+
+        learning_projection = LearningProjection(name="Learning Projection",
+                                                 sender=learning_mechanism.learning_signals[0],
+                                                 receiver=learned_projection.parameter_states["matrix"])
+        self.learning_projections.append(learning_projection)
+        learned_projection.has_learning_projection = True
+
+        return learning_projection
+
+    def _unpack_processing_components_of_learning_pathway(self, processing_pathway):
+        # unpack processing components and add to composition
+        if len(processing_pathway) == 3:
+            input_source, learned_projection, output_source = processing_pathway
+        elif len(processing_pathway) == 2:
+            input_source, output_source = processing_pathway
+            learned_projection = MappingProjection(sender=input_source, receiver=output_source)
+        else:
+            raise CompositionError(f"Too many components in learning pathway: {pathway}. Only single-layer learning "
+                                   f"is supported by this method. See AutodiffComposition for other learning models.")
+        return input_source, output_source, learned_projection
+
+    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+        """
+        Arguments
+        ---------
+
+            pathway: List
+                list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+                specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+                automatically generated for the learned projection.
+
+            learning_rate: float (default = 0.05)
+                learning rate of the ReinforcementLearning function
+
+            error_function: function (default = LinearCombination
+                function of the ComparatorMechanism
+        Returns
+        --------
+
+            A dictionary of components that were automatically generated and added to the Composition in order to
+            implement ReinforcementLearning along the pathway.
+
+            {LEARNING_MECHANISM: learning_mechanism,
+             COMPARATOR_MECHANISM: comparator,
+             TARGET_MECHANISM: target,
+             LEARNED_PROJECTION: learned_projection}
+
+        """
+
+        if not error_function:
+            error_function = LinearCombination()
+
+        # Processing Components
+        input_source, output_source, learned_projection = self._unpack_processing_components_of_learning_pathway(pathway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+
+        # Learning Components
+        target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
+                                                                                          output_source,
+                                                                                          error_function,
+                                                                                          learned_projection,
+                                                                                          learning_rate)
+        self.add_nodes([target, comparator, learning_mechanism])
+
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target,
+                                                                                 comparator,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection)
+
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
+                                       COMPARATOR_MECHANISM: comparator,
+                                       TARGET_MECHANISM: target,
+                                       LEARNED_PROJECTION: learned_projection}
+
+        return learning_related_components
+
+    def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None):
+        if not error_function:
+            error_function = LinearCombination()
+
+        # Processing Components
+        input_source, output_source, learned_projection = self._unpack_processing_components_of_learning_pathway(pathway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+
+        # Learning Components
+        target, comparator, learning_mechanism = self._create_backprop_related_mechanisms(input_source,
+                                                                                          output_source,
+                                                                                          error_function,
+                                                                                          learned_projection,
+                                                                                          learning_rate)
+        self.add_nodes([target, comparator, learning_mechanism])
+
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target,
+                                                                                 comparator,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, feedback=True)
+
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
+                                       COMPARATOR_MECHANISM: comparator,
+                                       TARGET_MECHANISM: target,
+                                       LEARNED_PROJECTION: learned_projection}
+
+        return learning_related_components
+
     def _validate_projection(self,
                              projection,
                              sender, receiver,
@@ -1629,74 +1882,81 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in the Composition.".format(projection, receiver))
 
-    def _analyze_graph(self, graph=None, context=None):
-        """
-        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
+    def _get_original_senders(self, input_state, projections):
+        original_senders = set()
+        for original_projection in projections:
+            if original_projection in self.projections:
+                original_senders.add(original_projection.sender)
+                correct_sender = original_projection.sender
+                shadow_found = False
+                for shadow_projection in input_state.path_afferents:
+                    if shadow_projection.sender == correct_sender:
+                        shadow_found = True
+                        break
+                if not shadow_found:
+                    # TBI - Shadow projection type? Matrix value?
+                    new_projection = MappingProjection(sender=correct_sender,
+                                                       receiver=input_state)
+                    self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
+        return original_senders
 
-        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
-        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
-        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
+    def _update_shadow_projections(self):
+        for node in self.nodes:
+            for input_state in node.input_states:
+                if input_state.shadow_inputs:
+                    original_senders = self._get_original_senders(input_state, input_state.shadow_inputs.path_afferents)
+                    for shadow_projection in input_state.path_afferents:
+                        if shadow_projection.sender not in original_senders:
+                            self.remove_projection(shadow_projection)
 
-        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
-        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
-        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
-        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
-        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
+            # If the node does not have any roles, it is internal
+            if len(self.get_roles_by_node(node)) == 0:
+                self._add_node_role(node, NodeRole.INTERNAL)
 
+    def _analyze_consideration_queue(self, q, objective_mechanism):
+        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
+            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
+            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead. """
+        for node in q[0]:
+            self._add_node_role(node, NodeRole.ORIGIN)
 
-        :param graph:
-        :param context:
-        :return:
-        """
-        if graph is None:
-            graph = self.graph_processing
+        for node in list(q)[-1]:
+            if node != objective_mechanism:
+                self._add_node_role(node, NodeRole.TERMINAL)
+            elif len(q[-1]) < 2:
+                for previous_node in q[-2]:
+                    self._add_node_role(previous_node, NodeRole.TERMINAL)
 
-        # Clear old information
+    def _determine_node_roles(self):
+        # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
+        # Required Roles
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        # First check for ORIGIN nodes:
-        # Nodes at the beginning of the consideration queue are ORIGIN
-        if len(self.scheduler_processing.consideration_queue) > 0:
+        objective_mechanism = None
+        if self.controller and self.enable_controller:
+            objective_mechanism = self.controller.objective_mechanism
+            self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
 
-            for node in self.scheduler_processing.consideration_queue[0]:
-                self._add_node_role(node, NodeRole.ORIGIN)
+        # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
+        if self.scheduler_processing.consideration_queue:
+            self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
 
-        # First check for TERMINAL nodes:
-        # Nodes at the beginning of the consideration queue are TERMINAL
+        # Cycles
+        for node in self.scheduler_processing.cycle_nodes:
+            self._add_node_role(node, NodeRole.CYCLE)
 
-        if len(self.scheduler_processing.consideration_queue) > 0:
-            for node in self.scheduler_processing.consideration_queue[-1]:
-                self._add_node_role(node, NodeRole.TERMINAL)
+        # "Feedback" projections
+        for node in self.feedback_senders:
+            self._add_node_role(node, NodeRole.FEEDBACK_SENDER)
 
-        # loop over all nodes in the Composition to identify additional roles
-        for node in self.nodes:
+        for node in self.feedback_receivers:
+            self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
 
-            # Second check for ORIGIN nodes:
-            # Nodes that either (1) have no "parents" in the graph OR (2) only receive mod projections are ORIGIN
-            mod_only = False
-            if hasattr(node, "path_afferents"):
-                if len(node.path_afferents) == 0:
-                    mod_only = True
-                else:
-                    all_input = True
-                    for proj in node.path_afferents:
-                        if not proj.sender.owner is self.input_CIM:
-                            all_input = False
-                            break
-                    if all_input:
-                        mod_only = True
-            if graph.get_parents_from_component(node) == [] or mod_only:
-                # if not isinstance(node, ObjectiveMechanism):
-                self._add_node_role(node, NodeRole.ORIGIN)
-
-            # Second check for TERMINAL nodes:
-            # Nodes that have no "children" in the graph are TERMINAL
-            if graph.get_children_from_component(node) == []:
-                self._add_node_role(node, NodeRole.TERMINAL)
-
+        # Required Roles
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
@@ -1718,29 +1978,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in terminal_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
 
-        self._create_CIM_states()
-        for node in self.nodes:
-            for input_state in node.input_states:
-                if input_state.shadow_inputs is not None:
-                    original_senders = set()
-                    for original_projection in input_state.shadow_inputs.path_afferents:
-                        if original_projection in self.projections:
-                            original_senders.add(original_projection.sender)
-                            correct_sender = original_projection.sender
-                            shadow_found = False
-                            for shadow_projection in input_state.path_afferents:
-                                if shadow_projection.sender == correct_sender:
-                                    shadow_found = True
-                                    break
-                            if not shadow_found:
-                                # TBI - Shadow projection type? Matrix value?
-                                new_projection = MappingProjection(sender=correct_sender,
-                                                                   receiver=input_state)
-                                self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
-                    for shadow_projection in input_state.path_afferents:
-                        if shadow_projection.sender not in original_senders:
-                            self.remove_projection(shadow_projection)
+    def _analyze_graph(self):
+        """
+        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
 
+        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
+        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
+
+        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
+        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
+        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
+        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
+        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
+
+
+        :param graph:
+        :param context:
+        :return:
+        """
+
+        self._determine_node_roles()
+        self._create_CIM_states()
+        self._update_shadow_projections()
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -2337,13 +2597,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TBI Show Dimensions
         name = item.name
 
-        if show_dimensions in {ALL, MECHANISMS}:
+        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_state.socket_width)
                                                   for input_state in item.input_states))
             output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
                                                     for output_state in item.output_states))
             return "{}\n{}\n{}".format(output_str, name, input_str)
-        if show_dimensions in {ALL, PROJECTIONS}:
+        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
             # MappingProjections use matrix
             if isinstance(item, MappingProjection):
                 value = np.array(item.matrix)
@@ -2358,11 +2618,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return name
 
     def show_graph(self,
-                   show_model_based_optimizer=False,
+                   show_controller=False,
                    show_dimensions=False,               # NOT WORKING?
                    show_node_structure=False,
                    show_cim=False,
-                   show_headers=False,
+                   show_headers=True,
                    show_projection_labels=False,
                    show_nested=False,
                    direction='BT',
@@ -2371,10 +2631,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
-                   model_based_optimizer_color='blue',
+                   controller_color='blue',
                    composition_color='pink',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
+                   **kwargs,
                    ):
         """
         .. note::
@@ -2386,9 +2647,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        show_node_structure : bool, VALUES, FUNCTIONS or ALL : default False
-            show a detailed representation of each `Mechanism` in the graph, including its `States`;  can have the
-            following settings:
+        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
+        or ALL : default False
+            show a detailed representation of each `Mechanism` in the graph, including its `States <State>`;  can
+            have any of the following settings alone or in a list:
 
             * `True` -- show States of Mechanism, but not information about the `value
               <Component.value>` or `function <Component.function>` of the Mechanism or its States.
@@ -2414,13 +2676,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
-              Mechanisms in the `Composition` and their `States` (using labels for the values, if specified;  see above).
-
-            Any combination of the settings above can also be specified in a list that is assigned to
-            show_node_structure
+              Mechanisms in the `Composition` and their `States <State>` (using labels for
+              the values, if specified -- see above), including parameters for all functions.
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
+
+        show_headers : bool : default True
+            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
+            **show_node_structure** is specified (see above).
 
         show_nested : bool : default False
             specifies whether nested Compositions are shown in details as inset graphs
@@ -2428,9 +2692,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_cim : bool : default False
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
 
-        show_model_based_optimizer :  bool : default False
-            specifies whether or not to show the Composition's model_based_optimizer and associated ObjectiveMechanism;
-            these are displayed in the color specified for **model_based_optimizer_color**.
+        show_controller :  bool : default False
+            specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
+            these are displayed in the color specified for **controller_color**.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2443,13 +2707,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             by GraphViz, or the keyword *BOLD*.
 
         input_color : keyword : default 'green',
-            specifies the display color for `INPUT` Nodes in the Composition
+            specifies the display color for `INPUT <NodeRole.INPUT>` Nodes in the Composition
 
         output_color : keyword : default 'red',
             specifies the display color for `OUTPUT` Nodes in the Composition
 
         input_and_output_color : keyword : default 'brown'
-            specifies the display color of nodes that are both an `INPUT` and an `OUTPUT` Node in the Composition
+            specifies the display color of nodes that are both an `INPUT <NodeRole.INPUT>` and an `OUTPUT
+            <NodeRole.OUTPUT>` Node in the Composition
 
         input_and_output_color : keyword : default 'brown'
             specifies the display color of nodes that represented nested Compositions.
@@ -2457,8 +2722,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
 
-        model_based_optimizer_color : keyword : default `blue`
-            specifies the color in which the model_based_optimizer components are displayed
+        controller_color : keyword : default `blue`
+            specifies the color in which the controller components are displayed
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -2496,11 +2761,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
-            # If recvr is ObjectiveMechanism for Composition's model_based_optimizer,
+            # If recvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
             elif (isinstance(rcvr, ObjectiveMechanism)
-                    and self.model_based_optimizer
-                    and rcvr is self.model_based_optimizer.objective_mechanism):
+                    and self.controller
+                    and rcvr is self.controller.objective_mechanism):
                 return
 
             else:
@@ -2622,49 +2887,53 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
-                # find edge name
+                # Iterate through all Projections from all OutputStates of sndr
                 for output_state in sndr.output_states:
-                    projs = output_state.efferents
-                    for proj in projs:
-                        # if proj.receiver.owner == rcvr:
-                        if show_node_structure:
-                            sndr_proj_label = '{}:{}'. \
-                                format(sndr_label, sndr._get_port_name(proj.sender))
-                            proc_mech_rcvr_label = '{}:{}'. \
-                                format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                            # format(rcvr_label, InputState.__name__, proj.receiver.name)
-                        else:
-                            sndr_proj_label = sndr_label
-                            proc_mech_rcvr_label = rcvr_label
-                        selected_proj = proj
-                # # MODIFIED 2/24/18 OLD:
-                # edge_label = self._get_graph_node_label(proj, show_dimensions)
-                # MODIFIED 2/24/18 NEW: [JDC]
-                edge_label = self._get_graph_node_label(selected_proj, show_dimensions)
-                # MODIFIED 2/24/18 END
+                    for proj in output_state.efferents:
 
-                # Render projections
-                if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
-                    if active_color is BOLD:
+                        # Skip any projections to ObjectiveMechanism for controller
+                        #   (those are handled in _assign_control_components)
+                        if (self.controller
+                                and proj.receiver.owner is self.controller.objective_mechanism):
+                            continue
 
-                        proj_color = default_node_color
-                    else:
-                        proj_color = active_color
-                    proj_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
+                        # Only consider Projections to the rcvr
+                        if proj.receiver.owner == rcvr:
 
-                else:
-                    proj_color = default_node_color
-                    proj_width = str(default_width)
-                proc_mech_label = edge_label
+                            if show_node_structure:
+                                sndr_proj_label = '{}:{}'. \
+                                    format(sndr_label, sndr._get_port_name(proj.sender))
+                                proc_mech_rcvr_label = '{}:{}'. \
+                                    format(rcvr_label, rcvr._get_port_name(proj.receiver))
+                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            else:
+                                sndr_proj_label = sndr_label
+                                proc_mech_rcvr_label = rcvr_label
 
-                # Render Projection normally (as edge)
-                if show_projection_labels:
-                    label = proc_mech_label
-                else:
-                    label = ''
-                g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                       color=proj_color, penwidth=proj_width)
+                            edge_label = self._get_graph_node_label(proj, show_dimensions)
+
+                            # Check if Projection or its receiver is active
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                                if active_color is BOLD:
+
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            proc_mech_label = edge_label
+
+                            # Render Projection as edge
+                            if show_projection_labels:
+                                label = proc_mech_label
+                            else:
+                                label = ''
+                            g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
 
         def _assign_cim_components(g, cims):
 
@@ -2794,54 +3063,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_control_components(g):
             '''Assign control nodes and edges to graph '''
 
-            model_based_optimizer = self.model_based_optimizer
-            if model_based_optimizer in active_items:
+            controller = self.controller
+            if controller in active_items:
                 if active_color is BOLD:
-                    ctlr_color = model_based_optimizer_color
+                    ctlr_color = controller_color
                 else:
                     ctlr_color = active_color
                 ctlr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                ctlr_color = model_based_optimizer_color
+                ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
-            if model_based_optimizer is None:
-                print("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_model_based_optimizer\' option "
+            if controller is None:
+                print("\nWARNING: {} has not been assigned a \'controller\', so \'show_controller\' option "
                       "can't be used in its show_graph() method\n".format(self.name))
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
-            objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
-            if model_based_optimizer in active_items:
+            objmech_ctlr_proj = controller.input_state.path_afferents[0]
+            if controller in active_items:
                 if active_color is BOLD:
-                    objmech_ctlr_proj_color = model_based_optimizer_color
+                    objmech_ctlr_proj_color = controller_color
                 else:
                     objmech_ctlr_proj_color = active_color
                 objmech_ctlr_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_ctlr_proj_color = model_based_optimizer_color
+                objmech_ctlr_proj_color = controller_color
                 objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
                 if active_color is BOLD:
-                    objmech_color = model_based_optimizer_color
+                    objmech_color = controller_color
                 else:
                     objmech_color = active_color
                 objmech_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
-                objmech_color = model_based_optimizer_color
+                objmech_color = controller_color
                 objmech_width = str(default_width)
 
-            ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions)
+            ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       model_based_optimizer.show_structure(**node_struct_args, node_border=ctlr_width),
+                       controller.show_structure(**node_struct_args, node_border=ctlr_width),
                        shape=struct_shape,
                        color=ctlr_color,
                        penwidth=ctlr_width,
@@ -2862,7 +3131,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         color=objmech_color, penwidth=objmech_width, shape=node_shape,
                         rank=control_rank)
 
-            # objmech to model_based_optimizer edge
+            # objmech to controller edge
             if show_projection_labels:
                 edge_label = objmech_ctlr_proj.name
             else:
@@ -2876,28 +3145,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
                    color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
-            # outgoing edges (from model_based_optimizer to ProcessingMechanisms)
-            for control_signal in model_based_optimizer.control_signals:
+            # outgoing edges (from controller to ProcessingMechanisms)
+            for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions)
-                    if model_based_optimizer in active_items:
+                    if controller in active_items:
                         if active_color is BOLD:
-                            ctl_proj_color = model_based_optimizer_color
+                            ctl_proj_color = controller_color
                         else:
                             ctl_proj_color = active_color
                         ctl_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        ctl_proj_color = model_based_optimizer_color
+                        ctl_proj_color = controller_color
                         ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
                     else:
                         edge_label = ''
                     if show_node_structure:
-                        ctl_sndr_label = ctlr_label + ':' + model_based_optimizer._get_port_name(control_signal)
+                        ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + model_based_optimizer._get_port_name(ctl_proj.receiver)
+                            proc_mech_label + ':' + controller._get_port_name(ctl_proj.receiver)
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
@@ -2913,13 +3182,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for projection in input_state.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
-                            proj_color = model_based_optimizer_color
+                            proj_color = controller_color
                         else:
                             proj_color = active_color
                         proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
-                        proj_color = model_based_optimizer_color
+                        proj_color = controller_color
                         proj_width = str(default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
@@ -2939,15 +3208,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
         INITIAL_FRAME = "INITIAL_FRAME"
-        MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
-        STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
-        # ALL = "ALL"
 
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
 
         # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
         #     return
+
+        # For backward compatibility
+        if 'show_model_based_optimizer' in kwargs:
+            show_controller = kwargs['show_model_based_optimizer']
+            del kwargs['show_model_based_optimizer']
+        if kwargs:
+            raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
+                                   f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
         if show_dimensions == True:
             show_dimensions = ALL
@@ -3040,8 +3314,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_cim:
             _assign_cim_components(G, [self.input_CIM, self.output_CIM])
 
-        # Add model-based-optimizer-related Components to graph if show_model_based_optimizer
-        if show_model_based_optimizer:
+        # Add controller-related Components to graph if show_controller
+        if show_controller:
             _assign_control_components(G)
 
         # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
@@ -3054,10 +3328,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if NodeRole.INPUT in roles:
                 i = get_list_index(node)
                 G.body.insert(0,G.body.pop(i))
-        if self.model_based_optimizer and show_model_based_optimizer:
-            # i = get_list_index(self.model_based_optimizer.objective_mechanism)
+        if self.controller and show_controller:
+            # i = get_list_index(self.controller.objective_mechanism)
             # G.body.insert(len(G.body),G.body.pop(i))
-            i = get_list_index(self.model_based_optimizer)
+            i = get_list_index(self.controller)
             G.body.insert(len(G.body),G.body.pop(i))
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
@@ -3139,6 +3413,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             targets=None,
             runtime_params=None,
+            skip_initialization=False,
             bin_execute=False,
             context=None
     ):
@@ -3192,6 +3467,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         '''
 
+        if bin_execute == 'Python':
+            bin_execute = False
+
         nested = False
         if len(self.input_CIM.path_afferents) > 0:
             nested = True
@@ -3209,6 +3487,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        execution_context = self.parameters.context.get(execution_id)
+
         # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
         # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
         # for example:
@@ -3218,7 +3498,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
         if self.most_recent_execution_context != execution_id or self.env is None:
             # initialize from base context but don't overwrite any values already set for this execution_id
-            if not nested:
+            if (
+                not skip_initialization
+                and not nested
+                or execution_context is None
+                and execution_context.execution_phase is not ContextFlags.SIMULATION
+            ):
                 self._initialize_from_context(execution_id, base_execution_id, override=False)
 
             self._assign_context_values(execution_id, composition=self)
@@ -3244,36 +3529,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
-        if (self.enable_model_based_optimizer and
-            self.model_based_optimizer_mode is BEFORE):
+        if (self.enable_controller and
+            self.controller_mode is BEFORE and
+            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                   execution_context=execution_id)
+        ):
+
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
-                if self.model_based_optimizer:
-                    self.model_based_optimizer.parameters.context.get(
-                        execution_id).execution_phase = ContextFlags.PROCESSING
-                    control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                    self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
+                if self.controller:
+                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+
                 if bin_execute:
                     data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
+                    _comp_ex.insert_node_output(self.controller, data)
 
-
-        if bin_execute == 'Python':
-            bin_execute = False
 
         if bin_execute:
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             # Exec mode skips mbo invocation so we can't use it if mbo is
             # present and active
-            can_exec = not self.enable_model_based_optimizer or execution_phase == ContextFlags.SIMULATION
+            can_exec = not self.enable_controller or execution_phase == ContextFlags.SIMULATION
             try:
-                if str(bin_execute).endswith('Exec') and can_exec:
-                    if bin_execute.startswith('LLVM'):
+                # Try running in Exec mode first
+                if (bin_execute is True or str(bin_execute).endswith('Exec')) and can_exec:
+                    if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [execution_id])
                         _comp_ex.execute(inputs)
                         return _comp_ex.extract_node_output(self.output_CIM)
@@ -3283,6 +3570,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         __execution.cuda_execute(inputs)
                         return __execution.extract_node_output(self.output_CIM)
 
+                # Exec failed for some reason, we can still try node level bin_execute
                 # Filter out mechanisms. Nested compositions are not executed in this mode
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
@@ -3294,7 +3582,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 bin_execute = True
             except Exception as e:
-                if bin_execute[:4] == 'LLVM':
+                if bin_execute.endswith('Exec'):
                     raise e
 
                 string = "Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e))
@@ -3370,7 +3658,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if bin_execute:
                         _comp_ex.execute_node(node)
                     else:
-                        if node is not self.model_based_optimizer:
+                        if node is not self.controller:
                             node.execute(
                                 execution_id=execution_id,
                                 runtime_params=execution_runtime_params,
@@ -3456,23 +3744,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
-        if (self.enable_model_based_optimizer and
-            self.model_based_optimizer_mode == AFTER):
+        if (self.enable_controller and
+                self.controller_mode == AFTER and
+                self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                       execution_context=execution_id)
+        ):
             # control phase
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
-                if self.model_based_optimizer:
-                    self.model_based_optimizer.parameters.context.get(
+                if self.controller:
+                    self.controller.parameters.context.get(
                         execution_id).execution_phase = ContextFlags.PROCESSING
-                    control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                    self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id,
+                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
                 if bin_execute:
                     data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.model_based_optimizer, data)
+                    _comp_ex.insert_node_output(self.controller, data)
 
         # extract result here
         if bin_execute:
@@ -3518,6 +3809,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
+            retain_old_simulation_data=False,
             context=None
     ):
         '''
@@ -3589,6 +3881,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       a `Condition`
 
                 See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            retain_old_simulation_data : bool
+                if True, all Parameter values generated during simulations will be saved for later inspection;
+                if False, simulation values will be deleted unless otherwise specified by individual Parameters
+
 
             Returns
             ---------
@@ -3676,35 +3973,48 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
         execution_context = self.parameters.context.get(execution_id)
-        # Run mode skips mbo invocation so we can't use it if mbo is
-        # present and active
-        can_run = (not self.enable_model_based_optimizer or
-                   (execution_context is not None and
-                    execution_context.execution_phase == ContextFlags.SIMULATION))
-        if str(bin_execute).endswith('Run') and can_run:
-            # initialize from base context but don't overwrite any values already set for this execution_id
+
+        # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
+        # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
+        # called repeatedly (this init is repeated in Composition.execute)
+        # initialize from base context but don't overwrite any values already set for this execution_id
+        if (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
-            if bin_execute.startswith('LLVM'):
-                _comp_ex = pnlvm.CompExecution(self, [execution_id])
-                results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-            elif bin_execute.startswith('PTX'):
-                self.__ptx_initialize(execution_id)
-                EX = self._compilation_data.ptx_execution.get(execution_id)
-                results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
+        # Run mode skips mbo invocation so we can't use it if mbo is
+        # present and active
+        can_run = (not self.enable_controller or
+                   (execution_context is not None and
+                    execution_context.execution_phase == ContextFlags.SIMULATION))
+        if (bin_execute is True or str(bin_execute).endswith('Run')) and can_run:
+            try:
+                if bin_execute is True or bin_execute.startswith('LLVM'):
+                    _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
+                elif bin_execute.startswith('PTX'):
+                    self.__ptx_initialize(execution_id)
+                    EX = self._compilation_data.ptx_execution.get(execution_id)
+                    results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
-            full_results = self.parameters.results.get(execution_id)
-            if full_results is None:
-                full_results = results
-            else:
-                full_results.extend(results)
+                full_results = self.parameters.results.get(execution_id)
+                if full_results is None:
+                    full_results = results
+                else:
+                    full_results.extend(results)
 
-            self.parameters.results.set(full_results, execution_id)
-            # KAM added the [-1] index after changing Composition run()
-            # behavior to return only last trial of run (11/7/18)
-            self.most_recent_execution_context = execution_id
-            return full_results[-1]
+                self.parameters.results.set(full_results, execution_id)
+                # KAM added the [-1] index after changing Composition run()
+                # behavior to return only last trial of run (11/7/18)
+                self.most_recent_execution_context = execution_id
+                return full_results[-1]
+
+            except Exception as e:
+                if str(bin_execute).endswith('Run'):
+                    raise e
+
+                print("WARNING: Failed to Run execution `{}': {}".format(
+                      self.name, str(e)))
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
@@ -3758,6 +4068,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         base_execution_id=base_execution_id,
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params,
+                                        skip_initialization=True,
                                         bin_execute=bin_execute)
 
             # ---------------------------------------------------------------------------------
@@ -3771,6 +4082,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 results.append(result_copy)
+
+                if not retain_old_simulation_data:
+                    if self.controller is not None:
+                        self._delete_contexts(*self.controller.parameters.simulation_ids.get(execution_id), check_simulation_storage=True)
+
+                        # if any other special parameters store simulation info that needs to be cleaned up
+                        # consider dedicating a function to it here
+                        # this will not be caught above because it resides in the base context (execution_id)
+                        if not self.parameters.simulation_results.retain_old_simulation_data:
+                            self.parameters.simulation_results.get(execution_id).clear()
+
+                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                            self.controller.parameters.simulation_ids.get(execution_id).clear()
 
             # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
@@ -3835,7 +4159,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # def _get_predicted_input(self, execution_id=None, context=None):
     #     """
-    #     Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
+    #     Called by the `controller <Composition.controller>` of the `Composition` before any
     #     simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
     #     after all simulations are complete, and (3) set the number of trials of simulations.
     #     """
@@ -3877,8 +4201,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_data_struct_type(self, ctx):
         output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
 
-        if self.model_based_optimizer is not None:
-            controller_output = ctx.get_output_struct_type(self.model_based_optimizer)
+        if self.controller is not None:
+            controller_output = ctx.get_output_struct_type(self.controller)
             output_type_list.append(controller_output)
         data = [pnlvm.ir.LiteralStructType(output_type_list)]
         for node in self.nodes:
@@ -3897,7 +4221,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_flattened_controller_output(self, execution_id):
-        controller_data = [os.parameters.value.get(execution_id) for os in self.model_based_optimizer.output_states]
+        controller_data = [os.parameters.value.get(execution_id) for os in self.controller.output_states]
         # This is an ugly hack to remove 2d arrays
         try:
             controller_data = [[c[0][0]] for c in controller_data]
@@ -3907,7 +4231,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_data_initializer(self, execution_id=None):
         output = [(os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes]
-        if self.model_based_optimizer is not None:
+        if self.controller is not None:
             output.append(self._get_flattened_controller_output(execution_id))
         data = [output]
         for node in self.nodes:
@@ -3918,7 +4242,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
-        if node is self.model_based_optimizer:
+        if node is self.controller:
             return len(node_list)
         return node_list.index(node)
 
@@ -3983,7 +4307,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._compilation_data.ptx_execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
-        assert node is not self.model_based_optimizer
+        assert node is not self.controller
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -4048,7 +4372,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
-                if par_mech in self._all_nodes or par_mech is self.model_based_optimizer:
+                if par_mech in self._all_nodes or par_mech is self.controller:
                     par_idx = self._get_node_index(par_mech)
                 else:
                     comp = par_mech.composition
@@ -4206,7 +4530,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
 
             # excludes any input states marked "internal_only" (usually recurrent)
-            input_must_match = node.external_input_values
+            # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
+            input_must_match = [input_state.defaults.value for input_state in node.input_states if not input_state.internal_only]
 
             if input_must_match == []:
                 # all input states are internal_only
@@ -4286,11 +4611,58 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
+    def reshape_control_signal(self,
+                                         arr):
+
+        current_shape = np.shape(arr)
+        if len(current_shape) > 2:
+            newshape = (current_shape[0], current_shape[1])
+            newarr = np.reshape(arr, newshape)
+            arr = tuple(newarr[i].item() for i in range(len(newarr)))
+
+        return np.array(arr)
+
+    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+        total_cost = 0.
+        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
+
+            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value.get(execution_id))
+
+            candidate_control_allocation = self.reshape_control_signal(control_allocation)
+
+            # Get reconfiguration cost for candidate control signal
+            reconfiguration_cost = 0.
+            if callable(self.controller.compute_reconfiguration_cost):
+                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
+                                                                                                base_control_allocation])
+            # Apply candidate control signal
+            self.controller.apply_control_allocation(candidate_control_allocation,
+                                                                execution_id=execution_id,
+                                                                runtime_params=runtime_params,
+                                                                context=context)
+
+            # Get control signal costs
+            all_costs = self.controller.parameters.costs.get(execution_id) + [reconfiguration_cost]
+            # Compute a total for the candidate control signal(s)
+            total_cost = self.controller.combine_costs(all_costs)
+        return total_cost
+    def _build_predicted_inputs_dict(self, predicted_input):
+        inputs = {}
+        # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
+        # If this is not a good assumption, we need another way to look up the feature InputStates
+        # of the OCM and know which InputState maps to which predicted_input value
+        for j in range(len(self.controller.input_states) - 1):
+            input_state = self.controller.input_states[j + 1]
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+
+        return inputs
+
     def evaluate(
             self,
             predicted_input=None,
             control_allocation=None,
-            num_trials=1,
+            num_simulation_trials=None,
             runtime_params=None,
             base_execution_id=None,
             execution_id=None,
@@ -4298,68 +4670,64 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_mode=False,
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
+           `controller <Composition.controller>` in order to return the
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
-           `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
+           `controller <Composition.controller>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
+        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
-        # These attrs are set during composition.before_simulation
-        # reinitialize_values = self.sim_reinitialize_values
+        # Build input dictionary for simulation
+        inputs = self._build_predicted_inputs_dict(predicted_input)
 
-        # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
-        #      (i.e., DOES IT ASSIGN THE SAME CONTROLSIGNAL VALUES FOR ALL SIMULATIONS?)
-        # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
-        #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
-        # Assign control_allocation current being sampled
-        if control_allocation is not None:
-            self.model_based_optimizer.apply_control_allocation(control_allocation,
-                                                                execution_id=execution_id,
-                                                                runtime_params=runtime_params,
-                                                                context=context)
+        # Run Composition in "SIMULATION" context
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
+        self.run(inputs=inputs,
+                 execution_id=execution_id,
+                 runtime_params=runtime_params,
+                 num_trials=num_simulation_trials,
+                 context=context,
+                 bin_execute=execution_mode)
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
-        net_control_allocation_outcomes = []
-        # FIX: the indexing below for predicted_input is not correct
-        for i in range(num_trials):
-            inputs = {}
-            # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
-            # If this is not a good assumption, we need another way to look up the feature InputStates
-            # of the OCM and know which InputState maps to which predicted_input value
-            for j in range(len(self.model_based_optimizer.input_states) - 1):
-                input_state = self.model_based_optimizer.input_states[j + 1]
-                if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+        # Store simulation results on "base" composition
+        if context.initialization_status != ContextFlags.INITIALIZING:
+            try:
+                self.parameters.simulation_results.get(base_execution_id).append(
+                    self.get_output_values(execution_id))
+            except AttributeError:
+                self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
-            for output_state in self.output_states:
-                for proj in output_state.efferents:
-                    proj.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        # Update input states in order to get correct value for "outcome" (from objective mech)
+        self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
+        outcome = self.controller.input_state.parameters.value.get(execution_id)
 
-            self.run(inputs=inputs,
-                     execution_id=execution_id,
-                     runtime_params=runtime_params,
-                     context=context,
-                     bin_execute=execution_mode)
+        # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
+        net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
-            # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
-            if context.initialization_status != ContextFlags.INITIALIZING:
-                try:
-                    self.parameters.simulation_results.get(base_execution_id).append(
-                        self.get_output_values(execution_id))
-                except AttributeError:
-                    self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
+        return net_outcome
 
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-            # need to update input states in order to get correct value for "outcome" (from objective mech)
-            self.model_based_optimizer._update_input_states(execution_id, runtime_params, context.flags_string)
+    def _dict_summary(self):
+        scheduler_dict = {
+            'schedulers': {
+                str(ContextFlags.PROCESSING): self.scheduler_processing._dict_summary()
+            }
+        }
 
-            outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
-            all_costs = self.model_based_optimizer.parameters.costs.get(execution_id)
-            combined_costs = self.model_based_optimizer.combine_costs(all_costs)
-            # KAM Modified 12/5/18 to use OCM's compute_net_outcome fn rather than hard-coded difference
-            net_outcome = self.model_based_optimizer.compute_net_outcome(outcome, combined_costs)
-            net_control_allocation_outcomes.append(net_outcome)
+        nodes_dict = {
+            'nodes': {n.name: n._dict_summary() for n in self.nodes}
+        }
 
-        return net_control_allocation_outcomes
+        projections_dict = {
+            'projections': {f'{p.sender.owner.name} to {p.receiver.owner.name}': p._dict_summary() for p in self.projections}
+        }
+
+        return {
+            **super()._dict_summary(),
+            **scheduler_dict,
+            **nodes_dict,
+            **projections_dict,
+        }
 
     @property
     def input_states(self):
@@ -4473,5 +4841,5 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             [self.input_CIM, self.output_CIM],
             self.input_CIM.efferents,
             self.output_CIM.afferents,
-            [self.model_based_optimizer] if self.model_based_optimizer is not None else []
+            [self.controller] if self.controller is not None else []
         ))

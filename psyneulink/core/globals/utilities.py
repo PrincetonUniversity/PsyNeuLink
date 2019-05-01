@@ -1380,7 +1380,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
     if isinstance(arr, np.matrix):
         if arr.dtype == object:
-            return np.matrix([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
+            return np.asarray([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
         else:
             return arr
 
@@ -1517,38 +1517,51 @@ def call_with_pruned_args(func, *args, **kwargs):
 
 class NodeRole(Enum):
     """
+    COMMENT:
+    Attributes
+    ----------
+    COMMENT
 
-    - ORIGIN
+    ORIGIN
         A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
 
-    - INPUT
+    INPUT
         A Node that receives external input. A Composition may have many `INPUT` Nodes.
 
-    - TERMINAL
+    TERMINAL
         A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
 
-    - OUTPUT
+    OUTPUT
         A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
         Composition may have many `OUTPUT` Nodes.
 
+    INTERNAL
+        A Node that is neither `ORIGIN` nor `TERMINAL`
+
+    OBJECTIVE
+        A Node that is the ObjectiveMechanism of a controller.
+
+    FEEDBACK_SENDER
+        A Node with one or more outgoing projections marked as "feedback". This means that the Node is at the end of a
+        pathway which would otherwise form a cycle.
+
+    FEEDBACK_RECEIVER
+        A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
+         pathway which would otherwise form a cycle.
+
+    CYCLE
+        A Node that belongs to a cycle.
 
     """
     ORIGIN = 0
-    INTERNAL = 1
-    CYCLE = 2
-    INITIALIZE_CYCLE = 3
-    TERMINAL = 4
-    SINGLETON = 5
-    MONITORED = 6
-    LEARNING = 7
-    TARGET = 8
-    RECURRENT_INIT = 9
-    OBJECTIVE = 10
-    INPUT = 11
-    OUTPUT = 12
-    RESULT = 13
-    MODEL_BASED_OPTIMIZER = 14
-
+    INPUT = 1
+    TERMINAL = 2
+    OUTPUT = 3
+    INTERNAL = 4
+    OBJECTIVE = 5
+    FEEDBACK_SENDER = 6
+    FEEDBACK_RECEIVER = 7
+    CYCLE = 8
 
 def unproxy_weakproxy(proxy):
     """

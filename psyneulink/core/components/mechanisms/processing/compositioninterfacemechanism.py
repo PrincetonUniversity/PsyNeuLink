@@ -8,34 +8,36 @@
 
 # **************************************  CompositionInterfaceMechanism *************************************************
 
+
 """
 Overview
 --------
 
-A CompositionInterfaceMechanism stores an input from the outside world so that the input can be delivered to a
-Composition's `ORIGIN` Mechanism via a Projection.
+A CompositionInterfaceMechanism stores inputs from outside the Composition so that those can be delivered to the
+Composition's `INPUT <NodeRole.INPUT>` Mechanism(s).
 
 .. _CompositionInterfaceMechanism_Creation:
 
 Creating an CompositionInterfaceMechanism
--------------------------------
+-----------------------------------------
 
-A CompositionInterfaceMechanism is created automatically when an `ORIGIN` Mechanism is identified in a Composition. When
-created, the CompositionInterfaceMechanism's OutputState is set directly by the Composition. This Mechanism should never
-be executed, and should never be created by a user.
+A CompositionInterfaceMechanism is created automatically when an `INPUT <NodeRole.INPUT>` Mechanism is identified in a
+Composition. When created, the CompositionInterfaceMechanism's OutputState is set directly by the Composition. This
+Mechanism should never be executed, and should never be created by a user.
 
 .. _CompositionInterfaceMechanism_Structure
 
 Structure
 ---------
 
----
+[TBD]
+
 .. _CompositionInterfaceMechanism_Execution
 
 Execution
 ---------
 
----
+[TBD]
 
 .. _CompositionInterfaceMechanism_Class_Reference:
 

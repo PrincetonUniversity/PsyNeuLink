@@ -376,7 +376,7 @@ class KohonenMechanism(TransferMechanism):
                 learning_function
                     see `learning_function <KohonenMechanism.learning_function>`
 
-                    :default value: `Kohonen`(distance_function=gaussian, learning_rate=0.05)
+                    :default value: `Kohonen`
                     :type: `Function`
 
                 learning_rate
