@@ -359,6 +359,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         initializer=None,                            \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
+        duplicate_keys=False,                        \
         max_entries=None,                            \
         params=None,                                 \
         owner=None,                                  \
@@ -425,6 +426,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <DND.distance_function>` and select the item to return.
 
+    duplicate_keys : bool : default False
+        specifies whether entries with duplicate keys are allowed in `memory <DND.memory>` (see `duplicate_keys
+        <DND.duplicate_keys for additional details>`).
+
     max_entries : int : default None
         specifies the maximum number of entries allowed in `memory <DND.memory>` (see `max_entries <DND.max_entries for
         additional details>`).
@@ -484,6 +489,11 @@ class DND(MemoryFunction):  # --------------------------------------------------
     previous_value : 1d array
         state of the `memory <DND.memory>` prior to storing `variable <DND.variable>` in the current call.
 
+    duplicate_keys : bool
+        determines whether entries with duplicate keys are allowed in `memory <DND.memory>`.  If False,
+        then an attempt to store and item with a key that is already in `memory <DND.memory>` is ignored.
+        If True, such items can be stored, and on retrieval using that key, a random entry matching the key is selected.
+
     max_entries : int
         maximum number of entries allowed in `memory <DND.memory>`;  if an attempt is made to add an additional entry
         an error is generated.
@@ -529,6 +539,12 @@ class DND(MemoryFunction):  # --------------------------------------------------
                     :default value: 1
                     :type: int
 
+                duplicate_keys
+                    see `duplicate_keys <DND.duplicate_keys>`
+
+                    :default value: False
+                    :type: bool
+
                 max_entries
                     see `max_entries <DND.max_entries>`
 
@@ -570,6 +586,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)
+        duplicate_keys = Parameter(False)
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
@@ -596,6 +613,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  initializer: tc.any(list, np.ndarray)=[],
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
+                 duplicate_keys:bool=False,
                  max_entries=1000,
                  seed=None,
                  params: tc.optional(tc.any(list, np.ndarray)) = None,
@@ -620,6 +638,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
+                                                  duplicate_keys=duplicate_keys,
                                                   rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
