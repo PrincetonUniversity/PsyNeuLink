@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.5.0.0+362.g9d1d478 documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.5.0.0+363.g80adfd3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.0.0+362.g9d1d478',
+              VERSION:'0.5.0.0+363.g80adfd3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.0.0+362
+                0.5.0.0+363
               </div>
             
           
@@ -199,7 +199,7 @@
 <span id="episodicmemorymechanism"></span><h1>EpisodicMemoryMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="episodicmemorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A EpisodicMemoryMechanism is an <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that can store and retrieve cue-associate pairs.</p>
+<p>An EpisodicMemoryMechanism is an <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that can store and retrieve cue-associate pairs.</p>
 </div>
 <div class="section" id="creating-a-transfermechanism">
 <span id="episodicmemorymechanism-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
@@ -227,7 +227,7 @@ specified in the corresponding arguments of the EpisodicMemoryMechanism’s cons
 ignored.</li>
 </ul>
 <ul class="simple">
-<li>It may also implement a <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> attribute;  if it does, it can be accesses by the EpisodicMemoryMechanism’s
+<li>It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism’s
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> attribute.</li>
 </ul>
 </div></blockquote>
@@ -312,7 +312,8 @@ if no retrieval is made, appropriately-shaped zero-valued arrays are assigned to
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory">
 <code class="descname">memory</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3d array</em> – array containing key-value pairs stored in the function’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> attribute (if it has one).</p>
+<dd><p><em>3d array</em> – contains key-value pairs stored in the <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;EpisodicMemoryMechanism.function&gt;'s</span> <span class="pre">`memory</span></code> attribute
+(if it has one).</p>
 </dd></dl>
 
 <dl class="attribute">
