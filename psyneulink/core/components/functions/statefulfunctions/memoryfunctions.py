@@ -35,7 +35,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
-    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
+    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, MIN_INDICATOR, NOISE, RATE
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
@@ -623,7 +623,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # It is necessary to create custom instances. Otherwise python would
         # share the same default instance for all DND objects.
         distance_function = distance_function or Distance(metric=COSINE)
-        selection_function = selection_function or OneHot(mode=MIN_VAL)
+        # selection_function = selection_function or OneHot(mode=MIN_VAL)
+        # MODIFIED 4/30/19 NEW: [JDC]
+        selection_function = selection_function or OneHot(mode=MIN_INDICATOR)
+        # MODIFIED 4/30/19 END
 
         self.distance_function = distance_function
         self.selection_function = selection_function
@@ -632,7 +635,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
             seed = get_global_seed()
         random_state = np.random.RandomState(np.asarray([seed]))
 
-        self.memory = []
+        self._memory = []
 
         # Assign args to params and functionParams dicts 
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
@@ -901,7 +904,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         # Default to full memory dictionary
         selection_function = self.selection_function
-        test_var = np.asfarray([distance_result if i==0 else np.zeros_like(distance_result) for i in range(self.get_current_function_param('max_entries'))])
+        test_var = np.asfarray([distance_result if i==0
+                                else np.zeros_like(distance_result)
+                                for i in range(self.get_current_function_param('max_entries'))])
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var)
             fct_msg = 'Function type'
@@ -916,10 +921,17 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 "must accept a list with two 1d arrays or a 2d array as its argument".
                                 format(fct_msg, repr(SELECTION_FUNCTION), self.__class__,
                                        selection_function))
-        if result.shape != test_var.shape or len(np.flatnonzero(result))>1:
+        # # MODIFIED 4/30/19 OLD:
+        # if result.shape != test_var.shape or len(np.flatnonzero(result))>1:
+        #     raise FunctionError("Value returned by {} specified for {} ({}) "
+        #                         "must return an array of the same length it receives with one nonzero value".
+        #                         format(repr(SELECTION_FUNCTION), self.__class__, result))
+        # MODIFIED 4/30/19 NEW: [JDC]
+        if result.shape != test_var.shape:
             raise FunctionError("Value returned by {} specified for {} ({}) "
-                                "must return an array of the same length it receives with one nonzero value".
+                                "must return an array of the same length it receives".
                                 format(repr(SELECTION_FUNCTION), self.__class__, result))
+        # MODIFIED 4/30/19 END
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
@@ -1097,8 +1109,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[0]]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
-        # index_of_selected_item = int(np.flatnonzero(selection_array))
-        index_of_selected_item = list(selection_array).index(min(selection_array))
+        index_of_selected_item = int(np.flatnonzero(selection_array))
+        # index_of_selected_item = list(selection_array).index(min(selection_array))
         best_match_key = _memory[0][index_of_selected_item]
         best_match_val = _memory[1][index_of_selected_item]
 
@@ -1126,13 +1138,15 @@ class DND(MemoryFunction):  # --------------------------------------------------
             d = np.delete(d, [0], axis=1)
 
         # If key does not match any existing keys (i.e., distance!=0 for any keys)
-        if all(d!=0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
+        if not self.duplicate_keys and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
+            pass
+        else:
             keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
             values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
             d = np.asfarray([keys, values])
 
         self.parameters.previous_value.set(d,execution_id)
-        self.memory = d
+        self._memory = d
 
     @tc.typecheck
     def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
@@ -1154,3 +1168,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         for memory in memories:
             # self._store_memory(memory[0], memory[1], execution_id)
             self._store_memory(memory, execution_id)
+
+    @property
+    def memory(self):
+        return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])
