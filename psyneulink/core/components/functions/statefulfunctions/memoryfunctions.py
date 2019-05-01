@@ -23,6 +23,7 @@ Functions that store and can return a record of their input.
 '''
 
 from collections.__init__ import deque, OrderedDict
+from random import choice
 
 import numpy as np
 import typecheck as tc
@@ -35,7 +36,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
-    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, MIN_INDICATOR, NOISE, RATE
+    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_INDICATOR, NOISE, RATE, RANDOM, OLDEST, NEWEST
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
@@ -359,7 +360,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         initializer=None,                            \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
-        duplicate_keys=False,                        \
+        duplicate_keys_allowed=False,                \
+        duplicate_keys_select=RANDOM,                \
         max_entries=None,                            \
         params=None,                                 \
         owner=None,                                  \
@@ -426,9 +428,12 @@ class DND(MemoryFunction):  # --------------------------------------------------
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <DND.distance_function>` and select the item to return.
 
-    duplicate_keys : bool : default False
-        specifies whether entries with duplicate keys are allowed in `memory <DND.memory>` (see `duplicate_keys
-        <DND.duplicate_keys for additional details>`).
+    duplicate_keys_allowed : bool : default False
+        specifies whether entries with duplicate keys are allowed in `memory <DND.memory>` (see `duplicate_keys_allowed
+        <DND.duplicate_keys_allowed for additional details>`).
+
+    duplicate_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
+        if duplicate_keys_allowed is True, specifies which entry is retrieved from a set with duplicate keys.
 
     max_entries : int : default None
         specifies the maximum number of entries allowed in `memory <DND.memory>` (see `max_entries <DND.max_entries for
@@ -489,10 +494,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
     previous_value : 1d array
         state of the `memory <DND.memory>` prior to storing `variable <DND.variable>` in the current call.
 
-    duplicate_keys : bool
+    duplicate_keys_allowed : bool
         determines whether entries with duplicate keys are allowed in `memory <DND.memory>`.  If False,
         then an attempt to store and item with a key that is already in `memory <DND.memory>` is ignored.
         If True, such items can be stored, and on retrieval using that key, a random entry matching the key is selected.
+        
+    duplicate_keys_select:  RANDOM | OLDEST | NEWEST
+        if duplicate_keys_allowed is True, deterimines which entry is retrieved from a set with duplicate keys.
 
     max_entries : int
         maximum number of entries allowed in `memory <DND.memory>`;  if an attempt is made to add an additional entry
@@ -539,8 +547,14 @@ class DND(MemoryFunction):  # --------------------------------------------------
                     :default value: 1
                     :type: int
 
-                duplicate_keys
-                    see `duplicate_keys <DND.duplicate_keys>`
+                duplicate_keys_allowed
+                    see `duplicate_keys_allowed <DND.duplicate_keys_allowed>`
+
+                    :default value: False
+                    :type: bool
+
+                duplicate_keys_select
+                    see `duplicate_keys_select <DND.duplicate_keys_select>`
 
                     :default value: False
                     :type: bool
@@ -586,7 +600,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)
-        duplicate_keys = Parameter(False)
+        duplicate_keys_allowed = Parameter(False)
+        duplicate_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
@@ -613,7 +628,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  initializer: tc.any(list, np.ndarray)=[],
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
-                 duplicate_keys:bool=False,
+                 duplicate_keys_allowed:bool=False,
+                 duplicate_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
                  max_entries=1000,
                  seed=None,
                  params: tc.optional(tc.any(list, np.ndarray)) = None,
@@ -641,7 +657,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
-                                                  duplicate_keys=duplicate_keys,
+                                                  duplicate_keys_allowed=duplicate_keys_allowed,
+                                                  duplicate_keys_select=duplicate_keys_select,
                                                   rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
@@ -1109,8 +1126,27 @@ class DND(MemoryFunction):  # --------------------------------------------------
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[0]]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
-        index_of_selected_item = int(np.flatnonzero(selection_array))
-        # index_of_selected_item = list(selection_array).index(min(selection_array))
+        # # MODIFIED 4/30/19 OLD:
+        # index_of_selected_item = int(np.flatnonzero(selection_array))
+        # MODIFIED 4/30/19 NEW: [JDC]
+        indices_of_selected_items = np.flatnonzero(selection_array)
+        if self.duplicate_keys_allowed:
+            # FIX ADD HANDLING OF DUPLICATE KEYS ARE BASE ON duplicate_keys_select
+            if self.duplicate_keys_select == RANDOM:
+                index_of_selected_item = choice(indices_of_selected_items)
+            elif self.duplicate_keys_select == OLDEST:
+                index_of_selected_item = indices_of_selected_items[0]
+            elif self.duplicate_keys_select == NEWEST:
+                index_of_selected_item = indices_of_selected_items[-1]
+            else:
+                assert False, f'PROGRAM ERROR:  bad specification ({self.duplicate_keys_select}) for  ' \
+                    f'\'duplicate_keys_select parameter of {self.name} for {self.owner.name}'
+        else:
+            assert len(indices_of_selected_items)==1, \
+            f'PROGRAM ERROR:  More than one item matched key ({_memory[0]}) ' \
+                f'in memory for {self.name} of {self.owner.name} even though \'duplicate_keys_allowed\' is False'
+            index_of_selected_item = int(np.flatnonzero(selection_array))
+        # MODIFIED 4/30/19 END
         best_match_key = _memory[0][index_of_selected_item]
         best_match_val = _memory[1][index_of_selected_item]
 
@@ -1137,8 +1173,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if len(d[0]) >= self.max_entries:
             d = np.delete(d, [0], axis=1)
 
-        # If key does not match any existing keys (i.e., distance!=0 for any keys)
-        if not self.duplicate_keys and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
+        # If dupliciate keys are not allowed and key matches any existing keys then don't encode
+        if not self.duplicate_keys_allowed and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
             pass
         else:
             keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
