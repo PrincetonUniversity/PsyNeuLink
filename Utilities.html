@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.5.2.1+2.g117bbe3 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.5.2.1+3.g6036abd documentation</title>
   
 
   
@@ -17,40 +17,44 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.5.2.1+3.g6036abd',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.2.1+2.g117bbe3 documentation" href="index.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -64,7 +68,7 @@
             
             
               <div class="version">
-                0.5.2.1+2
+                0.5.2.1+3
               </div>
             
           
@@ -106,7 +110,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PsyNeuLink</a>
@@ -114,9 +118,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -436,7 +441,7 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 
 <dl class="function">
 <dt id="psyneulink.core.globals.utilities.tensor_power">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x104369240&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x10beb0278&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
 <dd><p>return tensor product for all members of powerset of items</p>
 <p>levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
 if None, all terms will be returned</p>
@@ -805,29 +810,65 @@ items of type/dtype <strong>cast_from</strong> to type/dtype <strong>cast_to</st
 <dl class="class">
 <dt id="psyneulink.core.globals.utilities.NodeRole">
 <em class="property">class </em><code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">NodeRole</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole" title="Permalink to this definition">¶</a></dt>
-<dd><ul class="simple">
-<li><dl class="first docutils">
-<dt>ORIGIN</dt>
-<dd>A Node that does not receive any projections. A Composition may have many <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Nodes.</dd>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.ORIGIN">
+<code class="descname">ORIGIN</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node that does not receive any projections. A Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.INPUT">
+<code class="descname">INPUT</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.INPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node that receives external input. A Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.INPUT" title="psyneulink.core.globals.utilities.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> Nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.TERMINAL">
+<code class="descname">TERMINAL</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node that does not send any projections. A Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.OUTPUT">
+<code class="descname">OUTPUT</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node whose <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> are returned as output of the Composition. A
+Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.INTERNAL">
+<code class="descname">INTERNAL</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.INTERNAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node that is neither <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> nor <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.OBJECTIVE">
+<code class="descname">OBJECTIVE</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.OBJECTIVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node that is the ObjectiveMechanism of a controller.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.FEEDBACK_SENDER">
+<code class="descname">FEEDBACK_SENDER</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.FEEDBACK_SENDER" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node with one or more outgoing projections marked as “feedback”. This means that the Node is at the end of a
+pathway which would otherwise form a cycle.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.FEEDBACK_RECEIVER">
+<code class="descname">FEEDBACK_RECEIVER</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.FEEDBACK_RECEIVER" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>A Node with one or more incoming projections marked as “feedback”. This means that the Node is at the start of a</dt>
+<dd>pathway which would otherwise form a cycle.</dd>
 </dl>
-</li>
-<li><dl class="first docutils">
-<dt>INPUT</dt>
-<dd>A Node that receives external input. A Composition may have many <code class="xref any docutils literal"><span class="pre">INPUT</span></code> Nodes.</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>TERMINAL</dt>
-<dd>A Node that does not send any projections. A Composition may have many <code class="xref any docutils literal"><span class="pre">TERMINAL</span></code> Nodes.</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>OUTPUT</dt>
-<dd>A Node whose <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> are returned as output of the Composition. A
-Composition may have many <code class="xref any docutils literal"><span class="pre">OUTPUT</span></code> Nodes.</dd>
-</dl>
-</li>
-</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.utilities.NodeRole.CYCLE">
+<code class="descname">CYCLE</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.CYCLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node that belongs to a cycle.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -848,9 +889,7 @@ Much like</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -859,11 +898,11 @@ Much like</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jonathan D. Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -876,37 +915,15 @@ Much like</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.5.2.1+2.g117bbe3',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.5.2.1+2.g117bbe3 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.5.2.1+3.g6036abd documentation</title>
   
 
   
@@ -17,43 +17,46 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.5.2.1+3.g6036abd',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.5.2.1+2.g117bbe3 documentation" href="index.html"/>
-        <link rel="up" title="Scheduling" href="Scheduling.html"/>
-        <link rel="next" title="Time" href="Time.html"/>
-        <link rel="prev" title="Scheduler" href="Scheduler.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Time" href="Time.html" />
+    <link rel="prev" title="Scheduler" href="Scheduler.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -67,7 +70,7 @@
             
             
               <div class="version">
-                0.5.2.1+2
+                0.5.2.1+3
               </div>
             
           
@@ -121,7 +124,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PsyNeuLink</a>
@@ -129,9 +132,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -215,7 +219,7 @@ context and assigned automatically, as in the following example:</p>
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="psyneulink.core.components.functions.learningfunctions.Kohonen.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>.</p>
+<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.owner" title="psyneulink.core.components.functions.combinationfunctions.Reduce.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>.</p>
 </div>
 <div class="section" id="custom-conditions">
 <span id="condition-custom"></span><h3><em>Custom Conditions</em><a class="headerlink" href="#custom-conditions" title="Permalink to this headline">¶</a></h3>
@@ -269,7 +273,7 @@ evaluates to <code class="xref any docutils literal"><span class="pre">True</spa
 <p class="first admonition-title">Note</p>
 <p class="last">The optional <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> argument in many <a class="reference internal" href="#"><span class="doc">Conditions</span></a> specifies the unit of time over which the
 Condition operates;  the default value is <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> for all Conditions except those with “Trial” in their name,
-for which it is <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>.</p>
+for which it is <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>.</p>
 </div>
 <p id="conditions-generic"><strong>Generic Conditions</strong> (used to construct <a class="reference internal" href="#condition-custom"><span class="std std-ref">custom Conditions</span></a>):</p>
 <blockquote>
@@ -333,6 +337,12 @@ satisfied any time during the specified <a class="reference internal" href="Log.
 satisfied any time after the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> occurs.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="psyneulink.core.scheduling.condition.AfterNTrials"><code class="xref any py py-class docutils literal"><span class="pre">AfterNTrials</span></code></a> (int[, TimeScale])
 satisfied any time after the specified number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s has occurred.</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRun" title="psyneulink.core.scheduling.condition.AtRun"><code class="xref any py py-class docutils literal"><span class="pre">AtRun</span></code></a> (int)
+satisfied any time during the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>.</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterRun" title="psyneulink.core.scheduling.condition.AfterRun"><code class="xref any py py-class docutils literal"><span class="pre">AfterRun</span></code></a> (int)
+satisfied any time after the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> occurs.</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="psyneulink.core.scheduling.condition.AfterNRuns"><code class="xref any py py-class docutils literal"><span class="pre">AfterNRuns</span></code></a> (int)
+satisfied any time after the specified number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s has occurred.</li>
 </ul>
 </div></blockquote>
 <p id="conditions-component-based"><strong>Component-Based Conditions</strong> (based on the execution or state of other Components):</p>
@@ -351,7 +361,7 @@ satisfied when or any time after the specified Components have executed the spec
 of times among themselves, in total.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.EveryNCalls" title="psyneulink.core.scheduling.condition.EveryNCalls"><code class="xref any py py-class docutils literal"><span class="pre">EveryNCalls</span></code></a> (Component, int[, TimeScale])
 satisfied when the specified Component has executed the specified number of times since the
-last time <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="psyneulink.core.components.functions.learningfunctions.Kohonen.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</li>
+last time <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.owner" title="psyneulink.core.components.functions.combinationfunctions.Reduce.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.JustRan" title="psyneulink.core.scheduling.condition.JustRan"><code class="xref any py py-class docutils literal"><span class="pre">JustRan</span></code></a> (Component)
 satisfied if the specified Component was assigned to run in the previous <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AllHaveRun" title="psyneulink.core.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a> (<a href="#id15"><span class="problematic" id="id16">*</span></a>Components)
@@ -1021,6 +1031,64 @@ etc.).</li>
 </dd></dl>
 
 <dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AtRun">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtRun</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRun" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>exactly n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s have occurred.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AfterRun">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AfterRun</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterRun" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>at least n+1 <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s have occurred.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AfterNRuns">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AfterNRuns</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="Permalink to this definition">¶</a></dt>
+<dd><p>AfterNTrials</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>s have occured.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
 <dt id="psyneulink.core.scheduling.condition.BeforeNCalls">
 <em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">BeforeNCalls</code><span class="sig-paren">(</span><em>dependency</em>, <em>n</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -1316,9 +1384,7 @@ this Condition) can vary arbitrarily in time.</li>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -1327,7 +1393,7 @@ this Condition) can vary arbitrarily in time.</li>
         <a href="Time.html" class="btn btn-neutral float-right" title="Time" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Scheduler.html" class="btn btn-neutral" title="Scheduler" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Scheduler.html" class="btn btn-neutral float-left" title="Scheduler" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1336,11 +1402,11 @@ this Condition) can vary arbitrarily in time.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jonathan D. Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1353,37 +1419,15 @@ this Condition) can vary arbitrarily in time.</li>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.5.2.1+2.g117bbe3',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
