@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AGTControlMechanism &mdash; PsyNeuLink 0.5.0.0+361.g943b7ad documentation</title>
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0.5.0.0+362.g9d1d478 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.0.0+361.g943b7ad',
+              VERSION:'0.5.0.0+362.g9d1d478',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.0.0+361
+                0.5.0.0+362
               </div>
             
           
@@ -281,7 +281,7 @@ specified in its <strong>control_signals</strong> argument.</li>
 (see <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> for details of specification).</li>
 <li><strong>function</strong> (<em>TransferFunction :  default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies the Function used to convert the AGTControlMechanism’s <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> into its
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, that is used to assign the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>.</li>
-<li><strong>control_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState" title="psyneulink.core.components.states.parameterstate.ParameterState"><em>ParameterState</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>Mechanism</em><em>] or </em><a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.dict" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.dict"><em>dict</em></a><em>]</em>) – specifies the parameters to be controlled by the AGTControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
+<li><strong>control_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState" title="psyneulink.core.components.states.parameterstate.ParameterState"><em>ParameterState</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>Mechanism</em><em>] or </em><em>dict</em><em>]</em>) – specifies the parameters to be controlled by the AGTControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
 (see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
 for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
