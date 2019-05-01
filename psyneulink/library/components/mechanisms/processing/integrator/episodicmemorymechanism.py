@@ -14,7 +14,7 @@
 Overview
 --------
 
-A EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve cue-associate pairs.
+An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve cue-associate pairs.
 
 .. _EpisodicMemoryMechanism_Creation:
 
@@ -45,7 +45,7 @@ function can be specified, so long as it meets the following requirements:
       specified in the corresponding arguments of the EpisodicMemoryMechanism's constructor, otherwise those are
       ignored.
     ..
-    * It may also implement a `memory` attribute;  if it does, it can be accesses by the EpisodicMemoryMechanism's
+    * It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism's
       `memory <EpisodicMemoryMechanism.memory>` attribute.
 
 .. _EpisodicMemoryMechanism_Execution:
