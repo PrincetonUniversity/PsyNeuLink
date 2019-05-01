@@ -476,7 +476,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         initial set of entries for `memory <DND.memory>`.
 
     memory : 3d array
-        array of key-value pairs (axis 0) containing entries in DND.
+        array of key-value pairs containing entries in DND:  [[[key 1], [value 1]],[[key 2], value 2]]...]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         function used during retrieval to compare the first item in `variable <DND.variable>`
