@@ -1428,9 +1428,9 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     else:
         owner._input_states = state_list
 
-    # Assign require_projection_in_composition
+    # Assign value of require_projection_in_composition
     for state in owner._input_states:
-        # Assign True if it is the owner's primary InputState and the value has not already been set
+        # Assign True for owner's primary InputState and the value has not already been set in InputState constructor
         if state.require_projection_in_composition is None and owner.input_state == state:
             state.parameters.require_projection_in_composition.set(True, override=True)
 

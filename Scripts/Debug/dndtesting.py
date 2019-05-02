@@ -108,7 +108,7 @@ comp.add_projection(
     receiver=dnd.input_states[pnl.ASSOC_INPUT]
 )
 # show graph
-comp.show_graph(output_fmt='jupyter')
+comp.show_graph(show_node_structure=True)
 
 # # comp.show()
 # # the required inputs for dnd
