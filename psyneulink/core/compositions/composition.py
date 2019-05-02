@@ -1914,7 +1914,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
     def _check_for_projection_assignments(self):
-        '''Check that all Projections and States with require_projection attribute specified are properly connected.
+        '''Check that all Projections and States with require_projection_in_composition attribute are configured.
 
         Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
         Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
