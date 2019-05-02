@@ -896,7 +896,7 @@ class DDM(ProcessingMechanism_Base):
         if isinstance(output_states, (str, tuple)):
             output_states = list(output_states)
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   # input_format=input_format,
                                                   input_states=input_states,

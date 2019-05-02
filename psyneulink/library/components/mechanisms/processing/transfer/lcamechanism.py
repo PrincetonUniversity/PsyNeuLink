@@ -609,7 +609,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         integrator_function = LeakyCompetingIntegrator
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   leak=leak,
                                                   self_excitation=self_excitation,

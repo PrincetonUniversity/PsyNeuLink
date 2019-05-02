@@ -233,7 +233,7 @@ COMMENT
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
                                                   transfer_fct=transfer_fct,
@@ -570,7 +570,7 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
                                                   params=params)

@@ -224,7 +224,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
-      # Assign args to params and functionParams dicts 
+      # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
@@ -457,7 +457,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   increment=increment,
                                                   noise=noise,
@@ -747,7 +747,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -858,7 +858,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         (see `noise <Integrator_Noise>` for details).
 
     offset : float, list or 1d array : default 0.0
-        specifies constant value added to integral in each call to `function <AdaptiveIntegrator.function>`;  
+        specifies constant value added to integral in each call to `function <AdaptiveIntegrator.function>`;
         if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`
         (see `offset <AdaptiveIntegrator.offset>` for details).
 
@@ -2012,7 +2012,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         if default_variable is None:
             default_variable = initializer
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   rest=rest,
@@ -2387,7 +2387,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
                                                   starting_point=starting_point,
@@ -2738,7 +2738,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   noise=noise,
@@ -3014,7 +3014,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -3683,7 +3683,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,

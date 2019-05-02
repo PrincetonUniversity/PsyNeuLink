@@ -979,7 +979,7 @@ class ArgumentTherapy(Function_Base):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(propensity=propensity,
                                                   pertinacity=pertincacity,
                                                   params=params)
@@ -1140,7 +1140,7 @@ class EVCAuxiliaryFunction(Function_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 
