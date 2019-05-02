@@ -1075,6 +1075,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._scheduler_processing = None
 
+        self.has_learning = False
+
         # status attributes
         self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
         self.needs_update_graph = True  # Tracks if the Composition graph has been analyzed to assign roles to components
@@ -1658,7 +1660,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-
+        self.has_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
     def _create_backprop_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
