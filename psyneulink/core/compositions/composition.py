@@ -1913,6 +1913,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if len(self.get_roles_by_node(node)) == 0:
                 self._add_node_role(node, NodeRole.INTERNAL)
 
+    def _check_for_projection_assignments(self):
+        '''Check that all Projections and States with require_projection_in_composition attribute are configured.
+
+        Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
+        Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
+        Validate that all Projections have senders and receivers.
+        '''
+        projections = self.projections.copy()
+
+        for node in self.nodes:
+            if isinstance(node, Projection):
+                projections.append(node)
+                continue
+            for input_state in node.input_states:
+                if input_state.require_projection_in_composition and not input_state.path_afferents:
+                    warnings.warn(f'{InputState.__name__} ({input_state.name}) of {node.name} '
+                                  f'doesn\'t have any afferent {Projection.__name__}s')
+            for output_state in node.output_states:
+                if output_state.require_projection_in_composition and not output_state.efferents:
+                    warnings.warn(f'{OutputState.__name__} ({output_state.name}) of {node.name} '
+                                  f'doesn\'t have any efferent {Projection.__name__}s')
+
+        for projection in projections:
+            if not projection.sender:
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
+            if not projection.receiver:
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+
     def _analyze_consideration_queue(self, q, objective_mechanism):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
             all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
@@ -2001,6 +2029,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._determine_node_roles()
         self._create_CIM_states()
         self._update_shadow_projections()
+        self._check_for_projection_assignments()
         self.needs_update_graph = False
 
     def _update_processing_graph(self):

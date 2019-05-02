@@ -29,7 +29,7 @@ the shapes of the items stored in its memory.
 Structure
 ---------
 
-A EpisodicMemoryMechanism has two `InputStates <InputState>`, *CUE_INPUT* and *ASSOC_INPUT*, that represent
+An EpisodicMemoryMechanism has two `InputStates <InputState>`, *CUE_INPUT* and *ASSOC_INPUT*, that represent
 an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves cue-assoc pairs from its
 memory; and two `OutputStates <OutputState>`, *ASSOC_OUTPUT* and *CUE_OUTPUT* that represent a retrieved item.
 The default function is a `DND` that implements a simple form of differentiable neural dictionary, but a custom
