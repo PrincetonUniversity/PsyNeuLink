@@ -990,7 +990,7 @@ class OutputState(State_Base):
         if params:
             _maintain_backward_compatibility(params, name, owner)
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(
                 function=function,
                 params=params)
@@ -1482,6 +1482,12 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list
+
+    # Assign value of require_projection_in_composition
+    for state in owner._output_states:
+        # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
+        if state.require_projection_in_composition is None and owner.output_state == state:
+            state.parameters.require_projection_in_composition.set(True, override=True)
 
     return state_list
 

@@ -281,7 +281,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -664,7 +664,7 @@ class LinearCombination(
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -1271,7 +1271,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -1535,7 +1535,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts
-        # 
+        #
         params = self._assign_args_to_param_dicts(gamma=gamma,
                                                   params=params)
 

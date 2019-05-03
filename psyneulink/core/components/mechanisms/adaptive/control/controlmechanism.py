@@ -413,7 +413,7 @@ def _outcome_getter(owning_component=None, execution_id=None):
 def _net_outcome_getter(owning_component=None, execution_id=None):
     # NOTE: In cases where there is a reconfiguration_cost,
     # that cost is not included in the net_outcome
-    
+
     try:
         c = owning_component
         return c.compute_net_outcome(c.parameters.outcome.get(execution_id),
@@ -780,7 +780,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,

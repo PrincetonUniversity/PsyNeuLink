@@ -1019,7 +1019,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self.in_composition = in_composition
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(error_sources=error_sources,
                                                   function=function,
                                                   learning_signals=learning_signals,

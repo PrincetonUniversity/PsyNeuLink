@@ -438,7 +438,7 @@ class BayesGLM(LearningFunction):
 
         self.user_specified_default_variable = default_variable
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mu_0=mu_0,
                                                   sigma_0=sigma_0,
                                                   gamma_shape_0=gamma_shape_0,
@@ -748,7 +748,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(distance_function=distance_function,
                                                   learning_rate=learning_rate,
                                                   params=params)
@@ -1016,7 +1016,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(
             # activation_function=activation_function,
             learning_rate=learning_rate,
@@ -1249,7 +1249,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(
             # activation_function=activation_function,
             learning_rate=learning_rate,
@@ -1537,7 +1537,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(  # activation_function=activation_function,
             learning_rate=learning_rate,
             params=params)
@@ -1890,7 +1890,7 @@ class BackPropagation(LearningFunction):
         error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                  len(default_variable[LEARNING_ERROR_OUTPUT])))
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
                                                   error_matrix=error_matrix,
                                                   learning_rate=learning_rate,

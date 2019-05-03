@@ -400,7 +400,7 @@ class LearningSignal(ModulatorySignal):
             context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
                                                   params=params)

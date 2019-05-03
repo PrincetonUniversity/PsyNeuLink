@@ -959,7 +959,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = enable_learning
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
@@ -1247,6 +1247,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=self.matrix,
                                                                                context=context)
+        self.aux_components.append(self.recurrent_projection)
+
         if self.learning_enabled:
             self.configure_learning(context=context)
 

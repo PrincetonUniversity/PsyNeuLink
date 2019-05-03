@@ -23,6 +23,7 @@ Functions that store and can return a record of their input.
 '''
 
 from collections.__init__ import deque, OrderedDict
+from random import choice
 
 import numpy as np
 import typecheck as tc
@@ -35,7 +36,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
-    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
+    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_INDICATOR, NOISE, RATE, RANDOM, OLDEST, NEWEST
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
@@ -223,7 +224,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -359,6 +360,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         initializer=None,                            \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
+        duplicate_keys_allowed=False,                \
+        duplicate_keys_select=RANDOM,                \
         max_entries=None,                            \
         params=None,                                 \
         owner=None,                                  \
@@ -374,7 +377,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     .. _DND:
 
-    * First, with probability `retrieval_prob <DND.retrieval_prob>`, retrieve vector from `dict <DND.dict>` using
+    * First, with probability `retrieval_prob <DND.retrieval_prob>`, retrieve vector from `memory <DND.memory>` using
       first item of `variable <DND.variable>` as key, and the matching algorithm specified by `distance_function
       <DND.distance_function>` and `selection_function <DND.selection_function>`; if no retrieval occures,
       an appropriately shaped zero-valued array is returned.
@@ -387,7 +390,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         variable[1] * rate + noise
 
     .. note::
-       * Keys in `dict <DND.dict>` are stored as tuples (since lists and arrays are not hashable);
+       * Keys in `memory <DND.memory>` are stored as tuples (since lists and arrays are not hashable);
          they are converted to arrays for evaluation during retrieval.
        ..
        * All keys must be the same length (for comparision during retrieval).
@@ -400,33 +403,40 @@ class DND(MemoryFunction):  # --------------------------------------------------
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
     retrieval_prob : float in interval [0,1] : default 1.0
-        specifies probability of retrieiving a value from `dict <DND.dict>`.
+        specifies probability of retrieiving a value from `memory <DND.memory>`.
 
     storage_prob : float in interval [0,1] : default 1.0
-        specifies probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
+        specifies probability of adding `variable <DND.variable>` to `memory <DND.memory>`.
 
     rate : float, list, or array : default 1.0
-        specifies a value used to multiply key (first item of `variable <DND.variable>`) before storing in `dict
-        <DND.dict>` (see `rate <DND.noise> for details).
+        specifies a value used to multiply key (first item of `variable <DND.variable>`) before storing in `memory
+        <DND.memory>` (see `rate <DND.noise> for details).
 
     noise : float, list, array, or Function : default 0.0
-        specifies a random value added to key (first item of `variable <DND.variable>`) before storing in `dict
-        <DND.dict>` (see `noise <DND.noise> for details).
+        specifies a random value added to key (first item of `variable <DND.variable>`) before storing in `memory
+        <DND.memory>` (see `noise <DND.noise> for details).
 
-    initializer dict : default {}
-        specifies an initial set of entries for `dict <DND.dict>`;  each key must have the same shape as
+    initializer memory : default []
+        specifies an initial set of entries for `memory <DND.memory>`;  each key must have the same shape as
         the first item of `variable <DND.variable>` and each value must have the same shape as its second item.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         specifies the function used during retrieval to compare the first item in `variable <DND.variable>`
-        with keys in `dict <DND.dict>`.
+        with keys in `memory <DND.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <DND.distance_function>` and select the item to return.
 
+    duplicate_keys_allowed : bool : default False
+        specifies whether entries with duplicate keys are allowed in `memory <DND.memory>` (see `duplicate_keys_allowed
+        <DND.duplicate_keys_allowed for additional details>`).
+
+    duplicate_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
+        if duplicate_keys_allowed is True, specifies which entry is retrieved from a set with duplicate keys.
+
     max_entries : int : default None
-        specifies the maximum number of entries allowed in `dict <DND.dict>` (see `max_entries <DND.max_entries for
+        specifies the maximum number of entries allowed in `memory <DND.memory>` (see `max_entries <DND.max_entries for
         additional details>`).
 
     params : Dict[param keyword: param value] : default None
@@ -447,45 +457,53 @@ class DND(MemoryFunction):  # --------------------------------------------------
     ----------
 
     variable : 2d array
-        1st item (variable[0] is the key used to retrieve an enrtry from `dict <DND.dict>`, and 2nd item
-        (variable[1]) is the value of the entry, paired with key and added to the `dict <DND.dict>`.
+        1st item (variable[0] is the key used to retrieve an enrtry from `memory <DND.memory>`, and 2nd item
+        (variable[1]) is the value of the entry, paired with key and added to the `memory <DND.memory>`.
 
     key_size : int
-        length of keys in `dict <DND.dict>`.
+        length of keys in `memory <DND.memory>`.
 
     retrieval_prob : float in interval [0,1]
-        probability of retrieiving a value from `dict <DND.dict>`.
+        probability of retrieiving a value from `memory <DND.memory>`.
 
     storage_prob : float in interval [0,1]
-        probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
+        probability of adding `variable <DND.variable>` to `memory <DND.memory>`.
 
     rate : float or 1d array
-        value applied multiplicatively to key (first item of `variable <DND.variable>`) before storing in `dict
-        <DND.dict>` (see `rate <Stateful_Rate>` for additional details).
+        value applied multiplicatively to key (first item of `variable <DND.variable>`) before storing in `memory
+        <DND.memory>` (see `rate <Stateful_Rate>` for additional details).
 
     noise : float, 1d array or Function
-        value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`
+        value added to key (first item of `variable <DND.variable>`) before storing in `memory <DND.memory>`
         (see `noise <Stateful_Noise>` for additional details).
 
-    initializer dict : default {}
-        initial set of entries for `dict <DND.dict>`.
+    initializer memory
+        initial set of entries for `memory <DND.memory>`.
 
-    dict : dict
-        dictionary with current set of entries maintained by DND.
+    memory : 3d array
+        array of key-value pairs containing entries in DND:  [[[key 1], [value 1]],[[key 2], value 2]]...]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         function used during retrieval to compare the first item in `variable <DND.variable>`
-        with keys in `dict <DND.dict>`.
+        with keys in `memory <DND.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         function used during retrieval to evaluate the distances returned by `distance_function
         <DND.distance_function>` and select the item to return.
 
     previous_value : 1d array
-        state of the `dict <DND.dict>` prior to storing `variable <DND.variable>` in the current call.
+        state of the `memory <DND.memory>` prior to storing `variable <DND.variable>` in the current call.
+
+    duplicate_keys_allowed : bool
+        determines whether entries with duplicate keys are allowed in `memory <DND.memory>`.  If False,
+        then an attempt to store and item with a key that is already in `memory <DND.memory>` is ignored.
+        If True, such items can be stored, and on retrieval using that key, a random entry matching the key is selected.
+        
+    duplicate_keys_select:  RANDOM | OLDEST | NEWEST
+        if duplicate_keys_allowed is True, deterimines which entry is retrieved from a set with duplicate keys.
 
     max_entries : int
-        maximum number of entries allowed in `dict <DND.dict>`;  if an attempt is made to add an additional entry
+        maximum number of entries allowed in `memory <DND.memory>`;  if an attempt is made to add an additional entry
         an error is generated.
 
     random_state: numpy.RandomState instance
@@ -529,6 +547,18 @@ class DND(MemoryFunction):  # --------------------------------------------------
                     :default value: 1
                     :type: int
 
+                duplicate_keys_allowed
+                    see `duplicate_keys_allowed <DND.duplicate_keys_allowed>`
+
+                    :default value: False
+                    :type: bool
+
+                duplicate_keys_select
+                    see `duplicate_keys_select <DND.duplicate_keys_select>`
+
+                    :default value: False
+                    :type: bool
+
                 max_entries
                     see `max_entries <DND.max_entries>`
 
@@ -570,6 +600,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)
+        duplicate_keys_allowed = Parameter(False)
+        duplicate_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
@@ -593,19 +625,24 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
-                 initializer: dict={},
+                 initializer: tc.any(list, np.ndarray)=[],
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
+                 duplicate_keys_allowed:bool=False,
+                 duplicate_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
                  max_entries=1000,
                  seed=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.any(list, np.ndarray)) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # It is necessary to create custom instances. Otherwise python would
         # share the same default instance for all DND objects.
         distance_function = distance_function or Distance(metric=COSINE)
-        selection_function = selection_function or OneHot(mode=MIN_VAL)
+        # selection_function = selection_function or OneHot(mode=MIN_VAL)
+        # MODIFIED 4/30/19 NEW: [JDC]
+        selection_function = selection_function or OneHot(mode=MIN_INDICATOR)
+        # MODIFIED 4/30/19 END
 
         self.distance_function = distance_function
         self.selection_function = selection_function
@@ -614,10 +651,14 @@ class DND(MemoryFunction):  # --------------------------------------------------
             seed = get_global_seed()
         random_state = np.random.RandomState(np.asarray([seed]))
 
-        # Assign args to params and functionParams dicts 
+        self._memory = []
+
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
+                                                  duplicate_keys_allowed=duplicate_keys_allowed,
+                                                  duplicate_keys_select=duplicate_keys_select,
                                                   rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
@@ -809,7 +850,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                     var_key_element = b2.gep(var_key_ptr, [ctx.int32_ty(0), idx2])
                     cmp_key_element = b2.gep(cmp_key_ptr, [ctx.int32_ty(0), idx2])
                     element_differs = b.fcmp_unordered('!=',
-                                                       b.load(var_key_element), 
+                                                       b.load(var_key_element),
                                                        b.load(cmp_key_element))
                     key_differs = b2.load(key_differs_ptr)
                     key_differs = b2.or_(key_differs, element_differs)
@@ -880,7 +921,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         # Default to full memory dictionary
         selection_function = self.selection_function
-        test_var = np.asfarray([distance_result if i==0 else np.zeros_like(distance_result) for i in range(self.get_current_function_param('max_entries'))])
+        test_var = np.asfarray([distance_result if i==0
+                                else np.zeros_like(distance_result)
+                                for i in range(self.get_current_function_param('max_entries'))])
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var)
             fct_msg = 'Function type'
@@ -895,13 +938,21 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 "must accept a list with two 1d arrays or a 2d array as its argument".
                                 format(fct_msg, repr(SELECTION_FUNCTION), self.__class__,
                                        selection_function))
-        if result.shape != test_var.shape or len(np.flatnonzero(result))>1:
+        # # MODIFIED 4/30/19 OLD:
+        # if result.shape != test_var.shape or len(np.flatnonzero(result))>1:
+        #     raise FunctionError("Value returned by {} specified for {} ({}) "
+        #                         "must return an array of the same length it receives with one nonzero value".
+        #                         format(repr(SELECTION_FUNCTION), self.__class__, result))
+        # MODIFIED 4/30/19 NEW: [JDC]
+        if result.shape != test_var.shape:
             raise FunctionError("Value returned by {} specified for {} ({}) "
-                                "must return an array of the same length it receives with one nonzero value".
+                                "must return an array of the same length it receives".
                                 format(repr(SELECTION_FUNCTION), self.__class__, result))
+        # MODIFIED 4/30/19 END
 
     def _initialize_previous_value(self, initializer, execution_context=None):
-        vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
+        # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
+        vals = initializer
         previous_value = np.asfarray(vals) if len(initializer) != 0 else np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
@@ -922,11 +973,11 @@ class DND(MemoryFunction):  # --------------------------------------------------
         """
         reinitialize(<new_dictionary> default={})
 
-        Clears the dict in `previous_value <DND.previous_value>`.
+        Clears the memory in `previous_value <DND.previous_value>`.
 
         If an argument is passed into reinitialize or if the `initializer <DND.initializer>` attribute contains a
-        value besides [], then that value is used to start the new dict in `previous_value <DND.previous_value>`.
-        Otherwise, the new `previous_value <DND.previous_value>` dict starts out empty.
+        value besides [], then that value is used to start the new memory in `previous_value <DND.previous_value>`.
+        Otherwise, the new `previous_value <DND.previous_value>` memory starts out empty.
 
         `value <DND.value>` takes on the same value as  `previous_value <DND.previous_value>`.
         """
@@ -961,17 +1012,17 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  params=None,
                  context=None):
         """
-        Return value of entry in `dict <DND.dict>` best matched by first item of `variable <DND.variable>`, then add
-        `variable <DND.variable>` to `dict <DND.dict>`.
+        Return value of entry in `memory <DND.memory>` best matched by first item of `variable <DND.variable>`, then add
+        `variable <DND.variable>` to `memory <DND.memory>`.
 
-        If the length of `dict <DND.dict>` exceeds `max_entries <DND.max_entries>`, generate an error.
+        If the length of `memory <DND.memory>` exceeds `max_entries <DND.max_entries>`, generate an error.
 
         Arguments
         ---------
 
         variable : list or 2d array : default class_defaults.variable
            first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
-           with key, is added to `dict <DND.dict>`.
+           with key, is added to `memory <DND.memory>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -997,7 +1048,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # get random state
         random_state = self.get_current_function_param('random_state', execution_id)
 
-        # If this is an initialization run, leave dict empty (don't want to count it as an execution step),
+        # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
@@ -1045,16 +1096,16 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 format(len(key), self.__class__.__name__, self.parameters.key_size.get(execution_id)))
 
     @tc.typecheck
-    def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id):
+    def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id=None):
         """get_memory(query_key, execution_id=None)
 
-        Retrieve memory from `dict <DND.dict>` based on `distance_function <DND.distance_function>` and
+        Retrieve memory from `memory <DND.memory>` based on `distance_function <DND.distance_function>` and
         `selection_function <DND.selection_function>`.
 
         Arguments
         ---------
         query_key : list or 1d array
-            must be same length as key(s) of any existing entries in `dict <DND.dict>`.
+            must be same length as key(s) of any existing entries in `memory <DND.memory>`.
 
         Returns
         -------
@@ -1069,21 +1120,41 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # if no memory, return the zero vector
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
         # compute similarity(query_key, memory m ) for all m
-        memory_dict = self.get_previous_value(execution_id)
-        if len(memory_dict[0]) == 0:
+        _memory = self.get_previous_value(execution_id)
+        if len(_memory[0]) == 0:
             return np.zeros_like(self.defaults.variable)
-        distances = [self.distance_function([query_key, list(m)]) for m in memory_dict[0]]
+        distances = [self.distance_function([query_key, list(m)]) for m in _memory[0]]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
-        index_of_selected_item = int(np.flatnonzero(selection_array))
-        best_match_key = memory_dict[0][index_of_selected_item]
-        best_match_val = memory_dict[1][index_of_selected_item]
+        # # MODIFIED 4/30/19 OLD:
+        # index_of_selected_item = int(np.flatnonzero(selection_array))
+        # MODIFIED 4/30/19 NEW: [JDC]
+        indices_of_selected_items = np.flatnonzero(selection_array)
+        if self.duplicate_keys_allowed:
+            # FIX ADD HANDLING OF DUPLICATE KEYS ARE BASE ON duplicate_keys_select
+            if self.duplicate_keys_select == RANDOM:
+                index_of_selected_item = choice(indices_of_selected_items)
+            elif self.duplicate_keys_select == OLDEST:
+                index_of_selected_item = indices_of_selected_items[0]
+            elif self.duplicate_keys_select == NEWEST:
+                index_of_selected_item = indices_of_selected_items[-1]
+            else:
+                assert False, f'PROGRAM ERROR:  bad specification ({self.duplicate_keys_select}) for  ' \
+                    f'\'duplicate_keys_select parameter of {self.name} for {self.owner.name}'
+        else:
+            assert len(indices_of_selected_items)==1, \
+            f'PROGRAM ERROR:  More than one item matched key ({_memory[0]}) ' \
+                f'in memory for {self.name} of {self.owner.name} even though \'duplicate_keys_allowed\' is False'
+            index_of_selected_item = int(np.flatnonzero(selection_array))
+        # MODIFIED 4/30/19 END
+        best_match_key = _memory[0][index_of_selected_item]
+        best_match_val = _memory[1][index_of_selected_item]
 
         return [best_match_key, best_match_val]
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
-        """Save an key-value pair to `dict <DND.dict>`
+        """Save an key-value pair to `memory <DND.memory>`
 
         Arguments
         ---------
@@ -1102,18 +1173,22 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if len(d[0]) >= self.max_entries:
             d = np.delete(d, [0], axis=1)
 
-        if key not in d[0]:
-            a = np.append(d[0], key).reshape(1, len(key))
-            b = np.append(d[1], val).reshape(1, len(val))
-            d = np.asfarray([a, b])
+        # If dupliciate keys are not allowed and key matches any existing keys then don't encode
+        if not self.duplicate_keys_allowed and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
+            pass
+        else:
+            keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
+            values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
+            d = np.asfarray([keys, values])
 
         self.parameters.previous_value.set(d,execution_id)
+        self._memory = d
 
     @tc.typecheck
     def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
         """insert_memories(memories, execution_id=None)
 
-        add key-value pairs to `dict <DND.dict>`.
+        add key-value pairs to `memory <DND.memory>`.
 
         Arguments
         ---------
@@ -1127,8 +1202,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
             raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
                                 format(repr('memories'), repr('insert_memories'), self.__class__.__name ))
         for memory in memories:
-            self.store_memory(memory[0], memory[1], execution_id)
+            # self._store_memory(memory[0], memory[1], execution_id)
+            self._store_memory(memory, execution_id)
 
     @property
-    def dict(self):
-        return self.previous_value
+    def memory(self):
+        return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])

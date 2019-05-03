@@ -875,7 +875,7 @@ class EVCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
                                                   origin_objective_mechanism=origin_objective_mechanism,
