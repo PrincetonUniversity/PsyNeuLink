@@ -627,8 +627,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
-                 # initializer: tc.any(list, np.ndarray)=None,
-                 initializer: tc.any(list, np.ndarray)=[],
+                 # initializer: tc.any(list, np.ndarray)=[],
+                 initializer: tc.optional(tc.any(list, np.ndarray))=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
                  duplicate_keys_allowed:bool=False,
@@ -639,7 +639,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # initializer = initializer or []
+        initializer = np.array(initializer or [])
 
         # It is necessary to create custom instances. Otherwise python would
         # share the same default instance for all DND objects.
@@ -679,10 +679,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         if len(initializer) != 0:
-            # MODIFIED 5/3/19 OLD:
-            self.parameters.key_size.set(len(list(initializer.keys())[0]))
-            # # MODIFIED 5/3/19 NEW: [JDC]
-            # self.parameters.key_size.set(initializer.shape[0])
+            # # MODIFIED 5/3/19 OLD:
+            # self.parameters.key_size.set(len(list(initializer.keys())[0]))
+            # MODIFIED 5/3/19 NEW: [JDC]
+            self.parameters.key_size.set(initializer.shape[2])
             # MODIFIED 5/3/19 END
 
         self.has_initializers = True
