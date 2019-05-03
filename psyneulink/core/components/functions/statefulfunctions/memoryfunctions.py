@@ -27,6 +27,7 @@ from random import choice
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.core import llvm as pnlvm
 
@@ -416,9 +417,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         specifies a random value added to key (first item of `variable <DND.variable>`) before storing in `memory
         <DND.memory>` (see `noise <DND.noise> for details).
 
-    initializer memory : default []
-        specifies an initial set of entries for `memory <DND.memory>`;  each key must have the same shape as
-        the first item of `variable <DND.variable>` and each value must have the same shape as its second item.
+    initializer : 3d array : default None
+        specifies an initial set of entries for `memory <DND.memory>`.  The outer dimension (axis 0) must have two
+        2d arrays (one for keys, the other for values);  the length of all the 1d arrays in keys and values must
+        be the same.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         specifies the function used during retrieval to compare the first item in `variable <DND.variable>`
@@ -477,7 +479,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         value added to key (first item of `variable <DND.variable>`) before storing in `memory <DND.memory>`
         (see `noise <Stateful_Noise>` for additional details).
 
-    initializer memory
+    initializer : 3d array
         initial set of entries for `memory <DND.memory>`.
 
     memory : 3d array
@@ -625,7 +627,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
-                 initializer: tc.any(list, np.ndarray)=[],
+                 initializer: tc.optional(tc.any(list, np.ndarray))=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
                  duplicate_keys_allowed:bool=False,
@@ -636,13 +638,12 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        initializer = np.array(initializer or [])
+
         # It is necessary to create custom instances. Otherwise python would
         # share the same default instance for all DND objects.
         distance_function = distance_function or Distance(metric=COSINE)
-        # selection_function = selection_function or OneHot(mode=MIN_VAL)
-        # MODIFIED 4/30/19 NEW: [JDC]
         selection_function = selection_function or OneHot(mode=MIN_INDICATOR)
-        # MODIFIED 4/30/19 END
 
         self.distance_function = distance_function
         self.selection_function = selection_function
@@ -674,7 +675,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         if len(initializer) != 0:
-            self.parameters.key_size.set(len(list(initializer.keys())[0]))
+            # self.parameters.key_size.set(len(list(initializer.keys())[0]))
+            self.parameters.key_size.set(initializer.shape[2])
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -938,17 +940,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 "must accept a list with two 1d arrays or a 2d array as its argument".
                                 format(fct_msg, repr(SELECTION_FUNCTION), self.__class__,
                                        selection_function))
-        # # MODIFIED 4/30/19 OLD:
-        # if result.shape != test_var.shape or len(np.flatnonzero(result))>1:
-        #     raise FunctionError("Value returned by {} specified for {} ({}) "
-        #                         "must return an array of the same length it receives with one nonzero value".
-        #                         format(repr(SELECTION_FUNCTION), self.__class__, result))
-        # MODIFIED 4/30/19 NEW: [JDC]
         if result.shape != test_var.shape:
             raise FunctionError("Value returned by {} specified for {} ({}) "
                                 "must return an array of the same length it receives".
                                 format(repr(SELECTION_FUNCTION), self.__class__, result))
-        # MODIFIED 4/30/19 END
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
@@ -1126,9 +1121,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[0]]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
-        # # MODIFIED 4/30/19 OLD:
-        # index_of_selected_item = int(np.flatnonzero(selection_array))
-        # MODIFIED 4/30/19 NEW: [JDC]
         indices_of_selected_items = np.flatnonzero(selection_array)
         if self.duplicate_keys_allowed:
             # FIX ADD HANDLING OF DUPLICATE KEYS ARE BASE ON duplicate_keys_select
@@ -1141,16 +1133,22 @@ class DND(MemoryFunction):  # --------------------------------------------------
             else:
                 assert False, f'PROGRAM ERROR:  bad specification ({self.duplicate_keys_select}) for  ' \
                     f'\'duplicate_keys_select parameter of {self.name} for {self.owner.name}'
-        else:
-            assert len(indices_of_selected_items)==1, \
-            f'PROGRAM ERROR:  More than one item matched key ({_memory[0]}) ' \
-                f'in memory for {self.name} of {self.owner.name} even though \'duplicate_keys_allowed\' is False'
+        # else:
+        #     assert len(indices_of_selected_items)==1, \
+        #     f'PROGRAM ERROR:  More than one item matched key ({_memory[0]}) ' \
+        #         f'in memory for {self.name} of {self.owner.name} even though \'duplicate_keys_allowed\' is False'
+        #     index_of_selected_item = int(np.flatnonzero(selection_array))
+        #     return np.array([])
+        elif len(indices_of_selected_items)==1:
             index_of_selected_item = int(np.flatnonzero(selection_array))
-        # MODIFIED 4/30/19 END
+        else:
+            warnings.warn(f'More than one item matched key ({_memory[0]}) in memory for {self.name} of '
+                          f'{self.owner.name} even though \'duplicate_keys_allowed\' is False')
+            return np.array([])
         best_match_key = _memory[0][index_of_selected_item]
         best_match_val = _memory[1][index_of_selected_item]
 
-        return [best_match_key, best_match_val]
+        return np.array([best_match_key, best_match_val])
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
@@ -1207,4 +1205,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     @property
     def memory(self):
-        return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])
+        try:
+            return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])
+        except:
+            return np.array([])

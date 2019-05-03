@@ -463,7 +463,14 @@ class TestModelBasedOptimizationControlMechanisms:
                                # Note: Skip decision variable OutputState
                                evc_gratton.simulation_results[simulation][1:])
 
-    def test_model_based_ocm_after(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_after(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -491,12 +498,20 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, bin_execute=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs, bin_execute=mode)
 
-    def test_model_based_ocm_before(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_before(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -524,10 +539,11 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, bin_execute=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs, bin_execute=mode)
 
     def test_model_based_ocm_with_buffer(self):
 
@@ -834,7 +850,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        assert np.allclose([[1.], [15.], [20.], [15.], [35.], [20.], [15.], [30.], [15.], [30.]],
+        assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                            log_arr['outer_comp']['mod_slope'])
 
 class TestSampleIterator:

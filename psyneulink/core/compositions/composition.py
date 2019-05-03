@@ -3556,29 +3556,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
-        if (self.enable_controller and
-            self.controller_mode is BEFORE and
-            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                   execution_context=execution_id)
-        ):
-
-            # control phase
-            execution_phase = self.parameters.context.get(execution_id).execution_phase
-            if (
-                    execution_phase != ContextFlags.INITIALIZING
-                    and execution_phase != ContextFlags.SIMULATION
-            ):
-                if self.controller:
-                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
-                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
-                                                                    runtime_params=runtime_params, context=context)
-
-                if bin_execute:
-                    data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.controller, data)
-
-
         if bin_execute:
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             # Exec mode skips mbo invocation so we can't use it if mbo is
@@ -3608,16 +3585,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._get_bin_node(m)
 
                 bin_execute = True
+                _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                # FIXME: UGLY HACK to work around 'BEFORE' controllers
+                # This will be remove when a wrapper for controllers is added
+                _comp_ex._set_bin_node(self.input_CIM)
             except Exception as e:
-                if bin_execute.endswith('Exec'):
+                if str(bin_execute).endswith('Exec'):
                     raise e
 
                 string = "Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e))
                 print("WARNING: {}".format(string))
                 bin_execute = False
 
+        if (self.enable_controller and
+            self.controller_mode is BEFORE and
+            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                   execution_context=execution_id)
+        ):
+
+            # control phase
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
+            if (
+                    execution_phase != ContextFlags.INITIALIZING
+                    and execution_phase != ContextFlags.SIMULATION
+            ):
+                if self.controller:
+                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
+                                                                    runtime_params=runtime_params, context=context)
+
+                if bin_execute:
+                    data = self._get_flattened_controller_output(execution_id)
+                    _comp_ex.insert_node_output(self.controller, data)
+
         if bin_execute:
-            _comp_ex = pnlvm.CompExecution(self, [execution_id])
             _comp_ex.execute_node(self.input_CIM, inputs)
 
         if call_before_pass:
