@@ -76,6 +76,20 @@ def load_extract_scalar_array_one(builder, ptr):
     return val
 
 
+def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
+    diff = builder.fsub(val1, val2, "is_close_diff")
+    diff_neg = builder.fsub(diff.type(0.0), diff, "is_close_fneg_diff")
+    ltz = builder.fcmp_ordered("<", diff, diff.type(0.0), "is_close_ltz")
+    abs_diff = builder.select(ltz, diff_neg, diff, "is_close_abs")
+
+    rev2 = builder.fsub(val2.type(0.0), val2, "is_close_fneg2")
+    ltz2 = builder.fcmp_ordered("<", val2, val2.type(0.0), "is_close_ltz2")
+    abs2 = builder.select(ltz2, rev2, val2, "is_close_abs2")
+    rtol = builder.fmul(abs2.type(rtol), abs2, "is_close_rtol")
+    atol = builder.fadd(rtol, rtol.type(atol), "is_close_atol")
+    return builder.fcmp_ordered("<=", abs_diff, atol, "is_close_cmp")
+
+
 class ConditionGenerator:
     def __init__(self, ctx, composition):
         self.ctx = ctx
