@@ -37,7 +37,8 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
-    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_INDICATOR, NOISE, RATE, RANDOM, OLDEST, NEWEST
+    BUFFER_FUNCTION, INITIALIZER, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_INDICATOR, NOISE, RATE, RANDOM, OLDEST, \
+    NEWEST
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
@@ -638,7 +639,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        initializer = np.array(initializer or [])
+        initializer = initializer or []
 
         # It is necessary to create custom instances. Otherwise python would
         # share the same default instance for all DND objects.
@@ -674,9 +675,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        if len(initializer) != 0:
+        if len(self.previous_value) != 0:
             # self.parameters.key_size.set(len(list(initializer.keys())[0]))
-            self.parameters.key_size.set(initializer.shape[2])
+            # self.parameters.key_size.set(self.previous_value.shape[2])
+            self.parameters.key_size.set(len(self.previous_value[0][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -946,9 +948,35 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 format(repr(SELECTION_FUNCTION), self.__class__, result))
 
     def _initialize_previous_value(self, initializer, execution_context=None):
+        '''Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
+
+        - Validate, if initializer is specified, it is a 3d array
+            (must be done here rather than in validate_params as it is needed to initialize previous_value
+        - Insure that it has exactly 2 items in outer dimension (axis 0)
+            and that all items in each of those two items are all arrays
+        '''
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
-        vals = initializer
-        previous_value = np.asfarray(vals) if len(initializer) != 0 else np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+
+        if len(initializer) == 0:
+            previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+
+        else:
+            initializer = np.array(initializer)
+            previous_value = initializer.copy()
+            if initializer.ndim != 3:
+                for i, field in enumerate(initializer):
+                    for j, entry in enumerate(field):
+                        previous_value[i,j] = np.asfarray(initializer[i,j])
+                    # initializer[i] = np.array(initializer[i])
+            if previous_value.shape[0] != 2:
+                raise FunctionError(f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({initializer_array}) '
+                                        f'must be a 3d list or array')
+
+            # FIX: CHECK THAT ALL KEYS AND VALUES ARE THE SAME SIZES IN PREVIOUS_VALUE (UNLESS THAT IS GURANTEED BY
+            #  ABOVE)
+
+            # vals = initializer
+            # previous_value = np.asfarray(vals)
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
 
