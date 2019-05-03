@@ -436,10 +436,10 @@ COMMENT
         matrix = self.get_current_function_param(MATRIX, execution_id)
 
         current = variable
+
+        transformed = np.dot(matrix * self._hollow_matrix, variable)
         if self.transfer_fct is not None:
-            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, variable))
-        else:
-            transformed = np.dot(matrix * self._hollow_matrix, variable)
+            transformed = self.transfer_fct(transformed)
 
         # # MODIFIED 11/12/15 OLD:
         # if self.metric is ENERGY:
