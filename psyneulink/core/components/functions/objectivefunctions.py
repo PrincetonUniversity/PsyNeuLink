@@ -233,7 +233,7 @@ COMMENT
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
                                                   transfer_fct=transfer_fct,
@@ -436,10 +436,10 @@ COMMENT
         matrix = self.get_current_function_param(MATRIX, execution_id)
 
         current = variable
+
+        transformed = np.dot(matrix * self._hollow_matrix, variable)
         if self.transfer_fct is not None:
-            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, variable))
-        else:
-            transformed = np.dot(matrix * self._hollow_matrix, variable)
+            transformed = self.transfer_fct(transformed)
 
         # # MODIFIED 11/12/15 OLD:
         # if self.metric is ENERGY:
@@ -570,7 +570,7 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
                                                   params=params)

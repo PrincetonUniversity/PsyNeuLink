@@ -404,7 +404,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # self.system = None
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(gating_signals=gating_signals,
                                                   function=function,
                                                   params=params)

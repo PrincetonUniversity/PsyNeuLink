@@ -88,7 +88,6 @@ class PathwayComposition(Composition):
         execution_id=None,
         base_execution_id=None,
         clamp_input=SOFT_CLAMP,
-        targets=None,
         runtime_params=None,
         skip_initialization=False,
         bin_execute=False,
@@ -104,7 +103,7 @@ class PathwayComposition(Composition):
                                                          call_before_pass=call_before_pass,
                                                          call_after_time_step=call_after_time_step,
                                                          call_after_pass=call_after_pass, execution_id=execution_id,
-                                                         clamp_input=clamp_input, targets=targets,
+                                                         clamp_input=clamp_input,
                                                          runtime_params=runtime_params,
                                                          skip_initialization=skip_initialization,
                                                          bin_execute=bin_execute

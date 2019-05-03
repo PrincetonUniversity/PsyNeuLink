@@ -1009,8 +1009,16 @@ class State_Base(State):
                     :default value: `Linear`
                     :type: `Function`
 
+                require_projection_in_composition
+                    specifies whether the InputState requires a projection when instantiated in a Composition;
+                    if so, but none exists, a warning is issued.
+
+                    :default value: True
+                    :type:
+                    :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
+        require_projection_in_composition = Parameter(None, stateful=False, loggable=False, read_only=True)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -1098,7 +1106,7 @@ class State_Base(State):
             raise StateError("{}, as a subclass of {}, must implement an _execute() method".
                              format(self.__class__.__name__, STATE))
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(projections=projections,
                                                   params=params)
 

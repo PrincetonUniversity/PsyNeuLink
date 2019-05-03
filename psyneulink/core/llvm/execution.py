@@ -247,6 +247,12 @@ class CompExecution(CUDAExecution):
         if self.__bin_run_func is not None:
             return self.__bin_run_func
 
+        assert False, "Binary function not set for execution!"
+
+    def _set_bin_node(self, node):
+        assert node in self._composition._all_nodes
+        self.__bin_func = self._composition._get_bin_node(node)
+
     @property
     def _conditions(self):
         if len(self._execution_ids) > 1:
@@ -372,8 +378,8 @@ class CompExecution(CUDAExecution):
 
         assert inputs is not None or node is not self._composition.input_CIM
 
-        assert node in self._composition._all_nodes
-        self.__bin_func = self._composition._get_bin_node(node)
+        # Set bin node to make sure self._*struct works as expected
+        self._set_bin_node(node)
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 

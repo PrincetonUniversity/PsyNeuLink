@@ -1494,6 +1494,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_scheduler_processing = True
         self.projections.append(projection)
 
+
         projection._activate_for_compositions(self)
         for comp in subcompositions:
             projection._activate_for_compositions(comp)
@@ -1876,6 +1877,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if len(self.get_roles_by_node(node)) == 0:
                 self._add_node_role(node, NodeRole.INTERNAL)
 
+    def _check_for_projection_assignments(self):
+        '''Check that all Projections and States with require_projection_in_composition attribute are configured.
+
+        Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
+        Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
+        Validate that all Projections have senders and receivers.
+        '''
+        projections = self.projections.copy()
+
+        for node in self.nodes:
+            if isinstance(node, Projection):
+                projections.append(node)
+                continue
+            for input_state in node.input_states:
+                if input_state.require_projection_in_composition and not input_state.path_afferents:
+                    warnings.warn(f'{InputState.__name__} ({input_state.name}) of {node.name} '
+                                  f'doesn\'t have any afferent {Projection.__name__}s')
+            for output_state in node.output_states:
+                if output_state.require_projection_in_composition and not output_state.efferents:
+                    warnings.warn(f'{OutputState.__name__} ({output_state.name}) of {node.name} '
+                                  f'doesn\'t have any efferent {Projection.__name__}s')
+
+        for projection in projections:
+            if not projection.sender:
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
+            if not projection.receiver:
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+
     def _analyze_consideration_queue(self, q, objective_mechanism):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
             all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
@@ -1964,6 +1993,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._determine_node_roles()
         self._create_CIM_states()
         self._update_shadow_projections()
+        self._check_for_projection_assignments()
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -2259,7 +2289,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         name=proj_name
                     )
                     proj._activate_for_compositions(self)
-                    self._add_projection(proj)
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
@@ -3169,7 +3198,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id=None,
             base_execution_id=None,
             clamp_input=SOFT_CLAMP,
-            targets=None,
             runtime_params=None,
             skip_initialization=False,
             bin_execute=False,
@@ -3228,15 +3256,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # The nested var is set to True if this Composition is nested in another Composition, otherwise False
         # Later on, this is used to determine:
         #   (1) whether to initialize from context
-        #   (2) whether to assign values to CIM from
+        #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
         nested = False
         if len(self.input_CIM.path_afferents) > 0:
             nested = True
 
         runtime_params = self._parse_runtime_params(runtime_params)
 
-        if targets is None:
-            targets = {}
         execution_id = self._assign_execution_ids(execution_id)
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
@@ -3285,29 +3311,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
-        if (self.enable_controller and
-            self.controller_mode is BEFORE and
-            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                   execution_context=execution_id)
-        ):
-
-            # control phase
-            execution_phase = self.parameters.context.get(execution_id).execution_phase
-            if (
-                    execution_phase != ContextFlags.INITIALIZING
-                    and execution_phase != ContextFlags.SIMULATION
-            ):
-                if self.controller:
-                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
-                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
-                                                                    runtime_params=runtime_params, context=context)
-
-                if bin_execute:
-                    data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.controller, data)
-
-
         if bin_execute:
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             # Exec mode skips mbo invocation so we can't use it if mbo is
@@ -3337,16 +3340,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._get_bin_node(m)
 
                 bin_execute = True
+                _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                # FIXME: UGLY HACK to work around 'BEFORE' controllers
+                # This will be remove when a wrapper for controllers is added
+                _comp_ex._set_bin_node(self.input_CIM)
             except Exception as e:
-                if bin_execute.endswith('Exec'):
+                if str(bin_execute).endswith('Exec'):
                     raise e
 
                 string = "Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e))
                 print("WARNING: {}".format(string))
                 bin_execute = False
 
+        if (self.enable_controller and
+            self.controller_mode is BEFORE and
+            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                   execution_context=execution_id)
+        ):
+
+            # control phase
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
+            if (
+                    execution_phase != ContextFlags.INITIALIZING
+                    and execution_phase != ContextFlags.SIMULATION
+            ):
+                if self.controller:
+                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
+                                                                    runtime_params=runtime_params, context=context)
+
+                if bin_execute:
+                    data = self._get_flattened_controller_output(execution_id)
+                    _comp_ex.insert_node_output(self.controller, data)
+
         if bin_execute:
-            _comp_ex = pnlvm.CompExecution(self, [execution_id])
             _comp_ex.execute_node(self.input_CIM, inputs)
 
         if call_before_pass:
@@ -3563,7 +3591,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_before_trial=None,
             call_after_trial=None,
             clamp_input=SOFT_CLAMP,
-            targets=None,
             bin_execute=False,
             initial_values=None,
             reinitialize_values=None,
@@ -3716,9 +3743,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             num_trials = num_inputs_sets
 
-        if targets is None:
-            targets = {}
-
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
         execution_context = self.parameters.context.get(execution_id)
@@ -3843,22 +3867,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
                             self.controller.parameters.simulation_ids.get(execution_id).clear()
-
-            # LEARNING ------------------------------------------------------------------------
-            # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
-            execution_targets = {}
-            target_index = trial_num % num_inputs_sets
-            # Assign targets:
-            if targets is not None:
-
-                if isinstance(targets, function_type):
-                    self.target = targets
-                else:
-                    for node in targets:
-                        if callable(targets[node]):
-                            execution_targets[node] = targets[node]
-                        else:
-                            execution_targets[node] = targets[node][target_index]
 
             if call_after_trial:
                 call_with_pruned_args(call_after_trial, execution_context=execution_id)
@@ -4549,7 +4557,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         List of all nodes in the system that are currently marked as stateful. For Mechanisms, statefulness is
         determined by checking whether node.has_initializers is True. For Compositions, statefulness is determined
-        by checking whether any of its nodes are stateful. 
+        by checking whether any of its nodes are stateful.
 
         Returns
         -------

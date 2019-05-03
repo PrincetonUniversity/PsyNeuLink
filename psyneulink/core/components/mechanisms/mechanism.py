@@ -3283,7 +3283,6 @@ class Mechanism_Base(Mechanism):
                 output_states.append(state)
 
         if input_states:
-            # FIX: 11/9/17
             added_variable, added_input_state = self._handle_arg_input_states(input_states)
             if added_input_state:
                 if not isinstance(self.defaults.variable, list):

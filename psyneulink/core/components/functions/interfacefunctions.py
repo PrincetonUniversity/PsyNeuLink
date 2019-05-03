@@ -119,7 +119,7 @@ class Identity(InterfaceFunction):  # ------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
@@ -266,7 +266,7 @@ class InterfaceStateMap(InterfaceFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(corresponding_input_state=corresponding_input_state,
                                                   params=params)
 

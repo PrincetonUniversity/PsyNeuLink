@@ -357,7 +357,7 @@ class KohonenLearningMechanism(LearningMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   function=function,
                                                   learning_signals=learning_signals,

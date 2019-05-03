@@ -263,7 +263,7 @@ class OneHot(SelectionFunction):
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   random_state=random_state,
                                                   params=params)
