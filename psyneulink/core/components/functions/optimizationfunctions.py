@@ -1216,8 +1216,9 @@ class GridSearch(OptimizationFunction):
     def _get_param_struct_type(self, ctx):
         search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
         space = pnlvm.ir.LiteralStructType(search_space)
+        select_randomly = ctx.int32_ty
         obj_func_param = ctx.get_param_struct_type(self.objective_function)
-        return pnlvm.ir.LiteralStructType([obj_func_param, space])
+        return pnlvm.ir.LiteralStructType([obj_func_param, space, select_randomly])
 
     def _get_search_dim_init(self, execution_id, d):
         if isinstance(d.generator, list):
@@ -1226,7 +1227,8 @@ class GridSearch(OptimizationFunction):
 
     def _get_param_initializer(self, execution_id):
         grid_init = [self._get_search_dim_init(execution_id, d) for d in self.search_space]
-        return tuple([self.objective_function._get_param_initializer(execution_id), tuple(grid_init)])
+        select_randomly = 1 if self.select_randomly_from_optimal_values else 0
+        return tuple([self.objective_function._get_param_initializer(execution_id), tuple(grid_init), select_randomly])
 
     def _get_context_struct_type(self, ctx):
         obj_state = ctx.get_context_struct_type(self.objective_function)
@@ -1257,7 +1259,14 @@ class GridSearch(OptimizationFunction):
         obj_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         obj_state_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        random_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        search_space_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        select_random_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        select_random = builder.trunc(builder.load(select_random_ptr), pnlvm.ir.IntType(1))
+
+        opt_count_ptr = builder.alloca(ctx.float_ty)
+        builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
+        replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
 
         # Use NaN here. fcmp_unordered below returns true if one of the
         # operands is a NaN. This makes sure we always set min_*
@@ -1266,8 +1275,8 @@ class GridSearch(OptimizationFunction):
 
         b = builder
         with contextlib.ExitStack() as stack:
-            for i in range(len(self.search_space)):
-                array = b.gep(my_params, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            for i in range(len(search_space_ptr.type.pointee)):
+                array = b.gep(search_space_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 assert isinstance(array.type.pointee,  pnlvm.ir.ArrayType)
                 arg_elem = b.gep(sample_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, array, "loop_"+str(i)))
@@ -1279,9 +1288,30 @@ class GridSearch(OptimizationFunction):
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
             direction = "<" if self.direction is MINIMIZE else ">"
-            replace = b.fcmp_unordered(direction, value, min_value)
 
-            with b.if_then(replace):
+            replace = b.fcmp_unordered(direction, value, min_value)
+            builder.store(replace, replace_ptr)
+            with builder.if_then(select_random):
+                close = pnlvm.helpers.is_close(builder, value, min_value)
+                with builder.if_else(close) as (tb, eb):
+                    with tb:
+                        opt_count = builder.load(opt_count_ptr)
+                        opt_count = builder.fadd(opt_count, opt_count.type(1))
+                        prob = builder.fdiv(opt_count.type(1), opt_count)
+                        # reuse opt_count location. it will be overwritten later anyway
+                        res_ptr = opt_count_ptr
+                        rand_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+                        builder.call(rand_f, [random_state, res_ptr])
+                        res = builder.load(res_ptr)
+                        builder.store(opt_count, opt_count_ptr)
+                        replace = builder.fcmp_ordered("<", res, prob)
+                        builder.store(replace, replace_ptr)
+                    with eb:
+                        # we need to reset the counter if we are replacing with new best value
+                        with builder.if_then(builder.load(replace_ptr)):
+                            builder.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
+
+            with b.if_then(builder.load(replace_ptr)):
                 b.store(value, min_value_ptr)
                 b.store(b.load(sample_ptr), min_sample_ptr)
 

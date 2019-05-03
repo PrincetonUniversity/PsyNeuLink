@@ -92,17 +92,21 @@ def test_basic(obj_func, metric, normalize, direction, selection, benchmark):
 @pytest.mark.function
 @pytest.mark.benchmark
 @pytest.mark.optimization_function
+@pytest.mark.parametrize("selection", ['FIRST', 'RANDOM'])
 @pytest.mark.parametrize("direction", [OPTFunctions.MINIMIZE, OPTFunctions.MAXIMIZE])
 @pytest.mark.parametrize("normalize", [True, False])
 @pytest.mark.parametrize("metric", [kw.ENERGY, kw.ENTROPY])
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
-def test_llvm(obj_func, metric, normalize, direction, benchmark):
+def test_llvm(obj_func, metric, normalize, direction, selection, benchmark):
     variable = test_var
-    result = results[obj_func][metric][normalize][direction]['FIRST']
+    result = results[obj_func][metric][normalize][direction][selection]
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
 
     of = obj_func(default_variable=variable, metric=metric, normalize=normalize)
-    f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable, search_space=search_space, direction=direction)
+    f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable,
+                                search_space=search_space, direction=direction,
+                                select_randomly_from_optimal_values=(selection=='RANDOM'),
+                                seed=0)
     e = pnlvm.execution.FuncExecution(f)
     res = e.execute(variable)
     benchmark(e.execute, variable)
@@ -116,17 +120,21 @@ def test_llvm(obj_func, metric, normalize, direction, benchmark):
 @pytest.mark.function
 @pytest.mark.optimization_function
 @pytest.mark.benchmark
+@pytest.mark.parametrize("selection", ['FIRST', 'RANDOM'])
 @pytest.mark.parametrize("direction", [OPTFunctions.MINIMIZE, OPTFunctions.MAXIMIZE])
 @pytest.mark.parametrize("normalize", [True, False])
 @pytest.mark.parametrize("metric", [kw.ENERGY, kw.ENTROPY])
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
-def test_ptx_cuda(obj_func, metric, normalize, direction, benchmark):
+def test_ptx_cuda(obj_func, metric, normalize, direction, selection, benchmark):
     variable = test_var
-    result = results[obj_func][metric][normalize][direction]['FIRST']
+    result = results[obj_func][metric][normalize][direction][selection]
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
 
     of = obj_func(default_variable=variable, metric=metric, normalize=normalize)
-    f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable, search_space=search_space, direction=direction)
+    f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable,
+                                search_space=search_space, direction=direction,
+                                select_randomly_from_optimal_values=(selection=='RANDOM'),
+                                seed=0)
     e = pnlvm.execution.FuncExecution(f)
     res = e.cuda_execute(variable)
     benchmark(e.cuda_execute, variable)
