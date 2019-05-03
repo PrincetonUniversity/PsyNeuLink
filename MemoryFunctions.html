@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.5.3.0+368.g26bc8ad documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.5.3.0+391.gb22b76a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.0+368.g26bc8ad',
+              VERSION:'0.5.3.0+391.gb22b76a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.0+368
+                0.5.3.0+391
               </div>
             
           
@@ -367,8 +367,9 @@ of which is a list or array;  first item is used as key, and second as value ent
 <li><strong>storage_prob</strong> (<em>float in interval</em><em> [</em><em>0</em><em>,</em><em>1</em><em>] </em><em>: default 1.0</em>) – specifies probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
 <li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em>, or </em><em>array : default 1.0</em>) – specifies a value used to multiply key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <a href="#id1"><span class="problematic" id="id2">`</span></a>rate &lt;DND.noise&gt; for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em>, </em><em>array</em><em>, or </em><em>Function : default 0.0</em>) – specifies a random value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <a href="#id3"><span class="problematic" id="id4">`</span></a>noise &lt;DND.noise&gt; for details).</li>
-<li><strong>memory</strong> (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator.initializer"><em>initializer</em></a>) – specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>;  each key must have the same shape as
-the first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and each value must have the same shape as its second item.</li>
+<li><strong>initializer</strong> (<em>3d array : default None</em>) – specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.  The outer dimension (axis 0) must have two
+2d arrays (one for keys, the other for values);  the length of all the 1d arrays in keys and values must
+be the same.</li>
 <li><strong>distance_function</strong> (<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><em>Distance</em></a><em> or </em><em>function : default Distance</em><em>(</em><em>metric=COSINE</em><em>)</em>) – specifies the function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 with keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
 <li><strong>selection_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><em>OneHot</em></a><em> or </em><em>function : default OneHot</em><em>(</em><em>mode=MIN_VAL</em><em>)</em>) – specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> and select the item to return.</li>
@@ -425,9 +426,9 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt>
-<code class="descname">initializer memory</code></dt>
-<dd><p>initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.initializer">
+<code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.initializer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>3d array</em> – initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -580,7 +581,7 @@ length and equal to the length as key(s) of any existing entries in <code class=
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.reinitialize">
 <code class="descname">reinitialize</code><span class="sig-paren">(</span><em>&lt;new_dictionary&gt; default={}</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.reinitialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clears the memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
-<p>If an argument is passed into reinitialize or if the <code class="xref any docutils literal"><span class="pre">initializer</span></code> attribute contains a
+<p>If an argument is passed into reinitialize or if the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.initializer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> attribute contains a
 value besides [], then that value is used to start the new memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.
 Otherwise, the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> memory starts out empty.</p>
 <p><code class="xref any docutils literal"><span class="pre">value</span></code> takes on the same value as  <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
