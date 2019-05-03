@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import ctypes
 import copy
 import functools
 import numpy as np
@@ -147,5 +148,46 @@ def test_helper_is_close(mode):
         bin_f(ct_vec1, ct_vec2, ct_res, DIM_X)
     else:
         bin_f.cuda_wrap_call(vec1, vec2, res, np.int32(DIM_X))
+
+    assert np.array_equal(res, ref)
+
+
+@pytest.mark.llvm
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+def test_helper_all_close(mode):
+
+    with pnlvm.LLVMBuilderContext() as ctx:
+        arr_ptr_ty = ir.ArrayType(ctx.float_ty, DIM_X).as_pointer()
+        func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty,
+                                                  ir.IntType(32).as_pointer()])
+
+        custom_name = ctx.get_unique_name("all_close")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        in1, in2, out = function.args
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        all_close = pnlvm.helpers.all_close(builder, in1, in2)
+        res = builder.select(all_close, out.type.pointee(1), out.type.pointee(0))
+        builder.store(res, out)
+        builder.ret_void()
+
+    vec1 = copy.deepcopy(vector)
+    vec2 = copy.deepcopy(vector)
+
+    ref = np.allclose(vec1, vec2)
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    if mode == 'CPU':
+        ct_ty = pnlvm._convert_llvm_ir_to_ctype(arr_ptr_ty)
+        ct_vec1 = vec1.ctypes.data_as(ct_ty)
+        ct_vec2 = vec2.ctypes.data_as(ct_ty)
+        res = ctypes.c_int32()
+
+        bin_f(ct_vec1, ct_vec2, ctypes.byref(res))
+    else:
+        res = np.array([5], dtype=np.int32)
+        bin_f.cuda_wrap_call(vec1, vec2, res)
+        res = res[0]
 
     assert np.array_equal(res, ref)

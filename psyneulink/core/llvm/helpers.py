@@ -90,6 +90,23 @@ def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     return builder.fcmp_ordered("<=", abs_diff, atol, "is_close_cmp")
 
 
+def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
+    assert arr1.type == arr2.type
+    all_ptr = builder.alloca(ir.IntType(1))
+    builder.store(all_ptr.type.pointee(1), all_ptr)
+    with array_ptr_loop(builder, arr1, "all_close") as (builder, idx):
+        val1_ptr = builder.gep(arr1, [idx.type(0), idx])
+        val2_ptr = builder.gep(arr1, [idx.type(0), idx])
+        val1 = builder.load(val1_ptr)
+        val2 = builder.load(val2_ptr)
+        res_close = is_close(builder, val1, val2, rtol, atol)
+
+        all_val = builder.load(all_ptr)
+        all_val = builder.and_(all_val, res_close)
+        builder.store(all_val, all_ptr)
+
+    return builder.load(all_ptr)
+
 class ConditionGenerator:
     def __init__(self, ctx, composition):
         self.ctx = ctx
