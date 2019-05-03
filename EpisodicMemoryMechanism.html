@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.5.2.1+3.g6036abd documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.5.3.0+368.g26bc8ad documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.2.1+3.g6036abd',
+              VERSION:'0.5.3.0+368.g26bc8ad',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.2.1+3
+                0.5.3.0+368
               </div>
             
           
@@ -199,7 +199,7 @@
 <span id="episodicmemorymechanism"></span><h1>EpisodicMemoryMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="episodicmemorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A EpisodicMemoryMechanism is an <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that can store and retrieve cue-associate pairs.</p>
+<p>An EpisodicMemoryMechanism is an <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that can store and retrieve cue-associate pairs.</p>
 </div>
 <div class="section" id="creating-a-transfermechanism">
 <span id="episodicmemorymechanism-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
@@ -208,7 +208,7 @@ the shapes of the items stored in its memory.</p>
 </div>
 <div class="section" id="structure">
 <span id="episodicmemorymechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A EpisodicMemoryMechanism has two <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a>, <em>CUE_INPUT</em> and <em>ASSOC_INPUT</em>, that represent
+<p>An EpisodicMemoryMechanism has two <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a>, <em>CUE_INPUT</em> and <em>ASSOC_INPUT</em>, that represent
 an item to store;  a <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that stores and retrieves cue-assoc pairs from its
 memory; and two <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, <em>ASSOC_OUTPUT</em> and <em>CUE_OUTPUT</em> that represent a retrieved item.
 The default function is a <a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND"><code class="xref any py py-class docutils literal"><span class="pre">DND</span></code></a> that implements a simple form of differentiable neural dictionary, but a custom
@@ -227,7 +227,7 @@ specified in the corresponding arguments of the EpisodicMemoryMechanism’s cons
 ignored.</li>
 </ul>
 <ul class="simple">
-<li>It may also implement a <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> attribute;  if it does, it can be accesses by the EpisodicMemoryMechanism’s
+<li>It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism’s
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> attribute.</li>
 </ul>
 </div></blockquote>
@@ -312,7 +312,8 @@ if no retrieval is made, appropriately-shaped zero-valued arrays are assigned to
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory">
 <code class="descname">memory</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3d array</em> – array containing key-value pairs stored in the function’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> attribute (if it has one).</p>
+<dd><p><em>3d array</em> – contains key-value pairs stored in the <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;EpisodicMemoryMechanism.function&gt;'s</span> <span class="pre">`memory</span></code> attribute
+(if it has one).</p>
 </dd></dl>
 
 <dl class="attribute">
