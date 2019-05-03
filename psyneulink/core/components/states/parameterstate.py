@@ -558,7 +558,7 @@ class ParameterState(State_Base):
         # if isinstance(owner, MappingProjection) and name is MATRIX:
         #     function = LinearCombination(operation=SUM)
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 

@@ -876,7 +876,7 @@ class Process(Process_Base):
         pathway = pathway or []
         self.projections = []
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(pathway=pathway,
                                                   initial_values=initial_values,
                                                   clamp_input=clamp_input,

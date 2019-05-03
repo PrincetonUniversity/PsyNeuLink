@@ -231,7 +231,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         previous_value = self._initialize_previous_value(initializer)
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   previous_value=previous_value,

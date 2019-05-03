@@ -224,7 +224,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -653,7 +653,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         self._memory = []
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
@@ -850,7 +850,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                     var_key_element = b2.gep(var_key_ptr, [ctx.int32_ty(0), idx2])
                     cmp_key_element = b2.gep(cmp_key_ptr, [ctx.int32_ty(0), idx2])
                     element_differs = b.fcmp_unordered('!=',
-                                                       b.load(var_key_element), 
+                                                       b.load(var_key_element),
                                                        b.load(cmp_key_element))
                     key_differs = b2.load(key_differs_ptr)
                     key_differs = b2.or_(key_differs, element_differs)

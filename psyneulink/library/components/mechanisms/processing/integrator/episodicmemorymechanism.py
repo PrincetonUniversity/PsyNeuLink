@@ -14,7 +14,7 @@
 Overview
 --------
 
-A EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve cue-associate pairs.
+An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve cue-associate pairs.
 
 .. _EpisodicMemoryMechanism_Creation:
 
@@ -29,7 +29,7 @@ the shapes of the items stored in its memory.
 Structure
 ---------
 
-A EpisodicMemoryMechanism has two `InputStates <InputState>`, *CUE_INPUT* and *ASSOC_INPUT*, that represent
+An EpisodicMemoryMechanism has two `InputStates <InputState>`, *CUE_INPUT* and *ASSOC_INPUT*, that represent
 an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves cue-assoc pairs from its
 memory; and two `OutputStates <OutputState>`, *ASSOC_OUTPUT* and *CUE_OUTPUT* that represent a retrieved item.
 The default function is a `DND` that implements a simple form of differentiable neural dictionary, but a custom
@@ -45,7 +45,7 @@ function can be specified, so long as it meets the following requirements:
       specified in the corresponding arguments of the EpisodicMemoryMechanism's constructor, otherwise those are
       ignored.
     ..
-    * It may also implement a `memory` attribute;  if it does, it can be accesses by the EpisodicMemoryMechanism's
+    * It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism's
       `memory <EpisodicMemoryMechanism.memory>` attribute.
 
 .. _EpisodicMemoryMechanism_Execution:
@@ -178,7 +178,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         function that implements storage and retrieval from a memory.
 
     memory : 3d array
-        array containing key-value pairs stored in the function's `memory` attribute (if it has one).
+        contains key-value pairs stored in the `function <EpisodicMemoryMechanism.function>'\\s `memory` attribute
+        (if it has one).
 
     name : str
         the name of the EpisodicMemoryMechanism; if it is not specified in the **name** argument of the constructor, a
