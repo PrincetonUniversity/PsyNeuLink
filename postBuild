@@ -1,0 +1,4 @@
+#!/bin/bash
+# used for mybinder.org hosting of tutorial notebook
+conda install graphviz python-graphviz
+pip install --ignore-installed .[tutorial]

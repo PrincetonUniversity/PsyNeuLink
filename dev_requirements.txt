@@ -1,0 +1,15 @@
+pytest<4
+pytest-benchmark
+pytest-cov
+pytest-profiling
+pytest-helpers-namespace
+pytest-xdist<1.28.0
+jupyter
+sphinx
+sphinx_rtd_theme
+matplotlib
+ipykernel
+graphviz
+pillow
+torch
+ipython
