@@ -940,17 +940,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 "must accept a list with two 1d arrays or a 2d array as its argument".
                                 format(fct_msg, repr(SELECTION_FUNCTION), self.__class__,
                                        selection_function))
-        # # MODIFIED 4/30/19 OLD:
-        # if result.shape != test_var.shape or len(np.flatnonzero(result))>1:
-        #     raise FunctionError("Value returned by {} specified for {} ({}) "
-        #                         "must return an array of the same length it receives with one nonzero value".
-        #                         format(repr(SELECTION_FUNCTION), self.__class__, result))
-        # MODIFIED 4/30/19 NEW: [JDC]
         if result.shape != test_var.shape:
             raise FunctionError("Value returned by {} specified for {} ({}) "
                                 "must return an array of the same length it receives".
                                 format(repr(SELECTION_FUNCTION), self.__class__, result))
-        # MODIFIED 4/30/19 END
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
@@ -1152,7 +1145,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
             warnings.warn(f'More than one item matched key ({_memory[0]}) in memory for {self.name} of '
                           f'{self.owner.name} even though \'duplicate_keys_allowed\' is False')
             return np.array([])
-        # MODIFIED 4/30/19 END
         best_match_key = _memory[0][index_of_selected_item]
         best_match_val = _memory[1][index_of_selected_item]
 
