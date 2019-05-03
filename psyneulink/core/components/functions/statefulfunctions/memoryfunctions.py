@@ -1156,7 +1156,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         best_match_key = _memory[0][index_of_selected_item]
         best_match_val = _memory[1][index_of_selected_item]
 
-        return [best_match_key, best_match_val]
+        return np.array([best_match_key, best_match_val])
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
