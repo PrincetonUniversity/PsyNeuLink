@@ -958,7 +958,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
         if len(initializer) == 0:
-            previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+            # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+            previous_value = []
 
         else:
             initializer = np.array(initializer)
@@ -969,14 +970,11 @@ class DND(MemoryFunction):  # --------------------------------------------------
                         previous_value[i,j] = np.asfarray(initializer[i,j])
                     # initializer[i] = np.array(initializer[i])
             if previous_value.shape[0] != 2:
-                raise FunctionError(f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({initializer_array}) '
-                                        f'must be a 3d list or array')
+                raise FunctionError(f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({previous_value}) '
+                                    f'must be a 3d list or array')
 
             # FIX: CHECK THAT ALL KEYS AND VALUES ARE THE SAME SIZES IN PREVIOUS_VALUE (UNLESS THAT IS GURANTEED BY
             #  ABOVE)
-
-            # vals = initializer
-            # previous_value = np.asfarray(vals)
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
 
