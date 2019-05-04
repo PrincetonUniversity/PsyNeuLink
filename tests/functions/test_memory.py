@@ -67,8 +67,6 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(func, variable, params, expected, benchmark):
-    if func is Functions.DND:
-        pytest.skip("Not implemented")
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName;
     f(variable)
@@ -85,8 +83,6 @@ def test_basic(func, variable, params, expected, benchmark):
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, expected, benchmark):
     if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    if func is Functions.DND:
         pytest.skip("Not implemented")
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
@@ -106,8 +102,6 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.benchmark
 def test_ptx_cuda(func, variable, params, expected, benchmark):
     if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    if func is Functions.DND:
         pytest.skip("Not implemented")
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)

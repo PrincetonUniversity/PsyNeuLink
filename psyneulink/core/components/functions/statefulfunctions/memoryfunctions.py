@@ -1174,7 +1174,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
             d = np.delete(d, [0], axis=1)
 
         # If dupliciate keys are not allowed and key matches any existing keys then don't encode
-        if not self.duplicate_keys_allowed and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
+        if not self.duplicate_keys_allowed and (
+           any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]) or
+           key in d[0]):
             pass
         else:
             keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
