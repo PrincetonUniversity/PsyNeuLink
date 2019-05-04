@@ -7,7 +7,7 @@ import psyneulink.core.llvm as pnlvm
 np.random.seed(0)
 SIZE=10
 test_var = np.random.rand(2, SIZE)
-test_initializer = {tuple(test_var[0]): test_var[1]}
+test_initializer = [[test_var[0]], [test_var[1]]]
 test_noise_arr = np.random.rand(SIZE)
 
 RAND1 = np.random.random(1)

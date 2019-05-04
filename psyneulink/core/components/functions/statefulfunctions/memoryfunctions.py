@@ -674,7 +674,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         if len(initializer) != 0:
-            self.parameters.key_size.set(len(list(initializer.keys())[0]))
+            self.parameters.key_size.set(len(initializer[0][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
