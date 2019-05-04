@@ -620,6 +620,7 @@ from psyneulink.core.globals.keywords import \
     LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, \
     PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, \
     WEIGHT, OUTCOME
+from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, NodeRole, call_with_pruned_args
@@ -1116,6 +1117,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.__compiled_run = None
 
         self._compilation_data = self._CompilationData(owner=self)
+
+        self.log = CompositionLog(owner=self)
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -3835,6 +3838,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             targets=None,
             bin_execute=False,
+            log=False,
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
@@ -3911,6 +3915,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
+            log : bool, LogCondition
+                Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
+                `projection <Composition.projections>` in this Composition, if it is not already set.
+
+                .. note::
+                   as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
+                   correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
+
             retain_old_simulation_data : bool
                 if True, all Parameter values generated during simulations will be saved for later inspection;
                 if False, simulation values will be deleted unless otherwise specified by individual Parameters
@@ -3951,6 +3963,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if context is None, it has not been created for this execution_id yet, so it is not
             # in a simulation
             self._analyze_graph()
+
+        # set auto logging if it's not already set, and if log argument is True
+        if log:
+            for item in self.nodes + self.projections:
+                if (
+                    not isinstance(item, CompositionInterfaceMechanism)
+                    and item.parameters.value.log_condition is LogCondition.OFF
+                ):
+                    item.parameters.value.log_condition = LogCondition.EXECUTION
 
         results = []
 
