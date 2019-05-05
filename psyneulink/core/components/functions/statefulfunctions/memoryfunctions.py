@@ -420,10 +420,11 @@ class DND(MemoryFunction):  # --------------------------------------------------
         specifies a random value added to key (first item of `variable <DND.variable>`) before storing in `memory
         <DND.memory>` (see `noise <DND.noise> for details).
 
-    initializer : 3d array : default None
-        specifies an initial set of entries for `memory <DND.memory>`.  The outer dimension (axis 0) must have two
-        2d arrays (one for keys, the other for values);  the length of all the 1d arrays in keys and values must
-        be the same.
+    initializer : 3d array or list : default None
+        specifies an initial set of entries for `memory <DND.memory>`. It must be of the following form:
+        [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
+        is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
+        lists of the same length, and similarly for the values.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         specifies the function used during retrieval to compare the first item in `variable <DND.variable>`
@@ -486,10 +487,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         (see `noise <Stateful_Noise>` for additional details).
 
     initializer : 3d array
-        initial set of entries for `memory <DND.memory>`.
+        initial set of entries for `memory <DND.memory>`;  each entry is a 2d array with a key-value pair.
 
     memory : 3d array
-        array of key-value pairs containing entries in DND:  [[[key 1], [value 1]],[[key 2], value 2]]...]
+        array of key-value pairs containing entries in DND:  [[[key 1], [value 1]], [[key 2], value 2]]...]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         function used during retrieval to compare the first item in `variable <DND.variable>`
@@ -640,7 +641,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
-                 initializer: tc.optional(tc.any(list, np.ndarray))=None,
+                 initializer=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
                  duplicate_keys_allowed:bool=False,
@@ -651,7 +652,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        initializer = initializer or []
+        if initializer is None:
+            initializer = []
 
         # It is necessary to create custom instances. Otherwise python would
         # share the same default instance for all DND objects.
@@ -689,8 +691,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         # if len(self.previous_value) != 0:
         if self.previous_value.size != 0:
-            # self.parameters.key_size.set(len(list(initializer.keys())[0]))
-            # self.parameters.key_size.set(self.previous_value.shape[2])
             self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
             self.parameters.val_size.set(len(self.previous_value[VALS][0]))
 
