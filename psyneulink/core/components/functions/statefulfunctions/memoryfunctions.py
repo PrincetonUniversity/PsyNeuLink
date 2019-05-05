@@ -351,6 +351,8 @@ RETRIEVAL_PROB = 'retrieval_prob'
 STORAGE_PROB = 'storage_prob'
 DISTANCE_FUNCTION = 'distance_function'
 SELECTION_FUNCTION = 'selection_function'
+KEYS = 0
+VALS = 1
 
 
 class DND(MemoryFunction):  # ------------------------------------------------------------------------------
@@ -466,6 +468,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
     key_size : int
         length of keys in `memory <DND.memory>`.
 
+    val_size : int
+        length of values in `memory <DND.memory>`.
+
     retrieval_prob : float in interval [0,1]
         probability of retrieiving a value from `memory <DND.memory>`.
 
@@ -550,6 +555,12 @@ class DND(MemoryFunction):  # --------------------------------------------------
                     :default value: 1
                     :type: int
 
+                val_size
+                    see `val_size <DND.val_size>`
+
+                    :default value: 1
+                    :type: int
+
                 duplicate_keys_allowed
                     see `duplicate_keys_allowed <DND.duplicate_keys_allowed>`
 
@@ -603,6 +614,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)
+        val_size = Parameter(1, stateful=True)
         duplicate_keys_allowed = Parameter(False)
         duplicate_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
@@ -679,7 +691,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if self.previous_value.size != 0:
             # self.parameters.key_size.set(len(list(initializer.keys())[0]))
             # self.parameters.key_size.set(self.previous_value.shape[2])
-            self.parameters.key_size.set(len(self.previous_value[0][0]))
+            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
+            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -905,7 +918,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
     def _validate(self):
         distance_function = self.distance_function
-        test_var = [self.defaults.variable[0], self.defaults.variable[0]]
+        test_var = [self.defaults.variable[KEYS], self.defaults.variable[VALS]]
         if isinstance(distance_function, type):
             distance_function = distance_function(default_variable=test_var)
             fct_msg = 'Function type'
@@ -1036,9 +1049,10 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if len(initializer) == 0:
             return previous_value
         else:
-            # Set key_size if this is the first entry
+            # Set key_size and val_size if this is the first entry
             self.parameters.previous_value.set(previous_value, execution_context, override=True)
-            self.parameters.key_size.set(len(initializer[0][0]), execution_context)
+            self.parameters.key_size.set(len(initializer[KEYS][0]), execution_context)
+            self.parameters.val_size.set(len(initializer[VALS][0]), execution_context)
             for entry in initializer:
                 self._store_memory(np.array(entry), execution_context)
             return self._memory
@@ -1123,8 +1137,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         """
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        key = variable[0]
-        value = variable[1]
+        key = variable[KEYS]
+        val = variable[VALS]
 
         retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, execution_id)).astype(float)
         storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, execution_id)).astype(float)
@@ -1140,18 +1154,19 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
-        # Set key_size if this is the first entry
-        if len(self.get_previous_value(execution_id)[0]) == 0:
+        # Set key_size and val_size if this is the first entry
+        if len(self.get_previous_value(execution_id)[KEYS]) == 0:
             self.parameters.key_size.set(len(key), execution_id)
+            self.parameters.val_size.set(len(val), execution_id)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
-            ret_val = self.get_memory(key, execution_id)
+            memory = self.get_memory(key, execution_id)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            ret_val = np.zeros_like(self.defaults.variable)
+            memory = np.zeros_like(self.defaults.variable)
             # if self.context.initialization_status == ContextFlags.INITIALIZING:
             #     ret_val = np.zeros_like(self.defaults.variable)
             # else:
@@ -1163,7 +1178,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, execution_id)
 
-        return self.convert_output_type(ret_val)
+        # # MODIFIED 5/5/19 OLD:
+        # return self.convert_output_type(ret_val)
+        # MODIFIED 5/5/19 NEW: [JDC]
+        ret_val = np.array([list(memory[0]),[]])
+        ret_val[1] = list(memory[1])
+        return ret_val
+        # MODIFIED 5/5/19 END
 
     @tc.typecheck
     def _validate_memory(self, memory:tc.any(list, np.ndarray), execution_id):
@@ -1173,7 +1194,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
             raise FunctionError("Attempt to store memory in {} ({}) that does not have 2 1d arrays".
                                 format(self.__class__.__name__, memory))
 
-        self._validate_key(memory[0], execution_id)
+        self._validate_key(memory[KEYS], execution_id)
 
     @tc.typecheck
     def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
@@ -1208,9 +1229,16 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
         # compute similarity(query_key, memory m ) for all m
         _memory = self.get_previous_value(execution_id)
-        if len(_memory[0]) == 0:
-            return np.zeros_like(self.defaults.variable)
-        distances = [self.distance_function([query_key, list(m)]) for m in _memory[0]]
+        if len(_memory[KEYS]) == 0:
+            # # MODIFIED 5/5/19 OLD:
+            # return np.zeros_like(self.defaults.variable)
+            # MODIFIED 5/5/19 NEW: [JDC]
+            # ret_val = np.array(shape = self.get_previous_value(execution_context=execution_id).shape)
+            zeros_key = [0] * self.key_size
+            zeros_val = [0] * self.val_size
+            return [zeros_key, zeros_val]
+            # MODIFIED 5/5/19 END
+        distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
         indices_of_selected_items = np.flatnonzero(selection_array)
@@ -1234,13 +1262,19 @@ class DND(MemoryFunction):  # --------------------------------------------------
         elif len(indices_of_selected_items)==1:
             index_of_selected_item = int(np.flatnonzero(selection_array))
         else:
-            warnings.warn(f'More than one item matched key ({_memory[0]}) in memory for {self.name} of '
+            warnings.warn(f'More than one item matched key ({_memory[KEYS]}) in memory for {self.name} of '
                           f'{self.owner.name} even though \'duplicate_keys_allowed\' is False')
             return np.array([])
-        best_match_key = _memory[0][index_of_selected_item]
-        best_match_val = _memory[1][index_of_selected_item]
+        best_match_key = _memory[KEYS][index_of_selected_item]
+        best_match_val = _memory[VALS][index_of_selected_item]
 
-        return np.array([best_match_key, best_match_val])
+        # # MODIFIED 5/5/19 OLD:
+        # return np.array([best_match_key, best_match_val])
+        # # MODIFIED 5/5/19 NEW: [JDC]
+        # return [best_match_key, best_match_val]
+        # MODIFIED 5/5/19 NEWER [JDC]:
+        return [list(best_match_key), list(best_match_val)]
+        # MODIFIED 5/5/19 END
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
@@ -1255,16 +1289,17 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         self._validate_memory(memory, execution_id)
 
-        key = memory[0]
-        val = memory[1]
+        key = memory[KEYS]
+        val = memory[VALS]
 
         d = self.get_previous_value(execution_id)
 
-        if len(d[0]) >= self.max_entries:
-            d = np.delete(d, [0], axis=1)
+        if len(d[KEYS]) >= self.max_entries:
+            d = np.delete(d, [KEYS], axis=1)
 
         # If dupliciate keys are not allowed and key matches any existing keys then don't encode
-        if not self.duplicate_keys_allowed and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
+        if (not self.duplicate_keys_allowed
+                and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[KEYS]])):
             pass
         else:
             # # MODIFIED 5/5/19 OLD:
@@ -1276,9 +1311,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
             # values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
             # d = np.array([keys.tolist(), values.tolist()])
             # MODIFIED 5/5/19 NEWER: [JDC]
-            keys = d[0].tolist()
+            keys = d[KEYS].tolist()
             keys.append(key)
-            values = d[1].tolist()
+            values = d[VALS].tolist()
             values.append(val)
             d = np.array([keys, values])
             # MODIFIED 5/5/19 END
@@ -1311,6 +1346,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
     def memory(self):
         try:
             # return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])
-            return np.array(list(zip(self._memory[0],self._memory[1])))
+            return np.array(list(zip(self._memory[KEYS],self._memory[VALS])))
         except:
             return np.array([])
