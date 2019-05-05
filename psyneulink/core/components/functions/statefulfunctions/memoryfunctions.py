@@ -1165,12 +1165,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
             else:
                 assert False, f'PROGRAM ERROR:  bad specification ({self.duplicate_keys_select}) for  ' \
                     f'\'duplicate_keys_select parameter of {self.name} for {self.owner.name}'
-        # else:
-        #     assert len(indices_of_selected_items)==1, \
-        #     f'PROGRAM ERROR:  More than one item matched key ({_memory[0]}) ' \
-        #         f'in memory for {self.name} of {self.owner.name} even though \'duplicate_keys_allowed\' is False'
-        #     index_of_selected_item = int(np.flatnonzero(selection_array))
-        #     return np.array([])
         elif len(indices_of_selected_items)==1:
             index_of_selected_item = int(np.flatnonzero(selection_array))
         else:
