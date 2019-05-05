@@ -1051,8 +1051,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         else:
             # Set key_size and val_size if this is the first entry
             self.parameters.previous_value.set(previous_value, execution_context, override=True)
-            self.parameters.key_size.set(len(initializer[KEYS][0]), execution_context)
-            self.parameters.val_size.set(len(initializer[VALS][0]), execution_context)
+            self.parameters.key_size.set(len(initializer[0][KEYS]), execution_context)
+            self.parameters.val_size.set(len(initializer[0][VALS]), execution_context)
             for entry in initializer:
                 self._store_memory(np.array(entry), execution_context)
             return self._memory
