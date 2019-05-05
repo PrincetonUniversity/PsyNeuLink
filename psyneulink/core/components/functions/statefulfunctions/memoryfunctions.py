@@ -675,10 +675,11 @@ class DND(MemoryFunction):  # --------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        if len(self.previous_value) != 0:
+        # if len(self.previous_value) != 0:
+        if self.previous_value.size != 0:
             # self.parameters.key_size.set(len(list(initializer.keys())[0]))
             # self.parameters.key_size.set(self.previous_value.shape[2])
-            self.parameters.key_size.set(len(self.previous_value[0][0]))
+            self.parameters.key_size.set(len(self.previous_value[0][0][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -957,28 +958,90 @@ class DND(MemoryFunction):  # --------------------------------------------------
         '''
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
+        # # MODIFIED 5/4/19 OLD:
+        # if len(initializer) == 0:
+        #     previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+        #     # previous_value = []
+        #
+        # else:
+        #
+        #     # FIX: SHAPE NEEDS TO BE 2,0,1 OR 2,1,1 NOT 2,1
+        #     initializer = np.array(initializer)
+        #     previous_value = initializer.copy()
+        #     if initializer.ndim != 3:
+        #         # for i, field in enumerate(initializer):
+        #         #     for j, entry in enumerate(field):
+        #         #         previous_value[i,j] = np.asfarray(initializer[i,j])
+        #         keys = []
+        #         vals = []
+        #         for entry in initializer:
+        #             keys.append(np.array(entry[0]))
+        #             vals.append(np.array(entry[1]))
+        #         previous_value = [keys,vals]
+        #
+        #         assert previous_value.ndim == 3,  f'PROGRAM ERROR:  ' \
+        #             f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({previous_value}) ' \
+        #             f'could not be converted to 3d ndarray'
+        #     if previous_value.shape[0] != 2:
+        #         raise FunctionError(f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({previous_value}) '
+        #                             f'must be a 3d list or array')
+        #
+        #     # FIX: CHECK THAT ALL KEYS AND VALUES ARE THE SAME SIZES IN PREVIOUS_VALUE (UNLESS THAT IS GURANTEED BY
+        #     #  ABOVE)
+        # self.parameters.previous_value.set(previous_value, execution_context, override=True)
+        #
+        # return previous_value
+
+        # # MODIFIED 5/4/19 NEW: [JDC]
+        # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+        #
+        # if len(initializer) != 0:
+        #     keys = []
+        #     vals = []
+        #     for entry in initializer:
+        #         keys.append(np.array(entry[0]))
+        #         vals.append(np.array(entry[1]))
+        #     # previous_value[0] = [keys]
+        #     # previous_value[1] = [vals]
+        #     previous_value = np.array([[keys],[vals]])
+        #
+        # self.parameters.previous_value.set(previous_value, execution_context, override=True)
+        #
+        # return previous_value
+
+        # # MODIFIED 5/4/19 NEWER: [JDC]
+        # if len(initializer) == 0:
+        #     previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+        #     self.parameters.previous_value.set(previous_value, execution_context, override=True)
+        #     return previous_value
+        # else:
+        #     for entry in initializer:
+        #         self._store_memory(np.array(entry), execution_context)
+        #     return self._memory
+
+        # MODIFIED 5/4/19 NEWEST: [JDC]
+        previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
         if len(initializer) == 0:
-            # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-            previous_value = []
-
+            return previous_value
         else:
-            initializer = np.array(initializer)
-            previous_value = initializer.copy()
-            if initializer.ndim != 3:
-                for i, field in enumerate(initializer):
-                    for j, entry in enumerate(field):
-                        previous_value[i,j] = np.asfarray(initializer[i,j])
-                    # initializer[i] = np.array(initializer[i])
-            if previous_value.shape[0] != 2:
-                raise FunctionError(f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({previous_value}) '
-                                    f'must be a 3d list or array')
+            # Set key_size if this is the first entry
+            self.parameters.previous_value.set(previous_value, execution_context, override=True)
+            self.parameters.key_size.set(len(initializer[0][0]), execution_context)
+            for entry in initializer:
+                self._store_memory(np.array(entry), execution_context)
+            return self._memory
 
-            # FIX: CHECK THAT ALL KEYS AND VALUES ARE THE SAME SIZES IN PREVIOUS_VALUE (UNLESS THAT IS GURANTEED BY
-            #  ABOVE)
+        # # MODIFIED 5/4/19 VERY NEWEST: [JDC]
+        # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+        # if len(initializer) == 0:
+        #     return previous_value
+        # else:
+        #     # Set key_size if this is the first entry
+        #     self.parameters.key_size.set(len(initializer[0][0]), execution_context)
+        #     self.reinitialize(np.array(initializer), execution_context=execution_context)
+        #     return self._memory
 
-        self.parameters.previous_value.set(previous_value, execution_context, override=True)
-
-        return previous_value
+        # MODIFIED 5/4/19 END
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
@@ -1201,9 +1264,15 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if not self.duplicate_keys_allowed and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
             pass
         else:
+            # MODIFIED 5/5/19 OLD:
             keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
             values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
-            d = np.asfarray([keys, values])
+            d = [np.asfarray(keys), np.asfarray(values)]
+            # # MODIFIED 5/5/19 NEW: [JDC]
+            # keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
+            # values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
+            # d = np.array([keys.tolist(), values.tolist()])
+            # MODIFIED 5/5/19 END
 
         self.parameters.previous_value.set(d,execution_id)
         self._memory = d
@@ -1232,6 +1301,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
     @property
     def memory(self):
         try:
-            return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])
+            # return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])
+            return np.array(list(zip(self._memory[0],self._memory[1])))
         except:
             return np.array([])
