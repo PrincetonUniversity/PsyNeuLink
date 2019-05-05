@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.5.3.1+1.g937e7b1 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.5.3.1+2.g2c9559f documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.1+1.g937e7b1',
+              VERSION:'0.5.3.1+2.g2c9559f',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.1+1
+                0.5.3.1+2
               </div>
             
           
@@ -367,9 +367,10 @@ of which is a list or array;  first item is used as key, and second as value ent
 <li><strong>storage_prob</strong> (<em>float in interval</em><em> [</em><em>0</em><em>,</em><em>1</em><em>] </em><em>: default 1.0</em>) – specifies probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
 <li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em>, or </em><em>array : default 1.0</em>) – specifies a value used to multiply key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <a href="#id1"><span class="problematic" id="id2">`</span></a>rate &lt;DND.noise&gt; for details).</li>
 <li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em>, </em><em>array</em><em>, or </em><em>Function : default 0.0</em>) – specifies a random value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <a href="#id3"><span class="problematic" id="id4">`</span></a>noise &lt;DND.noise&gt; for details).</li>
-<li><strong>initializer</strong> (<em>3d array : default None</em>) – specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.  The outer dimension (axis 0) must have two
-2d arrays (one for keys, the other for values);  the length of all the 1d arrays in keys and values must
-be the same.</li>
+<li><strong>initializer</strong> (<em>3d array</em><em> or </em><em>list : default None</em>) – specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>. It must be of the following form:
+[[[key],[value]], [[key],[value]], …], such that each item in the outer dimension (axis 0)
+is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
+lists of the same length, and similarly for the values.</li>
 <li><strong>distance_function</strong> (<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><em>Distance</em></a><em> or </em><em>function : default Distance</em><em>(</em><em>metric=COSINE</em><em>)</em>) – specifies the function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 with keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
 <li><strong>selection_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><em>OneHot</em></a><em> or </em><em>function : default OneHot</em><em>(</em><em>mode=MIN_VAL</em><em>)</em>) – specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> and select the item to return.</li>
@@ -401,6 +402,12 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.val_size">
+<code class="descname">val_size</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.val_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – length of values in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.retrieval_prob">
 <code class="descname">retrieval_prob</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.retrieval_prob" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float in interval [0,1]</em> – probability of retrieiving a value from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
@@ -428,13 +435,13 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3d array</em> – initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
+<dd><p><em>3d array</em> – initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>;  each entry is a 2d array with a key-value pair.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory">
 <code class="descname">memory</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.DND.memory" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3d array</em> – array of key-value pairs containing entries in DND:  [[[key 1], [value 1]],[[key 2], value 2]]…]</p>
+<dd><p><em>list</em> – list of key-value pairs containing entries in DND:  [[[key 1], [value 1]], [[key 2], value 2]]…]</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -555,7 +562,7 @@ arguments of the constructor.</li>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>value and key for item retrieved</strong> – if no retrieval occurs, returns appropriately shaped zero-valued array.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">2d array</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">2d array as list</td>
 </tr>
 </tbody>
 </table>
