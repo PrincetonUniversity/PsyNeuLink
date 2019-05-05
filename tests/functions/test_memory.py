@@ -116,3 +116,7 @@ def test_ptx_cuda(func, variable, params, expected, benchmark):
     res = m.cuda_execute(variable)
     assert np.allclose(res, expected)
     benchmark(m.cuda_execute, variable)
+
+def test_DND():
+
+
