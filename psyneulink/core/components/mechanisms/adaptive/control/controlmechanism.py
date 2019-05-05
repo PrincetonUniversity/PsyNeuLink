@@ -670,11 +670,31 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     :default value: numpy.array([1.])
                     :type: numpy.ndarray
 
+                outcome
+                    see `outcome <ControlMechanism.outcome>
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                compute_reconfiguration_cost
+                     see 'compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
+
+                reconfiguration_cost
+                     see 'reconfiguration_cost <ControlMechanism.reconfiguration_cost>`
+
                 combine_costs
                     see `combine_costs <ControlMechanism.combine_costs>`
 
                     :default value: numpy.core.fromnumeric.sum
                     :type: <class 'function'>
+
+                costs
+                    see `costs <ControlMechanism.costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
 
                 compute_net_outcome
                     see `compute_net_outcome <ControlMechanism.compute_net_outcome>`

@@ -902,8 +902,11 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_frozen_execution_id(self, execution_id=None):
         return f'{execution_id}{EID_FROZEN}'
 
-    def _set_up_simulation(self, base_execution_id=None):
+    def _set_up_simulation(self, base_execution_id=None, control_allocation=None):
         sim_execution_id = self.get_next_sim_id(base_execution_id)
+
+        if control_allocation is not None:
+            sim_execution_id += f'-{control_allocation}'
 
         try:
             self.parameters.simulation_ids.get(base_execution_id).append(sim_execution_id)
@@ -930,7 +933,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         '''
         if self.agent_rep.runs_simulations:
-            sim_execution_id = self._set_up_simulation(execution_id)
+            sim_execution_id = self._set_up_simulation(execution_id, control_allocation)
 
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,

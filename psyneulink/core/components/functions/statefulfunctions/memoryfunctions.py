@@ -691,8 +691,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         # if len(self.previous_value) != 0:
         if self.previous_value.size != 0:
-            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
+            # self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
             self.parameters.val_size.set(len(self.previous_value[VALS][0]))
+            self.parameters.key_size.set(initializer.shape[2])
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -1182,7 +1183,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         best_match_val = _memory[VALS][index_of_selected_item]
 
         # Return as list of lists
-        return [list(best_match_key), list(best_match_val)]
+        return np.array([list(best_match_key), list(best_match_val)])
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
