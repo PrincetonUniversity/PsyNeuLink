@@ -7,7 +7,7 @@ import psyneulink.core.llvm as pnlvm
 np.random.seed(0)
 SIZE=10
 test_var = np.random.rand(2, SIZE)
-test_initializer = {tuple(test_var[0]): test_var[1]}
+test_initializer = np.array([[test_var[0], test_var[1]]])
 test_noise_arr = np.random.rand(SIZE)
 
 RAND1 = np.random.random(1)
@@ -67,8 +67,6 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(func, variable, params, expected, benchmark):
-    if func is Functions.DND:
-        pytest.skip("Not implemented")
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName;
     f(variable)
@@ -85,8 +83,6 @@ def test_basic(func, variable, params, expected, benchmark):
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, expected, benchmark):
     if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    if func is Functions.DND:
         pytest.skip("Not implemented")
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
@@ -106,8 +102,6 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.benchmark
 def test_ptx_cuda(func, variable, params, expected, benchmark):
     if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    if func is Functions.DND:
         pytest.skip("Not implemented")
     benchmark.group = GROUP_PREFIX + func.componentName;
     f = func(default_variable=variable, **params)
