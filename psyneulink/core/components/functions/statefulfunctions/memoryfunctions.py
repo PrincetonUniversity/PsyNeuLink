@@ -32,7 +32,7 @@ import warnings
 from psyneulink.core import llvm as pnlvm
 
 from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
+    Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, EPSILON
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
@@ -971,80 +971,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
         '''
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
-        # # MODIFIED 5/4/19 OLD:
-        # if len(initializer) == 0:
-        #     previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-        #     # previous_value = []
-        #
-        # else:
-        #
-        #     # FIX: SHAPE NEEDS TO BE 2,0,1 OR 2,1,1 NOT 2,1
-        #     initializer = np.array(initializer)
-        #     previous_value = initializer.copy()
-        #     if initializer.ndim != 3:
-        #         # for i, field in enumerate(initializer):
-        #         #     for j, entry in enumerate(field):
-        #         #         previous_value[i,j] = np.asfarray(initializer[i,j])
-        #         keys = []
-        #         vals = []
-        #         for entry in initializer:
-        #             keys.append(np.array(entry[0]))
-        #             vals.append(np.array(entry[1]))
-        #         previous_value = [keys,vals]
-        #
-        #         assert previous_value.ndim == 3,  f'PROGRAM ERROR:  ' \
-        #             f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({previous_value}) ' \
-        #             f'could not be converted to 3d ndarray'
-        #     if previous_value.shape[0] != 2:
-        #         raise FunctionError(f'{repr(INITIALIZER)} arg of {self.__class__.__name__} ({previous_value}) '
-        #                             f'must be a 3d list or array')
-        #
-        #     # FIX: CHECK THAT ALL KEYS AND VALUES ARE THE SAME SIZES IN PREVIOUS_VALUE (UNLESS THAT IS GURANTEED BY
-        #     #  ABOVE)
-        # self.parameters.previous_value.set(previous_value, execution_context, override=True)
-        #
-        # return previous_value
-
-        # # MODIFIED 5/4/19 NEW: [JDC]
-        # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-        #
-        # if len(initializer) != 0:
-        #     keys = []
-        #     vals = []
-        #     for entry in initializer:
-        #         keys.append(np.array(entry[0]))
-        #         vals.append(np.array(entry[1]))
-        #     # previous_value[0] = [keys]
-        #     # previous_value[1] = [vals]
-        #     previous_value = np.array([[keys],[vals]])
-        #
-        # self.parameters.previous_value.set(previous_value, execution_context, override=True)
-        #
-        # return previous_value
-
-        # # MODIFIED 5/4/19 NEWER: [JDC]
-        # if len(initializer) == 0:
-        #     previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-        #     self.parameters.previous_value.set(previous_value, execution_context, override=True)
-        #     return previous_value
-        # else:
-        #     for entry in initializer:
-        #         self._store_memory(np.array(entry), execution_context)
-        #     return self._memory
-
-        # # MODIFIED 5/4/19 NEWEST: [JDC]
-        # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-        # if len(initializer) == 0:
-        #     return previous_value
-        # else:
-        #     # Set key_size if this is the first entry
-        #     self.parameters.previous_value.set(previous_value, execution_context, override=True)
-        #     self.parameters.key_size.set(len(initializer[0][0]), execution_context)
-        #     for entry in initializer:
-        #         self._store_memory(np.array(entry), execution_context)
-        #     return self._memory
-
-        # MODIFIED 5/5/19 VERY NEWEST: [JDC]
         previous_value = np.ndarray(shape=(2, 0))
         if len(initializer) == 0:
             return previous_value
@@ -1056,9 +982,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
             for entry in initializer:
                 self._store_memory(np.array(entry), execution_context)
             return self._memory
-
-
-        # MODIFIED 5/4/19 END
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
@@ -1167,10 +1090,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
             memory = np.zeros_like(self.defaults.variable)
-            # if self.context.initialization_status == ContextFlags.INITIALIZING:
-            #     ret_val = np.zeros_like(self.defaults.variable)
-            # else:
-            #     ret_val = None
 
         # Store variable to dict:
         if noise:
@@ -1178,13 +1097,12 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, execution_id)
 
-        # # MODIFIED 5/5/19 OLD:
-        # return self.convert_output_type(ret_val)
-        # MODIFIED 5/5/19 NEW: [JDC]
+        # Return 3d array with keys and vals as lists
+        # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
+        #                       end up with array of arrays, rather than array of lists
         ret_val = np.array([list(memory[0]),[]])
         ret_val[1] = list(memory[1])
         return ret_val
-        # MODIFIED 5/5/19 END
 
     @tc.typecheck
     def _validate_memory(self, memory:tc.any(list, np.ndarray), execution_id):
@@ -1217,7 +1135,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
 
         Returns
         -------
-        value and key for item retrieved : 2d array
+        value and key for item retrieved : 2d array as list
             if no retrieval occurs, returns appropriately shaped zero-valued array.
 
         """
@@ -1225,19 +1143,14 @@ class DND(MemoryFunction):  # --------------------------------------------------
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
 
         self._validate_key(query_key, execution_id)
-        # if no memory, return the zero vector
-        # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
-        # compute similarity(query_key, memory m ) for all m
         _memory = self.get_previous_value(execution_id)
+
+        # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
-            # # MODIFIED 5/5/19 OLD:
-            # return np.zeros_like(self.defaults.variable)
-            # MODIFIED 5/5/19 NEW: [JDC]
-            # ret_val = np.array(shape = self.get_previous_value(execution_context=execution_id).shape)
             zeros_key = [0] * self.key_size
             zeros_val = [0] * self.val_size
             return [zeros_key, zeros_val]
-            # MODIFIED 5/5/19 END
+
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
         # get the best-match memory (one with the only non-zero value in the array)
         selection_array = self.selection_function(distances)
@@ -1268,13 +1181,8 @@ class DND(MemoryFunction):  # --------------------------------------------------
         best_match_key = _memory[KEYS][index_of_selected_item]
         best_match_val = _memory[VALS][index_of_selected_item]
 
-        # # MODIFIED 5/5/19 OLD:
-        # return np.array([best_match_key, best_match_val])
-        # # MODIFIED 5/5/19 NEW: [JDC]
-        # return [best_match_key, best_match_val]
-        # MODIFIED 5/5/19 NEWER [JDC]:
+        # Return as list of lists
         return [list(best_match_key), list(best_match_val)]
-        # MODIFIED 5/5/19 END
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
@@ -1298,25 +1206,17 @@ class DND(MemoryFunction):  # --------------------------------------------------
             d = np.delete(d, [KEYS], axis=1)
 
         # If dupliciate keys are not allowed and key matches any existing keys then don't encode
-        if (not self.duplicate_keys_allowed
-                and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[KEYS]])):
+        if ((not self.duplicate_keys_allowed)
+                and any(d<=EPSILON for d in [self.distance_function([key, list(m)]) for m in d[KEYS]])):
             pass
         else:
-            # # MODIFIED 5/5/19 OLD:
-            # keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
-            # values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
-            # d = [np.asfarray(keys), np.asfarray(values)]
-            # # MODIFIED 5/5/19 NEW: [JDC]
-            # keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
-            # values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
-            # d = np.array([keys.tolist(), values.tolist()])
-            # MODIFIED 5/5/19 NEWER: [JDC]
-            keys = d[KEYS].tolist()
+            # Append new items as lists
+            keys = list(d[KEYS])
             keys.append(key)
-            values = d[VALS].tolist()
+            values = list(d[VALS])
             values.append(val)
+            # Return 3d array with keys and vals as lists
             d = np.array([keys, values])
-            # MODIFIED 5/5/19 END
 
         self.parameters.previous_value.set(d,execution_id)
         self._memory = d
@@ -1345,7 +1245,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
     @property
     def memory(self):
         try:
-            # return np.array([[k,v] for k,v in zip(self._memory[0],self._memory[1])])
+            # Return 3d array with keys and vals as lists
             return np.array(list(zip(self._memory[KEYS],self._memory[VALS])))
         except:
             return np.array([])
