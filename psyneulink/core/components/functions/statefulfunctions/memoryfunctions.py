@@ -679,7 +679,7 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if self.previous_value.size != 0:
             # self.parameters.key_size.set(len(list(initializer.keys())[0]))
             # self.parameters.key_size.set(self.previous_value.shape[2])
-            self.parameters.key_size.set(len(self.previous_value[0][0][0]))
+            self.parameters.key_size.set(len(self.previous_value[0][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -1019,8 +1019,20 @@ class DND(MemoryFunction):  # --------------------------------------------------
         #         self._store_memory(np.array(entry), execution_context)
         #     return self._memory
 
-        # MODIFIED 5/4/19 NEWEST: [JDC]
-        previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+        # # MODIFIED 5/4/19 NEWEST: [JDC]
+        # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+        # if len(initializer) == 0:
+        #     return previous_value
+        # else:
+        #     # Set key_size if this is the first entry
+        #     self.parameters.previous_value.set(previous_value, execution_context, override=True)
+        #     self.parameters.key_size.set(len(initializer[0][0]), execution_context)
+        #     for entry in initializer:
+        #         self._store_memory(np.array(entry), execution_context)
+        #     return self._memory
+
+        # MODIFIED 5/5/19 VERY NEWEST: [JDC]
+        previous_value = np.ndarray(shape=(2, 0))
         if len(initializer) == 0:
             return previous_value
         else:
@@ -1031,15 +1043,6 @@ class DND(MemoryFunction):  # --------------------------------------------------
                 self._store_memory(np.array(entry), execution_context)
             return self._memory
 
-        # # MODIFIED 5/4/19 VERY NEWEST: [JDC]
-        # previous_value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-        # if len(initializer) == 0:
-        #     return previous_value
-        # else:
-        #     # Set key_size if this is the first entry
-        #     self.parameters.key_size.set(len(initializer[0][0]), execution_context)
-        #     self.reinitialize(np.array(initializer), execution_context=execution_context)
-        #     return self._memory
 
         # MODIFIED 5/4/19 END
 
@@ -1264,14 +1267,20 @@ class DND(MemoryFunction):  # --------------------------------------------------
         if not self.duplicate_keys_allowed and any(d==0 for d in [self.distance_function([key, list(m)]) for m in d[0]]):
             pass
         else:
-            # MODIFIED 5/5/19 OLD:
-            keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
-            values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
-            d = [np.asfarray(keys), np.asfarray(values)]
+            # # MODIFIED 5/5/19 OLD:
+            # keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
+            # values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
+            # d = [np.asfarray(keys), np.asfarray(values)]
             # # MODIFIED 5/5/19 NEW: [JDC]
             # keys = np.append(d[0], key).reshape(len(d[0])+1, len(key))
             # values = np.append(d[1], val).reshape(len(d[1])+1, len(val))
             # d = np.array([keys.tolist(), values.tolist()])
+            # MODIFIED 5/5/19 NEWER: [JDC]
+            keys = d[0].tolist()
+            keys.append(key)
+            values = d[1].tolist()
+            values.append(val)
+            d = np.array([keys, values])
             # MODIFIED 5/5/19 END
 
         self.parameters.previous_value.set(d,execution_id)
