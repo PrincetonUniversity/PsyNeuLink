@@ -1,10 +1,13 @@
 import functools
 import numpy as np
-import pytest
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
+import pytest
+import re
+
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
-from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator, SampleIteratorError
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+
 
 class TestControlMechanisms:
 
@@ -583,15 +586,21 @@ class TestModelBasedOptimizationControlMechanisms:
         # "outer" composition
         assert np.allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
 
+        # preprocess to ignore control allocations
+        log_parsed = {}
+        for key, value in log.items():
+            cleaned_key = re.sub(r'comp-sim-(\d).*', r'\1', key)
+            log_parsed[cleaned_key] = value
+
         # First round of simulations is only one trial.
         # (Even though the feature fn is a Buffer, there is no history yet)
         for i in range(0, 3):
-            assert len(log["comp-sim-"+str(i)]["Trial"]) == 1
+            assert len(log_parsed[str(i)]["Trial"]) == 1
 
         # Second and third rounds of simulations are two trials.
         # (The buffer has history = 2)
         for i in range(3, 9):
-            assert len(log["comp-sim-"+str(i)]["Trial"]) == 2
+            assert len(log_parsed[str(i)]["Trial"]) == 2
 
     def test_stability_flexibility_susan_and_sebastian(self):
 
