@@ -689,11 +689,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        # if len(self.previous_value) != 0:
         if self.previous_value.size != 0:
-            # self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
+            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
             self.parameters.val_size.set(len(self.previous_value[VALS][0]))
-            self.parameters.key_size.set(initializer.shape[2])
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -1167,23 +1165,17 @@ class DND(MemoryFunction):  # --------------------------------------------------
             else:
                 assert False, f'PROGRAM ERROR:  bad specification ({self.duplicate_keys_select}) for  ' \
                     f'\'duplicate_keys_select parameter of {self.name} for {self.owner.name}'
-        # else:
-        #     assert len(indices_of_selected_items)==1, \
-        #     f'PROGRAM ERROR:  More than one item matched key ({_memory[0]}) ' \
-        #         f'in memory for {self.name} of {self.owner.name} even though \'duplicate_keys_allowed\' is False'
-        #     index_of_selected_item = int(np.flatnonzero(selection_array))
-        #     return np.array([])
         elif len(indices_of_selected_items)==1:
             index_of_selected_item = int(np.flatnonzero(selection_array))
         else:
-            warnings.warn(f'More than one item matched key ({_memory[KEYS]}) in memory for {self.name} of '
-                          f'{self.owner.name} even though \'duplicate_keys_allowed\' is False')
-            return np.array([])
+            warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
+                              f'{self.owner.name} even though {repr("duplicate_keys_allowed")} is False')
+            return [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
         best_match_key = _memory[KEYS][index_of_selected_item]
         best_match_val = _memory[VALS][index_of_selected_item]
 
         # Return as list of lists
-        return np.array([list(best_match_key), list(best_match_val)])
+        return [list(best_match_key), list(best_match_val)]
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
