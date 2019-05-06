@@ -127,7 +127,6 @@ def test_DND_with_initializer_and_key_size_same_as_val_size():
     dnd = EpisodicMemoryMechanism(
             cue_size=3,
             assoc_size=3,
-            retrieval_prob=1.0,
             function = DND(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
                     duplicate_keys_allowed=True,
@@ -178,7 +177,6 @@ def test_DND_with_initializer_and_key_size_diff_from_val_size():
     dnd = EpisodicMemoryMechanism(
             cue_size=3,
             assoc_size=4,
-            retrieval_prob=1.0,
             function = DND(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
                     duplicate_keys_allowed=True,
@@ -229,7 +227,6 @@ def test_DND_without_initializer_and_key_size_same_as_val_size():
     dnd = EpisodicMemoryMechanism(
             cue_size=3,
             assoc_size=3,
-            retrieval_prob=1.0,
             function = DND(
                     duplicate_keys_allowed=True,
                     duplicate_keys_select=RANDOM)
@@ -279,7 +276,6 @@ def test_DND_without_initializer_and_key_size_diff_from_val_size():
     dnd = EpisodicMemoryMechanism(
             cue_size=3,
             assoc_size=4,
-            retrieval_prob=1.0,
             function = DND(
                     duplicate_keys_allowed=True,
                     duplicate_keys_select=RANDOM)

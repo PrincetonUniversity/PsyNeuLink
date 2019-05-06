@@ -32,47 +32,46 @@ names = [
     "DND Random Retrieval-Storage",
 ]
 
-
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_basic(variable, params, expected, benchmark):
-    m = EpisodicMemoryMechanism(cue_size=len(variable[0]), assoc_size=len(variable[1]), **params)
-    m.execute(variable)
-    m.execute(variable)
-    res = [s.value for s in m.output_states]
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    benchmark(m.execute, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(variable, params, expected, benchmark):
-    m = EpisodicMemoryMechanism(cue_size=len(variable[0]), assoc_size=len(variable[1]), **params)
-    e = pnlvm.execution.MechExecution(m)
-    e.execute(variable)
-    res = e.execute(variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    benchmark(e.execute, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(variable, params, expected, benchmark):
-    m = EpisodicMemoryMechanism(cue_size=len(variable[0]), assoc_size=len(variable[1]), **params)
-    e = pnlvm.execution.MechExecution(m)
-    e.cuda_execute(variable)
-    res = e.cuda_execute(variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    benchmark(e.cuda_execute, variable)
+# @pytest.mark.function
+# @pytest.mark.memory_function
+# @pytest.mark.parametrize("variable, params, expected", test_data, ids=names)
+# @pytest.mark.benchmark
+# def test_basic(variable, params, expected, benchmark):
+#     m = EpisodicMemoryMechanism(cue_size=len(variable[0]), assoc_size=len(variable[1]), **params)
+#     m.execute(variable)
+#     m.execute(variable)
+#     res = [s.value for s in m.output_states]
+#     assert np.allclose(res[0], expected[0])
+#     assert np.allclose(res[1], expected[1])
+#     benchmark(m.execute, variable)
+#
+#
+# @pytest.mark.llvm
+# @pytest.mark.function
+# @pytest.mark.memory_function
+# @pytest.mark.parametrize("variable, params, expected", test_data, ids=names)
+# @pytest.mark.benchmark
+# def test_llvm(variable, params, expected, benchmark):
+#     m = EpisodicMemoryMechanism(cue_size=len(variable[0]), assoc_size=len(variable[1]), **params)
+#     e = pnlvm.execution.MechExecution(m)
+#     e.execute(variable)
+#     res = e.execute(variable)
+#     assert np.allclose(res[0], expected[0])
+#     assert np.allclose(res[1], expected[1])
+#     benchmark(e.execute, variable)
+#
+#
+# @pytest.mark.llvm
+# @pytest.mark.cuda
+# @pytest.mark.function
+# @pytest.mark.memory_function
+# @pytest.mark.parametrize("variable, params, expected", test_data, ids=names)
+# @pytest.mark.benchmark
+# def test_ptx_cuda(variable, params, expected, benchmark):
+#     m = EpisodicMemoryMechanism(cue_size=len(variable[0]), assoc_size=len(variable[1]), **params)
+#     e = pnlvm.execution.MechExecution(m)
+#     e.cuda_execute(variable)
+#     res = e.cuda_execute(variable)
+#     assert np.allclose(res[0], expected[0])
+#     assert np.allclose(res[1], expected[1])
+#     benchmark(e.cuda_execute, variable)
