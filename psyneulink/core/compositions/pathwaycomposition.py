@@ -80,7 +80,6 @@ class PathwayComposition(Composition):
         autodiff_stimuli=None,
         scheduler_processing=None,
         termination_processing=None,
-        termination_learning=None,
         call_before_time_step=None,
         call_before_pass=None,
         call_after_time_step=None,
@@ -98,7 +97,6 @@ class PathwayComposition(Composition):
 
         output = super(PathwayComposition, self).execute(inputs, scheduler_processing=scheduler_processing,
                                                          termination_processing=termination_processing,
-                                                         termination_learning=termination_learning,
                                                          call_before_time_step=call_before_time_step,
                                                          call_before_pass=call_before_pass,
                                                          call_after_time_step=call_after_time_step,

@@ -3394,7 +3394,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             autodiff_stimuli=None,
             scheduler_processing=None,
             termination_processing=None,
-            termination_learning=None,
             call_before_time_step=None,
             call_before_pass=None,
             call_after_time_step=None,
@@ -3497,7 +3496,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nested:
             self.input_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
             self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
-
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
@@ -3784,7 +3782,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs=None,
             scheduler_processing=None,
             termination_processing=None,
-            termination_learning=None,
             execution_id=None,
             base_execution_id=None,
             num_trials=None,
@@ -4035,7 +4032,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         autodiff_stimuli=execution_autodiff_stimuli,
                                         scheduler_processing=scheduler_processing,
                                         termination_processing=termination_processing,
-                                        termination_learning=termination_learning,
                                         call_before_time_step=call_before_time_step,
                                         call_before_pass=call_before_pass,
                                         call_after_time_step=call_after_time_step,
