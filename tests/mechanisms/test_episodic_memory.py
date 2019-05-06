@@ -75,4 +75,3 @@ names = [
 #     assert np.allclose(res[0], expected[0])
 #     assert np.allclose(res[1], expected[1])
 #     benchmark(e.cuda_execute, variable)
-
