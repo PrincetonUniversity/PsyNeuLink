@@ -111,6 +111,212 @@ def test_ptx_cuda(func, variable, params, expected, benchmark):
     assert np.allclose(res, expected)
     benchmark(m.cuda_execute, variable)
 
-def test_DND():
+# Test of DND without LLVM:
+from psyneulink import *
+
+def test_DND_with_initializer_and_key_size_same_as_val_size():
+
+    stimuli = {'A': [[1,2,3],[4,5,6]],
+               'B': [[8,9,10],[11,12,13]],
+               'C': [[1,2,3],[11,12,13]],
+               'D': [[1,2,3],[21,22,23]],
+               'E': [[9,8,4],[11,12,13]],
+               'F': [[10,10,30],[40,50,60]],
+               }
+
+    dnd = EpisodicMemoryMechanism(
+            cue_size=3,
+            assoc_size=3,
+            retrieval_prob=1.0,
+            function = DND(
+                    initializer=np.array([stimuli['F'], stimuli['F']]),
+                    duplicate_keys_allowed=True,
+                    duplicate_keys_select=RANDOM)
+    )
+
+    retrieved_keys=[]
+    for key in sorted(stimuli.keys()):
+        retrieved = [i for i in dnd.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_keys.append(retrieved_key)
+    assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
+
+    stim = 'C'
+    dnd.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['A']
+
+    dnd.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['D']
+
+    # Test that after allowing dups, warning is issued and memory with zeros is returned
+    dnd.function.duplicate_keys_allowed = False
+    stim = 'A'
+
+    with pytest.warns(UserWarning) as warning_msg:
+        retrieved = dnd.execute(stimuli[stim])
+    warning_txt = warning_msg[0].message.args[0]
+    assert 'More than one item matched key ([1 2 3]) in memory for DND' in str(warning_txt)
+    retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+    assert retrieved_key == [None]
+    assert retrieved[0] == [0, 0, 0]
+    assert retrieved[1] == [0, 0, 0]
+
+def test_DND_with_initializer_and_key_size_diff_from_val_size():
+
+    stimuli = {'A': [[1,2,3],[4,5,6,7]],
+               'B': [[8,9,10],[11,12,13,14]],
+               'C': [[1,2,3],[11,12,13,14]],
+               'D': [[1,2,3],[21,22,23,24]],
+               'E': [[9,8,4],[11,12,13,14]],
+               'F': [[10,10,30],[40,50,60,70]],
+               }
+
+    dnd = EpisodicMemoryMechanism(
+            cue_size=3,
+            assoc_size=4,
+            retrieval_prob=1.0,
+            function = DND(
+                    initializer=np.array([stimuli['F'], stimuli['F']]),
+                    duplicate_keys_allowed=True,
+                    duplicate_keys_select=RANDOM)
+    )
+
+    retrieved_keys=[]
+    for key in sorted(stimuli.keys()):
+        retrieved = [i for i in dnd.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_keys.append(retrieved_key)
+    assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
+
+    stim = 'C'
+    dnd.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['A']
+
+    dnd.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['D']
+
+    # Test that after allowing dups, warning is issued and memory with zeros is returned
+    dnd.function.duplicate_keys_allowed = False
+    stim = 'A'
+
+    with pytest.warns(UserWarning) as warning_msg:
+        retrieved = dnd.execute(stimuli[stim])
+    warning_txt = warning_msg[0].message.args[0]
+    assert 'More than one item matched key ([1, 2, 3]) in memory for DND Function-0' in str(warning_txt)
+    retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+    assert retrieved_key == [None]
+    assert retrieved[0] == [0, 0, 0]
+    assert retrieved[1] == [0, 0, 0, 0]
+
+def test_DND_without_initializer_and_key_size_same_as_val_size():
+
+    stimuli = {'A': [[1,2,3],[4,5,6]],
+               'B': [[8,9,10],[11,12,13]],
+               'C': [[1,2,3],[11,12,13]],
+               'D': [[1,2,3],[21,22,23]],
+               'E': [[9,8,4],[11,12,13]],
+               'F': [[10,10,30],[40,50,60]],
+               }
+
+    dnd = EpisodicMemoryMechanism(
+            cue_size=3,
+            assoc_size=3,
+            retrieval_prob=1.0,
+            function = DND(
+                    duplicate_keys_allowed=True,
+                    duplicate_keys_select=RANDOM)
+    )
+
+    retrieved_keys=[]
+    for key in sorted(stimuli.keys()):
+        retrieved = [i for i in dnd.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_keys.append(retrieved_key)
+    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+
+    stim = 'C'
+    dnd.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['A']
+
+    dnd.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['D']
+
+    # Test that after allowing dups, warning is issued and memory with zeros is returned
+    dnd.function.duplicate_keys_allowed = False
+    stim = 'A'
+
+    with pytest.warns(UserWarning) as warning_msg:
+        retrieved = dnd.execute(stimuli[stim])
+    warning_txt = warning_msg[0].message.args[0]
+    assert 'More than one item matched key ([1 2 3]) in memory for DND' in str(warning_txt)
+    retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+    assert retrieved_key == [None]
+    assert retrieved[0] == [0, 0, 0]
+    assert retrieved[1] == [0, 0, 0]
+
+def test_DND_without_initializer_and_key_size_diff_from_val_size():
+
+    stimuli = {'A': [[1,2,3],[4,5,6,7]],
+               'B': [[8,9,10],[11,12,13,14]],
+               'C': [[1,2,3],[11,12,13,14]],
+               'D': [[1,2,3],[21,22,23,24]],
+               'E': [[9,8,4],[11,12,13,14]],
+               'F': [[10,10,30],[40,50,60,70]],
+               }
+
+    dnd = EpisodicMemoryMechanism(
+            cue_size=3,
+            assoc_size=4,
+            retrieval_prob=1.0,
+            function = DND(
+                    duplicate_keys_allowed=True,
+                    duplicate_keys_select=RANDOM)
+    )
+
+    retrieved_keys=[]
+    for key in sorted(stimuli.keys()):
+        retrieved = [i for i in dnd.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_keys.append(retrieved_key)
+    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+
+    stim = 'C'
+    dnd.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['A']
+
+    dnd.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in dnd.function.get_memory(stimuli[stim][0])]
+    retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+    assert retrieved_key == ['D']
+
+    # Test that after allowing dups, warning is issued and memory with zeros is returned
+    dnd.function.duplicate_keys_allowed = False
+    stim = 'A'
+
+    with pytest.warns(UserWarning) as warning_msg:
+        retrieved = dnd.execute(stimuli[stim])
+    warning_txt = warning_msg[0].message.args[0]
+    assert 'More than one item matched key ([1, 2, 3]) in memory for DND Function-0' in str(warning_txt)
+    retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+    assert retrieved_key == [None]
+    assert retrieved[0] == [0, 0, 0]
+    assert retrieved[1] == [0, 0, 0, 0]
+
+
+
 
 
