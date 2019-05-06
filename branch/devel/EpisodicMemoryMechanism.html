@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.5.3.1+9.g792f6a3 documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.5.3.1+10.g7470db8 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.1+9.g792f6a3',
+              VERSION:'0.5.3.1+10.g7470db8',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.1+9
+                0.5.3.1+10
               </div>
             
           
@@ -218,13 +218,8 @@ function can be specified, so long as it meets the following requirements:</p>
 <li>It must accept a 2d array as its first argument, the first item of which is the cue and the second the associate.</li>
 </ul>
 <ul class="simple">
-<li>It must retur a 2d array, the first item of which is the retrieved associate and the second of which is the cue
+<li>It must return a 2d array, the first item of which is the retrieved associate and the second of which is the cue
 with which it is associated in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
-</ul>
-<ul class="simple">
-<li>It may also implement <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob"><code class="xref any py py-attr docutils literal"><span class="pre">storage_prob</span></code></a> and/or <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.retrieval_prob" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.retrieval_prob"><code class="xref any py py-attr docutils literal"><span class="pre">retrieval_prob</span></code></a> attributes;  if it does, they are assigned the values
-specified in the corresponding arguments of the EpisodicMemoryMechanism’s constructor, otherwise those are
-ignored.</li>
 </ul>
 <ul class="simple">
 <li>It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism’s
@@ -238,13 +233,12 @@ ignored.</li>
 the following operations:</p>
 <blockquote>
 <div><ul class="simple">
-<li>retrieves an item from its memory based on the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>CUE_INPUT</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>
-and <code class="xref any docutils literal"><span class="pre">retrieval_prob</span></code>;  if no retrieval is made, appropriately shaped zero-valued
-arrays are assigned to the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <em>ASSOC_OUTPUT</em> and <em>CUE_OUTPUT</em> OutputStates.</li>
+<li>retrieves an item from its memory based on the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>CUE_INPUT</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>;
+if no retrieval is made, appropriately shaped zero-valued arrays are assigned to the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <em>ASSOC_OUTPUT</em> and <em>CUE_OUTPUT</em> OutputStates.</li>
 </ul>
 <ul class="simple">
 <li>stores the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>CUE_INPUT</em> and <em>ASSOC_INPUT</em> <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> in
-its memory, based on its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob"><code class="xref any py py-attr docutils literal"><span class="pre">storage_prob</span></code></a>.</li>
+its memory.</li>
 </ul>
 <ul class="simple">
 <li>assigns the value of the retrieved item’s assoc in the EpisodicMemoryMechanism’s  <em>ASSOC_OUTPUT</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>,
@@ -263,7 +257,7 @@ and the value of the cue of the retrieved item in the <em>CUE_OUTPUT</em> Output
 <span id="episodicmemorymechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.</code><code class="descname">EpisodicMemoryMechanism</code><span class="sig-paren">(</span><em>cue_size=1</em>, <em>assoc_size=1</em>, <em>storage_prob=1.0             retrieval_prob=1.0           function=DND</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.</code><code class="descname">EpisodicMemoryMechanism</code><span class="sig-paren">(</span><em>cue_size=1</em>, <em>assoc_size=1</em>, <em>function=DND</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that implements a <a class="reference external" href="HTML">differentiable neural dictionary (DND)</a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -272,8 +266,6 @@ and the value of the cue of the retrieved item in the <em>CUE_OUTPUT</em> Output
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>cue_size</strong> (<em>int : default 1</em>) – specifies length of the cue stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>s memory.</li>
 <li><strong>assoc_size</strong> (<em>int : default 1</em>) – specifies length of the assoc stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>s memory.</li>
-<li><strong>storage_prob</strong> (<em>float : default 1.0</em>) – specifies probability that the cue and assoc are stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s memory.</li>
-<li><strong>retrieval_prob</strong> (<em>float : default 1.0</em>) – specifies probability that the cue and assoc are retrieved from the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s memory.</li>
 <li><strong>function</strong> (<em>function : default DND</em>) – specifies the function that implements a memory store and methods to store to and retrieve from it.  It
 must take as its <code class="xref any docutils literal"><span class="pre">variable</span></code> a 2d array, the first item of which is the cue and the second
 the associate to be stored in its memory, and must return a 2d array that is the value of the
@@ -289,20 +281,6 @@ constructor.</li>
 </tr>
 </tbody>
 </table>
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob">
-<code class="descname">storage_prob</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.storage_prob" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> – probability that cue and assoc are stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>s memory.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.retrieval_prob">
-<code class="descname">retrieval_prob</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.retrieval_prob" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> – probability that cue and assoc are retrieved from the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>s memory;
-if no retrieval is made, appropriately-shaped zero-valued arrays are assigned to the the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <em>ASSOC_OUTPUT</em> and <em>CUE_OUTPUT</em> OutputStates (see &lt;Structure
-&lt;EpisodicMemoryMechanism_Structure&gt;`.</p>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function">
 <code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="Permalink to this definition">¶</a></dt>
