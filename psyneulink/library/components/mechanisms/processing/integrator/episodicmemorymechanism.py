@@ -225,6 +225,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                                            execution_id=execution_id,
                                            runtime_params=runtime_params,
                                            context=context)
+        # Only return content if assoc has not been specified (in which case second element of value should be empty)
         if len(value[1]) == 0:
             return np.delete(value,1)
         else:

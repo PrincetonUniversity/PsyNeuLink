@@ -124,8 +124,8 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
                'F': [[10,10,30],[40,50,60]],
                }
 
-    ContentAddressableMemory = EpisodicMemoryMechanism(
-            cue_size=3,
+    em = EpisodicMemoryMechanism(
+            content_size=3,
             assoc_size=3,
             function = ContentAddressableMemory(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
@@ -135,28 +135,28 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
 
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
-        retrieved = [i for i in ContentAddressableMemory.execute(stimuli[key])]
+        retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
     stim = 'C'
-    ContentAddressableMemory.function.duplicate_keys_select = OLDEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    ContentAddressableMemory.function.duplicate_keys_select = NEWEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    ContentAddressableMemory.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys_allowed = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
-        retrieved = ContentAddressableMemory.execute(stimuli[stim])
+        retrieved = em.execute(stimuli[stim])
     warning_txt = warning_msg[0].message.args[0]
     assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
@@ -174,8 +174,8 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
                'F': [[10,10,30],[40,50,60,70]],
                }
 
-    ContentAddressableMemory = EpisodicMemoryMechanism(
-            cue_size=3,
+    em = EpisodicMemoryMechanism(
+            content_size=3,
             assoc_size=4,
             function = ContentAddressableMemory(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
@@ -185,30 +185,30 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
 
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
-        retrieved = [i for i in ContentAddressableMemory.execute(stimuli[key])]
+        retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
     stim = 'C'
-    ContentAddressableMemory.function.duplicate_keys_select = OLDEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    ContentAddressableMemory.function.duplicate_keys_select = NEWEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    ContentAddressableMemory.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys_allowed = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
-        retrieved = ContentAddressableMemory.execute(stimuli[stim])
+        retrieved = em.execute(stimuli[stim])
     warning_txt = warning_msg[0].message.args[0]
-    assert 'More than one item matched key ([1, 2, 3]) in memory for ContentAddressableMemory Function-0' in str(warning_txt)
+    assert 'More than one item matched key ([1, 2, 3]) in memory for ContentAddressableMemory' in str(warning_txt)
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]
@@ -224,8 +224,8 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
                'F': [[10,10,30],[40,50,60]],
                }
 
-    ContentAddressableMemory = EpisodicMemoryMechanism(
-            cue_size=3,
+    em = EpisodicMemoryMechanism(
+            content_size=3,
             assoc_size=3,
             function = ContentAddressableMemory(
                     duplicate_keys_allowed=True,
@@ -234,28 +234,28 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
 
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
-        retrieved = [i for i in ContentAddressableMemory.execute(stimuli[key])]
+        retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
 
     stim = 'C'
-    ContentAddressableMemory.function.duplicate_keys_select = OLDEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    ContentAddressableMemory.function.duplicate_keys_select = NEWEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    ContentAddressableMemory.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys_allowed = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
-        retrieved = ContentAddressableMemory.execute(stimuli[stim])
+        retrieved = em.execute(stimuli[stim])
     warning_txt = warning_msg[0].message.args[0]
     assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
@@ -273,8 +273,8 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
                'F': [[10,10,30],[40,50,60,70]],
                }
 
-    ContentAddressableMemory = EpisodicMemoryMechanism(
-            cue_size=3,
+    em = EpisodicMemoryMechanism(
+            content_size=3,
             assoc_size=4,
             function = ContentAddressableMemory(
                     duplicate_keys_allowed=True,
@@ -283,36 +283,72 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
 
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
-        retrieved = [i for i in ContentAddressableMemory.execute(stimuli[key])]
+        retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
 
     stim = 'C'
-    ContentAddressableMemory.function.duplicate_keys_select = OLDEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = OLDEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    ContentAddressableMemory.function.duplicate_keys_select = NEWEST
-    retrieved = [i for i in ContentAddressableMemory.function.get_memory(stimuli[stim][0])]
+    em.function.duplicate_keys_select = NEWEST
+    retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    ContentAddressableMemory.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys_allowed = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
-        retrieved = ContentAddressableMemory.execute(stimuli[stim])
+        retrieved = em.execute(stimuli[stim])
     warning_txt = warning_msg[0].message.args[0]
-    assert 'More than one item matched key ([1, 2, 3]) in memory for ContentAddressableMemory Function-0' in str(warning_txt)
+
+    assert 'More than one item matched key ([1, 2, 3]) in memory for ContentAddressableMemory' in str(warning_txt)
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]
     assert retrieved[1] == [0, 0, 0, 0]
 
 
+def test_ContentAddressableMemory_without_assoc():
+
+    stimuli = {'A': [[1,2,3]],
+               'B': [[8,9,10]],
+               'C': [[1,2,3]],
+               'D': [[1,2,3]],
+               'E': [[9,8,4]],
+               'F': [[10,10,30]],
+               }
+
+    em = EpisodicMemoryMechanism(
+            name='EPISODIC MEMORY MECH',
+            content_size=3,
+            function = ContentAddressableMemory(
+                    # initializer=np.array([stimuli['F'], stimuli['F']]),
+                    duplicate_keys_allowed=True,
+                    duplicate_keys_select=RANDOM,
+                    retrieval_prob = 1.0
+            )
+    )
+
+    for key in sorted(stimuli.keys()):
+        print(f'\nCurrent memory: \n{em.memory}\n')
+        retrieved = [i for i in em.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        print(f'\nExecuted with stimulus {key}: {stimuli[key]};'
+              f'\nRetrieved memory {retrieved_key[0]}: \n\t{retrieved}')
+
+    retrieved_keys=[]
+    for key in sorted(stimuli.keys()):
+        retrieved = [i for i in em.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_keys.append(retrieved_key)
+
+    assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]
 
 
 
