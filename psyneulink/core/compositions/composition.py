@@ -622,8 +622,8 @@ from psyneulink.core.globals.keywords import \
     WEIGHT, OUTCOME
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import AutoNumber, NodeRole, call_with_pruned_args
-from psyneulink.core.scheduling.condition import Condition, All, Always, EveryNCalls
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, NodeRole, call_with_pruned_args
+from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -1066,7 +1066,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # core attribute
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
-        self.nodes = []
+        self.nodes = ContentAddressableList(component_type=Component)
         self.required_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
@@ -1085,7 +1085,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
 
-        self.projections = []
+        self.projections = ContentAddressableList(component_type=Component)
         self.learning_projections = []
 
         self._scheduler_processing = None
