@@ -48,73 +48,73 @@ w_ho = pnl.MappingProjection(
     receiver=output
 )
 
-# dnd
-dnd = pnl.EpisodicMemoryMechanism(
+# ContentAddressableMemory
+ContentAddressableMemory = pnl.EpisodicMemoryMechanism(
     cue_size=n_hidden, assoc_size=n_hidden,
-    name='dnd'
+    name='ContentAddressableMemory'
 )
 
 w_hdc = pnl.MappingProjection(
     name='hidden_to_cue',
     matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
     sender=hidden,
-    receiver=dnd.input_states[pnl.CUE_INPUT]
+    receiver=ContentAddressableMemory.input_states[pnl.CUE_INPUT]
 )
 
 w_hda = pnl.MappingProjection(
     name='hidden_to_assoc',
     matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
     sender=hidden,
-    receiver=dnd.input_states[pnl.ASSOC_INPUT]
+    receiver=ContentAddressableMemory.input_states[pnl.ASSOC_INPUT]
 )
 
 
 w_dh = pnl.MappingProjection(
     name='em_to_hidden',
     matrix=np.random.randn(n_hidden, n_hidden)*wts_init_scale,
-    sender=dnd,
+    sender=ContentAddressableMemory,
     receiver=hidden
 )
 
 comp = pnl.Composition(name='xor')
 
 # add all nodes
-all_nodes = [input, hidden, output, dnd]
+all_nodes = [input, hidden, output, ContentAddressableMemory]
 for node in all_nodes:
     comp.add_node(node)
 # input-hidden-output pathway
 comp.add_projection(sender=input, projection=w_ih, receiver=hidden)
 comp.add_projection(sender=hidden, projection=w_ho, receiver=output)
-# conneciton, dnd
-comp.add_projection(sender=dnd, projection=w_dh, receiver=hidden)
+# conneciton, ContentAddressableMemory
+comp.add_projection(sender=ContentAddressableMemory, projection=w_dh, receiver=hidden)
 comp.add_projection(
     sender=hidden,
     projection=w_hdc,
-    receiver=dnd.input_states[pnl.CUE_INPUT]
+    receiver=ContentAddressableMemory.input_states[pnl.CUE_INPUT]
 )
 comp.add_projection(
     sender=hidden,
     projection=w_hda,
-    receiver=dnd.input_states[pnl.ASSOC_INPUT]
+    receiver=ContentAddressableMemory.input_states[pnl.ASSOC_INPUT]
 )
 # show graph
 comp.show_graph()
 
 # # comp.show()
-# # the required inputs for dnd
-# print('dnd input_states: ', dnd.input_states.names)
+# # the required inputs for ContentAddressableMemory
+# print('ContentAddressableMemory input_states: ', ContentAddressableMemory.input_states.names)
 #
-# # currently, dnd receive info from the following node
-# print('dnd receive: ')
-# for dnd_input in dnd.input_states.names:
-#     afferents = dnd.input_states[dnd_input].path_afferents
+# # currently, ContentAddressableMemory receive info from the following node
+# print('ContentAddressableMemory receive: ')
+# for ContentAddressableMemory_input in ContentAddressableMemory.input_states.names:
+#     afferents = ContentAddressableMemory.input_states[ContentAddressableMemory_input].path_afferents
 #     if len(afferents) == 0:
-#         print(f'- {dnd_input}: NA')
+#         print(f'- {ContentAddressableMemory_input}: NA')
 #     else:
 #         sending_node_name = afferents[0].sender.owner.name
-#         print(f'- {dnd_input}: {sending_node_name}')
+#         print(f'- {ContentAddressableMemory_input}: {sending_node_name}')
 #
-# print('dnd cue input: ', dnd.input_states.names)
+# print('ContentAddressableMemory cue input: ', ContentAddressableMemory.input_states.names)
 #
 # print('hidden receive: ')
 # for hidden_afferent in hidden.input_states[0].path_afferents:

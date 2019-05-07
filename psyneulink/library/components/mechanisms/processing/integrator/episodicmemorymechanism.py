@@ -34,8 +34,8 @@ An EpisodicMemoryMechanism has at least one `InputStates <InputState>`, its *CON
 optionally, an *ASSOC_INPUT* InputState (if its *assoc_size* is specified and is not 0) that represent
 an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves content-assoc pairs from its
 memory; and at least one `OutputStates <OutputState>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
-an *ASSOC_INPUT* InputState, that represent a retrieved item. The default function is a `DND` that implements a
-simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
+an *ASSOC_INPUT* InputState, that represent a retrieved item. The default function is a `ContentAddressableMemory` that
+implements a simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
 following requirements:
 
     * It must accept a 2d array as its first argument, the first item of which is the content and the second the associate.
@@ -86,7 +86,7 @@ import warnings
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DND
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.inputstate import OutputState
@@ -113,17 +113,17 @@ class EpisodicMemoryMechanismError(Exception):
 
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
-    EpisodicMemoryMechanism( \
-        content_size=1,      \
-        assoc_size=1,        \
-        function=DND,        \
-        params=None,         \
-        name=None,           \
-        prefs=None           \
+    EpisodicMemoryMechanism(                \
+        content_size=1,                     \
+        assoc_size=1,                       \
+        function=ContentAddressableMemory,  \
+        params=None,                        \
+        name=None,                          \
+        prefs=None                          \
     )
 
-    Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary (DND)
-    <HTML>`_
+    Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary
+    (ContentAddressableMemory)<HTML>`_
 
     Arguments
     ---------
@@ -135,7 +135,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\s memory;
         if it is 0 (the default) then no *ASSOC_INPUT* InputState or *ASSOC_OUTPUT* OutputState are created.
 
-    function : function : default DND
+    function : function : default ContentAddressableMemory
         specifies the function that implements a memory store and methods to store to and retrieve from it.  It
         must take as its `variable <Function.variable>` a 2d array, the first item of which is the content and the second
         the associate to be stored in its memory, and must return a 2d array that is the value of the
@@ -191,13 +191,14 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  content_size:int=1,
                  assoc_size:int=0,
-                 function:Function=DND,
+                 function:Function=ContentAddressableMemory,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
         # Template for memory_store entries
-        default_variable = [np.zeros(content_size)]
+        default_variable.append(np.zeros(assoc_size))
+        # default_variable = [np.zeros(content_size)]
 
         input_states = [{NAME:CONTENT_INPUT, SIZE:content_size}]
         output_states = [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}]
@@ -205,7 +206,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         if assoc_size:
             input_states.append({NAME:ASSOC_INPUT, SIZE:assoc_size})
             output_states.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
-            default_variable.append(np.zeros(assoc_size))
+            # default_variable.append(np.zeros(assoc_size))
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
@@ -235,6 +236,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                                                           self.output_states):
             if input_state_spec.value is []:
                 del self.output_states[i]
+
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
+        if len(variable) != 2:
+            return np.array([variable,[]])
 
     @property
     def memory(self):

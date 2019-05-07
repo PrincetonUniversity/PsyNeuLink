@@ -40,7 +40,7 @@ context_in = ProcessingMechanism(name='Context',
 # em = EpisodicMemoryMechanism(name='Episodic Memory',
 #                              cue_size=num_states+context_size+rpe_size,
 #                              assoc_size=1,
-#                              function=DND(function=ExepctedValueCalc))
+#                              function=ContentAddressableMemory(function=ExepctedValueCalc))
 
 sr = ProcessingMechanism(name='Successor Rep')
 
