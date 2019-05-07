@@ -85,6 +85,8 @@ import numpy as np
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DND
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
@@ -216,6 +218,17 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                                   execution_id=execution_id,
                                   runtime_params=runtime_params,
                                   context=context)
+
+    def _instantiate_output_states(self, context=None):
+        if len(self.input_states) != len(self.output_states):
+            assert False, \
+                f'PROGRAM ERROR: Number of {InputState.__class__.__name__}s and ' \
+                f'{OutputState.__class__.__name__}s do not match in {self.name}'
+        for i, input_state_spec, output_state_spec in zip(range(len(self.input_states)-1),
+                                                          self.input_states,
+                                                          self.output_states):
+            if input_state_spec.value is []:
+                del self.output_states[i]
 
     @property
     def memory(self):
