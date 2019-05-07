@@ -197,8 +197,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None):
 
         # Template for memory_store entries
-        default_variable.append(np.zeros(assoc_size))
-        # default_variable = [np.zeros(content_size)]
+        # default_variable = [np.zeros(cue_size), np.zeros(assoc_size)]
+        default_variable = [np.zeros(content_size)]
 
         input_states = [{NAME:CONTENT_INPUT, SIZE:content_size}]
         output_states = [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}]
@@ -206,7 +206,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         if assoc_size:
             input_states.append({NAME:ASSOC_INPUT, SIZE:assoc_size})
             output_states.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
-            # default_variable.append(np.zeros(assoc_size))
+            default_variable.append(np.zeros(assoc_size))
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
@@ -221,6 +221,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                          )
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+
         return super()._execute(variable=variable,
                                   execution_id=execution_id,
                                   runtime_params=runtime_params,
@@ -239,7 +240,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         if len(variable) != 2:
-            return np.array([variable,[]])
+            return np.array([variable[0],[]])
 
     @property
     def memory(self):

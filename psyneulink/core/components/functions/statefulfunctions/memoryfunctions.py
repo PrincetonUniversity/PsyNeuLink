@@ -1060,8 +1060,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         key = variable[KEYS]
-        if len(variable)==2:
-            val = variable[VALS]
+        # if len(variable)==2:
+        val = variable[VALS]
 
         retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, execution_id)).astype(float)
         storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, execution_id)).astype(float)
