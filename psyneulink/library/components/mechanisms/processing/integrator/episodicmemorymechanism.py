@@ -246,6 +246,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         return super()._instantiate_output_states(context=context)
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
+
+        # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
         if len(variable) != 2:
             return np.array([variable[0],[]])
         else:
