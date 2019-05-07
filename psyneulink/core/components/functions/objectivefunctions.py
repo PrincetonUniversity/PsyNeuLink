@@ -233,7 +233,7 @@ COMMENT
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
                                                   transfer_fct=transfer_fct,
@@ -378,7 +378,7 @@ COMMENT
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
         my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        matrix, builder = ctx.get_param_ptr(self, builder, my_params, MATRIX)
+        matrix = ctx.get_param_ptr(self, builder, my_params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -436,10 +436,10 @@ COMMENT
         matrix = self.get_current_function_param(MATRIX, execution_id)
 
         current = variable
+
+        transformed = np.dot(matrix * self._hollow_matrix, variable)
         if self.transfer_fct is not None:
-            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, variable))
-        else:
-            transformed = np.dot(matrix * self._hollow_matrix, variable)
+            transformed = self.transfer_fct(transformed)
 
         # # MODIFIED 11/12/15 OLD:
         # if self.metric is ENERGY:
@@ -570,7 +570,7 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
                                                   params=params)
@@ -676,6 +676,29 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, prod)
         builder.store(new_acc, acc)
 
+    def __gen_llvm_cosine(self, builder, index, ctx, v1, v2, numer_acc, denom1_acc, denom2_acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        # Numerator
+        numer = builder.load(numer_acc)
+        val = builder.fmul(val1, val2)
+        numer = builder.fadd(numer, val)
+        builder.store(numer, numer_acc)
+
+        # Denominator1
+        denom = builder.load(denom1_acc)
+        val = builder.fmul(val1, val1)
+        denom = builder.fadd(denom, val)
+        builder.store(denom, denom1_acc)
+        # Denominator2
+        denom = builder.load(denom2_acc)
+        val = builder.fmul(val2, val2)
+        denom = builder.fadd(denom, val)
+        builder.store(denom, denom2_acc)
+
     def __gen_llvm_max_diff(self, builder, index, ctx, v1, v2, max_diff_ptr):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
@@ -752,6 +775,17 @@ class Distance(ObjectiveFunction):
             inner = functools.partial(self.__gen_llvm_sum_product, **kwargs)
         elif self.metric == CROSS_ENTROPY:
             inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
+        elif self.metric is COSINE:
+            del kwargs['acc']
+            numer_acc = builder.alloca(ctx.float_ty)
+            denom1_acc = builder.alloca(ctx.float_ty)
+            denom2_acc = builder.alloca(ctx.float_ty)
+            for loc in numer_acc, denom1_acc, denom2_acc:
+                builder.store(ctx.float_ty(0), loc)
+            kwargs['numer_acc'] = numer_acc
+            kwargs['denom1_acc'] = denom1_acc
+            kwargs['denom2_acc'] = denom2_acc
+            inner = functools.partial(self.__gen_llvm_cosine, **kwargs)
         elif self.metric == MAX_ABS_DIFF:
             del kwargs['acc']
             max_diff_ptr = builder.alloca(ctx.float_ty)
@@ -793,6 +827,18 @@ class Distance(ObjectiveFunction):
             ret = builder.call(sqrt, [ret])
         elif self.metric == MAX_ABS_DIFF:
             ret = builder.load(max_diff_ptr)
+        elif self.metric is COSINE:
+            numer = builder.load(numer_acc)
+            denom1 = builder.load(denom1_acc)
+            denom1 = builder.call(sqrt, [denom1])
+            denom2 = builder.load(denom2_acc)
+            denom2 = builder.call(sqrt, [denom2])
+            denom = builder.fmul(denom1, denom2)
+
+            ret = builder.fdiv(numer, denom)
+            ret = builder.call(fabs, [ret])
+            ret = builder.fsub(ret.type(1), ret)
+
         elif self.metric == CORRELATION:
             n = ctx.float_ty(input_length)
             acc_xy = builder.load(acc_xy_ptr)
@@ -847,8 +893,9 @@ class Distance(ObjectiveFunction):
             ret = builder.call(fabs, [corr])
             ret = builder.fsub(ctx.float_ty(1), ret)
 
-        # MAX_ABS_DIFF ignores normalization
-        if self.normalize and self.metric != MAX_ABS_DIFF and self.metric != CORRELATION:
+        # MAX_ABS_DIFF, CORRELATION, and COSINE ignore normalization
+        ignores = frozenset((MAX_ABS_DIFF, CORRELATION, COSINE))
+        if self.normalize and self.metric not in ignores:
             norm_factor = input_length
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2

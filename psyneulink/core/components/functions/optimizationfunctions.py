@@ -41,8 +41,11 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import call_with_pruned_args
+from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 from psyneulink.core.globals.sampleiterator import SampleIterator
+
+from psyneulink.core import llvm as pnlvm
+import contextlib
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'ParamEstimationFunction',
@@ -377,7 +380,7 @@ class OptimizationFunction(Function_Base):
         else:
             self.search_space = search_space
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(save_samples=save_samples,
                                                   save_values=save_values,
                                                   max_iterations=max_iterations,
@@ -559,8 +562,9 @@ class GradientOptimization(OptimizationFunction):
     GradientOptimization(            \
         default_variable=None,       \
         objective_function=None,     \
+        gradient_function=None,      \
         direction=ASCENT,            \
-        step=1.0,               \
+        step=1.0,                    \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -613,12 +617,12 @@ class GradientOptimization(OptimizationFunction):
     **Gradient Calculation**
 
     The gradient is evaluated by `gradient_function <GradientOptimization.gradient_function>`,
-    which is the derivative of the `objective_function <GradientOptimization.objective_function>`
+    which should be the derivative of the `objective_function <GradientOptimization.objective_function>`
     with respect to `variable <GradientOptimization.variable>` at its current value:
-    :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`
-
-    `Autograd's <https://github.com/HIPS/autograd>`_ `grad <autograd.grad>` method is used to
-    generate `gradient_function <GradientOptimization.gradient_function>`.
+    :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
+    constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
+    <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
+    a warning is issued, and gradients are not calculated.
 
 
     Arguments
@@ -632,6 +636,11 @@ class GradientOptimization(OptimizationFunction):
         specifies function used to evaluate `variable <GradientOptimization.variable>`
         in each iteration of the `optimization process  <GradientOptimization_Procedure>`;
         it must be specified and it must return a scalar value.
+
+    gradient_function : function
+        specifies function used to compute the gradient in each iteration of the `optimization process
+        <GradientOptimization_Procedure>`;  if it is not specified, an attempt is made to compute it using
+        `autograd.grad <https://github.com/HIPS/autograd>`_.
 
     direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization: if *ASCENT*, movement is attempted in the positive direction
@@ -748,6 +757,12 @@ class GradientOptimization(OptimizationFunction):
                     :type: list
                     :read only: True
 
+                gradient_function
+                    see `gradient_function <GradientOptimization.gradient_function>`
+
+                    :default value: None
+                    :type:
+
                 annealing_function
                     see `annealing_function <GradientOptimization.annealing_function>`
 
@@ -805,6 +820,7 @@ class GradientOptimization(OptimizationFunction):
         previous_variable = Parameter([[0], [0]], read_only=True)
         previous_value = Parameter([[0], [0]], read_only=True)
 
+        gradient_function = Parameter(None, stateful=False, loggable=False)
         annealing_function = Parameter(None, stateful=False, loggable=False)
 
         step = Parameter(1.0, modulable=True)
@@ -820,6 +836,7 @@ class GradientOptimization(OptimizationFunction):
     def __init__(self,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
+                 gradient_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
                  step:tc.optional(tc.any(int, float))=1.0,
                  annealing_function:tc.optional(is_function_type)=None,
@@ -833,9 +850,9 @@ class GradientOptimization(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
+        self.gradient_function = gradient_function
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
-        self.gradient_function = None
 
         if direction is ASCENT:
             self.direction = 1
@@ -843,7 +860,7 @@ class GradientOptimization(OptimizationFunction):
             self.direction = -1
         self.annealing_function = annealing_function
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(step=step,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
@@ -1104,6 +1121,7 @@ class GridSearch(OptimizationFunction):
         grid = Parameter(None)
         save_samples = True
         save_values = True
+        random_state = Parameter(None, modulable=False, stateful=True)
 
         direction = MAXIMIZE
 
@@ -1116,6 +1134,9 @@ class GridSearch(OptimizationFunction):
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
                  save_values:tc.optional(bool)=False,
+                 # tolerance=0.,
+                 select_randomly_from_optimal_values=False,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -1125,11 +1146,18 @@ class GridSearch(OptimizationFunction):
         search_termination_function = self._grid_complete
         self._return_values = save_values
         self._return_samples = save_values
-        self.num_iterations = 1
+        self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
         self.direction = direction
+        # self.tolerance = tolerance
+        self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
+
+        if seed is None:
+            seed = get_global_seed()
+        random_state = np.random.RandomState(np.asarray([seed]))
 
         # Assign args to params and functionParams dicts 
-        params = self._assign_args_to_param_dicts(params=params)
+        params = self._assign_args_to_param_dicts(params=params,
+                                                  random_state=random_state)
 
         super().__init__(default_variable=default_variable,
                          objective_function=objective_function,
@@ -1142,6 +1170,8 @@ class GridSearch(OptimizationFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+        self.stateful_attributes = ["random_state"]
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1182,6 +1212,121 @@ class GridSearch(OptimizationFunction):
         for s in self.search_space:
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
+
+    def _get_search_dim(self, ctx, d):
+        if isinstance(d.generator, list):
+            return ctx.convert_python_struct_to_llvm_ir(d.generator)
+        assert False, "Unsupported dimension type"
+
+    def _get_param_struct_type(self, ctx):
+        search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
+        space = pnlvm.ir.LiteralStructType(search_space)
+        select_randomly = ctx.int32_ty
+        obj_func_param = ctx.get_param_struct_type(self.objective_function)
+        return pnlvm.ir.LiteralStructType([obj_func_param, space, select_randomly])
+
+    def _get_search_dim_init(self, execution_id, d):
+        if isinstance(d.generator, list):
+            return tuple(d.generator)
+        assert False, "Unsupported dimension type"
+
+    def _get_param_initializer(self, execution_id):
+        grid_init = [self._get_search_dim_init(execution_id, d) for d in self.search_space]
+        select_randomly = 1 if self.select_randomly_from_optimal_values else 0
+        return tuple([self.objective_function._get_param_initializer(execution_id), tuple(grid_init), select_randomly])
+
+    def _get_context_struct_type(self, ctx):
+        obj_state = ctx.get_context_struct_type(self.objective_function)
+        # Get random state
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
+        return pnlvm.ir.LiteralStructType([obj_state, random_state_struct])
+
+    def _get_context_initializer(self, execution_id):
+        obj_init = self.objective_function._get_context_initializer(execution_id)
+        random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
+        return tuple([obj_init, pnlvm._tupleize(random_state)])
+
+    def _get_output_struct_type(self, ctx):
+        val = self.defaults.value
+        # we should never return 'all values'
+        new_val = tuple([val[0], val[1]])
+        return ctx.convert_python_struct_to_llvm_ir(new_val)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        obj_func = ctx.get_llvm_function(self.objective_function)
+        sample_t = obj_func.args[2].type.pointee
+        value_t = obj_func.args[3].type.pointee
+        min_sample_ptr = builder.alloca(sample_t)
+        min_value_ptr = builder.alloca(value_t)
+        sample_ptr = builder.alloca(sample_t)
+        value_ptr = builder.alloca(value_t)
+
+        obj_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        obj_state_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        random_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        search_space_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        select_random_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        select_random = builder.trunc(builder.load(select_random_ptr), pnlvm.ir.IntType(1))
+
+        opt_count_ptr = builder.alloca(ctx.float_ty)
+        builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
+        replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
+
+        # Use NaN here. fcmp_unordered below returns true if one of the
+        # operands is a NaN. This makes sure we always set min_*
+        # in the first iteration
+        builder.store(min_value_ptr.type.pointee("NaN"), min_value_ptr)
+
+        b = builder
+        with contextlib.ExitStack() as stack:
+            for i in range(len(search_space_ptr.type.pointee)):
+                array = b.gep(search_space_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                assert isinstance(array.type.pointee,  pnlvm.ir.ArrayType)
+                arg_elem = b.gep(sample_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, array, "loop_"+str(i)))
+                array_elem = b.gep(array, [ctx.int32_ty(0), idx])
+                b.store(b.load(array_elem), arg_elem)
+
+            # We are in the inner most loop now with sample_ptr setup for execution
+            b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
+            value = b.load(value_ptr)
+            min_value = b.load(min_value_ptr)
+            direction = "<" if self.direction is MINIMIZE else ">"
+
+            replace = b.fcmp_unordered(direction, value, min_value)
+            builder.store(replace, replace_ptr)
+            with builder.if_then(select_random):
+                close = pnlvm.helpers.is_close(builder, value, min_value)
+                with builder.if_else(close) as (tb, eb):
+                    with tb:
+                        opt_count = builder.load(opt_count_ptr)
+                        opt_count = builder.fadd(opt_count, opt_count.type(1))
+                        prob = builder.fdiv(opt_count.type(1), opt_count)
+                        # reuse opt_count location. it will be overwritten later anyway
+                        res_ptr = opt_count_ptr
+                        rand_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+                        builder.call(rand_f, [random_state, res_ptr])
+                        res = builder.load(res_ptr)
+                        builder.store(opt_count, opt_count_ptr)
+                        replace = builder.fcmp_ordered("<", res, prob)
+                        builder.store(replace, replace_ptr)
+                    with eb:
+                        # we need to reset the counter if we are replacing with new best value
+                        with builder.if_then(builder.load(replace_ptr)):
+                            builder.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
+
+            with b.if_then(builder.load(replace_ptr)):
+                b.store(value, min_value_ptr)
+                b.store(b.load(sample_ptr), min_sample_ptr)
+
+            builder = b
+
+        out_sample_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        out_value_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        builder.store(builder.load(min_sample_ptr), out_sample_ptr)
+        builder.store(builder.load(min_value_ptr), out_value_ptr)
+        return builder
 
     def function(self,
                  variable=None,
@@ -1309,26 +1454,39 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
+            assert self.direction is MAXIMIZE or self.direction is MINIMIZE, \
+                "PROGRAM ERROR: bad value for {} arg of {}: {}". \
+                    format(repr(DIRECTION), self.name, self.direction)
+
             last_sample, last_value, all_samples, all_values = super().function(
                 variable=variable,
                 execution_id=execution_id,
                 params=params,
                 context=context
             )
-            # return_optimal_value = max(all_values)
-            # return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
 
-            # Evaluate objective_function for current sample
+            optimal_value_count = 1
+            value_sample_pairs = zip(all_values, all_samples)
+            value_optimal, sample_optimal = next(value_sample_pairs)
 
-            # Evaluate for optimal value
-            if self.direction is MAXIMIZE:
-                value_optimal = max(all_values)
-            elif self.direction is MINIMIZE:
-                value_optimal = min(all_values)
-            else:
-                assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
-                    format(repr(DIRECTION),self.name,self.direction)
-            sample_optimal = all_samples[all_values.index(value_optimal)]
+            for value, sample in value_sample_pairs:
+                if self.select_randomly_from_optimal_values and np.allclose(value, value_optimal):
+                    optimal_value_count += 1
+
+                    # swap with probability = 1/optimal_value_count in order to achieve
+                    # uniformly random selection from identical outcomes
+                    probability = 1/optimal_value_count
+                    random_state = self.get_current_function_param("random_state", execution_id)
+                    random_value = random_state.rand()
+
+                    if random_value < probability:
+                        value_optimal, sample_optimal = value, sample
+
+                elif (value > value_optimal and self.direction is MAXIMIZE) or \
+                        (value < value_optimal and self.direction is MINIMIZE):
+                    value_optimal, sample_optimal = value, sample
+                    optimal_value_count = 1
+
             if self._return_samples:
                 return_all_samples = all_samples
             if self._return_values:
@@ -1532,7 +1690,7 @@ class GaussianProcess(OptimizationFunction):
         self._return_samples = save_values
         self.direction = direction
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,

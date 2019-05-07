@@ -326,7 +326,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                 function
                     see `function <ComparatorMechanism.function>`
 
-                    :default value: `LinearCombination`(offset=0.0, operation=sum, scale=1.0, weights=numpy.array([[-1], [ 1]]))
+                    :default value: `LinearCombination`(weights=numpy.array([[-1], [ 1]]))
                     :type: `Function`
 
                 sample
@@ -397,6 +397,9 @@ class ComparatorMechanism(ObjectiveMechanism):
                          name=name,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+        # Require Projection to TARGET InputState (already required for SAMPLE as primary InputState)
+        self.input_states[1].parameters.require_projection_in_composition.set(True, override=True)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible

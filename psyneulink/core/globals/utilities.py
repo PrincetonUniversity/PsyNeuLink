@@ -1108,6 +1108,7 @@ class ContentAddressableList(UserList):
     def __init__(self, component_type, key=None, list=None, name=None, **kwargs):
         self.component_type = component_type
         self.key = key or 'name'
+        self.component_type = component_type
         self.name = name or component_type.__name__
         if not isinstance(component_type, type):
             raise UtilitiesError("component_type arg for {} ({}) must be a class"
@@ -1217,6 +1218,19 @@ class ContentAddressableList(UserList):
             self.data.append(value)
         else:
             self.data[key] = value
+
+    def __add__(self, item):
+        try:
+            if self.component_type != item.component_type:
+                raise TypeError(f'Type mismatch {self.component_type} and {item.component_type}')
+
+            if self.key != item.key:
+                raise TypeError(f'Key mismatch {self.key} and {item.key}')
+
+        except AttributeError:
+            raise TypeError('ContentAddressableList can only be added to ContentAddressableList')
+
+        return ContentAddressableList(self.component_type, self.key, self.data + item.data, self.name)
 
     def copy(self):
         return self.data.copy()
@@ -1380,7 +1394,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
     if isinstance(arr, np.matrix):
         if arr.dtype == object:
-            return np.matrix([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
+            return np.asarray([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
         else:
             return arr
 

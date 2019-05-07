@@ -16,6 +16,7 @@ import os, re
 
 from psyneulink.core.scheduling.time import TimeScale
 
+from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
 from .helpers import ConditionGenerator
 from llvmlite import ir
@@ -134,19 +135,14 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_input_struct_type'):
             return component._get_input_struct_type(self)
 
-        # KDM 12/28/18: <_instance_defaults_note> left _instance_defaults in place so that this code could use it.
-        # Ideally this would be simply .defaults. After going through the special handler above, component becomes a
-        # super() object, which seems to return the .defaults attr of the class associated with the super() object,
-        # whereas _instance_defaults retuns the .defaults attr of the instance associated. I don't know whether
-        # is a design or a convenience measure for workarounds, so I left this in place.
-        default_var = component._instance_defaults.variable
+        default_var = component.defaults.variable
         return self.convert_python_struct_to_llvm_ir(default_var)
 
     def get_output_struct_type(self, component):
         if hasattr(component, '_get_output_struct_type'):
             return component._get_output_struct_type(self)
 
-        default_val = component._instance_defaults.value
+        default_val = component.defaults.value
         return self.convert_python_struct_to_llvm_ir(default_val)
 
     def get_param_struct_type(self, component):
@@ -174,8 +170,11 @@ class LLVMBuilderContext:
 
     def get_param_ptr(self, component, builder, params_ptr, param_name):
         idx = self.int32_ty(component._get_param_ids().index(param_name))
-        ptr = builder.gep(params_ptr, [self.int32_ty(0), idx])
-        return ptr, builder
+        return builder.gep(params_ptr, [self.int32_ty(0), idx])
+
+    def get_state_ptr(self, component, builder, state_ptr, state_name):
+        idx = self.int32_ty(component.stateful_attributes.index(state_name))
+        return builder.gep(state_ptr, [self.int32_ty(0), idx])
 
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
@@ -196,7 +195,7 @@ class LLVMBuilderContext:
             cond_gen.get_condition_struct_type().as_pointer()))
         llvm_func = ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
-        context, params, comp_in, data, cond = llvm_func.args
+        context, params, comp_in, data_arg, cond = llvm_func.args
         for a in llvm_func.args:
             a.attributes.add('nonnull')
             a.attributes.add('noalias')
@@ -210,6 +209,13 @@ class LLVMBuilderContext:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             params = builder.alloca(const_params.type)
             builder.store(const_params, params)
+
+        if "alloca_data" in debug_env:
+            data = builder.alloca(data_arg.type.pointee)
+            data_vals = builder.load(data_arg)
+            builder.store(data_vals, data)
+        else:
+            data = data_arg
 
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM);
@@ -311,6 +317,10 @@ class LLVMBuilderContext:
         output_cim_w = composition._get_node_wrapper(composition.output_CIM);
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.call(output_cim_f, [context, params, comp_in, data, data])
+
+        if "alloca_data" in debug_env:
+            data_vals = builder.load(data)
+            builder.store(data_vals, data_arg)
 
         # Bump run counter
         cond_gen.bump_ts(builder, cond, (1, 0, 0))
@@ -479,6 +489,8 @@ class LLVMBuilderContext:
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif t is None:
             return ir.LiteralStructType([])
+        elif isinstance(t, np.random.RandomState):
+            return pnlvm.builtins.get_mersenne_twister_state_struct(self)
 
         assert False, "Don't know how to convert {}".format(type(t))
 

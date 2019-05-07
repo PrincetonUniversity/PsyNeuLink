@@ -205,6 +205,14 @@ five types:
     * `AfterNTrials` (int[, TimeScale])
       satisfied any time after the specified number of `TRIAL`\\ s has occurred.
 
+    * `AtRun` (int)
+      satisfied any time during the specified `RUN`.
+
+    * `AfterRun` (int)
+      satisfied any time after the specified `RUN` occurs.
+
+    * `AfterNRuns` (int)
+      satisfied any time after the specified number of `RUN`\\ s has occurred.
 
 .. _Conditions_Component_Based:
 
@@ -273,10 +281,10 @@ from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
-    'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any', 'AtNCalls', 'AtPass', 'AtTimeStep', 'AtTrial',
-    'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial', 'Condition', 'ConditionError', 'ConditionSet',
-    'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny',
-    'While', 'WhileNot'
+    'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any', 'AtNCalls',
+    'AtPass', 'AtTimeStep', 'AtTrial', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial', 'Condition',
+    'ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished',
+    'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
@@ -395,6 +403,13 @@ class Condition(object):
         self.kwargs = kwargs
 
         self._owner = None
+
+    def __str__(self):
+        return '{0}({1}{2})'.format(
+            self.__class__.__name__,
+            ', '.join([str(arg) for arg in self.args]) if len(self.args) > 0 else '',
+            ', {0}'.format(self.kwargs) if len(self.kwargs) > 0 else ''
+        )
 
     @property
     def owner(self):
@@ -1028,6 +1043,76 @@ class AfterNTrials(Condition):
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
         super().__init__(func, n, time_scale)
+
+
+
+class AtRun(Condition):
+    """AtRun
+
+    Parameters:
+
+        n(int): the `RUN` at which the Condition is satisfied
+
+    Satisfied when:
+
+        - exactly n `RUN`\\ s have occurred.
+
+    """
+    def __init__(self, n):
+        def func(n, scheduler=None, execution_context=None):
+            try:
+                return scheduler.clocks[execution_context].time.run == n
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n)
+
+
+class AfterRun(Condition):
+    """AfterRun
+
+    Parameters:
+
+        n(int): the `RUN` after which the Condition is satisfied
+
+    Satisfied when:
+
+        - at least n+1 `RUN`\\ s have occurred.
+
+    """
+    def __init__(self, n):
+        def func(n, scheduler=None, execution_context=None):
+            try:
+                return scheduler.clocks[execution_context].time.run > n
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n)
+
+
+class AfterNRuns(Condition):
+    """AfterNTrials
+
+    Parameters:
+
+        n(int): the number of `RUN`\\ s after which the Condition is satisfied
+
+    Satisfied when:
+
+        - at least n `RUN`\\ s have occured.
+
+    """
+
+    def __init__(self, n):
+        def func(n, scheduler=None, execution_context=None):
+            try:
+                return scheduler.clocks[execution_context].time.run >= n
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n)
+
+
 
 ######################################################################
 # Component-based Conditions

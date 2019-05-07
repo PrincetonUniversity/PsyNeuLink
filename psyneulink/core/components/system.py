@@ -926,7 +926,7 @@ class System(System_Base):
 
         self.projections = []
 
-        # fAssign args to params and functionParams dicts 
+        # fAssign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(processes=processes,
                                                   initial_values=initial_values,
                                                   # controller=controller,

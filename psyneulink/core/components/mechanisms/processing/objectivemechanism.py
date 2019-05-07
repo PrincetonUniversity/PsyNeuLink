@@ -609,7 +609,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is OUTCOME:
             output_states = [OUTCOME]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   output_states=output_states,
                                                   function=function,
@@ -809,6 +809,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             if any(exponent is not None for exponent in exponents):
                 self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
+
 
     @property
     def monitor(self):

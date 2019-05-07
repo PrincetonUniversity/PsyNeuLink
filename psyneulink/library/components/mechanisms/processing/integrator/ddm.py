@@ -789,7 +789,7 @@ class DDM(ProcessingMechanism_Base):
                 function
                     see `function <DDM.function>`
 
-                    :default value: `DriftDiffusionAnalytical`(bias=0.5, drift_rate=1.0, noise=0.5, starting_point=0.0, t0=0.2, threshold=1.0)
+                    :default value: `DriftDiffusionAnalytical`
                     :type: `Function`
 
                 initializer
@@ -896,7 +896,7 @@ class DDM(ProcessingMechanism_Base):
         if isinstance(output_states, (str, tuple)):
             output_states = list(output_states)
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   # input_format=input_format,
                                                   input_states=input_states,

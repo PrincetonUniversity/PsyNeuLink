@@ -12,13 +12,14 @@
 # The currently recognized values are:
 # "compile" -- prints information messages when modules are compiled
 # "stat" -- prints code generation and compilation statistics at the end
-# "debug_info" -- emit line debuging information when generating llvm IR
-# "const_params" -- harcode base parameter values into generated code,
-#                   instead of laoding them from param_struct
+# "debug_info" -- emit line debugging information when generating LLVM IR
+# "const_params" -- hardcode base parameter values into generated code,
+#                   instead of loading them from param_struct
+# "alloca_data" -- use alloca'd storage for composition data (exposes data flow)
 # "comp_node_debug" -- print intermediate results after execution composition node wrapper.
-# "llvm" -- dumps llvm IR into a file (named after the dumped module).
+# "llvm" -- dumps LLVM IR into a file (named after the dumped module).
 #            Code is dumped both after module generation and linking into global module.
-# "opt" -- dump llvm IR after running through the optimization passes
+# "opt" -- dump LLVM IR after running through the optimization passes
 # "isa" -- dump machine specific ISA
 # "cuda" -- enable execution on CUDA devices if available
 # "cuda_data" -- print data upload/download statistic (to GPU VRAM)

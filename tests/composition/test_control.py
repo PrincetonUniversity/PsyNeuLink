@@ -1,10 +1,13 @@
 import functools
 import numpy as np
-import pytest
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
+import pytest
+import re
+
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
-from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator, SampleIteratorError
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+
 
 class TestControlMechanisms:
 
@@ -234,7 +237,7 @@ class TestModelBasedOptimizationControlMechanisms:
             reward: [20, 20]
         }
 
-        comp.run(inputs=stim_list_dict)
+        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
 
         # Note: Removed decision variable OutputState from simulation results because sign is chosen randomly
         expected_sim_results_array = [
@@ -463,7 +466,14 @@ class TestModelBasedOptimizationControlMechanisms:
                                # Note: Skip decision variable OutputState
                                evc_gratton.simulation_results[simulation][1:])
 
-    def test_model_based_ocm_after(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_after(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -491,12 +501,20 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, bin_execute=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs, bin_execute=mode)
 
-    def test_model_based_ocm_before(self):
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_before(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -524,10 +542,11 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, bin_execute=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs, bin_execute=mode)
 
     def test_model_based_ocm_with_buffer(self):
 
@@ -560,22 +579,28 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for i in range(1, len(ocm.input_states)):
             ocm.input_states[i].function.reinitialize()
-        comp.run(inputs=inputs)
+        comp.run(inputs=inputs, retain_old_simulation_data=True)
 
         log = objective_mech.log.nparray_dictionary()
 
         # "outer" composition
         assert np.allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
 
+        # preprocess to ignore control allocations
+        log_parsed = {}
+        for key, value in log.items():
+            cleaned_key = re.sub(r'comp-sim-(\d).*', r'\1', key)
+            log_parsed[cleaned_key] = value
+
         # First round of simulations is only one trial.
         # (Even though the feature fn is a Buffer, there is no history yet)
         for i in range(0, 3):
-            assert len(log["comp-sim-"+str(i)]["Trial"]) == 1
+            assert len(log_parsed[str(i)]["Trial"]) == 1
 
         # Second and third rounds of simulations are two trials.
         # (The buffer has history = 2)
         for i in range(3, 9):
-            assert len(log["comp-sim-"+str(i)]["Trial"]) == 2
+            assert len(log_parsed[str(i)]["Trial"]) == 2
 
     def test_stability_flexibility_susan_and_sebastian(self):
 
@@ -755,30 +780,12 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for i in range(1, len(stabilityFlexibility.controller.input_states)):
             stabilityFlexibility.controller.input_states[i].function.reinitialize()
-
-        # END OF COMPOSITION CONSTRUCTION
-
-        # TESTING
-
-        print("Beginning of Run")
-        print("--------------------------------------------------------------------------")
-        print()
-
-        # stabilityFlexibility.show_graph(show_model_based_optimizer=True)
-        # stabilityFlexibility.show_graph(show_model_based_optimizer=True, show_node_structure=True)
-
         # Origin Node Inputs
         taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1]]
         stimulusTrain = [[1, -1], [-1, 1], [1, -1], [-1, 1]]
 
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
-        print(stabilityFlexibility.results)
-        activation.log.print_entries()
-        print()
-        print(activation.mod_gain)
-        decisionMaker.log.print_entries()
-        print(pnl.BEFORE)
 
     def test_model_based_num_estimates(self):
 
@@ -816,6 +823,44 @@ class TestModelBasedOptimizationControlMechanisms:
         assert np.allclose(comp.results,
                            [[np.array([1.])], [np.array([1.75])]])
 
+    def test_grid_search_random_selection(self):
+        A = pnl.ProcessingMechanism(name='A')
+
+        A.log.set_log_conditions(items="mod_slope")
+        B = pnl.ProcessingMechanism(name='B',
+                                    function=pnl.Logistic())
+
+        comp = pnl.Composition(name='comp')
+        comp.add_linear_processing_pathway([A, B])
+
+        search_range = pnl.SampleSpec(start=15., stop=35., step=5)
+        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+                                           function=pnl.Linear,
+                                           variable=1.0,
+                                           allocation_samples=search_range,
+                                           intensity_cost_function=pnl.Linear(slope=0.))
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                               features=[A.input_state],
+                                               objective_mechanism=objective_mech,
+                                               function=pnl.GridSearch(select_randomly_from_optimal_values=True),
+                                               control_signals=[control_signal])
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]]]}
+
+        comp.run(inputs=inputs,
+                 num_trials=10,
+                 execution_id='outer_comp')
+
+        log_arr = A.log.nparray_dictionary()
+
+        # control signal value (mod slope) is chosen randomly from all of the control signal values
+        # that correspond to a net outcome of 1
+        assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
+                           log_arr['outer_comp']['mod_slope'])
 
 class TestSampleIterator:
 

@@ -235,7 +235,7 @@ class LeabraFunction(Function_Base):
         if network is None:
             raise LeabraError('network was None. Cannot create function for Leabra Mechanism if network is not specified.')
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(network=network,
                                                   params=params)
 

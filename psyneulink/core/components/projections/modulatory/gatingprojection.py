@@ -281,7 +281,7 @@ class GatingProjection(ModulatoryProjection_Base):
                 function
                     see `function <GatingProjection.function>`
 
-                    :default value: `Linear`(intercept=0.0, slope=1.0)
+                    :default value: `Linear`
                     :type: `Function`
 
                 gating_signal
@@ -312,7 +312,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   gating_signal_params=gating_signal_params,
                                                   params=params)

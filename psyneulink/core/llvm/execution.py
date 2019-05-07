@@ -43,14 +43,14 @@ class CUDAExecution:
     def __init__(self, buffers=['param_struct', 'context_struct']):
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
-        self.__cuda_out_buf = None
         self._uploaded_bytes = 0
         self._downloaded_bytes = 0
-        self._debug_env = debug_env
+        self.__cuda_out_buf = None
+        self.__debug_env = debug_env
         self.__vo_ty = None
 
     def __del__(self):
-        if "cuda_data" in self._debug_env:
+        if "cuda_data" in self.__debug_env:
             try:
                 name = self._bin_func.name
             except:
@@ -202,13 +202,13 @@ class CompExecution(CUDAExecution):
     def __init__(self, composition, execution_ids = [None]):
         super().__init__(buffers=['context_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
-        self._debug_env = debug_env
         self._execution_ids = execution_ids
         self.__bin_exec_func = None
         self.__bin_exec_multi_func = None
         self.__bin_func = None
         self.__bin_run_func = None
         self.__bin_run_multi_func = None
+        self.__debug_env = debug_env
         self.__frozen_vals = None
 
 
@@ -246,6 +246,12 @@ class CompExecution(CUDAExecution):
             return self.__bin_exec_func
         if self.__bin_run_func is not None:
             return self.__bin_run_func
+
+        assert False, "Binary function not set for execution!"
+
+    def _set_bin_node(self, node):
+        assert node in self._composition._all_nodes
+        self.__bin_func = self._composition._get_bin_node(node)
 
     @property
     def _conditions(self):
@@ -372,12 +378,12 @@ class CompExecution(CUDAExecution):
 
         assert inputs is not None or node is not self._composition.input_CIM
 
-        assert node in self._composition._all_nodes
-        self.__bin_func = self._composition._get_bin_node(node)
+        # Set bin node to make sure self._*struct works as expected
+        self._set_bin_node(node)
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
-        if "comp_node_debug" in self._debug_env:
+        if "comp_node_debug" in self.__debug_env:
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
     @property

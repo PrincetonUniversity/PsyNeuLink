@@ -722,7 +722,7 @@ class LCControlMechanism(ControlMechanism):
                  context=None,
                  default_variable=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
                                                   modulated_mechanisms=modulated_mechanisms,
                                                   modulation=modulation,

@@ -659,7 +659,7 @@ class ControlSignal(ModulatorySignal):
                 combine_costs_function
                     see `combine_costs_function <ControlSignal.combine_costs_function>`
 
-                    :default value: `Reduce`(offset=0.0, operation=sum, scale=1.0)
+                    :default value: `Reduce`
                     :type: `Function`
 
                 cost
@@ -793,7 +793,7 @@ class ControlSignal(ModulatorySignal):
         # If index has not been specified, but the owner has, control_allocation has been determined, so use that
         index = index or SEQUENTIAL
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   cost_options=cost_options,
                                                   intensity_cost_function=intensity_cost_function,

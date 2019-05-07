@@ -119,7 +119,7 @@ class Identity(InterfaceFunction):  # ------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
@@ -176,15 +176,15 @@ class Identity(InterfaceFunction):  # ------------------------------------------
                 variable = tuple(variable)
 
             return ctx.convert_python_struct_to_llvm_ir(variable)
-        return ctx.get_input_struct_type(super())
+        default_var = self.defaults.variable
+        return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def _get_output_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its defaults shape
-        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-        if isinstance(self.owner, CompositionInterfaceMechanism):
-            return ctx.get_input_struct_type(self)
-        return ctx.get_output_struct_type(super())
+        #       does not update its defaults shape
+        #       Standalone function works OK with defaults as well as this
+        #       workaround.
+        return ctx.get_input_struct_type(self)
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         val = builder.load(arg_in)
@@ -266,7 +266,7 @@ class InterfaceStateMap(InterfaceFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(corresponding_input_state=corresponding_input_state,
                                                   params=params)
 

@@ -43,10 +43,6 @@ def test_simplified_greedy_agent(benchmark, mode):
     player = TransferMechanism(size=prey_len, name="PLAYER OBS")
     prey = TransferMechanism(size=prey_len, name="PREY OBS")
 
-    # For future use:
-    values = TransferMechanism(size=3, name="AGENT VALUES")
-    reward = TransferMechanism(name="REWARD")
-
     # Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
     # note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
     greedy_action_mech = ComparatorMechanism(name='MOTOR OUTPUT',sample=player,target=prey)
@@ -94,10 +90,6 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 
     player = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
     prey = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
-
-    # For future use:
-    values = TransferMechanism(size=3, name="AGENT VALUES")
-    reward = TransferMechanism(name="REWARD")
 
     # Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
     # note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
@@ -156,9 +148,6 @@ def test_predator_prey(benchmark, mode):
     player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
     prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
     predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
-    # Value and Reward Mechanisms (not yet used;  for future use)
-    values = TransferMechanism(size=3, name="AGENT VALUES")
-    reward = TransferMechanism(name="REWARD")
 
     # Action Mechanism
     #    Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
@@ -201,7 +190,7 @@ def test_predator_prey(benchmark, mode):
                                          prey_obs:[[-0.60836214,  0.1760381 ]],
                                          }
     run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
-    
+
     assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
     # KAM modified expected output 3/13 because Objective Mechanism is no longer considered an "OUTPUT" node.
     # assert np.allclose(run_results[1], [[-7.95925672]])

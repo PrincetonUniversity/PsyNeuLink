@@ -744,7 +744,7 @@ class InputState(State_Base):
                 function
                     see `function <InputState.function>`
 
-                    :default value: `LinearCombination`(offset=0.0, operation=sum, scale=1.0)
+                    :default value: `LinearCombination`
                     :type: `Function`
 
                 internal_only
@@ -759,6 +759,7 @@ class InputState(State_Base):
 
                     :default value: None
                     :type: InputState
+                    :read only: True
 
                 weight
                     see `weight <InputState.weight>`
@@ -1426,6 +1427,12 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list
+
+    # Assign value of require_projection_in_composition
+    for state in owner._input_states:
+        # Assign True for owner's primary InputState and the value has not already been set in InputState constructor
+        if state.require_projection_in_composition is None and owner.input_state == state:
+            state.parameters.require_projection_in_composition.set(True, override=True)
 
     # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not
