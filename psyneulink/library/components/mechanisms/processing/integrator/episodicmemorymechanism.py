@@ -114,7 +114,7 @@ class EpisodicMemoryMechanismError(Exception):
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
     EpisodicMemoryMechanism( \
-        content_size=1,          \
+        content_size=1,      \
         assoc_size=1,        \
         function=DND,        \
         params=None,         \
@@ -197,7 +197,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None):
 
         # Template for memory_store entries
-        default_variable = [np.zeros(content_size), np.zeros(assoc_size)]
+        default_variable = [np.zeros(content_size)]
 
         input_states = [{NAME:CONTENT_INPUT, SIZE:content_size}]
         output_states = [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}]
@@ -205,6 +205,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         if assoc_size:
             input_states.append({NAME:ASSOC_INPUT, SIZE:assoc_size})
             output_states.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
+            default_variable.append(np.zeros(assoc_size))
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
