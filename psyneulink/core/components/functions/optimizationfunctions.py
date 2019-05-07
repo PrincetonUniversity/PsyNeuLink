@@ -1999,7 +1999,7 @@ class ParamEstimationFunction(OptimizationFunction):
         if not self._is_model_initialized:
             return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
-        result = self._sampler.sample(10, quantile=0.01)
+        result = self._sampler.sample(100, quantile=0.01)
 
         result.summary()
 
