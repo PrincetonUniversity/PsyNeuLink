@@ -197,7 +197,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None):
 
         # Template for memory_store entries
-        # default_variable = [np.zeros(content_size), np.zeros(assoc_size)]
         default_variable = [np.zeros(content_size)]
 
         input_states = [{NAME:CONTENT_INPUT, SIZE:content_size}]
@@ -220,12 +219,17 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                          context=ContextFlags.CONSTRUCTOR
                          )
 
-    # def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-    #
-    #     return super()._execute(variable=variable,
-    #                               execution_id=execution_id,
-    #                               runtime_params=runtime_params,
-    #                               context=context)
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+
+        value =  super()._execute(variable=variable,
+                                           execution_id=execution_id,
+                                           runtime_params=runtime_params,
+                                           context=context)
+        if len(value[1]) == 0:
+            return np.delete(value,1)
+        else:
+            return value
+
 
     def _instantiate_output_states(self, context=None):
         if len(self.input_states) != len(self.output_states):
