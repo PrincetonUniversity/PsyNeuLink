@@ -1942,6 +1942,10 @@ class ParamEstimationFunction(OptimizationFunction):
                  observed,
                  summary,
                  discrepancy,
+                 n_samples,
+                 threshold=None,
+                 quantile=None,
+                 n_sim=None,
                  seed=None,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
@@ -1955,6 +1959,14 @@ class ParamEstimationFunction(OptimizationFunction):
         self._observed = observed
         self._summary = summary
         self._discrepancy = discrepancy
+        self._n_samples = n_samples
+        self._threshold = threshold
+        self._n_sim = n_sim
+        self._quantile = quantile
+        self._sampler_args = {'n_samples': self._n_samples,
+                              'threshold': self._threshold,
+                              'quantile': self._quantile,
+                              'n_sim': self._n_sim}
 
         if seed is None:
             self._seed = random.randrange(sys.maxsize)
@@ -2113,7 +2125,6 @@ class ParamEstimationFunction(OptimizationFunction):
             # Mark that we are initialized
             self._is_model_initialized = True
 
-
     def function(self,
                  variable=None,
                  execution_id=None,
@@ -2157,8 +2168,7 @@ class ParamEstimationFunction(OptimizationFunction):
         if not self._is_model_initialized:
             return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
-        result = self._sampler.sample(100, quantile=0.01)
-
-        result.summary()
+        # Run the sampler
+        result = self._sampler.sample(**self._sampler_args)
 
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
