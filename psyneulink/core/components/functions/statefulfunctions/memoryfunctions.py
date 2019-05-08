@@ -1185,7 +1185,7 @@ Keys and values are each stored in their own ordered lists; k
             selected_keys = _memory[KEYS]
             # Check for any duplicate keys in matches and, if they are not allowed, return zeros
             if (not self.duplicate_keys_allowed
-                    and any(selected_keys[indices_of_selected_items[0]]==selected_keys[other]
+                    and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
                             for other in indices_of_selected_items[1:])):
                 warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
                                   f'{self.owner.name} even though {repr("duplicate_keys_allowed")} is False')

@@ -237,7 +237,7 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
@@ -286,7 +286,7 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
