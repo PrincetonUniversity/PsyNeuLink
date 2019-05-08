@@ -1260,8 +1260,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         return success
 
     @tc.typecheck
-    def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
-        """insert_memories(memories, execution_id=None)
+    def add_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
+        """Insert one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
 
         add key-value pairs to `memory <ContentAddressableMemory.memory>`.
 
@@ -1275,10 +1275,32 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         memories = np.array(memories)
         if not 2 <= memories.ndim <= 3:
             raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
-                                format(repr('memories'), repr('insert_memories'), self.__class__.__name ))
+                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
         for memory in memories:
             # self._store_memory(memory[0], memory[1], execution_id)
             self._store_memory(memory, execution_id)
+
+    @tc.typecheck
+    def delete_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
+        """Insert one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
+
+        add key-value pairs to `memory <ContentAddressableMemory.memory>`.
+
+        Arguments
+        ---------
+        memories : list or array
+            a list or array of 2d arrays, each of which must be a valid "memory" consisting of two items,
+            a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
+            length and equal to the length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
+        """
+        memories = np.array(memories)
+        if not 2 <= memories.ndim <= 3:
+            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
+                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
+        for memory in memories:
+            # self._store_memory(memory[0], memory[1], execution_id)
+            self._store_memory(memory, execution_id)
+
 
     @property
     def memory(self):
