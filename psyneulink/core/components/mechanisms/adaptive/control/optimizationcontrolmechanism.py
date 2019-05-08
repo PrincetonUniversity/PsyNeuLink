@@ -480,12 +480,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep : Composition  : default Composition to which the OptimizationControlMechanism belongs
         specifies the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
-        to predictd the `net_outcome <ControlMechanism.net_outcome>` for a given `state
+        to predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
         <OptimizationControlMechanism_State>`.  If a Composition other than the default is assigned,
         it must be suitably configured (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details).
         If the default is used, the OptimizationControlMechanism is assigned as the Composition's `controller
         <Composition.controller>` unless one has already been assigned, in which case the
-        OptimizationControlMechanismit is disabled.
+        OptimizationControlMechanism is disabled.
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
@@ -509,6 +509,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
         <OptimizationControlMechanism.function>`.  Each item must have the same shape as `control_allocation
         <ControlMechanism.control_allocation>`.
+
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
         must take as its sole argument an array with the same shape as `control_allocation
@@ -879,7 +880,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # and the simulations must start from the exact spot
         self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id, override=True)
 
-        # Get control_allocation that optmizes net_outcome using OptimizationControlMechanism's function
+        # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
                                                 super(ControlMechanism,self)._execute(variable=control_allocation,
