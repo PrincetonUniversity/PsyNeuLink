@@ -402,22 +402,33 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     Execution
     ---------
 
-    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, retrieve an entry from
-      `memory <ContentAddressableMemory.memory>` that has a key that is closest to the query key (first item of
+    When `function <ContentAddressableMemory.function>` is executed, it first retrieves the
+    item in `memory <ContentAddressableMemory.memory>` with the key that most closely matches the key of the item
+    (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
+    If key of the pair in the call is an exact match of a key in memory and `duplicate_keys_allowed
+    <ContentAddressableMemory.duplicate_keys_allowed>` is False, then the matching item is returned, but the
+    pair in the call is not stored. If the length of `memory <ContentAddressableMemory.memory>` exceeds
+    `max_entries <ContentAddressableMemory.max_entries>`, generate an error.  These steps are descrdibed in more
+    detail below:
+
+    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, an entry is retrieved from
+      `memory <ContentAddressableMemory.memory>` that has a key that is closest to the one in the call (first item of
       `variable <ContentAddressableMemory.variable>`), as determined by the `distance_function
       <ContentAddressableMemory.distance_function>` and `selection_function
       <ContentAddressableMemory.selection_function>`.  The `distance_function
       <ContentAddressableMemory.distance_function>` generates a list of distances of each key in memory from the
-      query key;  the `selection_function <ContentAddressableMemory.selection_function>` determines how to select
-      ones for consideration.  If more than one eligible entry is identified, use `equidistant_keys_select
-      <ContentAddressableMemory.equidistant_keys_select>` to determine which to retrieve.  If no retrieval occurs,
-      return an appropriately shaped zero-valued array.
+      one in the call;  the `selection_function <ContentAddressableMemory.selection_function>` then determines which to
+      select ones for consideration.  If more than one entry from memory is identified, `equidistant_keys_select
+      <ContentAddressableMemory.equidistant_keys_select>` is used to determine which to retrieve.  If no retrieval
+      occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory (and returned by the
+      `function <ContentAddressableMemory.function>`.
     ..
-    * Then, with probability `storage_prob <ContentAddressableMemory.storage_prob>`, add new entry using the first
-      item of `variable <ContentAddressableMemory.variable>` as the key and its second item as the value.  If the
-      key is identical to one already in `memory <ContentAddressableMemory.memory>` and `duplicate_keys_allowed
-      <ContentAddressableMemory.duplicate_keys_allowed>` is False, skip storage.  If **rate** and/or **noise**
-      arguments are specified in the construtor, apply to the key before storing, as follows:
+    * After retrieval, the key-value pair in the call (`variable <ContentAddressableMemory.variable>`) is stored in
+     `memory <ContentAddressableMemory.memory>` with probability `storage_prob <ContentAddressableMemory.storage_prob>`.
+      If the key (`variable <ContentAddressableMemory.variable>`\[0]) is identical to one already in `memory
+      <ContentAddressableMemory.memory>` and `duplicate_keys_allowed <ContentAddressableMemory.duplicate_keys_allowed>`
+      is False, storage is skipped.  If **rate** and/or **noise** arguments are specified in the construtor,
+      it is applied to the key before storing, as follows:
 
     .. math::
         variable[1] * rate + noise
@@ -1069,10 +1080,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                  params=None,
                  context=None):
         """
-        Return value of entry in `memory <ContentAddressableMemory.memory>` best matched by first item of `variable <ContentAddressableMemory.variable>`, then add
-        `variable <ContentAddressableMemory.variable>` to `memory <ContentAddressableMemory.memory>`.
-
-        If the length of `memory <ContentAddressableMemory.memory>` exceeds `max_entries <ContentAddressableMemory.max_entries>`, generate an error.
+        Return entry in `memory <ContentAddressableMemory.memory>` that key of which best matches first item of
+        `variable <ContentAddressableMemory.variable>` (query key), then add `variable
+        <ContentAddressableMemory.variable>` to `memory <ContentAddressableMemory.memory>` (see `above
+        <ContentAddressableMemory_Execution>` for additional details).
 
         Arguments
         ---------
@@ -1260,14 +1271,12 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         return success
 
     @tc.typecheck
-    def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
-        """insert_memories(memories, execution_id=None)
-
-        add key-value pairs to `memory <ContentAddressableMemory.memory>`.
+    def add_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
+        """Insert one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
 
         Arguments
         ---------
-        memories : list or array
+        memories : list or 3d array
             a list or array of 2d arrays, each of which must be a valid "memory" consisting of two items,
             a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
             length and equal to the length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
@@ -1275,10 +1284,40 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         memories = np.array(memories)
         if not 2 <= memories.ndim <= 3:
             raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
-                                format(repr('memories'), repr('insert_memories'), self.__class__.__name ))
+                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
         for memory in memories:
             # self._store_memory(memory[0], memory[1], execution_id)
             self._store_memory(memory, execution_id)
+
+    @tc.typecheck
+    def delete_memories(self, memories:tc.any(list, np.ndarray), key_only:bool= True, execution_id=None):
+        """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
+
+        Arguments
+        ---------
+        memories : list or 3d array
+            a list or array of 2d arrays, each of which must be a valid "memory" consisting of two items,
+            a key and a value, each of which is a list of numbers or 1d array.
+
+        key_only :  bool : default True
+            if True, delete all memories with the same keys as those listed in **memories**;  if False,
+            delete only memories that have the same key *and* value as those listed in **memories**.
+
+        """
+        for memory in memories:
+            self._validate_memory(memory, execution_id)
+
+        keys = [list(k) for k in memories[0]]
+        vals = [list(k) for k in memories[0]]
+
+        for i, key in enumerate(keys):
+            for j, stored_key in enumerate(self._memory[KEYS]):
+                if key == list(stored_key):
+                    if key_only or vals[j] == list(self._memory[VALS][j]):
+                        memory_keys = np.delete(self._memory[KEYS],j,axis=0)
+                        memory_vals = np.delete(self._memory[VALS],j,axis=0)
+                        self._memory = np.array([list(memory_keys), list(memory_vals)])
+                        self.parameters.previous_value.set(self._memory, execution_id)
 
     @property
     def memory(self):
