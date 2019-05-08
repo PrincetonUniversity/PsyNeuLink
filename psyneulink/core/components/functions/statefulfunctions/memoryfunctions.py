@@ -355,16 +355,18 @@ KEYS = 0
 VALS = 1
 
 
-class ContentAddressableMemory(MemoryFunction):  # ------------------------------------------------------------------------------
+class ContentAddressableMemory(MemoryFunction):  # ---------------------------------------------------------------------
     """
-    ContentAddressableMemory(                                             \
+    ContentAddressableMemory(                        \
         default_variable=None,                       \
+        retrieval_prob=1.0                           \
+        storage_prob=1.0                             \
         rate=None,                                   \
         noise=0.0,                                   \
         initializer=None,                            \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
-        equidistant_keys_selection=RANDOM,           \
+        equidistant_keys_select=RANDOM,              \
         duplicate_keys_allowed=False,                \
         max_entries=None,                            \
         params=None,                                 \
@@ -374,48 +376,51 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     .. _ContentAddressableMemory:
 
-    Implements a configurable, dictionary-style storage and retrieval of key-value pairs, in which retrieval of items
-    is determined by a `distance_function <ContentAddressableMemory.distance_function>` and a selection_function
-    <ContentAddressableMemory.selection_function>` as decribed under `Execution <ContentAddressableMemory_Execution>`
-    below.  Keys and values can have different lengths, but all keys must be the same length, and as must all values.
-    Duplicate keys can be allowed or disallowed (see `duplicate_keys_allowed
-    <ContentAddressableMemory.duplicate_keys_allowed>);
-
-    FIX: FINISH
-
-    .. _ContentAddressableMemory_Options:
-
-    Options
-    -------
+    Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage is determined
+    by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by
+    `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
+    <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
+    Keys and values may have different lengths, but all keys must be the same length, as must all values.
+    Duplicate keys can be allowed or disallowed (using `duplicate_keys_allowed
+    <ContentAddressableMemory.duplicate_keys_allowed>`), and selection among duplicate keys or ones indistinguishable
+    by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
+    (using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`).
 
     .. _ContentAddressableMemory_Structure:
 
     Structure
     ---------
 
+    An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
+    pairs can be assigned to the **initialzer** argument of the ContentAddressableMemory's constructor, or in
+    a call to its `reinitialize <ContentAddressableMemory.reinitialize>` method.  The current contents of the memory
+    can be inspected using the `memory <ContentAddressableMemory.memory>` attribute, which returns a list containing
+    the current entries, each as a 2 item list containing a key-value pair.
+
     .. _ContentAddressableMemory_Execution:
 
     Execution
     ---------
 
-    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, retrieve vector from `memory <ContentAddressableMemory.memory>` using
-      first item of `variable <ContentAddressableMemory.variable>` as key, and the matching algorithm specified by `distance_function
-      <ContentAddressableMemory.distance_function>` and `selection_function <ContentAddressableMemory.selection_function>`; if no retrieval occures,
-      an appropriately shaped zero-valued array is returned.
+    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, retrieve an entry from
+      `memory <ContentAddressableMemory.memory>` that has a key that is closest to the query key (first item of
+      `variable <ContentAddressableMemory.variable>`), as determined by the `distance_function
+      <ContentAddressableMemory.distance_function>` and `selection_function
+      <ContentAddressableMemory.selection_function>`.  The `distance_function
+      <ContentAddressableMemory.distance_function>` generates a list of distances of each key in memory from the
+      query key;  the `selection_function <ContentAddressableMemory.selection_function>` determines how to select
+      ones for consideration.  If more than one eligible entry is identified, use `equidistant_keys_select
+      <ContentAddressableMemory.equidistant_keys_select>` to determine which to retrieve.  If no retrieval occurs,
+      return an appropriately shaped zero-valued array.
     ..
-    * Then, with probability `storage_prob <ContentAddressableMemory.storage_prob>` add new entry using the first item of `variable
-      <ContentAddressableMemory.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
-      **noise** arguments are applied to the key before storing:
+    * Then, with probability `storage_prob <ContentAddressableMemory.storage_prob>`, add new entry using the first
+      item of `variable <ContentAddressableMemory.variable>` as the key and its second item as the value.  If the
+      key is identical to one already in `memory <ContentAddressableMemory.memory>` and `duplicate_keys_allowed
+      <ContentAddressableMemory.duplicate_keys_allowed>` is False, skip storage.  If **rate** and/or **noise**
+      arguments are specified in the construtor, apply to the key before storing, as follows:
 
     .. math::
         variable[1] * rate + noise
-
-    .. note::
-Keys and values are each stored in their own ordered lists; k
-       * Keys in `memory <ContentAddressableMemory.memory>` are stored as tuples (since lists and arrays are not hashable);
-         they are converted to arrays for evaluation during retrieval.
-       ..
-       * All keys must be the same length (for comparision during retrieval).
 
     Arguments
     ---------
@@ -453,8 +458,7 @@ Keys and values are each stored in their own ordered lists; k
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <ContentAddressableMemory.distance_function>` and select the item to return.
 
-    FIX: FINISH REFACTORING AROUND THIS
-    equidistant_keys_selection:  RANDOM | OLDEST | NEWEST : default RANDOM
+    equidistant_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
         `variable  <ContentAddressableMemory.variable>`.
 
@@ -520,18 +524,23 @@ Keys and values are each stored in their own ordered lists; k
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         function used during retrieval to evaluate the distances returned by `distance_function
-        <ContentAddressableMemory.distance_function>` and select the item to return.
+        <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
     previous_value : 1d array
         state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable <ContentAddressableMemory.variable>` in the current call.
 
     duplicate_keys_allowed : bool
-        determines whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`.  If False,
-        then an attempt to store and item with a key that is already in `memory <ContentAddressableMemory.memory>` is ignored.
-        If True, such items can be stored, and on retrieval using that key, a random entry matching the key is selected.
+        determines whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`.
+        If True (the default), items with keys that are the same as ones in memory can be stored;  on retrieval, a
+        single one is selected based on `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
+        If False, then an attempt to store and item with a key that is already in `memory
+        <ContentAddressableMemory.memory>` is ignored, and the entry already in memory with that key is retrieved.
+        If a duplicate key is identified during retrieval (e.g., **duplicate_keys_allowed** is changed from True to
+        False), a warning is issued and zeros are returned.
         
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST
-        if duplicate_keys_allowed is True, deterimines which entry is retrieved from a set with duplicate keys.
+        deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
+        `distance_function <ContentAddressableMemory.distance_function>`.
 
     max_entries : int
         maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`;  if an attempt is made to add an additional entry
@@ -990,6 +999,8 @@ Keys and values are each stored in their own ordered lists; k
         '''
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
+        # FIX: TEST THAT ATTEMPT TO STORE DUPS WITH duplicate_keys_allowed == False FAILS
+
         previous_value = np.ndarray(shape=(2, 0))
         if len(initializer) == 0:
             return previous_value
@@ -999,7 +1010,10 @@ Keys and values are each stored in their own ordered lists; k
             self.parameters.key_size.set(len(initializer[0][KEYS]), execution_context)
             self.parameters.val_size.set(len(initializer[0][VALS]), execution_context)
             for entry in initializer:
-                self._store_memory(np.array(entry), execution_context)
+                if not self._store_memory(np.array(entry), execution_context):
+                    warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
+                                  f"that has the same key as a previous one, while 'duplicate_keys_allowed'==False; "
+                                  f"that entry has been skipped")
             return self._memory
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -1226,10 +1240,11 @@ Keys and values are each stored in their own ordered lists; k
         if len(d[KEYS]) >= self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
 
-        # If dupliciate keys are not allowed and key matches any existing keys then don't encode
-        if ((not self.duplicate_keys_allowed)
-                and any(d<=EPSILON for d in [self.distance_function([key, list(m)]) for m in d[KEYS]])):
-            pass
+        # If dupliciate keys are not allowed and key matches any existing keys then warn and don't encode
+        if (self.duplicate_keys_allowed == False
+                # and any(d<=EPSILON for d in [self.distance_function([key, list(m)]) for m in d[KEYS]])):
+                and any(list(key)==list(m) for m in d[KEYS])):
+            success = False
         else:
             # Append new items as lists
             keys = list(d[KEYS])
@@ -1238,9 +1253,11 @@ Keys and values are each stored in their own ordered lists; k
             values.append(val)
             # Return 3d array with keys and vals as lists
             d = np.array([keys, values])
+            success = True
 
         self.parameters.previous_value.set(d,execution_id)
         self._memory = d
+        return success
 
     @tc.typecheck
     def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):

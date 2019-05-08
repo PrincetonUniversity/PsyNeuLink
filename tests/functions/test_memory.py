@@ -360,4 +360,24 @@ def test_ContentAddressableMemory_without_assoc():
     assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]
 
 
+def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning():
+
+    warning_text = ''
+    with pytest.warns(UserWarning) as warning_msg:
+        em = EpisodicMemoryMechanism(
+                name='EPISODIC MEMORY MECH',
+                content_size=3,
+                assoc_size=3,
+                function = ContentAddressableMemory(
+                        initializer=np.array([[[1,2,3], [4,5,6]],
+                                              [[1,2,3], [7,8,9]]]),
+                        duplicate_keys_allowed=False,
+                        equidistant_keys_select=RANDOM,
+                        retrieval_prob = 1.0
+                )
+        )
+    warning_txt = warning_msg[0].message.args[0]
+    assert 'Attempt to initialize memory of ContentAddressableMemory with an entry ([[1 2 3]' in warning_txt
+    assert np.allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
+
 
