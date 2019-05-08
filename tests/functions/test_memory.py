@@ -380,4 +380,28 @@ def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning():
     assert 'Attempt to initialize memory of ContentAddressableMemory with an entry ([[1 2 3]' in warning_txt
     assert np.allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
+def test_ContentAddressableMemory_add_and_delete_memories():
+
+    em = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]]],
+            duplicate_keys_allowed=True,
+            equidistant_keys_select=RANDOM,
+            retrieval_prob = 1.0,
+            storage_prob = 1.0
+    )
+    em.add_memories([[[10,20,30],[40,50,60]],
+                     [[11,21,31],[41,51,61]]])
+
+    expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                       [[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    em.delete_memories([[[1,2,3],[4,5,6]]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]]]
+    assert np.allclose(em.memory, expected_memory)
 
