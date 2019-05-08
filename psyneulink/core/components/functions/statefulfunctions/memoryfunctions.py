@@ -1014,8 +1014,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         '''
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
-        # FIX: TEST THAT ATTEMPT TO STORE DUPS WITH duplicate_keys_allowed == False FAILS
-
         previous_value = np.ndarray(shape=(2, 0))
         if len(initializer) == 0:
             return previous_value
