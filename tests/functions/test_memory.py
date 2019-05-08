@@ -130,7 +130,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
             function = ContentAddressableMemory(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
                     duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -140,13 +140,22 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
+    # Run again to test re-initialization and random retrieval
+    em.function.reinitialize(np.array([stimuli['A'], stimuli['F']]))
+    retrieved_keys=[]
+    for key in sorted(stimuli.keys()):
+        retrieved = [i for i in em.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_keys.append(retrieved_key)
+    assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
+
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
@@ -180,7 +189,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
             function = ContentAddressableMemory(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
                     duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -191,12 +200,12 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
@@ -229,7 +238,7 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
             assoc_size=3,
             function = ContentAddressableMemory(
                     duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -237,15 +246,15 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
@@ -278,7 +287,7 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
             assoc_size=4,
             function = ContentAddressableMemory(
                     duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -286,15 +295,15 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
@@ -330,7 +339,7 @@ def test_ContentAddressableMemory_without_assoc():
             function = ContentAddressableMemory(
                     # initializer=np.array([stimuli['F'], stimuli['F']]),
                     duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM,
+                    equidistant_keys_select=RANDOM,
                     retrieval_prob = 1.0
             )
     )
