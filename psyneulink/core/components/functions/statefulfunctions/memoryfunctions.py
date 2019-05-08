@@ -1263,11 +1263,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     def add_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
         """Insert one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
 
-        add key-value pairs to `memory <ContentAddressableMemory.memory>`.
-
         Arguments
         ---------
-        memories : list or array
+        memories : list or 3d array
             a list or array of 2d arrays, each of which must be a valid "memory" consisting of two items,
             a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
             length and equal to the length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
@@ -1281,26 +1279,34 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self._store_memory(memory, execution_id)
 
     @tc.typecheck
-    def delete_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
-        """Insert one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
-
-        add key-value pairs to `memory <ContentAddressableMemory.memory>`.
+    def delete_memories(self, memories:tc.any(list, np.ndarray), key_only:bool= True, execution_id=None):
+        """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
 
         Arguments
         ---------
-        memories : list or array
+        memories : list or 3d array
             a list or array of 2d arrays, each of which must be a valid "memory" consisting of two items,
-            a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
-            length and equal to the length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
-        """
-        memories = np.array(memories)
-        if not 2 <= memories.ndim <= 3:
-            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
-                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
-        for memory in memories:
-            # self._store_memory(memory[0], memory[1], execution_id)
-            self._store_memory(memory, execution_id)
+            a key and a value, each of which is a list of numbers or 1d array.
 
+        key_only :  bool : default True
+            if True, delete all memories with the same keys as those listed in **memories**;  if False,
+            delete only memories that have the same key *and* value as those listed in **memories**.
+
+        """
+        for memory in memories:
+            self._validate_memory(memory, execution_id)
+
+        keys = [list(k) for k in memories[0]]
+        vals = [list(k) for k in memories[0]]
+
+        for i, key in enumerate(keys):
+            for j, stored_key in enumerate(self._memory[KEYS]):
+                if key == list(stored_key):
+                    if key_only or vals[j] == list(self._memory[VALS][j]):
+                        memory_keys = np.delete(self._memory[KEYS],j,axis=0)
+                        memory_vals = np.delete(self._memory[VALS],j,axis=0)
+                        self._memory = np.array([list(memory_keys), list(memory_vals)])
+                        self.parameters.previous_value.set(self._memory, execution_id)
 
     @property
     def memory(self):
