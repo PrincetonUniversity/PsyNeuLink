@@ -386,6 +386,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
     (using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`).
 
+    The class also provides methods for directly retrieving a memory (`get_memory
+    <ContentAddressableMemory.get_memory>`), and adding (`add_memories <ContentAddressableMemory.add_memories>`)
+    and deleting (`delete_memories <ContentAddressableMemory.delete_memories>`) sets of memories.
+
     .. _ContentAddressableMemory_Structure:
 
     Structure
@@ -1272,7 +1276,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     @tc.typecheck
     def add_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
-        """Insert one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
+        """Add one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
 
         Arguments
         ---------
