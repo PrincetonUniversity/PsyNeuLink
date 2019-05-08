@@ -1211,7 +1211,9 @@ class GridSearch(OptimizationFunction):
     def _get_search_dim(self, ctx, d):
         if isinstance(d.generator, list):
             return ctx.convert_python_struct_to_llvm_ir(d.generator)
-        assert False, "Unsupported dimension type"
+        if isinstance(d, SampleIterator):
+            return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
+        assert False, "Unsupported dimension type: {}".format(d)
 
     def _get_param_struct_type(self, ctx):
         search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
@@ -1223,7 +1225,10 @@ class GridSearch(OptimizationFunction):
     def _get_search_dim_init(self, execution_id, d):
         if isinstance(d.generator, list):
             return tuple(d.generator)
-        assert False, "Unsupported dimension type"
+        if isinstance(d, SampleIterator):
+            return tuple((d.start, d.step, d.num))
+
+        assert False, "Unsupported dimension type: {}".format(d)
 
     def _get_param_initializer(self, execution_id):
         grid_init = [self._get_search_dim_init(execution_id, d) for d in self.search_space]
@@ -1276,12 +1281,27 @@ class GridSearch(OptimizationFunction):
         b = builder
         with contextlib.ExitStack() as stack:
             for i in range(len(search_space_ptr.type.pointee)):
-                array = b.gep(search_space_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                assert isinstance(array.type.pointee,  pnlvm.ir.ArrayType)
+                dimension = b.gep(search_space_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 arg_elem = b.gep(sample_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, array, "loop_"+str(i)))
-                array_elem = b.gep(array, [ctx.int32_ty(0), idx])
-                b.store(b.load(array_elem), arg_elem)
+                if isinstance(dimension.type.pointee,  pnlvm.ir.ArrayType):
+                    b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, dimension, "loop_" + str(i)))
+                    alloc_elem = b.gep(dimension, [ctx.int32_ty(0), idx])
+                    b.store(b.load(alloc_elem), arg_elem)
+                elif isinstance(dimension.type.pointee, pnlvm.ir.LiteralStructType):
+                    assert len(dimension.type.pointee) == 3
+                    start_ptr = b.gep(dimension, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                    step_ptr = b.gep(dimension, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                    num_ptr = b.gep(dimension, [ctx.int32_ty(0), ctx.int32_ty(2)])
+                    start = b.load(start_ptr)
+                    step = b.load(step_ptr)
+                    num = b.load(num_ptr)
+                    b, idx = stack.enter_context(pnlvm.helpers.for_loop_zero_inc(b, num, "loop_" + str(i)))
+                    val = b.uitofp(idx, start.type)
+                    val = b.fmul(val, step)
+                    val = b.fadd(val, start)
+                    b.store(val, arg_elem)
+                else:
+                    assert False, "Unknown dimension type: {}".format(dimension.type)
 
             # We are in the inner most loop now with sample_ptr setup for execution
             b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])

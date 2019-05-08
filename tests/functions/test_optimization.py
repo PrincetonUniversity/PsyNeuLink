@@ -4,14 +4,14 @@ import psyneulink.core.components.functions.function as Function
 import psyneulink.core.components.functions.objectivefunctions as Functions
 import psyneulink.core.components.functions.optimizationfunctions as OPTFunctions
 import psyneulink.core.globals.keywords as kw
-from psyneulink.core.globals.sampleiterator import SampleIterator
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 import pytest
 
 SIZE=5
 # Some metrics (CROSS_ENTROPY) don't like 0s
 test_var = np.random.rand(SIZE) + Function.EPSILON
 EPS = float(Function.EPSILON)
-search_space = [SampleIterator([EPS, 1.0]) for i in range(SIZE)]
+search_space = [SampleIterator([EPS, 1.0] if i % 2 == 0 else SampleSpec(start=EPS, stop=1.0, num=2)) for i in range(SIZE)]
 results = {
     Functions.Stability: {
         kw.ENERGY: {
