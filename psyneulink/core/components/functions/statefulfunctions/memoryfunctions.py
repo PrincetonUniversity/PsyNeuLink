@@ -477,7 +477,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
         `variable  <ContentAddressableMemory.variable>`.
 
-    duplicate_keys_allowed : bool : default False
+    duplicate_keys : bool | OVERWRITE : default False
         specifies whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`
         (see `duplicate_keys_allowed <ContentAddressableMemory.duplicate_keys_allowed for additional details>`).
 
@@ -544,14 +544,15 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     previous_value : 1d array
         state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable <ContentAddressableMemory.variable>` in the current call.
 
-    duplicate_keys_allowed : bool
+    duplicate_keys_allowed : bool | OVERWRITE
         determines whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`.
         If True (the default), items with keys that are the same as ones in memory can be stored;  on retrieval, a
         single one is selected based on `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
         If False, then an attempt to store and item with a key that is already in `memory
         <ContentAddressableMemory.memory>` is ignored, and the entry already in memory with that key is retrieved.
         If a duplicate key is identified during retrieval (e.g., **duplicate_keys_allowed** is changed from True to
-        False), a warning is issued and zeros are returned.
+        False), a warning is issued and zeros are returned.  If *OVERWRITE*, then retrieval of a cue with an identical
+        key causes the value at that entry to be overwritten with the new value.
         
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST
         deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
@@ -612,7 +613,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `duplicate_keys_allowed <ContentAddressableMemory.duplicate_keys_allowed>`
 
                     :default value: False
-                    :type: bool
+                    :type: bool or string
 
                 equidistant_keys_select
                     see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
@@ -690,7 +691,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                  initializer=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
-                 duplicate_keys_allowed:bool=False,
+                 duplicate_keys_allowed:tc.any(bool, tc.enum(OVERWRITE))=False,
                  equidistant_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
                  max_entries=1000,
                  seed=None,
