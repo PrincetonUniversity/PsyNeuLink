@@ -364,22 +364,39 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         initializer=None,                            \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
+        equidistant_keys_selection=RANDOM,           \
         duplicate_keys_allowed=False,                \
-        duplicate_keys_select=RANDOM,                \
         max_entries=None,                            \
         params=None,                                 \
         owner=None,                                  \
         prefs=None,                                  \
         )
 
-    Implements simple form of Differential Neural Dictionary described in `Ritter et al.
-    <http://arxiv.org/abs/1805.09692>`_
-
-    Based on implementation in `dlstm <https://github.com/qihongl/dlstm-demo>`_ by
-    `Qihong Lu <https://github.com/qihongl>`_ (see also  `Kaiser et al. <http://arxiv.org/abs/1703.03129>`_
-    and `Pritzel et al. <http://arxiv.org/abs/1703.01988>`_).
-
     .. _ContentAddressableMemory:
+
+    Implements a configurable, dictionary-style storage and retrieval of key-value pairs, in which retrieval of items
+    is determined by a `distance_function <ContentAddressableMemory.distance_function>` and a selection_function
+    <ContentAddressableMemory.selection_function>` as decribed under `Execution <ContentAddressableMemory_Execution>`
+    below.  Keys and values can have different lengths, but all keys must be the same length, and as must all values.
+    Duplicate keys can be allowed or disallowed (see `duplicate_keys_allowed
+    <ContentAddressableMemory.duplicate_keys_allowed>);
+
+    FIX: FINISH
+
+    .. _ContentAddressableMemory_Options:
+
+    Options
+    -------
+
+    .. _ContentAddressableMemory_Structure:
+
+    Structure
+    ---------
+
+    .. _ContentAddressableMemory_Execution:
+
+    Execution
+    ---------
 
     * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, retrieve vector from `memory <ContentAddressableMemory.memory>` using
       first item of `variable <ContentAddressableMemory.variable>` as key, and the matching algorithm specified by `distance_function
@@ -394,6 +411,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         variable[1] * rate + noise
 
     .. note::
+Keys and values are each stored in their own ordered lists; k
        * Keys in `memory <ContentAddressableMemory.memory>` are stored as tuples (since lists and arrays are not hashable);
          they are converted to arrays for evaluation during retrieval.
        ..
@@ -407,39 +425,42 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
     retrieval_prob : float in interval [0,1] : default 1.0
-        specifies probability of retrieiving a value from `memory <ContentAddressableMemory.memory>`.
+        specifies probability of retrieiving a key from `memory <ContentAddressableMemory.memory>`.
 
     storage_prob : float in interval [0,1] : default 1.0
-        specifies probability of adding `variable <ContentAddressableMemory.variable>` to `memory <ContentAddressableMemory.memory>`.
+        specifies probability of adding `variable <ContentAddressableMemory.variable>` to `memory
+        <ContentAddressableMemory.memory>`.
 
     rate : float, list, or array : default 1.0
-        specifies a value used to multiply key (first item of `variable <ContentAddressableMemory.variable>`) before storing in `memory
-        <ContentAddressableMemory.memory>` (see `rate <ContentAddressableMemory.noise> for details).
+        specifies a value used to multiply key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `rate <ContentAddressableMemory.noise> for details).
 
     noise : float, list, array, or Function : default 0.0
-        specifies a random value added to key (first item of `variable <ContentAddressableMemory.variable>`) before storing in `memory
-        <ContentAddressableMemory.memory>` (see `noise <ContentAddressableMemory.noise> for details).
+        specifies a random value added to key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `noise <ContentAddressableMemory.noise> for details).
 
     initializer : 3d array or list : default None
-        specifies an initial set of entries for `memory <ContentAddressableMemory.memory>`. It must be of the following form:
-        [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
+        specifies an initial set of entries for `memory <ContentAddressableMemory.memory>`. It must be of the following
+        form: [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
         is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
         lists of the same length, and similarly for the values.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
-        specifies the function used during retrieval to compare the first item in `variable <ContentAddressableMemory.variable>`
-        with keys in `memory <ContentAddressableMemory.memory>`.
+        specifies the function used during retrieval to compare the first item in `variable
+        <ContentAddressableMemory.variable>` with keys in `memory <ContentAddressableMemory.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <ContentAddressableMemory.distance_function>` and select the item to return.
 
-    duplicate_keys_allowed : bool : default False
-        specifies whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>` (see `duplicate_keys_allowed
-        <ContentAddressableMemory.duplicate_keys_allowed for additional details>`).
+    FIX: FINISH REFACTORING AROUND THIS
+    equidistant_keys_selection:  RANDOM | OLDEST | NEWEST : default RANDOM
+        specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
+        `variable  <ContentAddressableMemory.variable>`.
 
-    duplicate_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
-        if duplicate_keys_allowed is True, specifies which entry is retrieved from a set with duplicate keys.
+    duplicate_keys_allowed : bool : default False
+        specifies whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`
+        (see `duplicate_keys_allowed <ContentAddressableMemory.duplicate_keys_allowed for additional details>`).
 
     max_entries : int : default None
         specifies the maximum number of entries allowed in `memory <ContentAddressableMemory.memory>` (see `max_entries <ContentAddressableMemory.max_entries for
@@ -463,8 +484,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     ----------
 
     variable : 2d array
-        1st item (variable[0] is the key used to retrieve an enrtry from `memory <ContentAddressableMemory.memory>`, and 2nd item
-        (variable[1]) is the value of the entry, paired with key and added to the `memory <ContentAddressableMemory.memory>`.
+        1st item (variable[0] is the key used to retrieve an enrtry from `memory <ContentAddressableMemory.memory>`,
+        and 2nd item (variable[1]) is the value of the entry, paired with key and added to the `memory
+        <ContentAddressableMemory.memory>`.
 
     key_size : int
         length of keys in `memory <ContentAddressableMemory.memory>`.
@@ -508,7 +530,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         then an attempt to store and item with a key that is already in `memory <ContentAddressableMemory.memory>` is ignored.
         If True, such items can be stored, and on retrieval using that key, a random entry matching the key is selected.
         
-    duplicate_keys_select:  RANDOM | OLDEST | NEWEST
+    equidistant_keys_select:  RANDOM | OLDEST | NEWEST
         if duplicate_keys_allowed is True, deterimines which entry is retrieved from a set with duplicate keys.
 
     max_entries : int
@@ -568,8 +590,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     :default value: False
                     :type: bool
 
-                duplicate_keys_select
-                    see `duplicate_keys_select <ContentAddressableMemory.duplicate_keys_select>`
+                equidistant_keys_select
+                    see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
 
                     :default value: False
                     :type: bool
@@ -617,7 +639,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         key_size = Parameter(1, stateful=True)
         val_size = Parameter(1, stateful=True)
         duplicate_keys_allowed = Parameter(False)
-        duplicate_keys_select = Parameter(RANDOM)
+        equidistant_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
@@ -645,7 +667,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
                  duplicate_keys_allowed:bool=False,
-                 duplicate_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
+                 equidistant_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
                  max_entries=1000,
                  seed=None,
                  params: tc.optional(tc.any(list, np.ndarray)) = None,
@@ -674,7 +696,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
                                                   duplicate_keys_allowed=duplicate_keys_allowed,
-                                                  duplicate_keys_select=duplicate_keys_select,
+                                                  equidistant_keys_select=equidistant_keys_select,
                                                   rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
@@ -916,6 +938,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                     format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
 
     def _validate(self):
+        '''Validate distance_function, selection_function and memory store'''
         distance_function = self.distance_function
         test_var = [self.defaults.variable[KEYS], self.defaults.variable[VALS]]
         if isinstance(distance_function, type):
@@ -936,29 +959,26 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                 format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
                                        distance_function))
 
-        # Default to full memory dictionary
+        # Default to full memory
         selection_function = self.selection_function
         test_var = np.asfarray([distance_result if i==0
                                 else np.zeros_like(distance_result)
                                 for i in range(self.get_current_function_param('max_entries'))])
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var)
-            fct_msg = 'Function type'
+            fct_string = 'Function type'
         else:
             selection_function.defaults.variable = test_var
             selection_function._instantiate_value()
-            fct_msg = 'Function'
+            fct_string = 'Function'
         try:
             result = np.asarray(selection_function(test_var))
         except e:
-            raise FunctionError("{} specified for {} arg of {} ({}) must accept a 1d array "
-                                "must accept a list with two 1d arrays or a 2d array as its argument".
-                                format(fct_msg, repr(SELECTION_FUNCTION), self.__class__,
-                                       selection_function))
+            raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+                                f'({selection_function}) must accept a 1d array as its argument')
         if result.shape != test_var.shape:
-            raise FunctionError("Value returned by {} specified for {} ({}) "
-                                "must return an array of the same length it receives".
-                                format(repr(SELECTION_FUNCTION), self.__class__, result))
+            raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
+                                f'({result}) must return an array of the same length it receives')
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         '''Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
@@ -1150,27 +1170,35 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             zeros_val = [0] * self.val_size
             return [zeros_key, zeros_val]
 
+        # Get distances between query_key and all keys in memory
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
-        # get the best-match memory (one with the only non-zero value in the array)
+
+        # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
         selection_array = self.selection_function(distances)
         indices_of_selected_items = np.flatnonzero(selection_array)
-        if self.duplicate_keys_allowed:
-            # FIX ADD HANDLING OF DUPLICATE KEYS ARE BASE ON duplicate_keys_select
-            if self.duplicate_keys_select == RANDOM:
+
+        # Single key identified
+        if len(indices_of_selected_items)==1:
+            index_of_selected_item = int(np.flatnonzero(selection_array))
+        # More than one key identified
+        else:
+            selected_keys = _memory[KEYS]
+            # Check for any duplicate keys in matches and, if they are not allowed, return zeros
+            if (not self.duplicate_keys_allowed
+                    and any(selected_keys[indices_of_selected_items[0]]==selected_keys[other]
+                            for other in indices_of_selected_items[1:])):
+                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
+                                  f'{self.owner.name} even though {repr("duplicate_keys_allowed")} is False')
+                return [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
+            if self.equidistant_keys_select == RANDOM:
                 index_of_selected_item = choice(indices_of_selected_items)
-            elif self.duplicate_keys_select == OLDEST:
+            elif self.equidistant_keys_select == OLDEST:
                 index_of_selected_item = indices_of_selected_items[0]
-            elif self.duplicate_keys_select == NEWEST:
+            elif self.equidistant_keys_select == NEWEST:
                 index_of_selected_item = indices_of_selected_items[-1]
             else:
-                assert False, f'PROGRAM ERROR:  bad specification ({self.duplicate_keys_select}) for  ' \
-                    f'\'duplicate_keys_select parameter of {self.name} for {self.owner.name}'
-        elif len(indices_of_selected_items)==1:
-            index_of_selected_item = int(np.flatnonzero(selection_array))
-        else:
-            warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
-                              f'{self.owner.name} even though {repr("duplicate_keys_allowed")} is False')
-            return [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
+                assert False, f'PROGRAM ERROR:  bad specification ({self.equidistant_keys_select}) for  ' \
+                    f'\'equidistant_keys_select parameter of {self.name} for {self.owner.name}'
         best_match_key = _memory[KEYS][index_of_selected_item]
         best_match_val = _memory[VALS][index_of_selected_item]
 
