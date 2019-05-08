@@ -357,14 +357,16 @@ VALS = 1
 
 class ContentAddressableMemory(MemoryFunction):  # ------------------------------------------------------------------------------
     """
-    ContentAddressableMemory(                                             \
+    ContentAddressableMemory(                        \
         default_variable=None,                       \
+        retrieval_prob = 1.0                         \
+        storage_prob = 1.0                           \
         rate=None,                                   \
         noise=0.0,                                   \
         initializer=None,                            \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
-        equidistant_keys_select=RANDOM,           \
+        equidistant_keys_select=RANDOM,              \
         duplicate_keys_allowed=False,                \
         max_entries=None,                            \
         params=None,                                 \
@@ -374,49 +376,51 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     .. _ContentAddressableMemory:
 
-    Implements configurable, dictionary-style storage and retrieval of key-value pairs, in which retrieval of items
-    is determined by a `distance_function <ContentAddressableMemory.distance_function>` and a selection_function
-    <ContentAddressableMemory.selection_function>` as decribed below.  Keys and values can have different lengths,
-    but all keys must be the same length, and as must all values. Duplicate keys can be allowed or disallowed (by
-    `duplicate_keys_allowed <ContentAddressableMemory.duplicate_keys_allowed), and selection among duplicate keys
-    or ones indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
-    (by `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_selection>`).
-
-    FIX: FINISH
-
-    .. _ContentAddressableMemory_Options:
-
-    Options
-    -------
+    Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage is determined
+    by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by a
+    `distance_function <ContentAddressableMemory.distance_function>`, a selection_function
+    <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
+    Keys and values may have different lengths, but all keys must be the same length, as must all values.
+    Duplicate keys can be allowed or disallowed (using `duplicate_keys_allowed
+    <ContentAddressableMemory.duplicate_keys_allowed), and selection among duplicate keys or ones indistinguishable
+    by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
+    (using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_selection>`).
 
     .. _ContentAddressableMemory_Structure:
 
     Structure
     ---------
 
+    An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
+    pairs can be assigned to the **initialzer** argument of the ContentAddressableMemory's constructor, or in
+    a call to its `reinitialize <ContentAddressableMemory.reinitialize>` method.  The current contents of the memory
+    can be inspected using the `memory <ContentAddressableMemory.memory>` attribute, which returns a list containing
+    the current entries, each as a 2 item list containing a key-value pair.
+
     .. _ContentAddressableMemory_Execution:
 
     Execution
     ---------
 
-    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, retrieve vector from `memory <ContentAddressableMemory.memory>` using
-      first item of `variable <ContentAddressableMemory.variable>` as key, and the matching algorithm specified by `distance_function
-      <ContentAddressableMemory.distance_function>` and `selection_function <ContentAddressableMemory.selection_function>`; if no retrieval occures,
-      an appropriately shaped zero-valued array is returned.
+    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, retrieve an entry from
+      `memory <ContentAddressableMemory.memory>` that has a key that is closest to the query key (first item of
+      `variable <ContentAddressableMemory.variable>`), as determined by the `distance_function
+      <ContentAddressableMemory.distance_function>` and `selection_function
+      <ContentAddressableMemory.selection_function>`.  The `distance_function
+      <ContentAddressableMemory.distance_function>` generates a list of distances of each key in memory from the
+      query key;  the `selection_function <ContentAddressableMemory.selection_function>` determines how to select
+      ones for consideration.  If more than one eligible entry is identified, use `equidistant_keys_select
+      <ContentAddressableMemory.equidistant_keys_select>` to determine which to retrieve.  If no retrieval occurs,
+      return an appropriately shaped zero-valued array.
     ..
-    * Then, with probability `storage_prob <ContentAddressableMemory.storage_prob>` add new entry using the first item of `variable
-      <ContentAddressableMemory.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
-      **noise** arguments are applied to the key before storing:
+    * Then, with probability `storage_prob <ContentAddressableMemory.storage_prob>`, add new entry using the first
+      item of `variable <ContentAddressableMemory.variable>` as the key and its second item as the value.  If the
+      key is identical to one already in `memory <ContentAddressableMemory.memory>` and `duplicate_keys_allowed
+      <ContentAddressableMemory.duplicate_keys_allowed>` is False, skip storage.  If **rate** and/or **noise**
+      arguments are specified in the construtor, apply to the key before storing, as follows:
 
     .. math::
         variable[1] * rate + noise
-
-    .. note::
-Keys and values are each stored in their own ordered lists; k
-       * Keys in `memory <ContentAddressableMemory.memory>` are stored as tuples (since lists and arrays are not hashable);
-         they are converted to arrays for evaluation during retrieval.
-       ..
-       * All keys must be the same length (for comparision during retrieval).
 
     Arguments
     ---------
