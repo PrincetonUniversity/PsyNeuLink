@@ -1283,9 +1283,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
             length and equal to the length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
         """
-        for memory in memories:
-            self._validate_memory(memory, execution_id)
-
+        memories = np.array(memories)
+        if not 2 <= memories.ndim <= 3:
+            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
+                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
         for memory in memories:
             # self._store_memory(memory[0], memory[1], execution_id)
             self._store_memory(memory, execution_id)
@@ -1305,6 +1306,12 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             delete only memories that have the same key *and* value as those listed in **memories**.
 
         """
+
+        memories = np.array(memories)
+        if not 2 <= memories.ndim <= 3:
+            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
+                                format(repr('memories'), repr('delete_memories'), self.__class__.__name ))
+
         for memory in memories:
             self._validate_memory(memory, execution_id)
 
