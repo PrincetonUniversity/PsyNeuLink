@@ -355,12 +355,12 @@ KEYS = 0
 VALS = 1
 
 
-class ContentAddressableMemory(MemoryFunction):  # ------------------------------------------------------------------------------
+class ContentAddressableMemory(MemoryFunction):  # ---------------------------------------------------------------------
     """
     ContentAddressableMemory(                        \
         default_variable=None,                       \
-        retrieval_prob = 1.0                         \
-        storage_prob = 1.0                           \
+        retrieval_prob=1.0                           \
+        storage_prob=1.0                             \
         rate=None,                                   \
         noise=0.0,                                   \
         initializer=None,                            \
@@ -377,14 +377,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     .. _ContentAddressableMemory:
 
     Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage is determined
-    by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by a
-    `distance_function <ContentAddressableMemory.distance_function>`, a selection_function
+    by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by
+    `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
     <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
     Keys and values may have different lengths, but all keys must be the same length, as must all values.
     Duplicate keys can be allowed or disallowed (using `duplicate_keys_allowed
-    <ContentAddressableMemory.duplicate_keys_allowed), and selection among duplicate keys or ones indistinguishable
+    <ContentAddressableMemory.duplicate_keys_allowed>`), and selection among duplicate keys or ones indistinguishable
     by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
-    (using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_selection>`).
+    (using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`).
 
     .. _ContentAddressableMemory_Structure:
 
@@ -458,7 +458,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <ContentAddressableMemory.distance_function>` and select the item to return.
 
-    FIX: FINISH REFACTORING AROUND THIS
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
         `variable  <ContentAddressableMemory.variable>`.
