@@ -72,6 +72,85 @@ class TestReinforcement:
                                                         [2.08614798], [1.85006765], [2.30401336], [2.08614798],
                                                         [1.85006765]])
 
+    def test_td(self):
+        sample = pnl.TransferMechanism(
+            default_variable=np.zeros(10),
+            name=pnl.SAMPLE
+        )
+
+        action_selection = pnl.TransferMechanism(
+            default_variable=np.zeros(10),
+            function=pnl.Linear(slope=1.0, intercept=1.0),
+            name='Action Selection'
+        )
+
+        stimulus_onset = 2
+        reward_delivery = 4
+
+        samples = np.zeros(10)
+        samples[stimulus_onset:] = 1
+        samples = np.tile(samples, (20, 1))
+
+        targets = np.zeros(10)
+        targets[reward_delivery] = 1
+        targets = np.tile(targets, (20, 1))
+
+        # training begins at trial 11
+        # no reward given every 15 trials to simulate a wrong response
+        no_reward_trials = [
+            # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 29, 44, 59, 74,
+            #                 89, 104, 119
+        ]
+        for t in no_reward_trials:
+            targets[t][reward_delivery] = 0
+
+        sample_to_action_selection = pnl.MappingProjection(sender=sample,
+                                                           receiver=action_selection,
+                                                           matrix=np.zeros((10, 10)))
+
+        comp = pnl.Composition(name='TD_Learning')
+        pathway = [sample, sample_to_action_selection, action_selection]
+        comp.add_td_learning_pathway(pathway)
+        comp.show_graph()
+        # learning_projection = pnl.LearningProjection(
+        #     learning_function=pnl.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
+        # )
+
+        # p = pnl.Process(
+        #     default_variable=np.zeros(60),
+        #     pathway=[sample, action_selection],
+        #     learning=learning_projection,
+        #     size=60,
+        #     target=np.zeros(60)
+        # )
+        trial = 0
+
+
+        input_list = {
+            sample: samples
+        }
+
+        target_list = {
+            action_selection: targets
+        }
+
+        # s = pnl.System(processes=[p])
+
+        delta_vals = np.zeros((20, 10))
+        comp.run(inputs=input_list)
+        print()
+        for i, result in enumerate(comp.results):
+            print("Trial ", i, " Results = ", result)
+            print("[Trial input = ", samples[i], "]\n\n")
+
+        # s.run(
+        #     num_trials=120,
+        #     inputs=input_list,
+        #     targets=target_list,
+        #     learning=True,
+        #     call_before_trial=print_header,
+        #     call_after_trial=store_delta_vals
+        # )
 # class TestBackprop:
 #
 #     def test_backprop(self):

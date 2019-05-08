@@ -2146,7 +2146,7 @@ class TDLearning(Reinforcement):
             raise ComponentError("Variable for {} ({}) must have three items (input, output, and error arrays)".
                                  format(self.name, variable))
 
-        if len(variable[LEARNING_ERROR_OUTPUT]) != len(variable[LEARNING_ACTIVATION_OUTPUT]):
-            raise ComponentError("Error term does not match the length of the sample sequence")
+        # if len(variable[LEARNING_ERROR_OUTPUT]) != len(variable[LEARNING_ACTIVATION_OUTPUT]):
+        #     raise ComponentError("Error term does not match the length of the sample sequence")
 
         return variable

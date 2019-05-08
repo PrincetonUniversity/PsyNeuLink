@@ -600,8 +600,8 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
-from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -628,6 +628,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
+from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 
 __all__ = [
 
@@ -1662,6 +1663,49 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.has_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
+    def _create_td_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
+        # Create learning components
+        target_mechanism = ProcessingMechanism(name='Target')
+
+        # comparator_mechanism = ComparatorMechanism(
+        #     # name='Comparator',
+        #     #                                        target={NAME: TARGET,
+        #     #                                                VARIABLE: [0.]},
+        #     #                                        sample={NAME: SAMPLE,
+        #     #                                                VARIABLE: [0.], WEIGHT: -1},
+        #     #                                        function=error_function,
+        #     #                                        output_states=[OUTCOME, MSE]
+        # )
+
+        comparator_mechanism = PredictionErrorMechanism(
+            sample={NAME: SAMPLE,
+                    VARIABLE: output_source.value,
+                    # PROJECTIONS: [lc.activation_mech_output]
+                    },
+            target={NAME: TARGET,
+                    VARIABLE: output_source.value
+                    },
+            function=PredictionErrorDeltaFunction(gamma=1.0),
+            # name="{} {}".format(output_source.name
+            #                     # PREDICTION_ERROR_MECHANISM
+            #                     )
+        )
+
+        learning_mechanism = LearningMechanism(function=TDLearning(
+            # default_variable=[input_source.output_states[0].value,
+            #                                                                             output_source.output_states[0].value,
+            #                                                                             comparator_mechanism.output_states[0].value],
+            #
+            #                                                           learning_rate=learning_rate
+        ),
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 comparator_mechanism.output_states[0].value],
+                                               error_sources=comparator_mechanism,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+        self.has_learning = True
+        return target_mechanism, comparator_mechanism, learning_mechanism
     def _create_backprop_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target',
@@ -1788,6 +1832,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
+    def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+
+        if not error_function:
+            error_function = LinearCombination()
+
+        # Processing Components
+        input_source, output_source, learned_projection = self._unpack_processing_components_of_learning_pathway(pathway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+
+        # Learning Components
+        target, comparator, learning_mechanism = self._create_td_related_mechanisms(input_source,
+                                                                                    output_source,
+                                                                                    error_function,
+                                                                                    learned_projection,
+                                                                                    learning_rate)
+        self.add_nodes([target, comparator, learning_mechanism])
+
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target,
+                                                                                 comparator,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, learning_projection=True)
+
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
+                                       COMPARATOR_MECHANISM: comparator,
+                                       TARGET_MECHANISM: target,
+                                       LEARNED_PROJECTION: learned_projection}
+
+        return learning_related_components
     def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None):
         if not error_function:
             error_function = LinearCombination()
