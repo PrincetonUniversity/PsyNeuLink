@@ -1296,7 +1296,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         shadow_proj._activate_for_compositions(self)
 
     def _parse_projection_spec(self, projection, name):
-
         if isinstance(projection, (np.ndarray, np.matrix, list)):
             return MappingProjection(matrix=projection, name=name)
         elif isinstance(projection, str):
@@ -1305,12 +1304,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
         elif isinstance(projection, ModulatoryProjection_Base):
-            pass
+            return projection
         elif projection is None:
             return MappingProjection(name=name)
         elif not isinstance(projection, Projection):
             raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
                                    .format(projection, self.name))
+        return projection
 
     def _parse_sender_spec(self, projection, sender):
         if sender is None:
@@ -1359,9 +1359,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection.sender.owner != sender_mechanism:
                 raise CompositionError("The position of {} in {} conflicts with its sender attribute."
                                        .format(projection.name, self.name))
-        return sender
+        return sender, sender_mechanism, graph_sender, subcompositions
 
-    def _parse_receiver_spec(self, projection, receiver):
+    def _parse_receiver_spec(self, projection, receiver, sender, subcompositions, learning_projection):
         # Manage receiver spec -------------------------------------------------
 
         if receiver is None:
@@ -1372,10 +1372,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a receiver specification. ".format(projection.name))
         graph_receiver = receiver
-
+        receiver_input_state = None
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        learning_projection = False
 
         if isinstance(receiver, Mechanism):
             receiver_mechanism = receiver
@@ -1407,9 +1406,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(receiver, self.name,
                                           Mechanism.__name__, InputState.__name__, Composition.__name__))
 
-        return receiver, receiver_mechanism, receiver_input_state
+        return receiver, receiver_mechanism, graph_receiver, receiver_input_state, subcompositions, learning_projection
 
-    def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, name=None):
+    def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, learning_projection=False, name=None):
         '''
 
             Adds a projection to the Composition, if it is not already added.
@@ -1449,21 +1448,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         '''
 
         projection = self._parse_projection_spec(projection, name)
-        sender, sender_mechanism, sender_input_state = self._parse_sender_spec(projection, sender)
-        receiver, receiver_mechanism, receiver_input_state = self._parse_receiver_spec(projection, receiver)
+        sender, sender_mechanism, graph_sender, subcompositions = self._parse_sender_spec(projection, sender)
+        receiver, receiver_mechanism, graph_receiver, receiver_input_state, subcompositions, learning_projection = \
+            self._parse_receiver_spec(projection, receiver, sender, subcompositions, learning_projection)
 
-        # # MODIFIED 2/19/19 OLD:
-        # if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
-        #         and not isinstance(receiver, Composition)
-        #         and receiver not in self.nodes
-        #         and not learning_projection):
-        # MODIFIED 2/19/19 NEW: [JDC]
         if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
                 and receiver_mechanism not in self.nodes
                 and not learning_projection):
-        # MODIFIED 2/19/19 END
-
             # Check if receiver is in a nested Composition and, if so, if it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1787,7 +1779,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_projections(learning_related_projections)
 
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection)
+        self.add_projection(learning_projection, learning_projection=True)
 
         learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
                                        COMPARATOR_MECHANISM: comparator,
