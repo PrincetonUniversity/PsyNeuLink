@@ -1166,8 +1166,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
         if len(key) != self.parameters.key_size.get(execution_id):
-            raise FunctionError("Length of 'key'({}) to store in {} must be same as others in the dict ({})".
-                                format(len(key), self.__class__.__name__, self.parameters.key_size.get(execution_id)))
+            raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
+                                f"must be same as others in the dict ({self.parameters.key_size.get(execution_id)})")
 
     @tc.typecheck
     def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id=None):
@@ -1304,10 +1304,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
             length and equal to the length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
         """
-        memories = np.array(memories)
-        if not 2 <= memories.ndim <= 3:
-            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
-                                format(repr('memories'), repr('add_memories'), self.__class__.__name ))
+        memories = self._parse_memories(memories, 'add_memories', execution_id)
+
         for memory in memories:
             self._store_memory(memory, execution_id)
 
@@ -1326,14 +1324,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             delete only memories that have the same key *and* value as those listed in **memories**.
 
         """
-
-        memories = np.array(memories)
-        if not 2 <= memories.ndim <= 3:
-            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
-                                format(repr('memories'), repr('delete_memories'), self.__class__.__name ))
-
-        for memory in memories:
-            self._validate_memory(memory, execution_id)
+        memories = self._parse_memories(memories, 'add_memories', execution_id)
 
         keys = [list(k) for k in memories[0]]
         vals = [list(k) for k in memories[0]]
@@ -1347,10 +1338,26 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         self._memory = np.array([list(memory_keys), list(memory_vals)])
                         self.parameters.previous_value.set(self._memory, execution_id)
 
+    def _parse_memories(self, memories, method, execution_id=None):
+        '''Parse passing of single vs. multiple memories, validate memories, and return ndarray'''
+        memories = np.array(memories)
+        if not 1 <= memories.ndim <= 3:
+            raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
+                                f"must be a 2-item list or 2d array, or a list or 3d array containing those")
+
+        if (memories.ndim == 2 and memories.dtype != object) or (memories.ndim == 1 and memories.dtype == object):
+            memories = np.expand_dims(memories,axis=0)
+
+        for memory in memories:
+            self._validate_memory(memory, execution_id)
+
+        return memories
+
     @property
     def memory(self):
         try:
             # Return 3d array with keys and vals as lists
+            # IMPLEMENTATION NOTE:  array is used for multi-line printout
             return np.array(list(zip(self._memory[KEYS],self._memory[VALS])))
         except:
             return np.array([])
