@@ -1220,7 +1220,13 @@ class GridSearch(OptimizationFunction):
         search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
         space = pnlvm.ir.LiteralStructType(search_space)
         select_randomly = ctx.int32_ty
-        obj_func_param = ctx.get_param_struct_type(self.objective_function)
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            composition = self.objective_function.__self__.agent_rep
+            obj_func_param = composition._get_param_struct_type(ctx, True)
+        except AttributeError:
+            obj_func_param = ctx.get_param_struct_type(self.objective_function)
         return pnlvm.ir.LiteralStructType([obj_func_param, space, select_randomly])
 
     def _get_search_dim_init(self, execution_id, d):
@@ -1234,18 +1240,41 @@ class GridSearch(OptimizationFunction):
     def _get_param_initializer(self, execution_id):
         grid_init = [self._get_search_dim_init(execution_id, d) for d in self.search_space]
         select_randomly = 1 if self.select_randomly_from_optimal_values else 0
-        return tuple([self.objective_function._get_param_initializer(execution_id), tuple(grid_init), select_randomly])
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            composition = self.objective_function.__self__.agent_rep
+            obj_func_param_init = composition._get_param_initializer(execution_id, True)
+        except AttributeError:
+            obj_func_param_init = self.objective_function._get_param_initializer(execution_id)
+        return tuple([obj_func_param_init, tuple(grid_init), select_randomly])
 
     def _get_context_struct_type(self, ctx):
-        obj_state = ctx.get_context_struct_type(self.objective_function)
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            composition = self.objective_function.__self__.agent_rep
+            comp_state = composition._get_context_struct_type(ctx, True)
+            comp_data = composition._get_data_struct_type(ctx)
+            obj_func_state = pnlvm.ir.LiteralStructType([comp_state, comp_data])
+        except AttributeError:
+            obj_func_state = ctx.get_context_struct_type(self.objective_function)
         # Get random state
         random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
-        return pnlvm.ir.LiteralStructType([obj_state, random_state_struct])
+        return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
 
     def _get_context_initializer(self, execution_id):
-        obj_init = self.objective_function._get_context_initializer(execution_id)
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            composition = self.objective_function.__self__.agent_rep
+            comp_state = composition._get_context_initializer(execution_id, True)
+            comp_data = composition._get_data_initializer(execution_id)
+            obj_func_state_init = (comp_state, comp_data)
+        except AttributeError:
+            obj_func_state_init = self.objective_function._get_context_initializer(execution_id)
         random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
-        return tuple([obj_init, pnlvm._tupleize(random_state)])
+        return (obj_func_state_init, pnlvm._tupleize(random_state))
 
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value

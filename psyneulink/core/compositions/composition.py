@@ -3579,7 +3579,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Exec failed for some reason, we can still try node level bin_execute
                 # Filter out mechanisms. Nested compositions are not executed in this mode
-                mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
+                # Filter out controller. Compilation of controllers is not supported yet
+                mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism) and n is not self.controller]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
                     self._get_node_wrapper(m)
@@ -4227,16 +4228,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             yield n
         yield self.input_CIM
         yield self.output_CIM
+        if self.controller:
+            yield self.controller
 
-    def _get_param_struct_type(self, ctx):
-        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+    def _get_param_struct_type(self, ctx, simulation=False):
+        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes if m is not self.controller or not simulation)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
-    def _get_context_struct_type(self, ctx):
-        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
+    def _get_context_struct_type(self, ctx, simulation=False):
+        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes if m is not self.controller or not simulation)
         proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_ctx_type_list),
@@ -4249,24 +4252,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
+        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
 
-        if self.controller is not None:
-            controller_output = ctx.get_output_struct_type(self.controller)
-            output_type_list.append(controller_output)
         data = [pnlvm.ir.LiteralStructType(output_type_list)]
         for node in self.nodes:
             nested_data = ctx.get_data_struct_type(node)
             data.append(nested_data)
         return pnlvm.ir.LiteralStructType(data)
 
-    def _get_context_initializer(self, execution_id=None):
-        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id)) for m in self._all_nodes)
+    def _get_context_initializer(self, execution_id=None, simulation=False):
+        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id)) for m in self._all_nodes if m is not self.controller or not simulation)
         proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-    def _get_param_initializer(self, execution_id):
-        mech_params = (tuple(m._get_param_initializer(execution_id)) for m in self._all_nodes)
+    def _get_param_initializer(self, execution_id, simulation=False):
+        mech_params = (tuple(m._get_param_initializer(execution_id)) for m in self._all_nodes if m is not self.controller or not simulation)
         proj_params = (tuple(p._get_param_initializer(execution_id)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
@@ -4281,8 +4281,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_data_initializer(self, execution_id=None):
         output = [(os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes]
-        if self.controller is not None:
-            output.append(self._get_flattened_controller_output(execution_id))
         data = [output]
         for node in self.nodes:
             nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node,
@@ -4292,8 +4290,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
-        if node is self.controller:
-            return len(node_list)
         return node_list.index(node)
 
     def _get_node_wrapper(self, node):
@@ -4422,7 +4418,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
-                if par_mech in self._all_nodes or par_mech is self.controller:
+                if par_mech in self._all_nodes:
                     par_idx = self._get_node_index(par_mech)
                 else:
                     comp = par_mech.composition
