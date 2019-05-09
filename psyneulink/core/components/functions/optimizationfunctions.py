@@ -1210,7 +1210,8 @@ class GridSearch(OptimizationFunction):
 
     def _get_search_dim(self, ctx, d):
         if isinstance(d.generator, list):
-            return ctx.convert_python_struct_to_llvm_ir(d.generator)
+            # Make sure we only generate float values
+            return ctx.convert_python_struct_to_llvm_ir([float(x) for x in d.generator])
         if isinstance(d, SampleIterator):
             return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
         assert False, "Unsupported dimension type: {}".format(d)
