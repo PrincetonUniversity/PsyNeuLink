@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.5.3.2+10.g47a2001 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.5.3.2+11.g796735e documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+10.g47a2001',
+              VERSION:'0.5.3.2+11.g796735e',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+10
+                0.5.3.2+11
               </div>
             
           
@@ -338,8 +338,8 @@ Keys and values may have different lengths, but all keys must be the same length
 disallowed, or overwritten using <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal"><span class="pre">duplicate_keys</span></code></a>), and selection among
 duplicate keys or ones indistinguishable by the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a>
 can be specified using <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select"><code class="xref any py py-attr docutils literal"><span class="pre">equidistant_keys_select</span></code></a>.</p>
-<p>The class also provides methods for directly retrieving a memory (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory"><code class="xref any py py-meth docutils literal"><span class="pre">get_memory</span></code></a>), and adding (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_memories" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_memories"><code class="xref any py py-meth docutils literal"><span class="pre">add_memories</span></code></a>)
-and deleting (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_memories" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_memories"><code class="xref any py py-meth docutils literal"><span class="pre">delete_memories</span></code></a>) sets of memories.</p>
+<p>The class also provides methods for directly retrieving an entry (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory"><code class="xref any py py-meth docutils literal"><span class="pre">get_memory</span></code></a>), and adding (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory"><code class="xref any py py-meth docutils literal"><span class="pre">add_to_memory</span></code></a>)
+and deleting (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory"><code class="xref any py py-meth docutils literal"><span class="pre">delete_from_memory</span></code></a>) one or more entries.</p>
 <p>An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
 pairs can be assigned to the <strong>initialzer</strong> argument of the ContentAddressableMemory’s constructor, or in
 a call to its <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reinitialize" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method.  The current contents of the memory
@@ -549,32 +549,32 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </tbody>
 </table>
 <dl class="method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_memories">
-<code class="descname">add_memories</code><span class="sig-paren">(</span><em>memories: &lt;typecheck.tc_predicates.any object at 0x10bc49198&gt;</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_memories" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory">
+<code class="descname">add_to_memory</code><span class="sig-paren">(</span><em>memories: &lt;typecheck.tc_predicates.any object at 0x1131ac2b0&gt;</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add one or more key-value pairs into <code class="xref any docutils literal"><span class="pre">memory</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>memories</strong> (<em>list</em><em> or </em><em>3d array</em>) – a list or array of 2d arrays, each of which must be a valid “memory” consisting of two items,
-a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
-length and equal to the length as key(s) of any existing entries in <code class="xref any docutils literal"><span class="pre">dict</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>memories</strong> (<em>list</em><em> or </em><em>array</em>) – a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
+consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
+The keys must all be the same length and equal to the length as key(s) of any existing entries in <code class="xref any docutils literal"><span class="pre">dict</span></code>.  Items are added to memory in the order listed.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_memories">
-<code class="descname">delete_memories</code><span class="sig-paren">(</span><em>memories: &lt;typecheck.tc_predicates.any object at 0x10bc49240&gt;</em>, <em>key_only: bool = True</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_memories" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory">
+<code class="descname">delete_from_memory</code><span class="sig-paren">(</span><em>memories: &lt;typecheck.tc_predicates.any object at 0x1131ac358&gt;</em>, <em>key_only: bool = True</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete one or more key-value pairs from <code class="xref any docutils literal"><span class="pre">memory</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>memories</strong> (<em>list</em><em> or </em><em>3d array</em>) – a list or array of 2d arrays, each of which must be a valid “memory” consisting of two items,
-a key and a value, each of which is a list of numbers or 1d array.</li>
+<li><strong>memories</strong> (<em>list</em><em> or </em><em>array</em>) – a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
+consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].</li>
 <li><strong>key_only</strong> (<em>bool : default True</em>) – if True, delete all memories with the same keys as those listed in <strong>memories</strong>;  if False,
 delete only memories that have the same key <em>and</em> value as those listed in <strong>memories</strong>.</li>
 </ul>
