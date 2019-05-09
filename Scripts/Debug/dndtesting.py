@@ -200,7 +200,7 @@ ContentAddressableMemory.ASSOC_INPUT = [1,2,3,4,5]
 print(ContentAddressableMemory.input_values)
 print(ContentAddressableMemory.output_values)
 
-# ContentAddressableMemory.function.add_memories([[[100,101,102,103,104],[23,24,25,26,27]]], execution_id=5)
+# ContentAddressableMemory.function.add_to_memory([[[100,101,102,103,104],[23,24,25,26,27]]], execution_id=5)
 # assert True
 
 # ContentAddressableMemory.dict.insert_memory({0,1})
