@@ -405,6 +405,47 @@ def test_ContentAddressableMemory_add_and_delete_memories():
                        [[11, 21, 31],[41, 51, 61]]]
     assert np.allclose(em.memory, expected_memory)
 
+    # Test adding and deleting a single memory
+    em.add_memories([[1,2,3],[100,101,102]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]],
+                       [[ 1,  2,  3],[100,101,102]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    em.delete_memories([[1,2,3],[100,101,102]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    # Test adding memory with different size value
+    em.add_memories([[1,2,3],[100,101,102,103]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]],
+                       [[ 1,  2,  3],[100,101,102,103]]]
+    for m,e in zip(em.memory,expected_memory):
+        for i,j in zip(m,e):
+            assert np.allclose(i,j)
+
+    # Test adding memory with different size value as np.array
+    em.add_memories(np.array([[1,2,3],[200,201,202,203]]))
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]],
+                       [[ 1,  2,  3],[100,101,102,103]],
+                       [[ 1,  2,  3],[200,201,202,203]]]
+    for m,e in zip(em.memory,expected_memory):
+        for i,j in zip(m,e):
+            assert np.allclose(i,j)
+
+    # Test error for illegal key:
+    with pytest.raises(FunctionError) as error_text:
+        em.add_memories(np.array([[1,2],[200,201,202,203]]))
+    assert "Length of 'key'" in str(error_text.value) and "must be same as others in the dict" in str(error_text.value)
+
+
 def test_ContentAddressableMemory_overwrite_mode():
 
     em = ContentAddressableMemory(
