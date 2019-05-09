@@ -380,11 +380,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by
     `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
     <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
-    Keys and values may have different lengths, but all keys must be the same length, as must all values.
-    Duplicate keys can be allowed or disallowed (using `duplicate_keys
-    <ContentAddressableMemory.duplicate_keys>`), and selection among duplicate keys or ones indistinguishable
-    by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
-    (using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`).
+    Keys and values may have different lengths, but all keys must be the same length. Duplicate keys can be allowed,
+    disallowed, or overwritten using `duplicate_keys <ContentAddressableMemory.duplicate_keys>`), and selection among
+    duplicate keys or ones indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>`
+    can be specified using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
 
     The class also provides methods for directly retrieving a memory (`get_memory
     <ContentAddressableMemory.get_memory>`), and adding (`add_memories <ContentAddressableMemory.add_memories>`)
@@ -431,7 +430,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
      `memory <ContentAddressableMemory.memory>` with probability `storage_prob <ContentAddressableMemory.storage_prob>`.
       If the key (`variable <ContentAddressableMemory.variable>`\[0]) is identical to one already in `memory
       <ContentAddressableMemory.memory>` and `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
-      is False, storage is skipped.  If **rate** and/or **noise** arguments are specified in the construtor,
+      is set to False, storage is skipped; if it is set to *OVERWRITE*, the value of the key in memory is replaced
+      with the one in the call.  If **rate** and/or **noise** arguments are specified in the construtor,
       it is applied to the key before storing, as follows:
 
     .. math::
@@ -463,7 +463,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         specifies an initial set of entries for `memory <ContentAddressableMemory.memory>`. It must be of the following
         form: [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
         is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
-        lists of the same length, and similarly for the values.
+        lists of the same length.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         specifies the function used during retrieval to compare the first item in `variable
@@ -1284,12 +1284,11 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             d = [keys, values]
             storage_succeeded = True
 
+        if len(d[KEYS]) > self.max_entries:
+            d = np.delete(d, [KEYS], axis=1)
+
         self.parameters.previous_value.set(d,execution_id)
         self._memory = d
-
-        # FIX:
-        if len(d[KEYS]) >= self.max_entries:
-            d = np.delete(d, [KEYS], axis=1)
 
         return storage_succeeded
 
@@ -1309,7 +1308,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
                                 format(repr('memories'), repr('add_memories'), self.__class__.__name ))
         for memory in memories:
-            # self._store_memory(memory[0], memory[1], execution_id)
             self._store_memory(memory, execution_id)
 
     @tc.typecheck
