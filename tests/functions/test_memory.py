@@ -450,3 +450,25 @@ def test_ContentAddressableMemory_overwrite_mode():
         em.execute([[7,8,9], [200,210,220]])
     assert ('Attempt to store item' in str(error_text.value)
             and 'with \'duplicate_keys\'=\'OVERWRITE\'' in str(error_text.value))
+
+
+def test_ContentAddressableMemory_max_entries():
+
+    em = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]],
+                         [[1,2,3], [100,101,102]]],
+            duplicate_keys=True,
+            equidistant_keys_select=RANDOM,
+            retrieval_prob = 1.0,
+            storage_prob = 1.0,
+            max_entries = 4
+    )
+    em.add_memories([[[10,20,30],[40,50,60]],
+                    [[11,21,31],[41,51,61]],
+                    [[12,22,32],[42,52,62]]])
+    expected_memory = [[[1,2,3], [100,101,102]],
+                       [[10,20,30],[40,50,60]],
+                       [[11,21,31],[41,51,61]],
+                       [[12,22,32],[42,52,62]]]
+    assert np.allclose(em.memory, expected_memory)
