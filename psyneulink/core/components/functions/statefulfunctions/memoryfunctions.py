@@ -410,9 +410,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
     If key of the pair in the call is an exact match of a key in memory and `duplicate_keys
     <ContentAddressableMemory.duplicate_keys>` is False, then the matching item is returned, but the
-    pair in the call is not stored. If the length of `memory <ContentAddressableMemory.memory>` exceeds
-    `max_entries <ContentAddressableMemory.max_entries>`, generate an error.  These steps are descrdibed in more
-    detail below:
+    pair in the call is not stored. These steps are described in more detail below:
 
     * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, an entry is retrieved from
       `memory <ContentAddressableMemory.memory>` that has a key that is closest to the one in the call (first item of
@@ -431,11 +429,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
       If the key (`variable <ContentAddressableMemory.variable>`\[0]) is identical to one already in `memory
       <ContentAddressableMemory.memory>` and `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
       is set to False, storage is skipped; if it is set to *OVERWRITE*, the value of the key in memory is replaced
-      with the one in the call.  If **rate** and/or **noise** arguments are specified in the construtor,
-      it is applied to the key before storing, as follows:
+      with the one in the call.  If **rate** and/or **noise** arguments are specified in the
+      construtor, it is applied to the key before storing, as follows:
 
     .. math::
         variable[1] * rate + noise
+
+    If the number of entries exceeds `max_entries <ContentAddressableMemory.max_entries>, the first (oldest) item in
+    memory is deleted.
 
     Arguments
     ---------
@@ -482,8 +483,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         (see `duplicate_keys <ContentAddressableMemory.duplicate_keys for additional details>`).
 
     max_entries : int : default None
-        specifies the maximum number of entries allowed in `memory <ContentAddressableMemory.memory>` (see `max_entries <ContentAddressableMemory.max_entries for
-        additional details>`).
+        specifies the maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`
+        (see `max_entries <ContentAddressableMemory.max_entries for additional details>`).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -559,8 +560,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `distance_function <ContentAddressableMemory.distance_function>`.
 
     max_entries : int
-        maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`;  if an attempt is made to add an additional entry
-        an error is generated.
+        maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`;  if storing a memory
+        exceeds the number, the oldest memory is deleted.
 
     random_state: numpy.RandomState instance
 
