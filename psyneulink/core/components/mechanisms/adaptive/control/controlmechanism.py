@@ -1,4 +1,4 @@
- # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -349,11 +349,12 @@ import warnings
 
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
-from psyneulink.core.components.shellclasses import Composition_Base, Composition_Base, System_Base
+from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
@@ -642,7 +643,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
-    outputStateType = ControlSignal
+    outputStateTypes = [ControlSignal, GatingSignal]
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({ControlSignal:CONTROL_SIGNALS})
 
@@ -777,7 +778,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
+                 control_signals:tc.optional(tc.any(is_iterable,
+                                                    ParameterState,
+                                                    InputState,
+                                                    OutputState,
+                                                    ControlSignal,
+                                                    GatingSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
@@ -914,8 +920,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
             if not isinstance(target_set[CONTROL_SIGNALS], list):
                 target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
+            from psyneulink.core.components.projections.projection import ProjectionError
             for control_signal in target_set[CONTROL_SIGNALS]:
-                _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
+                # _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
+                try:
+                    _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
+                except ProjectionError:
+                    _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=control_signal)
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
     # ONCE THAT IS IMPLEMENTED
@@ -1079,13 +1090,24 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
         #    reassign ControlSignal.variable to actual OWNER_VALUE below, once value has been expanded
 
-        control_signal = _instantiate_state(state_type=ControlSignal,
-                                            owner=self,
-                                            variable=defaultControlAllocation,
-                                            reference_value=ControlSignal.defaults.allocation,
-                                            modulation=self.modulation,
-                                            state_spec=control_signal,
-                                            context=context)
+        from psyneulink.core.components.projections.projection import ProjectionError
+        try:
+            control_signal = _instantiate_state(state_type=ControlSignal,
+                                                owner=self,
+                                                variable=defaultControlAllocation,
+                                                reference_value=ControlSignal.defaults.allocation,
+                                                modulation=self.modulation,
+                                                state_spec=control_signal,
+                                                context=context)
+        except ProjectionError:
+            control_signal = _instantiate_state(state_type=GatingSignal,
+                                                owner=self,
+                                                variable=defaultControlAllocation,
+                                                reference_value=ControlSignal.defaults.allocation,
+                                                modulation=self.modulation,
+                                                state_spec=control_signal,
+                                                context=context)
+
         control_signal.owner = self
 
         # Update control_signal_costs to accommodate instantiated Projection
@@ -1341,28 +1363,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     @property
     def monitored_output_states_weights_and_exponents(self):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
-
-    # @property
-    # def outcome(self):
-    #     return self.variable[0]
-
-    # @property
-    # def costs(self):
-    #     # FIX: 11/9/19 LOCALLY MANAGE STATEF     ULNESS OF ControlSignals AND costs [JDC]
-    #     # MODIFIED 11/9/18 OLD:
-    #     return [c.compute_costs(c.variable) for c in self.control_signals]
-    #     # # MODIFIED 11/9/18 NEW:
-    #     # return [c.compute_costs(c.variable, c.last_intensity) for c in self.control_signals]
-    #     # MODIFIED 11/9/18 END
-
-    # @property
-    # def combined_costs(self):
-    #     return self.combine_costs(self.costs)
-    #
-    # @property
-    # def net_outcome(self):
-    #     # return self.compute_net_outcome(self.outcome, self.costs)
-    #     return self.outcome - self.combined_costs
 
     @property
     def control_projections(self):

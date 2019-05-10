@@ -185,20 +185,6 @@ __all__ = [
 GatingMechanismRegistry = {}
 
 
-# MODIFIED 11/28/17 OLD:
-# def _is_gating_spec(spec):
-#     from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
-#     if isinstance(spec, tuple):
-#         return _is_gating_spec(spec[1])
-#     elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
-#         return True
-#     elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection)):
-#         return True
-#     elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
-#         return True
-#     else:
-#         return False
-# MODIFIED 11/28/17 NEW:
 def _is_gating_spec(spec):
     from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
     if isinstance(spec, tuple):
@@ -213,7 +199,6 @@ def _is_gating_spec(spec):
         return True
     else:
         return False
-# MODIFIED 11/28/17 END
 
 
 class GatingMechanismError(Exception):
@@ -353,7 +338,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
-    outputStateType = GatingSignal
+    outputStateTypes = GatingSignal
 
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({GatingSignal:GATING_SIGNALS})

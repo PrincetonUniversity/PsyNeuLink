@@ -1202,7 +1202,7 @@ def _parse_projection_spec(projection_spec,
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateType.paramClassDefaults[PROJECTION_TYPE]
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateTypes.paramClassDefaults[PROJECTION_TYPE]
     # MODIFIED 11/29/17 END
 
     # Dict
@@ -1377,7 +1377,7 @@ def _parse_connection_specs(connectee_state_type,
             # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-            #     connection = connection.outputStateType
+            #     connection = connection.outputStateTypes
             if ((isinstance(connectee_state_type, (InputState, OutputState, ParameterState))
                  or isinstance(connectee_state_type, type)
                 and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
@@ -1385,7 +1385,7 @@ def _parse_connection_specs(connectee_state_type,
 
                 # Convert AdaptiveMechanism spec to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-                    connection = connection.outputStateType
+                    connection = connection.outputStateTypes
                 elif isinstance(connection, AdaptiveMechanism_Base):
                     connection = connection.output_state
 

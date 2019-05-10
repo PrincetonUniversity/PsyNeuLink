@@ -2674,7 +2674,7 @@ def _parse_state_spec(state_type=None,
         # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
         if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
-            state_specification = state_specification.outputStateType
+            state_specification = state_specification.outputStateTypes
         projection = state_type
 
     # State or Mechanism object specification:

@@ -586,6 +586,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 import warnings
+from collections import OrderedDict
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function, function_type, method_type
@@ -611,7 +612,7 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
-OUTPUT_STATE_TYPE = 'outputStateType'
+OUTPUT_STATE_TYPE = 'outputStateTypes'
 
 # Used to specify how StandardOutputStates are indexed
 PRIMARY = 0
@@ -1464,24 +1465,34 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         reference_value = owner_value
 
+    # Put output_states in entries of a dict for each outputStateTypes specified by owner's Class
     if hasattr(owner, OUTPUT_STATE_TYPE):
-        outputStateType = owner.outputStateType
+        # If owner has only one OutputStateTypes, put in list
+        if not isinstance(owner.outputStateTypes ,list):
+            state_lists = dict({owner.outputStateTypes.__name__:[output_states]})
+        else:
+            # Construct a dict with an entry for states of each type, and add output_states to list for that type
+            state_lists = OrderedDict({i:[] for i in owner.outputStateTypes})
+            for output_state in output_states:
+                state_lists[output_state.__class__.__name__].append(output_state)
     else:
-        outputStateType = OutputState
+        state_lists = dict({OutputState:[output_states]})
 
-    state_list = _instantiate_state_list(owner=owner,
-                                         state_list=output_states,
-                                         state_type=outputStateType,
-                                         state_param_identifier=OUTPUT_STATE,
-                                         reference_value=reference_value,
-                                         reference_value_name="output",
-                                         context=context)
+    implemented_states = []
+    for state_type, output_states in state_lists.items():
+        implemented_states.extend(_instantiate_state_list(owner=owner,
+                                                    state_list=output_states,
+                                                    state_type=state_type,
+                                                    state_param_identifier=OUTPUT_STATE,
+                                                    reference_value=reference_value,
+                                                    reference_value_name="output",
+                                                    context=context))
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
     if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
-        owner.output_states.extend(state_list)
+        owner.output_states.extend(implemented_states)
     else:
-        owner._output_states = state_list
+        owner._output_states = implemented_states
 
     # Assign value of require_projection_in_composition
     for state in owner._output_states:
@@ -1489,7 +1500,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         if state.require_projection_in_composition is None and owner.output_state == state:
             state.parameters.require_projection_in_composition.set(True, override=True)
 
-    return state_list
+    return implemented_states
 
 
 class StandardOutputStatesError(Exception):
