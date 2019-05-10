@@ -1482,7 +1482,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         state_lists = dict({OutputState:output_states})
 
-    implemented_states = []
+    # implemented_states = []
     implemented_states = ContentAddressableList(component_type=State_Base,
                                                 list=[],
                                                 name=owner.name + ' output_states')
