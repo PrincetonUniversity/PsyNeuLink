@@ -1465,28 +1465,31 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         reference_value = owner_value
 
-    # Put output_states in entries of a dict for each outputStateTypes specified by owner's Class
+    # Create dict with entries for outputStateTypes specified by owner's Class,
+    #     and assign each output_state to the relevant entry for its type
     if hasattr(owner, OUTPUT_STATE_TYPE):
         # If owner has only one OutputStateTypes, put in list
-        if not isinstance(owner.outputStateTypes ,list):
-            state_lists = dict({owner.outputStateTypes.__name__:[output_states]})
+        if not isinstance(owner.outputStateTypes, list):
+            state_lists = dict({owner.outputStateTypes:output_states})
         else:
             # Construct a dict with an entry for states of each type, and add output_states to list for that type
             state_lists = OrderedDict({i:[] for i in owner.outputStateTypes})
             for output_state in output_states:
-                state_lists[output_state.__class__.__name__].append(output_state)
+                state_lists[output_state.__class__].append(output_state)
+                assert True
     else:
-        state_lists = dict({OutputState:[output_states]})
+        state_lists = dict({OutputState:output_states})
 
     implemented_states = []
     for state_type, output_states in state_lists.items():
-        implemented_states.extend(_instantiate_state_list(owner=owner,
-                                                    state_list=output_states,
-                                                    state_type=state_type,
-                                                    state_param_identifier=OUTPUT_STATE,
-                                                    reference_value=reference_value,
-                                                    reference_value_name="output",
-                                                    context=context))
+        if output_states:
+            implemented_states.extend(_instantiate_state_list(owner=owner,
+                                                              state_list=output_states,
+                                                              state_type=state_type,
+                                                              state_param_identifier=OUTPUT_STATE,
+                                                              reference_value=reference_value,
+                                                              reference_value_name="output",
+                                                              context=context))
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
     if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
