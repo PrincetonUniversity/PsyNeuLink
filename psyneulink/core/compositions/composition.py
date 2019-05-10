@@ -2776,14 +2776,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
+            'jupyter': return the object (for working in jupyter/ipython notebooks);
+            'gv': return graphviz object
+            'gif': return gif used for animation
 
         Returns
         -------
 
         display of Composition : `pdf` or Graphviz graph object
-            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
-            Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
+            PDF: (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
+            Graphviz graph object if :keyword:`output_fmt` arg is 'gv' or 'jupyter';
+            gif if :keyword:`output_fmt` arg is 'gif'.
 
         """
 
@@ -2796,7 +2799,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                           show_nested):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
-                nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
+                nested_comp_graph = rcvr.show_graph(output_fmt='gv')
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -3367,7 +3370,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # get all Nodes
+        # # MODIFIED 5/9/19 OLD:
         self._analyze_graph()
+        # MODIFIED 5/9/19 NEW: [JDC]
+        if output_fmt != 'gv':
+            self._analyze_graph()
+        # MODIFIED 5/9/19 END
         processing_graph = self.scheduler_processing.visual_graph
         rcvrs = list(processing_graph.keys())
 
@@ -3458,6 +3466,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
             return G
+
+        elif output_fmt == 'gv':
+            return G
+
 
     def execute(
             self,
