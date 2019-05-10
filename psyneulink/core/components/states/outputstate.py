@@ -597,7 +597,8 @@ from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LIN
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, iscompatible, make_readonly_property, recursive_update
+from psyneulink.core.globals.utilities import \
+    is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
 
 __all__ = [
     'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -1481,7 +1482,10 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         state_lists = dict({OutputState:output_states})
 
-    implemented_states = []
+    # implemented_states = []
+    implemented_states = ContentAddressableList(component_type=State_Base,
+                                                list=[],
+                                                name='output_states')
     ref_val_start = 0
 
     # Instantiate OutputStates
