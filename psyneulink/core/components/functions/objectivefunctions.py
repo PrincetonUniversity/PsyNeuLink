@@ -633,7 +633,7 @@ class Distance(ObjectiveFunction):
 
         sub = builder.fsub(val1, val2)
         ltz = builder.fcmp_ordered("<", sub, ctx.float_ty(0))
-        abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
+        abs_val = builder.select(ltz, pnlvm.helpers.fneg(builder, sub), sub)
         acc_val = builder.load(acc)
         new_acc = builder.fadd(acc_val, abs_val)
         builder.store(new_acc, acc)
