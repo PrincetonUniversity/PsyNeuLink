@@ -1290,9 +1290,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
+                        # MODIFIED 5/9/19 OLD:
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
+                        # # MODIFIED 5/9/19 NEW: [JDC]
+                        # self.add_projection(sender=proj.sender.owner,
+                        #                     receiver=node)
+                        # MODIFIED 5/9/19 END
 
     def add_nodes(self, nodes=None, *args):
 
@@ -1518,7 +1523,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
             projection.is_processing = False
-            projection.name = '{0} to {1}'.format(sender, receiver)
+            projection.name = f'{sender} to {receiver}'
             self.graph.add_component(projection, feedback=feedback)
 
             try:
@@ -1654,11 +1659,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(pathway[c], (Mechanism, Composition)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    self.add_projection(MappingProjection(sender=pathway[c - 1],
-                                                          receiver=pathway[c]),
-                                        pathway[c - 1],
-                                        pathway[c],
+                    # # MODIFIED 5/9/19 OLD:
+                    # self.add_projection(MappingProjection(sender=pathway[c - 1],
+                    #                                       receiver=pathway[c]),
+                    #                     pathway[c - 1],
+                    #                     pathway[c],
+                    #                     feedback=feedback)
+                    # MODIFIED 5/9/19 NEW: [JDC]
+                    self.add_projection(sender=pathway[c - 1],
+                                        receiver=pathway[c],
                                         feedback=feedback)
+                    # MODIFIED 5/9/19 END
             # if the current item is a Projection
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
@@ -2783,7 +2794,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_processing_components(g,
                                           rcvr,
                                           show_nested):
-
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
                 nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
@@ -2801,14 +2811,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If recvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
-            elif (isinstance(rcvr, ObjectiveMechanism)
+            # # MODIFIED 5/9/19 OLD:
+            # elif (isinstance(rcvr, ObjectiveMechanism)
+            # MODIFIED 5/9/19 NEW: [JDC] [ALLOW NESTED TO STAND ON ITS OWN ABOVE]
+            if (isinstance(rcvr, ObjectiveMechanism)
+            # MODIFIED 5/9/19 END
                     and self.controller
                     and rcvr is self.controller.objective_mechanism):
                 return
 
             else:
-                rcvr_rank = 'same'
                 # Set rcvr color and penwidth based on node type
+                rcvr_rank = 'same'
+                node_shape = mechanism_shape
+
+                # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
@@ -2821,6 +2838,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         rcvr_color = input_and_output_color
                         rcvr_penwidth = str(bold_width)
+
+                # Input Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
                     if rcvr in active_items:
                         if active_color is BOLD:
@@ -2833,6 +2852,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_color = input_color
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = input_rank
+
+                # Output Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
                         if active_color is BOLD:
@@ -2846,7 +2867,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = output_rank
 
+                # Composition
                 elif isinstance(rcvr, Composition):
+                    node_shape = composition_shape
                     if rcvr in active_items:
                         if active_color is BOLD:
                             rcvr_color = composition_color
@@ -2936,7 +2959,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
 
                         # Only consider Projections to the rcvr
-                        if proj.receiver.owner == rcvr:
+                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
 
                             if show_node_structure:
                                 sndr_proj_label = '{}:{}'. \
@@ -3163,10 +3187,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        )
             else:
                 g.node(ctlr_label,
-                        color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
+                        color=ctlr_color, penwidth=ctlr_width, shape=mechanism_shape,
                         rank=control_rank)
                 g.node(objmech_label,
-                        color=objmech_color, penwidth=objmech_width, shape=node_shape,
+                        color=objmech_color, penwidth=objmech_width, shape=mechanism_shape,
                         rank=control_rank)
 
             # objmech to controller edge
@@ -3305,8 +3329,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'output_fmt': 'struct'}
 
         default_node_color = 'black'
-        node_shape = 'oval'
+        mechanism_shape = 'oval'
         cim_shape = 'rectangle'
+        composition_shape = 'rectangle'
         struct_shape = 'plaintext' # assumes use of html
 
         bold_width = 3
