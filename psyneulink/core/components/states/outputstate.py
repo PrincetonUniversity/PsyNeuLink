@@ -1465,6 +1465,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         reference_value = owner_value
 
+
     # Create dict with entries for outputStateTypes specified by owner's Class,
     #     and assign each output_state to the relevant entry for its type
     if hasattr(owner, OUTPUT_STATE_TYPE):
@@ -1481,15 +1482,28 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         state_lists = dict({OutputState:output_states})
 
     implemented_states = []
+    ref_val_start = 0
+
+    # Instantiate OutputStates
     for state_type, output_states in state_lists.items():
-        if output_states:
-            implemented_states.extend(_instantiate_state_list(owner=owner,
-                                                              state_list=output_states,
-                                                              state_type=state_type,
-                                                              state_param_identifier=OUTPUT_STATE,
-                                                              reference_value=reference_value,
-                                                              reference_value_name="output",
-                                                              context=context))
+
+        # Get reference_values for each state_type
+        if output_states is None:
+            ref_val_end = ref_val_start+1
+        else:
+            ref_val_end = ref_val_start + len(output_states)
+        ref_vals = reference_value[ref_val_start:ref_val_end]
+
+        # Instantiate states for each state_type
+        implemented_states.extend(_instantiate_state_list(owner=owner,
+                                                          state_list=output_states,
+                                                          state_type=state_type,
+                                                          state_param_identifier=OUTPUT_STATE,
+                                                          reference_value=ref_vals,
+                                                          reference_value_name="output",
+                                                          context=context))
+        ref_val_start += ref_val_end
+
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
     if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):

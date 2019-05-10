@@ -1052,7 +1052,7 @@ class ContentAddressableList(UserList):
 
     IMPLEMENTATION NOTE:
         This class allows Components to be maintained in lists, while providing ordered storage
-        and the convenience access and assignment by name (e.g., akin to a dict).
+        and the convenience of access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
                 collections of states to other variables, such as lists of their values);
