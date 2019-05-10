@@ -736,9 +736,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         elif not (isinstance(self.agent_rep, Composition)
                   or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, Composition))):
-            raise OptimizationControlMechanismError("The {} arg of an {} must be either a {}".
-                                                    format(repr(AGENT_REP),self.__class__.__name__,
-                                                           Composition.__name__))
+            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} "
+                                                    f"must be either a {Composition.__name__} or a sublcass of one")
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
