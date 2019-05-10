@@ -3370,8 +3370,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # get all Nodes
-        # # MODIFIED 5/9/19 OLD:
-        self._analyze_graph()
+        # # # MODIFIED 5/9/19 OLD:
+        # self._analyze_graph()
         # MODIFIED 5/9/19 NEW: [JDC]
         if output_fmt != 'gv':
             self._analyze_graph()
