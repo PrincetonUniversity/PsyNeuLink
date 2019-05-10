@@ -47,9 +47,9 @@ sr = ProcessingMechanism(name='Successor Rep')
 
 model = Composition(name='Adaptive Replay Model')
 model.add_nodes([stim_in, context_in, perceptual_state, agent, action])
-# model.add_projection(sender=perceptual_state, receiver=agent)
-# model.add_projection(sender=agent, receiver=action)
 model.add_linear_processing_pathway([perceptual_state, agent, action])
+
+ocm = OptimizationControlMechanism(agent_rep=agent)
 
 # comp.add_reinforcement_learning_pathway([state, action])
 

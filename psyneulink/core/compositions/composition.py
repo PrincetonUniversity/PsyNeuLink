@@ -3373,6 +3373,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # # MODIFIED 5/9/19 OLD:
         # self._analyze_graph()
         # MODIFIED 5/9/19 NEW: [JDC]
+        # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
             self._analyze_graph()
         # MODIFIED 5/9/19 END
