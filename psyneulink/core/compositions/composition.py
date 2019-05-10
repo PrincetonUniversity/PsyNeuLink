@@ -1294,7 +1294,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             sender=proj.sender.owner,
                                             receiver=node)
 
-    def add_nodes(self, nodes):
+    def add_nodes(self, nodes=None, *args):
+
+        if not isinstance(nodes, list):
+            raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
+                                   f"must be a list of nodes")
 
         for node in nodes:
             self.add_node(node)
@@ -1625,8 +1629,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway, feedback=False):
+    def add_linear_processing_pathway(self, pathway, feedback=False, *args):
         # First, verify that the pathway begins with a node
+        if not isinstance(pathway, list):
+            raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
+                                   f"{Composition.__name__} must be a list of nodes")
+
         if isinstance(pathway[0], (Mechanism, Composition)):
             self.add_node(pathway[0])
         else:
