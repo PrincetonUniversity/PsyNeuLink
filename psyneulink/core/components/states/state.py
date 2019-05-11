@@ -2811,7 +2811,10 @@ def _parse_state_spec(state_type=None,
             matrix = projection_spec[MATRIX]
 
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
-            sender = _get_state_for_socket(owner=owner,state_spec=sender,state_types=state_dict[STATE_TYPE])
+            sender = _get_state_for_socket(owner=owner,
+                                           # connectee_state_type=state_type,
+                                           state_spec=sender,
+                                           state_types=state_dict[STATE_TYPE])
             projection_value = _get_projection_value_shape(sender, matrix)
 
         reference_value = state_dict[REFERENCE_VALUE]
