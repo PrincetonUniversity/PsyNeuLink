@@ -1216,6 +1216,11 @@ class GridSearch(OptimizationFunction):
             return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
         assert False, "Unsupported dimension type: {}".format(d)
 
+    def _get_compilation_params(self, execution_id):
+        return [self.parameters.objective_function,
+                self.parameters.search_space,
+                self.parameters.random_state]
+
     def _get_param_struct_type(self, ctx):
         search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
         space = pnlvm.ir.LiteralStructType(search_space)
