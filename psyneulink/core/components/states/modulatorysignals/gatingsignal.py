@@ -15,7 +15,7 @@ Overview
 A GatingSignal is a type of `ModulatorySignal <ModulatorySignal>` that is specialized for use with a `GatingMechanism`
 and one or more `GatingProjections <GatingProjection>`, to modify the `value <State_Base.value>`\\(s) of the
 `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` to which they project. A GatingSignal receives the
-value from the `gating_policy <GatingMechanism.gating_policy>` of the GatingMechanism to which it belongs,
+value from the `gating_allocation <GatingMechanism.gating_allocation>` of the GatingMechanism to which it belongs,
 and assigns that as the value of its `gating_signal <GatingSignal.gating_signal>` to its `GatingProjection(s)
 <GatingProjection>`, each of which projects to an InputState or OutputState and is used to modulate the `value
 <State_Base.value>` of that State.
@@ -67,7 +67,7 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
     The dictionary can also contain entries for any other GatingSignal attributes to be specified
     (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
     `value <State_Base.value>` of the State(s) that it gates; or a *VARIABLE* entry specifying which item
-    of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
+    of the GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` it should use as its `value
     <GatingSignal,value>`;  see `OutputState_Customization`).
   ..
   * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- the 1st item must be the name of the
@@ -125,7 +125,7 @@ Execution
 
 A GatingSignal cannot be executed directly.  It is executed whenever the `GatingMechanism` to which it belongs is
 executed.  When this occurs, the GatingMechanism provides the GatingSignal with one of the values from its
-`gating_policy <GatingMechanism.gating_signal>`, that is used by its `function <GatingSignal.function>` to generate its
+`gating_allocation <GatingMechanism.gating_signal>`, that is used by its `function <GatingSignal.function>` to generate its
 the value of its `gating_signal <GatingSignal.gating_signal>`.  That, in turn, is used by its `GatingProjection(s)
 <GatingProjection>` to modulate the `value <State_Base.value>` of the States to which they project. How the modulation
 is executed is determined by the GatingSignal's `modulation <GatingSignal.modulation>` attribute
@@ -305,7 +305,7 @@ class GatingSignal(ModulatorySignal):
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
     index : int : default PRIMARY
-        specifies the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        specifies the item of the owner GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` used as the
         GatingSignal's `value <GatingSignal.value>`.
 
     function : Function or method : default Linear
@@ -353,7 +353,7 @@ class GatingSignal(ModulatorySignal):
         (same as its `gating_signal <GatingSignal.gating_signal>`).
 
     index : int
-        the item of the owner GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` used as the
+        the item of the owner GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` used as the
         GatingSignal's `value <GatingSignal.value>`.
 
     gating_signal : number, list or np.ndarray
@@ -453,7 +453,15 @@ class GatingSignal(ModulatorySignal):
         # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
-            if len(owner.gating_policy)==1:
+            # MODIFIED 5/11/19 OLD:
+            # if len(owner.gating_allocation)==1:
+            # MODIFIED 5/11/19 NEW: [JDC] TO MOVE GatingSignals to ControlMechanism
+            try:
+                allocation = owner.gating_allocation
+            except AttributeError:
+                allocation = owner.control_allocation
+            if len(allocation)==1:
+            # MODIFIED 5/11/19 END
                 index = PRIMARY
             else:
                 index = SEQUENTIAL

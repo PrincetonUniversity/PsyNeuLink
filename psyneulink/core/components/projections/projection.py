@@ -1555,8 +1555,8 @@ def _parse_connection_specs(connectee_state_type,
                      # Call _parse_connection_spec for each State or Mechanism, to generate a conection spec for each
                     for connect_with_spec in first_item:
                         if not isinstance(connect_with_spec, (State, Mechanism)):
-                              raise StateError(f"Item in the list used to specify a {state_type.__name__} "
-                                               f"for {owner.name} ({connect_with_spec}) "
+                              raise StateError(f"Item in the list used to specify a {last_item.__name__} "
+                                               f"for {owner.name} ({connect_with_spec.__name__}) "
                                                f"is not a {State.__name__} or {Mechanism.__name__}")
                         c = _parse_connection_specs(connectee_state_type=connectee_state_type,
                                                     owner=owner,
@@ -1604,6 +1604,7 @@ def _parse_connection_specs(connectee_state_type,
             # Validate state specification, and get actual state referenced if it has been instantiated
             try:
                 # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
+                # FIX: 5/11/19: CORRECT TO HANDLE ControlMechanism SPECIFIED FOR GATIN
                 if (_is_gating_spec(first_item)
                     and (isinstance(last_item, OutputState) or last_item == OutputState)):
                     projection_socket = SENDER
@@ -1614,6 +1615,7 @@ def _parse_connection_specs(connectee_state_type,
                     mech_state_attribute=connect_with_attr
 
                 state = _get_state_for_socket(owner=owner,
+                                              connectee_state_type=connectee_state_type,
                                               state_spec=state_spec,
                                               state_types=state_types,
                                               mech=mech,

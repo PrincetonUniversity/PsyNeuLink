@@ -1026,23 +1026,11 @@ class OutputState(State_Base):
                 variable = DEFAULT_VARIABLE_SPEC
             else:
                 variable = reference_value
-        # MODIFIED 3/10/18 OLD:
         variable_getter = None
         self._variable_spec = variable
 
         if not is_numeric(variable):
             self._variable = variable
-
-        # # MODIFIED 3/10/18 NEW:
-        # # FIX: SHOULD HANDLE THIS MORE GRACEFULLY IN _instantiate_state and/or instaniate_output_state
-        # # If variable is numeric, assume it is a default spec passed in that had been parsed for initializatoin purposes
-        # if is_numeric(variable):
-        #     # self._variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC]
-        #     self._variable = DEFAULT_VARIABLE_SPEC
-        # else:
-        #     self._variable = variable
-        # MODIFIED 3/10/18 END:
-
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:

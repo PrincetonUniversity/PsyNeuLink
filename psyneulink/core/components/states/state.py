@@ -745,13 +745,24 @@ from psyneulink.core.components.functions.function import Function, ModulationPa
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_STATES, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
+from psyneulink.core.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, \
+    EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_STATES, \
+    LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, \
+    MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, \
+    PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
+    PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
+    RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, \
+    STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
+    VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, \
+    is_value_spec, iscompatible, merge_param_dicts, type_match
 
 __all__ = [
     'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
@@ -2674,7 +2685,20 @@ def _parse_state_spec(state_type=None,
         # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
         if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
+            # MODIFIED 5/11/19 OLD:
             state_specification = state_specification.outputStateTypes
+            # MODIFIED 5/11/19 NEW: [JDC] TO ACCOMODATE GatingSignals on ControlMechanism
+            # FIX: IF THIS WORKS, TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)
+            # FIX: AND ANY OTHER PLACES WHERE LISTS ARE DEALT WITH
+            if isinstance(state_specification, list):
+                specs = [s for s in state_specification if s.__name__ in state_type.connectsWith]
+                assert len(specs)==1, \
+                    f"PROGRAM ERROR:  More than one {State.__name__} type found ({specs})" \
+                        f"that can be specificied as a modulatory {Projection.__name__} to {state_type}"
+                state_specification = specs[0]
+            # MODIFIED 5/11/19 END
+
+
         projection = state_type
 
     # State or Mechanism object specification:
@@ -2693,11 +2717,11 @@ def _parse_state_spec(state_type=None,
                 state_specification = mech
                 projection = state_type
 
-        # Specified State is one with which connectee can connect, so assume it is a Projection specification
+        # Specication is a State with which connectee can connect, so assume it is a Projection specification
         if state_specification.__class__.__name__ in state_type.connectsWith + state_type.modulators:
             projection = state_type
 
-        # Specified State is same as connectee's type (state_type),
+        # Specified is a State that is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
         elif isinstance(state_specification, state_type):
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
@@ -3040,6 +3064,7 @@ def _parse_state_spec(state_type=None,
 # FIX:          ONCE STATE CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
 @tc.typecheck
 def _get_state_for_socket(owner,
+                          connectee_state_type:tc.optional(_is_state_class)=None,
                           state_spec=None,
                           state_types:tc.optional(tc.any(list, _is_state_class))=None,
                           mech:tc.optional(Mechanism)=None,
@@ -3182,6 +3207,13 @@ def _get_state_for_socket(owner,
                              "to get its primary State".format(state_spec.name))
         try:
             state = state_type._get_primary_state(state_type, state_spec)
+            # Primary State for Mechanism specified in state_spec is not compatible
+            # with owner's State for which a connection is being specified
+            if not state.__class__.__name__ in connectee_state_type.connectsWith:
+                raise StateError(f"Primary {state_type.__name__} of {state_spec.name} ({state.name}) cannot be used "
+                                 f"as a {projection_socket} of a {Projection.__name__} "
+                                 f"{PROJECTION_DIRECTION[projection_socket]} {connectee_state_type.__name__} of "
+                                 f"{owner.name}")
         except StateError:
             if mech_state_attribute:
                 try:
