@@ -1548,9 +1548,9 @@ def _parse_connection_specs(connectee_state_type,
                      # Call _parse_connection_spec for each State or Mechanism, to generate a conection spec for each
                     for connect_with_spec in first_item:
                         if not isinstance(connect_with_spec, (State, Mechanism)):
-                              raise StateError("Item in the list used to specify a(n) {} for {} ({}) is not a {} or {}".
-                                             format(state_type.__name__, owner.name, connect_with_spec,
-                                                    State.__name__, Mechanism.__name__))
+                              raise StateError(f"Item in the list used to specify a {state_type.__name__} "
+                                               f"for {owner.name} ({connect_with_spec}) "
+                                               f"is not a {State.__name__} or {Mechanism.__name__}")
                         c = _parse_connection_specs(connectee_state_type=connectee_state_type,
                                                     owner=owner,
                                                     connections=ProjectionTuple(connect_with_spec,

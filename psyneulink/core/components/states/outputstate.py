@@ -1474,18 +1474,22 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         if not isinstance(owner.outputStateTypes, list):
             state_lists = dict({owner.outputStateTypes:output_states})
         else:
-            # Construct a dict with an entry for states of each type, and add output_states to list for that type
-            state_lists = OrderedDict({i:[] for i in owner.outputStateTypes})
-            for output_state in output_states:
-                state_lists[output_state.__class__].append(output_state)
-                assert True
+            # If no OutputState specified, used first state_type in outputStateTypes
+            if output_states is None:
+                state_lists = dict({owner.outputStateTypes[0]:None})
+            else:
+                # Construct a dict with an entry for states of each type, and add output_states to list for that type
+                state_lists = OrderedDict({i:[] for i in owner.outputStateTypes})
+                for output_state in output_states:
+                    state_lists[output_state.__class__].append(output_state)
     else:
         state_lists = dict({OutputState:output_states})
 
     # implemented_states = []
     implemented_states = ContentAddressableList(component_type=State_Base,
                                                 list=[],
-                                                name=owner.name + ' output_states')
+                                                # name=owner.name + ' output_states'
+                                                name=owner.name+' ContentAddressableList of OutputStates')
     ref_val_start = 0
 
     # Instantiate OutputStates
