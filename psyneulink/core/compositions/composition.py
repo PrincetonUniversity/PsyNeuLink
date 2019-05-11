@@ -3564,9 +3564,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Exec mode skips mbo invocation so we can't use it if mbo is
             # present and active
             can_exec = not self.enable_controller or execution_phase == ContextFlags.SIMULATION
-            try:
-                # Try running in Exec mode first
-                if (bin_execute is True or str(bin_execute).endswith('Exec')) and can_exec:
+            # Try running in Exec mode first
+            if (bin_execute is True or str(bin_execute).endswith('Exec')) and can_exec:
+                try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [execution_id])
                         _comp_ex.execute(inputs)
@@ -3576,8 +3576,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         __execution = self._compilation_data.ptx_execution.get(execution_id)
                         __execution.cuda_execute(inputs)
                         return __execution.extract_node_output(self.output_CIM)
+                except Exception as e:
+                    if bin_execute is not True:
+                        raise e
 
-                # Exec failed for some reason, we can still try node level bin_execute
+                    string = "Failed to execute `{}': {}".format(self.name, str(e))
+                    print("WARNING: {}".format(string))
+
+            # Exec failed for some reason, we can still try node level bin_execute
+            try:
                 # Filter out mechanisms. Nested compositions are not executed in this mode
                 # Filter out controller. Compilation of controllers is not supported yet
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism) and n is not self.controller]
@@ -3594,7 +3601,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # This will be remove when a wrapper for controllers is added
                 _comp_ex._set_bin_node(self.input_CIM)
             except Exception as e:
-                if str(bin_execute).endswith('Exec'):
+                if bin_execute is not True:
                     raise e
 
                 string = "Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e))
@@ -4061,7 +4068,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return full_results[-1]
 
             except Exception as e:
-                if str(bin_execute).endswith('Run'):
+                if bin_execute is not True:
                     raise e
 
                 print("WARNING: Failed to Run execution `{}': {}".format(
