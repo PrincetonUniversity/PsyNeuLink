@@ -1233,12 +1233,12 @@ class GridSearch(OptimizationFunction):
         if isinstance(d.generator, list):
             return tuple(d.generator)
         if isinstance(d, SampleIterator):
-            return tuple((d.start, d.step, d.num))
+            return (d.start, d.step, d.num)
 
         assert False, "Unsupported dimension type: {}".format(d)
 
     def _get_param_initializer(self, execution_id):
-        grid_init = [self._get_search_dim_init(execution_id, d) for d in self.search_space]
+        grid_init = (self._get_search_dim_init(execution_id, d) for d in self.search_space)
         select_randomly = 1 if self.select_randomly_from_optimal_values else 0
         try:
             # self.objective_function may be bound method of
@@ -1247,7 +1247,7 @@ class GridSearch(OptimizationFunction):
             obj_func_param_init = composition._get_param_initializer(execution_id, True)
         except AttributeError:
             obj_func_param_init = self.objective_function._get_param_initializer(execution_id)
-        return tuple([obj_func_param_init, tuple(grid_init), select_randomly])
+        return (obj_func_param_init, tuple(grid_init), select_randomly)
 
     def _get_context_struct_type(self, ctx):
         try:
@@ -1278,9 +1278,8 @@ class GridSearch(OptimizationFunction):
 
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value
-        # we should never return 'all values'
-        new_val = tuple([val[0], val[1]])
-        return ctx.convert_python_struct_to_llvm_ir(new_val)
+        # compiled version should never return 'all values'
+        return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         obj_func = ctx.get_llvm_function(self.objective_function)

@@ -372,7 +372,7 @@ COMMENT
         my_params = super()._get_param_initializer(execution_id)
         metric_params = self._metric_fct._get_param_initializer(execution_id)
         transfer_params = self.transfer_fct._get_param_initializer(execution_id) if self.transfer_fct is not None else tuple()
-        return tuple([my_params, metric_params, transfer_params])
+        return (my_params, metric_params, transfer_params)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product

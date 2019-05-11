@@ -728,7 +728,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         distance_init = self.distance_function._get_param_initializer(execution_id)
         selection_init = self.selection_function._get_param_initializer(execution_id)
         my_init = super()._get_param_initializer(execution_id)
-        return tuple([*my_init, distance_init, selection_init])
+        return (*my_init, distance_init, selection_init)
 
     def _get_context_initializer(self, execution_id):
         distance_init = self.distance_function._get_context_initializer(execution_id)
@@ -736,7 +736,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
         memory = self.get_previous_value(execution_id)
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
-        return tuple([distance_init, selection_init, my_init])
+        return (distance_init, selection_init, my_init)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         my_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
