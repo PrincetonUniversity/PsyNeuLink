@@ -3210,10 +3210,12 @@ def _get_state_for_socket(owner,
             # Primary State for Mechanism specified in state_spec is not compatible
             # with owner's State for which a connection is being specified
             if not state.__class__.__name__ in connectee_state_type.connectsWith:
-                raise StateError(f"Primary {state_type.__name__} of {state_spec.name} ({state.name}) cannot be used "
-                                 f"as a {projection_socket} of a {Projection.__name__} "
-                                 f"{PROJECTION_DIRECTION[projection_socket]} {connectee_state_type.__name__} of "
-                                 f"{owner.name}")
+                from psyneulink.core.components.projections.projection import ProjectionError
+                raise ProjectionError(f"Primary {state_type.__name__} of {state_spec.name} ({state.name}) cannot be "
+                                      f"used "
+                                      f"as a {projection_socket} of a {Projection.__name__} "
+                                      f"{PROJECTION_DIRECTION[projection_socket]} {connectee_state_type.__name__} of "
+                                      f"{owner.name}")
         except StateError:
             if mech_state_attribute:
                 try:
