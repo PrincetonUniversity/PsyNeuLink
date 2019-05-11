@@ -1454,6 +1454,7 @@ class State_Base(State):
                         #    Connection spec (state) is specified as State type
                         #    so try to get that State type for the Mechanism
                         sender = _get_state_for_socket(owner=self.owner,
+                                                       connectee_state_type=self.__class__,
                                                        state_spec=proj_sender,
                                                        state_types=state)
                     else:
