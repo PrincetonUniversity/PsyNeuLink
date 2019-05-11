@@ -2812,7 +2812,9 @@ def _parse_state_spec(state_type=None,
 
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
             sender = _get_state_for_socket(owner=owner,
+                                           # MODIFIED 5/11/19 NEW: [JDC]
                                            # connectee_state_type=state_type,
+                                           # MODIFIED 5/11/19 END
                                            state_spec=sender,
                                            state_types=state_dict[STATE_TYPE])
             projection_value = _get_projection_value_shape(sender, matrix)
