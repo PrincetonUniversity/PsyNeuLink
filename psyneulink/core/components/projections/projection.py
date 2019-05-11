@@ -1385,7 +1385,17 @@ def _parse_connection_specs(connectee_state_type,
 
                 # Convert AdaptiveMechanism spec to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-                    connection = connection.outputStateTypes
+                    # FIX: USE LIST COMPREHENSION AND THEN GENERATE PROGRAM ERROR IF MORE THAN ONE IS FOUND
+                    # If the connection supports multiple outputStateTypes,
+                    # get the one compatible with the current connectee:
+                    outputStateTypes = connection.outputStateTypes
+                    if not isinstance(outputStateTypes, list):
+                        outputStateTypes = [outputStateTypes]
+                    for outputStateType in outputStateTypes:
+                        if outputStateType.__name__ in connectee_state_type.connectsWith:
+                            connection = outputStateType
+                    # else:
+                    #     connection = connection.outputStateTypes
                 elif isinstance(connection, AdaptiveMechanism_Base):
                     connection = connection.output_state
 
