@@ -1198,12 +1198,10 @@ def _parse_projection_spec(projection_spec,
           or (isinstance(projection_spec, type) and issubclass(projection_spec, State))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
-    # MODIFIED 11/29/17 NEW:
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateTypes.paramClassDefaults[PROJECTION_TYPE]
-    # MODIFIED 11/29/17 END
 
     # Dict
     elif isinstance(projection_spec, dict):
@@ -1371,7 +1369,6 @@ def _parse_connection_specs(connectee_state_type,
         #     to validate the state spec and append ProjectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
-
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
             # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
             # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
@@ -1382,20 +1379,20 @@ def _parse_connection_specs(connectee_state_type,
                  or isinstance(connectee_state_type, type)
                 and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
                 and _is_modulatory_spec(connection)):
-
                 # Convert AdaptiveMechanism spec to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-                    # FIX: USE LIST COMPREHENSION AND THEN GENERATE PROGRAM ERROR IF MORE THAN ONE IS FOUND
                     # If the connection supports multiple outputStateTypes,
-                    # get the one compatible with the current connectee:
-                    outputStateTypes = connection.outputStateTypes
-                    if not isinstance(outputStateTypes, list):
-                        outputStateTypes = [outputStateTypes]
-                    for outputStateType in outputStateTypes:
-                        if outputStateType.__name__ in connectee_state_type.connectsWith:
-                            connection = outputStateType
-                    # else:
-                    #     connection = connection.outputStateTypes
+                    #    get the one compatible with the current connectee:
+                    output_state_types = connection.outputStateTypes
+                    if not isinstance(output_state_types, list):
+                        output_state_types = [output_state_types]
+                    output_state_type = [o for o in output_state_types if o.__name__ in
+                                          connectee_state_type.connectsWith]
+                    assert len(output_state_type)==1, \
+                        f"PROGRAM ERROR:  More than one {OutputState.__name__} type found for {connection}  " \
+                            f"({output_state_types}) that can be assigned a modulatory {Projection.__name__} " \
+                            f"to {connectee_state_type.__name__} of {owner.name}"
+                    connection = output_state_type[0]
                 elif isinstance(connection, AdaptiveMechanism_Base):
                     connection = connection.output_state
 
