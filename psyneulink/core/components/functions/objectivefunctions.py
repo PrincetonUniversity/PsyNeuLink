@@ -764,7 +764,7 @@ class Distance(ObjectiveFunction):
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
         acc_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(0), acc_ptr)
+        builder.store(ctx.float_ty(-0.0), acc_ptr)
 
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
         if self.metric == DIFFERENCE or self.metric == NORMED_L0_SIMILARITY:
@@ -781,7 +781,7 @@ class Distance(ObjectiveFunction):
             denom1_acc = builder.alloca(ctx.float_ty)
             denom2_acc = builder.alloca(ctx.float_ty)
             for loc in numer_acc, denom1_acc, denom2_acc:
-                builder.store(ctx.float_ty(0), loc)
+                builder.store(ctx.float_ty(-0.0), loc)
             kwargs['numer_acc'] = numer_acc
             kwargs['denom1_acc'] = denom1_acc
             kwargs['denom2_acc'] = denom2_acc
@@ -799,7 +799,7 @@ class Distance(ObjectiveFunction):
             acc_x2_ptr = builder.alloca(ctx.float_ty)
             acc_y2_ptr = builder.alloca(ctx.float_ty)
             for loc in [acc_x_ptr, acc_y_ptr, acc_xy_ptr, acc_x2_ptr, acc_y2_ptr]:
-                builder.store(ctx.float_ty(0), loc)
+                builder.store(ctx.float_ty(-0.0), loc)
             del kwargs['acc']
             kwargs['acc_x'] = acc_x_ptr
             kwargs['acc_y'] = acc_y_ptr
