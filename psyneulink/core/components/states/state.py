@@ -2812,12 +2812,16 @@ def _parse_state_spec(state_type=None,
 
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
             # Get sender of Projection to determine its value
+            from psyneulink.core.components.states.outputstate import OutputState
             sender = _get_state_for_socket(owner=owner,
+                                           # # MODIFIED 5/11/19 OLD:
+                                           # state_spec=sender,
+                                           # state_types=state_dict[STATE_TYPE])
                                            # MODIFIED 5/11/19 NEW: [JDC]
-                                           # connectee_state_type=state_type,
-                                           # MODIFIED 5/11/19 END
+                                           connectee_state_type=state_type,
                                            state_spec=sender,
-                                           state_types=state_dict[STATE_TYPE])
+                                           state_types=[OutputState])
+                                           # MODIFIED 5/11/19 END
             projection_value = _get_projection_value_shape(sender, matrix)
 
         reference_value = state_dict[REFERENCE_VALUE]
