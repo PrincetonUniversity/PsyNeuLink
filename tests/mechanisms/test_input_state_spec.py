@@ -8,6 +8,7 @@ from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import ProjectionError
+from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.states.inputstate import InputState, InputStateError
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
@@ -552,12 +553,28 @@ class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 32
 
-    def test_projection_with_matrix_and_sender_mismatches_default(self):
+    def tests_for_projection_with_matrix_and_sender_mismatches_default(self):
         with pytest.raises(MechanismError) as error_text:
             m = TransferMechanism(size=2)
             p = MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
             TransferMechanism(default_variable=[0, 0], input_states=[p])
         assert mismatches_specified_default_variable_error_text in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            m = TransferMechanism(size=3, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
+            p = MappingProjection(sender=m, matrix=[[0,0,0], [0,0,0]])
+            T = TransferMechanism(input_states=[p])
+        assert 'Specification of matrix and/or default_variable for LinearMatrix Function-0 is not valid. ' \
+               'The shapes of variable (1, 1) and matrix (2, 3) are not compatible for multiplication' \
+               in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            m2 = TransferMechanism(size=2, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
+            p2 = MappingProjection(sender=m2, matrix=[[1,1,1],[1,1,1]])
+            T2 = TransferMechanism(input_states=[p2])
+        assert 'Specification of matrix and/or default_variable for LinearMatrix Function-1 is not valid. ' \
+               'The shapes of variable (1, 1) and matrix (2, 3) are not compatible for multiplication' \
+               in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 33
