@@ -38,31 +38,26 @@ _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
 
 class LLVMBuilderContext:
-    module = None
-    nest_level = 0
     uniq_counter = 0
     _llvm_generation = 0
 
     def __init__(self):
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
+        self.module = None
 
     def __enter__(self):
-        if LLVMBuilderContext.nest_level == 0:
-            assert LLVMBuilderContext.module is None
-            LLVMBuilderContext.module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
-        LLVMBuilderContext.nest_level += 1
+        assert self.module is None
+        self.module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
+        LLVMBuilderContext._llvm_generation += 1
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
-        LLVMBuilderContext.nest_level -= 1
-        if LLVMBuilderContext.nest_level == 0:
-            assert LLVMBuilderContext.module is not None
-            _modules.add(LLVMBuilderContext.module)
-            _all_modules.add(LLVMBuilderContext.module)
-            LLVMBuilderContext.module = None
+        assert self.module is not None
+        _modules.add(self.module)
+        _all_modules.add(self.module)
+        LLVMBuilderContext.module = None
 
-        LLVMBuilderContext._llvm_generation += 1
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
@@ -73,15 +68,14 @@ class LLVMBuilderContext:
         if name in ('pow', 'log', 'exp'):
             return self.get_llvm_function("__pnl_builtin_" + name)
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
-
     def get_llvm_function(self, name):
         try:
             f = name._llvm_function
         except AttributeError:
-            f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
+            f = _find_llvm_function(name, _all_modules | {self.module})
         # Add declaration to the current module
-        if f.name not in LLVMBuilderContext.module.globals:
-            decl_f = ir.Function(LLVMBuilderContext.module, f.type.pointee, f.name)
+        if f.name not in self.module.globals:
+            decl_f = ir.Function(self.module, f.type.pointee, f.name)
             assert decl_f.is_declaration
             return decl_f
         return f
