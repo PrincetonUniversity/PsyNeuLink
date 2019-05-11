@@ -1106,19 +1106,8 @@ class InputState(State_Base):
                 state_spec = None
                 # Reduce to 2-item tuple Projection specification
                 projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
-                # MODIFIED 5/11/19 OLD:
                 projections_spec = (tuple_spec[0],projection_item)
-                # MODIFIED 5/11/19 NEW: [JDC] TO ACCOMODATE ControlMechansim for GatingSignal
-                # projections_spec = tuple_spec[0]
-                # if isinstance(projections_spec, list):
-                #     specs = [s for s in projections_spec if o.__name__ in self.connectsWith]
-                #     assert len(specs)==1, \
-                #         f"PROGRAM ERROR:  More than one {OutputState.__name__} type found for {connection}  " \
-                #             f"({output_state_types}) that can be assigned a modulatory {Projection.__name__} " \
-                #             f"to {connectee_state_type.__name__} of {owner.name}"
-                #     projections_spec = (specs[0], projection_item)
-                # assert True
-                # MODIFIED 5/11/19 END
+
 
             # GET PROJECTIONS IF SPECIFIED *************************************************************************
 

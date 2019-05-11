@@ -234,10 +234,13 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import _is_modulation_param
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
-from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL
+from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL, _output_state_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER
+from psyneulink.core.globals.defaults import defaultGatingAllocation
+from psyneulink.core.globals.keywords import \
+    COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, \
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -410,6 +413,13 @@ class GatingSignal(ModulatorySignal):
             Attributes
             ----------
 
+                variable
+                    see `variable <ControlSignal.variable>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+
                 value
                     see `value <GatingSignal.value>`
 
@@ -417,8 +427,15 @@ class GatingSignal(ModulatorySignal):
                     :type: numpy.ndarray
                     :read only: True
 
+                allocation_samples
+                    see `allocation_samples <ControlSignal.allocation_samples>`
+
         """
-        value = Parameter(np.array([0]), read_only=True, aliases=['gating_signal'])
+        variable = Parameter(np.array(defaultGatingAllocation),
+                             aliases='allocation',
+                             getter=_output_state_variable_getter)
+        value = Parameter(np.array(defaultGatingAllocation), read_only=True, aliases=['intensity'])
+        allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -453,15 +470,11 @@ class GatingSignal(ModulatorySignal):
         # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
-            # MODIFIED 5/11/19 OLD:
-            # if len(owner.gating_allocation)==1:
-            # MODIFIED 5/11/19 NEW: [JDC] TO MOVE GatingSignals to ControlMechanism
             try:
                 allocation = owner.gating_allocation
             except AttributeError:
                 allocation = owner.control_allocation
             if len(allocation)==1:
-            # MODIFIED 5/11/19 END
                 index = PRIMARY
             else:
                 index = SEQUENTIAL

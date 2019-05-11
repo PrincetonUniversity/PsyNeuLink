@@ -2686,7 +2686,6 @@ def _parse_state_spec(state_type=None,
         # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
         if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
-            # MODIFIED 5/11/19 OLD:
             state_specification = state_specification.outputStateTypes
             # MODIFIED 5/11/19 NEW: [JDC] TO ACCOMODATE GatingSignals on ControlMechanism
             # FIX: IF THIS WORKS, TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)
@@ -2814,14 +2813,9 @@ def _parse_state_spec(state_type=None,
             # Get sender of Projection to determine its value
             from psyneulink.core.components.states.outputstate import OutputState
             sender = _get_state_for_socket(owner=owner,
-                                           # # MODIFIED 5/11/19 OLD:
-                                           # state_spec=sender,
-                                           # state_types=state_dict[STATE_TYPE])
-                                           # MODIFIED 5/11/19 NEW: [JDC]
                                            connectee_state_type=state_type,
                                            state_spec=sender,
                                            state_types=[OutputState])
-                                           # MODIFIED 5/11/19 END
             projection_value = _get_projection_value_shape(sender, matrix)
 
         reference_value = state_dict[REFERENCE_VALUE]

@@ -157,9 +157,6 @@ Class Reference
 
 """
 
-# IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
-#                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
-
 import warnings
 
 import numpy as np
@@ -171,8 +168,10 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.states.state import State_Base, _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.defaults import defaultGatingPolicy
-from psyneulink.core.globals.keywords import GATING, GATING_ALLOCATION, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
+from psyneulink.core.globals.defaults import defaultGatingAllocation
+from psyneulink.core.globals.keywords import \
+    GATING, GATING_ALLOCATION, GATING_PROJECTION, GATING_PROJECTIONS,GATING_SIGNAL,GATING_SIGNALS,GATING_SIGNAL_SPECS, \
+    INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -243,7 +242,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     Arguments
     ---------
 
-    default_gating_allocation : value, list or ndarray : default `defaultGatingPolicy`
+    default_gating_allocation : value, list or ndarray : default `defaultGatingAllocation`
         the default value for each of the GatingMechanism's GatingSignals;
         its length must equal the number of items specified in the **gating_signals** argument.
 
@@ -370,7 +369,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         """
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
-        variable = np.array(defaultGatingPolicy)
+        variable = np.array(defaultGatingAllocation)
         value = Parameter(AdaptiveMechanism_Base.Parameters.value.default_value, aliases=['gating_allocation'])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -493,7 +492,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         gating_signal = _instantiate_state(state_type=GatingSignal,
                                            variable=(OWNER_VALUE,0),
                                            owner=self,
-                                           reference_value=defaultGatingPolicy,
+                                           reference_value=defaultGatingAllocation,
                                            modulation=self.modulation,
                                            state_spec=gating_signal,
                                            context=context)

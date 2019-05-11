@@ -1862,11 +1862,7 @@ def _get_projection_value_shape(sender, matrix):
     """Return shape of a Projection's value given its sender and matrix"""
     from psyneulink.core.components.functions.transferfunctions import get_matrix
     matrix = get_matrix(matrix)
-    # # MODIFIED 5/11/19 OLD:
-    # return np.zeros(matrix.shape[sender.value.ndim :])
-    # MODIFIED 5/11/19 NEW: [JDC]
     return np.zeros(matrix.shape[np.atleast_1d(sender.value).ndim :])
-    # MODIFIED 5/11/19 END
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
 @tc.typecheck

@@ -13,17 +13,20 @@ Overview
 --------
 
 A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the parameter(s) of one or more
-`Components <Component>`, in response to an evaluative signal received from an `ObjectiveMechanism`.  The
+`Components <Component>` in response to an evaluative signal received from an `ObjectiveMechanism`.  The
 ObjectiveMechanism monitors a specified set of OutputStates, and from these generates the evaluative signal that is
-used by the ControlMechanism's `function <ControlMechanism.function>` to calculate an `control_allocation
-<ControlMechanism.control_allocation>`: a list of `allocation <ControlSignal.allocation>` values for each of its
-`ControlSignals <ControlSignal>`.  Each ControlSignal uses its `allocation <ControlSignal.allocation>` to calculate its
-`intensity`, which is then transmitted by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the
-`ParameterState(s) <ParameterState>` to which they project.  Each ParameterState uses the value received by a
-ControlProjection to modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation`
-for a more detailed description of how modulation operates).  A ControlMechanism can regulate only the parameters of
-Components in the `System` to which it belongs. The OutputStates used to determine the ControlMechanism's
-`control_allocation <ControlMechanism.control_allocation>`, the `ObjectiveMechanism` used to evalute these, and the
+used by the ControlMechanism's `function <ControlMechanism.function>` to calculate a `control_allocation
+<ControlMechanism.control_allocation>`: a list of values provided to each of its `modulatory_signals
+<ControlMechanism.modulatory_signals>`.  Its modulatory_signals are OutputStates that are used to modify the
+parameter(s) the ControlMechanism controls. The `modulatory_signals <ControlMechanism.modulatory_signals>` of a
+ControlMechanism can be `ControlSignals <ControlSignal>`, that modulate the parameters of a Mechanism's `function
+<Mechanism.function>`, and/or `GatingSignals <GatingSignal>`, that can modulate an `InputState` `function
+<InputState.function>` or `OutputState` `function <OutputState.function>` (see `ModulatorySignal_Modulation` for a
+more detailed description of how modulation operates). A ControlMechanism can modulate Components in the `Composition`
+to which it belongs.
+
+The ControlMechanism's `modulatory_signals <ControlMechanism.modulatory_signals>`, `control_allocation
+<ControlMechanism.control_allocation>`, the `ObjectiveMechanism` used to evalute these, and the
 parameters controlled by the ControlMechanism can be listed using its `show <ControlMechanism.show>` method.
 
 COMMENT:
