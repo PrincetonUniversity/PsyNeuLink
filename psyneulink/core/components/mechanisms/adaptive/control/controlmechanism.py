@@ -395,6 +395,28 @@ class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
+def _control_allocation_getter(owning_component=None, execution_id=None):
+    try:
+        return np.array([c.parameters.variable.get(execution_id) for c in owning_component.control_signals])
+    except TypeError:
+        return None
+
+def _control_allocation_setter(value, owning_component=None, execution_id=None):
+    for c in owning_component.control_signals:
+        c.parameters.variable.set(value, execution_id)
+    return value
+
+def _gating_allocation_getter(owning_component=None, execution_id=None):
+    try:
+        return np.array([c.parameters.variable.get(execution_id) for c in owning_component.gating_signals])
+    except TypeError:
+        return None
+
+def _gating_allocation_setter(value, owning_component=None, execution_id=None):
+    for c in owning_component.gating_signals:
+        c.parameters.variable.set(value, execution_id)
+    return value
+
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
@@ -749,7 +771,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([defaultControlAllocation])
         value = Parameter(np.array(defaultControlAllocation), aliases='control_allocation')
-
+        control_signal_allocation = Parameter(np.array(defaultControlAllocation),
+                                              getter=_control_allocation_getter,
+                                              setter=_control_allocation_setter),
+        gating_allocation = Parameter(np.array(defaultGatingAllocation),
+                                      getter=_gating_allocation_getter,
+                                      setter=_gating_allocation_setter),
         outcome = Parameter(None, read_only=True, getter=_outcome_getter)
 
         compute_reconfiguration_cost = Parameter(None, stateful=False, loggable=False)
