@@ -642,7 +642,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
-    outputStateType = ControlSignal
+    outputStateTypes = ControlSignal
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({ControlSignal:CONTROL_SIGNALS})
 
