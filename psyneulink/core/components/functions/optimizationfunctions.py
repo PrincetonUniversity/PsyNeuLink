@@ -1241,8 +1241,8 @@ class GridSearch(OptimizationFunction):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
-            composition = self.objective_function.__self__.agent_rep
-            obj_func_param = composition._get_param_struct_type(ctx, True)
+            ocm = self.objective_function.__self__
+            obj_func_param = ocm._get_evaluate_param_struct_type(ctx)
         except AttributeError:
             obj_func_param = ctx.get_param_struct_type(self.objective_function)
         return pnlvm.ir.LiteralStructType([obj_func_param, space, select_randomly])
@@ -1261,8 +1261,8 @@ class GridSearch(OptimizationFunction):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
-            composition = self.objective_function.__self__.agent_rep
-            obj_func_param_init = composition._get_param_initializer(execution_id, True)
+            ocm = self.objective_function.__self__
+            obj_func_param_init = ocm._get_evaluate_param_initializer(execution_id)
         except AttributeError:
             obj_func_param_init = self.objective_function._get_param_initializer(execution_id)
         return (obj_func_param_init, tuple(grid_init), select_randomly)
@@ -1271,10 +1271,8 @@ class GridSearch(OptimizationFunction):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
-            composition = self.objective_function.__self__.agent_rep
-            comp_state = composition._get_context_struct_type(ctx, True)
-            comp_data = composition._get_data_struct_type(ctx)
-            obj_func_state = pnlvm.ir.LiteralStructType([comp_state, comp_data])
+            ocm = self.objective_function.__self__
+            obj_func_state = ocm._get_evaluate_context_struct_type(ctx)
         except AttributeError:
             obj_func_state = ctx.get_context_struct_type(self.objective_function)
         # Get random state
@@ -1285,10 +1283,8 @@ class GridSearch(OptimizationFunction):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
-            composition = self.objective_function.__self__.agent_rep
-            comp_state = composition._get_context_initializer(execution_id, True)
-            comp_data = composition._get_data_initializer(execution_id)
-            obj_func_state_init = (comp_state, comp_data)
+            ocm = self.objective_function.__self__
+            obj_func_state_init = ocm._get_evaluate_context_initializer(execution_id)
         except AttributeError:
             obj_func_state_init = self.objective_function._get_context_initializer(execution_id)
         random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]

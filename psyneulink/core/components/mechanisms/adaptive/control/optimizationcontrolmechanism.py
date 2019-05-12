@@ -412,6 +412,8 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
 from psyneulink.core.globals.sampleiterator import SampleIterator
 
+from psyneulink.core import llvm as pnlvm
+
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
     'AGENT_REP', 'FEATURES'
@@ -953,6 +955,22 @@ class OptimizationControlMechanism(ControlMechanism):
             )
 
         return result
+
+    def _get_evaluate_param_struct_type(self, ctx):
+        return self.agent_rep._get_param_struct_type(ctx, True)
+
+    def _get_evaluate_param_initializer(self, execution_id):
+        return self.agent_rep._get_param_initializer(execution_id, True)
+
+    def _get_evaluate_context_struct_type(self, ctx):
+        state = self.agent_rep._get_context_struct_type(ctx, True)
+        data = self.agent_rep._get_data_struct_type(ctx)
+        return pnlvm.ir.LiteralStructType([state, data])
+
+    def _get_evaluate_context_initializer(self, execution_id):
+        state = self.agent_rep._get_context_initializer(execution_id, True)
+        data = self.agent_rep._get_data_initializer(execution_id)
+        return (state, data)
 
     def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
