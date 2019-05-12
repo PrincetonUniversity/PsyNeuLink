@@ -49,7 +49,7 @@ def test_gating():
 
     np.testing.assert_allclose(comp.results, expected_results)
 
-def test_gating_using_ControlMechanism():
+def test_gating_using_ModulatoryMechanism():
 
     Input_Layer = pnl.TransferMechanism(
         name='Input_Layer',
@@ -67,7 +67,7 @@ def test_gating_using_ControlMechanism():
         }
     )
 
-    Gating_Mechanism = pnl.ControlMechanism(
+    Gating_Mechanism = pnl.ModulatoryMechanism(
         size=[1],
         control_signals=[Output_Layer.output_state]
     )
