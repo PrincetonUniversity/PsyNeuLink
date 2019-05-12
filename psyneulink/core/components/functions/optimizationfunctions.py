@@ -1208,6 +1208,19 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
+    def _get_input_struct_type(self, ctx):
+        if self.owner is not None:
+            variable = [state.defaults.value for state in self.owner.input_states]
+            # Python list does not care about ndarrays of different lengths
+            # we do care, so convert to tuple to create struct
+            if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
+                variable = tuple(variable)
+
+        else:
+            variable = self.defaults.variable
+
+        return ctx.convert_python_struct_to_llvm_ir(variable)
+
     def _get_search_dim(self, ctx, d):
         if isinstance(d.generator, list):
             # Make sure we only generate float values
