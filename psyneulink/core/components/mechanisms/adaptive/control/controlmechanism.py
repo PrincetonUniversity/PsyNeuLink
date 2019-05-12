@@ -360,7 +360,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.defaults import defaultControlAllocation
+from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EID_SIMULATION, EUCLIDEAN, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -427,13 +427,11 @@ def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
     except TypeError:
         return None
 
-
 def _outcome_getter(owning_component=None, execution_id=None):
     try:
         return owning_component.parameters.variable.get(execution_id)[0]
     except TypeError:
         return None
-
 
 def _net_outcome_getter(owning_component=None, execution_id=None):
     # NOTE: In cases where there is a reconfiguration_cost,
@@ -1100,6 +1098,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._control_signals = ContentAddressableList(component_type=ControlSignal,
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, ControlSignal)])
+
+        self._gating_signals = ContentAddressableList(component_type=GatingSignal,
+                                                       list=[state for state in self.output_states
+                                                             if isinstance(state, GatingSignal)])
 
         # If the ControlMechanism's control_allocation has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
