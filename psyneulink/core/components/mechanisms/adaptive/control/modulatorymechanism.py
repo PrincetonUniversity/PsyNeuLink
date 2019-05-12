@@ -245,7 +245,7 @@ ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of 
 *Costs and Net Outcome*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When a ModulatoryMechanism executes, each of its `control_signals <ControlMechanmism>` can incur a `cost
+When a ModulatoryMechanism executes, each of its `control_signals <ModulatoryMechanism>` can incur a `cost
 <ControlSignal.cost>`.  The costs
 
 
