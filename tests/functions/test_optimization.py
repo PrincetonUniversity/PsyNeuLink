@@ -69,7 +69,7 @@ results = {
 @pytest.mark.parametrize("normalize", [True, False])
 @pytest.mark.parametrize("metric", [kw.ENERGY, kw.ENTROPY])
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
-def test_basic(obj_func, metric, normalize, direction, selection, benchmark):
+def test_grid_search(obj_func, metric, normalize, direction, selection, benchmark):
     variable = test_var
     result = results[obj_func][metric][normalize][direction][selection]
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
@@ -97,7 +97,7 @@ def test_basic(obj_func, metric, normalize, direction, selection, benchmark):
 @pytest.mark.parametrize("normalize", [True, False])
 @pytest.mark.parametrize("metric", [kw.ENERGY, kw.ENTROPY])
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
-def test_llvm(obj_func, metric, normalize, direction, selection, benchmark):
+def test_grid_search_llvm(obj_func, metric, normalize, direction, selection, benchmark):
     variable = test_var
     result = results[obj_func][metric][normalize][direction][selection]
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
@@ -125,7 +125,7 @@ def test_llvm(obj_func, metric, normalize, direction, selection, benchmark):
 @pytest.mark.parametrize("normalize", [True, False])
 @pytest.mark.parametrize("metric", [kw.ENERGY, kw.ENTROPY])
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
-def test_ptx_cuda(obj_func, metric, normalize, direction, selection, benchmark):
+def test_grid_search_ptx(obj_func, metric, normalize, direction, selection, benchmark):
     variable = test_var
     result = results[obj_func][metric][normalize][direction][selection]
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
