@@ -352,6 +352,7 @@ import warnings
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
@@ -383,6 +384,7 @@ def _is_control_spec(spec):
         return _is_control_spec(spec[PROJECTION_TYPE])
     elif isinstance(spec, (ModulatoryMechanism, ControlSignal, ControlProjection)):
         return True
+    # elif isinstance(spec, type) and issubclass(spec, (ControlMechanism, ControlSignal, ControlProjection)):
     elif isinstance(spec, type) and issubclass(spec, (ModulatoryMechanism, ControlSignal, ControlProjection)):
         return True
     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
