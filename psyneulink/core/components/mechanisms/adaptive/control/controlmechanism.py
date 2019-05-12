@@ -374,13 +374,20 @@ ControlMechanismRegistry = {}
 
 def _is_control_spec(spec):
     from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+    from psyneulink.core.components.mechanisms.adaptive.control.modulatorymechanism import ModulatoryMechanism
     if isinstance(spec, tuple):
         return any(_is_control_spec(item) for item in spec)
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return _is_control_spec(spec[PROJECTION_TYPE])
-    elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
+    elif isinstance(spec, (ControlMechanism,
+                           ControlSignal,
+                           ControlProjection,
+                           ModulatoryMechanism)):
         return True
-    elif isinstance(spec, type) and issubclass(spec, (ControlMechanism, ControlSignal, ControlProjection)):
+    elif isinstance(spec, type) and issubclass(spec, (ControlMechanism,
+                                                      ControlSignal,
+                                                      ControlProjection,
+                                                      ModulatoryMechanism)):
         return True
     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
         return True

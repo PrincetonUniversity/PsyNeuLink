@@ -164,6 +164,7 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.core.components.mechanisms.adaptive.control.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.states.state import State_Base, _parse_state_spec
@@ -190,9 +191,15 @@ def _is_gating_spec(spec):
         return any(_is_gating_spec(item) for item in spec)
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return _is_gating_spec(spec[PROJECTION_TYPE])
-    elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
+    elif isinstance(spec, (GatingMechanism,
+                           GatingSignal,
+                           GatingProjection,
+                           ModulatoryMechanism)):
         return True
-    elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection, GatingMechanism)):
+    elif isinstance(spec, type) and issubclass(spec, (GatingSignal,
+                                                      GatingProjection,
+                                                      GatingMechanism,
+                                                      ModulatoryMechanism)):
         return True
     elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
         return True
