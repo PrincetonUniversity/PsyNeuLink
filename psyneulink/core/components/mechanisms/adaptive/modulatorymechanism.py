@@ -29,10 +29,10 @@ to which it belongs.
 The OutputStates monitored by the ModulatoryMechanism's `objective_mechanism <ModulatoryMechanism.objective_mechanism>`
 and the parameters it modulates can be listed using its `show <ModulatoryMechanism.show>` method.
 
-.. _ModulatoryMechanism_System_Controller:
+.. _ModulatoryMechanism_Composition_Controller:
 
 *ModulatoryMechanisms and a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ModulatoryMechanism can be assigned to a `Composition` and executed just like any other Mechanism. It can also be
 assigned as the `controller <Composition.controller>` of a `Composition`, that has a special relation
@@ -60,7 +60,7 @@ constructor, then  one is automatically created and assigned as its `objective_m
 <ModulatoryMechanism.objective_mechanism>` attribute (see `ModulatoryMechanism_ObjectiveMechanism` below).  This is used to
 monitor and evaluate the OutputStates that are are used to determine the ModulatoryMechanism's `control_allocation
 <ModulatoryMechanism.control_allocation>`.  The `OutputStates <OutputState>` monitored by the `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` can be specified in the **monitor_for_control** argument of the
+<ModulatoryMechanism.objective_mechanism>` can be specified in the **monitor_for_modulation** argument of the
 ModulatoryMechanism's constructor, or in the **monitor** argument of the constructor for the `ObjectiveMechanism`
 itself.  The parameters to be controlled by the  ModulatoryMechanism are specified in the **control_signals** argument (
 see `ModulatoryMechanism_Control_Signals` below).
@@ -90,14 +90,11 @@ the ObjectiveMechanism is assigned to the ModulatoryMechanism's `objective_mecha
 <ModulatoryMechanism.objective_mechanism>` attribute, and a `MappingProjection` is created that projects from the
 ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ModulatoryMechanism's *OUTCOME*
 `InputState` (which is its  `primary InputState <InputState_Primary>`.  All of the OutputStates monitored by the
-ObjectiveMechanism are listed in its `monitored_output_States <ObjectiveMechanism.monitored_output_states>`
-attribute, and in the ModulatoryMechanism's `monitor_for_control <ModulatoryMechanism.montior_for_control>` attribute.
+ObjectiveMechanism are listed in its `monitored_output_States <ObjectiveMechanism.monitored_output_states>` attribute,
+and in the ModulatoryMechanism's `monitor_for_modulation <ModulatoryMechanism.montior_for_control>` attribute.
 
-*When the ModulatoryMechanism is created explicitly*
-
-When a ModulatoryMechanism is created using its constructor -- either on its own, or in the **controller** argument
-of the `constructor for a Composition <Composition_Control_Specification>`) -- the following arguments of the
-ModulatoryMechanism's constructor can be used to specify its ObjectiveMechanism and/or the OutputStates it monitors:
+The following arguments of the ModulatoryMechanism's constructor can be used to specify its ObjectiveMechanism and/or
+the OutputStates it monitors:
 
   * **objective_mechanism** -- this can be specified using any of the following:
 
@@ -115,21 +112,24 @@ ModulatoryMechanism's constructor can be used to specify its ObjectiveMechanism 
     <ModulatoryMechanism.objective_mechanism>`, including those of its `function <ObjectiveMechanism.function>` (see
     `note <EVCModulatoryMechanism_Objective_Mechanism_Function_Note>` in EVCModulatoryMechanism for an example);
   ..
-  * **monitor_for_control** -- a list a list of `OutputState specifications
+  * **monitor_for_modulation** -- a list a list of `OutputState specifications
     <ObjectiveMechanism_Monitored_Output_States>`;  a default ObjectiveMechanism is created, using the list of
     OutputState specifications for its **monitored_output_states** argument.
 
   If OutputStates to be monitored are specified in both the **objective_mechanism** argument (on their own, or within
-  the constructor for an ObjectiveMechanism) and the **monitor_for_control** argument of the ModulatoryMechanism,
+  the constructor for an ObjectiveMechanism) and the **monitor_for_modulation** argument of the ModulatoryMechanism,
   both sets are used in creating the ObjectiveMechanism.
 
-*When the ModulatoryMechanism is created for or assigned as the controller a System*
+*When the ModulatoryMechanism is created for or assigned as the controller a Composition*
 
-If a ModulatoryMechanism is specified as the `controller <System.controller>` of a System (see
+COMMENT:
+TBI [Functionality for System that has yet to be ported to Composition]
+If a ModulatoryMechanism is specified as the `controller <Composition.controller>` of a Composition (see
 `ModulatoryMechanism_Composition_Controller`), any OutputStates specified to be monitored by the System are assigned as
-inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_control** argument of the
-System's constructor, as well as any specified in a monitor_for_control entry of a Mechanism `parameter specification
+inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_modulation** argument of the
+System's constructor, as well as any specified in a monitor_for_modulation entry of a Mechanism `parameter specification
 dictionary <ParameterState_Specification>` (see `Mechanism_Constructor_Arguments` and `System_Control_Specification`).
+COMMENT
 
 COMMENT:
 FOR DEVELOPERS:
@@ -138,11 +138,9 @@ FOR DEVELOPERS:
     ObjectiveMechanism.add_monitored_output_states method.
 COMMENT
 
-* Adding OutputStates to be monitored to a ModulatoryMechanism*
-
-OutputStates to be monitored can also be added to an existing ModulatoryMechanism by using the `add_monitored_output_states
-<ObjectiveMechanism.add_monitored_output_states>` method of the ModulatoryMechanism's `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>`.
+OutputStates to be monitored can also be added to an existing ModulatoryMechanism by using the
+`add_monitored_output_states <ObjectiveMechanism.add_monitored_output_states>` method of the ModulatoryMechanism's
+`objective_mechanism <ModulatoryMechanism.objective_mechanism>`.
 
 
 .. _ModulatoryMechanism_Control_Signals:
@@ -189,19 +187,22 @@ Structure
 *Input*
 ~~~~~~~
 
-A ModulatoryMechanism has a single *OUTCOME* `InputState`. Its `value <InputState.value>` (that can be referenced
-by its `outcome <ModulatoryMechanism.outcome>` attribute) is used as the input to the ModulatoryMechanism's `function
-<ModulatoryMechanism.function>`, that determines the ModulatoryMechanism's `control_allocation
-<ModulatoryMechanism.control_allocation>`. The *OUTCOME* InputState receives its input via a `MappingProjection` from the
-*OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The Objective Mechanism is specified
-in the **objective_mechanism** argument of its constructor, and listed in its `objective_mechanism
-<EVCModulatoryMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the ObjectiveMechanism (listed
+A ModulatoryMechanism has a single `InputState`, named *OUTCOME*, that receives its input from the *OUTCOME*
+`OutputState <ObjectiveMechanism_Output>` of the ModulatoryMechanism's `objective_mechanism
+<ModulatoryMechanism.objective_mechanism>`.  The `value <InputState.value>` of the *OUTCOME* InputState can be
+referenced by the `outcome <ModulatoryMechanism.outcome>` attribute, and is used as the input to the
+ModulatoryMechanism's `function <ModulatoryMechanism.function>`, that determines the ModulatoryMechanism's
+`modulatory_allocation
+<ModulatoryMechanism.modulatory_allocation>`. The *OUTCOME* InputState receives its input via a `MappingProjection`
+from  the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of its `objective_mechanism
+<ModulatoryMechanism.objective_mechanism>`.  The OutputStates monitored by the ObjectiveMechanism (listed
 in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute) are also listed in the
 `monitor_for_control <ModulatoryMechanism.monitor_for_control>` of the ModulatoryMechanism (see
 `ModulatoryMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the OutputStates it monitors are specified).
-The OutputStates monitored by the ModulatoryMechanism's `objective_mechanism <ModulatoryMechanism.objective_mechanism>` can
-be displayed using its `show <ModulatoryMechanism.show>` method. The ObjectiveMechanism's `function <ObjectiveMechanism>`
-evaluates the specified OutputStates, and the result is conveyed as the input to the ModulatoryMechanism.
+The OutputStates monitored by the ModulatoryMechanism's `objective_mechanism <ModulatoryMechanism.objective_mechanism>`
+can be displayed using its `show <ModulatoryMechanism.show>` method. The ObjectiveMechanism's `function
+<ObjectiveMechanism>` evaluates the specified OutputStates, and the result is conveyed as the input to the
+ModulatoryMechanism.
 
 
 .. _ModulatoryMechanism_Function:
