@@ -1,10 +1,9 @@
- # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-
 
 # **************************************  ControlMechanism ************************************************
 
@@ -13,49 +12,36 @@ Overview
 --------
 
 A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the parameter(s) of one or more
-`Components <Component>`, in response to an evaluative signal received from an `ObjectiveMechanism`.  The
-ObjectiveMechanism monitors a specified set of OutputStates, and from these generates the evaluative signal that is
-used by the ControlMechanism's `function <ControlMechanism.function>` to calculate an `control_allocation
-<ControlMechanism.control_allocation>`: a list of `allocation <ControlSignal.allocation>` values for each of its
-`ControlSignals <ControlSignal>`.  Each ControlSignal uses its `allocation <ControlSignal.allocation>` to calculate its
-`intensity`, which is then transmitted by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the
-`ParameterState(s) <ParameterState>` to which they project.  Each ParameterState uses the value received by a
-ControlProjection to modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation`
-for a more detailed description of how modulation operates).  A ControlMechanism can regulate only the parameters of
-Components in the `System` to which it belongs. The OutputStates used to determine the ControlMechanism's
-`control_allocation <ControlMechanism.control_allocation>`, the `ObjectiveMechanism` used to evalute these, and the
-parameters controlled by the ControlMechanism can be listed using its `show <ControlMechanism.show>` method.
-
-COMMENT:
-    ALTERNATE VERSION
-    and has a `ControlSignal` for each parameter of the Components in the `system <EVCControlMechanism.system>` that it
-    controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
-    controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
-    combination of ControlSignal `intensity` values is called an `control_allocation`. When a `System` is executed that
-    uses an EVCControlMechanism as its `controller <System.controller>`, it concludes by executing the EVCControlMechanism, which
-    determines its `control_allocation` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
-    ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`. The OutputStates used
-    to determine an EVCControlMechanism's `control_allocation <EVCControlMechanism.control_allocation>` and the parameters it
-    controls can be listed using its `show <EVCControlMechanism.show>` method.
-COMMENT
+`Components <Component>` in response to an evaluative signal received from its `objective_mechanism
+<ControlMechanism.objective_mechanism>`.  The `objective_mechanism
+<ControlMechanism.objective_mechanism>` monitors a specified set of OutputStates, and from these generates the
+evaluative signal that is used by the ControlMechanism's `function <ControlMechanism.function>` to calculate a
+`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to
+that modulate the parameters of other Mechanisms' `function <Mechanism.function>` (see `ControlSignal_Modulation` for a
+more detailed description of how modulation operates). A ControlMechanism can modulate only Components in the
+`Composition` to which it belongs. The OutputStates monitored by the ControlMechanism's `objective_mechanism
+<ControlMechanism.objective_mechanism>` and the parameters it modulates can be listed using its `show
+<ControlMechanism.show>` method.
 
 .. _ControlMechanism_System_Controller:
 
-*ControlMechanisms and a System*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*ControlMechanisms and a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlMechanism can be assigned to a `Process` and executed within one or more Systems, just like any other
-Mechanism. It can also be assigned as the `controller <System.controller>` of a `System`, that has a special relation
-to the System: it is used to control all of the parameters that have been `specified for control
-<ControlMechanism_Control_Signals>` in that System.  A ControlMechanism can be the `controller <System.controller>`
-for only one System, and a System can have only one `controller <System.controller>`.  The System's `controller
-<System.controller>` is executed after all of the other Components in the System have been executed, including any
-other ControlMechanisms that belong to it (see `System Execution <System_Execution>`).  A ControlMechanism can be
-assigned as the `controller <System.controller>` for a System by specifying it in the **controller** argument of the
-System's constructor, or by specifying the System as the **system** argument of either the ControlMechanism's
-constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>` method. A System's `controller
-<System.controller>` and its associated Components can be displayed using the System's `show_graph
-<System.show_graph>` method with its **show_control** argument assigned as `True`.
+A ControlMechanism can be assigned to a `Composition` and executed just like any other Mechanism. It can also be
+assigned as the `controller <Composition.controller>` of a `Composition`, that has a special relation
+to the Composition: it is used to control all of the parameters that have been `specified for control
+<ControlMechanism_Control_Signals>` in that Composition.  A ControlMechanism can be the `controller
+<Composition.controller>` for only one Composition, and a Composition can have only one `controller
+<Composition.controller>`.  The Composition's `controller <Composition.controller>` is executed either before or after
+all of the other Components in the Composition are executed, including any other ControlMechanisms that belong to it
+(see `Composition Execution <Composition_Execution>`).  A ControlMechanism can be assigned as the `controller
+<Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
+constructor, or by specifying the Composition as the **composition** argument of either the ControlMechanism's
+constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>` method. A Composition's `controller
+<Composition.controller>` and its associated Components can be displayed using the Composition's `show_graph
+<Composition.show_graph>` method with its **show_control** argument assigned as `True`.
 
 
 .. _ControlMechanism_Creation:
@@ -63,21 +49,27 @@ constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>
 Creating a ControlMechanism
 ---------------------------
 
-A ControlMechanism can be created using the standard Python method of calling the constructor for the desired type.
-A ControlMechanism is also created automatically whenever a `System is created <System_Creation>`, and the
-ControlMechanism class or one of its subtypes is specified in the **controller** argument of the System's constructor
-(see `System_Creation`).  If the ControlMechanism is created explicitly (using its constructor), it must be included
-in a `Process` assigned to the System.  The `OutputStates <OutputState>` monitored by its `ObjectiveMechanism` are
-specified in the **monitor_for_control** argument of its constructor, and the parameters it controls are specified in
-the **control_signals** argument; an ObjectiveMechanism is automatically created that monitors and evaluates the
-specified OutputStates.  The ObjectiveMechanism can also be explicitly specified in the **objective_mechanism**
-argument of the ControlMechanism's constructor (see `below <ControlMechanism_ObjectiveMechanism>`). If the
+A ControlMechanism can be created by calling its constructor. Whenever a ControlMechanism is created,
+if no `ObjectiveMechanism` is specified in the **objective_mechanism** of its
+constructor, then  one is automatically created and assigned as its `objective_mechanism
+<ControlMechanism.objective_mechanism>` attribute (see `ControlMechanism_ObjectiveMechanism` below).  This is used to
+monitor and evaluate the OutputStates that are are used to determine the ControlMechanism's `control_allocation
+<ControlMechanism.control_allocation>`.  The `OutputStates <OutputState>` monitored by the `objective_mechanism
+<ControlMechanism.objective_mechanism>` can be specified in the **monitor_for_control** argument of the
+ControlMechanism's constructor, or in the **monitor** argument of the constructor for the `ObjectiveMechanism`
+itself.  The parameters to be controlled by the  ControlMechanism are specified in the **control_signals** argument
+(see `ControlMechanism_Control_Signals` below).
+
+COMMENT:
+VERIFY FOR Composition
+If the
 ControlMechanism is created automatically by a System (as its `controller <System.controller>`), then the specification
 of OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components
 themselves (see `System_Control_Specification`).  In either case, the Components needed to monitor the specified
 OutputStates (an `ObjectiveMechanism` and `Projections <Projection>` to it) and to control the specified parameters
 (`ControlSignals <ControlSignal>` and corresponding `ControlProjections <ControlProjection>`) are created
 automatically, as described below.
+COMMENT
 
 .. _ControlMechanism_ObjectiveMechanism:
 
@@ -1331,6 +1323,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
         for aff in self._objective_mechanism.afferents:
             aff._activate_for_compositions(compositions)
 
+    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
+        '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
+        specified `control_allocation <ControlMechanism.control_allocation>`.
+        '''
+
+        value = [np.atleast_1d(a) for a in control_allocation]
+        self.parameters.value.set(value, execution_id)
+        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
+                                   context=ContextFlags.COMPOSITION)
+
     @property
     def monitored_output_states(self):
         try:
@@ -1348,28 +1350,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     @property
     def monitored_output_states_weights_and_exponents(self):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
-
-    # @property
-    # def outcome(self):
-    #     return self.variable[0]
-
-    # @property
-    # def costs(self):
-    #     # FIX: 11/9/19 LOCALLY MANAGE STATEF     ULNESS OF ControlSignals AND costs [JDC]
-    #     # MODIFIED 11/9/18 OLD:
-    #     return [c.compute_costs(c.variable) for c in self.control_signals]
-    #     # # MODIFIED 11/9/18 NEW:
-    #     # return [c.compute_costs(c.variable, c.last_intensity) for c in self.control_signals]
-    #     # MODIFIED 11/9/18 END
-
-    # @property
-    # def combined_costs(self):
-    #     return self.combine_costs(self.costs)
-    #
-    # @property
-    # def net_outcome(self):
-    #     # return self.compute_net_outcome(self.outcome, self.costs)
-    #     return self.outcome - self.combined_costs
 
     @property
     def control_projections(self):
@@ -1400,3 +1380,4 @@ class ControlMechanism(AdaptiveMechanism_Base):
             super()._dependent_components,
             [self.objective_mechanism],
         ))
+

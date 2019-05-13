@@ -3590,7 +3590,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 bin_execute = True
                 _comp_ex = pnlvm.CompExecution(self, [execution_id])
                 # FIXME: UGLY HACK to work around 'BEFORE' controllers
-                # This will be remove when a wrapper for controllers is added
+                # This will be removed when a wrapper for controllers is added
                 _comp_ex._set_bin_node(self.input_CIM)
             except Exception as e:
                 if str(bin_execute).endswith('Exec'):

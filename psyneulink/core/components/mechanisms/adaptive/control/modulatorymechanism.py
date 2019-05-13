@@ -55,12 +55,6 @@ Creating a ModulatoryMechanism
 ---------------------------
 
 A ModulatoryMechanism can be created by calling its constructor.
-COMMENT:
-FIX: VERIFY
-A ModulatoryMechanism is also created
-automatically whenever a `System is created <System_Creation>`, and the ModulatoryMechanism class or one of its subtypes
-is specified in the **controller** argument of the Compositions's constructor (see `Composition_Creation`).
-COMMENT
 Whenever a ModulatoryMechanism is created, if no `ObjectiveMechanism` is specified in the **objective_mechanism** of its
 constructor, then  one is automatically created and assigned as its `objective_mechanism
 <ModulatoryMechanism.objective_mechanism>` attribute (see `ModulatoryMechanism_ObjectiveMechanism` below).  This is used to
@@ -72,6 +66,7 @@ itself.  The parameters to be controlled by the  ModulatoryMechanism are specifi
 see `ModulatoryMechanism_Control_Signals` below).
 
 COMMENT:
+VERIFY for Composition
 If the
 ModulatoryMechanism is created automatically by a System (as its `controller <System.controller>`), then the specification
 of OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components
@@ -100,9 +95,9 @@ attribute, and in the ModulatoryMechanism's `monitor_for_control <ModulatoryMech
 
 *When the ModulatoryMechanism is created explicitly*
 
-When a ModulatoryMechanism is created explicitly -- either on its own, or in the **controller** argument of the
-`constructor for a System <System_Control_Specification>`) -- the following arguments of the ModulatoryMechanism's
-constructor can be used to specify its ObjectiveMechanism and/or the OutputStates it monitors:
+When a ModulatoryMechanism is created using its constructor -- either on its own, or in the **controller** argument
+of the `constructor for a Composition <Composition_Control_Specification>`) -- the following arguments of the
+ModulatoryMechanism's constructor can be used to specify its ObjectiveMechanism and/or the OutputStates it monitors:
 
   * **objective_mechanism** -- this can be specified using any of the following:
 
@@ -133,7 +128,7 @@ constructor can be used to specify its ObjectiveMechanism and/or the OutputState
 If a ModulatoryMechanism is specified as the `controller <System.controller>` of a System (see
 `ModulatoryMechanism_Composition_Controller`), any OutputStates specified to be monitored by the System are assigned as
 inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_control** argument of the
-System's constructor, as well as any specified in a MONITOR_FOR_CONTROL entry of a Mechanism `parameter specification
+System's constructor, as well as any specified in a monitor_for_control entry of a Mechanism `parameter specification
 dictionary <ParameterState_Specification>` (see `Mechanism_Constructor_Arguments` and `System_Control_Specification`).
 
 COMMENT:
@@ -361,7 +356,9 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EID_SIMULATION, EUCLIDEAN, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
+    CONTROL_SIGNALS, EID_SIMULATION, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, \
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -374,22 +371,6 @@ __all__ = [
 CONTROL_ALLOCATION = 'control_allocation'
 
 ModulatoryMechanismRegistry = {}
-
-# def _is_control_spec(spec):
-#     from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-#     if isinstance(spec, tuple):
-#         return any(_is_control_spec(item) for item in spec)
-#     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
-#         return _is_control_spec(spec[PROJECTION_TYPE])
-#     elif isinstance(spec, (ModulatoryMechanism, ControlSignal, ControlProjection)):
-#         return True
-#     elif isinstance(spec, type) and issubclass(spec, (ModulatoryMechanism, ControlSignal, ControlProjection)):
-#         return True
-#     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
-#         return True
-#     else:
-#         return False
-#
 
 class ModulatoryMechanismError(Exception):
     def __init__(self, error_value):
@@ -449,7 +430,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     """
     ModulatoryMechanism(                                         \
         system=None                                              \
-        monitor_for_control=None,                                \
+        monitor_for_control=None,                             \
         objective_mechanism=None,                                \
         function=Linear,                                         \
         control_signals=None,                                    \
@@ -857,10 +838,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             self._activate_projections_for_compositions(system)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
+        """Validate SYSTEM, monitor_for_control and CONTROL_SIGNALS
 
         If System is specified, validate it
-        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that all items in monitor_for_control are Mechanisms or OutputStates for Mechanisms in self.system
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
         from psyneulink.core.components.system import MonitoredOutputStateTuple
@@ -1298,7 +1279,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         # Get any and all OutputStates specified in:
         # - **monitored_output_states** argument of the System's constructor
-        # - in a MONITOR_FOR_CONTROL specification for individual OutputStates and/or Mechanisms
+        # - in a monitor_for_control specification for individual OutputStates and/or Mechanisms
         # - already being montiored by the ModulatoryMechanism being assigned
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
 
