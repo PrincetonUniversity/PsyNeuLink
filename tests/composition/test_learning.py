@@ -110,7 +110,12 @@ class TestReinforcement:
 
         comp = pnl.Composition(name='TD_Learning')
         pathway = [sample, sample_to_action_selection, action_selection]
-        comp.add_td_learning_pathway(pathway)
+        learning_related_components = comp.add_td_learning_pathway(pathway)
+
+        # learning_mechanism = learning_related_components[pnl.LEARNING_MECHANISM]
+        # comparator_mechanism = learning_related_components[pnl.COMPARATOR_MECHANISM]
+        target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
+        learned_projection = learning_related_components[pnl.LEARNED_PROJECTION]
         comp.show_graph()
         # learning_projection = pnl.LearningProjection(
         #     learning_function=pnl.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
@@ -125,19 +130,19 @@ class TestReinforcement:
         # )
         trial = 0
 
-
+        targets = [[1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0], [1.0]]
         input_list = {
-            sample: samples
+            sample: samples,
+            target_mechanism: targets
         }
 
-        target_list = {
-            action_selection: targets
-        }
-
-        # s = pnl.System(processes=[p])
-
+        def print_proj():
+            print("\nproj val = ", learned_projection.value)
+            print()
+        print(input_list)
         delta_vals = np.zeros((20, 10))
-        comp.run(inputs=input_list)
+        comp.run(inputs=input_list,
+                 call_after_trial=print_proj)
         print()
         for i, result in enumerate(comp.results):
             print("Trial ", i, " Results = ", result)
