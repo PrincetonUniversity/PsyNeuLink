@@ -1721,6 +1721,28 @@ class Log:
     #     print("Saved")
 
 
+class CompositionLog(Log):
+    @property
+    def all_items(self):
+        return super().all_items + [item.name for item in self.owner.nodes + self.owner.projections]
+
+    def _get_parameter_from_item_string(self, string):
+        param = super()._get_parameter_from_item_string(string)
+
+        if param is None:
+            try:
+                return self.owner.nodes[string].parameters.value
+            except (AttributeError, TypeError):
+                pass
+
+            try:
+                return self.owner.projections[string].parameters.value
+            except (AttributeError, TypeError):
+                pass
+        else:
+            return param
+
+
 def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL, LogCondition.RUN), context, execution_id=None):
     # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
     # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??

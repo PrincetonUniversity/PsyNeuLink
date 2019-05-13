@@ -2442,11 +2442,12 @@ class Mechanism_Base(Mechanism):
             else:
                 raise MechanismError(
                     "Length ({}) of input ({}) does not match "
-                    "required length ({}) for input to {} of {}".format(
+                    "required length ({}) for input to {} {} of {}".format(
                         len(input_item),
                         input_item,
                         len(input_state.defaults.variable),
                         input_state.name,
+                        InputState.__name__,
                         self.name
                     )
                 )
