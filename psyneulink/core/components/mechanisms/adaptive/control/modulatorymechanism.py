@@ -1076,6 +1076,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         # Reassign control_signals to capture any user_defined ControlSignals instantiated in call to super
         #    and assign to ContentAddressableList
+        self._modulatory_signals = ContentAddressableList(component_type=ControlSignal,
+                                                       list=[state for state in self.output_states
+                                                             if isinstance(state, (ControlSignal, GatingSignal))])
+
         self._control_signals = ContentAddressableList(component_type=ControlSignal,
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, ControlSignal)])
@@ -1123,15 +1127,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         control_signal.owner = self
 
         # Update control_signal_costs to accommodate instantiated Projection
-        # MODIFIED 11/2/18 OLD:
         control_signal_costs = self.parameters.control_signal_costs.get()
         try:
             control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
         except (AttributeError, ValueError):
             control_signal_costs = np.zeros((1, 1))
         self.parameters.control_signal_costs.set(control_signal_costs, override=True)
-
-        # MODIFIED 11/2/18 END
 
         # UPDATE output_states AND control_projections -------------------------------------------------------------
 
@@ -1158,10 +1159,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         try:
             self.defaults.value[control_signal.owner_value_index]
         except IndexError:
-            raise ModulatoryMechanismError(
-                "Index specified for {} of {} ({}) exceeds the number of items of its {} ({})".
-                    format(ControlSignal.__name__, self.name, control_signal.owner_value_index,
-                           CONTROL_ALLOCATION, len(self.defaults.value)
+            raise ModulatoryMechanismError("Index specified for {} of {} ({}) "
+                                           "exceeds the number of items of its {} ({})".
+                                           format(ControlSignal.__name__, self.name, control_signal.owner_value_index,
+                                                  CONTROL_ALLOCATION, len(self.defaults.value)
                 )
             )
 
