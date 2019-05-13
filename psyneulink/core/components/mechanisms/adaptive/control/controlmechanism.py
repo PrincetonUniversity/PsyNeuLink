@@ -341,20 +341,20 @@ import warnings
 
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
-from psyneulink.core.components.shellclasses import Composition_Base, Composition_Base, System_Base
+from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EID_SIMULATION, EUCLIDEAN, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EID_SIMULATION, \
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import NodeRole, ContentAddressableList, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable
 
 __all__ = [
     'CONTROL_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -366,7 +366,7 @@ ControlMechanismRegistry = {}
 
 def _is_control_spec(spec):
     from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-    from psyneulink.core.components.mechanisms.adaptive.control.modulatorymechanism import ModulatoryMechanism
+    from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
     if isinstance(spec, tuple):
         return any(_is_control_spec(item) for item in spec)
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
@@ -936,7 +936,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         * self.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
-        from psyneulink.core.components.system import MonitoredOutputStateTuple
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
         from psyneulink.core.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX

@@ -164,7 +164,7 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-from psyneulink.core.components.mechanisms.adaptive.control.modulatorymechanism import ModulatoryMechanism
+from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.states.state import State_Base, _parse_state_spec
