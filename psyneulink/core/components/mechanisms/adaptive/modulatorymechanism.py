@@ -873,16 +873,18 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 if not isinstance(spec, (OutputState, Mechanism)):
                     if isinstance(spec, type) and issubclass(spec, Mechanism):
                         raise ModulatoryMechanismError(
-                                f"Mechanism class specified in {MONITOR_FOR_MODULATION} arg of {self.name};"
-                                f"it must be an instance of the class")
+                                f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_MODULATION}' arg "
+                                f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
+                                f"{OutputState.__name__} of one.")
                     elif isinstance(spec, State):
                         raise ModulatoryMechanismError(
-                                f"{spec.__class__.__name__} specified in {MONITOR_FOR_MODULATION} arg of {self.name};"
-                                f"it must be an {OutputState.__name__}")
+                                f"{spec.__class__.__name__} specified in '{MONITOR_FOR_MODULATION}' arg of {self.name} "
+                                f"({spec.name} of {spec.owner.name}); "
+                                f"it must be an {OutputState.__name__} or {Mechanism.__name__}.")
                     else:
                         raise ModulatoryMechanismError(
-                                f"Erroneous specification of {MONITOR_FOR_MODULATION} arg for {self.name} ({spec});"
-                                f"it must be an {OutputState.__name__} or a {Mechanism.__name__}")
+                                f"Erroneous specification of '{MONITOR_FOR_MODULATION}' arg for {self.name} ({spec}); "
+                                f"it must be an {OutputState.__name__} or a {Mechanism.__name__}.")
                 # If ModulatoryMechanism has been assigned to a System, check that
                 #    all the items in the list used to specify objective_mechanism are in the same System
                 if self.system:
