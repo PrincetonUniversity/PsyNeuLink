@@ -1360,6 +1360,16 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         for aff in self._objective_mechanism.afferents:
             aff._activate_for_compositions(compositions)
 
+    def apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context, execution_id=None):
+        '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
+        specified `control_allocation <ControlMechanism.control_allocation>`.
+        '''
+        value = [np.atleast_1d(a) for a in modulatory_allocation]
+        self.parameters.value.set(value, execution_id)
+        self._update_output_states(execution_id=execution_id,
+                                   runtime_params=runtime_params,
+                                   context=ContextFlags.COMPOSITION)
+
     @property
     def monitored_output_states(self):
         try:
