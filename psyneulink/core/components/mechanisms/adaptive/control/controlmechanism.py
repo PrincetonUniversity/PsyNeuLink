@@ -344,6 +344,7 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
+from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -842,7 +843,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
             for spec in spec_list:
                 if isinstance(spec, MonitoredOutputStateTuple):
                     spec = spec.output_state
-                if isinstance(spec, dict):
+                elif isinstance(spec, tuple):
+                    spec = spec[0]
+                elif isinstance(spec, dict):
                     # If it is a dict, parse to validate that it is an InputState specification dict
                     #    (for InputState of ObjectiveMechanism to be assigned to the monitored_output_state)
                     spec = _parse_state_spec(owner=self,
@@ -854,8 +857,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     #    in the InputState state specification dictionary returned from the parse,
                     #    and that it is specified as a projection_spec (parsed into that in the call
                     #    to _parse_connection_specs by _parse_state_spec)
-
                     spec = spec[PROJECTIONS][0][0]
+
+                if not isinstance(spec, (OutputState, Mechanism)):
+                    if isinstance(spec, type) and issubclass(spec, Mechanism):
+                        raise ControlMechanismError(
+                                f"Mechanism class specified in {MONITOR_FOR_CONTROL} arg of {self.name};"
+                                f"it must be an instance of the class")
+                    elif isinstance(spec, State):
+                        raise ControlMechanismError(
+                                f"{spec.__class__.__name__} specified in {MONITOR_FOR_CONTROL} arg of {self.name};"
+                                f"it must be an {OutputState.__name__}")
+                    else:
+                        raise ControlMechanismError(
+                                f"Erroneous specification of {MONITOR_FOR_CONTROL} arg for {self.name} ({spec});"
+                                f"it must be an {OutputState.__name__} or a {Mechanism.__name__}")
 
                 # If ControlMechanism has been assigned to a System, check that
                 #    all the items in the list used to specify objective_mechanism are in the same System
@@ -873,7 +889,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
             spec = target_set[MONITOR_FOR_CONTROL]
-            if not isinstance(spec, list):
+            if not isinstance(spec, (list, ContentAddressableList)):
                 spec = [spec]
             validate_monitored_state_spec(spec)
 
