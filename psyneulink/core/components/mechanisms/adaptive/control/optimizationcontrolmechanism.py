@@ -965,12 +965,14 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_evaluate_context_struct_type(self, ctx):
         state = self.agent_rep._get_context_struct_type(ctx, True)
         data = self.agent_rep._get_data_struct_type(ctx)
-        return pnlvm.ir.LiteralStructType([state, data])
+        num_estimates = ctx.int32_ty
+        return pnlvm.ir.LiteralStructType([state, data, num_estimates])
 
     def _get_evaluate_context_initializer(self, execution_id):
         state = self.agent_rep._get_context_initializer(execution_id, True)
         data = self.agent_rep._get_data_initializer(execution_id)
-        return (state, data)
+        num_estimates = self.parameters.num_estimates.get(execution_id) or 0
+        return (state, data, num_estimates)
 
     def _get_evaluate_output_struct_type(self, ctx):
         # Returns a scalar that is the predicted net_outcome
