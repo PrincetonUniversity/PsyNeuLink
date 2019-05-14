@@ -1299,9 +1299,16 @@ class GridSearch(OptimizationFunction):
         return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        obj_func = ctx.get_llvm_function(self.objective_function)
-        sample_t = obj_func.args[2].type.pointee
-        value_t = obj_func.args[3].type.pointee
+        ocm = getattr(self.objective_function, '__self__', None)
+        if ocm is not None:
+            assert ocm.function is self
+            sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
+            value_t = ocm._get_evaluate_output_struct_type(ctx)
+        else:
+            obj_func = ctx.get_llvm_function(self.objective_function)
+            sample_t = obj_func.args[2].type.pointee
+            value_t = obj_func.args[3].type.pointee
+
         min_sample_ptr = builder.alloca(sample_t)
         min_value_ptr = builder.alloca(value_t)
         sample_ptr = builder.alloca(sample_t)
@@ -1350,7 +1357,10 @@ class GridSearch(OptimizationFunction):
                     assert False, "Unknown dimension type: {}".format(dimension.type)
 
             # We are in the inner most loop now with sample_ptr setup for execution
-            b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
+            if ocm is not None:
+                builder, ocm._gen_llvm_evaluate(ctx, builder, obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr)
+            else:
+                b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
             direction = "<" if self.direction is MINIMIZE else ">"
