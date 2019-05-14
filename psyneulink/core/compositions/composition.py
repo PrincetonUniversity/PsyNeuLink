@@ -1116,6 +1116,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.__compiled_execution = None
         self.__compiled_run = None
 
+        self.__generated_sim_node_wrappers = {}
+        self.__compiled_sim_node_wrappers = {}
+        self.__generated_simulation = None
+        self.__generated_sim_run = None
+        self.__compiled_simulation = None
+        self.__compiled_sim_run = None
+
         self._compilation_data = self._CompilationData(owner=self)
 
         self.log = CompositionLog(owner=self)
@@ -4043,9 +4050,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Run mode skips mbo invocation so we can't use it if mbo is
         # present and active
-        can_run = (not self.enable_controller or
-                   (execution_context is not None and
-                    execution_context.execution_phase == ContextFlags.SIMULATION))
+        is_simulation = (execution_context is not None and
+                         execution_context.execution_phase == ContextFlags.SIMULATION)
+        can_run = not self.enable_controller or is_simulation
         if (bin_execute is True or str(bin_execute).endswith('Run')) and can_run:
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
@@ -4300,7 +4307,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_list = list(self._all_nodes)
         return node_list.index(node)
 
-    def _get_node_wrapper(self, node):
+    def _get_node_wrapper(self, node, simulation=False):
+        if simulation:
+            return self._get_sim_node_wrapper(node)
+
         if node not in self.__generated_node_wrappers:
             class node_wrapper():
                 def __init__(self, func):
@@ -4321,6 +4331,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return self.__compiled_node_wrappers[node]
 
+    def _get_sim_node_wrapper(self, node):
+        if node not in self.__generated_sim_node_wrappers:
+            class node_wrapper():
+                def __init__(self, func):
+                    self._llvm_function = func
+            wrapper_f = self.__gen_node_wrapper(node, True)
+            wrapper = node_wrapper(wrapper_f)
+            self.__generated_sim_node_wrappers[node] = wrapper
+            return wrapper
+
+        return self.__generated_sim_node_wrappers[node]
+
+    def _get_sim_bin_node(self, node):
+        if node not in self.__compiled_sim_node_wrappers:
+            wrapper = self._get_sim_node_wrapper(node)
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
+            self.__compiled_sim_node_wrappers[node] = bin_f
+            return bin_f
+
+        return self.__compiled_sim_node_wrappers[node]
+
     @property
     def _llvm_function(self):
         if self.__generated_execution is None:
@@ -4328,6 +4359,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.__generated_execution = ctx.gen_composition_exec(self)
 
         return self.__generated_execution
+
+    @property
+    def _llvm_simulation(self):
+        if self.__generated_simulation is None:
+            with pnlvm.LLVMBuilderContext() as ctx:
+                self.__generated_simulation = ctx.gen_composition_exec(self, True)
+
+        return self.__generated_simulation
+
+    @property
+    def _llvm_sim_run(self):
+        if self.__generated_sim_run is None:
+            with pnlvm.LLVMBuilderContext() as ctx:
+                self.__generated_sim_run = ctx.gen_composition_run(self, True)
+
+        return self.__generated_sim_run
+
 
     def _get_bin_execution(self):
         if self.__compiled_execution is None:
@@ -4360,15 +4408,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self._compilation_data.ptx_execution.get(execution_id) is None:
             self._compilation_data.ptx_execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
-    def __gen_node_wrapper(self, node):
+    def __gen_node_wrapper(self, node, simulation=False):
+        assert node is not self.controller or simulation is False
+        name = 'comp_sim_wrap_' if simulation else 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.get_unique_name("comp_wrap_" + node.name)
+            func_name = ctx.get_unique_name(name + node.name)
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
-                ctx.get_context_struct_type(self).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
+                self._get_context_struct_type(ctx, simulation).as_pointer(),
+                self._get_param_struct_type(ctx, simulation).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr]
 

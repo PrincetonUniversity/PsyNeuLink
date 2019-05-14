@@ -176,14 +176,15 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
-    def gen_composition_exec(self, composition):
+    def gen_composition_exec(self, composition, simulation=False):
         # Create condition generator
         cond_gen = ConditionGenerator(self, composition)
 
-        func_name = self.get_unique_name('exec_wrap_' + composition.name)
+        name = 'exec_wrap_sim_' if simulation else 'exec_wrap_'
+        func_name = self.get_unique_name(name + composition.name)
         func_ty = ir.FunctionType(ir.VoidType(), (
-            self.get_context_struct_type(composition).as_pointer(),
-            self.get_param_struct_type(composition).as_pointer(),
+            composition._get_context_struct_type(self, simulation).as_pointer(),
+            composition._get_param_struct_type(self, simulation).as_pointer(),
             self.get_input_struct_type(composition).as_pointer(),
             self.get_data_struct_type(composition).as_pointer(),
             cond_gen.get_condition_struct_type().as_pointer()))
@@ -212,7 +213,7 @@ class LLVMBuilderContext:
             data = data_arg
 
         # Call input CIM
-        input_cim_w = composition._get_node_wrapper(composition.input_CIM);
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
@@ -265,7 +266,7 @@ class LLVMBuilderContext:
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
             with builder.if_then(mech_cond):
-                mech_w = composition._get_node_wrapper(mech);
+                mech_w = composition._get_node_wrapper(mech, simulation);
                 mech_f = self.get_llvm_function(mech_w)
                 # Wrappers do proper indexing of all strctures
                 if len(mech_f.args) == 5: # Mechanism wrappers have 5 inputs
@@ -308,7 +309,7 @@ class LLVMBuilderContext:
 
         builder.position_at_end(exit_block)
         # Call output CIM
-        output_cim_w = composition._get_node_wrapper(composition.output_CIM);
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation);
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.call(output_cim_f, [context, params, comp_in, data, data])
 
@@ -323,11 +324,12 @@ class LLVMBuilderContext:
 
         return llvm_func
 
-    def gen_composition_run(self, composition):
-        func_name = self.get_unique_name('run_wrap_' + composition.name)
+    def gen_composition_run(self, composition, simulation=False):
+        name = 'run_wrap_sim_' if simulation else 'run_wrap_'
+        func_name = self.get_unique_name(name + composition.name)
         func_ty = ir.FunctionType(ir.VoidType(), (
-            self.get_context_struct_type(composition).as_pointer(),
-            self.get_param_struct_type(composition).as_pointer(),
+            composition._get_context_struct_type(self, simulation).as_pointer(),
+            composition._get_param_struct_type(self, simulation).as_pointer(),
             self.get_data_struct_type(composition).as_pointer(),
             self.get_input_struct_type(composition).as_pointer(),
             self.get_output_struct_type(composition).as_pointer(),
@@ -379,7 +381,10 @@ class LLVMBuilderContext:
         data_in_ptr = builder.gep(data_in, [input_idx])
 
         # Call execution
-        exec_f = self.get_llvm_function(composition)
+        if simulation:
+            exec_f = self.get_llvm_function(composition._llvm_simulation.name)
+        else:
+            exec_f = self.get_llvm_function(composition)
         builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
         # Extract output_CIM result
