@@ -1293,6 +1293,9 @@ class GridSearch(OptimizationFunction):
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value
         # compiled version should never return 'all values'
+        if len(val[0]) != len(self.search_space):
+            val = list(val)
+            val[0] = [0.0] * len(self.search_space)
         return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
