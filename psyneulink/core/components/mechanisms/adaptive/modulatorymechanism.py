@@ -845,8 +845,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   modulatory_signals=modulatory_signals,
-                                                  control_signals=None,
-                                                  gating_signals=None,
+                                                  # control_signals=None,
+                                                  # gating_signals=None,
                                                   modulation=modulation,
                                                   params=params)
 
@@ -1124,14 +1124,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._modulatory_signals = ContentAddressableList(component_type=ModulatorySignal,
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
-
-        self._control_signals = ContentAddressableList(component_type=ControlSignal,
-                                                       list=[state for state in self.output_states
-                                                             if isinstance(state, ControlSignal)])
-
-        self._gating_signals = ContentAddressableList(component_type=GatingSignal,
-                                                       list=[state for state in self.output_states
-                                                             if isinstance(state, GatingSignal)])
 
         # If the ModulatoryMechanism's control_allocation has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
@@ -1441,8 +1433,20 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 for projection in modulatory_signal.efferents]
 
     @property
+    def control_signals(self):
+        return ContentAddressableList(component_type=ControlSignal,
+                                      list=[state for state in self.output_states
+                                            if isinstance(state, ControlSignal)])
+
+    @property
     def control_projections(self):
         return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
+
+    @property
+    def gating_signals(self):
+        return ContentAddressableList(component_type=GatingSignal,
+                                      list=[state for state in self.output_states
+                                            if isinstance(state, GatingSignal)])
 
     @property
     def gating_projections(self):
