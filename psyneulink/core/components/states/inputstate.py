@@ -1395,7 +1395,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=input_states,
-                                         state_type=InputState,
+                                         state_types=[InputState],
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.defaults.variable,

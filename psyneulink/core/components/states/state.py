@@ -2201,7 +2201,7 @@ class State_Base(State):
 
 def _instantiate_state_list(owner,
                             state_list,              # list of State specs, (state_spec, params) tuples, or None
-                            state_type,              # StateType subclass
+                            state_types,             # StateType subclass
                             state_param_identifier,  # used to specify state_type State(s) in params[]
                             reference_value,         # value(s) used as default for State and to check compatibility
                             reference_value_name,    # name of reference_value type (e.g. variable, output...)
@@ -2216,9 +2216,11 @@ def _instantiate_state_list(owner,
                                  number (used as constraint value)
                                  dict (key=name, value=reference_value or param dict)
                          if None, instantiate a single default State using reference_value as state_spec
-    - state_param_identifier (str): kw used to identify set of States in params;  must be one of:
+    - state_param_identifier (str): used to identify set of States in params;  must be one of:
         - INPUT_STATE
         - OUTPUT_STATE
+        (note: this is not a list, even if state_types is, since it is about the attribute to which the
+               states will be assigned)
     - reference_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of State(s):
         - INPUT_STATE: self.defaults.variable
@@ -2256,11 +2258,9 @@ def _instantiate_state_list(owner,
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
-            print("No {0} specified for {1}; default will be created using {2} "
-                  "of function ({3}) as its value".format(state_param_identifier,
-                                                          owner.__class__.__name__,
-                                                          reference_value_name,
-                                                          reference_value))
+            print(f"No {state_param_identifier} specified for {owner.__class__.__name__}; "
+                  f"default will be created using {reference_value_name} "
+                  f"of function ({reference_value}) as its value.")
 
     # States should be either in a list, or possibly an np.array (from reference_value assignment above):
     # KAM 6/21/18 modified to include tuple as an option for state_list
@@ -2282,9 +2282,8 @@ def _instantiate_state_list(owner,
         # Insure that reference_value is an indexible item (list, >=2D np.darray, or otherwise)
         num_constraint_items = len(reference_value)
     except:
-        raise StateError("PROGRAM ERROR: reference_value ({0}) for {1} of {2}"
-                             " must be an indexable object (e.g., list or np.ndarray)".
-                             format(reference_value, reference_value_name, state_type.__name__))
+        raise StateError(f"PROGRAM ERROR: reference_value ({reference_value}) for {reference_value_name} of "
+                         f"{[s.__name__ for s in state_types]} must be an indexable object (e.g., list or np.ndarray).")
     # If number of States does not equal the number of items in reference_value, raise exception
     if num_states != num_constraint_items:
         if num_states > num_constraint_items:
@@ -2307,8 +2306,16 @@ def _instantiate_state_list(owner,
                                     name=owner.name+' ContentAddressableList of ' + state_param_identifier)
     # For each state, pass state_spec and the corresponding item of reference_value to _instantiate_state
 
-    for index, state_spec in enumerate(state_list):
-
+    # # MODIFIED 5/14/19 OLD:
+    # for index, state_spec in enumerate(state_list):
+    # MODIFIED 5/14/19 NEW: [JDC]
+    if not isinstance(state_types, list):
+        state_types = [state_types] * len(state_list)
+    if len(state_types) != len(state_list):
+        state_types = [state_types[0]] * len(state_list)
+    # for index, state_spec, state_type in enumerate(zip(state_list, state_types)):
+    for index, state_spec, state_type in zip(list(range(len(state_list))), state_list, state_types):
+    # MODIFIED 5/14/19 END
         # # Get name of state, and use as index to assign to states ContentAddressableList
         # default_name = state_type._assign_default_state_name(state_type)
         # name = default_name or None

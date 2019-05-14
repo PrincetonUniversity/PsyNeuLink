@@ -69,7 +69,7 @@ def test_gating_using_ModulatoryMechanism():
 
     Gating_Mechanism = pnl.ModulatoryMechanism(
         size=[1],
-        control_signals=[Output_Layer.output_state]
+        modulatory_signals=[Output_Layer.output_state]
     )
 
     p_pathway = [Input_Layer, Output_Layer]

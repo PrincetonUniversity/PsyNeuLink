@@ -39,13 +39,12 @@ class TestModulatoryMechanism:
         comp.add_controller(C)
 
         assert Tz.parameter_states[SLOPE].mod_afferents[0].sender.owner == C
-        result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
         assert np.allclose(comp.results,[[[1.], [4.]], [[4.], [4.]]])
 
     def test_control_modulation_in_composition(self):
         m = ProcessingMechanism(function=Logistic)
         c = ModulatoryMechanism(
-                control_signals=[
+                modulatory_signals=[
                     ControlSignal(projections=(GAIN,m)),
                     GatingSignal(projections=m)]
         )
