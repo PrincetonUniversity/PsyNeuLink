@@ -14,32 +14,35 @@
 Overview
 --------
 
-An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve cue-associate pairs.
+An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve content-associate pairs.
+Only the content is used for determining which pairs are retrieved
 
 .. _EpisodicMemoryMechanism_Creation:
 
 Creating a TransferMechanism
 -----------------------------
 
-An EpisodicMemoryMechanism is created by calling its constructor with **cue_size** and **assoc_size** that define
-the shapes of the items stored in its memory.
+An EpisodicMemoryMechanism is created by calling its constructor with **content_size** and, optionally, **assoc_size**,
+that define the shapes of the items stored in its memory.
 
 .. _EpisodicMemoryMechanism_Structure:
 
 Structure
 ---------
 
-An EpisodicMemoryMechanism has two `InputStates <InputState>`, *CUE_INPUT* and *ASSOC_INPUT*, that represent
-an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves cue-assoc pairs from its
-memory; and two `OutputStates <OutputState>`, *ASSOC_OUTPUT* and *CUE_OUTPUT* that represent a retrieved item.
-The default function is a `DND` that implements a simple form of differentiable neural dictionary, but a custom
-function can be specified, so long as it meets the following requirements:
+An EpisodicMemoryMechanism has at least one `InputStates <InputState>`, its *CONTENT_INPUT* and,
+optionally, an *ASSOC_INPUT* InputState (if its *assoc_size* is specified and is not 0) that represent
+an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves content-assoc pairs from its
+memory; and at least one `OutputStates <OutputState>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
+an *ASSOC_INPUT* InputState, that represent a retrieved item. The default function is a `ContentAddressableMemory` that
+implements a simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
+following requirements:
 
-    * It must accept a 2d array as its first argument, the first item of which is the cue and the second the associate.
+    * It must accept a 2d array as its first argument, the first item of which is the content and the second the associate.
     ..
-    * It must return a 2d array, the first item of which is the retrieved associate and the second of which is the cue
-      with which it is associated in the `function <EpisodicMemoryMechanism.function>`\\'s `memory
-      <EpisodicMemoryMechanism.memory>`.
+    * It must return a 2d array, the first item of which is the retrieved content and the second of which is the
+    assoc with which it is associated in the `function <EpisodicMemoryMechanism.function>`\\'s `memory
+    <EpisodicMemoryMechanism.memory>`.
     ..
     * It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism's
       `memory <EpisodicMemoryMechanism.memory>` attribute.
@@ -52,24 +55,24 @@ Execution
 When an EpisodicMemoryMechanism is executed, its `function <EpisodicMemoryMechanism.function>` carries out
 the following operations:
 
-    * retrieves an item from its memory based on the `value <InputState.value>` of its *CUE_INPUT* `InputState`;
+    * retrieves an item from its memory based on the `value <InputState.value>` of its *CONTENT_INPUT* `InputState`;
       if no retrieval is made, appropriately shaped zero-valued arrays are assigned to the `value
-      <OutputState.value>` of the *ASSOC_OUTPUT* and *CUE_OUTPUT* OutputStates.
+      <OutputState.value>` of the *CONTENT_OUTPUT* and, if specified, it *ASSOC_OUTPUT* OutputStates.
     ..
-    * stores the `value <InputState.value>` of its *CUE_INPUT* and *ASSOC_INPUT* `InputStates <InputState>` in
-      its memory.
+    * stores the `value <InputState.value>` of its *CONTENT_INPUT* and, if specified, *ASSOC_INPUT* `InputStates
+    <InputState>` in its memory.
     ..
-    * assigns the value of the retrieved item's assoc in the EpisodicMemoryMechanism's  *ASSOC_OUTPUT* `OutputState`,
-      and the value of the cue of the retrieved item in the *CUE_OUTPUT* OutputState.
+    * assigns the value of the retrieved item's content in the EpisodicMemoryMechanism's  *CONTENT_OUTPUT*
+    `OutputState`, and the value of the assoc of the retrieved item in the *ASSOC_OUTPUT* OutputState.
 
     .. note::
          The order of storage and retieval is determined by the function.
 
-         The value of the cue of the item retrieved from memory (and stored in *CUE_OUTPUT*) may be different than the
-         `value <InputState.value>` of *CUE* used to retrieve the item.
+         The value of the content of the item retrieved from memory (and stored in *CONTENT_OUTPUT*) may be different than the
+         `value <InputState.value>` of *CONTENT* used to retrieve the item.
 
          If no retrieval is made, appropriately shaped zero-valued arrays are assigned as the `value
-         <OutputState.value>` of the *ASSOC_OUTPUT* and *CUE_OUTPUT* OutputStates.
+         <OutputState.value>` of the *CONTENT_OUTPUT* and, if specified, *ASSOC_OUTPUT* OutputStates.
 
 .. _EpisodicMemoryMechanism_Class_Reference:
 
@@ -83,18 +86,20 @@ import warnings
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DND
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
-__all__ = ['EpisodicMemoryMechanism', 'CUE_INPUT', 'ASSOC_INPUT', 'CUE_OUTPUT', 'ASSOC_OUTPUT']
+__all__ = ['EpisodicMemoryMechanism', 'CONTENT_INPUT', 'ASSOC_INPUT', 'CONTENT_OUTPUT', 'ASSOC_OUTPUT']
 
-CUE_INPUT = 'CUE_INPUT'
+CONTENT_INPUT = 'CONTENT_INPUT'
 ASSOC_INPUT = 'ASSOC_INPUT'
-CUE_OUTPUT = 'CUE_OUTPUT'
+CONTENT_OUTPUT = 'CONTENT_OUTPUT'
 ASSOC_OUTPUT = 'ASSOC_OUTPUT'
 
 
@@ -108,32 +113,33 @@ class EpisodicMemoryMechanismError(Exception):
 
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
-    EpisodicMemoryMechanism( \
-        cue_size=1,          \
-        assoc_size=1,        \
-        function=DND,        \
-        params=None,         \
-        name=None,           \
-        prefs=None           \
+    EpisodicMemoryMechanism(                \
+        content_size=1,                     \
+        assoc_size=1,                       \
+        function=ContentAddressableMemory,  \
+        params=None,                        \
+        name=None,                          \
+        prefs=None                          \
     )
 
-    Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary (DND)
-    <HTML>`_
+    Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary
+    (ContentAddressableMemory)<HTML>`_
 
     Arguments
     ---------
 
-    cue_size : int : default 1
-        specifies length of the cue stored in the `function <EpisodicMemoryMechanism.function>`\s memory.
+    content_size : int : default 1
+        specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\s memory.
 
-    assoc_size : int : default 1
-        specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\s memory.
+    assoc_size : int : default 0
+        specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\s memory;
+        if it is 0 (the default) then no *ASSOC_INPUT* InputState or *ASSOC_OUTPUT* OutputState are created.
 
-    function : function : default DND
+    function : function : default ContentAddressableMemory
         specifies the function that implements a memory store and methods to store to and retrieve from it.  It
-        must take as its `variable <Function.variable>` a 2d array, the first item of which is the cue and the second
+        must take as its `variable <Function.variable>` a 2d array, the first item of which is the content and the second
         the associate to be stored in its memory, and must return a 2d array that is the value of the
-        retriefved associate and the actual cue associated with it in memory.
+        content and assoc retrieved from its memory.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -180,24 +186,26 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :type: list
 
         """
-        variable = Parameter([[0],[0]])
+        variable = Parameter([[0]])
 
     def __init__(self,
-                 cue_size:int=1,
-                 assoc_size:int=1,
-                 function:Function=DND,
+                 content_size:int=1,
+                 assoc_size:int=0,
+                 function:Function=ContentAddressableMemory,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
         # Template for memory_store entries
-        default_variable = [np.zeros(cue_size), np.zeros(assoc_size)]
+        default_variable = [np.zeros(content_size)]
 
-        input_states = [{NAME:CUE_INPUT, SIZE:cue_size},
-                        {NAME:ASSOC_INPUT, SIZE:assoc_size}]
+        input_states = [{NAME:CONTENT_INPUT, SIZE:content_size}]
+        output_states = [{NAME: CONTENT_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}]
 
-        output_states = [{NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 0)},
-                         {NAME: CUE_OUTPUT, VARIABLE: (OWNER_VALUE, 1)}]
+        if assoc_size:
+            input_states.append({NAME:ASSOC_INPUT, SIZE:assoc_size})
+            output_states.append({NAME: ASSOC_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
+            default_variable.append(np.zeros(assoc_size))
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
@@ -212,13 +220,42 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                          )
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        return super()._execute(variable=variable,
-                                  execution_id=execution_id,
-                                  runtime_params=runtime_params,
-                                  context=context)
+
+        value =  super()._execute(variable=variable,
+                                           execution_id=execution_id,
+                                           runtime_params=runtime_params,
+                                           context=context)
+        # Only return content if assoc has not been specified (in which case second element of value should be empty)
+        if len(value[1]) == 0:
+            return np.delete(value,1)
+        else:
+            return value
+
+
+    def _instantiate_output_states(self, context=None):
+        if len(self.input_states) != len(self.output_states):
+            assert False, \
+                f'PROGRAM ERROR: Number of {InputState.__class__.__name__}s and ' \
+                f'{OutputState.__class__.__name__}s do not match in {self.name}'
+        for i, input_state_spec, output_state_spec in zip(range(len(self.input_states)-1),
+                                                          self.input_states,
+                                                          self.output_states):
+            if input_state_spec.value is []:
+                del self.output_states[i]
+
+        return super()._instantiate_output_states(context=context)
+
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
+
+        # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
+        if len(variable) != 2:
+            return np.array([variable[0],[]])
+        else:
+            return variable
 
     @property
     def memory(self):
+        '''Return function's memory attribute'''
         try:
             return self.function.memory
         except:

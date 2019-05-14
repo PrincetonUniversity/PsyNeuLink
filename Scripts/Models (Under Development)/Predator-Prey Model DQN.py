@@ -28,7 +28,7 @@ VERBOSE = SIMULATION_REPORTING
 
 # ControlSignal parameters
 COST_RATE = -.05
-COST_BIAS = 1
+COST_BIAS = -3
 ALLOCATION_SAMPLES = [0, 500]
 
 
@@ -161,7 +161,7 @@ ocm = OptimizationControlMechanism(name='EVC',
                                    objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
                                                                           function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
-                                   compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
+                                   # compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
