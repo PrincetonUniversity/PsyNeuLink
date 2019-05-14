@@ -1358,7 +1358,7 @@ class GridSearch(OptimizationFunction):
 
             # We are in the inner most loop now with sample_ptr setup for execution
             if ocm is not None:
-                builder, ocm._gen_llvm_evaluate(ctx, builder, obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr)
+                b = ocm._gen_llvm_evaluate(ctx, b, obj_param_ptr, obj_state_ptr, sample_ptr, arg_in, value_ptr)
             else:
                 b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
             value = b.load(value_ptr)

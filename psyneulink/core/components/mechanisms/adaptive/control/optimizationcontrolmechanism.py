@@ -982,7 +982,72 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.ArrayType(ctx.float_ty,
                                   len(self.control_allocation_search_space))
 
-    def _gen_llvm_evaluate(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_evaluate(self, ctx, builder, params, state, allocation_sample, arg_in, arg_out):
+        sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)
+
+        # create a simulation copy of state
+        base_comp_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        comp_state = builder.alloca(base_comp_state.type.pointee)
+        builder.store(builder.load(base_comp_state), comp_state)
+
+        # create a simulation copy of data
+        base_comp_data = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        comp_data = builder.alloca(base_comp_data.type.pointee)
+        builder.store(builder.load(base_comp_data), comp_data)
+
+        # apply allocation sample
+        assert len(self.output_states) == len(allocation_sample.type.pointee)
+        idx = self.agent_rep._get_node_index(self)
+        ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                          ctx.int32_ty(idx)])
+        for i, _ in enumerate(self.output_states):
+            idx = ctx.int32_ty(i)
+            sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
+            sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+            builder.store(builder.load(sample_ptr), sample_dst)
+
+        # construct input
+        num_features = len(arg_in.type.pointee) - 1
+        comp_input = builder.alloca(sim_f.args[3].type.pointee, num_features)
+        for i in range(num_features):
+            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            # destination is array of structs of inputs
+            dst = builder.gep(comp_input, [ctx.int32_ty(i), ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(src), dst)
+
+        comp_in_count = builder.alloca(ctx.int32_ty)
+        builder.store(comp_in_count.type.pointee(num_features), comp_in_count)
+
+        # determine simulation counts
+        num_estimates = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        num_estimates = builder.load(num_estimates)
+
+        # if the parameter value is 0 use the size of feature vector
+        param_is_zero = builder.icmp_unsigned("==", num_estimates,
+                                                    ctx.int32_ty(0))
+        num_sims = builder.select(param_is_zero, ctx.int32_ty(num_features),
+                                                 num_estimates)
+
+        comp_out_count = builder.alloca(ctx.int32_ty)
+        builder.store(num_sims, comp_out_count)
+
+        comp_param = params
+        #TODO: get correct output size
+        comp_output = builder.alloca(sim_f.args[4].type.pointee, 10)
+        builder.call(sim_f, [comp_state, comp_param, comp_data, comp_input,
+                             comp_output, comp_in_count, comp_out_count])
+
+        # Extract objective mech value
+        idx = self.agent_rep._get_node_index(self.objective_mechanism)
+        objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+        objective_val_ptr = builder.gep(objective_os_ptr,
+                                        [ctx.int32_ty(0), ctx.int32_ty(0),
+                                         ctx.int32_ty(0)])
+
+        objective = builder.load(objective_val_ptr)
+
+        #TODO: run cost function
+        builder.store(objective, arg_out)
         return builder
 
     def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
