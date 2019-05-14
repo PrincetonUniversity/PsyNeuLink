@@ -7,11 +7,11 @@ class TestModulatoryMechanism:
         Tx = TransferMechanism(name='Tx')
         Ty = TransferMechanism(name='Ty')
         Tz = TransferMechanism(name='Tz')
-        C =  ControlMechanism(
+        C =  ModulatoryMechanism(
                 # function=Linear,
                 default_variable=[1],
                 monitor_for_control=Ty,
-                control_signals=ControlSignal(modulation=OVERRIDE,
+                modulatory_signals=ControlSignal(modulation=OVERRIDE,
                                                   projections=(SLOPE,Tz)))
         P1=Process(pathway=[Tx,Tz])
         P2=Process(pathway=[Ty, C])
@@ -27,10 +27,10 @@ class TestModulatoryMechanism:
         Tx = TransferMechanism(name='Tx')
         Ty = TransferMechanism(name='Ty')
         Tz = TransferMechanism(name='Tz')
-        C =  ControlMechanism(
+        C =  ModulatoryMechanism(
                 default_variable=[1],
                 monitor_for_control=Ty,
-                control_signals=ControlSignal(modulation=OVERRIDE,
+                modulatory_signals=ControlSignal(modulation=OVERRIDE,
                                                   projections=(SLOPE,Tz)))
 
         comp = Composition(enable_controller=True)
@@ -52,3 +52,4 @@ class TestModulatoryMechanism:
         assert  'ProcessingMechanism-0[InputState-0] GatingSignal' in c.output_states.names
         assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
         assert m.input_state.mod_afferents[0].sender.owner == c
+

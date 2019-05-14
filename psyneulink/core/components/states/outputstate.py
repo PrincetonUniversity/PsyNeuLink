@@ -1453,117 +1453,17 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     else:
         reference_value = owner_value
-        
-    # # MODIFIED 5/14/19 OLD:
-    # if hasattr(owner, OUTPUT_STATE_TYPES):
-    #     outputStateType = owner.outputStateType
-    # else:
-    #     outputStateType = OutputState
-    # 
-    # state_list = _instantiate_state_list(owner=owner,
-    #                                      state_list=output_states,
-    #                                      state_type=outputStateType,
-    #                                      state_param_identifier=OUTPUT_STATE,
-    #                                      reference_value=reference_value,
-    #                                      reference_value_name="output",
-    #                                      context=context)
-    # 
-    # # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    # if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
-    #     owner.output_states.extend(state_list)
-    # else:
-    #     owner._output_states = state_list
-    # 
-    # # Assign value of require_projection_in_composition
-    # for state in owner._output_states:
-    #     # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
-    #     if state.require_projection_in_composition is None and owner.output_state == state:
-    #         state.parameters.require_projection_in_composition.set(True, override=True)
-    # 
-    # return state_list
-    
-    # # MODIFIED 5/14/19 NEW: [JDC]
-    # # Create dict with entries for outputStateTypes specified by owner's Class,
-    # #     and assign each output_state to the relevant entry for its type
-    # if hasattr(owner, OUTPUT_STATE_TYPES):
-    #     # If owner has only one OutputStateTypes, put in list
-    #     if not isinstance(owner.outputStateTypes, list):
-    #         state_lists = dict({owner.outputStateTypes:output_states})
-    #     else:
-    #         # If no OutputState specified, used first state_type in outputStateTypes
-    #         if output_states is None:
-    #             state_lists = dict({owner.outputStateTypes[0]:None})
-    #         else:
-    #             # Construct a dict with an entry for states of each type, and add output_states to list for that type
-    #             state_lists = OrderedDict({i:[] for i in owner.outputStateTypes})
-    #             for output_state in output_states:
-    #                 state_lists[output_state.__class__].append(output_state)
-    # else:
-    #     state_lists = dict({OutputState:output_states})
-    #
-    # # implemented_states = []
-    # implemented_states = ContentAddressableList(component_type=State_Base,
-    #                                             list=[],
-    #                                             # name=owner.name + ' output_states'
-    #                                             name=owner.name+' ContentAddressableList of OutputStates')
-    # ref_val_start = 0
-    #
-    # # Instantiate OutputStates
-    # for state_type, output_states in state_lists.items():
-    #
-    #     # Get reference_values for each state_type
-    #     if output_states is None:
-    #         ref_val_end = ref_val_start+1
-    #     else:
-    #         ref_val_end = ref_val_start + len(output_states)
-    #     ref_vals = reference_value[ref_val_start:ref_val_end]
-    #
-    #     # Instantiate states for each state_type
-    #     implemented_states.extend(_instantiate_state_list(owner=owner,
-    #                                                       state_list=output_states,
-    #                                                       state_types=state_type,
-    #                                                       state_param_identifier=OUTPUT_STATE,
-    #                                                       reference_value=ref_vals,
-    #                                                       reference_value_name="output",
-    #                                                       context=context))
-    #     ref_val_start += ref_val_end
-    #
-    #
-    # # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    # if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
-    #     owner.output_states.extend(implemented_states)
-    # else:
-    #     owner._output_states = implemented_states
-    #
-    # # Assign value of require_projection_in_composition
-    # for state in owner._output_states:
-    #     # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
-    #     if state.require_projection_in_composition is None and owner.output_state == state:
-    #         state.parameters.require_projection_in_composition.set(True, override=True)
-    #
-    # return implemented_states
-
-    # MODIFIED 5/14/19 NEWER [JDC]:
-    # if hasattr(owner, OUTPUT_STATE_TYPES):
-    #     outputStateTypes = owner.outputStateTypes
-    # else:
-    #     outputStateTypes = [OutputState]
-
-    # If default OutputState is being implemented, use base class as default
-    # if output_states is None:
-    #     state_types = OutputState
 
     if hasattr(owner, OUTPUT_STATE_TYPES):
         # If owner has only one type in OutputStateTypes, generate state_types list with that for all entries
         if not isinstance(owner.outputStateTypes, list):
-            state_types = [owner.outputStateTypes] * len(output_states)
+            state_types = owner.outputStateTypes
         else:
             # If no OutputState specified, used first state_type in outputStateTypes as default
             if output_states is None:
-                # state_types = [owner.outputStateTypes[0]] * len(output_states)
                 state_types = owner.outputStateTypes[0]
             else:
-                # Construct a dict with an entry for states of each type, and add output_states to list for that type
+                # Construct list with an entry for the state_type of each OutputState in output_states
                 state_types = []
                 for output_state in output_states:
                     state_types.append(output_state.__class__)

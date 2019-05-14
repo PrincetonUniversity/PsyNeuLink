@@ -932,6 +932,7 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
+        # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
             sim_execution_id = self._set_up_simulation(execution_id, control_allocation)
 
@@ -943,6 +944,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                              context=self.function.parameters.context.get(execution_id),
                                              execution_mode=self.parameters.comp_execution_mode.get(execution_id)
             )
+        # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
