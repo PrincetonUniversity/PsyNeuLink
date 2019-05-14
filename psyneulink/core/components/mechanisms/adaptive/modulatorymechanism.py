@@ -81,6 +81,14 @@ COMMENT
 *ObjectiveMechanism*
 ~~~~~~~~~~~~~~~~~~~~
 
+XXX Explain here and above that this is only created if:
+- explicitly specified in objective_mechanism argument of ModulatoryMechanism's constructor
+- monitor_for_control is specified
+- assign_as_controller is called
+
+XXX Add same explanation in ControlMechanism docstring
+
+
 Whenever a ModulatoryMechanism is created, it automatically creates an `ObjectiveMechanism` that monitors and evaluates
 the `value <OutputState.value>`\\(s) of a set of `OutputState(s) <OutputState>`; this evaluation is used to determine
 the ModulatoryMechanism's `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`. The ObjectiveMechanism,
@@ -1090,7 +1098,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self.input_state.name = OUTCOME
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        self._instantiate_objective_mechanism(context=context)
+        if self.monitor_for_control or self._objective_mechanism:
+            self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
         from psyneulink.core.globals.registry import register_category
@@ -1303,6 +1312,9 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         if context == ContextFlags.COMMAND_LINE:
             system.controller = self
             return
+
+        if self._objective_mechanism is None:
+            self._instantiate_objective_mechanism(context=context)
 
         # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
         # DETACH AS CONTROLLER FOR ANY EXISTING SYSTEM (AND SET THAT ONE'S CONTROLLER ATTRIBUTE TO None)

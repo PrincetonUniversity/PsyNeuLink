@@ -2306,16 +2306,12 @@ def _instantiate_state_list(owner,
                                     name=owner.name+' ContentAddressableList of ' + state_param_identifier)
     # For each state, pass state_spec and the corresponding item of reference_value to _instantiate_state
 
-    # # MODIFIED 5/14/19 OLD:
-    # for index, state_spec in enumerate(state_list):
-    # MODIFIED 5/14/19 NEW: [JDC]
     if not isinstance(state_types, list):
         state_types = [state_types] * len(state_list)
     if len(state_types) != len(state_list):
         state_types = [state_types[0]] * len(state_list)
     # for index, state_spec, state_type in enumerate(zip(state_list, state_types)):
     for index, state_spec, state_type in zip(list(range(len(state_list))), state_list, state_types):
-    # MODIFIED 5/14/19 END
         # # Get name of state, and use as index to assign to states ContentAddressableList
         # default_name = state_type._assign_default_state_name(state_type)
         # name = default_name or None
@@ -2695,16 +2691,20 @@ def _parse_state_spec(state_type=None,
         if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
             state_specification = state_specification.outputStateTypes
             # MODIFIED 5/11/19 NEW: [JDC] TO ACCOMODATE GatingSignals on ControlMechanism
-            # FIX: IF THIS WORKS, TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)
+            # FIX: TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)
             # FIX: AND ANY OTHER PLACES WHERE LISTS ARE DEALT WITH
             if isinstance(state_specification, list):
+                # If modulatory projection is specified as a Mechanism that allows more than one type of OutputState
+                #   (e.g., ModulatoryMechanism allows both ControlSignals or GatingSignals as its OutputStates)
+                #   make sure that only one of these is appropriate for state to be modulated (state_type.connectswith),
+                #   otherwise it is ambiguous which to assign as state_specification
                 specs = [s for s in state_specification if s.__name__ in state_type.connectsWith]
-                assert len(specs)==1, \
-                    f"PROGRAM ERROR:  More than one {State.__name__} type found ({specs})" \
-                        f"that can be specificied as a modulatory {Projection.__name__} to {state_type}"
-                state_specification = specs[0]
-            # MODIFIED 5/11/19 END
-
+                try:
+                    state_specification, = specs
+                except ValueError:
+                    assert False, \
+                        f"PROGRAM ERROR:  More than one {State.__name__} type found ({specs})" \
+                            f"that can be specificied as a modulatory {Projection.__name__} to {state_type}"
 
         projection = state_type
 

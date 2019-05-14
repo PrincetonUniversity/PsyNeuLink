@@ -919,7 +919,7 @@ class System(System_Base):
         # If controller has already been instantiated, flag its ObjectiveMechanism as belonging to a controller
         #    so that it is recognized as such the System in _instantiate_system_graph()
         #    (can't actually assign ControlMechanism as controller here, as _instantiate_controller needs parsed graph)
-        if isinstance(controller, ControlMechanism):
+        if isinstance(controller, ControlMechanism) and controller.objective_mechanism is not None:
             controller.objective_mechanism.for_controller = True
             for proj in controller.objective_mechanism.path_afferents:
                 proj._activate_for_compositions(self)

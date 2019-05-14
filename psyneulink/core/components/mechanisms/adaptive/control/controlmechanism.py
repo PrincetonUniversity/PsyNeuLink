@@ -1041,7 +1041,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.input_state.name = OUTCOME
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        self._instantiate_objective_mechanism(context=context)
+        if self.monitor_for_control or self._objective_mechanism:
+            self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
         from psyneulink.core.globals.registry import register_category
@@ -1243,6 +1244,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if context == ContextFlags.COMMAND_LINE:
             system.controller = self
             return
+
+        if self._objective_mechanism is None:
+            self._instantiate_objective_mechanism(context=context)
 
         # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
         # DETACH AS CONTROLLER FOR ANY EXISTING SYSTEM (AND SET THAT ONE'S CONTROLLER ATTRIBUTE TO None)

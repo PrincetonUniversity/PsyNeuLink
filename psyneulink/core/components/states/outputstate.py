@@ -1493,8 +1493,6 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     return state_list
 
-    # MODIFIED 5/14/19 END
-
 
 class StandardOutputStatesError(Exception):
     def __init__(self, error_value):
