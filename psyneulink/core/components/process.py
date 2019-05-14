@@ -1250,7 +1250,7 @@ class Process(Process_Base):
                             preceding_item._parameter_states = _instantiate_state_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_types=[ParameterState],
+                                    state_types=ParameterState,
                                     state_param_identifier=PARAMETER_STATE,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
@@ -1311,7 +1311,7 @@ class Process(Process_Base):
                                 projection._parameter_states = _instantiate_state_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_types=[ParameterState],
+                                    state_types=ParameterState,
                                     state_param_identifier=PARAMETER_STATE,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,

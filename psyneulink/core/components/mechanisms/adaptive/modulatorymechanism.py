@@ -384,7 +384,7 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
     try:
         return np.array([c.parameters.variable.get(execution_id) for c in owning_component.control_signals])
     except TypeError:
-        return None
+        return defaultControlAllocation
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
     for c in owning_component.control_signals:
@@ -395,7 +395,7 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
     try:
         return np.array([c.parameters.variable.get(execution_id) for c in owning_component.gating_signals])
     except TypeError:
-        return None
+        return defaultGatingAllocation
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
     for c in owning_component.gating_signals:

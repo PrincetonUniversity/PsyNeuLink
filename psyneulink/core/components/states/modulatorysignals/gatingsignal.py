@@ -470,10 +470,14 @@ class GatingSignal(ModulatorySignal):
         # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
-            try:
-                allocation = owner.gating_allocation
-            except AttributeError:
-                allocation = owner.control_allocation
+            # # MODIFIED 5/14/19 OLDISH:
+            # try:
+            #     allocation = owner.gating_allocation
+            # except AttributeError:
+            #     allocation = owner.control_allocation
+            # MODIFIED 5/14/19 NEW: [JDC]
+            allocation = owner.gating_allocation
+            # MODIFIED 5/14/19 END
             if len(allocation)==1:
                 index = PRIMARY
             else:
