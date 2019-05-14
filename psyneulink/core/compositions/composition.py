@@ -3587,7 +3587,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 # Filter out mechanisms. Nested compositions are not executed in this mode
                 # Filter out controller. Compilation of controllers is not supported yet
-                mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism) and n is not self.controller]
+                is_simulation = execution_context is not None and execution_context.execution_phase is ContextFlags.SIMULATION
+                mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism) and (n is not self.controller or not is_simulation)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
                     self._get_node_wrapper(m)
@@ -4360,7 +4361,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._compilation_data.ptx_execution.set(pnlvm.CompExecution(self, [execution_id]), execution_id)
 
     def __gen_node_wrapper(self, node):
-        assert node is not self.controller
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext() as ctx:
