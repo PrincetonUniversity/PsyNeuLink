@@ -3605,9 +3605,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 bin_execute = True
                 _comp_ex = pnlvm.CompExecution(self, [execution_id])
-                # FIXME: UGLY HACK to work around 'BEFORE' controllers
-                # This will be remove when a wrapper for controllers is added
-                _comp_ex._set_bin_node(self.input_CIM)
             except Exception as e:
                 if bin_execute is not True:
                     raise e
@@ -3628,15 +3625,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
-                if self.controller:
+                if self.controller and not bin_execute:
                     self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
 
                 if bin_execute:
-                    data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.controller, data)
+                    _comp_ex.execute_node(self.controller)
 
         if bin_execute:
             _comp_ex.execute_node(self.input_CIM, inputs)
