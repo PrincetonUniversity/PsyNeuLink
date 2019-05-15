@@ -3615,7 +3615,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self.controller:
                     self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
-                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
+                    self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
 
                 if bin_execute:
@@ -3791,7 +3791,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.parameters.context.get(
                         execution_id).execution_phase = ContextFlags.PROCESSING
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
-                    self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
+                    self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
                 if bin_execute:
                     data = self._get_flattened_controller_output(execution_id)
@@ -4686,7 +4686,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                                 base_control_allocation])
             # Apply candidate control signal
-            self.controller.apply_control_allocation(candidate_control_allocation,
+            self.controller._apply_control_allocation(candidate_control_allocation,
                                                                 execution_id=execution_id,
                                                                 runtime_params=runtime_params,
                                                                 context=context)

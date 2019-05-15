@@ -1342,7 +1342,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         for aff in self._objective_mechanism.afferents:
             aff._activate_for_compositions(compositions)
 
-    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
+    def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
         specified `control_allocation <ControlMechanism.control_allocation>`.
         '''

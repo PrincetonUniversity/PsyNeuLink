@@ -1410,7 +1410,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         for aff in self._objective_mechanism.afferents:
             aff._activate_for_compositions(compositions)
 
-    def apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context, execution_id=None):
+    def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
+        self._apply_modulatory_allocation(self, control_allocation, runtime_params, context, execution_id=None)
+
+    def _apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context, execution_id=None):
         '''Update values to `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
         based on specified `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`
         (used by controller of a Composition in simulations)
