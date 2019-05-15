@@ -1309,7 +1309,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = controller
         self.controller.composition = self
-        self.add_node(self.controller.objective_mechanism)
+        # MODIFIED 5/14/19 NEW: [JDC]
+        if self.controller.objective_mechanism is not None:
+            self.add_node(self.controller.objective_mechanism)
+        # MODIFIED 5/14/19 END
         self.enable_controller = True
 
         for proj in self.controller.objective_mechanism.path_afferents:
