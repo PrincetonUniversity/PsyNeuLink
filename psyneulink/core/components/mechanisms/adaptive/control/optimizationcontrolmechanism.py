@@ -957,22 +957,31 @@ class OptimizationControlMechanism(ControlMechanism):
         return result
 
     def _get_evaluate_param_struct_type(self, ctx):
-        return self.agent_rep._get_param_struct_type(ctx, True)
+        agent_param = self.agent_rep._get_param_struct_type(ctx, True)
+        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
+        return pnlvm.ir.LiteralStructType([agent_param, intensity_cost_struct])
 
     def _get_evaluate_param_initializer(self, execution_id):
-        return self.agent_rep._get_param_initializer(execution_id, True)
+        agent_param = self.agent_rep._get_param_initializer(execution_id, True)
+        # FIXME: THe intensity cost function is not setup with the right execution id
+        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
+        return (agent_param, intensity_cost)
 
     def _get_evaluate_context_struct_type(self, ctx):
         state = self.agent_rep._get_context_struct_type(ctx, True)
         data = self.agent_rep._get_data_struct_type(ctx)
         num_estimates = ctx.int32_ty
-        return pnlvm.ir.LiteralStructType([state, data, num_estimates])
+        intensity_cost = [ctx.get_context_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
+        return pnlvm.ir.LiteralStructType([state, data, num_estimates, intensity_cost_struct])
 
     def _get_evaluate_context_initializer(self, execution_id):
         state = self.agent_rep._get_context_initializer(execution_id, True)
         data = self.agent_rep._get_data_initializer(execution_id)
         num_estimates = self.parameters.num_estimates.get(execution_id) or 0
-        return (state, data, num_estimates)
+        intensity_cost = tuple((os.intensity_cost_function._get_context_initializer(execution_id) for os in self.output_states))
+        return (state, data, num_estimates, intensity_cost)
 
     def _get_evaluate_output_struct_type(self, ctx):
         # Returns a scalar that is the predicted net_outcome
@@ -1031,7 +1040,7 @@ class OptimizationControlMechanism(ControlMechanism):
         comp_out_count = builder.alloca(ctx.int32_ty)
         builder.store(num_sims, comp_out_count)
 
-        comp_param = params
+        comp_param = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         #TODO: get correct output size
         comp_output = builder.alloca(sim_f.args[4].type.pointee, 10)
         builder.call(sim_f, [comp_state, comp_param, comp_data, comp_input,
@@ -1046,8 +1055,39 @@ class OptimizationControlMechanism(ControlMechanism):
 
         objective = builder.load(objective_val_ptr)
 
-        #TODO: run cost function
-        builder.store(objective, arg_out)
+        # calculate cost function
+        total_cost = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(-0.0), total_cost)
+        for i, os in enumerate(self.output_states):
+            # FIXME: Add support for other cost types
+            assert os.cost_options == ControlSignalCosts.INTENSITY
+            func = ctx.get_llvm_function(os.intensity_cost_function)
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(i)])
+            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            func_out = builder.alloca(func.args[3].type.pointee)
+            func_in = builder.alloca(func.args[2].type.pointee)
+            # copy allocation_sample the input is 1-element array
+            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(data_in), data_out)
+            builder.call(func, [func_params, func_state, func_in, func_out])
+
+            # extract cost result
+            res_in = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            cost = builder.load(res_in)
+            # simplified version of combination fmax(cost, 0)
+            ltz = builder.fcmp_ordered("<", cost, cost.type(0))
+            cost = builder.select(ltz, ctx.float_ty(0), cost)
+
+            # combine is not a PNL functions
+            assert self.combine_costs is np.sum
+            val = builder.load(total_cost)
+            val = builder.fadd(val, cost)
+            builder.store(val, total_cost)
+
+        # compute net outcome
+        net_outcome = builder.fsub(objective, builder.load(total_cost))
+        builder.store(net_outcome, arg_out)
         return builder
 
     def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
