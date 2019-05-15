@@ -380,6 +380,8 @@ class CompExecution(CUDAExecution):
 
         # Set bin node to make sure self._*struct works as expected
         self._set_bin_node(node)
+        if node is not self._composition.input_CIM and self.__frozen_vals is None:
+            self.freeze_values()
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
