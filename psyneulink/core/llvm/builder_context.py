@@ -342,6 +342,11 @@ class LLVMBuilderContext:
             a.attributes.add('nonnull')
             a.attributes.add('noalias')
 
+        # simulation does not care about the output
+        # it extracts results of the controller objective mechanism
+        if simulation:
+            data_out.attributes.remove('nonnull')
+
         # Create entry block
         entry_block = llvm_func.append_basic_block(name="entry")
         builder = ir.IRBuilder(entry_block)
@@ -387,12 +392,13 @@ class LLVMBuilderContext:
             exec_f = self.get_llvm_function(composition)
         builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
-        # Extract output_CIM result
-        idx = composition._get_node_index(composition.output_CIM)
-        result_ptr = builder.gep(data, [self.int32_ty(0), self.int32_ty(0), self.int32_ty(idx)])
-        output_ptr = builder.gep(data_out, [iters])
-        result = builder.load(result_ptr)
-        builder.store(result, output_ptr)
+        if not simulation:
+            # Extract output_CIM result
+            idx = composition._get_node_index(composition.output_CIM)
+            result_ptr = builder.gep(data, [self.int32_ty(0), self.int32_ty(0), self.int32_ty(idx)])
+            output_ptr = builder.gep(data_out, [iters])
+            result = builder.load(result_ptr)
+            builder.store(result, output_ptr)
 
         # Increment counter
         iters = builder.add(iters, self.int32_ty(1))

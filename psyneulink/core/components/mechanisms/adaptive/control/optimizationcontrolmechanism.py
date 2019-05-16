@@ -1033,8 +1033,8 @@ class OptimizationControlMechanism(ControlMechanism):
         comp_out_count = builder.alloca(ctx.int32_ty)
         builder.store(num_sims, comp_out_count)
 
-        #TODO: get correct output size
-        comp_output = builder.alloca(sim_f.args[4].type.pointee, 10)
+        # Simulations don't store output
+        comp_output = sim_f.args[4].type(None)
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
                              comp_output, comp_in_count, comp_out_count])
 
