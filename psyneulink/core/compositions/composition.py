@@ -1668,22 +1668,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_td_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
         # Create learning components
-        target_mechanism = ProcessingMechanism(name='Target')
-
-        # comparator_mechanism = ComparatorMechanism(
-        #     # name='Comparator',
-        #     #                                        target={NAME: TARGET,
-        #     #                                                VARIABLE: [0.]},
-        #     #                                        sample={NAME: SAMPLE,
-        #     #                                                VARIABLE: [0.], WEIGHT: -1},
-        #     #                                        function=error_function,
-        #     #                                        output_states=[OUTCOME, MSE]
-        # )
+        target_mechanism = ProcessingMechanism(name='Target',
+                                               default_variable=output_source.value)
 
         comparator_mechanism = PredictionErrorMechanism(
             sample={NAME: SAMPLE,
                     VARIABLE: output_source.value,
-                    # PROJECTIONS: [lc.activation_mech_output]
                     },
             target={NAME: TARGET,
                     VARIABLE: output_source.value
@@ -1694,13 +1684,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                     )
         )
 
-        learning_mechanism = LearningMechanism(function=TDLearning(
-            # default_variable=[input_source.output_states[0].value,
-            #                                                                             output_source.output_states[0].value,
-            #                                                                             comparator_mechanism.output_states[0].value],
-            #
-            #                                                           learning_rate=learning_rate
-        ),
+        learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
                                                default_variable=[input_source.output_states[0].value,
                                                                  output_source.output_states[0].value,
                                                                  comparator_mechanism.output_states[0].value],

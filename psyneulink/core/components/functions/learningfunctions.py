@@ -1627,6 +1627,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
         error = self.get_current_function_param(ERROR_SIGNAL, execution_id)
         learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
+
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
