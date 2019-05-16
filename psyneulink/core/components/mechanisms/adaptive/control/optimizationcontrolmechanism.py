@@ -957,31 +957,25 @@ class OptimizationControlMechanism(ControlMechanism):
         return result
 
     def _get_evaluate_param_struct_type(self, ctx):
-        agent_param = self.agent_rep._get_param_struct_type(ctx, True)
         intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_states]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
-        return pnlvm.ir.LiteralStructType([agent_param, intensity_cost_struct])
+        return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
     def _get_evaluate_param_initializer(self, execution_id):
-        agent_param = self.agent_rep._get_param_initializer(execution_id, True)
         # FIXME: THe intensity cost function is not setup with the right execution id
         intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
-        return (agent_param, intensity_cost)
+        return (intensity_cost,)
 
     def _get_evaluate_context_struct_type(self, ctx):
-        state = self.agent_rep._get_context_struct_type(ctx, True)
-        data = self.agent_rep._get_data_struct_type(ctx)
         num_estimates = ctx.int32_ty
         intensity_cost = [ctx.get_context_struct_type(os.intensity_cost_function) for os in self.output_states]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
-        return pnlvm.ir.LiteralStructType([state, data, num_estimates, intensity_cost_struct])
+        return pnlvm.ir.LiteralStructType([num_estimates, intensity_cost_struct])
 
     def _get_evaluate_context_initializer(self, execution_id):
-        state = self.agent_rep._get_context_initializer(execution_id, True)
-        data = self.agent_rep._get_data_initializer(execution_id)
         num_estimates = self.parameters.num_estimates.get(execution_id) or 0
         intensity_cost = tuple((os.intensity_cost_function._get_context_initializer(execution_id) for os in self.output_states))
-        return (state, data, num_estimates, intensity_cost)
+        return (num_estimates, intensity_cost)
 
     def _get_evaluate_output_struct_type(self, ctx):
         # Returns a scalar that is the predicted net_outcome
@@ -994,13 +988,12 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_evaluate(self, ctx, builder, params, state, allocation_sample, arg_in, arg_out):
         sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)
 
+        comp_params, base_comp_state, base_comp_data = builder.function.args[-3:]
         # create a simulation copy of state
-        base_comp_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
         comp_state = builder.alloca(base_comp_state.type.pointee)
         builder.store(builder.load(base_comp_state), comp_state)
 
         # create a simulation copy of data
-        base_comp_data = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
         comp_data = builder.alloca(base_comp_data.type.pointee)
         builder.store(builder.load(base_comp_data), comp_data)
 
@@ -1028,7 +1021,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(comp_in_count.type.pointee(num_features), comp_in_count)
 
         # determine simulation counts
-        num_estimates = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        num_estimates = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
         num_estimates = builder.load(num_estimates)
 
         # if the parameter value is 0 use the size of feature vector
@@ -1040,10 +1033,9 @@ class OptimizationControlMechanism(ControlMechanism):
         comp_out_count = builder.alloca(ctx.int32_ty)
         builder.store(num_sims, comp_out_count)
 
-        comp_param = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         #TODO: get correct output size
         comp_output = builder.alloca(sim_f.args[4].type.pointee, 10)
-        builder.call(sim_f, [comp_state, comp_param, comp_data, comp_input,
+        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
                              comp_output, comp_in_count, comp_out_count])
 
         # Extract objective mech value
@@ -1062,8 +1054,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # FIXME: Add support for other cost types
             assert os.cost_options == ControlSignalCosts.INTENSITY
             func = ctx.get_llvm_function(os.intensity_cost_function)
-            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(i)])
-            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(i)])
             func_out = builder.alloca(func.args[3].type.pointee)
             func_in = builder.alloca(func.args[2].type.pointee)
             # copy allocation_sample the input is 1-element array

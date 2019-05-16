@@ -4243,14 +4243,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             yield self.controller
 
     def _get_param_struct_type(self, ctx, simulation=False):
-        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes if m is not self.controller or not simulation)
+        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
     def _get_context_struct_type(self, ctx, simulation=False):
-        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes if m is not self.controller or not simulation)
+        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
         proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_ctx_type_list),
