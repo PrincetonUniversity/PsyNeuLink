@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+12.g867894d documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+13.ge5911b9 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+12.g867894d',
+              VERSION:'0.5.3.2+13.ge5911b9',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+12
+                0.5.3.2+13
               </div>
             
           
@@ -695,6 +695,27 @@ looking for values after a run, it’s important to know the execution context y
 occurs in the <code class="xref any docutils literal"><span class="pre">None</span></code> execution context.</p>
 </div>
 </div>
+<div class="section" id="controller">
+<span id="composition-controller"></span><h2>Controller<a class="headerlink" href="#controller" title="Permalink to this headline">¶</a></h2>
+<p>A Composition can be assigned a <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  This is a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>, or a subclass
+of one, that modulates the parameters of Components within the Composition.  It typically does this based on the output
+of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that evaluates the value of other Mechanisms in the Composition, and provides the result to
+the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.</p>
+<div class="section" id="assigning-a-controller">
+<span id="composition-controller-assignment"></span><h3>Assigning a Controller<a class="headerlink" href="#assigning-a-controller" title="Permalink to this headline">¶</a></h3>
+<p>A <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> can be assigned either by specifying it in the <strong>controller</strong> argument of the
+Composition’s constructor, or using its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_controller" title="psyneulink.core.compositions.composition.Composition.add_controller"><code class="xref any py py-meth docutils literal"><span class="pre">add_controller</span></code></a> method.</p>
+</div>
+<div class="section" id="controller-execution">
+<span id="composition-controller-execution"></span><h3>Controller Execution<a class="headerlink" href="#controller-execution" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed only if the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.enable_controller" title="psyneulink.core.compositions.composition.Composition.enable_controller"><code class="xref any py py-attr docutils literal"><span class="pre">enable_controller</span></code></a> attribute is True.  This generally done automatically when the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is <a class="reference internal" href="#composition-controller-assignment"><span class="std std-ref">assigned</span></a>.  If enabled, the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is generally executed either before or after all of the other Components in the Composition
+have been executed, as determined by the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller_mode" title="psyneulink.core.compositions.composition.Composition.controller_mode"><code class="xref any py py-attr docutils literal"><span class="pre">controller_mode</span></code></a> attribute.
+However, the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller_condition" title="psyneulink.core.compositions.composition.Composition.controller_condition"><code class="xref any py py-attr docutils literal"><span class="pre">controller_condition</span></code></a> attribute can be used to
+customize when it is executed.  All three of these attributes can be specified in corresponding arguments of the
+Composition’s constructor, or programmatically after it is constructed by assigning the desired value to the
+attribute.</p>
+</div>
+</div>
 <div class="section" id="for-developers">
 <h2>For Developers<a class="headerlink" href="#for-developers" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -782,7 +803,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x1130be2e8&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11568f278&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

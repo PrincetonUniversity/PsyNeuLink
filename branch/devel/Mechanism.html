@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+12.g867894d documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+13.ge5911b9 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+12.g867894d',
+              VERSION:'0.5.3.2+13.ge5911b9',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+12
+                0.5.3.2+13
               </div>
             
           
@@ -596,7 +596,7 @@ that are in its <a class="reference internal" href="InputState.html#inputstate-s
 <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">matrix specification</span></a>.  However, if a specification in the <strong>input_states</strong> argument
 or an <em>INPUT_STATES</em> entry of a <strong>params</strong> dictionary cannot be resolved to an instantiated OutputState at the time the
 Mechanism is created, no MappingProjection is assigned to the InputState, and this must be done by some other means;
-any specifications in the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_states</span></code> attribute that are not
+any specifications in the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute that are not
 associated with an instantiated OutputState at the time the Mechanism is executed are ignored.</p>
 <p>The <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> (e.g., <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>) it receives are listed
 in its <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.path_afferents" title="psyneulink.core.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute.  If the Mechanism is an <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism of a
@@ -675,7 +675,7 @@ attributes are listed below by their argument names / keywords, along with a des
 </ul>
 <ul class="simple">
 <li><strong>monitor_for_control</strong> / <em>MONITOR_FOR_CONTROL</em> - specifies which of the Mechanism’s OutputStates is monitored by
-the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for the System to which the Mechanism belongs (see <code class="xref any docutils literal"><span class="pre">specifying</span> <span class="pre">monitored</span> <span class="pre">OutputStates</span></code> for details of specification).</li>
+the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for the System to which the Mechanism belongs (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">specifying monitored OutputStates</span></a> for details of specification).</li>
 </ul>
 <ul class="simple">
 <li><strong>monitor_for_learning</strong> / <em>MONITOR_FOR_LEARNING</em> - specifies which of the Mechanism’s OutputStates is used for
@@ -1460,7 +1460,7 @@ description of formatting requirements and options).</li>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_mech_function_params: bool = False</em>, <em>show_state_function_params: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>composition=None</em>, <em>compact_cim: bool = False</em>, <em>node_border: str = '1'</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x113230940&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_mech_function_params: bool = False</em>, <em>show_state_function_params: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>composition=None</em>, <em>compact_cim: bool = False</em>, <em>node_border: str = '1'</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x1151edcf8&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>

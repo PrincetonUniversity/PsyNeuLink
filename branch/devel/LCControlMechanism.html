@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.5.3.2+12.g867894d documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.5.3.2+13.ge5911b9 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+12.g867894d',
+              VERSION:'0.5.3.2+13.ge5911b9',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+12
+                0.5.3.2+13
               </div>
             
           
@@ -355,7 +355,7 @@ argument of the <a class="reference internal" href="#psyneulink.library.componen
 specified in its <strong>control_signals</strong> argument.</li>
 <li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em>, </em><em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em> or </em><em>Tuple</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><em>list</em><em> or </em><em>1d np.array</em><em>, </em><em>list</em><em> or </em><em>1d     np.array</em><em>]</em><em>] </em><em>: default ObjectiveMechanism</em><em>(</em><em>function=CombineMeans</em><em>)</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the LCControlMechanism or a list of the OutputStates it
 should
-monitor; if a list of <code class="xref any docutils literal"><span class="pre">OutputState</span> <span class="pre">specifications</span></code> is used,
+monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputState specifications</span></a> is used,
 a default ObjectiveMechanism is created and the list is passed to its <strong>monitored_output_states</strong> argument.</li>
 <li><strong>modulated_mechanisms</strong> (List[<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>] or <em>ALL</em>) – specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
 Mechanism with a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that implements a <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>;  alternatively the keyword <em>ALL</em> can be used to specify all of the
