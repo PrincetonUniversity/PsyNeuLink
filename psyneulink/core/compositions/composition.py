@@ -1309,11 +1309,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = controller
         self.controller.composition = self
-        self.add_node(self.controller.objective_mechanism)
+        if self.controller.objective_mechanism is not None:
+            self.add_node(self.controller.objective_mechanism)
+
         self.enable_controller = True
 
-        for proj in self.controller.objective_mechanism.path_afferents:
-            self.add_projection(proj)
+        if self.controller.objective_mechanism is not None:
+            for proj in self.controller.objective_mechanism.path_afferents:
+                self.add_projection(proj)
 
         controller._activate_projections_for_compositions(self)
         self._analyze_graph()
@@ -1967,7 +1970,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         objective_mechanism = None
-        if self.controller and self.enable_controller:
+        if self.controller and self.enable_controller and self.controller.objective_mechanism:
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
 
@@ -4741,6 +4744,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  bin_execute=execution_mode)
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
+        try:
+            if self.num_calls % 1 == 0:
+                print(f"Evaluate: num_calls={self.num_calls}")
+                self.memory_tracker.print_diff()
+            self.num_calls = self.num_calls + 1
+        except AttributeError:
+            print("Creating memory tracker.")
+            from pympler import tracker
+            self.memory_tracker = tracker.SummaryTracker()
+            self.num_calls = 0
+
         # Store simulation results on "base" composition
         if context.initialization_status != ContextFlags.INITIALIZING:
             try:
@@ -4751,7 +4765,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Update input states in order to get correct value for "outcome" (from objective mech)
         self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
-        outcome = self.controller.input_state.parameters.value.get(execution_id)
+        outcome = self.controller.input_state.parameters.value.get(execution_id) or [0]
 
         # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
         net_outcome = self.controller.compute_net_outcome(outcome, total_cost)

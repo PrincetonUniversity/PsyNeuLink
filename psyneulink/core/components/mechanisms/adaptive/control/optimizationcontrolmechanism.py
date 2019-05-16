@@ -1054,7 +1054,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return list(itertools.chain(
             super()._dependent_components,
-            [self.objective_mechanism],
+            [] if self.objective_mechanism is None else [self._objective_mechanism],
             [self.agent_rep] if isinstance(self.agent_rep, CompositionFunctionApproximator) else [],
             [self.search_function] if isinstance(self.search_function, Function_Base) else [],
             [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],

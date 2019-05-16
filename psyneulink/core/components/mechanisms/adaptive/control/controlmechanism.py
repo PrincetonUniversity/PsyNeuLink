@@ -1027,7 +1027,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.input_state.name = OUTCOME
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        self._instantiate_objective_mechanism(context=context)
+        if self.monitor_for_control or self._objective_mechanism:
+            self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
         from psyneulink.core.globals.registry import register_category
@@ -1307,22 +1308,26 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._activate_projections_for_compositions(system)
 
     def _activate_projections_for_compositions(self, compositions=None):
-        self._objective_projection._activate_for_compositions(compositions)
+
+        if self.objective_mechanism is not None:
+            self._objective_projection._activate_for_compositions(compositions)
 
         for cs in self.control_signals:
             for eff in cs.efferents:
                 eff._activate_for_compositions(compositions)
 
         # assign any deferred init objective mech monitored output state projections to this system
-        for output_state in self.objective_mechanism.monitored_output_states:
-            for eff in output_state.efferents:
-                eff._activate_for_compositions(compositions)
+        if self.objective_mechanism is not None:
+            for output_state in self.objective_mechanism.monitored_output_states:
+                for eff in output_state.efferents:
+                    eff._activate_for_compositions(compositions)
 
         for eff in self.efferents:
             eff._activate_for_compositions(compositions)
 
-        for aff in self._objective_mechanism.afferents:
-            aff._activate_for_compositions(compositions)
+        if self.objective_mechanism is not None:
+            for aff in self._objective_mechanism.afferents:
+                aff._activate_for_compositions(compositions)
 
     @property
     def monitored_output_states(self):
@@ -1391,5 +1396,5 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.objective_mechanism],
+            [] if self._objective_mechanism is None else [self.objective_mechanism],
         ))

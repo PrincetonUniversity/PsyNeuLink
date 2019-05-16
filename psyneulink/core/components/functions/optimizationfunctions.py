@@ -2007,7 +2007,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # Call the objective_function and check its return type
             zero_input = np.zeros(len(self.search_space))
             ret = self.objective_function(zero_input, execution_id=execution_id, return_results=True)
-        except TypeError:
+        except TypeError as ex:
             return None
 
         if type(ret) is int:
