@@ -4242,14 +4242,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             yield self.controller
 
-    def _get_param_struct_type(self, ctx, simulation=False):
+    def _get_param_struct_type(self, ctx):
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
-    def _get_context_struct_type(self, ctx, simulation=False):
+    def _get_context_struct_type(self, ctx):
         mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
         proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
@@ -4413,8 +4413,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             func_name = ctx.get_unique_name(name + node.name)
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
-                self._get_context_struct_type(ctx, simulation).as_pointer(),
-                self._get_param_struct_type(ctx, simulation).as_pointer(),
+                ctx.get_context_struct_type(self).as_pointer(),
+                ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr]
 

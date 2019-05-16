@@ -183,8 +183,8 @@ class LLVMBuilderContext:
         name = 'exec_wrap_sim_' if simulation else 'exec_wrap_'
         func_name = self.get_unique_name(name + composition.name)
         func_ty = ir.FunctionType(ir.VoidType(), (
-            composition._get_context_struct_type(self, simulation).as_pointer(),
-            composition._get_param_struct_type(self, simulation).as_pointer(),
+            self.get_context_struct_type(composition).as_pointer(),
+            self.get_param_struct_type(composition).as_pointer(),
             self.get_input_struct_type(composition).as_pointer(),
             self.get_data_struct_type(composition).as_pointer(),
             cond_gen.get_condition_struct_type().as_pointer()))
@@ -328,8 +328,8 @@ class LLVMBuilderContext:
         name = 'run_wrap_sim_' if simulation else 'run_wrap_'
         func_name = self.get_unique_name(name + composition.name)
         func_ty = ir.FunctionType(ir.VoidType(), (
-            composition._get_context_struct_type(self, simulation).as_pointer(),
-            composition._get_param_struct_type(self, simulation).as_pointer(),
+            self.get_context_struct_type(composition).as_pointer(),
+            self.get_param_struct_type(composition).as_pointer(),
             self.get_data_struct_type(composition).as_pointer(),
             self.get_input_struct_type(composition).as_pointer(),
             self.get_output_struct_type(composition).as_pointer(),
