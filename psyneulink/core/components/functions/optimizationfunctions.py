@@ -1208,6 +1208,28 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
+    def _gen_llvm_function(self):
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            ocm = self.objective_function.__self__
+        except AttributeError:
+            ocm = None
+        if ocm is not None:
+            with pnlvm.LLVMBuilderContext() as ctx:
+                extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
+                              ctx.get_context_struct_type(ocm.agent_rep).as_pointer(),
+                              ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
+        else:
+            extra_args = []
+
+        f = super()._gen_llvm_function(extra_args)
+        for a in f.args[-len(extra_args):]:
+            a.attributes.add('nonnull')
+            a.attributes.add('noalias')
+
+        return f
+
     def _get_input_struct_type(self, ctx):
         if self.owner is not None:
             variable = [state.defaults.value for state in self.owner.input_states]
