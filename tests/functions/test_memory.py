@@ -129,8 +129,8 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
             assoc_size=3,
             function = ContentAddressableMemory(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
-                    duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    duplicate_keys=True,
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -140,19 +140,28 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
+    # Run again to test re-initialization and random retrieval
+    em.function.reinitialize(np.array([stimuli['A'], stimuli['F']]))
+    retrieved_keys=[]
+    for key in sorted(stimuli.keys()):
+        retrieved = [i for i in em.execute(stimuli[key])]
+        retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
+        retrieved_keys.append(retrieved_key)
+    assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
+
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    em.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
@@ -179,8 +188,8 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
             assoc_size=4,
             function = ContentAddressableMemory(
                     initializer=np.array([stimuli['F'], stimuli['F']]),
-                    duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    duplicate_keys=True,
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -191,18 +200,18 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    em.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
@@ -228,8 +237,8 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
             content_size=3,
             assoc_size=3,
             function = ContentAddressableMemory(
-                    duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    duplicate_keys=True,
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -237,21 +246,21 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    em.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
@@ -277,8 +286,8 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
             content_size=3,
             assoc_size=4,
             function = ContentAddressableMemory(
-                    duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM)
+                    duplicate_keys=True,
+                    equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
@@ -286,21 +295,21 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
         retrieved = [i for i in em.execute(stimuli[key])]
         retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
         retrieved_keys.append(retrieved_key)
-    assert retrieved_keys == [[None], ['A'], ['A'], ['A'], ['B'], ['D']]
+    assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['C']]
 
     stim = 'C'
-    em.function.duplicate_keys_select = OLDEST
+    em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['A']
 
-    em.function.duplicate_keys_select = NEWEST
+    em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
     retrieved_key = [k for k,v in stimuli.items() if v==retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
-    em.function.duplicate_keys_allowed = False
+    em.function.duplicate_keys = False
     stim = 'A'
 
     with pytest.warns(UserWarning) as warning_msg:
@@ -329,8 +338,8 @@ def test_ContentAddressableMemory_without_assoc():
             content_size=3,
             function = ContentAddressableMemory(
                     # initializer=np.array([stimuli['F'], stimuli['F']]),
-                    duplicate_keys_allowed=True,
-                    duplicate_keys_select=RANDOM,
+                    duplicate_keys=True,
+                    equidistant_keys_select=RANDOM,
                     retrieval_prob = 1.0
             )
     )
@@ -351,4 +360,156 @@ def test_ContentAddressableMemory_without_assoc():
     assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]
 
 
+def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning():
 
+    warning_text = ''
+    with pytest.warns(UserWarning) as warning_msg:
+        em = EpisodicMemoryMechanism(
+                name='EPISODIC MEMORY MECH',
+                content_size=3,
+                assoc_size=3,
+                function = ContentAddressableMemory(
+                        initializer=np.array([[[1,2,3], [4,5,6]],
+                                              [[1,2,3], [7,8,9]]]),
+                        duplicate_keys=False,
+                        equidistant_keys_select=RANDOM,
+                        retrieval_prob = 1.0
+                )
+        )
+    warning_txt = warning_msg[0].message.args[0]
+    assert 'Attempt to initialize memory of ContentAddressableMemory with an entry ([[1 2 3]' in warning_txt
+    assert np.allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
+
+def test_ContentAddressableMemory_add_and_delete_from_memory():
+
+    em = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]]],
+            duplicate_keys=True,
+            equidistant_keys_select=RANDOM,
+            retrieval_prob = 1.0,
+            storage_prob = 1.0
+    )
+    em.add_to_memory([[[10,20,30],[40,50,60]],
+                     [[11,21,31],[41,51,61]]])
+
+    expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                       [[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    em.delete_from_memory([[[1,2,3],[4,5,6]]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    # Test adding and deleting a single memory
+    em.add_to_memory([[1,2,3],[100,101,102]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]],
+                       [[ 1,  2,  3],[100,101,102]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    em.delete_from_memory([[1,2,3],[100,101,102]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    # Test adding memory with different size value
+    em.add_to_memory([[1,2,3],[100,101,102,103]])
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]],
+                       [[ 1,  2,  3],[100,101,102,103]]]
+    for m,e in zip(em.memory,expected_memory):
+        for i,j in zip(m,e):
+            assert np.allclose(i,j)
+
+    # Test adding memory with different size value as np.array
+    em.add_to_memory(np.array([[1,2,3],[200,201,202,203]]))
+    expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                       [[10, 20, 30],[40, 50, 60]],
+                       [[11, 21, 31],[41, 51, 61]],
+                       [[ 1,  2,  3],[100,101,102,103]],
+                       [[ 1,  2,  3],[200,201,202,203]]]
+    for m,e in zip(em.memory,expected_memory):
+        for i,j in zip(m,e):
+            assert np.allclose(i,j)
+
+    # Test error for illegal key:
+    with pytest.raises(FunctionError) as error_text:
+        em.add_to_memory(np.array([[1,2],[200,201,202,203]]))
+    assert "Length of 'key'" in str(error_text.value) and "must be same as others in the dict" in str(error_text.value)
+
+
+def test_ContentAddressableMemory_overwrite_mode():
+
+    em = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]]],
+            duplicate_keys=True,
+            equidistant_keys_select=RANDOM,
+            retrieval_prob = 1.0,
+            storage_prob = 1.0
+    )
+
+    em.duplicate_keys = OVERWRITE
+
+    # Add new memory
+    retreived = em.execute([[7,8,10], [100,110,120]])
+    assert np.allclose(list(retreived), [[7,8,9],[10,11,12]])
+    expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
+                       [[7,8,9], [10,11,12]],
+                       [[7,8,10], [100,110,120]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    # Overwrite old memory
+    retreived = em.execute([[7,8,9], [100,110,120]])
+    assert np.allclose(list(retreived), [[7,8,9],[10,11,12]])
+    expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
+                       [[7,8,9], [100,110,120]],
+                       [[7,8,10], [100,110,120]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    # Allow entry of memory with duplicate key
+    em.duplicate_keys = True
+    retreived = em.execute([[7,8,9], [200,210,220]])
+    assert np.allclose(list(retreived), [[7,8,9],[100,110,120]])
+    expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
+                       [[7,8,9], [100,110,120]],
+                       [[7,8,10], [100,110,120]],
+                       [[7,8,9], [200,210,220]]]
+    assert np.allclose(em.memory, expected_memory)
+
+    # Attempt to overwrite with two matches should generate error
+    em.duplicate_keys = OVERWRITE
+    with pytest.raises(FunctionError) as error_text:
+        em.execute([[7,8,9], [200,210,220]])
+    assert ('Attempt to store item' in str(error_text.value)
+            and 'with \'duplicate_keys\'=\'OVERWRITE\'' in str(error_text.value))
+
+
+def test_ContentAddressableMemory_max_entries():
+
+    em = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]],
+                         [[1,2,3], [100,101,102]]],
+            duplicate_keys=True,
+            equidistant_keys_select=RANDOM,
+            retrieval_prob = 1.0,
+            storage_prob = 1.0,
+            max_entries = 4
+    )
+    em.add_to_memory([[[10,20,30],[40,50,60]],
+                    [[11,21,31],[41,51,61]],
+                    [[12,22,32],[42,52,62]]])
+    expected_memory = [[[1,2,3], [100,101,102]],
+                       [[10,20,30],[40,50,60]],
+                       [[11,21,31],[41,51,61]],
+                       [[12,22,32],[42,52,62]]]
+    assert np.allclose(em.memory, expected_memory)

@@ -38,9 +38,10 @@ action = ProcessingMechanism(name='Actions',
 #                             function=SoftMax(output=PROB, gain=1.0))
 
 em = EpisodicMemoryMechanism(name='Episodic Memory',
-                             cue_size=num_states+context_size+rpe_size,
+                             content_size=num_states+context_size+rpe_size,
                              assoc_size=1,
-                             function=ContentAddressableMemory(function=ExepctedValueCalc))
+                             # function=ContentAddressableMemory(function=ExepctedValueCalc))
+                             function=ContentAddressableMemory)
 
 sr = ProcessingMechanism(name='Successor Rep')
 
@@ -60,4 +61,4 @@ comp.add_nodes([stim_in, context_in, state])
 stimuli = {stim_in:np.array([1]*num_states),
            context_in: np.array([10]*context_size)}
 
-print(comp.execute(inputs=stimuli))
+print(comp.run(inputs=stimuli))
