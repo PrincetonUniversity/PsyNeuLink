@@ -377,8 +377,9 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
-    CONTROL_SIGNALS, EID_SIMULATION, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_MODULATION, \
+from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNALS, \
+    EID_SIMULATION, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -850,7 +851,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  ):
 
         if kwargs:
-                for i in kwargs.keys():
+                for k in kwargs.keys():
+                    if CONTEXT in k:
+                        context=kwargs[CONTEXT]
+                        continue
                     raise ModulatoryMechanismError("Unrecognized arg in constructor for {}: {}".
                                                 format(self.__class__.__name__, repr(i)))
 

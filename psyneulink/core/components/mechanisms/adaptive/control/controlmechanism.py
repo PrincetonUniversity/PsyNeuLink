@@ -794,9 +794,9 @@ class ControlMechanism(ModulatoryMechanism):
                     raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
                                                 format(self.__class__.__name__, repr(i)))
 
-        control_signals = control_signals or []
-        if not isinstance(control_signals, list):
-            control_signals = [control_signals]
+        # control_signals = control_signals or []
+        # if not isinstance(control_signals, list):
+        #     control_signals = [control_signals]
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
@@ -815,6 +815,7 @@ class ControlMechanism(ModulatoryMechanism):
         super(ControlMechanism, self).__init__(default_variable=default_variable,
                                                size=size,
                                                modulation=modulation,
+                                               modulatory_signals=control_signals,
                                                params=params,
                                                name=name,
                                                function=function,
