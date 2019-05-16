@@ -1196,7 +1196,8 @@ class Component(object, metaclass=ComponentsMeta):
             params, context, arg_in, arg_out = llvm_func.args[:len(args)]
             for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
-                p.attributes.add('noalias')
+                if len(extra_args) == 0:
+                    p.attributes.add('noalias')
 
             metadata = ctx.get_debug_location(llvm_func, self)
             if metadata is not None:

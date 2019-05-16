@@ -1224,9 +1224,9 @@ class GridSearch(OptimizationFunction):
             extra_args = []
 
         f = super()._gen_llvm_function(extra_args)
-        for a in f.args[-len(extra_args):]:
-            a.attributes.add('nonnull')
-            a.attributes.add('noalias')
+        if len(extra_args) > 0:
+            for a in f.args[-len(extra_args):]:
+                a.attributes.add('nonnull')
 
         return f
 

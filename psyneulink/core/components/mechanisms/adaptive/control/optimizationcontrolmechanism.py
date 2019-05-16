@@ -1094,9 +1094,9 @@ class OptimizationControlMechanism(ControlMechanism):
             extra_args = []
 
         f = super()._gen_llvm_function(extra_args)
-        for a in f.args[-len(extra_args):]:
-            a.attributes.add('nonnull')
-            a.attributes.add('noalias')
+        if is_comp:
+            for a in f.args[-len(extra_args):]:
+                a.attributes.add('nonnull')
 
         return f
 
