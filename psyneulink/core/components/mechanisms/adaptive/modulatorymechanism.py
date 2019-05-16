@@ -25,6 +25,7 @@ assigning it an `ObjectiveMechanism` and/or specifying a list of `OutputStates <
 <Composition.controller>` of a `Composition`, which has a special relation to that Composition: it generally executes
 either before or after all of the other Mechanisms in that Composition (see `Composition_Controller_Execution`).
 
+
 .. _ModulatoryMechanism_Creation:
 
 Creating a ModulatoryMechanism
@@ -177,6 +178,7 @@ Composition in any of the following ways, by specifying:
     * the ModulatoryMechanism in the **controller** argument of the Composition's constructor;
     * the ModulatoryMechanism in the **controller** argument of the Composition's `add_controller` method.
 
+
 .. _ModulatoryMechanism_Structure:
 
 Structure
@@ -236,6 +238,7 @@ These are computed using the ModulatoryMechanism's default `compute_reconfigurat
 <ModulatoryMechanism.compute_reconfiguration_cost>`, `combine_costs <ModulatoryMechanism.combine_costs>`,
 and `compute_net_outcome <ModulatoryMechanism.compute_net_outcome>` functions, but these can also be assigned custom
 functions (see links to attributes for details).
+
 
 .. _ModulatoryMechanism_Execution:
 
