@@ -7,7 +7,8 @@
 
 
 # **************************************  ModulatoryMechanism ************************************************
-#
+
+
 """
 Overview
 --------
@@ -254,7 +255,7 @@ allocation it is assigned to calculate its `ControlSignal` `intensity <ControlSi
 `GatingProjection(s) <GatingProjection>`, respectively, to modulate the value of the States to which they project.
 Those values are then used in the subsequent `TRIAL` of execution. If a ModulatoryMechanism is a Composition's
 `controller <Composition.controller>`, it is generally either the first or the last `Mechanism <Mechanism>` to be
-executed in a `TRIAL`, although this can be customized (see Composition Controller <Composition_Controller_Execution>`).
+executed in a `TRIAL`, although this can be customized (see `Composition Controller <Composition_Controller_Execution>`).
 
 .. note::
    `ParameterStates <ParameterState>` that receive `ControlProjections <ControlProjection>`, and `InputStates

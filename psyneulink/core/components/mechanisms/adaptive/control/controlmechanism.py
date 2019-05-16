@@ -342,6 +342,7 @@ import warnings
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.state import State
@@ -422,7 +423,7 @@ def _net_outcome_getter(owning_component=None, execution_id=None):
         return [0]
 
 
-class ControlMechanism(AdaptiveMechanism_Base):
+class ControlMechanism(ModulatoryMechanism):
     """
     ControlMechanism(                                            \
         system=None                                              \
