@@ -465,7 +465,7 @@ class OptimizationControlMechanism(ControlMechanism):
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
         specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
-        <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
+        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
     features : Mechanism, OutputState, Projection, dict, or list containing any of these
@@ -932,6 +932,7 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
+        # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
             sim_execution_id = self._set_up_simulation(execution_id, control_allocation)
 
@@ -943,6 +944,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                              context=self.function.parameters.context.get(execution_id),
                                              execution_mode=self.parameters.comp_execution_mode.get(execution_id)
             )
+        # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
@@ -952,29 +954,6 @@ class OptimizationControlMechanism(ControlMechanism):
             )
 
         return result
-
-    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
-        '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
-        specified `control_allocation <ControlMechanism.control_allocation>`.
-
-        Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
-        <OptimizationControlMechanism.agent_rep>`.
-        '''
-
-        value = [np.atleast_1d(a) for a in control_allocation]
-        self.parameters.value.set(value, execution_id)
-        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
-                                   context=ContextFlags.COMPOSITION)
-
-    # @property
-    # def feature_values(self):
-    #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
-    #         return self.agent_rep._get_predicted_input()
-    #     else:
-    #         return np.array(np.array(self.variable[1:]).tolist())
-
-    # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
-    # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
 
     tc.typecheck
     def add_features(self, features):

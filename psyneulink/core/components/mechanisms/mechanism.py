@@ -537,7 +537,7 @@ that are in its `InputState specification <InputState_Specification>`, using `AU
 `matrix specification <Mapping_Matrix_Specification>`.  However, if a specification in the **input_states** argument
 or an *INPUT_STATES* entry of a **params** dictionary cannot be resolved to an instantiated OutputState at the time the
 Mechanism is created, no MappingProjection is assigned to the InputState, and this must be done by some other means;
-any specifications in the Mechanism's `input_states <Mechanism_Base.monitored_output_states>` attribute that are not
+any specifications in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute that are not
 associated with an instantiated OutputState at the time the Mechanism is executed are ignored.
 
 The `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) it receives are listed
@@ -642,7 +642,7 @@ attributes are listed below by their argument names / keywords, along with a des
     ..
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputStates is monitored by
       the `controller` for the System to which the Mechanism belongs (see `specifying monitored OutputStates
-      <ObjectiveMechanism_Monitored_Output_States>` for details of specification).
+      <ObjectiveMechanism_Monitor>` for details of specification).
     ..
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).

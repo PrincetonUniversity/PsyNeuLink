@@ -31,7 +31,7 @@ A PredictionErrorMechanism is usually created automatically when a `LearningMech
 A PredictionErrorMechanism can also be created directly by calling its constructor.
 Its **sample** and **target**  arguments are used to specify the OutputStates
 that provide the sample and target inputs, respectively (see
-`ObjectiveMechanism Monitored Output States <ObjectiveMechanism_Monitored_Output_States>`
+`ObjectiveMechanism Monitored Output States <ObjectiveMechanism_Monitor>`
 for details). When the PredictionErrorMechanism is created, two InputStates are
 created, one each for its sample and target inputs (and named, by default
 *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the

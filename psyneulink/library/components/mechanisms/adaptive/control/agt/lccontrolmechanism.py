@@ -348,7 +348,7 @@ class LCControlMechanism(ControlMechanism):
     np.array]] : default ObjectiveMechanism(function=CombineMeans)
         specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputStates it
         should
-        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
+        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     modulated_mechanisms : List[`Mechanism`] or *ALL*

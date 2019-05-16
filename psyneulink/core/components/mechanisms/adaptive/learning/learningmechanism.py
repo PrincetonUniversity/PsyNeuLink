@@ -920,7 +920,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     className = componentType
     suffix = " " + className
 
-    outputStateType = LearningSignal
+    outputStateTypes = LearningSignal
 
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
