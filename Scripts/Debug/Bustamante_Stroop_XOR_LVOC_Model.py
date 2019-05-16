@@ -79,7 +79,6 @@ task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
 color_task.set_log_conditions('value')      
 word_task.set_log_conditions('value')
 
-
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_node(color_stim)
 c.add_node(word_stim)
@@ -89,7 +88,6 @@ c.add_node(reward)
 c.add_node(task_decision)
 c.add_projection(sender=color_task, receiver=task_decision)
 c.add_projection(sender=word_task, receiver=task_decision)
-
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
