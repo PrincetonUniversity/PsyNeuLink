@@ -465,7 +465,7 @@ class OptimizationControlMechanism(ControlMechanism):
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
         specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
-        <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
+        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
     features : Mechanism, OutputState, Projection, dict, or list containing any of these

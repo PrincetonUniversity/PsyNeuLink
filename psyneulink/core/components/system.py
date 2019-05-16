@@ -73,7 +73,7 @@ arguments of the `System`, as described below.
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` using
   any of the ways used to specify the *monitored_output_states* for an ObjectiveMechanism (see
-  `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two
+  `ObjectiveMechanism_Monitor`).  In addition, the **monitor_for_control** argument supports two
   other forms of specification:
 
   * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
@@ -510,7 +510,7 @@ kwSystemInputState = 'SystemInputState'
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()

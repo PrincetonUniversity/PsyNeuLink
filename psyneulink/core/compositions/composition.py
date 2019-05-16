@@ -456,12 +456,13 @@ the `controller <Composition.controller>`.
 .. _Composition_Controller_Assignment:
 
 Assigning a Controller
-~~~~~~~~~~~~~~~~~~~~~~
+======================
 
 A `controller <Composition.controller>` can be assigned either by specifying it in the **controller** argument of the
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
 
 COMMENT:
+
 TBI [PARALLELING SYSTEM]:
 Specyfing Parameters to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -479,7 +480,7 @@ arguments of the `System`, as described below.
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` using
   any of the ways used to specify the *monitored_output_states* for an ObjectiveMechanism (see
-  `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two
+  `ObjectiveMechanism_Monitor`).  In addition, the **monitor_for_control** argument supports two
   other forms of specification:
 
   * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
@@ -509,13 +510,12 @@ arguments of the `System`, as described below.
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
   control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
-
 COMMENT
 
 .. _Composition_Controller_Execution:
 
 Controller Execution
-~~~~~~~~~~~~~~~~~~~~
+====================
 
 The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
 <Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
@@ -740,7 +740,7 @@ class RunError(Exception):
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()

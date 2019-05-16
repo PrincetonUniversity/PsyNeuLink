@@ -99,10 +99,10 @@ constructor can be used to specify its ObjectiveMechanism and/or the OutputState
     - an existing `ObjectiveMechanism`;
     |
     - a constructor for an ObjectiveMechanism; its **monitored_output_states** argument can be used to specify
-      `the OutputStates to be monitored <ObjectiveMechanism_Monitored_Output_States>`, and its **function**
+      `the OutputStates to be monitored <ObjectiveMechanism_Monitor>`, and its **function**
       argument can be used to specify how those OutputStates are evaluated (see `ControlMechanism_Examples`).
     |
-    - a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`; a default ObjectiveMechanism
+    - a list of `OutputState specifications <ObjectiveMechanism_Monitor>`; a default ObjectiveMechanism
       is created, using the list of OutputState specifications for its **monitored_output_states** argument.
     |
     Note that if the ObjectiveMechanism is explicitly (using either of the first two methods above), its
@@ -111,7 +111,7 @@ constructor can be used to specify its ObjectiveMechanism and/or the OutputState
     `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for an example);
   ..
   * **monitor_for_control** -- a list a list of `OutputState specifications
-    <ObjectiveMechanism_Monitored_Output_States>`;  a default ObjectiveMechanism is created, using the list of
+    <ObjectiveMechanism_Monitor>`;  a default ObjectiveMechanism is created, using the list of
     OutputState specifications for its **monitored_output_states** argument.
 
   If OutputStates to be monitored are specified in both the **objective_mechanism** argument (on their own, or within
@@ -130,13 +130,13 @@ COMMENT:
 FOR DEVELOPERS:
     If the ObjectiveMechanism has not yet been created, these are added to the **monitored_output_states** of its
     constructor called by ControlMechanism._instantiate_objective_mechanmism;  otherwise, they are created using the
-    ObjectiveMechanism.add_monitored_output_states method.
+    ObjectiveMechanism.add_to_monitor method.
 COMMENT
 
 * Adding OutputStates to be monitored to a ControlMechanism*
 
-OutputStates to be monitored can also be added to an existing ControlMechanism by using the `add_monitored_output_states
-<ObjectiveMechanism.add_monitored_output_states>` method of the ControlMechanism's `objective_mechanism
+OutputStates to be monitored can also be added to an existing ControlMechanism by using the `add_to_monitor
+<ObjectiveMechanism.add_to_monitor>` method of the ControlMechanism's `objective_mechanism
 <ControlMechanism.objective_mechanism>`.
 
 
@@ -495,7 +495,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
-        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
+        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
@@ -554,7 +554,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
         `objective_mechanism <ControlMechanism.objective_mechanism>` attribute;  it is the same as that
         ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute
-        (see `ObjectiveMechanism_Monitored_Output_States` for specification).  The `value <OutputState.value>`
+        (see `ObjectiveMechanism_Monitor` for specification).  The `value <OutputState.value>`
         of the OutputStates in the list are used by the ObjectiveMechanism to generate the ControlMechanism's `input
         <ControlMechanism_Input>`.
 
@@ -991,9 +991,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # If *objective_mechanism* argument is an ObjectiveMechanism, add monitored_output_states to it
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:
-                self.objective_mechanism.add_monitored_output_states(
-                                                              monitored_output_states_specs=monitored_output_states,
-                                                              context=context)
+                self.objective_mechanism.add_to_monitor(monitor_specs=monitored_output_states, context=context)
         # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_states
         else:
             try:
@@ -1184,7 +1182,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         print ("\n---------------------------------------------------------")
 
-    def add_monitored_output_states(self, monitored_output_states, context=None):
+    def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate OutputStates to be monitored by ControlMechanism's `objective_mechanism
         <ControlMechanism.objective_mechanism>`.
 
@@ -1197,9 +1195,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         If any item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
         OutputStates must belong to Mechanisms in the same `System` as the ControlMechanism.
         """
-        output_states = self.objective_mechanism.add_monitored_output_states(
-                                                                 monitored_output_states_specs=monitored_output_states,
-                                                                 context=context)
+        output_states = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs,
+                                                                context=context)
         if self.system:
             self.system._validate_monitored_states_in_system(output_states, context=context)
 
@@ -1275,7 +1272,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
         if monitored_output_states:
-            self.add_monitored_output_states(monitored_output_states)
+            self.add_to_monitor(monitored_output_states)
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
