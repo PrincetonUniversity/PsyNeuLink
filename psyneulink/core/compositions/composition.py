@@ -3570,7 +3570,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             # Exec mode skips mbo invocation so we can't use it if mbo is
             # present and active
-            can_exec = not self.enable_controller or execution_phase == ContextFlags.SIMULATION
+            is_simulation = (execution_context is not None and
+                             execution_context.execution_phase == ContextFlags.SIMULATION)
+            can_exec = not self.enable_controller or is_simulation
             # Try running in Exec mode first
             if (bin_execute is True or str(bin_execute).endswith('Exec')) and can_exec:
                 try:
