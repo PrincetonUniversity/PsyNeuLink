@@ -13,21 +13,15 @@ Overview
 --------
 
 A ModulatoryMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the parameter(s) of one or more
-`Components <Component>` in response to an evaluative signal received from its `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>`.  The `objective_mechanism <ModulatoryMechanism.objective_mechanism>`
-monitors a specified set of OutputStates, and from these generates the evaluative signal that is used by the
-ModulatoryMechanism's `function <ModulatoryMechanism.function>` to calculate a `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`: a list of values provided to each of its `modulatory_signals
-<ModulatoryMechanism.modulatory_signals>`.  Its modulatory_signals are OutputStates that are used to modify the
-parameter(s) the ModulatoryMechanism controls. The `modulatory_signals <ModulatoryMechanism.modulatory_signals>` of a
-ModulatoryMechanism can be `ControlSignals <ControlSignal>`, that modulate the parameters of a Mechanism's `function
-<Mechanism.function>`, and/or `GatingSignals <GatingSignal>`, that can modulate an `InputState` `function
-<InputState.function>` or `OutputState` `function <OutputState.function>` (see `ModulatorySignal_Modulation` for a
-more detailed description of how modulation operates). A ModulatoryMechanism can modulate Components in the `Composition`
-to which it belongs.
-
-The OutputStates monitored by the ModulatoryMechanism's `objective_mechanism <ModulatoryMechanism.objective_mechanism>`
-and the parameters it modulates can be listed using its `show <ModulatoryMechanism.show>` method.
+`Components <Component>` in the `Composition` to which it belongs.  It's `function <ModulatoryMechanism.function>`
+uses its input to calculate a `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`: a list of values
+provided to each of its `modulatory_signals <ModulatoryMechanism.modulatory_signals>`.  These can be `ControlSignals
+<ControlSignal>` and/or `GatingSignals <GatingSignals>`;  the former modulate parameters of the `functions
+<Mechanism.function>` of other Mechanisms, while the latter modulate the values of `InputStates <InputState>` and/or
+`OutputStates <OutputState>` of other Mechanisms.  A ModulatoryMechanism can be used to monitor the outputs of
+other Mechanisms in order to determine its `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`, either
+by assigning it an `ObjectiveMechanism` and/or the list of OutputStates to monitor (see
+`ModulatoryMechanism_ObjectiveMechanism` below).
 
 .. _ModulatoryMechanism_Composition_Controller:
 
@@ -41,12 +35,16 @@ to the Composition: it is used to modulate all of the parameters that have been 
 <Composition.controller>` for only one Composition, and a Composition can have only one `controller
 <Composition.controller>`.  The Composition's `controller <Composition.controller>` is executed either before or after
 all of the other Components in the Composition are executed, including any other ModulatoryMechanisms that belong to it
-(see `Composition Execution <Composition_Execution>`).  A ModulatoryMechanism can be assigned as the `controller
-<Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
-constructor, or by specifying the Composition as the **composition** argument of either the ModulatoryMechanism's
-constructor or its `assign_as_controller <ModulatoryMechanism.assign_as_controller>` method. A Composition's `controller
-<Composition.controller>` and its associated Components can be displayed using the Composition's `show_graph
-<Composition.show_graph>` method with its **show_control** argument assigned as `True`.
+(see `Composition_Controller`).  A ModulatoryMechanism can be assigned as the `controller <Composition.controller>`
+for a Composition in any of the following ways, by specifying:
+
+    * the Composition in the **composition** argument of the ModulatoryMechanism's constructor;
+    COMMENT:
+    * the Composition in the **(composition** argument of the ModulatoryMechanism's `assign_as_controller
+      <ModulatoryMechanism.assign_as_controller>` method;
+    COMMENT
+    * the ModulatoryMechanism in the **controller** argument of the Composition's constructor;
+    * the ModulatoryMechanism in the **controller** argument of the Composition's `add_controller` method.
 
 
 .. _ModulatoryMechanism_Creation:
@@ -85,6 +83,29 @@ XXX Explain here and above that this is only created if:
 - explicitly specified in objective_mechanism argument of ModulatoryMechanism's constructor
 - monitor_for_control is specified
 - assign_as_controller is called
+
+
+either an ObjectiveMechanism
+and/or a list of OutputStates to monitor, in which
+
+monitor
+
+response to an evaluative signal received from its `objective_mechanism
+<ModulatoryMechanism.objective_mechanism>`.  The `objective_mechanism <ModulatoryMechanism.objective_mechanism>`
+monitors a specified set of OutputStates, and from these generates the evaluative signal that is used by the
+ModulatoryMechanism's `function <ModulatoryMechanism.function>` to calculate a `modulatory_allocation
+<ModulatoryMechanism.modulatory_allocation>`: a list of values provided to each of its `modulatory_signals
+<ModulatoryMechanism.modulatory_signals>`.  Its modulatory_signals are OutputStates that are used to modify the
+parameter(s) the ModulatoryMechanism controls. The `modulatory_signals <ModulatoryMechanism.modulatory_signals>` of a
+ModulatoryMechanism can be `ControlSignals <ControlSignal>`, that modulate the parameters of a Mechanism's `function
+<Mechanism.function>`, and/or `GatingSignals <GatingSignal>`, that can modulate an `InputState` `function
+<InputState.function>` or `OutputState` `function <OutputState.function>` (see `ModulatorySignal_Modulation` for a
+more detailed description of how modulation operates). A ModulatoryMechanism can modulate Components in the
+`Composition` to which it belongs.
+
+The OutputStates monitored by the ModulatoryMechanism's `objective_mechanism <ModulatoryMechanism.objective_mechanism>`
+and the parameters it modulates can be listed using its `show <ModulatoryMechanism.show>` method.
+
 
 XXX Add same explanation in ControlMechanism docstring
 

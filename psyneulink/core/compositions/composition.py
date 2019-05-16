@@ -98,7 +98,6 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
 Running a Composition
 ---------------------
 
-
 .. _Run_Inputs:
 
 *Inputs*
@@ -401,8 +400,6 @@ Environment.
 COMMENT
 
 
-
-
 .. _Run_Scope_of_Execution:
 
 *Execution Contexts*
@@ -446,6 +443,87 @@ looking for values after a run, it's important to know the execution context you
 In general, anything that happens outside of a Composition run and without an explicit setting of execution context
 occurs in the `None` execution context.
 
+.. _Composition_Controller:
+
+Controller
+----------
+
+A Composition can be assigned a `controller <Composition.controller>`.  This is a `ModulatoryMechanism`, or a subclass
+of one, that modulates the parameters of Components within the Composition.  It typically does this based on the output
+of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in the Composition, and provides the result to
+the `controller <Composition.controller>`.
+
+.. _Composition_Controller_Assignment:
+
+Assigning a Controller
+~~~~~~~~~~~~~~~~~~~~~~
+
+A `controller <Composition.controller>` can be assigned either by specifying it in the **controller** argument of the
+Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
+
+COMMENT:
+TBI [PARALLELING SYSTEM]:
+Specyfing Parameters to Control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
+existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
+instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
+the `OutputStates it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
+<ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
+<ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
+attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
+arguments of the `System`, as described below.
+
+* **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that should be
+  monitored by the `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
+  `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
+  its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` using
+  any of the ways used to specify the *monitored_output_states* for an ObjectiveMechanism (see
+  `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two
+  other forms of specification:
+
+  * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
+    (see third example under `System_Control_Examples`).  This can be used anywhere a reference to an OutputState can
+    ordinarily be used (e.g., in an `InputState tuple specification <InputState_Tuple_Specification>`). Any OutputState
+    with a name matching the string will be monitored, including ones with the same name that belong to different
+    Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
+    other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
+    <InputState_Specification>`, and examples under `System_Control_Examples`).
+  |
+  * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
+    single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
+    the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
+    except its `controller <System.controller>` and `LearningMechanisms <LearningMechanism>`. The
+    *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
+    monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
+  |
+  The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
+  The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
+  ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
+  the ControlMechanism's `monitored_output_states <EVCControlMechanism.monitored_output_states>` attribute, and its
+  ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute).
+..
+* **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
+  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
+  *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
+  already been specified for the `controller <System.controller>` (listed in its `control_signals
+  <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
+  control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
+
+COMMENT
+
+Controller Execution
+~~~~~~~~~~~~~~~~~~~~
+
+The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
+<Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
+<Composition.controller>` is `assigned <Composition_Controller_Assignment>`.  If enabled, the `controller
+<Composition.controller>` is generally executed either before or after all of the other Components in the Composition
+have been executed, as determined by the Composition's `controller_mode <Composition.controller_mode>` attribute.
+However, the Composition's `controller_condition <Composition.controller_condition>` attribute can be used to
+customize when it is executed.  All three of these attributes can be specified in corresponding arguments of the
+Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
+attribute.
 
 For Developers
 --------------
