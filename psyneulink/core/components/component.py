@@ -1179,20 +1179,21 @@ class Component(object, metaclass=ComponentsMeta):
             self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
         return self.__llvm_bin_function
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, extra_args=[]):
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
+            args = [ctx.get_param_struct_type(self).as_pointer(),
+                    ctx.get_context_struct_type(self).as_pointer(),
+                    ctx.get_input_struct_type(self).as_pointer(),
+                    ctx.get_output_struct_type(self).as_pointer()]
             func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
-                (ctx.get_param_struct_type(self).as_pointer(),
-                 ctx.get_context_struct_type(self).as_pointer(),
-                 ctx.get_input_struct_type(self).as_pointer(),
-                 ctx.get_output_struct_type(self).as_pointer()))
+                                            args + extra_args)
 
             func_name = ctx.get_unique_name(str(self))
             llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, context, arg_in, arg_out = llvm_func.args
+            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
             for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
                 p.attributes.add('noalias')
