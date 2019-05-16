@@ -355,6 +355,12 @@ class GatingSignal(ModulatorySignal):
         result of the GatingSignal's `function <GatingSignal.function>`
         (same as its `gating_signal <GatingSignal.gating_signal>`).
 
+    intensity : float
+        result of the GatingSignal's `function <GatingSignal.function>`;
+        assigned as the value of the GatingSignal's GatingProjection, and used to modify the `value <State_Base.value>`
+        of the State(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project; same as
+        `gating_signal <GatingSignal.gating_signal>`.
+
     index : int
         the item of the owner GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` used as the
         GatingSignal's `value <GatingSignal.value>`.

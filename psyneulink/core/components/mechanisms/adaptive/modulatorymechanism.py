@@ -225,28 +225,17 @@ allocations to any GatingSignals are listed in the `gating_signals <ModulatoryMe
 
 .. _ModulatoryMechanism_Costs:
 
-*ControlSignal Costs and Net Outcome*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Costs and Net Outcome*
 
-COMMENT:
-FIX: MOVE TO EXECUTION BELOW?
-COMMENT
-
-When a ModulatoryMechanism `executes <ModulatoryMechanism_Execution>, it updates each of it's `modulatory_signals
-<ModulatoryMechanism.modulatory_signals>`.  For `ControlSignals <ControlSignal>`, this includes a `calculation of each
-one's cost <ControlSignal_Costs>`, as well as a `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>`
-computed using the ModulatoryMechanism's `compute_reconfiguration_cost
-<ModulatoryMechanism.compute_reconfiguration_cost>` function. These are then combined by the ModulatoryMechanism's
-`combine_costs <ModuModulatoryMechanism.combine_costs>` function, the result of which is assigned to its `costs
-<ModulatoryMechanism.costs>` attribute.  The ModulatoryMechanism then uses the `outcome <ModulatoryMechanism.outcome>`
-in its `*OUTCOME* InputState <ModulatoryMechanism_Input>`, together with its `costs <ModulatoryMechanism.costs>`,
-to compute a `net_outcome <ModulatoryMechanism.net_outcome>` using its `compute_net_outcome
-<ModulatoryMechanism.compute_net_outcome>` function.  This value is then used by the `function
-<ModulatoryMechanism.function>` of some subclasses of ModulatoryMechanism to compute its `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>` (for example, see `OptimizationControlMechanism`).  The `combine_costs
-<ModulatoryMechanism.combine_costs>`, `compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>`,
-and `compute_net_outcome <ModulatoryMechanism.compute_net_outcome>` functions used in the above computations can be
-assigned custom functions (see links to attributes for details).
+If a ModulatoryMechanism has any `ControlSignals <ControlSignal>` in its `modulatory_signals
+<ModulatoryMechanism.modulatory_signals>`, then it also computes the combined `costs <ModulatoryMechanism.costs>` of
+those, and a `net_outcome <ModulatoryMechanism.net_outcome>` based on them (see `below
+<ModulatoryMechanism_Costs_Computation>`). This is used by some subclasses of ModulatoryMechanism (e.g.,
+`OptimizationControlMechanism`) to compute the `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.
+These are computed using the ModulatoryMechanism's default `compute_reconfiguration_cost
+<ModulatoryMechanism.compute_reconfiguration_cost>`, `combine_costs <ModulatoryMechanism.combine_costs>`,
+and `compute_net_outcome <ModulatoryMechanism.compute_net_outcome>` functions, but these can also be assigned custom
+functions (see links to attributes for details).
 
 .. _ModulatoryMechanism_Execution:
 
@@ -258,7 +247,7 @@ of its *OUTCOME* `input_state <Mechanism_Base.input_state>` (also contained in `
 uses that to determine its `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>` that specifies the
 value assigned to its `modulatory_signals <ModulatoryMechanism.modulatory_signals>`.  Each of those uses the
 allocation it is assigned to calculate its `ControlSignal` `intensity <ControlSignal.intensity>` or `GatingSignal`
-`intensity <GatingSignal.intensity>`.  These are used by their `ControlProjection(s) <ControlProjection>` or
+`intensity <GatingSignal.intensity>`. These are used by their `ControlProjection(s) <ControlProjection>` or
 `GatingProjection(s) <GatingProjection>`, respectively, to modulate the value of the States to which they project.
 Those values are then used in the subsequent `TRIAL` of execution. If a ModulatoryMechanism is a Composition's
 `controller <Composition.controller>`, it is generally either the first or the last `Mechanism <Mechanism>` to be
@@ -270,6 +259,23 @@ executed in a `TRIAL`, although this can be customized (see Composition Controll
    update their values until their owner Mechanisms execute (see `Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).  This means that even if a ModulatoryMechanism has executed, the States that it modulates will
    not assume their new values until the Mechanisms to which they belong have executed.
+
+.. _ModulatoryMechanism_Costs_Computation:
+
+*Computation of Costs and Net_Outcome*
+
+When a ModulatoryMechanism updates the `intensity <ControlSignal.intensity>` of any ControlSignals in its
+`modulatory_signals <ModulatoryMechanism.modulatory_signals>`, each of those ControlSignals calculates a `cost
+<ControlSignal.cost>`, based on its `intensity  <ControlSignal/intensity>`.  The ModulatoryMechanism computes a
+`reconfiguration_cost  <ModulatoryMechanism.reconfiguration_cost>` based on these,  using its
+`compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>` function.  It then  combines this
+with the `cost  <ControlSignal.cost>` of its individual ControlSignals, using its `combine_costs
+<ModulatoryMechanism.combine_costs>` function, and assigns the result to its `costs <ModulatoryMechanism.costs>`
+attribute.  The ModulatoryMechanism uses this, together with its `outcome <ModulatoryMechanism.outcome>` attribute,
+to compute a  `net_outcome <ModulatoryMechanism.net_outcome>` using its `compute_net_outcome
+<ModulatoryMechanism.compute_net_outcome>` function.  This is used by some subclasses of ModulatoryMechanism
+(e.g., `OptimizationControlMechanism`) to  compute its `modulatory_allocation
+<ModulatoryMechanism.modulatory_allocation>`.
 
 .. _ModulatoryMechanism_Examples:
 
