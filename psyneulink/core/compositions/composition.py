@@ -4521,7 +4521,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             m_context = builder.gep(context, [zero, zero, idx])
             m_out = builder.gep(data_out, [zero, zero, idx])
             if is_mech:
-                builder.call(m_function, [m_params, m_context, m_in, m_out])
+                call_args = [m_params, m_context, m_in, m_out]
+                if node is self.controller:
+                    call_args += [params, context, data_in]
+                builder.call(m_function, call_args)
             else:
                 # Condition and data structures includes parent first
                 nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)

@@ -1090,6 +1090,24 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(net_outcome, arg_out)
         return builder
 
+    def _gen_llvm_function(self):
+        from psyneulink.core.compositions.composition import Composition
+        is_comp = isinstance(self.agent_rep, Composition)
+        if is_comp:
+            with pnlvm.LLVMBuilderContext() as ctx:
+                extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                              ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                              ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+        else:
+            extra_args = []
+
+        f = super()._gen_llvm_function(extra_args)
+        for a in f.args[-len(extra_args):]:
+            a.attributes.add('nonnull')
+            a.attributes.add('noalias')
+
+        return f
+
     def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
         for i, state in enumerate(self.output_states):
 
