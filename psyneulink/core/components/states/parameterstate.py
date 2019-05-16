@@ -14,7 +14,7 @@ Overview
 --------
 
 ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>`. A ParameterState is created
-to represent each eligible `configurable parameter <ParameterState_Configurable_Parameters>` of the `Mechanism
+to represent each `modulatable parameter <ParameterState_Configurable_Parameters>` of the `Mechanism
 <Mechanism>` or a `Projection <Projection>`, as well as those of the component's `function <Component_Function>`. A
 ParameterState provides the current value of the parameter it represents during any relevant computations, and serves as
 an interface for parameter modulation.
