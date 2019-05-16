@@ -2411,7 +2411,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     )
                     proj._activate_for_compositions(self)
                     if isinstance(node, Composition):
-                        projection._activate_for_compositions(node)
+                        proj._activate_for_compositions(node)
 
         previous_output_node_output_states = set(self.output_CIM_states.keys())
         for output_state in previous_output_node_output_states.difference(current_output_node_output_states):
