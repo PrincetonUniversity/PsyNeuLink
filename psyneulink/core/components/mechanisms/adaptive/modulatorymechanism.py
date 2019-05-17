@@ -387,10 +387,13 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import NodeRole, ContentAddressableList, is_iterable
 
 __all__ = [
-    'MODULATORY_ALLOCATION', 'ModulatoryMechanism', 'ModulatoryMechanismError', 'ModulatoryMechanismRegistry'
+    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'MODULATORY_ALLOCATION',
+    'ModulatoryMechanism', 'ModulatoryMechanismError', 'ModulatoryMechanismRegistry'
 ]
 
 MODULATORY_ALLOCATION = 'modulatory_allocation'
+CONTROL_ALLOCATION = 'control_allocation'
+GATING_ALLOCATION = 'gating_allocation'
 
 ModulatoryMechanismRegistry = {}
 
@@ -420,7 +423,7 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None):
         c.parameters.variable.set(value, execution_id)
     return value
 
-def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
+def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
         costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
@@ -700,7 +703,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
     outputStateTypes = [ControlSignal, GatingSignal]
     stateListAttr = Mechanism_Base.stateListAttr.copy()
-    stateListAttr.update({ControlSignal:CONTROL_SIGNALS})
+    stateListAttr.update({ControlSignal:CONTROL_SIGNALS,
+                          GatingSignal:GATING_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -810,7 +814,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # reconfiguration_cost = Parameter(None, read_only=True, getter=_reconfiguration_cost_getter)
 
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
-        costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
+        costs = Parameter(None, read_only=True, getter=_modulatory_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True)
 
         compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
@@ -996,7 +1000,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                    self.name, target_set[OBJECTIVE_MECHANISM],
                                                    ObjectiveMechanism.componentName))
 
-        if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
+        if MODULATORY_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
             if not isinstance(target_set[CONTROL_SIGNALS], list):
                 target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
             from psyneulink.core.components.projections.projection import ProjectionError
@@ -1248,10 +1252,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             for projection in state.path_afferents:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
-                # FIX: 10/3/17 - self.monitored_output_states IS A LIST OF INPUT_STATES,
-                # FIX:            BUT monitored_state IS AN INPUT_STATE
-                # FIX:            * ??USE monitored_state.name,
-                # FIX:              BUT THEN NEED TO UPDATE index METHOD OF
                 # ContentAddressableList
                 monitored_state_index = self.monitored_output_states.index(monitored_state)
 
@@ -1261,12 +1261,21 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, weight, exponent))
 
-        print ("\n\tControlling the following Mechanism parameters:".format(self.name))
-        # Sort for consistency of output:
-        state_names_sorted = sorted(self.output_states.names)
-        for state_name in state_names_sorted:
-            for projection in self.output_states[state_name].efferents:
-                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        if self.control_signals:
+            print ("\n\tControlling the following Mechanism parameters:".format(self.name))
+            # Sort for consistency of output:
+            state_names_sorted = sorted(self.control_signals.names)
+            for state_name in state_names_sorted:
+                for projection in self.control_signals[state_name].efferents:
+                    print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+
+        if self.gating_signals:
+            print ("\n\tGating the following States:".format(self.name))
+            # Sort for consistency of output:
+            state_names_sorted = sorted(self.gating_signals.names)
+            for state_name in state_names_sorted:
+                for projection in self.gating_signals[state_name].efferents:
+                    print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")
 
