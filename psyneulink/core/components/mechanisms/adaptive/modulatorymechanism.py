@@ -378,8 +378,8 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
-    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNALS, \
-    EID_SIMULATION, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_MODULATION, \
+    CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, \
+    EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -403,24 +403,51 @@ class ModulatoryMechanismError(Exception):
 
 def _control_allocation_getter(owning_component=None, execution_id=None):
     try:
-        return np.array([c.parameters.variable.get(execution_id) for c in owning_component.control_signals])
+        control_signal_indices = [owning_component.modulatory_signals.index(c)
+                                  for c in owning_component.control_signals]
+        return np.array([owning_component.modulatory_allocation[i] for i in control_signal_indices])
     except TypeError:
         return defaultControlAllocation
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
-    for c in owning_component.control_signals:
-        c.parameters.variable.set(value, execution_id)
+    control_signal_indices = [owning_component.modulatory_signals.index(c)
+                              for c in owning_component.control_signals]
+    if len(value)!=len(control_signal_indices):
+        raise ModulatoryMechanismError(f"Attempt to set {CONTROL_ALLOCATION} parameter of {owning_component.name} "
+                                       f"with value ({value} that has a different length than the number of its"
+                                       f"{CONTROL_SIGNALS} ({len(control_signal_indices)})")
+    mod_alloc = owning_component.parameters.modulatory_allocation.get(execution_id)
+    for j, i in enumerate(control_signal_indices):
+        mod_alloc[i] = value[j]
+    owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
     return value
 
 def _gating_allocation_getter(owning_component=None, execution_id=None):
+    # try:
+    #     return np.array([c.parameters.variable.get(execution_id) for c in owning_component.gating_signals])
+    # except TypeError:
+    #     return defaultGatingAllocation
     try:
-        return np.array([c.parameters.variable.get(execution_id) for c in owning_component.gating_signals])
+        gating_signal_indices = [owning_component.modulatory_signals.index(c)
+                                  for c in owning_component.gating_signals]
+        return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
     except TypeError:
         return defaultGatingAllocation
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
-    for c in owning_component.gating_signals:
-        c.parameters.variable.set(value, execution_id)
+    # for c in owning_component.gating_signals:
+    #     c.parameters.variable.set(value, execution_id)
+    # return value
+    gating_signal_indices = [owning_component.modulatory_signals.index(c)
+                              for c in owning_component.gating_signals]
+    if len(value)!=len(gating_signal_indices):
+        raise ModulatoryMechanismError(f"Attempt to set {GATING_ALLOCATION} parameter of {owning_component.name} "
+                                       f"with value ({value} that has a different length than the number of its"
+                                       f"{GATING_SIGNALS} ({len(gating_signal_indices)})")
+    mod_alloc = owning_component.parameters.modulatory_allocation.get(execution_id)
+    for j, i in enumerate(gating_signal_indices):
+        mod_alloc[i] = value[j]
+    owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
     return value
 
 def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
@@ -1000,19 +1027,19 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                    self.name, target_set[OBJECTIVE_MECHANISM],
                                                    ObjectiveMechanism.componentName))
 
-        if MODULATORY_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
-            if not isinstance(target_set[CONTROL_SIGNALS], list):
-                target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
+        if MODULATORY_SIGNALS in target_set and target_set[MODULATORY_SIGNALS]:
+            modulatory_signals = target_set[MODULATORY_SIGNALS]
+            if not isinstance(modulatory_signals, list):
+                modulatory_signals = [modulatory_signals]
             from psyneulink.core.components.projections.projection import ProjectionError
-            for control_signal in target_set[CONTROL_SIGNALS]:
+            for modulatory_signal in modulatory_signals:
                 # _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
                 try:
-                    _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
+                    _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=modulatory_signal)
                 except ProjectionError:
-                    _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=control_signal)
+                    _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=modulatory_signal)
 
-    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
-    # ONCE THAT IS IMPLEMENTED
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):
         """
         # FIX: ??THIS SHOULD BE IN OR MOVED TO ObjectiveMechanism
@@ -1465,32 +1492,50 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
     @property
     def monitored_output_states_weights_and_exponents(self):
-        return self._objective_mechanism.monitored_output_states_weights_and_exponents
+        try:
+            return self._objective_mechanism.monitored_output_states_weights_and_exponents
+        except:
+            return None
 
     @property
     def modulatory_projections(self):
-        return [projection for modulatory_signal in self.modulatory_signals
-                for projection in modulatory_signal.efferents]
+        try:
+            return [projection for modulatory_signal in self.modulatory_signals
+                    for projection in modulatory_signal.efferents]
+        except:
+            return None
 
     @property
     def control_signals(self):
-        return ContentAddressableList(component_type=ControlSignal,
-                                      list=[state for state in self.output_states
-                                            if isinstance(state, ControlSignal)])
+        try:
+            return ContentAddressableList(component_type=ControlSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, ControlSignal)])
+        except:
+            return None
 
     @property
     def control_projections(self):
-        return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
+        try:
+            return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
+        except:
+            return None
 
     @property
     def gating_signals(self):
-        return ContentAddressableList(component_type=GatingSignal,
-                                      list=[state for state in self.output_states
-                                            if isinstance(state, GatingSignal)])
+        try:
+            return ContentAddressableList(component_type=GatingSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, GatingSignal)])
+        except:
+            return None
 
     @property
     def gating_projections(self):
-        return [projection for gating_signal in self.gating_signals for projection in gating_signal.efferents]
+        try:
+            return [projection for gating_signal in self.gating_signals for projection in gating_signal.efferents]
+        except:
+            return None
 
     @property
     def _sim_count_lock(self):

@@ -658,7 +658,7 @@ class ControlMechanism(ModulatoryMechanism):
         super(ControlMechanism, self).__init__(default_variable=default_variable,
                                                size=size,
                                                modulation=modulation,
-                                               monitor_for_control=monitor_for_control,
+                                               monitor_for_modulation=monitor_for_control,
                                                objective_mechanism=objective_mechanism,
                                                function=function,
                                                combine_costs=combine_costs,
@@ -669,9 +669,14 @@ class ControlMechanism(ModulatoryMechanism):
                                                name=name,
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
+        assert True
 
         # FIX: DELETE ATTRIBUTES/PARAMS RELATED TO GATING OR MODULATORY STUFF HERE:
-        # gating_projections, gating_signals
+        # modulatory_signals, modulatory_projections, modulatory_allocation -> control_signal
+        # DELETE gating_signals, gating_projections, gating_allocation
+
+    def _instantiate_control_signal(self, control_signal, context):
+        return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
 
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
@@ -759,7 +764,9 @@ class ControlMechanism(ModulatoryMechanism):
                 and self.control_signals[0].name=='ControlSignal-0'
                 and not self.control_signals[0].efferents):
             del self._output_states[0]
-            del self.control_signals[0]
+            # # MODIFIED 5/16/19 OLD:
+            # del self.control_signals[0]
+            # MODIFIED 5/16/19 END
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
@@ -790,8 +797,26 @@ class ControlMechanism(ModulatoryMechanism):
 
         self._activate_projections_for_compositions(system)
 
+    # # MODIFIED 5/16/19 NEW: [JDC]
+    # def _execute(self, variable,  execution_id, runtime_params, context):
+    #     return super()._execute(variable,  execution_id, runtime_params, context)
+    # # MODIFIED 5/16/19 END
+
     def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         self._apply_modulatory_allocation(modulatory_allocation=control_allocation,
                                           runtime_params=runtime_params,
                                           context=context,
                                           execution_id=execution_id)
+
+    @property
+    def control_signals(self):
+        try:
+            return ContentAddressableList(component_type=ControlSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, ControlSignal)])
+        except:
+            return None
+
+    @control_signals.setter
+    def control_signals(self, value):
+        self._modulatory_signals = value
