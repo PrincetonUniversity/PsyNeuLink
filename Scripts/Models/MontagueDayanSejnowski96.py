@@ -3,6 +3,8 @@ This implements a model of mesolimbic dopamine cell activity during monkey
 conditioning as found in `Montague, Dayan, and Sejnowski (1996) in PsyNeuLink
 <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
 """
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import psyneulink as pnl
@@ -14,95 +16,111 @@ import psyneulink.core.components.functions.learningfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 
-def model_training():
-    """
-    This creates the plot for figure 5A in the Montague paper. Figure 5A is
-    a 'plot of ∂(t) over time for three trials during training (1, 30, and 50).'
-    """
-    sample = pnl.TransferMechanism(
-        default_variable=np.zeros(60),
-        name=pnl.SAMPLE
-    )
+def build_processing_components(intercept):
+    sample_mechanism = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             name=pnl.SAMPLE)
 
-    action_selection = pnl.TransferMechanism(
-        default_variable=np.zeros(60),
-        function=psyneulink.core.components.functions.transferfunctions.Linear(slope=1.0, intercept=0.01),
-        name='Action Selection'
-    )
+    action_selection = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             function=pnl.Linear(slope=1.0, intercept=intercept),
+                                             name='Action Selection')
+
+    sample_to_action_selection = pnl.MappingProjection(sender=sample_mechanism,
+                                                       receiver=action_selection,
+                                                       matrix=np.zeros((60, 60)))
+
+    return sample_mechanism, action_selection, sample_to_action_selection
+
+
+def build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_trials):
 
     stimulus_onset = 41
     reward_delivery = 54
 
-    samples = np.zeros(60)
-    samples[stimulus_onset:] = 1
-    samples = np.tile(samples, (120, 1))
+    # build input dictionary
+    samples = []
+    targets = []
+    for trial in range(120):
+        target = [0.] * 60
+        target[reward_delivery] = 1.
+        if trial in no_reward_trials:
+            target[reward_delivery] = 0.
+        targets.append(target)
 
-    targets = np.zeros(60)
-    targets[reward_delivery] = 1
-    targets = np.tile(targets, (120, 1))
+        sample = [0.] * 60
+        for i in range(stimulus_onset, 60):
+            sample[i] = 1.
+        samples.append(sample)
 
-    # no reward given every 15 trials to simulate a wrong response
-    targets[14][reward_delivery] = 0
-    targets[29][reward_delivery] = 0
-    targets[44][reward_delivery] = 0
-    targets[59][reward_delivery] = 0
-    targets[74][reward_delivery] = 0
-    targets[89][reward_delivery] = 0
+    return {sample_mechanism: samples,
+            target_mechanism: targets}
 
-    pnl.MappingProjection(
-        sender=sample,
-        receiver=action_selection,
-        matrix=np.full((60, 60), 0.0)
-    )
-    learning_projection = pnl.LearningProjection(
-        learning_function=psyneulink.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
-    )
 
-    p = pnl.Process(
-        default_variable=np.zeros(60),
-        pathway=[sample, action_selection],
-        learning=learning_projection,
-        size=60,
-        target=np.zeros(60)
-    )
-    trial = 0
+def build_stimulus_dictionary_2(sample_mechanism, target_mechanism):
 
-    def print_header():
-        nonlocal trial
-        print("\n\n*** EPISODE: {}".format(trial))
+    stimulus_onset = 42
+    reward_delivery = 54
 
-    def store_delta_vals():
-        nonlocal trial
-        delta_vals[trial] = s.mechanisms[2].value
-        trial += 1
+    # build input dictionary
+    samples = []
+    targets = []
+    for trial in range(150):
+        target = [0.] * 60
+        target[reward_delivery] = 1.
+        if trial > 70:
+            target[reward_delivery] = 0.
+        targets.append(target)
 
-        print('Delta values: \n{0}'.format(s.mechanisms[2].value))
-        
+        sample = [0.] * 60
+        for i in range(stimulus_onset, 60):
+            sample[i] = 1.
+        samples.append(sample)
 
-    input_list = {
-        sample: samples
-    }
+    return {sample_mechanism: samples,
+            target_mechanism: targets}
 
-    target_list = {
-        action_selection: targets
-    }
 
-    s = pnl.System(processes=[p])
+def figure_5A():
+    """
+    This creates the plot for figure 5A in the Montague paper. Figure 5A is
+    a 'plot of ∂(t) over time for three trials during training (1, 30, and 50).'
+    """
 
-    delta_vals = np.zeros((120, 60))
+    # Create Processing Components
+    sample_mechanism, action_selection, sample_to_action_selection = build_processing_components(intercept=0.01)
 
-    s.run(
-        num_trials=120,
-        inputs=input_list,
-        targets=target_list,
-        learning=True,
-        call_before_trial=print_header,
-        call_after_trial=store_delta_vals
-    )
+    # Create Composition
+    composition_name = 'TD_Learning_Figure_5A'
+    comp = pnl.Composition(name=composition_name)
+
+    # Add Processing Components to the Composition
+    pathway = [sample_mechanism, sample_to_action_selection, action_selection]
+
+    # Add Learning Components to the Composition
+    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
+
+    # Unpack Relevant Learning Components
+    prediction_error_mechanism = learning_related_components[pnl.COMPARATOR_MECHANISM]
+    target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
+
+    # Create Log
+    prediction_error_mechanism.log.set_log_conditions(pnl.VALUE)
+
+    # Create Stimulus Dictionary
+    no_reward_trials = {14, 29, 44, 59, 74, 89}
+    inputs = build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_trials)
+
+    # Run Composition
+    comp.run(inputs=inputs)
+    # comp.show_graph()
+
+    # Get Delta Values from Log
+    delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
+
+    # Plot Delta Values form trials 1, 30, and 50
     with plt.style.context('seaborn'):
-        plt.plot(delta_vals[0], "-o", label="Trial 1")
-        plt.plot(delta_vals[29], "-s", label="Trial 30")
-        plt.plot(delta_vals[49], "-o", label="Trial 50")
+        plt.plot(delta_vals[0][0], "-o", label="Trial 1")
+        plt.plot(delta_vals[29][0], "-s", label="Trial 30")
+        plt.plot(delta_vals[49][0], "-o", label="Trial 50")
         plt.title("Montague et. al. (1996) -- Figure 5A")
         plt.xlabel("Timestep")
         plt.ylabel("∂")
@@ -112,94 +130,52 @@ def model_training():
         plt.show()
 
 
-def model_training_full_experiment():
+def figure_5B():
     """
     This creates the plot for figure 5B in the Montague paper. Figure 5B shows
     the 'entire time course of model responses (trials 1-150).' The setup is
     the same as in Figure 5A, except that training begins at trial 10.
     """
-    sample = pnl.TransferMechanism(
-        default_variable=np.zeros(60),
-        name=pnl.SAMPLE
-    )
 
-    action_selection = pnl.TransferMechanism(
-        default_variable=np.zeros(60),
-        function=psyneulink.core.components.functions.transferfunctions.Linear(slope=1.0, intercept=1.0),
-        name='Action Selection'
-    )
+    # Create Processing Components
+    sample_mechanism, action_selection, sample_to_action_selection = build_processing_components(intercept=1.0)
 
-    stimulus_onset = 41
-    reward_delivery = 54
+    # Create Composition
+    composition_name = 'TD_Learning_Figure_5B'
+    comp = pnl.Composition(name=composition_name)
 
-    samples = np.zeros(60)
-    samples[stimulus_onset:] = 1
-    samples = np.tile(samples, (120, 1))
+    # Add Processing Components to the Composition
+    pathway = [sample_mechanism, sample_to_action_selection, action_selection]
 
-    targets = np.zeros(60)
-    targets[reward_delivery] = 1
-    targets = np.tile(targets, (120, 1))
+    # Add Learning Components to the Composition
+    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
-    # training begins at trial 11
-    # no reward given every 15 trials to simulate a wrong response
-    no_reward_trials = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 29, 44, 59, 74,
-                        89, 104, 119]
-    for t in no_reward_trials:
-        targets[t][reward_delivery] = 0
+    # Unpack Relevant Learning Components
+    prediction_error_mechanism = learning_related_components[pnl.COMPARATOR_MECHANISM]
+    target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
-    pnl.MappingProjection(
-        sender=sample,
-        receiver=action_selection,
-        matrix=np.zeros((60, 60))
-    )
+    # Create Log
+    prediction_error_mechanism.log.set_log_conditions(pnl.VALUE)
 
-    learning_projection = pnl.LearningProjection(
-        learning_function=psyneulink.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
-    )
+    # Create Stimulus Dictionary
+    no_reward_trials = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 29, 44, 59, 74,
+                        89, 104, 119}
+    inputs = build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_trials)
 
-    p = pnl.Process(
-        default_variable=np.zeros(60),
-        pathway=[sample, action_selection],
-        learning=learning_projection,
-        size=60,
-        target=np.zeros(60)
-    )
-    trial = 0
+    # Run Composition
+    comp.run(inputs=inputs)
+    # comp.show_graph()
 
-    def print_header():
-        nonlocal trial
-        print("\n\n*** EPISODE: {}".format(trial))
+    # Get Delta Values from Log
+    delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
 
-    def store_delta_vals():
-        nonlocal trial
-        delta_vals[trial] = s.mechanisms[2].value
-        trial += 1
-
-    input_list = {
-        sample: samples
-    }
-
-    target_list = {
-        action_selection: targets
-    }
-
-    s = pnl.System(processes=[p])
-
-    delta_vals = np.zeros((120, 60))
-
-    s.run(
-        num_trials=120,
-        inputs=input_list,
-        targets=target_list,
-        learning=True,
-        call_before_trial=print_header,
-        call_after_trial=store_delta_vals
-    )
     with plt.style.context('seaborn'):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         x_vals, y_vals = np.meshgrid(np.arange(120), np.arange(40, 60, step=1))
-        ax.plot_surface(x_vals, y_vals, delta_vals[:, 40:60].transpose())
+        d_vals = np.array([d[0][40:60] for d in delta_vals]).transpose()
+        ax.plot_surface(x_vals, y_vals, d_vals)
+        ax.invert_yaxis()
         ax.invert_yaxis()
         ax.set_xlabel("Trial")
         ax.set_ylabel("Timestep")
@@ -208,93 +184,49 @@ def model_training_full_experiment():
         plt.show()
 
 
-def model_training_response_extinction():
+def figure_5C():
     """
     This creates the plot for Figure 5C in the Montague paper. Figure 5C shows
     'extinction of response to the sensory cue.' The setup is the same as
     Figure 5A, except that reward delivery stops at trial 70
     """
-    sample = pnl.TransferMechanism(
-        default_variable=np.zeros(60),
-        name=pnl.SAMPLE
-    )
 
-    action_selection = pnl.TransferMechanism(
-        default_variable=np.zeros(60),
-        function=psyneulink.core.components.functions.transferfunctions.Linear(slope=1.0, intercept=1.0),
-        name='Action Selection'
-    )
+    # Create Processing Components
+    sample_mechanism, action_selection, sample_to_action_selection = build_processing_components(intercept=1.0)
 
-    stimulus_onset = 42
-    reward_delivery = 54
+    # Create Composition
+    composition_name = 'TD_Learning_Figure_5C'
+    comp = pnl.Composition(name=composition_name)
 
-    samples = np.zeros(60)
-    samples[stimulus_onset:] = 1
-    samples = np.tile(samples, (150, 1))
+    # Add Processing Components to the Composition
+    pathway = [sample_mechanism, sample_to_action_selection, action_selection]
 
-    targets = np.zeros(60)
-    targets[reward_delivery] = 1
-    targets = np.tile(targets, (150, 1))
+    # Add Learning Components to the Composition
+    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
-    # stop delivering reward after trial 70
-    for i in range(71, 150):
-        targets[i][reward_delivery] = 0
+    # Unpack Relevant Learning Components
+    prediction_error_mechanism = learning_related_components[pnl.COMPARATOR_MECHANISM]
+    target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
-    pnl.MappingProjection(
-        sender=sample,
-        receiver=action_selection,
-        matrix=np.zeros((60, 60))
-    )
+    # Create Log
+    prediction_error_mechanism.log.set_log_conditions(pnl.VALUE)
 
-    learning_projection = pnl.LearningProjection(
-        learning_function=psyneulink.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
-    )
+    # Create Stimulus Dictionary
+    inputs = build_stimulus_dictionary_2(sample_mechanism, target_mechanism)
 
-    p = pnl.Process(
-        default_variable=np.zeros(60),
-        pathway=[sample, action_selection],
-        learning=learning_projection,
-        size=60,
-        target=np.zeros(60)
-    )
+    # Run Composition
+    comp.run(inputs=inputs)
+    # comp.show_graph()
 
-    trial = 0
+    # Get Delta Values from Log
+    delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
 
-    def print_header():
-        nonlocal trial
-        print("\n\n*** EPISODE: {}".format(trial))
-
-    input_list = {
-        sample: samples
-    }
-
-    target_list = {
-        action_selection: targets
-    }
-
-    s = pnl.System(processes=[p])
-
-    delta_vals = np.zeros((150, 60))
-    trial = 0
-
-    def store_delta_vals():
-        nonlocal trial
-        delta_vals[trial] = s.mechanisms[2].value
-        trial += 1
-
-    s.run(
-        num_trials=150,
-        inputs=input_list,
-        targets=target_list,
-        learning=True,
-        call_before_trial=print_header,
-        call_after_trial=store_delta_vals
-    )
     with plt.style.context('seaborn'):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         x_vals, y_vals = np.meshgrid(np.arange(150), np.arange(40, 60, step=1))
-        ax.plot_surface(x_vals, y_vals, delta_vals[:, 40:60].transpose())
+        d_vals = np.array([d[0][40:60] for d in delta_vals]).transpose()
+        ax.plot_surface(x_vals, y_vals, d_vals)
         ax.invert_yaxis()
         ax.set_xlabel("Trial")
         ax.set_ylabel("Timestep")
@@ -304,6 +236,6 @@ def model_training_response_extinction():
 
 
 if __name__ == '__main__':
-    model_training()
-    model_training_full_experiment()
-    model_training_response_extinction()
+    figure_5A()
+    figure_5B()
+    figure_5C()
