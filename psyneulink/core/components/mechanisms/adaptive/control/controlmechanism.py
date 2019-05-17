@@ -797,33 +797,35 @@ class ControlMechanism(ModulatoryMechanism):
         # control_signals = control_signals or []
         # if not isinstance(control_signals, list):
         #     control_signals = [control_signals]
-        self.combine_costs = combine_costs
-        self.compute_net_outcome = compute_net_outcome
-        self.compute_reconfiguration_cost = compute_reconfiguration_cost
+        # self.combine_costs = combine_costs
+        # self.compute_net_outcome = compute_net_outcome
+        # self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
-                                                  monitor_for_control=monitor_for_control,
-                                                  objective_mechanism=objective_mechanism,
-                                                  function=function,
-                                                  control_signals=control_signals,
-                                                  modulation=modulation,
+                                                  # monitor_for_control=monitor_for_control,
+                                                  # objective_mechanism=objective_mechanism,
+                                                  # function=function,
+                                                  # control_signals=control_signals,
+                                                  # modulation=modulation,
                                                   params=params)
 
-        self._sim_counts = {}
+        # self._sim_counts = {}
 
         super(ControlMechanism, self).__init__(default_variable=default_variable,
                                                size=size,
                                                modulation=modulation,
+                                               monitor_for_control=monitor_for_control,
+                                               objective_mechanism=objective_mechanism,
+                                               function=function,
                                                modulatory_signals=control_signals,
                                                params=params,
                                                name=name,
-                                               function=function,
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
 
-        if system is not None:
-            self._activate_projections_for_compositions(system)
+        # if system is not None:
+        #     self._activate_projections_for_compositions(system)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
