@@ -413,9 +413,9 @@ def _control_allocation_setter(value, owning_component=None, execution_id=None):
     control_signal_indices = [owning_component.modulatory_signals.index(c)
                               for c in owning_component.control_signals]
     if len(value)!=len(control_signal_indices):
-        raise ModulatoryMechanismError(f"Attempt to set {CONTROL_ALLOCATION} parameter of {owning_component.name} "
-                                       f"with value ({value} that has a different length than the number of its"
-                                       f"{CONTROL_SIGNALS} ({len(control_signal_indices)})")
+        raise ModulatoryMechanismError(f"Attempt to set '{CONTROL_ALLOCATION}' parameter of {owning_component.name} "
+                                       f"with value ({value} that has a different length ({len(value)}) "
+                                       f"than the number of its {CONTROL_SIGNALS} ({len(control_signal_indices)})")
     mod_alloc = owning_component.parameters.modulatory_allocation.get(execution_id)
     for j, i in enumerate(control_signal_indices):
         mod_alloc[i] = value[j]

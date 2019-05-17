@@ -669,9 +669,8 @@ class ControlMechanism(ModulatoryMechanism):
                                                name=name,
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
-        assert True
 
-        # FIX: DELETE ATTRIBUTES/PARAMS RELATED TO GATING OR MODULATORY STUFF HERE:
+        # FIX: 5/16/19 - DELETE ATTRIBUTES/PARAMS RELATED TO GATING OR MODULATORY STUFF HERE:
         # modulatory_signals, modulatory_projections, modulatory_allocation -> control_signal
         # DELETE gating_signals, gating_projections, gating_allocation
 
