@@ -891,11 +891,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             self._activate_projections_for_compositions(system)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate SYSTEM, monitor_for_modulation and CONTROL_SIGNALS
+        """Validate SYSTEM, monitor_for_modulation, CONTROL_SIGNALS and GATING_SIGNALS
 
         If System is specified, validate it
         Check that all items in monitor_for_modulation are Mechanisms or OutputStates for Mechanisms in self.system
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
+        Check that all items in GATING_SIGNALS are States for Mechanisms in self.system
         """
         from psyneulink.core.components.system import MonitoredOutputStateTuple
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
