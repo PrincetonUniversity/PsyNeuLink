@@ -683,9 +683,6 @@ class LCControlMechanism(ControlMechanism):
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:FitzHughNagumoIntegrator,
-                               # MODIFIED 5/16/19 OLD:
-                               # CONTROL_SIGNALS: None,
-                               # MODIFIED 5/16/19 END
                                CONTROL_PROJECTIONS: None,
                                })
 
@@ -849,12 +846,7 @@ class LCControlMechanism(ControlMechanism):
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
-            # # MODIFIED 5/16/19 OLD:
-            # self._control_signals = [{PROJECTIONS: ctl_sig_projs}]
-            # # MODIFIED 5/16/19 NEW: [JDC]
-            # self._modulatory_signals = [{PROJECTIONS: ctl_sig_projs}]
             self.control_signals = [{PROJECTIONS: ctl_sig_projs}]
-            # MODIFIED 5/16/19 END
 
         super()._instantiate_output_states(context=context)
 

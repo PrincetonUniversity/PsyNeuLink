@@ -764,9 +764,6 @@ class ControlMechanism(ModulatoryMechanism):
                 and self.control_signals[0].name=='ControlSignal-0'
                 and not self.control_signals[0].efferents):
             del self._output_states[0]
-            # # MODIFIED 5/16/19 OLD:
-            # del self.control_signals[0]
-            # MODIFIED 5/16/19 END
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
@@ -796,11 +793,6 @@ class ControlMechanism(ModulatoryMechanism):
             system._controller = self
 
         self._activate_projections_for_compositions(system)
-
-    # # MODIFIED 5/16/19 NEW: [JDC]
-    # def _execute(self, variable,  execution_id, runtime_params, context):
-    #     return super()._execute(variable,  execution_id, runtime_params, context)
-    # # MODIFIED 5/16/19 END
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         self._apply_modulatory_allocation(modulatory_allocation=control_allocation,
