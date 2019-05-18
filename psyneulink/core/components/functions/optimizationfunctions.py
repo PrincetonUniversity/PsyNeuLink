@@ -30,8 +30,6 @@ import itertools
 import numpy as np
 import typecheck as tc
 
-import elfi
-
 from typing import Iterator
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
@@ -2103,6 +2101,8 @@ class ParamEstimationFunction(OptimizationFunction):
 
         # If the model has not been initialized, try to do it.
         if not self._is_model_initialized:
+
+            import elfi
 
             # Try to make the simulator function we will pass to ELFI, this will fail
             # when we are in psyneulink intializaztion phases.
