@@ -4825,6 +4825,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return net_outcome
 
+    def disable_all_history(self):
+        '''
+            When run, disables history tracking for all Parameters of all Components used in this Composition
+        '''
+        self._set_all_parameter_properties_recursively(history_max_length=0)
+
     def _dict_summary(self):
         scheduler_dict = {
             'schedulers': {
