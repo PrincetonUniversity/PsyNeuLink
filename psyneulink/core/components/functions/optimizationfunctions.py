@@ -2002,6 +2002,24 @@ class ParamEstimationFunction(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    @staticmethod
+    def _import_elfi():
+        """Import any need libraries needed for this classes opertation. Mainly ELFI"""
+
+        # ELFI imports matplotlib at the top level for some dumb reason. Matplotlib
+        # doesn't always play nice MacOS X backend. See example:
+        # https://github.com/scikit-optimize/scikit-optimize/issues/637
+        # Lets import and set the backend to PS to be safe. We aren't plotting anyway
+        # I guess. Only do this on Mac OS X
+        from sys import platform
+        if platform == "darwin":
+            import matplotlib
+            matplotlib.use('PS')
+
+        import elfi
+
+        return elfi
+
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
@@ -2102,7 +2120,7 @@ class ParamEstimationFunction(OptimizationFunction):
         # If the model has not been initialized, try to do it.
         if not self._is_model_initialized:
 
-            import elfi
+            elfi = ParamEstimationFunction._import_elfi()
 
             # Try to make the simulator function we will pass to ELFI, this will fail
             # when we are in psyneulink intializaztion phases.
