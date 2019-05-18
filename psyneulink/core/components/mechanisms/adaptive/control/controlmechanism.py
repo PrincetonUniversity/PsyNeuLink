@@ -775,7 +775,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  size=None,
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 objective_mechanism=None,
+                 objective_mechanism=True,
                  function=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -799,6 +799,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
+
+        # If the user passed in True for objective mechanism, then that
+        # means we need to create one automatically. Set it to None to
+        # single this downstream.
+        if objective_mechanism is True:
+            objective_mechanism = None
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
@@ -878,7 +884,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 spec = [spec]
             validate_monitored_state_spec(spec)
 
-        if OBJECTIVE_MECHANISM in target_set and target_set[OBJECTIVE_MECHANISM] is not None:
+        if OBJECTIVE_MECHANISM in target_set and \
+                target_set[OBJECTIVE_MECHANISM] is not None and \
+                target_set[OBJECTIVE_MECHANISM] is not False:
 
             if isinstance(target_set[OBJECTIVE_MECHANISM], list):
 
@@ -1027,8 +1035,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.input_state.name = OUTCOME
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        if self.monitor_for_control or self._objective_mechanism:
-            self._instantiate_objective_mechanism(context=context)
+        if self.monitor_for_control or \
+                self._objective_mechanism is None or \
+                type(self._objective_mechanism) is not bool:
+
+                self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
         from psyneulink.core.globals.registry import register_category
@@ -1309,7 +1320,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _activate_projections_for_compositions(self, compositions=None):
 
-        if self.objective_mechanism is not None:
+        if self.objective_mechanism:
             self._objective_projection._activate_for_compositions(compositions)
 
         for cs in self.control_signals:
@@ -1317,7 +1328,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 eff._activate_for_compositions(compositions)
 
         # assign any deferred init objective mech monitored output state projections to this system
-        if self.objective_mechanism is not None:
+        if self.objective_mechanism:
             for output_state in self.objective_mechanism.monitored_output_states:
                 for eff in output_state.efferents:
                     eff._activate_for_compositions(compositions)
@@ -1325,7 +1336,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         for eff in self.efferents:
             eff._activate_for_compositions(compositions)
 
-        if self.objective_mechanism is not None:
+        if self.objective_mechanism:
             for aff in self._objective_mechanism.afferents:
                 aff._activate_for_compositions(compositions)
 
@@ -1396,5 +1407,5 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [] if self._objective_mechanism is None else [self.objective_mechanism],
+            [self._objective_mechanism] if self.objective_mechanism else [],
         ))

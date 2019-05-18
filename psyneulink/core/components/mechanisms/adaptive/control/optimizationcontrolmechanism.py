@@ -437,7 +437,7 @@ class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(            \
     objective_mechanism=None,                   \
     monitor_for_control=None,                   \
-    objective_mechanism=None,                   \
+    objective_mechanism=True,                   \
     origin_objective_mechanism=False            \
     terminal_objective_mechanism=False          \
     features=None,                              \
@@ -462,11 +462,12 @@ class OptimizationControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    objective_mechanism : ObjectiveMechanism or List[OutputState specification]
-        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
-        `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
-        <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
-        is passed to its **monitored_output_states** argument.
+    objective_mechanism : ObjectiveMechanism or List[OutputState specification] or bool
+        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, a list of the
+        `OutputState <OutputState>`\\s it should monitor, or True/False to enable/disable automatice creation
+         of objective mechanism. If a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`
+         is used, a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states**
+         argument. The default is True, which causes automatic creation.
 
     features : Mechanism, OutputState, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
@@ -1054,7 +1055,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return list(itertools.chain(
             super()._dependent_components,
-            [] if self.objective_mechanism is None else [self._objective_mechanism],
+            [self._objective_mechanism] if self.objective_mechanism else [],
             [self.agent_rep] if isinstance(self.agent_rep, CompositionFunctionApproximator) else [],
             [self.search_function] if isinstance(self.search_function, Function_Base) else [],
             [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],

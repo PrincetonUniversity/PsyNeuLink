@@ -15,7 +15,7 @@ from psyneulink.core.components.functions.optimizationfunctions import ParamEsti
 def test_moving_average():
 
     # Set an arbitrary seed and a global random state to keep the randomly generated quantities the same between runs
-    seed = 20170530
+    seed = 20170530  # this will be separately given to ELFI
     np.random.seed(seed)
 
     # true parameters
@@ -55,14 +55,14 @@ def test_moving_average():
     comp.add_node(ma_mech)
 
     # Now lets setup some control signals for the parameters we want to
-    # infer
+    # infer. This is where we would like to specify priors.
     signalSearchRange = SampleSpec(start=0.1, stop=2.0, step=0.2)
     t1_control_signal = ControlSignal(projections=[('t1', ma_mech)],
-                                          allocation_samples=signalSearchRange,
-                                          modulation=OVERRIDE)
+                                      allocation_samples=signalSearchRange,
+                                      modulation=OVERRIDE)
     t2_control_signal = ControlSignal(projections=[('t2', ma_mech)],
-                                          allocation_samples=signalSearchRange,
-                                          modulation=OVERRIDE)
+                                      allocation_samples=signalSearchRange,
+                                      modulation=OVERRIDE)
 
     # A function to calculate the auto-covariance with specific lag for a
     # time series. We will use this function to compute the summary statistics
@@ -75,33 +75,43 @@ def test_moving_average():
         C = np.mean(x[:, lag:] * x[:, :-lag], axis=1)
         return C
 
-    # Lets make one function that computes all the summary stats in one go because PsyNeuLink
-    # objective mechanism expect a single function.
-    def objective_function(x):
-        return np.concatenate((autocov(x), autocov(x, lag=2)))
+    # # Lets make one function that computes all the summary stats in one go because PsyNeuLink
+    # # objective mechanism expect a single function.
+    # def objective_function(x):
+    #     return np.concatenate((autocov(x), autocov(x, lag=2)))
+    #
+    # # Objective Mechanism and its function currently need to be specified in the script.
+    # # (In future versions, this will be set up automatically)
+    # objective_mech = ObjectiveMechanism(function=objective_function,
+    #                                         monitor=[ma_mech])
 
-    # Objective Mechanism and its function currently need to be specified in the script.
-    # (In future versions, this will be set up automatically)
-    objective_mech = ObjectiveMechanism(function=objective_function,
-                                            monitor=[ma_mech])
-
+    # Setup the controller with the ParamEstimationFunction
     comp.add_controller(
         controller=OptimizationControlMechanism(
             agent_rep=comp,
-            objective_mechanism=objective_mech,
             function=ParamEstimationFunction(
                 priors={'t1': (scipy.stats.uniform, 0, 2), 't2': (scipy.stats.uniform, 0, 2)},
                 observed=y_obs,
                 summary=[(autocov, 1), (autocov, 2)],
                 discrepancy='euclidean',
+                n_samples=3, quantile=0.01, # Set very small now cause things are slow.
                 seed=seed),
+            objective_mechanism=False,
             control_signals=[t1_control_signal, t2_control_signal]))
-
-    # comp.show_graph(show_controller=True,  show_projection_labels=True, show_node_structure=True, show_cim=True)
 
     # Lets setup some input to the mechanism, not that it uses it for anything.
     stim_list_dict = {ma_mech: [0]}
 
+    # # FIXME: Show graph fails when the controller doesn't have an objective mechanism.
+    # comp.show_graph(show_controller=True,
+    #                 show_projection_labels=True,
+    #                 show_node_structure=True,
+    #                 show_cim=True,
+    #                 show_dimensions=True)
+
     comp.run(inputs=stim_list_dict)
 
-
+    # FIXME: The final test should be to check if the true parameters set above are
+    # recovered approximately. Not sure how to get all the samples out from
+    # above yet though so just pass for now.
+    assert True

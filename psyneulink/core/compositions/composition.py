@@ -1309,12 +1309,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = controller
         self.controller.composition = self
-        if self.controller.objective_mechanism is not None:
+        if self.controller.objective_mechanism:
             self.add_node(self.controller.objective_mechanism)
 
         self.enable_controller = True
 
-        if self.controller.objective_mechanism is not None:
+        if self.controller.objective_mechanism:
             for proj in self.controller.objective_mechanism.path_afferents:
                 self.add_projection(proj)
 
@@ -4743,17 +4743,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  context=context,
                  bin_execute=execution_mode)
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-
-        try:
-            if self.num_calls % 1 == 0:
-                print(f"Evaluate: num_calls={self.num_calls}")
-                self.memory_tracker.print_diff()
-            self.num_calls = self.num_calls + 1
-        except AttributeError:
-            print("Creating memory tracker.")
-            from pympler import tracker
-            self.memory_tracker = tracker.SummaryTracker()
-            self.num_calls = 0
 
         # Store simulation results on "base" composition
         if context.initialization_status != ContextFlags.INITIALIZING:

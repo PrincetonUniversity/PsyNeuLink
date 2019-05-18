@@ -1955,6 +1955,8 @@ class ParamEstimationFunction(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
+        # Setup all the arguments we will need to feed to
+        # ELFI later.
         self._priors = priors
         self._observed = observed
         self._summary = summary
@@ -1966,14 +1968,21 @@ class ParamEstimationFunction(OptimizationFunction):
         self._sampler_args = {'n_samples': self._n_samples,
                               'threshold': self._threshold,
                               'quantile': self._quantile,
-                              'n_sim': self._n_sim}
+                              'n_sim': self._n_sim,
+                              'bar': False}
 
+        # If no seed is specified, generate a different random one for
+        # each instance
         if seed is None:
             self._seed = random.randrange(sys.maxsize)
         else:
             self._seed = seed
 
-        # Has the ELFI model been setup yet.
+        # Setup a RNG for our stuff, we will also pass the seed to ELFI for
+        # its crap.
+        self._rng = np.random.RandomState(seed=seed)
+
+        # Has the ELFI model been setup yet. Nope!
         self._is_model_initialized = False
 
         # The simulator function we will pass to ELFI, this is really the objective_function
@@ -2000,9 +2009,15 @@ class ParamEstimationFunction(OptimizationFunction):
 
     def _make_simulator_function(self, execution_id):
 
+        # If the objective function hasn't been setup yet, we can simulate anything.
         if self.objective_function is None:
             return None
 
+        # FIXME: All of the checks below are for initializing state, must be a better way
+        # Just because the objective_function is setup doesn't mean things are
+        # ready to go yet, we could be in initialization or something. Try to
+        # invoke it, if we get a TypeError, that means it is not the right
+        # function yet.
         try:
             # Call the objective_function and check its return type
             zero_input = np.zeros(len(self.search_space))
@@ -2010,40 +2025,13 @@ class ParamEstimationFunction(OptimizationFunction):
         except TypeError as ex:
             return None
 
+        # This check is because the default return value for the default objective function
+        # is an int.
         if type(ret) is int:
             return None
 
-        # FIXME: This is here if we want to test out things by cheating.
-        # That is, rather than invoke PsyNeuLink for the simulator, just
-        # call the underlying function.
-        def MA2(t1, t2, n_obs=100, batch_size=1, random_state=None):
-            """Generate a sequence of samples from the MA2 model.
-
-            The sequence is a moving average
-
-                x_i = w_i + \theta_1 w_{i-1} + \theta_2 w_{i-2}
-
-            where w_i are white noise ~ N(0,1).
-
-            Parameters
-            ----------
-            t1 : float, array_like
-            t2 : float, array_like
-            n_obs : int, optional
-            batch_size : int, optional
-            random_state : RandomState, optional
-
-            """
-            # Make inputs 2d arrays for broadcasting with w
-            t1 = np.asanyarray(t1).reshape((-1, 1))
-            t2 = np.asanyarray(t2).reshape((-1, 1))
-            random_state = random_state or np.random
-
-            # i.i.d. sequence ~ N(0,1)
-            w = random_state.randn(batch_size, n_obs + 2)
-            x = w[:, 2:] + t1 * w[:, 1:-1] + t2 * w[:, :-2]
-            return x
-
+        # Things are ready, create a function for the simulator that invokes
+        # the objective function.
         def simulator(*args, **kwargs):
 
             # If kwargs None then the simulator has been called without keyword argumets.
@@ -2075,6 +2063,19 @@ class ParamEstimationFunction(OptimizationFunction):
             # optimization control mechanism.
             # self.owner.parameters.num_estimates.set(batch_size, execution_id)
 
+            # TODO: This is hardcoded in here for memory profiling, remove later.
+            if False:
+                try:
+                    if self.num_calls % 1 == 0:
+                        print(f"objective_function: num_calls={self.num_calls}")
+                        self.memory_tracker.print_diff()
+                    self.num_calls = self.num_calls + 1
+                except AttributeError:
+                    print("Creating memory tracker.")
+                    from pympler import tracker
+                    self.memory_tracker = tracker.SummaryTracker()
+                    self.num_calls = 0
+
             # Run batch_size simulations of the PsyNeuLink composition
             results = []
             for i in range(batch_size):
@@ -2092,7 +2093,12 @@ class ParamEstimationFunction(OptimizationFunction):
 
     def _initialize_model(self, execution_id):
         """
+        Setup the ELFI model for sampling.
 
+        :param execution_id: The current execution id, we need to pass this to
+        the objective function so it must be passed to our simulator function
+        implicitly.
+        :return: None
         """
 
         # If the model has not been initialized, try to do it.
@@ -2170,5 +2176,16 @@ class ParamEstimationFunction(OptimizationFunction):
 
         # Run the sampler
         result = self._sampler.sample(**self._sampler_args)
+
+        # We now have a set of N samples, where N should be n_samples. This
+        # is the N samples that represent the self._quantile from the total
+        # number of simulations. N is not the total number of simulation
+        # samples. We will return a random sample from this set for the
+        # "optimal" control allocation.
+        sample_idx = self._rng.randint(low=0, high=result.n_samples)
+        return_optimal_sample = np.array(result.samples_array[sample_idx])
+        return_optimal_value = result.discrepancies[sample_idx]
+        return_all_samples = np.array(result.samples_array)
+        return_all_values = np.array(result.discrepancies)
 
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
