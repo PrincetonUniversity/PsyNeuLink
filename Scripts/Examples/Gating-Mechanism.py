@@ -28,7 +28,7 @@ Output_Layer = pnl.TransferMechanism(
 )
 
 Gating_Mechanism = pnl.GatingMechanism(
-    # default_gating_policy=0.0,
+    # default_gating_allocation=0.0,
     size=[1],
     gating_signals=[
         Hidden_Layer_1,

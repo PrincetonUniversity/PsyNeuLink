@@ -935,6 +935,7 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
+        # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
             sim_execution_id = self._set_up_simulation(execution_id, control_allocation)
 
@@ -964,34 +965,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              execution_id=execution_id,
-                                             context=self.function.parameters.context.get(execution_id)
-            )
+                                             context=self.function.parameters.context.get(execution_id))
 
             return outcome
 
-
-    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
-        '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
-        specified `control_allocation <ControlMechanism.control_allocation>`.
-
-        Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
-        <OptimizationControlMechanism.agent_rep>`.
-        '''
-
-        value = [np.atleast_1d(a) for a in control_allocation]
-        self.parameters.value.set(value, execution_id)
-        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
-                                   context=ContextFlags.COMPOSITION)
-
-    # @property
-    # def feature_values(self):
-    #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
-    #         return self.agent_rep._get_predicted_input()
-    #     else:
-    #         return np.array(np.array(self.variable[1:]).tolist())
-
-    # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
-    # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
 
     tc.typecheck
     def add_features(self, features):

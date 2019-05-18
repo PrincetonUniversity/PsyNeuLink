@@ -1248,13 +1248,13 @@ class Process(Process_Base):
                         except AttributeError:
                             # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
                             preceding_item._parameter_states = _instantiate_state_list(
-                                owner=preceding_item,
-                                state_list=[(MATRIX, self.learning)],
-                                state_type=ParameterState,
-                                state_param_identifier=PARAMETER_STATE,
-                                reference_value=self.learning,
-                                reference_value_name=LEARNING_PROJECTION,
-                                context=context
+                                    owner=preceding_item,
+                                    state_list=[(MATRIX, self.learning)],
+                                    state_types=ParameterState,
+                                    state_param_identifier=PARAMETER_STATE,
+                                    reference_value=self.learning,
+                                    reference_value_name=LEARNING_PROJECTION,
+                                    context=context
                             )
 
                         # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
@@ -1311,7 +1311,7 @@ class Process(Process_Base):
                                 projection._parameter_states = _instantiate_state_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_type=ParameterState,
+                                    state_types=ParameterState,
                                     state_param_identifier=PARAMETER_STATE,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
