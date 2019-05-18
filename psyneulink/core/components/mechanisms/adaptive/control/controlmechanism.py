@@ -655,7 +655,8 @@ class ControlMechanism(ModulatoryMechanism):
         params = self._assign_args_to_param_dicts(system=system,
                                                   params=params)
 
-        super(ControlMechanism, self).__init__(default_variable=default_variable,
+        super(ControlMechanism, self).__init__(system=system,
+                                               default_variable=default_variable,
                                                size=size,
                                                modulation=modulation,
                                                monitor_for_modulation=monitor_for_control,
