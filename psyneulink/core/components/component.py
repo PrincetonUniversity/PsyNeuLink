@@ -417,7 +417,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
 from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParametersBase
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
@@ -2334,6 +2334,20 @@ class Component(object, metaclass=ComponentsMeta):
         if propagate:
             for comp in self._dependent_components:
                 comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+    def _set_all_parameter_properties_recursively(self, **kwargs):
+        # sets a property of all parameters for this component and all its dependent components
+        # used currently for disabling history, but setting logging could use this
+        for param_name in self.parameters.names():
+            parameter = getattr(self.parameters, param_name)
+            for (k, v) in kwargs.items():
+                try:
+                    setattr(parameter, k, v)
+                except ParameterError as e:
+                    logger.warning(str(e) + ' Parameter has not been modified.')
+
+        for comp in self._dependent_components:
+            comp._set_all_parameter_properties_recursively(**kwargs)
 
     def _set_multiple_parameter_values(self, execution_id, override=False, **kwargs):
         """
