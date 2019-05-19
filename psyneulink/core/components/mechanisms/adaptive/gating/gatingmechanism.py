@@ -446,41 +446,45 @@ class GatingMechanism(ModulatoryMechanism):
     #         for gating_signal in target_set[GATING_SIGNALS]:
     #             _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
 
-    # def _instantiate_output_states(self, context=None):
-    #
-    #     from psyneulink.core.globals.registry import register_category
-    #
-    #     # Create registry for GatingSignals (to manage names)
-    #
-    #     register_category(entry=GatingSignal,
-    #                       base_class=State_Base,
-    #                       registry=self._stateRegistry,
-    #                       context=context)
-    #
-    #     if self.gating_signals:
-    #
-    #         self._output_states = []
-    #
-    #         for gating_signal in self.gating_signals:
-    #             self._instantiate_gating_signal(gating_signal, context=context)
-    #
-    #     super()._instantiate_output_states(context=context)
-    #
-    #     # Reassign gating_signals to capture any user_defined GatingSignals instantiated in call to super
-    #     #    and assign to ContentAddressableList
-    #     self._gating_signals = ContentAddressableList(component_type=GatingSignal,
-    #                                                   list=[state for state in self.output_states
-    #                                                         if isinstance(state, GatingSignal)])
-    #
-    #     # If the GatingMechanism's policy has more than one item,
-    #     #    warn if the number of items does not equal the number of its GatingSignals
-    #     #    (note:  there must be fewer GatingSignals than items in gating_allocation,
-    #     #            as the reverse is an error that is checked for in _instantiate_gating_signal)
-    #     if len(self.gating_allocation)>1 and len(self.gating_signals) != len(self.gating_allocation):
-    #         if self.verbosePref:
-    #             warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
-    #                              format(GatingSignal.__name__, self.name, len(self.gating_signals),
-    #                                     GATING_ALLOCATION, len(self.gating_allocation)))
+    def _instantiate_output_states(self, context=None):
+
+        from psyneulink.core.globals.registry import register_category
+
+        # Create registry for GatingSignals (to manage names)
+
+        register_category(entry=GatingSignal,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+
+        if self.gating_signals:
+
+            self._output_states = []
+
+            for gating_signal in self.gating_signals:
+                self._instantiate_gating_signal(gating_signal, context=context)
+
+        # # MODIFIED 5/18/19 OLD:
+        # super()._instantiate_output_states(context=context)
+        # MODIFIED 5/18/19 NEW: [JDC]
+        super(ModulatoryMechanism, self)._instantiate_output_states(context=context)
+        # MODIFIED 5/18/19 END
+
+        # Reassign gating_signals to capture any user_defined GatingSignals instantiated in call to super
+        #    and assign to ContentAddressableList
+        self._gating_signals = ContentAddressableList(component_type=GatingSignal,
+                                                      list=[state for state in self.output_states
+                                                            if isinstance(state, GatingSignal)])
+
+        # If the GatingMechanism's policy has more than one item,
+        #    warn if the number of items does not equal the number of its GatingSignals
+        #    (note:  there must be fewer GatingSignals than items in gating_allocation,
+        #            as the reverse is an error that is checked for in _instantiate_gating_signal)
+        if len(self.gating_allocation)>1 and len(self.gating_signals) != len(self.gating_allocation):
+            if self.verbosePref:
+                warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
+                                 format(GatingSignal.__name__, self.name, len(self.gating_signals),
+                                        GATING_ALLOCATION, len(self.gating_allocation)))
 
     def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
