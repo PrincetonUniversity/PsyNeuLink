@@ -1569,5 +1569,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.objective_mechanism],
+            # [self.objective_mechanism],
+            [self._objective_mechanism] if self.objective_mechanism else [],
         ))
