@@ -564,6 +564,19 @@ class GatingMechanism(ModulatoryMechanism):
     #             print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
     #     print ("\n---------------------------------------------------------")
 
+    @property
+    def gating_signals(self):
+        try:
+            return ContentAddressableList(component_type=GatingSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, GatingSignal)])
+        except:
+            return None
+
+    @gating_signals.setter
+    def gating_signals(self, value):
+        self._modulatory_signals = value
+
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_gating_mechanism_to_system(owner:GatingMechanism):
@@ -579,5 +592,3 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
                         # if not any(state.path_afferents for state in owner.input_states):
                         #     system.origin_mechanisms.mechs.append(owner)
-
-
