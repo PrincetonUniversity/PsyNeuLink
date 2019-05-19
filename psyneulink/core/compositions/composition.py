@@ -1389,14 +1389,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = controller
         self.controller.composition = self
-        # MODIFIED 5/14/19 NEW: [JDC]
-        if self.controller.objective_mechanism is not None:
+        # # MODIFIED 5/14/19 NEW: [JDC]
+        # if self.controller.objective_mechanism is not None:
+        #     self.add_node(self.controller.objective_mechanism)
+        #
+        # self.enable_controller = True
+        #
+        # for proj in self.controller.objective_mechanism.path_afferents:
+        #     self.add_projection(proj)
+        # MODIFIED 5/18/19 NEWER: [JDC PER DM]
+        if self.controller.objective_mechanism:
             self.add_node(self.controller.objective_mechanism)
-        # MODIFIED 5/14/19 END
+
         self.enable_controller = True
 
-        for proj in self.controller.objective_mechanism.path_afferents:
-            self.add_projection(proj)
+        if self.controller.objective_mechanism:
+            for proj in self.controller.objective_mechanism.path_afferents:
+                self.add_projection(proj)
+        # MODIFIED 5/14/19 END
 
         controller._activate_projections_for_compositions(self)
         self._analyze_graph()
@@ -2049,10 +2059,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
+        # # MODIFIED 5/18/19 OLD:
+        # objective_mechanism = None
+        # if self.controller and self.enable_controller:
+        #     objective_mechanism = self.controller.objective_mechanism
+        #     self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
+        # MODIFIED 5/18/19 NEW: [JDC]
         objective_mechanism = None
-        if self.controller and self.enable_controller:
+        if self.controller and self.enable_controller and self.controller.objective_mechanism:
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
+        # MODIFIED 5/18/19 END
+
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler_processing.consideration_queue:
