@@ -1330,7 +1330,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
     def _add_process(self, process, role:str):
         super()._add_process(process, role)
-        self.objective_mechanism._add_process(process, role)
+        if self._objective_mechanism:
+            self.objective_mechanism._add_process(process, role)
 
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):

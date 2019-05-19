@@ -457,12 +457,21 @@ class GatingMechanism(ModulatoryMechanism):
                           registry=self._stateRegistry,
                           context=context)
 
-        if self.gating_signals:
+        # # MODIFIED 5/18/19 OLD:
+        # if self.gating_signals:
+        #
+        #     self._output_states = []
+        #
+        #     for gating_signal in self.gating_signals:
+        #         self._instantiate_gating_signal(gating_signal, context=context)
+        # MODIFIED 5/18/19 NEW: [JDC]
+        if self.modulatory_signals:
 
             self._output_states = []
 
-            for gating_signal in self.gating_signals:
+            for gating_signal in self.modulatory_signals:
                 self._instantiate_gating_signal(gating_signal, context=context)
+        # MODIFIED 5/18/19 END
 
         # # MODIFIED 5/18/19 OLD:
         # super()._instantiate_output_states(context=context)
@@ -470,6 +479,7 @@ class GatingMechanism(ModulatoryMechanism):
         super(ModulatoryMechanism, self)._instantiate_output_states(context=context)
         # MODIFIED 5/18/19 END
 
+        # FIX: 5/19/19 - DOES THIS PROPERLY ADDRESS THE BACKING_FIELD OF ModulatoryMechanism.gating_signals PARAMETER
         # Reassign gating_signals to capture any user_defined GatingSignals instantiated in call to super
         #    and assign to ContentAddressableList
         self._gating_signals = ContentAddressableList(component_type=GatingSignal,
