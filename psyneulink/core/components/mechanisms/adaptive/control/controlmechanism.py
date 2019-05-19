@@ -627,6 +627,12 @@ class ControlMechanism(ModulatoryMechanism):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
+    # # MODIFIED 5/18/19 NEW: [JDC]
+    # class Parameters(ModulatoryMechanism.Parameters):
+    #     # This suppresses the inclusion of gating_allocation (inherited from ModulatoryMechanism) in a ControlMechanism
+    #     gating_allocation = None
+    # MODIFIED 5/18/19 END
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -671,6 +677,9 @@ class ControlMechanism(ModulatoryMechanism):
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
 
+        assert True
+        self.parameters.__delattr__('gating_allocation')
+        assert True
         # FIX: 5/16/19 - DELETE ATTRIBUTES/PARAMS RELATED TO GATING OR MODULATORY STUFF HERE:
         # modulatory_signals, modulatory_projections, modulatory_allocation -> control_signal
         # DELETE gating_signals, gating_projections, gating_allocation

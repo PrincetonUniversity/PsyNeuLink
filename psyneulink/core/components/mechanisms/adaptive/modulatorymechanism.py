@@ -431,10 +431,10 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
         gating_signal_indices = [owning_component.modulatory_signals.index(g)
                                   for g in owning_component.gating_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
-    # # MODIFIED 5/18/19 OLD:
-    # except (TypeError):
-    # MODIFIED 5/18/19 NEW: [JDC]
-    except (TypeError, ValueError):
+    # MODIFIED 5/18/19 OLD:
+    except (TypeError):
+    # # MODIFIED 5/18/19 NEW: [JDC]
+    # except (TypeError, ValueError):
     # MODIFIED 5/18/19 END
         return defaultGatingAllocation
 

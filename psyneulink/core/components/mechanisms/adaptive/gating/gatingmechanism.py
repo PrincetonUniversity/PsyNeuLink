@@ -211,11 +211,20 @@ class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
+# MODIFIED 5/18/19 NEW: [JDC]
+def _gating_allocation_getter(owning_component=None, execution_id=None):
+    return owning_component.modulatory_allocation
+
+def _gating_allocation_setter(value, owning_component=None, execution_id=None):
+    owning_component.parameters.modulatory_allocation.set(np.array(value), execution_id)
+    return value
+# MODIFIED 5/18/19 END
+
 
 class GatingMechanism(ModulatoryMechanism):
     """
     GatingMechanism(                                \
-        default_gating_allocation=None,                 \
+        default_gating_allocation=None,             \
         size=None,                                  \
         function=Linear(slope=1, intercept=0),      \
         gating_signals:tc.optional(list) = None,    \
@@ -356,6 +365,43 @@ class GatingMechanism(ModulatoryMechanism):
     #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
+    class Parameters(ModulatoryMechanism.Parameters):
+        """
+            Attributes
+            ----------
+
+                gating_allocation
+                    see `gating_allocation <ModulatoryMechanism.gating_allocation>
+
+                    :default value: defaultGatingAllocation
+                    :type:
+                    :read only: True
+
+        """
+        # This must be a list, as there may be more than one (e.g., one per control_signal)
+        # # MODIFIED 5/18/19 NEW: [JDC]
+        value = Parameter(np.array(defaultGatingAllocation), aliases='modulatory_allocation')
+        # gating_allocation = Parameter(np.array(defaultGatingAllocation),
+        #                               getter=_gating_allocation_getter,
+        #                               setter=_gating_allocation_setter,
+        #                               read_only=True)
+        gating_allocation = Parameter(np.array(defaultGatingAllocation),
+                                      getter=_gating_allocation_getter,
+                                      setter=_gating_allocation_setter,
+                                      read_only=True)
+        # # MODIFIED 5/18/19 NEWER: [JDC]
+        # value = Parameter(np.array(defaultGatingAllocation), aliases=['modulatory_allocation', 'gating_allocation'])
+        # gating_allocation = None
+        # # These suppress ControlMechanism-related parameters (inherited from ModulatoryMechanism) in GatingMechanism
+        # control_allocation = None
+        # compute_reconfiguration_cost = None
+        # combine_costs = None
+        # costs = None
+        # control_signal_costs = None
+        # compute_net_outcome = None
+        # net_outcome = None
+        # MODIFIED 5/18/19 END
+
     # paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({GATING_PROJECTIONS: None})
 
@@ -382,6 +428,7 @@ class GatingMechanism(ModulatoryMechanism):
                          name=name,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+        assert True
 
     # def _validate_params(self, request_set, target_set=None, context=None):
     #     """Validate items in the GATING_SIGNALS param (**gating_signals** argument of constructor)
