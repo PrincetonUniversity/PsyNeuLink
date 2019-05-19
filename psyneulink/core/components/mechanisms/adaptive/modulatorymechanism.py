@@ -1151,7 +1151,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self.input_state.name = OUTCOME
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        if self.monitor_for_control or self._objective_mechanism:
+        # if self.monitor_for_control or self._objective_mechanism:
+        if self._objective_mechanism:
             self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -1449,22 +1450,26 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._activate_projections_for_compositions(system)
 
     def _activate_projections_for_compositions(self, compositions=None):
-        self._objective_projection._activate_for_compositions(compositions)
+
+        if self.objective_mechanism:
+            self._objective_projection._activate_for_compositions(compositions)
 
         for ms in self.modulatory_signals:
             for eff in ms.efferents:
                 eff._activate_for_compositions(compositions)
 
         # assign any deferred init objective mech monitored output state projections to this system
-        for output_state in self.objective_mechanism.monitored_output_states:
-            for eff in output_state.efferents:
-                eff._activate_for_compositions(compositions)
+        if self.objective_mechanism:
+            for output_state in self.objective_mechanism.monitored_output_states:
+                for eff in output_state.efferents:
+                    eff._activate_for_compositions(compositions)
 
         for eff in self.efferents:
             eff._activate_for_compositions(compositions)
 
-        for aff in self._objective_mechanism.afferents:
-            aff._activate_for_compositions(compositions)
+        if self.objective_mechanism:
+            for aff in self._objective_mechanism.afferents:
+                aff._activate_for_compositions(compositions)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         self._apply_modulatory_allocation(self, control_allocation, runtime_params, context, execution_id=None)
