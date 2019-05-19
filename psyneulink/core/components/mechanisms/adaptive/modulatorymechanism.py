@@ -1245,6 +1245,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Add ControlSignal to output_states list
         self._output_states.append(modulatory_signal)
 
+        # FIX: 5/18/19 - NEEDS TO GET APPROPRIATE DEFAULT FOR TYPE BEING IMPLEMENTED
+        # FIX: 5/18/19 - NEEDS TO ACCOMODATE owner_value_index WHICH MIGHT REMAIN 0 (THE WAY OLD GATINGMECHANISM DID)
         # since output_states is exactly control_signals is exactly the shape of value, we can just construct it here
         self.defaults.value = np.array([[ControlSignal.defaults.allocation]
                                                  for i in range(len(self._output_states))])
