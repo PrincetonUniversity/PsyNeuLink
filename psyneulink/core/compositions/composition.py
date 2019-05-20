@@ -1114,6 +1114,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
+            learning_enabled=False,
             **param_defaults
     ):
         # also sets name
@@ -1156,7 +1157,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._scheduler_processing = None
 
-        self.has_learning = False
+        self.learning_enabled = False
 
         # status attributes
         self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
@@ -1339,10 +1340,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             sender=proj.sender.owner,
                                             receiver=node)
 
-    def add_nodes(self, nodes):
+    def add_nodes(self, nodes, required_roles=None):
 
         for node in nodes:
-            self.add_node(node)
+            self.add_node(node=node, required_roles=required_roles)
 
     def add_controller(self, controller):
         """
@@ -1745,7 +1746,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-        self.has_learning = True
+        self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
     def _create_td_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
@@ -1882,7 +1883,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                           error_function,
                                                                                           learned_projection,
                                                                                           learning_rate)
-        self.add_nodes([target, comparator, learning_mechanism])
+        self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
@@ -1916,7 +1917,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                     error_function,
                                                                                     learned_projection,
                                                                                     learning_rate)
-        self.add_nodes([target, comparator, learning_mechanism])
+        self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
@@ -1948,7 +1949,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                           error_function,
                                                                                           learned_projection,
                                                                                           learning_rate)
-        self.add_nodes([target, comparator, learning_mechanism])
+        self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
@@ -3762,7 +3763,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _comp_ex.freeze_values()
 
             # execute each node with EXECUTING in context
+            learning_related_nodes = self.get_nodes_by_role(NodeRole.LEARNING)
             for node in next_execution_set:
+                if self.learning_enabled and node in learning_related_nodes:
+                    continue
                 frozen_values[node] = node.get_output_values(execution_id)
                 if node in input_nodes:
                     if clamp_input:
@@ -3834,11 +3838,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node._assign_context_values(execution_id, composition=node)
 
                     # autodiff compositions must be passed extra inputs
-                    learning_enabled = False
+                    pytorch_enabled = False
                     if hasattr(node, "pytorch_representation"):
                         if node.learning_enabled:
-                            learning_enabled = True
-                    if learning_enabled:
+                            pytorch_enabled = True
+                    if pytorch_enabled:
                         ret = node.execute(inputs=autodiff_stimuli[node],
                                            execution_id=execution_id,
                                            context=ContextFlags.COMPOSITION)
