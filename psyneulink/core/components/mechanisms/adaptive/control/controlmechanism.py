@@ -677,6 +677,7 @@ class ControlMechanism(ModulatoryMechanism):
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
 
+        # FIX: 5/18/19 - REMOVE WHEN DONE REFACTORING
         assert True
         self.parameters.__delattr__('gating_allocation')
         assert True

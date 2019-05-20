@@ -711,6 +711,7 @@ class InputState(State_Base):
     connectsWithAttribute = [OUTPUT_STATES]
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL]
+    canReceive = modulators + [MAPPING_PROJECTION]
 
 
     classPreferenceLevel = PreferenceLevel.TYPE

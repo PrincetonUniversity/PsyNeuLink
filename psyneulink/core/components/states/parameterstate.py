@@ -528,6 +528,7 @@ class ParameterState(State_Base):
     connectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
     projectionSocket = SENDER
     modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    canReceive = modulators
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

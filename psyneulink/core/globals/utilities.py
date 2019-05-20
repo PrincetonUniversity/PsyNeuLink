@@ -84,6 +84,7 @@ CONTENTS
 * `make_readonly_property`
 * `get_class_attributes`
 * `insert_list`
+* `flatten_list`
 * `get_global_seed`
 * `set_global_seed`
 
@@ -106,7 +107,7 @@ from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUS
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes',
+    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -1418,6 +1419,9 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
+
+def flatten_list(l):
+    return [item for sublist in l for item in sublist]
 
 _seed = int(time.monotonic())
 def get_global_seed(offset=1):
