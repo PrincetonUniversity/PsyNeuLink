@@ -1388,28 +1388,28 @@ class GridSearch(OptimizationFunction):
             direction = "<" if self.direction is MINIMIZE else ">"
 
             replace = b.fcmp_unordered(direction, value, min_value)
-            builder.store(replace, replace_ptr)
-            with builder.if_then(select_random):
-                close = pnlvm.helpers.is_close(builder, value, min_value)
-                with builder.if_else(close) as (tb, eb):
+            b.store(replace, replace_ptr)
+            with b.if_then(select_random):
+                close = pnlvm.helpers.is_close(b, value, min_value)
+                with b.if_else(close) as (tb, eb):
                     with tb:
-                        opt_count = builder.load(opt_count_ptr)
-                        opt_count = builder.fadd(opt_count, opt_count.type(1))
-                        prob = builder.fdiv(opt_count.type(1), opt_count)
+                        opt_count = b.load(opt_count_ptr)
+                        opt_count = b.fadd(opt_count, opt_count.type(1))
+                        prob = b.fdiv(opt_count.type(1), opt_count)
                         # reuse opt_count location. it will be overwritten later anyway
                         res_ptr = opt_count_ptr
                         rand_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
-                        builder.call(rand_f, [random_state, res_ptr])
-                        res = builder.load(res_ptr)
-                        builder.store(opt_count, opt_count_ptr)
-                        replace = builder.fcmp_ordered("<", res, prob)
-                        builder.store(replace, replace_ptr)
+                        b.call(rand_f, [random_state, res_ptr])
+                        res = b.load(res_ptr)
+                        b.store(opt_count, opt_count_ptr)
+                        replace = b.fcmp_ordered("<", res, prob)
+                        b.store(replace, replace_ptr)
                     with eb:
                         # we need to reset the counter if we are replacing with new best value
-                        with builder.if_then(builder.load(replace_ptr)):
-                            builder.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
+                        with b.if_then(b.load(replace_ptr)):
+                            b.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
 
-            with b.if_then(builder.load(replace_ptr)):
+            with b.if_then(b.load(replace_ptr)):
                 b.store(value, min_value_ptr)
                 b.store(b.load(sample_ptr), min_sample_ptr)
 
