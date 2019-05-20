@@ -4,7 +4,7 @@ conditioning as found in `Montague, Dayan, and Sejnowski (1996) in PsyNeuLink
 <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
 """
 import matplotlib
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import psyneulink as pnl
