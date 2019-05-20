@@ -429,136 +429,11 @@ class GatingMechanism(ModulatoryMechanism):
                          name=name,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
-        assert True
-
-    # def _validate_params(self, request_set, target_set=None, context=None):
-    #     """Validate items in the GATING_SIGNALS param (**gating_signals** argument of constructor)
-    #
-    #     Check that GATING_SIGNALS is a list, and that every item is valid state_spec
-    #     """
-    #
-    #     super(GatingMechanism, self)._validate_params(request_set=request_set,
-    #                                                   target_set=target_set,
-    #                                                   context=context)
-    #
-    #     if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
-    #         if not isinstance(target_set[GATING_SIGNALS], list):
-    #             target_set[g] = [target_set[GATING_SIGNALS]]
-    #         for gating_signal in target_set[GATING_SIGNALS]:
-    #             _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
-
-    # def _instantiate_output_states(self, context=None):
-    #
-    #     from psyneulink.core.globals.registry import register_category
-    #
-    #     # Create registry for GatingSignals (to manage names)
-    #
-    #     register_category(entry=GatingSignal,
-    #                       base_class=State_Base,
-    #                       registry=self._stateRegistry,
-    #                       context=context)
-    #
-    #     # # MODIFIED 5/18/19 OLD:
-    #     # if self.gating_signals:
-    #     #
-    #     #     self._output_states = []
-    #     #
-    #     #     for gating_signal in self.gating_signals:
-    #     #         self._instantiate_gating_signal(gating_signal, context=context)
-    #     # MODIFIED 5/18/19 NEW: [JDC]
-    #     if self.modulatory_signals:
-    #
-    #         self._output_states = []
-    #
-    #         for gating_signal in self.modulatory_signals:
-    #             self._instantiate_gating_signal(gating_signal, context=context)
-    #     # MODIFIED 5/18/19 END
-    #
-    #     # # MODIFIED 5/18/19 OLD:
-    #     # super()._instantiate_output_states(context=context)
-    #     # MODIFIED 5/18/19 NEW: [JDC]
-    #     super(ModulatoryMechanism, self)._instantiate_output_states(context=context)
-    #     # MODIFIED 5/18/19 END
-    #
-    #     # FIX: 5/19/19 - DOES THIS PROPERLY ADDRESS THE BACKING_FIELD OF ModulatoryMechanism.gating_signals PARAMETER
-    #     # Reassign gating_signals to capture any user_defined GatingSignals instantiated in call to super
-    #     #    and assign to ContentAddressableList
-    #     self._gating_signals = ContentAddressableList(component_type=GatingSignal,
-    #                                                   list=[state for state in self.output_states
-    #                                                         if isinstance(state, GatingSignal)])
-    #
-    #     # If the GatingMechanism's policy has more than one item,
-    #     #    warn if the number of items does not equal the number of its GatingSignals
-    #     #    (note:  there must be fewer GatingSignals than items in gating_allocation,
-    #     #            as the reverse is an error that is checked for in _instantiate_gating_signal)
-    #     if len(self.gating_allocation)>1 and len(self.gating_signals) != len(self.gating_allocation):
-    #         if self.verbosePref:
-    #             warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
-    #                              format(GatingSignal.__name__, self.name, len(self.gating_signals),
-    #                                     GATING_ALLOCATION, len(self.gating_allocation)))
 
     def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
-
-        # Notes:
-        # * gating_signal arg can be a:
-        #     - GatingSignal object;
-        #     - GatingProjection;
-        #     - InputState or OutputState;
-        #     - params dict, from _take_over_as_default_gating_mechanism(), containing a GatingProjection;
-        #     - tuple (state_name, Mechanism), from gating_signals arg of constructor;
-        #             [NOTE: this is a convenience format;
-        #                    it precludes specification of GatingSignal params (e.g., MODULATION_OPERARATION)]
-        #     - GatingSignal specification dictionary, from gating_signals arg of constructor
-        #             [NOTE: this must have at least NAME:str (state name) and MECHANISM:Mechanism entries;
-        #                    it can also include a PARAMS entry with a params dict containing GatingSignal params]
-        # * State._parse_state_spec() is used to parse gating_signal arg
-        # * params are expected to be for (i.e., to be passed to) GatingSignal;
-        # * wait to instantiate deferred_init() projections until after GatingSignal is instantiated,
-        #     so that correct OutputState can be assigned as its sender
-        # # * index of OutputState is incremented based on number of GatingSignals already instantiated;
-        # #     this means that the GatingMechanism's function must return as many items as it has GatingSignals,
-        # #     with each item of the function's value used by a corresponding GatingSignal.
-        #     Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
-        #           (that is, gating of many states with a single value -- e.g., LC)
-        # * index of OutputState is assigned to [0], so that all GatingSignals use the same single value produced
-        #     returned by a GatingMechanism's function
-        #
-        # Returns GatingSignal (OutputState)
-        # """
-        # from psyneulink.core.components.states.state import _instantiate_state
-        #
-        # # Parse gating_signal specifications (in call to State._parse_state_spec)
-        # #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        # # KDM 5/29/18: here, what happens if you make two gating signals with the same owner (self)?
-        # # looks like they both will get the variable spec (OWNER_VALUE, 0)
-        # gating_signal = _instantiate_state(state_type=GatingSignal,
-        #                                    variable=(OWNER_VALUE,0),
-        #                                    owner=self,
-        #                                    reference_value=defaultGatingAllocation,
-        #                                    modulation=self.modulation,
-        #                                    state_spec=gating_signal,
-        #                                    context=context)
-        #
-        # # Validate index
-        # try:
-        #     self.gating_allocation[gating_signal.owner_value_index]
-        # except IndexError:
-        #     raise GatingMechanismError("Index specified for {} of {} ({}) "
-        #                                "exceeds the number of items of its {} ({})".
-        #                                format(GatingSignal.__name__, self.name, gating_signal.owner_value_index,
-        #                                       GATING_ALLOCATION, len(self.gating_allocation)))
-        #
-        # # Add GatingSignal TO output_states LIST
-        # self._output_states.append(gating_signal)
-        #
-        # # Add GatingProjection(s) to GatingMechanism's list of GatingProjections
-        # try:
-        #     self.gating_projections.extend(gating_signal.efferents)
-        # except AttributeError:
-        #     self.gating_projections = gating_signal.efferents.copy()
-        #
-        # return gating_signal
+        Return GatingSignal (OutputState)
+        """
         return super()._instantiate_modulatory_signal(modulatory_signal=gating_signal, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -604,27 +479,6 @@ class GatingMechanism(ModulatoryMechanism):
                         self._instantiate_gating_signal(gating_signal_specs, context=context)
 
         self._activate_projections_for_compositions(self.system)
-
-    # def _activate_projections_for_compositions(self, compositions=None):
-    #     for gp in self.gating_signals:
-    #         for eff in gp.efferents:
-    #             eff._activate_for_compositions(compositions)
-
-    # def show(self):
-    #     """Display the InputStates and/or OutputStates gated by the GatingMechanism's `gating_signals
-    #     <GatingMechanism.gating_signals>`.
-    #     """
-    #
-    #     print ("\n---------------------------------------------------------")
-    #
-    #     print ("\n{0}".format(self.name))
-    #     print ("\n\tGating the following Mechanism InputStates and/or OutputStates:".format(self.name))
-    #     # Sort for consistency of output:
-    #     state_names_sorted = sorted(self.output_states)
-    #     for state_name in state_names_sorted:
-    #         for projection in self.output_states[state_name].efferents:
-    #             print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
-    #     print ("\n---------------------------------------------------------")
 
     @property
     def gating_signals(self):
