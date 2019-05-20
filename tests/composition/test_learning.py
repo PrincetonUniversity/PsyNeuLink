@@ -1,10 +1,5 @@
 import psyneulink as pnl
 import numpy as np
-import pytest
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 class TestHebbian:
 
