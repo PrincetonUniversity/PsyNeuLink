@@ -9,26 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import psyneulink as pnl
 
-# needed for 3d plotting in full_experiment and response_extinction
-from mpl_toolkits import mplot3d
-
-import psyneulink.core.components.functions.learningfunctions
-import psyneulink.core.components.functions.transferfunctions
-
-
-def build_processing_components(intercept):
-    sample_mechanism = pnl.TransferMechanism(default_variable=np.zeros(60),
-                                             name=pnl.SAMPLE)
-
-    action_selection = pnl.TransferMechanism(default_variable=np.zeros(60),
-                                             function=pnl.Linear(slope=1.0, intercept=intercept),
-                                             name='Action Selection')
-
-    sample_to_action_selection = pnl.MappingProjection(sender=sample_mechanism,
-                                                       receiver=action_selection,
-                                                       matrix=np.zeros((60, 60)))
-
-    return sample_mechanism, action_selection, sample_to_action_selection
+from mpl_toolkits import mplot3d # needed for 3d plotting
 
 
 def build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_trials):
@@ -36,7 +17,6 @@ def build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_tria
     stimulus_onset = 41
     reward_delivery = 54
 
-    # build input dictionary
     samples = []
     targets = []
     for trial in range(120):
@@ -55,7 +35,7 @@ def build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_tria
             target_mechanism: targets}
 
 
-def build_stimulus_dictionary_2(sample_mechanism, target_mechanism):
+def build_stimulus_dictionary_figure_5c(sample_mechanism, target_mechanism):
 
     stimulus_onset = 42
     reward_delivery = 54
@@ -79,15 +59,24 @@ def build_stimulus_dictionary_2(sample_mechanism, target_mechanism):
             target_mechanism: targets}
 
 
-def figure_5A():
+def figure_5a():
     """
     This creates the plot for figure 5A in the Montague paper. Figure 5A is
     a 'plot of ∂(t) over time for three trials during training (1, 30, and 50).'
     """
 
     # Create Processing Components
-    sample_mechanism, action_selection, sample_to_action_selection = build_processing_components(intercept=0.01)
+    sample_mechanism = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             name=pnl.SAMPLE)
 
+    action_selection = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             function=pnl.Linear(slope=1.0,
+                                                                 intercept=0.01),
+                                             name='Action Selection')
+
+    sample_to_action_selection = pnl.MappingProjection(sender=sample_mechanism,
+                                                       receiver=action_selection,
+                                                       matrix=np.zeros((60, 60)))
     # Create Composition
     composition_name = 'TD_Learning_Figure_5A'
     comp = pnl.Composition(name=composition_name)
@@ -130,7 +119,7 @@ def figure_5A():
         plt.show()
 
 
-def figure_5B():
+def figure_5b():
     """
     This creates the plot for figure 5B in the Montague paper. Figure 5B shows
     the 'entire time course of model responses (trials 1-150).' The setup is
@@ -138,8 +127,17 @@ def figure_5B():
     """
 
     # Create Processing Components
-    sample_mechanism, action_selection, sample_to_action_selection = build_processing_components(intercept=1.0)
+    sample_mechanism = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             name=pnl.SAMPLE)
 
+    action_selection = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             function=pnl.Linear(slope=1.0,
+                                                                 intercept=1.0),
+                                             name='Action Selection')
+
+    sample_to_action_selection = pnl.MappingProjection(sender=sample_mechanism,
+                                                       receiver=action_selection,
+                                                       matrix=np.zeros((60, 60)))
     # Create Composition
     composition_name = 'TD_Learning_Figure_5B'
     comp = pnl.Composition(name=composition_name)
@@ -184,7 +182,7 @@ def figure_5B():
         plt.show()
 
 
-def figure_5C():
+def figure_5c():
     """
     This creates the plot for Figure 5C in the Montague paper. Figure 5C shows
     'extinction of response to the sensory cue.' The setup is the same as
@@ -192,8 +190,17 @@ def figure_5C():
     """
 
     # Create Processing Components
-    sample_mechanism, action_selection, sample_to_action_selection = build_processing_components(intercept=1.0)
+    sample_mechanism = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             name=pnl.SAMPLE)
 
+    action_selection = pnl.TransferMechanism(default_variable=np.zeros(60),
+                                             function=pnl.Linear(slope=1.0,
+                                                                 intercept=1.0),
+                                             name='Action Selection')
+
+    sample_to_action_selection = pnl.MappingProjection(sender=sample_mechanism,
+                                                       receiver=action_selection,
+                                                       matrix=np.zeros((60, 60)))
     # Create Composition
     composition_name = 'TD_Learning_Figure_5C'
     comp = pnl.Composition(name=composition_name)
@@ -212,7 +219,7 @@ def figure_5C():
     prediction_error_mechanism.log.set_log_conditions(pnl.VALUE)
 
     # Create Stimulus Dictionary
-    inputs = build_stimulus_dictionary_2(sample_mechanism, target_mechanism)
+    inputs = build_stimulus_dictionary_figure_5c(sample_mechanism, target_mechanism)
 
     # Run Composition
     comp.run(inputs=inputs)
@@ -236,6 +243,6 @@ def figure_5C():
 
 
 if __name__ == '__main__':
-    figure_5A()
-    figure_5B()
-    figure_5C()
+    figure_5a()
+    figure_5b()
+    figure_5c()
