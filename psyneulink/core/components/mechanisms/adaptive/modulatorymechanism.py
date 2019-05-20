@@ -385,7 +385,7 @@ from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import NodeRole, ContentAddressableList, is_iterable
+from psyneulink.core.globals.utilities import NodeRole, ContentAddressableList, is_iterable, convert_to_list
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'MODULATORY_ALLOCATION',
@@ -1231,34 +1231,38 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                         MODULATORY_ALLOCATION, len(self.defaults.value)))
 
     def _instantiate_modulatory_signal(self,  modulatory_signal, context=None):
-        from psyneulink.core.components.states.state import _instantiate_state
-        # Parses and instantiates modulatory_signal specifications (in call to State._parse_state_spec)
-        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
-        #    value, output_states and modulatory_signals haven't been expanded yet to accomodate the new
-        #    ModulatorySignal; reassign modulatory_signal.variable to actual OWNER_VALUE below,
-        #    once value has been expanded
+        '''Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
+           and any embedded Projection specifications (in call to <State>._instantiate_projections)
 
+        Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
+           value, output_states and modulatory_signals haven't been expanded yet to accomodate the new
+           ModulatorySignal; reassign modulatory_signal.variable to actual OWNER_VALUE below,
+           once value has been expanded
+        '''
+        from psyneulink.core.components.states.state import _instantiate_state
         from psyneulink.core.components.projections.projection import ProjectionError
+
+        # Try to instantiate as ControlSignal;  if that fails, try GatingSignal
+        mod_spec = modulatory_signal
         try:
             modulatory_signal = _instantiate_state(state_type=ControlSignal,
                                                    owner=self,
                                                    variable=defaultControlAllocation,
                                                    reference_value=ControlSignal.defaults.allocation,
                                                    modulation=self.modulation,
-                                                   state_spec=modulatory_signal,
+                                                   state_spec=mod_spec,
                                                    context=context)
-            if not type(modulatory_signal) in list([self.outputStateTypes]):
-                raise ProjectionError
+            if not type(modulatory_signal) in convert_to_list(self.outputStateTypes):
+                raise ProjectionError(f'{type(modulatory_signal)} inappropriate for {self.name}')
+
         except ProjectionError:
             modulatory_signal = _instantiate_state(state_type=GatingSignal,
                                                    owner=self,
                                                    variable=defaultGatingAllocation,
                                                    reference_value=GatingSignal.defaults.allocation,
                                                    modulation=self.modulation,
-                                                   state_spec=modulatory_signal,
+                                                   state_spec=mod_spec,
                                                    context=context)
-
         modulatory_signal.owner = self
 
         if isinstance(modulatory_signal, ControlSignal):
