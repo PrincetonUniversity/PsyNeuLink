@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+13.ge5911b9 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+34.gdac34b4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+13.ge5911b9',
+              VERSION:'0.5.3.2+34.gdac34b4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+13
+                0.5.3.2+34
               </div>
             
           
@@ -803,7 +803,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11568f278&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x117e222b0&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -967,7 +967,7 @@ an optimal Control policy.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_projection">
-<code class="descname">add_projection</code><span class="sig-paren">(</span><em>projection=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>feedback=False</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_projection</code><span class="sig-paren">(</span><em>projection=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>feedback=False</em>, <em>learning_projection=False</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a projection to the Composition, if it is not already added.</p>
 <p>If a <em>projection</em> is not specified, then a default MappingProjection is created.</p>
 <p>The sender and receiver of a particular Projection vertex within the Composition (the <em>sender</em> and
@@ -1067,7 +1067,7 @@ reset to pre-simulation values at the end of the simulation.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>autodiff_stimuli=None</em>, <em>scheduler_processing=None</em>, <em>scheduler_learning=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>call_before_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_time_step=None</em>, <em>call_after_pass=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>clamp_input='soft_clamp'</em>, <em>targets=None</em>, <em>runtime_params=None</em>, <em>skip_initialization=False</em>, <em>bin_execute=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>autodiff_stimuli=None</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>call_before_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_time_step=None</em>, <em>call_after_pass=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>clamp_input='soft_clamp'</em>, <em>runtime_params=None</em>, <em>skip_initialization=False</em>, <em>bin_execute=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Passes inputs to any Nodes receiving inputs directly from the user (via the “inputs” argument) then
 coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
 termination conditions are met.</p>
@@ -1080,7 +1080,6 @@ termination conditions are met.</p>
 the user. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
 the shape of which must match the node’s default variable.</li>
 <li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
-<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the Learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
 <li><strong>execution_id</strong> – execution_id will be set to self.default_execution_id if unspecified</li>
 <li><strong>base_execution_id</strong> – the execution_id corresponding to the execution context from which this execution will be initialized, if
 values currently do not exist for <strong>execution_id</strong></li>
@@ -1189,7 +1188,7 @@ passed the current <em>execution_id</em> (but it is not necessary for your calla
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler_processing=None</em>, <em>scheduler_learning=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>num_trials=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>clamp_input='soft_clamp'</em>, <em>targets=None</em>, <em>bin_execute=False</em>, <em>log=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em>, <em>retain_old_simulation_data=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>num_trials=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>log=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em>, <em>retain_old_simulation_data=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Passes inputs to compositions, then executes
 to receive and execute sets of nodes that are eligible to run until termination conditions are met.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1201,8 +1200,6 @@ to receive and execute sets of nodes that are eligible to run until termination 
 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
 list corresponds to a certain <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
 <li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of
-this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
-<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the Learning execution of
 this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
 <li><strong>execution_id</strong> – execution_id will be set to self.default_execution_id if unspecified</li>
 <li><strong>base_execution_id</strong> – the execution_id corresponding to the execution context from which this execution will be initialized, if
@@ -1256,21 +1253,6 @@ if False, simulation values will be deleted unless otherwise specified by indivi
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">various</p>
 </td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.compositions.composition.Composition.scheduler_learning">
-<code class="descname">scheduler_learning</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.scheduler_learning" title="Permalink to this definition">¶</a></dt>
-<dd><p>A default <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> automatically generated by the Composition, used for the
-<a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">learning</span></a> phase of execution.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Returns the default learning scheduler, and builds it if it needs updating since the last access.</td>
 </tr>
 </tbody>
 </table>

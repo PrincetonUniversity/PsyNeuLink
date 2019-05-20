@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.5.3.2+13.ge5911b9 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.5.3.2+34.gdac34b4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+13.ge5911b9',
+              VERSION:'0.5.3.2+34.gdac34b4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+13
+                0.5.3.2+34
               </div>
             
           
@@ -313,9 +313,9 @@ to and from which they project (see <a class="reference internal" href="#system-
 <span id="system-scheduler"></span><h3><em>Scheduler</em><a class="headerlink" href="#scheduler" title="Permalink to this headline">¶</a></h3>
 <p>Every System has two <a class="reference internal" href="Scheduler.html"><span class="doc">Schedulers</span></a>, one that handles the ordering of execution of its Components for
 <a class="reference internal" href="#system-execution-processing"><span class="std std-ref">processing</span></a> (assigned to its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler_processing" title="psyneulink.core.compositions.composition.Composition.scheduler_processing"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler_processing</span></code></a> attribute), and one that
-does the same for <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning</span></a> (assigned to its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler_learning" title="psyneulink.core.compositions.composition.Composition.scheduler_learning"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler_learning</span></code></a> attribute).
+does the same for <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning</span></a> (assigned to its <code class="xref any docutils literal"><span class="pre">scheduler_learning</span></code> attribute).
 The <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler_processing" title="psyneulink.core.compositions.composition.Composition.scheduler_processing"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler_processing</span></code></a> can be assigned in the <strong>scheduler</strong> argument of the System’s constructor;  if it is not
-specified, a default <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> is created automatically.   The <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler_learning" title="psyneulink.core.compositions.composition.Composition.scheduler_learning"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler_learning</span></code></a> is always assigned automatically.
+specified, a default <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> is created automatically.   The <code class="xref any docutils literal"><span class="pre">scheduler_learning</span></code> is always assigned automatically.
 The System’s Schedulers base the ordering of execution of its Components based on the order in which they are listed
 in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>s of the <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> used to construct the System, constrained by any
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that have been created for individual Components and assigned to the System’s Schedulers (see

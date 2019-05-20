@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.5.3.2+13.ge5911b9 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.5.3.2+34.gdac34b4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+13.ge5911b9',
+              VERSION:'0.5.3.2+34.gdac34b4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+13
+                0.5.3.2+34
               </div>
             
           
@@ -323,8 +323,7 @@ and <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log
 when all Components have run at least once within the trial, and the termination condition for a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> is
 when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
 by passing a dictionary mapping <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> in the
-<strong>termination_processing</strong> argument of a call to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a> (to terminate the execution of processing),
-or its <strong>termination_learning</strong> argument to terminate the execution of learning:</p>
+<strong>termination_processing</strong> argument of a call to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a> (to terminate the execution of processing):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">System</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">termination_processing</span><span class="o">=</span><span class="p">{</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">WhenFinished</span><span class="p">(</span><span class="n">ddm</span><span class="p">)}</span>
