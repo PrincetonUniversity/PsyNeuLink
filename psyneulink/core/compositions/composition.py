@@ -3218,34 +3218,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       "can't be used in its show_graph() method\n".format(self.name))
                 return
 
-            # get projection from ObjectiveMechanism to ControlMechanism
-            objmech_ctlr_proj = controller.input_state.path_afferents[0]
-            if controller in active_items:
-                if active_color is BOLD:
-                    objmech_ctlr_proj_color = controller_color
-                else:
-                    objmech_ctlr_proj_color = active_color
-                objmech_ctlr_proj_width = str(default_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                objmech_ctlr_proj_color = controller_color
-                objmech_ctlr_proj_width = str(default_width)
-
-            # get ObjectiveMechanism
-            objmech = objmech_ctlr_proj.sender.owner
-            if objmech in active_items:
-                if active_color is BOLD:
-                    objmech_color = controller_color
-                else:
-                    objmech_color = active_color
-                objmech_width = str(default_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                objmech_color = controller_color
-                objmech_width = str(default_width)
-
+            # Assign controller node
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
-            objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
                        controller.show_structure(**node_struct_args, node_border=ctlr_width),
@@ -3254,34 +3228,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        penwidth=ctlr_width,
                        rank=control_rank
                        )
-                g.node(objmech_label,
-                       objmech.show_structure(**node_struct_args, node_border=ctlr_width),
-                       shape=struct_shape,
-                       color=objmech_color,
-                       penwidth=ctlr_width,
-                       rank=control_rank
-                       )
             else:
                 g.node(ctlr_label,
                         color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
                         rank=control_rank)
-                g.node(objmech_label,
-                        color=objmech_color, penwidth=objmech_width, shape=node_shape,
-                        rank=control_rank)
-
-            # objmech to controller edge
-            if show_projection_labels:
-                edge_label = objmech_ctlr_proj.name
-            else:
-                edge_label = ''
-            if show_node_structure:
-                obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
-                ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
-            else:
-                obj_to_ctrl_label = objmech_label
-                ctlr_from_obj_label = ctlr_label
-            g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
-                   color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
@@ -3314,33 +3264,88 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=ctl_proj_color,
                            penwidth=ctl_proj_width
                            )
+            # If controller has objective_mechanism, assign its node and projetions
+            if controller.objective_mechanism:
+                # get projection from ObjectiveMechanism to ControlMechanism
+                objmech_ctlr_proj = controller.input_state.path_afferents[0]
+                if controller in active_items:
+                    if active_color is BOLD:
+                        objmech_ctlr_proj_color = controller_color
+                    else:
+                        objmech_ctlr_proj_color = active_color
+                    objmech_ctlr_proj_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    objmech_ctlr_proj_color = controller_color
+                    objmech_ctlr_proj_width = str(default_width)
 
-            # incoming edges (from monitored mechs to objective mechanism)
-            for input_state in objmech.input_states:
-                for projection in input_state.path_afferents:
-                    if objmech in active_items:
-                        if active_color is BOLD:
-                            proj_color = controller_color
+                # get ObjectiveMechanism
+                objmech = objmech_ctlr_proj.sender.owner
+                if objmech in active_items:
+                    if active_color is BOLD:
+                        objmech_color = controller_color
+                    else:
+                        objmech_color = active_color
+                    objmech_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    objmech_color = controller_color
+                    objmech_width = str(default_width)
+
+                objmech_label = self._get_graph_node_label(objmech, show_dimensions)
+                if show_node_structure:
+                    g.node(objmech_label,
+                           objmech.show_structure(**node_struct_args, node_border=ctlr_width),
+                           shape=struct_shape,
+                           color=objmech_color,
+                           penwidth=ctlr_width,
+                           rank=control_rank
+                           )
+                else:
+                    g.node(objmech_label,
+                            color=objmech_color, penwidth=objmech_width, shape=node_shape,
+                            rank=control_rank)
+
+                # objmech to controller edge
+                if show_projection_labels:
+                    edge_label = objmech_ctlr_proj.name
+                else:
+                    edge_label = ''
+                if show_node_structure:
+                    obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
+                    ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
+                else:
+                    obj_to_ctrl_label = objmech_label
+                    ctlr_from_obj_label = ctlr_label
+                g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
+                       color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
+
+                # incoming edges (from monitored mechs to objective mechanism)
+                for input_state in objmech.input_states:
+                    for projection in input_state.path_afferents:
+                        if objmech in active_items:
+                            if active_color is BOLD:
+                                proj_color = controller_color
+                            else:
+                                proj_color = active_color
+                            proj_width = str(default_width + active_thicker_by)
+                            self.active_item_rendered = True
                         else:
-                            proj_color = active_color
-                        proj_width = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        proj_color = controller_color
-                        proj_width = str(default_width)
-                    if show_node_structure:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
-                                          ':' + objmech._get_port_name(projection.sender)
-                        objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_state)
-                    else:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
-                        objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
-                    if show_projection_labels:
-                        edge_label = projection.name
-                    else:
-                        edge_label = ''
-                    g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
-                           color=proj_color, penwidth=proj_width)
+                            proj_color = controller_color
+                            proj_width = str(default_width)
+                        if show_node_structure:
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
+                                              ':' + objmech._get_port_name(projection.sender)
+                            objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_state)
+                        else:
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
+                            objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
+                        if show_projection_labels:
+                            edge_label = projection.name
+                        else:
+                            edge_label = ''
+                        g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
+                               color=proj_color, penwidth=proj_width)
 
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------

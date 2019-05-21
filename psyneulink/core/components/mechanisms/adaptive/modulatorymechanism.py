@@ -43,12 +43,13 @@ described below.
 *ObjectiveMechanism*
 ~~~~~~~~~~~~~~~~~~~~
 
-If an `ObjectiveMechanism` is specified in the **objective_mechanism** of a ModulatoryMechanism's constructor, or
-any `OutputStates <OutputState>` are specified in its **monitor_for_modulation** argument, then an ObjectiveMechanism
+If an `ObjectiveMechanism` is specified in the **objective_mechanism** argument of a ModulatoryMechanism's constructor
+or any `OutputStates <OutputState>` are specified in its **monitor_for_modulation** argument, then an ObjectiveMechanism
 is automatically created and assigned as the ModulatoryMechanism's `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` attribute.  This is used to monitor the OutputStates specified in either
-the **monitor** argument of the ObjectiveMechanism's constructor and/or the  **monitor_for_modulation** argument of
-the ModulatoryMechanism's constructor.  The values of these OutputStates are  evaluted by the ObjectiveMechanism's
+<ModulatoryMechanism.objective_mechanism>` attribute. If the **objective_mechanism** is specified simply as True, a
+default ObjectiveMechanism is created.   This is used to monitor the OutputStates specified in either the
+**monitor** argument of the ObjectiveMechanism's constructor and/or the  **monitor_for_modulation** argument of the
+ModulatoryMechanism's constructor.  The values of these OutputStates are evaluted by the ObjectiveMechanism's
 `function <ObjectiveMechanism.function>`, and the result is conveyed to the  ModulatoryMechanism by way of a
 `MappingProjection` created from the *OUTCOME* Outputstate of the ObjectiveMechanism to the *OUTCOME* InputState of
 the ModulatoryMechanism, and used by it to determine its `modulatory_allocation
@@ -372,6 +373,7 @@ from psyneulink.core.components.functions.function import \
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
+# from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
@@ -588,10 +590,11 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         **objective_mechanism** argument; for any Mechanisms specified, their `primary OutputState
         <OutputState_Primary>` are used.
 
-    objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
-        specifies either an `ObjectiveMechanism` to use for the ModulatoryMechanism, or a list of the OutputStates it
-        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
-        a default ObjectiveMechanism is created and the list is passed to its **monitor** argument.
+    objective_mechanism : ObjectiveMechanism | List[OutputState specification] | bool : default None
+        specifies either an `ObjectiveMechanism` to use for the ModulatoryMechanism, the list of OutputStates that
+        one constructed automatically should use, or the construction of a default ObjectiveMechanism (for True);
+        if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is specified,
+        the list is passed to as the **monitor** argument in the constructor for a default ObjectiveMechanism.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
@@ -902,6 +905,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  size=None,
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_modulation:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
+                 # objective_mechanism:tc.optional(ObjectiveMechanism, list, bool)=None,
                  objective_mechanism=None,
                  function=None,
                  modulatory_signals:tc.optional(tc.any(is_iterable,
@@ -936,12 +940,14 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
-        # If the user passed in True for objective_mechanism, means one needs to be created automatically.
-        # Set it to None to signal this downstream (vs. False which means *don't* create one),
-        #    while still causing tests to indicate that one does NOT yet exist
-        #    (since actual assignment of one registers as True).
-        if objective_mechanism is True:
-            objective_mechanism = None
+        # MODIFIED 5/20/19 NEW: [DM/JDC] - commented out to allow True to designate construction of default ObjMech
+        # # If the user passed in True for objective_mechanism, means one needs to be created automatically.
+        # # Set it to None to signal this downstream (vs. False which means *don't* create one),
+        # #    while still causing tests to indicate that one does NOT yet exist
+        # #    (since actual assignment of one registers as True).
+        # if objective_mechanism is True:
+        #     objective_mechanism = None
+        # MODIFIED 5/20/19 END
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
@@ -1069,7 +1075,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 else:
                     validate_monitored_state_spec(obj_mech_spec_list)
 
-            if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list)):
+            if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
                 raise ModulatoryMechanismError("Specification of {} arg for {} ({}) must be an {}"
                                             "or a list of Mechanisms and/or OutputStates to be monitored for control".
                                             format(OBJECTIVE_MECHANISM,
@@ -1400,21 +1406,27 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, weight, exponent))
 
-        if self.control_signals:
-            print ("\n\tControlling the following Mechanism parameters:".format(self.name))
-            # Sort for consistency of output:
-            state_names_sorted = sorted(self.control_signals.names)
-            for state_name in state_names_sorted:
-                for projection in self.control_signals[state_name].efferents:
-                    print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        try:
+            if self.control_signals:
+                print ("\n\tControlling the following Mechanism parameters:".format(self.name))
+                # Sort for consistency of output:
+                state_names_sorted = sorted(self.control_signals.names)
+                for state_name in state_names_sorted:
+                    for projection in self.control_signals[state_name].efferents:
+                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
 
-        if self.gating_signals:
-            print ("\n\tGating the following States:".format(self.name))
-            # Sort for consistency of output:
-            state_names_sorted = sorted(self.gating_signals.names)
-            for state_name in state_names_sorted:
-                for projection in self.gating_signals[state_name].efferents:
-                    print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        try:
+            if self.gating_signals:
+                print ("\n\tGating the following States:".format(self.name))
+                # Sort for consistency of output:
+                state_names_sorted = sorted(self.gating_signals.names)
+                for state_name in state_names_sorted:
+                    for projection in self.gating_signals[state_name].efferents:
+                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
 
         print ("\n---------------------------------------------------------")
 
