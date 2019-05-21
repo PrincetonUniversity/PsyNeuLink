@@ -13,22 +13,10 @@
 Overview
 --------
 
-A GatingMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modulates the value of the InputState(s) and/or
-OutputState(s) of one or more `Mechanisms <Mechanism>`.   Its `function <GatingMechanism.function>` takes the
-GatingMechanism's `variable <GatingMechanism.variable>` and uses that generate a `gating_allocation`:  a list of values,
-one for each of its `GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal
-<GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the
-State(s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System`
-to which it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its `show
-<GatingMehanism.show>` method.
-
-COMMENT: TBI
-The gating components of a System can be displayed using the System's
-`show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
-COMMENT
-
-The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
-`LearningMechanism <LearningMechanism>`, and  `ControlMechanism <ControlMechanism>` in that System have been executed.
+A GatingMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `GatingSignals
+<GatingSignal>` and not ControlSignals.  Accordingly, its constructor has a **gating_signals** argument in place of
+a **modulatory_signals** argument.  It also lacks any attributes related to control.  In all other respects it is
+identical to its parent class, ModulatoryMechanism.
 
 .. _GatingMechanism_Creation:
 
