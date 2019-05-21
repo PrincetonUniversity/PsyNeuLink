@@ -1774,7 +1774,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-        self.has_learning = True
+        self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
     def _create_backprop_related_mechanisms(self, input_source, output_source, error_function, learned_projection, learning_rate):
         # Create learning components
@@ -3762,11 +3762,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if bin_execute:
                 _comp_ex.freeze_values()
 
+            # If learning is turned off, check for any learning related nodes and remove them from the execution set
+            if not self.learning_enabled:
+                next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
+
             # execute each node with EXECUTING in context
-            learning_related_nodes = self.get_nodes_by_role(NodeRole.LEARNING)
             for node in next_execution_set:
-                if self.learning_enabled and node in learning_related_nodes:
-                    continue
                 frozen_values[node] = node.get_output_values(execution_id)
                 if node in input_nodes:
                     if clamp_input:
