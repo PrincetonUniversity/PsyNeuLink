@@ -381,11 +381,11 @@ from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGa
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import NodeRole, ContentAddressableList, is_iterable, convert_to_list
+from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, convert_to_list
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'MODULATORY_ALLOCATION',
@@ -932,6 +932,13 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
 
+        # If the user passed in True for objective_mechanism, means one needs to be created automatically.
+        # Set it to None to signal this downstream (vs. False which means *don't* create one),
+        #    while still causing tests to indicate that one does NOT yet exist
+        #    (since actual assignment of one registers as True).
+        if objective_mechanism is True:
+            objective_mechanism = None
+
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_modulation=monitor_for_modulation,
@@ -1030,7 +1037,9 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 spec = [spec]
             validate_monitored_state_spec(spec)
 
-        if OBJECTIVE_MECHANISM in target_set and target_set[OBJECTIVE_MECHANISM] is not None:
+        if OBJECTIVE_MECHANISM in target_set and \
+                target_set[OBJECTIVE_MECHANISM] is not None and\
+                target_set[OBJECTIVE_MECHANISM] is not False:
 
             if isinstance(target_set[OBJECTIVE_MECHANISM], list):
 
@@ -1143,7 +1152,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
             except (ObjectiveMechanismError, FunctionError) as e:
-                raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
+                raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
 
         # Print monitored_output_states
         if self.prefs.verbosePref:
@@ -1153,7 +1162,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                          self.monitored_output_states.index(state)][WEIGHT_INDEX]
                 exponent = self.monitored_output_states_weights_and_exponents[
                                                          self.monitored_output_states.index(state)][EXPONENT_INDEX]
-                print("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+                print(f"\t{weight} (exp: {weight}; wt: {exponent})")
 
         # Assign ObjectiveMechanism's role as CONTROL
         self.objective_mechanism._role = CONTROL

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************* Composition ***************************************************************
+# ********************************************* Composition ************************************************************
 
 """
 ..
@@ -45,7 +45,8 @@ following Composition methods:
     - `add_projections <Composition.add_projections>`
         Adds connection between multiple pairs of nodes in the Composition
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
-        Adds and connects a list of nodes and/or Projections to the Composition; Inserts a default Projection between any adjacent Nodes
+        Adds and connects a list of nodes and/or Projections to the Composition;
+        Inserts a default Projection between any adjacent Nodes
 
 .. note::
   Only Nodes and Projections added to a Composition via the methods above constitute a Composition, even if
@@ -1389,15 +1390,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = controller
         self.controller.composition = self
-        # # MODIFIED 5/14/19 NEW: [JDC]
-        # if self.controller.objective_mechanism is not None:
-        #     self.add_node(self.controller.objective_mechanism)
-        #
-        # self.enable_controller = True
-        #
-        # for proj in self.controller.objective_mechanism.path_afferents:
-        #     self.add_projection(proj)
-        # MODIFIED 5/18/19 NEWER: [JDC PER DM]
+
         if self.controller.objective_mechanism:
             self.add_node(self.controller.objective_mechanism)
 
@@ -1406,7 +1399,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller.objective_mechanism:
             for proj in self.controller.objective_mechanism.path_afferents:
                 self.add_projection(proj)
-        # MODIFIED 5/14/19 END
 
         controller._activate_projections_for_compositions(self)
         self._analyze_graph()
