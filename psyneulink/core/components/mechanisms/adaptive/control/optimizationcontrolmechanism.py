@@ -593,6 +593,13 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>` if its `save_values <OptimizationFunction.save_samples>` parameter
         is `True`;  otherwise list is empty.
 
+    search_statefulness : bool : True
+        if set to False, an `OptimizationControlMechanism`\\ 's `evaluation_function` will never run simulations; the
+        evaluations will simply execute in the original `execution context <_Execution_Contexts>`.
+
+        if set to True, `simulations <OptimizationControlMechanism_Execution>` will be created normally for each
+        `control allocation <control_allocation>`.
+
     name : str
         name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
@@ -669,6 +676,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
 
+                search_statefulness
+                    see `search_statefulness <OptimizationControlMechanism.search_statefulness>`
+
+                    :default value: True
+                    :type: bool
+
                 search_termination_function
                     see `search_termination_function <OptimizationControlMechanism.search_termination_function>`
 
@@ -681,6 +694,7 @@ class OptimizationControlMechanism(ControlMechanism):
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False)
+        search_statefulness = Parameter(True, stateful=False, loggable=False)
 
         agent_rep = Parameter(None, stateful=False, loggable=False)
 
@@ -703,6 +717,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
+                 search_statefulness=None,
                  params=None,
                  **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
@@ -717,6 +732,7 @@ class OptimizationControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(input_states=features,
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
+                                                  search_statefulness=search_statefulness,
                                                   params=params)
 
         super().__init__(system=None,
@@ -934,13 +950,19 @@ class OptimizationControlMechanism(ControlMechanism):
         '''
         # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
-            sim_execution_id = self._set_up_simulation(execution_id, control_allocation)
+            # KDM 5/20/19: crudely using default here because it is a stateless parameter
+            # and there is a bug in setting parameter values on init, see TODO note above
+            # call to self._instantiate_defaults around component.py:1115
+            if self.defaults.search_statefulness:
+                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
+            else:
+                new_execution_id = execution_id
 
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              base_execution_id=execution_id,
-                                             execution_id=sim_execution_id,
+                                             execution_id=new_execution_id,
                                              context=self.function.parameters.context.get(execution_id),
                                              execution_mode=self.parameters.comp_execution_mode.get(execution_id)
             )

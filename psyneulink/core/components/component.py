@@ -1106,6 +1106,10 @@ class Component(object, metaclass=ComponentsMeta):
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
+        # TODO: the below overrides setting default values to None context,
+        # at least in stateless parameters. Possibly more. Below should be
+        # removed eventually
+
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
         self._instantiate_defaults(variable=default_variable,
