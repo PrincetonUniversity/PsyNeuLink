@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.5.3.2+38.gb97b5a4 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.5.3.2+39.gb302cdd documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+38.gb97b5a4',
+              VERSION:'0.5.3.2+39.gb302cdd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+38
+                0.5.3.2+39
               </div>
             
           
@@ -207,7 +207,7 @@ closely with (and often created automatically by) <a class="reference internal" 
 <span id="objectivemechanism-creation"></span><h2>Creating an ObjectiveMechanism<a class="headerlink" href="#creating-an-objectivemechanism" title="Permalink to this headline">¶</a></h2>
 <p>ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
 AdaptiveMechanisms, such as <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">LearningMechanisms</span></a> and
-<a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">ControlMechanisms</span></a>).  An ObjectiveMechanism can also be created directly by calling its
+<code class="xref any docutils literal"><span class="pre">ControlMechanisms</span></code>).  An ObjectiveMechanism can also be created directly by calling its
 constructor.  The primary attribute used to define an ObjectiveMechanism is its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a>
 attribute, that is specified using the corresponding argument of its constructor as described below.</p>
 <div class="section" id="monitor">
@@ -233,7 +233,7 @@ specified for that InputState.</p>
 <p>The OutputStates monitored by the ObjectiveMechanism are listed in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a>
 attribute.  When an ObjectiveMechanism is created by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>, or a <a class="reference internal" href="System.html"><span class="doc">System</span></a> for its <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, these may pass a set of OutputStates to be monitored to the ObjectiveMechanism.  A
 ControlMechanism passes OutputState specifications listed in its <strong>objective_mechanism</strong> argument (see
-<a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a>), and a System passes any listed in its <strong>monitor_for_control</strong> argument (see
+<code class="xref any docutils literal"><span class="pre">ControlMechanism_ObjectiveMechanism</span></code>), and a System passes any listed in its <strong>monitor_for_control</strong> argument (see
 <a class="reference internal" href="System.html#system-control-specification"><span class="std std-ref">Specifying Control</span></a>).</p>
 </div>
 </div>

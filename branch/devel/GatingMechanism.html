@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gating Mechanism &mdash; PsyNeuLink 0.5.3.2+38.gb97b5a4 documentation</title>
+  <title>Gating Mechanism &mdash; PsyNeuLink 0.5.3.2+39.gb302cdd documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+38.gb97b5a4',
+              VERSION:'0.5.3.2+39.gb302cdd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+38
+                0.5.3.2+39
               </div>
             
           
@@ -198,14 +198,9 @@
 <span id="gating-mechanism"></span><h1>Gating Mechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A GatingMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> that modulates the value of the InputState(s) and/or
-OutputState(s) of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.   Its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes the
-GatingMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.variable" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and uses that generate a <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a>:  a list of values,
-one for each of its <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>.  Each of those, in turn, generates a <a class="reference internal" href="GatingSignal.html#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.gating_signal" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> used by its <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to modulate the value of the
-State(s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the <a class="reference internal" href="System.html"><span class="doc">System</span></a>
-to which it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its <code class="xref any docutils literal"><span class="pre">show</span></code> method.</p>
-<p>The gating components of a System are executed after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>,
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>, and  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> in that System have been executed.</p>
+<p>A GatingMechanism is a subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that is restricted to using only <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a> and not ControlSignals.  Accordingly, its constructor has a <strong>gating_signals</strong> argument in place of
+a <strong>modulatory_signals</strong> argument.  It also lacks any attributes related to control.  In all other respects it is
+identical to its parent class, ModulatoryMechanism.</p>
 </div>
 <div class="section" id="creating-a-gatingmechanism">
 <span id="gatingmechanism-creation"></span><h2>Creating A GatingMechanism<a class="headerlink" href="#creating-a-gatingmechanism" title="Permalink to this headline">¶</a></h2>
@@ -253,13 +248,13 @@ as the input to the GatingMechanism’s <a class="reference internal" href="#psy
 </div>
 <div class="section" id="function">
 <span id="gatingmechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
-<p>A GatingMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary
-InputState</span></a> to generate an <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a>.  The default
-<a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for a GatingMechanism is a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> identity function, that simply takes
-the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> and assigns this as the single item
-of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a>.  This can be replaced by a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that generates
-a <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a> with multiple values, which may be useful if the GatingMechanism
-is assigned more than one <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.</p>
+<p>A GatingMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses <code class="xref any docutils literal"><span class="pre">outcome</span></code>
+(the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>OUTCOME</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>) to generate a <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a>.  By default, <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is assigned
+the <code class="xref any docutils literal"><span class="pre">DefaultAllocationFunction</span></code>, which takes a single value as its input, and assigns this as the value of
+each item of <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">modulatory_allocation</span></code></a>.  Each of these items is assigned as
+the allocation for the corresponding  <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> in <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_signals" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a>. Thus,
+by default, the GatingMechanism distributes its input as the allocation to each of its <code class="xref any docutils literal"><span class="pre">gating_signals</span></code>, and/or by specifying that individual GatingSignals  reference different
+items in <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a> as their allocation (i.e., the value of their <a class="reference internal" href="GatingSignal.html#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.variable" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </div>
 <div class="section" id="output">
 <span id="gatingmechanism-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
@@ -272,7 +267,7 @@ then the <a class="reference internal" href="GatingSignal.html#psyneulink.core.c
 dictionary</span></a> in the <strong>gating_signal</strong> argument of the GatingMechanism’s constructor),
 or an error is generated.  The GatingSignals of a GatingMechanism are listed in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_signals" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> attribute.  Since GatingSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, they are also listed
 in the GatingMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute. The InputStates and/or OutputStates
-modulated by a GatingMechanism’s GatingSignals can be displayed using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.show" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.show"><code class="xref py py-func docutils literal"><span class="pre">show</span></code></a> method.</p>
+modulated by a GatingMechanism’s GatingSignals can be displayed using its <code class="xref py py-func docutils literal"><span class="pre">show</span></code> method.</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -403,12 +398,6 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dt id="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.outputStateTypes">
 <code class="descname">outputStateTypes</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.outputStateTypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">GatingSignal</span></code></p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.show">
-<code class="descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.show" title="Permalink to this definition">¶</a></dt>
-<dd><p>Display the InputStates and/or OutputStates gated by the GatingMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_signals" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>

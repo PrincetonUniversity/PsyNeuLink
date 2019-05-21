@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+38.gb97b5a4 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+39.gb302cdd documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+38.gb97b5a4',
+              VERSION:'0.5.3.2+39.gb302cdd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+38
+                0.5.3.2+39
               </div>
             
           
@@ -271,7 +271,7 @@ must become stateful Parameters, or they are at risk of computational errors lik
 <blockquote>
 <div><p>For example, <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> has a special getter method, which computes the cost on-the-fly:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_control_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execution_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_modulatory_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execution_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">compute_costs</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">variable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">execution_id</span><span class="p">),</span> <span class="n">execution_id</span><span class="o">=</span><span class="n">execution_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">control_signals</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
