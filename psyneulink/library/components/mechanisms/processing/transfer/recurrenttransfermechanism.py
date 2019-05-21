@@ -316,6 +316,11 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
 
     return value
 
+def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
+    if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
+        owning_component.learning_mechanism.parameters.learning_rate.set(value, execution_id)
+    return value
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
@@ -829,7 +834,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 convergence_function
                     see `convergence_function <RecurrentTransferMechanism.convergence_function>`
 
-                    :default value: `Distance`(metric=max_abs_diff, normalize=False)
+                    :default value: `Distance`(metric=max_abs_diff)
                     :type: `Function`
 
                 enable_learning
@@ -897,7 +902,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
         learning_function = Parameter(Hebbian, stateful=False, loggable=False)
-        learning_rate = Parameter(None, modulable=True)
+        learning_rate = Parameter(None, modulable=True, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
@@ -954,7 +959,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = enable_learning
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
@@ -1242,6 +1247,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=self.matrix,
                                                                                context=context)
+        self.aux_components.append(self.recurrent_projection)
+
         if self.learning_enabled:
             self.configure_learning(context=context)
 

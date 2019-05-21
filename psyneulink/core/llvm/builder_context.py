@@ -16,6 +16,7 @@ import os, re
 
 from psyneulink.core.scheduling.time import TimeScale
 
+from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
 from .helpers import ConditionGenerator
 from llvmlite import ir
@@ -134,19 +135,14 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_input_struct_type'):
             return component._get_input_struct_type(self)
 
-        # KDM 12/28/18: <_instance_defaults_note> left _instance_defaults in place so that this code could use it.
-        # Ideally this would be simply .defaults. After going through the special handler above, component becomes a
-        # super() object, which seems to return the .defaults attr of the class associated with the super() object,
-        # whereas _instance_defaults retuns the .defaults attr of the instance associated. I don't know whether
-        # is a design or a convenience measure for workarounds, so I left this in place.
-        default_var = component._instance_defaults.variable
+        default_var = component.defaults.variable
         return self.convert_python_struct_to_llvm_ir(default_var)
 
     def get_output_struct_type(self, component):
         if hasattr(component, '_get_output_struct_type'):
             return component._get_output_struct_type(self)
 
-        default_val = component._instance_defaults.value
+        default_val = component.defaults.value
         return self.convert_python_struct_to_llvm_ir(default_val)
 
     def get_param_struct_type(self, component):
@@ -174,12 +170,15 @@ class LLVMBuilderContext:
 
     def get_param_ptr(self, component, builder, params_ptr, param_name):
         idx = self.int32_ty(component._get_param_ids().index(param_name))
-        ptr = builder.gep(params_ptr, [self.int32_ty(0), idx])
-        return ptr, builder
+        return builder.gep(params_ptr, [self.int32_ty(0), idx])
+
+    def get_state_ptr(self, component, builder, state_ptr, state_name):
+        idx = self.int32_ty(component.stateful_attributes.index(state_name))
+        return builder.gep(state_ptr, [self.int32_ty(0), idx])
 
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
-            assert(element.type.pointee.count == 1)
+            assert element.type.pointee.count == 1
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
@@ -196,7 +195,7 @@ class LLVMBuilderContext:
             cond_gen.get_condition_struct_type().as_pointer()))
         llvm_func = ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
-        context, params, comp_in, data, cond = llvm_func.args
+        context, params, comp_in, data_arg, cond = llvm_func.args
         for a in llvm_func.args:
             a.attributes.add('nonnull')
             a.attributes.add('noalias')
@@ -210,6 +209,13 @@ class LLVMBuilderContext:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             params = builder.alloca(const_params.type)
             builder.store(const_params, params)
+
+        if "alloca_data" in debug_env:
+            data = builder.alloca(data_arg.type.pointee)
+            data_vals = builder.load(data_arg)
+            builder.store(data_vals, data)
+        else:
+            data = data_arg
 
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM);
@@ -312,6 +318,10 @@ class LLVMBuilderContext:
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.call(output_cim_f, [context, params, comp_in, data, data])
 
+        if "alloca_data" in debug_env:
+            data_vals = builder.load(data)
+            builder.store(data_vals, data_arg)
+
         # Bump run counter
         cond_gen.bump_ts(builder, cond, (1, 0, 0))
 
@@ -399,6 +409,72 @@ class LLVMBuilderContext:
 
         return llvm_func
 
+    def gen_multirun_wrapper(self, function):
+
+        if function.module is not self.module:
+            function = ir.Function(self.module, function.type.pointee, function.name)
+            assert function.is_declaration
+
+        args = [a.type for a in function.args]
+        args.append(self.int32_ty.as_pointer())
+        multirun_ty = ir.FunctionType(function.type.pointee.return_type, args)
+        multirun_f = ir.Function(self.module, multirun_ty, function.name + "_multirun")
+        block = multirun_f.append_basic_block(name="entry")
+        cond_block = multirun_f.append_basic_block(name="loop_cond")
+        body_block = multirun_f.append_basic_block(name="loop_body")
+        exit_block = multirun_f.append_basic_block(name="exit_loop")
+
+        builder = ir.IRBuilder(block)
+
+        limit_ptr = multirun_f.args[-1]
+        index_ptr = builder.alloca(self.int32_ty)
+        builder.store(index_ptr.type.pointee(0), index_ptr)
+        builder.branch(cond_block)
+
+        with builder.goto_block(cond_block):
+            index = builder.load(index_ptr)
+            limit = builder.load(limit_ptr)
+            cond = builder.icmp_unsigned("<", index, limit)
+            builder.cbranch(cond, body_block, exit_block)
+
+        with builder.goto_block(body_block):
+            # Runs need special handling. data_in and data_out are one dimensional,
+            # but hold entries for all parallel invocations.
+            is_comp_run = len(function.args) == 7
+            if is_comp_run:
+                runs_count = multirun_f.args[5]
+                input_count = multirun_f.args[6]
+
+            # Index all pointer arguments
+            index = builder.load(index_ptr)
+            indexed_args = []
+            for i, arg in enumerate(multirun_f.args[:-1]):
+                # Don't adjust #inputs and #trials
+                if isinstance(arg.type, ir.PointerType):
+                    offset = index
+                    # #runs and #trials needs to be the same
+                    if is_comp_run and i >= 5:
+                        offset = self.int32_ty(0)
+                    # data arrays need special handling
+                    elif is_comp_run and i == 4: # data_out
+                        offset = builder.mul(index, builder.load(runs_count))
+                    elif is_comp_run and i == 3: # data_in
+                        offset = builder.mul(index, builder.load(input_count))
+
+                    arg = builder.gep(arg, [offset])
+
+                indexed_args.append(arg)
+
+            builder.call(function, indexed_args)
+            new_idx = builder.add(index, index.type(1))
+            builder.store(new_idx, index_ptr)
+            builder.branch(cond_block)
+
+        with builder.goto_block(exit_block):
+            builder.ret_void()
+
+        return multirun_f
+
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
             assert all(type(x) == type(t[0]) for x in t)
@@ -413,9 +489,10 @@ class LLVMBuilderContext:
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif t is None:
             return ir.LiteralStructType([])
+        elif isinstance(t, np.random.RandomState):
+            return pnlvm.builtins.get_mersenne_twister_state_struct(self)
 
-        print(type(t))
-        assert False
+        assert False, "Don't know how to convert {}".format(type(t))
 
 def _find_llvm_function(name, mods = _all_modules):
     f = None
@@ -517,8 +594,7 @@ def _convert_llvm_ir_to_ctype(t):
         ret_t._fields_ = field_list
         assert len(ret_t._fields_) == len(t.elements)
     else:
-        print(t)
-        assert(False)
+        assert False, "Don't know how to convert LLVM type: {}".format(t)
 
     _type_cache[t] = ret_t
     return ret_t

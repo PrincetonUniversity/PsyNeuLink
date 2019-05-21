@@ -15,7 +15,7 @@ This is an attempt to show the value of defaultControlAllocation:  :py:print:`De
 from enum import Enum
 
 __all__ = [
-    'defaultControlAllocation', 'DefaultControlAllocationMode', 'defaultGatingPolicy', 'DefaultGatingPolicyMode',
+    'defaultControlAllocation','DefaultControlAllocationMode','defaultGatingAllocation','DefaultGatingAllocationMode',
     'inputValueSystemDefault', 'MPI_IMPLEMENTATION', 'outputValueSystemDefault', 'SystemDefaultInputValue',
 ]
 
@@ -36,9 +36,9 @@ class DefaultControlAllocationMode(Enum):
 defaultControlAllocation = [DefaultControlAllocationMode.BADGER_MODE.value] #: This is a string
 
 # Default gating policy mode values:
-class DefaultGatingPolicyMode(Enum):
+class DefaultGatingAllocationMode(Enum):
     PHASIC_MODE = 1.0
     TONIC_MODE = 0.5
     SLEEP_MODE = 0.0
     TEST_MODE = 240
-defaultGatingPolicy = [DefaultGatingPolicyMode.TONIC_MODE.value]
+defaultGatingAllocation = [DefaultGatingAllocationMode.TONIC_MODE.value]

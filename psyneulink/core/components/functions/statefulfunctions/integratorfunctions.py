@@ -25,7 +25,6 @@ Functions that integrate current value of input with previous value.
 
 '''
 
-import functools
 import itertools
 import numbers
 import warnings
@@ -225,7 +224,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
-      # Assign args to params and functionParams dicts 
+      # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
@@ -458,7 +457,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   increment=increment,
                                                   noise=noise,
@@ -748,7 +747,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -859,7 +858,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         (see `noise <Integrator_Noise>` for details).
 
     offset : float, list or 1d array : default 0.0
-        specifies constant value added to integral in each call to `function <AdaptiveIntegrator.function>`;  
+        specifies constant value added to integral in each call to `function <AdaptiveIntegrator.function>`;
         if it is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable>`
         (see `offset <AdaptiveIntegrator.offset>` for details).
 
@@ -1073,9 +1072,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             raise FunctionError(rate_value_msg.format(rate, self.name))
 
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-        rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
-        offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
+        rate_p = ctx.get_param_ptr(self, builder, params, RATE)
+        offset_p = ctx.get_param_ptr(self, builder, params, OFFSET)
+        noise_p = ctx.get_param_ptr(self, builder, params, NOISE)
 
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
 
@@ -1088,7 +1087,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
         # Get the only context member -- previous value
-        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
@@ -1112,16 +1111,14 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Get rid of 2d array.
-        # When part of a Mechanism the input, and output are 2d arrays.
+        # When part of a Mechanism, the input and output are 2d arrays.
         arg_in = ctx.unwrap_2d_array(builder, arg_in)
         arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
-        inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
-            inner(*args)
+            self.__gen_llvm_integrate(*args, ctx, arg_in, arg_out, params, state)
 
         return builder
 
@@ -2015,7 +2012,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         if default_variable is None:
             default_variable = initializer
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   rest=rest,
@@ -2390,7 +2387,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
                                                   starting_point=starting_point,
@@ -2741,7 +2738,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   decay=decay,
                                                   noise=noise,
@@ -3017,7 +3014,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   noise=noise,
                                                   offset=offset,
@@ -3686,7 +3683,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,
@@ -4072,17 +4069,17 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         return previous_v, previous_w, previous_time
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         zero_i32 = ctx.int32_ty(0)
 
         # Get rid of 2d array. When part of a Mechanism the input,
-        # (and output, and context) are 2d arrays.
+        # (and output, and state) are 2d arrays.
         arg_in = ctx.unwrap_2d_array(builder, arg_in)
-        # Load context values
+        # Load state values
         prev = {}
-        for idx, ctx_el in enumerate(self.stateful_attributes):
-            val = builder.gep(context, [zero_i32, ctx.int32_ty(idx)])
-            prev[ctx_el] = ctx.unwrap_2d_array(builder, val)
+        for state_el in self.stateful_attributes:
+            ptr = ctx.get_state_ptr(self, builder, state, state_el)
+            prev[state_el] = ctx.unwrap_2d_array(builder, ptr)
 
         # Output locations
         out = {}
@@ -4093,7 +4090,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # Load parameters
         param_vals = {}
         for p in self._get_param_ids():
-            param_ptr, builder = ctx.get_param_ptr(self, builder, params, p)
+            param_ptr = ctx.get_param_ptr(self, builder, params, p)
             param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
                                             builder, param_ptr)
 
@@ -4108,20 +4105,19 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # stateless and considered an inherent feature of the function. Changing parameter
         # to stateful=False accordingly. If it should be stateful, need to pass an execution_id here
         method = self.get_current_function_param("integration_method")
-        if method == "RK4":
-            func = functools.partial(self.__gen_llvm_rk4_body, **inner_args)
-        elif method == "EULER":
-            func = functools.partial(self.__gen_llvm_euler_body, **inner_args)
-        else:
-            raise FunctionError("Invalid integration method ({}) selected for {}".
-                                format(method, self.name))
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
-            func(*args)
+            if method == "RK4":
+                self.__gen_llvm_rk4_body(*args, **inner_args)
+            elif method == "EULER":
+                self.__gen_llvm_euler_body(*args, **inner_args)
+            else:
+                raise FunctionError("Invalid integration method ({}) selected for {}".
+                                    format(method, self.name))
 
-        # Save context
+        # Save state
         result = builder.load(arg_out)
-        builder.store(result, context)
+        builder.store(result, state)
         return builder
 
     def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):

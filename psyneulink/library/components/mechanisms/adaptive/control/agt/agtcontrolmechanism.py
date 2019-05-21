@@ -33,7 +33,7 @@ constructor.  When an AGTControlMechanism is created, it automatically creates a
 
 The OutputStates to be monitored by the AGTControlMechanism's `objective_mechanism <AGTControlMechanism.objective_mechanism>` are
 specified using the **monitored_output_states** argument of the AGTControlMechanism's constructor, using any of the ways to
-`specify the OutputStates monitored by ObjectiveMechanism <ObjectiveMechanism_Monitored_Output_States>`.  The
+`specify the OutputStates monitored by ObjectiveMechanism <ObjectiveMechanism_Monitor>`.  The
 monitored OutputStates are listed in the LCControlMechanism's `monitored_output_states <AGTControlMechanism.monitored_output_states>`
 attribute,  as well as that of its `objective_mechanism <AGTControlMechanism.objective_mechanism>`.
 
@@ -146,7 +146,6 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.core.compositions.composition import MonitoredOutputStatesOption
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
@@ -313,7 +312,7 @@ class AGTControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   control_signals=control_signals,
                                                   params=params)

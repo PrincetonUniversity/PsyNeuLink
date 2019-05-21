@@ -1,9 +1,14 @@
 import functools
 import numpy as np
-import pytest
 import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
-from psyneulink.core.components.functions.optimizationfunctions import SampleIterator, SampleSpec, OptimizationFunctionError
+import pytest
+import re
+
+from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+
+
 class TestControlMechanisms:
 
     def test_lvoc(self):
@@ -183,6 +188,7 @@ class TestControlMechanisms:
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
 
+
 class TestModelBasedOptimizationControlMechanisms:
 
     def test_evc(self):
@@ -210,7 +216,7 @@ class TestModelBasedOptimizationControlMechanisms:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=comp,
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
                                                                                   features=[Input.input_state, reward.input_state],
                                                                                   feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
@@ -222,7 +228,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                                                    ("threshold", Decision)])
                                        )
 
-        comp.enable_model_based_optimizer = True
+        comp.enable_controller = True
 
         comp._analyze_graph()
 
@@ -231,7 +237,7 @@ class TestModelBasedOptimizationControlMechanisms:
             reward: [20, 20]
         }
 
-        comp.run(inputs=stim_list_dict)
+        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
 
         # Note: Removed decision variable OutputState from simulation results because sign is chosen randomly
         expected_sim_results_array = [
@@ -346,7 +352,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                          (Decision.output_states[
                                                                               pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
         # Model Based OCM (formerly controller)
-        evc_gratton.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
+        evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
                                                                                          features=[target_stim.input_state,
                                                                                                    flanker_stim.input_state,
                                                                                                    reward.input_state],
@@ -357,7 +363,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                                          control_signals=[
                                                                                              target_rep_control_signal,
                                                                                              flanker_rep_control_signal]))
-        evc_gratton.enable_model_based_optimizer = True
+        evc_gratton.enable_controller = True
 
         targetFeatures = [1, 1, 1]
         flankerFeatures = [1, -1, 1]
@@ -460,6 +466,437 @@ class TestModelBasedOptimizationControlMechanisms:
                                # Note: Skip decision variable OutputState
                                evc_gratton.simulation_results[simulation][1:])
 
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_after(self, benchmark, mode):
+
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+
+        comp = pnl.Composition(name='comp',
+                               controller_mode=pnl.AFTER)
+        comp.add_linear_processing_pathway([A, B])
+
+        search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
+        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+                                           function=pnl.Linear,
+                                           variable=1.0,
+                                           allocation_samples=search_range,
+                                           intensity_cost_function=pnl.Linear(slope=0.))
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                               features=[A.input_state],
+                                               objective_mechanism=objective_mech,
+                                               function=pnl.GridSearch(),
+                                               control_signals=[control_signal])
+        # objective_mech.log.set_log_conditions(pnl.OUTCOME)
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
+
+        comp.run(inputs=inputs, bin_execute=mode)
+
+        # objective_mech.log.print_entries(pnl.OUTCOME)
+        assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs, bin_execute=mode)
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    def test_model_based_ocm_before(self, benchmark, mode):
+
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+
+        comp = pnl.Composition(name='comp',
+                               controller_mode=pnl.BEFORE)
+        comp.add_linear_processing_pathway([A, B])
+
+        search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
+        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+                                           function=pnl.Linear,
+                                           variable=1.0,
+                                           allocation_samples=search_range,
+                                           intensity_cost_function=pnl.Linear(slope=0.))
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                               features=[A.input_state],
+                                               objective_mechanism=objective_mech,
+                                               function=pnl.GridSearch(),
+                                               control_signals=[control_signal])
+        # objective_mech.log.set_log_conditions(pnl.OUTCOME)
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
+
+        comp.run(inputs=inputs, bin_execute=mode)
+
+        # objective_mech.log.print_entries(pnl.OUTCOME)
+        assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        benchmark(comp.run, inputs, bin_execute=mode)
+
+    def test_model_based_ocm_with_buffer(self):
+
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+
+        comp = pnl.Composition(name='comp',
+                               controller_mode=pnl.BEFORE)
+        comp.add_linear_processing_pathway([A, B])
+
+        search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
+        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+                                           function=pnl.Linear,
+                                           variable=1.0,
+                                           allocation_samples=search_range,
+                                           intensity_cost_function=pnl.Linear(slope=0.))
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                               features=[A.input_state],
+                                               feature_function=pnl.Buffer(history=2),
+                                               objective_mechanism=objective_mech,
+                                               function=pnl.GridSearch(),
+                                               control_signals=[control_signal])
+        objective_mech.log.set_log_conditions(pnl.OUTCOME)
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
+
+        for i in range(1, len(ocm.input_states)):
+            ocm.input_states[i].function.reinitialize()
+        comp.run(inputs=inputs, retain_old_simulation_data=True)
+
+        log = objective_mech.log.nparray_dictionary()
+
+        # "outer" composition
+        assert np.allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
+
+        # preprocess to ignore control allocations
+        log_parsed = {}
+        for key, value in log.items():
+            cleaned_key = re.sub(r'comp-sim-(\d).*', r'\1', key)
+            log_parsed[cleaned_key] = value
+
+        # First round of simulations is only one trial.
+        # (Even though the feature fn is a Buffer, there is no history yet)
+        for i in range(0, 3):
+            assert len(log_parsed[str(i)]["Trial"]) == 1
+
+        # Second and third rounds of simulations are two trials.
+        # (The buffer has history = 2)
+        for i in range(3, 9):
+            assert len(log_parsed[str(i)]["Trial"]) == 2
+
+    def test_stability_flexibility_susan_and_sebastian(self):
+
+        # computeAccuracy(trialInformation)
+        # Inputs: trialInformation[0, 1, 2, 3]
+        # trialInformation[0] - Task Dimension : [0, 1] or [1, 0]
+        # trialInformation[1] - Stimulus Dimension: Congruent {[1, 1] or [-1, -1]} // Incongruent {[-1, 1] or [1, -1]}
+        # trialInformation[2] - Upper Threshold: Probability of DDM choosing upper bound
+        # trialInformation[3] - Lower Threshold: Probability of DDM choosing lower bound
+
+        def computeAccuracy(trialInformation):
+
+            # Unload contents of trialInformation
+            # Origin Node Inputs
+            taskInputs = trialInformation[0]
+            stimulusInputs = trialInformation[1]
+
+            # DDM Outputs
+            upperThreshold = trialInformation[2]
+            lowerThreshold = trialInformation[3]
+
+            # Keep Track of Accuracy
+            accuracy = []
+
+            # Beginning of Accuracy Calculation
+            colorTrial = (taskInputs[0] == 1)
+            motionTrial = (taskInputs[1] == 1)
+
+            # Based on the task dimension information, decide which response is "correct"
+            # Obtain accuracy probability from DDM thresholds in "correct" direction
+            if colorTrial:
+                if stimulusInputs[0] == 1:
+                    accuracy.append(upperThreshold)
+                elif stimulusInputs[0] == -1:
+                    accuracy.append(lowerThreshold)
+
+            if motionTrial:
+                if stimulusInputs[1] == 1:
+                    accuracy.append(upperThreshold)
+                elif stimulusInputs[1] == -1:
+                    accuracy.append(lowerThreshold)
+
+            # Accounts for initialization runs that have no variable input
+            if len(accuracy) == 0:
+                accuracy = [0]
+
+            # print("Accuracy: ", accuracy[0])
+            # print()
+
+            return [accuracy]
+
+        # BEGIN: Composition Construction
+
+        # Constants as defined in Musslick et al. 2018
+        tau = 0.9  # Time Constant
+        DRIFT = 1  # Drift Rate
+        STARTING_POINT = 0.0  # Starting Point
+        THRESHOLD = 0.0475  # Threshold
+        NOISE = 0.04  # Noise
+        T0 = 0.2  # T0
+
+        # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
+        # Origin Node
+        taskLayer = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                          size=2,
+                                          function=pnl.Linear(slope=1, intercept=0),
+                                          output_states=[pnl.RESULT],
+                                          name='Task Input [I1, I2]')
+
+        # Stimulus Layer: [Color Stimulus, Motion Stimulus]
+        # Origin Node
+        stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                             size=2,
+                                             function=pnl.Linear(slope=1, intercept=0),
+                                             output_states=[pnl.RESULT],
+                                             name="Stimulus Input [S1, S2]")
+
+        # Activation Layer: [Color Activation, Motion Activation]
+        # Recurrent: Self Excitation, Mutual Inhibition
+        # Controlled: Gain Parameter
+        activation = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
+                                                    function=pnl.Logistic(gain=1.0),
+                                                    matrix=[[1.0, -1.0],
+                                                            [-1.0, 1.0]],
+                                                    integrator_mode=True,
+                                                    integrator_function=pnl.AdaptiveIntegrator(rate=(tau)),
+                                                    initial_value=np.array([[0.0, 0.0]]),
+                                                    output_states=[pnl.RESULT],
+                                                    name='Task Activations [Act 1, Act 2]')
+
+        # Hadamard product of Activation and Stimulus Information
+        nonAutomaticComponent = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                                      size=2,
+                                                      function=pnl.Linear(slope=1, intercept=0),
+                                                      input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                      output_states=[pnl.RESULT],
+                                                      name='Non-Automatic Component [S1*Activity1, S2*Activity2]')
+
+        # Summation of nonAutomatic and Automatic Components
+        ddmCombination = pnl.TransferMechanism(size=1,
+                                               function=pnl.Linear(slope=1, intercept=0),
+                                               input_states=pnl.InputState(combine=pnl.SUM),
+                                               output_states=[pnl.RESULT],
+                                               name="Drift = (S1 + S2) + (S1*Activity1 + S2*Activity2)")
+
+        decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=DRIFT,
+                                                                      starting_point=STARTING_POINT,
+                                                                      threshold=THRESHOLD,
+                                                                      noise=NOISE,
+                                                                      t0=T0),
+                                output_states=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
+                                               pnl.PROBABILITY_UPPER_THRESHOLD,
+                                               pnl.PROBABILITY_LOWER_THRESHOLD],
+                                name='DDM')
+
+        taskLayer.set_log_conditions([pnl.RESULT])
+        stimulusInfo.set_log_conditions([pnl.RESULT])
+        activation.set_log_conditions([pnl.RESULT, "mod_gain"])
+        nonAutomaticComponent.set_log_conditions([pnl.RESULT])
+        ddmCombination.set_log_conditions([pnl.RESULT])
+        decisionMaker.set_log_conditions([pnl.PROBABILITY_UPPER_THRESHOLD, pnl.PROBABILITY_LOWER_THRESHOLD,
+                                          pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME])
+
+        # Composition Creation
+
+        stabilityFlexibility = pnl.Composition(controller_mode=pnl.BEFORE)
+
+        # Node Creation
+        stabilityFlexibility.add_node(taskLayer)
+        stabilityFlexibility.add_node(activation)
+        stabilityFlexibility.add_node(nonAutomaticComponent)
+        stabilityFlexibility.add_node(stimulusInfo)
+        stabilityFlexibility.add_node(ddmCombination)
+        stabilityFlexibility.add_node(decisionMaker)
+
+        # Projection Creation
+        stabilityFlexibility.add_projection(sender=taskLayer, receiver=activation)
+        stabilityFlexibility.add_projection(sender=activation, receiver=nonAutomaticComponent)
+        stabilityFlexibility.add_projection(sender=stimulusInfo, receiver=nonAutomaticComponent)
+        stabilityFlexibility.add_projection(sender=stimulusInfo, receiver=ddmCombination)
+        stabilityFlexibility.add_projection(sender=nonAutomaticComponent, receiver=ddmCombination)
+        stabilityFlexibility.add_projection(sender=ddmCombination, receiver=decisionMaker)
+
+        # Beginning of Controller
+
+        # Grid Search Range
+        searchRange = pnl.SampleSpec(start=1.0, stop=1.9, num=10)
+
+        # Modulate the GAIN parameter from activation layer
+        # Initalize cost function as 0
+        signal = pnl.ControlSignal(projections=[(pnl.GAIN, activation)],
+                                   function=pnl.Linear,
+                                   variable=1.0,
+                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                   allocation_samples=searchRange)
+
+        # Use the computeAccuracy function to obtain selection values
+        # Pass in 4 arguments whenever computeRewardRate is called
+        objectiveMechanism = pnl.ObjectiveMechanism(monitor=[taskLayer, stimulusInfo,
+                                                             (pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker),
+                                                             (pnl.PROBABILITY_LOWER_THRESHOLD, decisionMaker)],
+                                                    function=computeAccuracy,
+                                                    name="Controller Objective Mechanism")
+
+        #  Sets trial history for simulations over specified signal search parameters
+        metaController = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
+                                                          features=[taskLayer.input_state, stimulusInfo.input_state],
+                                                          feature_function=pnl.Buffer(history=10),
+                                                          name="Controller",
+                                                          objective_mechanism=objectiveMechanism,
+                                                          function=pnl.GridSearch(),
+                                                          control_signals=[signal])
+
+        stabilityFlexibility.add_controller(metaController)
+        stabilityFlexibility.enable_controller = True
+        # stabilityFlexibility.model_based_optimizer_mode = pnl.BEFORE
+
+        for i in range(1, len(stabilityFlexibility.controller.input_states)):
+            stabilityFlexibility.controller.input_states[i].function.reinitialize()
+        # Origin Node Inputs
+        taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1]]
+        stimulusTrain = [[1, -1], [-1, 1], [1, -1], [-1, 1]]
+
+        inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
+        stabilityFlexibility.run(inputs)
+
+    def test_model_based_num_estimates(self):
+
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B',
+                                    function=pnl.SimpleIntegrator(rate=1))
+
+        comp = pnl.Composition(name='comp')
+        comp.add_linear_processing_pathway([A, B])
+
+        search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
+        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+                                           function=pnl.Linear,
+                                           variable=1.0,
+                                           allocation_samples=search_range,
+                                           intensity_cost_function=pnl.Linear(slope=0.))
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                               features=[A.input_state],
+                                               objective_mechanism=objective_mech,
+                                               function=pnl.GridSearch(),
+                                               num_estimates=5,
+                                               control_signals=[control_signal])
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]]]}
+
+        comp.run(inputs=inputs,
+                 num_trials=2)
+
+        assert np.allclose(comp.simulation_results,
+                           [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
+        assert np.allclose(comp.results,
+                           [[np.array([1.])], [np.array([1.75])]])
+
+    def test_model_based_ocm_no_simulations(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B', function=pnl.SimpleIntegrator(rate=1))
+
+        comp = pnl.Composition(name='comp')
+        comp.add_linear_processing_pathway([A, B])
+
+        control_signal = pnl.ControlSignal(
+            projections=[(pnl.SLOPE, A)],
+            function=pnl.Linear,
+            variable=1.0,
+            allocation_samples=[1, 2, 3],
+            intensity_cost_function=pnl.Linear(slope=0.)
+        )
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(
+            agent_rep=comp,
+            features=[A.input_state],
+            objective_mechanism=objective_mech,
+            function=pnl.GridSearch(),
+            num_estimates=1,
+            control_signals=[control_signal],
+            search_statefulness=False,
+        )
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]]]}
+
+        comp.run(inputs=inputs, num_trials=1)
+
+        # initial 1 + each allocation sample (1, 2, 3) integrated
+        assert B.parameters.value.get(comp) == 7
+
+    def test_grid_search_random_selection(self):
+        A = pnl.ProcessingMechanism(name='A')
+
+        A.log.set_log_conditions(items="mod_slope")
+        B = pnl.ProcessingMechanism(name='B',
+                                    function=pnl.Logistic())
+
+        comp = pnl.Composition(name='comp')
+        comp.add_linear_processing_pathway([A, B])
+
+        search_range = pnl.SampleSpec(start=15., stop=35., step=5)
+        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
+                                           function=pnl.Linear,
+                                           variable=1.0,
+                                           allocation_samples=search_range,
+                                           intensity_cost_function=pnl.Linear(slope=0.))
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                               features=[A.input_state],
+                                               objective_mechanism=objective_mech,
+                                               function=pnl.GridSearch(select_randomly_from_optimal_values=True),
+                                               control_signals=[control_signal])
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]]]}
+
+        comp.run(inputs=inputs,
+                 num_trials=10,
+                 execution_id='outer_comp')
+
+        log_arr = A.log.nparray_dictionary()
+
+        # control signal value (mod slope) is chosen randomly from all of the control signal values
+        # that correspond to a net outcome of 1
+        assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
+                           log_arr['outer_comp']['mod_slope'])
+
 class TestSampleIterator:
 
     def test_int_step(self):
@@ -503,7 +940,7 @@ class TestSampleIterator:
         assert next(sample_iterator, None) is None
 
     def test_neither_num_nor_step(self):
-        with pytest.raises(OptimizationFunctionError) as error_text:
+        with pytest.raises(SampleIteratorError) as error_text:
             SampleSpec(start=0,
                        stop=10)
         assert "Must specify one of 'step', 'num' or 'function'" in str(error_text.value)
@@ -534,7 +971,7 @@ class TestSampleIterator:
         spec = SampleSpec(function=fun)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589]
+        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
 
         for i in range(5):
             assert np.allclose(next(sample_iterator), expected[i])
@@ -545,7 +982,7 @@ class TestSampleIterator:
                           num=4)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.400157208367223, 5.978737984105739, 7.240893199201458, 6.867557990149967]
+        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
 
         for i in range(4):
             assert np.allclose(next(sample_iterator), expected[i])
@@ -571,3 +1008,4 @@ class TestSampleIterator:
         assert sample_iterator.start == 1
         assert sample_iterator.stop is None
         assert sample_iterator.num == len(sample_list)
+

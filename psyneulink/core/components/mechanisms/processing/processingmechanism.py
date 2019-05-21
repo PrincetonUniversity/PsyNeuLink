@@ -287,7 +287,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
                                                   output_states=output_states,

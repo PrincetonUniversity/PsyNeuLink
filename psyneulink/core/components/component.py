@@ -417,7 +417,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
 from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParametersBase
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
@@ -871,6 +871,12 @@ class Component(object, metaclass=ComponentsMeta):
                     :type: numpy.ndarray
                     :read only: True
 
+                has_initializers
+                    see `has_initializers <Component.has_initializers>`
+
+                    :default value: False
+                    :type: bool
+
         """
         variable = Parameter(np.array([0]), read_only=True)
         value = Parameter(np.array([0]), read_only=True)
@@ -1099,6 +1105,10 @@ class Component(object, metaclass=ComponentsMeta):
                     pass
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
+
+        # TODO: the below overrides setting default values to None context,
+        # at least in stateless parameters. Possibly more. Below should be
+        # removed eventually
 
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
@@ -2303,6 +2313,15 @@ class Component(object, metaclass=ComponentsMeta):
             if param.setter is not None:
                 param._initialize_from_context(execution_context, base_execution_context, override)
 
+    def _delete_contexts(self, *execution_contexts, check_simulation_storage=False):
+        for comp in self._dependent_components:
+            comp._delete_contexts(*execution_contexts, check_simulation_storage=check_simulation_storage)
+
+        for param in self.stateful_parameters:
+            if not check_simulation_storage or not param.retain_old_simulation_data:
+                for execution_context in execution_contexts:
+                    param.delete(execution_context)
+
     def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
         context_param = self.parameters.context.get(execution_id)
         if context_param is None:
@@ -2319,6 +2338,20 @@ class Component(object, metaclass=ComponentsMeta):
         if propagate:
             for comp in self._dependent_components:
                 comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+    def _set_all_parameter_properties_recursively(self, **kwargs):
+        # sets a property of all parameters for this component and all its dependent components
+        # used currently for disabling history, but setting logging could use this
+        for param_name in self.parameters.names():
+            parameter = getattr(self.parameters, param_name)
+            for (k, v) in kwargs.items():
+                try:
+                    setattr(parameter, k, v)
+                except ParameterError as e:
+                    logger.warning(str(e) + ' Parameter has not been modified.')
+
+        for comp in self._dependent_components:
+            comp._set_all_parameter_properties_recursively(**kwargs)
 
     def _set_multiple_parameter_values(self, execution_id, override=False, **kwargs):
         """
@@ -2800,9 +2833,11 @@ class Component(object, metaclass=ComponentsMeta):
             )
         )
 
+        # Specification is the function of a (non-instantiated?) Function class
         # KDM 11/12/18: parse an instance of a Function's .function method to itself
         # (not sure how worth it this is, but it existed in Scripts/Examples/Reinforcement-Learning REV)
         # purposely not attempting to parse a class Function.function
+        # JDC 3/6/19:  ?what about parameter states for its parameters (see python function problem below)?
         if isinstance(function, types.MethodType):
             try:
                 if isinstance(function.__self__, Function):
@@ -2810,31 +2845,32 @@ class Component(object, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
+        # Specification is a standard python function, so wrap as a UserDefnedFunction
+        # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
         if isinstance(function, types.FunctionType):
-            self.function = UserDefinedFunction(
-                default_variable=function_variable,
-                custom_function=function,
-                context=context
-            )
-            self.function_params = dict(self.function.cust_fct_params)
+            self.function = UserDefinedFunction(default_variable=function_variable,
+                                                custom_function=function,
+                                                context=context)
+            self.function_params = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+            for param_name in self.function.cust_fct_params:
+                self.function_params.__additem__(param_name, self.function.cust_fct_params[param_name])
+
+        # Specification is an already implemented Function
         elif isinstance(function, Function):
             if not iscompatible(function_variable, function.defaults.variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
                     raise ComponentError(
-                        'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                        ' of the component {3} to which it is being assigned'.format(
-                            function.defaults.variable,
-                            function,
-                            function_variable,
-                            self
-                        )
+                            'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
+                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
+                            format(function.defaults.variable, function, function_variable, self)
                     )
                 elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
                     if not iscompatible(function_variable, function_increased_dim):
                         raise ComponentError(
                             'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                            ' of the component {3} to which it is being assigned'.format(
+                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
+                                format(
                                 function.defaults.variable,
                                 function,
                                 function_variable,
@@ -2860,6 +2896,9 @@ class Component(object, metaclass=ComponentsMeta):
             self.function._instantiate_value(context)
 
             self.function.context.initialization_status = ContextFlags.INITIALIZED
+
+        # Specification is Function class
+        # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
         elif inspect.isclass(function) and issubclass(function, Function):
             kwargs_to_instantiate = function.class_defaults.values().copy()
             if function_params is not None:
@@ -2883,6 +2922,7 @@ class Component(object, metaclass=ComponentsMeta):
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
             self.function = function(default_variable=function_variable, **kwargs)
+
         else:
             raise ComponentError('Unsupported function type: {0}, function={1}'.format(type(function), function))
 
@@ -3282,6 +3322,37 @@ class Component(object, metaclass=ComponentsMeta):
         """
         self.log.log_values(entries)
 
+    def _dict_summary(self):
+        basic_attributes = ['name']
+
+        # lifted from LLVM
+        parameter_black_list = {'function', 'variable', 'value', 'context'}
+        parameters_dict = {}
+
+        for p in self.parameters:
+            if p.user and p.name not in parameter_black_list:
+                val = p.get(self.most_recent_execution_context)
+
+                if isinstance(val, np.ndarray):
+                    val = f'numpy.array({val})'
+                elif not isinstance(val, numbers.Number) and val is not None:
+                    val = str(val)
+
+                parameters_dict[p.name] = val
+
+        function_dict = {'function': self.function._dict_summary()} if (hasattr(self, 'function') and isinstance(self.function, Component)) else {}
+
+        return {
+            **{attr: getattr(self, attr) for attr in basic_attributes},
+            **{'parameters': parameters_dict},
+            **function_dict,
+            **{'type': self.__class__.__name__}
+        }
+
+    def json_summary(self):
+        import json
+        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
+
     @property
     def logged_items(self):
         """Dictionary of all items that have entries in the log, and their currently assigned `ContextFlags`\\s
@@ -3385,12 +3456,6 @@ class Component(object, metaclass=ComponentsMeta):
             Refers to the defaults of this object's class
         """
         return self.__class__.defaults
-
-    # left in for compatibility with llvm, see note in builder_context.py (search for <_instance_defaults_note>)
-    # DEPRECATED
-    @property
-    def _instance_defaults(self):
-        return self.defaults
 
     @property
     def is_pnl_inherent(self):

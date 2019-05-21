@@ -28,7 +28,10 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+from psyneulink.core.globals.keywords import \
+    CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
+    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
@@ -230,7 +233,7 @@ COMMENT
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
                                                   transfer_fct=transfer_fct,
@@ -375,7 +378,7 @@ COMMENT
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
         my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        matrix, builder = ctx.get_param_ptr(self, builder, my_params, MATRIX)
+        matrix = ctx.get_param_ptr(self, builder, my_params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -394,6 +397,7 @@ COMMENT
         # Transfer Function if configured
         trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
         if self.transfer_fct is not None:
+            #FIXME: implement this
             assert False
         else:
             builder.store(builder.load(dot_out), trans_out)
@@ -432,10 +436,10 @@ COMMENT
         matrix = self.get_current_function_param(MATRIX, execution_id)
 
         current = variable
+
+        transformed = np.dot(matrix * self._hollow_matrix, variable)
         if self.transfer_fct is not None:
-            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, variable))
-        else:
-            transformed = np.dot(matrix * self._hollow_matrix, variable)
+            transformed = self.transfer_fct(transformed)
 
         # # MODIFIED 11/12/15 OLD:
         # if self.metric is ENERGY:
@@ -566,7 +570,7 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
                                                   params=params)
@@ -621,7 +625,7 @@ class Distance(ObjectiveFunction):
         denom = np.sqrt(np.sum(v1_norm ** 2) * np.sum(v2_norm ** 2)) or EPSILON
         return np.sum(v1_norm * v2_norm) / denom
 
-    def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
+    def __gen_llvm_sum_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
         val1 = builder.load(ptr1)
@@ -634,7 +638,7 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, abs_val)
         builder.store(new_acc, acc)
 
-    def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
+    def __gen_llvm_sum_diff_squares(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
         val1 = builder.load(ptr1)
@@ -660,30 +664,40 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fsub(acc_val, prod)
         builder.store(new_acc, acc)
 
-    def __gen_llvm_energy(self, builder, index, ctx, v1, v2, acc):
+    def __gen_llvm_sum_product(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
         val1 = builder.load(ptr1)
         val2 = builder.load(ptr2)
 
         prod = builder.fmul(val1, val2)
-        prod = builder.fmul(prod, ctx.float_ty(0.5))
 
         acc_val = builder.load(acc)
-        new_acc = builder.fsub(acc_val, prod)
+        new_acc = builder.fadd(acc_val, prod)
         builder.store(new_acc, acc)
 
-    def __gen_llvm_correlate(self, builder, index, ctx, v1, v2, acc):
+    def __gen_llvm_cosine(self, builder, index, ctx, v1, v2, numer_acc, denom1_acc, denom2_acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
         val1 = builder.load(ptr1)
         val2 = builder.load(ptr2)
 
-        # This should be conjugate, but we don't deal with complex numbers
-        mul = builder.fmul(val1, val2)
-        acc_val = builder.load(acc)
-        new_acc = builder.fadd(acc_val, mul)
-        builder.store(new_acc, acc)
+        # Numerator
+        numer = builder.load(numer_acc)
+        val = builder.fmul(val1, val2)
+        numer = builder.fadd(numer, val)
+        builder.store(numer, numer_acc)
+
+        # Denominator1
+        denom = builder.load(denom1_acc)
+        val = builder.fmul(val1, val1)
+        denom = builder.fadd(denom, val)
+        builder.store(denom, denom1_acc)
+        # Denominator2
+        denom = builder.load(denom2_acc)
+        val = builder.fmul(val2, val2)
+        denom = builder.fadd(denom, val)
+        builder.store(denom, denom2_acc)
 
     def __gen_llvm_max_diff(self, builder, index, ctx, v1, v2, max_diff_ptr):
         ptr1 = builder.gep(v1, [index])
@@ -741,6 +755,11 @@ class Distance(ObjectiveFunction):
         builder.store(acc_y2_val, acc_y2)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+        # FIXME python version also ignores other vectors
+        assert arg_in.type.pointee.count >= 2
+
         v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
@@ -748,14 +767,25 @@ class Distance(ObjectiveFunction):
         builder.store(ctx.float_ty(0), acc_ptr)
 
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
-        if self.metric == DIFFERENCE:
-            inner = functools.partial(self.__gen_llvm_difference, **kwargs)
+        if self.metric == DIFFERENCE or self.metric == NORMED_L0_SIMILARITY:
+            inner = functools.partial(self.__gen_llvm_sum_difference, **kwargs)
         elif self.metric == EUCLIDEAN:
-            inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
+            inner = functools.partial(self.__gen_llvm_sum_diff_squares, **kwargs)
+        elif self.metric == ENERGY:
+            inner = functools.partial(self.__gen_llvm_sum_product, **kwargs)
         elif self.metric == CROSS_ENTROPY:
             inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
-        elif self.metric == ENERGY:
-            inner = functools.partial(self.__gen_llvm_energy, **kwargs)
+        elif self.metric is COSINE:
+            del kwargs['acc']
+            numer_acc = builder.alloca(ctx.float_ty)
+            denom1_acc = builder.alloca(ctx.float_ty)
+            denom2_acc = builder.alloca(ctx.float_ty)
+            for loc in numer_acc, denom1_acc, denom2_acc:
+                builder.store(ctx.float_ty(0), loc)
+            kwargs['numer_acc'] = numer_acc
+            kwargs['denom1_acc'] = denom1_acc
+            kwargs['denom2_acc'] = denom2_acc
+            inner = functools.partial(self.__gen_llvm_cosine, **kwargs)
         elif self.metric == MAX_ABS_DIFF:
             del kwargs['acc']
             max_diff_ptr = builder.alloca(ctx.float_ty)
@@ -780,10 +810,6 @@ class Distance(ObjectiveFunction):
         else:
             raise RuntimeError('Unsupported metric')
 
-        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
-        assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
-        assert arg_in.type.pointee.count == 2
-
         input_length = arg_in.type.pointee.element.count
         vector_length = ctx.int32_ty(input_length)
         with pnlvm.helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
@@ -792,10 +818,27 @@ class Distance(ObjectiveFunction):
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
         fabs = ctx.get_builtin("fabs", [ctx.float_ty])
         ret = builder.load(acc_ptr)
-        if self.metric == EUCLIDEAN:
+        if self.metric == NORMED_L0_SIMILARITY:
+            ret = builder.fdiv(ret, ret.type(4))
+            ret = builder.fsub(ret.type(1), ret)
+        elif self.metric == ENERGY:
+            ret = builder.fmul(ret, ret.type(-0.5))
+        elif self.metric == EUCLIDEAN:
             ret = builder.call(sqrt, [ret])
         elif self.metric == MAX_ABS_DIFF:
             ret = builder.load(max_diff_ptr)
+        elif self.metric is COSINE:
+            numer = builder.load(numer_acc)
+            denom1 = builder.load(denom1_acc)
+            denom1 = builder.call(sqrt, [denom1])
+            denom2 = builder.load(denom2_acc)
+            denom2 = builder.call(sqrt, [denom2])
+            denom = builder.fmul(denom1, denom2)
+
+            ret = builder.fdiv(numer, denom)
+            ret = builder.call(fabs, [ret])
+            ret = builder.fsub(ret.type(1), ret)
+
         elif self.metric == CORRELATION:
             n = ctx.float_ty(input_length)
             acc_xy = builder.load(acc_xy_ptr)
@@ -850,12 +893,17 @@ class Distance(ObjectiveFunction):
             ret = builder.call(fabs, [corr])
             ret = builder.fsub(ctx.float_ty(1), ret)
 
-        # MAX_ABS_DIFF ignores normalization
-        if self.normalize and self.metric != MAX_ABS_DIFF and self.metric != CORRELATION:
+        # MAX_ABS_DIFF, CORRELATION, and COSINE ignore normalization
+        ignores = frozenset((MAX_ABS_DIFF, CORRELATION, COSINE))
+        if self.normalize and self.metric not in ignores:
             norm_factor = input_length
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
+        # Get rid of nesting
+        # TODO: fix this properly
+        while arg_out.type.pointee != ret.type:
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(ret, arg_out)
 
         return builder
@@ -890,6 +938,10 @@ class Distance(ObjectiveFunction):
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
+
+        # Similarity (used specifically for testing Compilation of Predator-Prey Model)
+        elif self.metric is NORMED_L0_SIMILARITY:
+            result = 1-np.sum(np.abs(v1 - v2))/4
 
         # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:

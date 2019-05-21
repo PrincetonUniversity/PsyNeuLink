@@ -815,14 +815,17 @@ class Function_Base(Function):
 
     def _get_context_initializer(self, execution_id):
         try:
-            vals = (getattr(self.parameters, sa).get(execution_id).tolist() for sa in self.stateful_attributes)
-            return pnlvm._tupleize(vals)
+            stateful = (getattr(self.parameters, sa).get(execution_id) for sa in self.stateful_attributes)
+            # Skip first element of random state (id string)
+            lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
+
+            return pnlvm._tupleize(lists)
         except AttributeError:
             return tuple([])
 
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params
-        black_list = {'function', 'variable', 'value', 'context'}
+        black_list = {'function', 'variable', 'value', 'context', 'initializer'}
         try:
             # Don't list stateful params, the are included in context
             black_list.update(self.stateful_attributes)
@@ -845,6 +848,8 @@ class Function_Base(Function):
         for p in self._get_compilation_params(execution_id):
             param = p.get(execution_id)
             try:
+                # Existence of parameter state changes the shape to array
+                # the base value should remain the same though
                 self.owner.parameter_states[p.name]
                 param = [param]
             except (AttributeError, TypeError):
@@ -974,7 +979,7 @@ class ArgumentTherapy(Function_Base):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(propensity=propensity,
                                                   pertinacity=pertincacity,
                                                   params=params)
@@ -1135,7 +1140,7 @@ class EVCAuxiliaryFunction(Function_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 

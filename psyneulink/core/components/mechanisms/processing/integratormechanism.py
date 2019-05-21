@@ -192,7 +192,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                 function
                     see `function <IntegratorMechanism.function>`
 
-                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), noise=0.0, offset=0.0, previous_value=numpy.array([0]), rate=0.5)
+                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
                     :type: `Function`
 
         """
@@ -216,7 +216,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   output_states=output_states,
                                                   function=function,

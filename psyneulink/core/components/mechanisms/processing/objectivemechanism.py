@@ -597,11 +597,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if MONITORED_OUTPUT_STATES in kwargs:
             if monitor:
-                raise ObjectiveMechanismError("Can't specifiy both {} ({}) and {} ({}) args of {} specified; pick one!".
-                                              format(repr(MONITOR), monitor,
-                                                     repr(MONITORED_OUTPUT_STATES), kwargs[MONITORED_OUTPUT_STATES]))
-            warnings.warn('Use of {} as arg of {} is deprecated;  use {} instead'.
-                          format(repr(MONITORED_OUTPUT_STATES), self.__class__.__name__, repr(MONITOR)))
+                raise ObjectiveMechanismError(f'Can\'t specifiy both {repr(MONITOR)} ({monitor}) '
+                                              f'and {repr(MONITORED_OUTPUT_STATES)} ({kwargs[MONITORED_OUTPUT_STATES]})'
+                                              f' args of {self.name} specified; pick one!')
+            warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
+                          f'use {repr(MONITOR)} instead')
             monitor = kwargs[MONITORED_OUTPUT_STATES]
 
         monitor = monitor or None # deal with possibility of empty list
@@ -609,7 +609,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is OUTCOME:
             output_states = [OUTCOME]
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   output_states=output_states,
                                                   function=function,
@@ -707,9 +707,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             state.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
             register_instance(state, state.name, InputState, self._stateRegistry, INPUT_STATE)
 
-    def add_monitored_output_states(self, monitored_output_states_specs, context=None):
-        return self.add_to_monitor(monitored_output_states_specs, context=None)
-
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
 
@@ -760,7 +757,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # There should be only one ProjectionTuple specified,
             #    that designates the OutputState and (possibly) a Projection from it
             if len(input_state[PARAMS][PROJECTIONS])!=1:
-                raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitored_output_states_specs "
+                raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitor_specs "
                                               "for {} (item: {})".format(self.name, spec))
             projection_tuple = input_state[PARAMS][PROJECTIONS][0]
             # If Projection is specified, use its value
@@ -809,6 +806,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             if any(exponent is not None for exponent in exponents):
                 self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
+
 
     @property
     def monitor(self):

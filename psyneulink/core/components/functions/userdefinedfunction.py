@@ -13,7 +13,8 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import ADDITIVE_PARAM, FunctionError, Function_Base, MULTIPLICATIVE_PARAM
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, CUSTOM_FUNCTION, PARAMETER_STATE_PARAMS, PARAMS, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, VARIABLE
+from psyneulink.core.globals.keywords import CONTEXT, CUSTOM_FUNCTION, PARAMETER_STATE_PARAMS, PARAMS, SELF, \
+    USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, VARIABLE, OWNER, EXECUTION_ID
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
 from psyneulink.core.globals.utilities import call_with_pruned_args, iscompatible
@@ -34,10 +35,10 @@ class UserDefinedFunction(Function_Base):
     A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
     as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a `Component
     <Component>`.  This is done automatically if a Python function or method is assigned as the `function
-    <Component.function>` attribute of a Component.  A Python function or method can also be wrapped on its own,
-    by calling the UserDefinedFunction constructor, and assigning the Python function or method as its
-    **custom_function** argument.  The Python function or method must obey the following conventions to be treated
-    correctly as a UserDefinedFunction (UDF):
+    <Component.function>` attribute of a Component.  A Python function or method can also be wrapped explicitly,
+    using the UserDefinedFunction constructor, and assigning the Python function or method to its **custom_function**
+    argument.  A Python function or method wrapped as a UDF must obey the following conventions to be treated
+    correctly:
 
     .. _UDF_Variable:
 
@@ -64,9 +65,11 @@ class UserDefinedFunction(Function_Base):
     ..
     .. _UDF_Params_Context:
 
-    * It may include **context** and **params** arguments;  these are not required, but can be included to receive
-      information about the current conditions of execution.  When the function or method is called, an initial attempt
-      is made to do so with these arguments; if that fails, it is called again without them.
+    * It may include **self**, **owner**, **execution_id**, **context** and/or **params** arguments;  none of these are
+      required, but can be included to gain access to the standard `Function` parameters (such as the history of its
+      parameter values), those of the `Component` to which it has been assigned (i.e., its `owner <Function.owner>`,
+      and/or receive information about the current conditions of execution.   When the function or method is called,
+      an initial attempt is made to pass these arguments; if that fails, it is called again without them.
     ..
     .. _UDF_Modulatory_Params:
 
@@ -384,13 +387,30 @@ class UserDefinedFunction(Function_Base):
             args = {}
             defaults = {}
             for arg_name, arg in signature(custom_function).parameters.items():
+
+                # MODIFIED 3/6/19 NEW: [JDC]
+                # Custom function specified owner as arg
+                if arg_name in {SELF, OWNER, EXECUTION_ID}:
+                    # Flag for inclusion in call to function
+                    if arg_name is SELF:
+                        self.self_arg = True
+                    elif arg_name is OWNER:
+                        self.owner_arg = True
+                    else:
+                        self.execution_id_arg = True
+                    # Skip rest, as these don't need to be params
+                    continue
+                # MODIFIED 3/6/19 END
+
                 # Use definition from the function as default;
                 #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
                 #    while assigning an actual value to paramClassDefaults (in _assign_args_to_params_dicts);
                 if arg.default is _empty:
                     defaults[arg_name] = None
+
                 else:
                     defaults[arg_name] = arg.default
+
                 # If arg is specified in the constructor for the UDF, assign that as its value
                 if arg_name in kwargs:
                     args[arg_name] = kwargs[arg_name]
@@ -406,6 +426,10 @@ class UserDefinedFunction(Function_Base):
 
             return variable, args, defaults
 
+        self.self_arg = False
+        self.owner_arg = False
+        self.execution_id_arg = False
+
         # Get variable and names of other any other args for custom_function and assign to cust_fct_params
         if params is not None and CUSTOM_FUNCTION in params:
             custom_function = params[CUSTOM_FUNCTION]
@@ -415,6 +439,7 @@ class UserDefinedFunction(Function_Base):
             raise FunctionError("Assignment of a built-in function or method ({}) to a {} is not supported".
                                 format(custom_function, self.__class__.__name__))
 
+        # If params is specified as arg in custom function's definition, move it to params in UDF's constructor
         if PARAMS in self.cust_fct_params:
             if self.cust_fct_params[PARAMS]:
                 if params:
@@ -423,6 +448,7 @@ class UserDefinedFunction(Function_Base):
                     params = self.cust_fct_params[PARAMS]
             del self.cust_fct_params[PARAMS]
 
+        # If context is specified as arg in custom function's definition, delete it
         if CONTEXT in self.cust_fct_params:
             if self.cust_fct_params[CONTEXT]:
                 context = self.cust_fct_params[CONTEXT]
@@ -432,12 +458,17 @@ class UserDefinedFunction(Function_Base):
         if default_variable is None:
             default_variable = cust_fct_variable
         elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
-            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} ({}) "
-                                "conflicts with specification of first argument in constructor for {} itself ({})".
-                                format(self.__class__.__name__, custom_function.__name__,
-                                       owner.name, default_variable, custom_function.__name__, cust_fct_variable))
+            owner_name = ' ({})'.format(owner.name) if owner else ''
+            cust_fct_name = repr(custom_function.__name__)
+            raise FunctionError("Value passed as \'default_variable\' for {} {} ({}) conflicts with specification of "
+                                "first argument in constructor for {} itself ({}). "
+                                "Try modifying specification of \'default_variable\' "
+                                "for object to which {} is being assigned{}, and/or insuring that "
+                                "the first argument of {} is at least a 2d array".
+                                format(self.__class__.__name__, cust_fct_name, default_variable,
+                                       cust_fct_name, cust_fct_variable, cust_fct_name, owner_name, cust_fct_name))
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(custom_function=custom_function,
                                                   params=params,
                                                   defaults=defaults,
@@ -460,24 +491,38 @@ class UserDefinedFunction(Function_Base):
 
         self._initialize_parameters()
 
-    def function(self, execution_id=None, **kwargs):
+    def function(self, variable, execution_id=None, **kwargs):
 
         # Update value of parms in cust_fct_params
         for param in self.cust_fct_params:
+
             # First check for value passed in params as runtime param:
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
                 # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
                 self.cust_fct_params[param] = self.get_current_function_param(param, execution_id)
-        kwargs.update(self.cust_fct_params)
+
+        call_params = self.cust_fct_params.copy()
+
+        # # MODIFIED 3/6/19 NEW: [JDC]
+        # Add any of these that were included in the definition of the custom function:
+        if self.self_arg:
+            call_params[SELF] = self
+        if self.owner_arg:
+            call_params[OWNER] = self.owner
+        if self.execution_id_arg:
+            call_params[EXECUTION_ID] = execution_id
+        # MODIFIED 3/6/19 END
+
+        kwargs.update(call_params)
 
         try:
             # Try calling with full list of args (including context and params)
-            value = call_with_pruned_args(self.custom_function, **kwargs)
+            value = self.custom_function(variable, **kwargs)
         except TypeError:
             # Try calling with just variable and cust_fct_params
-            value = self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
+            value = self.custom_function(variable, **call_params)
 
         return self.convert_output_type(value)
 

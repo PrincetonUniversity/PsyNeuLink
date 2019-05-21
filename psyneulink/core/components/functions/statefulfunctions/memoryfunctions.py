@@ -13,7 +13,7 @@
 Functions that store and can retrieve a record of their current input.
 
 * `Buffer`
-* `DND`
+* `ContentAddressableMemory`
 
 Overview
 --------
@@ -23,23 +23,28 @@ Functions that store and can return a record of their input.
 '''
 
 from collections.__init__ import deque, OrderedDict
+from random import choice
 
 import numpy as np
 import typecheck as tc
+import warnings
+
+from psyneulink.core import llvm as pnlvm
 
 from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
+    Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, EPSILON
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
-    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, DND_FUNCTION, MIN_VAL, NOISE, RATE
-from psyneulink.core.globals.utilities import all_within_range, parameter_spec
+    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
+    MIN_INDICATOR, NOISE, OVERWRITE, RATE, RANDOM, OLDEST, NEWEST
+from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
-__all__ = ['MemoryFunction', 'Buffer', 'DND']
+__all__ = ['MemoryFunction', 'Buffer', 'ContentAddressableMemory']
 
 
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
@@ -160,6 +165,29 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     componentName = BUFFER_FUNCTION
 
     class Parameters(StatefulFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                history
+                    see `history <Buffer.history>`
+
+                    :default value: None
+                    :type:
+
+                noise
+                    see `noise <Buffer.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                rate
+                    see `rate <Buffer.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
@@ -198,7 +226,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -323,49 +351,92 @@ RETRIEVAL_PROB = 'retrieval_prob'
 STORAGE_PROB = 'storage_prob'
 DISTANCE_FUNCTION = 'distance_function'
 SELECTION_FUNCTION = 'selection_function'
+KEYS = 0
+VALS = 1
 
 
-class DND(MemoryFunction):  # ------------------------------------------------------------------------------
+class ContentAddressableMemory(MemoryFunction):  # ---------------------------------------------------------------------
     """
-    DND(                                             \
+    ContentAddressableMemory(                        \
         default_variable=None,                       \
+        retrieval_prob=1.0                           \
+        storage_prob=1.0                             \
         rate=None,                                   \
         noise=0.0,                                   \
         initializer=None,                            \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
+        equidistant_keys_select=RANDOM,              \
+        duplicate_keys=False,                \
         max_entries=None,                            \
         params=None,                                 \
         owner=None,                                  \
         prefs=None,                                  \
         )
 
-    Implements simple form of Differential Neural Dictionary described in `Ritter et al.
-    <http://arxiv.org/abs/1805.09692>`_
+    .. _ContentAddressableMemory:
 
-    Based on implementation in `dlstm <https://github.com/qihongl/dlstm-demo>`_ by
-    `Qihong Lu <https://github.com/qihongl>`_ (see also  `Kaiser et al. <http://arxiv.org/abs/1703.03129>`_
-    and `Pritzel et al. <http://arxiv.org/abs/1703.01988>`_).
+    Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage is determined
+    by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by
+    `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
+    <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
+    Keys and values may have different lengths, but all keys must be the same length. Duplicate keys can be allowed,
+    disallowed, or overwritten using `duplicate_keys <ContentAddressableMemory.duplicate_keys>`), and selection among
+    duplicate keys or ones indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>`
+    can be specified using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
 
-    .. _DND:
+    The class also provides methods for directly retrieving an entry (`get_memory
+    <ContentAddressableMemory.get_memory>`), and adding (`add_to_memory <ContentAddressableMemory.add_to_memory>`)
+    and deleting (`delete_from_memory <ContentAddressableMemory.delete_from_memory>`) one or more entries.
 
-    * First, with probability `retrieval_prob <DND.retrieval_prob>`, retrieve vector from `dict <DND.dict>` using
-      first item of `variable <DND.variable>` as key, and the matching algorithm specified by `distance_function
-      <DND.distance_function>` and `selection_function <DND.selection_function>`; if no retrieval occures,
-      an appropriately shaped zero-valued array is returned.
+    .. _ContentAddressableMemory_Structure:
+
+    Structure
+    ---------
+
+    An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
+    pairs can be assigned to the **initialzer** argument of the ContentAddressableMemory's constructor, or in
+    a call to its `reinitialize <ContentAddressableMemory.reinitialize>` method.  The current contents of the memory
+    can be inspected using the `memory <ContentAddressableMemory.memory>` attribute, which returns a list containing
+    the current entries, each as a 2 item list containing a key-value pair.
+
+    .. _ContentAddressableMemory_Execution:
+
+    Execution
+    ---------
+
+    When `function <ContentAddressableMemory.function>` is executed, it first retrieves the
+    item in `memory <ContentAddressableMemory.memory>` with the key that most closely matches the key of the item
+    (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
+    If key of the pair in the call is an exact match of a key in memory and `duplicate_keys
+    <ContentAddressableMemory.duplicate_keys>` is False, then the matching item is returned, but the
+    pair in the call is not stored. These steps are described in more detail below:
+
+    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, an entry is retrieved from
+      `memory <ContentAddressableMemory.memory>` that has a key that is closest to the one in the call (first item of
+      `variable <ContentAddressableMemory.variable>`), as determined by the `distance_function
+      <ContentAddressableMemory.distance_function>` and `selection_function
+      <ContentAddressableMemory.selection_function>`.  The `distance_function
+      <ContentAddressableMemory.distance_function>` generates a list of distances of each key in memory from the
+      one in the call;  the `selection_function <ContentAddressableMemory.selection_function>` then determines which to
+      select ones for consideration.  If more than one entry from memory is identified, `equidistant_keys_select
+      <ContentAddressableMemory.equidistant_keys_select>` is used to determine which to retrieve.  If no retrieval
+      occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory (and returned by the
+      `function <ContentAddressableMemory.function>`.
     ..
-    * Then, with probability `storage_prob <DND.storage_prob>` add new entry using the first item of `variable
-      <DND.variable>` as the key and its second item as the value. If specified, the values of the **rate** and
-      **noise** arguments are applied to the key before storing:
+    * After retrieval, the key-value pair in the call (`variable <ContentAddressableMemory.variable>`) is stored in
+     `memory <ContentAddressableMemory.memory>` with probability `storage_prob <ContentAddressableMemory.storage_prob>`.
+      If the key (`variable <ContentAddressableMemory.variable>`\[0]) is identical to one already in `memory
+      <ContentAddressableMemory.memory>` and `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
+      is set to False, storage is skipped; if it is set to *OVERWRITE*, the value of the key in memory is replaced
+      with the one in the call.  If **rate** and/or **noise** arguments are specified in the
+      construtor, it is applied to the key before storing, as follows:
 
     .. math::
         variable[1] * rate + noise
 
-    .. note::
-       * Keys in `dict <DND.dict>` are stored as tuples (since lists and arrays are not hashable);
-         they are converted to arrays for evaluation during retrieval.
-       ..
-       * All keys must be the same length (for comparision during retrieval).
+    If the number of entries exceeds `max_entries <ContentAddressableMemory.max_entries>, the first (oldest) item in
+    memory is deleted.
 
     Arguments
     ---------
@@ -375,34 +446,45 @@ class DND(MemoryFunction):  # --------------------------------------------------
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
     retrieval_prob : float in interval [0,1] : default 1.0
-        specifies probability of retrieiving a value from `dict <DND.dict>`.
+        specifies probability of retrieiving a key from `memory <ContentAddressableMemory.memory>`.
 
     storage_prob : float in interval [0,1] : default 1.0
-        specifies probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
+        specifies probability of adding `variable <ContentAddressableMemory.variable>` to `memory
+        <ContentAddressableMemory.memory>`.
 
     rate : float, list, or array : default 1.0
-        specifies a value used to multiply key (first item of `variable <DND.variable>`) before storing in `dict
-        <DND.dict>` (see `rate <DND.noise> for details).
+        specifies a value used to multiply key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `rate <ContentAddressableMemory.noise> for details).
 
     noise : float, list, array, or Function : default 0.0
-        specifies a random value added to key (first item of `variable <DND.variable>`) before storing in `dict
-        <DND.dict>` (see `noise <DND.noise> for details).
+        specifies a random value added to key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `noise <ContentAddressableMemory.noise> for details).
 
-    initializer dict : default {}
-        specifies an initial set of entries for `dict <DND.dict>`;  each key must have the same shape as
-        the first item of `variable <DND.variable>` and each value must have the same shape as its second item.
+    initializer : 3d array or list : default None
+        specifies an initial set of entries for `memory <ContentAddressableMemory.memory>`. It must be of the following
+        form: [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
+        is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
+        lists of the same length.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
-        specifies the function used during retrieval to compare the first item in `variable <DND.variable>`
-        with keys in `dict <DND.dict>`.
+        specifies the function used during retrieval to compare the first item in `variable
+        <ContentAddressableMemory.variable>` with keys in `memory <ContentAddressableMemory.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
-        <DND.distance_function>` and select the item to return.
+        <ContentAddressableMemory.distance_function>` and select the item to return.
+
+    equidistant_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
+        specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
+        `variable  <ContentAddressableMemory.variable>`.
+
+    duplicate_keys : bool | OVERWRITE : default False
+        specifies whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`
+        (see `duplicate_keys <ContentAddressableMemory.duplicate_keys for additional details>`).
 
     max_entries : int : default None
-        specifies the maximum number of entries allowed in `dict <DND.dict>` (see `max_entries <DND.max_entries for
-        additional details>`).
+        specifies the maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`
+        (see `max_entries <ContentAddressableMemory.max_entries for additional details>`).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -422,46 +504,66 @@ class DND(MemoryFunction):  # --------------------------------------------------
     ----------
 
     variable : 2d array
-        1st item (variable[0] is the key used to retrieve an enrtry from `dict <DND.dict>`, and 2nd item
-        (variable[1]) is the value of the entry, paired with key and added to the `dict <DND.dict>`.
+        1st item (variable[0] is the key used to retrieve an enrtry from `memory <ContentAddressableMemory.memory>`,
+        and 2nd item (variable[1]) is the value of the entry, paired with key and added to the `memory
+        <ContentAddressableMemory.memory>`.
 
     key_size : int
-        length of keys in `dict <DND.dict>`.
+        length of keys in `memory <ContentAddressableMemory.memory>`.
+
+    val_size : int
+        length of values in `memory <ContentAddressableMemory.memory>`.
 
     retrieval_prob : float in interval [0,1]
-        probability of retrieiving a value from `dict <DND.dict>`.
+        probability of retrieiving a value from `memory <ContentAddressableMemory.memory>`.
 
     storage_prob : float in interval [0,1]
-        probability of adding `variable <DND.variable>` to `dict <DND.dict>`.
+        probability of adding `variable <ContentAddressableMemory.variable>` to `memory <ContentAddressableMemory.memory>`.
 
     rate : float or 1d array
-        value applied multiplicatively to key (first item of `variable <DND.variable>`) before storing in `dict
-        <DND.dict>` (see `rate <Stateful_Rate>` for additional details).
+        value applied multiplicatively to key (first item of `variable <ContentAddressableMemory.variable>`) before storing in `memory
+        <ContentAddressableMemory.memory>` (see `rate <Stateful_Rate>` for additional details).
 
     noise : float, 1d array or Function
-        value added to key (first item of `variable <DND.variable>`) before storing in `dict <DND.dict>`
+        value added to key (first item of `variable <ContentAddressableMemory.variable>`) before storing in `memory <ContentAddressableMemory.memory>`
         (see `noise <Stateful_Noise>` for additional details).
 
-    initializer dict : default {}
-        initial set of entries for `dict <DND.dict>`.
+    initializer : 3d array
+        initial set of entries for `memory <ContentAddressableMemory.memory>`;  each entry is a 2d array with a key-value pair.
 
-    dict : dict
-        dictionary with current set of entries maintained by DND.
+    memory : list
+        list of key-value pairs containing entries in ContentAddressableMemory:  [[[key 1], [value 1]], [[key 2], value 2]]...]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
-        function used during retrieval to compare the first item in `variable <DND.variable>`
-        with keys in `dict <DND.dict>`.
+        function used during retrieval to compare the first item in `variable <ContentAddressableMemory.variable>`
+        with keys in `memory <ContentAddressableMemory.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         function used during retrieval to evaluate the distances returned by `distance_function
-        <DND.distance_function>` and select the item to return.
+        <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
     previous_value : 1d array
-        state of the `dict <DND.dict>` prior to storing `variable <DND.variable>` in the current call.
+        state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable <ContentAddressableMemory.variable>` in the current call.
+
+    duplicate_keys : bool | OVERWRITE
+        determines whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`.
+        If True (the default), items with keys that are the same as ones in memory can be stored;  on retrieval, a
+        single one is selected based on `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
+        If False, then an attempt to store and item with a key that is already in `memory
+        <ContentAddressableMemory.memory>` is ignored, and the entry already in memory with that key is retrieved.
+        If a duplicate key is identified during retrieval (e.g., **duplicate_keys** is changed from True to
+        False), a warning is issued and zeros are returned.  If *OVERWRITE*, then retrieval of a cue with an identical
+        key causes the value at that entry to be overwritten with the new value.
+        
+    equidistant_keys_select:  RANDOM | OLDEST | NEWEST
+        deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
+        `distance_function <ContentAddressableMemory.distance_function>`.
 
     max_entries : int
-        maximum number of entries allowed in `dict <DND.dict>`;  if an attempt is made to add an additional entry
-        an error is generated.
+        maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`;  if storing a memory
+        exceeds the number, the oldest memory is deleted.
+
+    random_state: numpy.RandomState instance
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -478,21 +580,96 @@ class DND(MemoryFunction):  # --------------------------------------------------
     Returns
     -------
 
-    value and key of entry that best matches first item of `variable <DND.variable>`  : 2d array
+    value and key of entry that best matches first item of `variable <ContentAddressableMemory.variable>`  : 2d array
         if no retrieval occures, an appropriately shaped zero-valued array is returned.
 
     """
 
-    componentName = DND_FUNCTION
+    componentName = ContentAddressableMemory_FUNCTION
 
     class Parameters(StatefulFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <ContentAddressableMemory.variable>`
+
+                    :default value: [[0], [0]]
+                    :type: list
+
+                key_size
+                    see `key_size <ContentAddressableMemory.key_size>`
+
+                    :default value: 1
+                    :type: int
+
+                val_size
+                    see `val_size <ContentAddressableMemory.val_size>`
+
+                    :default value: 1
+                    :type: int
+
+                duplicate_keys
+                    see `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
+
+                    :default value: False
+                    :type: bool or string
+
+                equidistant_keys_select
+                    see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
+
+                    :default value: False
+                    :type: bool
+
+                max_entries
+                    see `max_entries <ContentAddressableMemory.max_entries>`
+
+                    :default value: 1000
+                    :type: int
+
+                noise
+                    see `noise <ContentAddressableMemory.noise>`
+
+                    :default value: 0.0
+                    :type: float
+
+                random_state
+                    see `random_state <ContentAddressableMemory.random_state>`
+
+                    :default value: None
+                    :type:
+
+                rate
+                    see `rate <ContentAddressableMemory.rate>`
+
+                    :default value: 1.0
+                    :type: float
+
+                retrieval_prob
+                    see `retrieval_prob <ContentAddressableMemory.retrieval_prob>`
+
+                    :default value: 1.0
+                    :type: float
+
+                storage_prob
+                    see `storage_prob <ContentAddressableMemory.storage_prob>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
         variable = Parameter([[0],[0]])
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)
+        val_size = Parameter(1, stateful=True)
+        duplicate_keys = Parameter(False)
+        equidistant_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
+        random_state = Parameter(None, modulable=False, stateful=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -512,25 +689,44 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  storage_prob: tc.optional(tc.any(int, float))=1.0,
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
-                 initializer: tc.optional(dict)=None,
-                 distance_function:tc.any(Distance, is_function_type)=Distance(metric=COSINE),
-                 selection_function:tc.any(OneHot, is_function_type)=OneHot(mode=MIN_VAL),
+                 initializer=None,
+                 distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
+                 selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
+                 duplicate_keys:tc.any(bool, tc.enum(OVERWRITE))=False,
+                 equidistant_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
                  max_entries=1000,
-                 params: tc.optional(dict) = None,
+                 seed=None,
+                 params: tc.optional(tc.any(list, np.ndarray)) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
-        initializer = initializer or []
+        if initializer is None:
+            initializer = []
+
+        # It is necessary to create custom instances. Otherwise python would
+        # share the same default instance for all ContentAddressableMemory objects.
+        distance_function = distance_function or Distance(metric=COSINE)
+        selection_function = selection_function or OneHot(mode=MIN_INDICATOR)
+
         self.distance_function = distance_function
         self.selection_function = selection_function
 
-        # Assign args to params and functionParams dicts 
+        if seed is None:
+            seed = get_global_seed()
+        random_state = np.random.RandomState(np.asarray([seed]))
+
+        self._memory = []
+
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
                                                   storage_prob=storage_prob,
                                                   initializer=initializer,
+                                                  duplicate_keys=duplicate_keys,
+                                                  equidistant_keys_select=equidistant_keys_select,
                                                   rate=rate,
                                                   noise=noise,
                                                   max_entries=max_entries,
+                                                  random_state=random_state,
                                                   params=params)
 
         super().__init__(
@@ -541,7 +737,216 @@ class DND(MemoryFunction):  # --------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
+        if self.previous_value.size != 0:
+            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
+            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
+
         self.has_initializers = True
+        self.stateful_attributes = ["previous_value", "random_state"]
+
+    def _get_context_struct_type(self, ctx):
+        distance_state = ctx.get_context_struct_type(self.distance_function)
+        selection_state = ctx.get_context_struct_type(self.selection_function)
+        # Get random state
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
+        # Construct a ring buffer
+        keys_struct = pnlvm.ir.ArrayType(
+            ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0]),
+            self.get_current_function_param("max_entries"))
+        vals_struct = pnlvm.ir.ArrayType(
+            ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1]),
+            self.get_current_function_param("max_entries"))
+        ring_buffer_struct = pnlvm.ir.LiteralStructType([
+            keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty])
+        my_state = pnlvm.ir.LiteralStructType([random_state_struct, ring_buffer_struct])
+        return pnlvm.ir.LiteralStructType([distance_state, selection_state, my_state])
+
+    def _get_param_struct_type(self, ctx):
+        distance_params = ctx.get_param_struct_type(self.distance_function)
+        selection_params = ctx.get_param_struct_type(self.selection_function)
+
+        my_param_struct = self._get_param_values()
+        my_params = ctx.convert_python_struct_to_llvm_ir(my_param_struct)
+        elements = [e for e in my_params.elements]
+        elements.append(distance_params)
+        elements.append(selection_params)
+        return pnlvm.ir.LiteralStructType(elements)
+
+    def _get_param_initializer(self, execution_id):
+        distance_init = self.distance_function._get_param_initializer(execution_id)
+        selection_init = self.selection_function._get_param_initializer(execution_id)
+        my_init = super()._get_param_initializer(execution_id)
+        return tuple([*my_init, distance_init, selection_init])
+
+    def _get_context_initializer(self, execution_id):
+        distance_init = self.distance_function._get_context_initializer(execution_id)
+        selection_init = self.selection_function._get_context_initializer(execution_id)
+        random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
+        memory = self.get_previous_value(execution_id)
+        my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
+        return tuple([distance_init, selection_init, my_init])
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        my_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        # PRNG
+        rand_struct = builder.gep(my_state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        uniform_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+
+        # Ring buffer
+        buffer_ptr = builder.gep(my_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        wr_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(3)])
+        max_entries = len(vals_ptr.type.pointee)
+
+        # Input
+        var_key_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        var_val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+        # Zero output
+        out_key_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        out_val_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        with pnlvm.helpers.array_ptr_loop(builder, out_key_ptr, "zero_key") as (b, i):
+            out_ptr = b.gep(out_key_ptr, [ctx.int32_ty(0), i])
+            b.store(out_ptr.type.pointee(0), out_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, out_val_ptr, "zero_val") as (b, i):
+            out_ptr = b.gep(out_val_ptr, [ctx.int32_ty(0), i])
+            b.store(out_ptr.type.pointee(0), out_ptr)
+
+        # Check retrieval probability
+        retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
+        builder.store(retr_ptr.type.pointee(1), retr_ptr)
+        retr_prob_ptr = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
+
+        # Prob can be [x] if we are part of a mechanism
+        retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
+        retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
+
+        entries = builder.load(count_ptr)
+        entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
+        # The call to random function needs to be behind jump to match python
+        # code
+        with builder.if_then(retr_rand):
+            rand_ptr = builder.alloca(ctx.float_ty)
+            builder.call(uniform_f, [rand_struct, rand_ptr])
+            rand = builder.load(rand_ptr)
+            passed = builder.fcmp_ordered('<', rand, retr_prob)
+            builder.store(passed, retr_ptr)
+
+        param_count = len(list(self._get_compilation_params()))
+        # Retrieve
+        retr = builder.load(retr_ptr)
+        with builder.if_then(retr, likely=True):
+            # Determine distances
+            distance_f = ctx.get_llvm_function(self.distance_function)
+            distance_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count)])
+            distance_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
+            builder.store(builder.load(var_key_ptr),
+                          builder.gep(distance_arg_in, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)]))
+            selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries))
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
+                compare_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
+                b.store(b.load(compare_ptr),
+                        b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+                distance_arg_out = b.gep(selection_arg_in, [ctx.int32_ty(0), idx])
+                b.call(distance_f, [distance_params, distance_state,
+                                    distance_arg_in, distance_arg_out])
+
+            selection_f = ctx.get_llvm_function(self.selection_function)
+            selection_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count + 1)])
+            selection_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
+            builder.call(selection_f, [selection_params, selection_state,
+                                       selection_arg_in, selection_arg_out])
+
+            # Find the selected index
+            selected_idx_ptr = builder.alloca(ctx.int32_ty)
+            builder.store(ctx.int32_ty(0), selected_idx_ptr)
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
+                selection_val = b.load(b.gep(selection_arg_out, [ctx.int32_ty(0), idx]))
+                non_zero = b.fcmp_ordered('!=', selection_val, ctx.float_ty(0))
+                with b.if_then(non_zero):
+                    b.store(idx, selected_idx_ptr)
+
+            selected_idx = builder.load(selected_idx_ptr)
+            selected_key = builder.load(builder.gep(keys_ptr, [ctx.int32_ty(0),
+                                                               selected_idx]))
+            selected_val = builder.load(builder.gep(vals_ptr, [ctx.int32_ty(0),
+                                                               selected_idx]))
+            builder.store(selected_key, builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            builder.store(selected_val, builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+
+        # Check storage probability
+        store_ptr = builder.alloca(pnlvm.ir.IntType(1))
+        builder.store(store_ptr.type.pointee(1), store_ptr)
+        store_prob_ptr = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
+
+        # Prob can be [x] if we are part of a mechanism
+        store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
+        store_rand = builder.fcmp_ordered('<', store_prob, store_prob.type(1.0))
+
+        # The call to random function needs to be behind jump to match python
+        # code
+        with builder.if_then(store_rand):
+            rand_ptr = builder.alloca(ctx.float_ty)
+            builder.call(uniform_f, [rand_struct, rand_ptr])
+            rand = builder.load(rand_ptr)
+            passed = builder.fcmp_ordered('<', rand, store_prob)
+            builder.store(passed, store_ptr)
+
+        # Store
+        store = builder.load(store_ptr)
+        with builder.if_then(store, likely=True):
+
+            # Check if such key already exists
+            is_new_key_ptr = builder.alloca(pnlvm.ir.IntType(1))
+            builder.store(is_new_key_ptr.type.pointee(1), is_new_key_ptr)
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
+                cmp_key_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
+
+                # Vector compare
+                # TODO: move this to helpers
+                key_differs_ptr = b.alloca(pnlvm.ir.IntType(1))
+                b.store(key_differs_ptr.type.pointee(0), key_differs_ptr)
+                with pnlvm.helpers.array_ptr_loop(b, cmp_key_ptr, "key_compare") as (b2, idx2):
+                    var_key_element = b2.gep(var_key_ptr, [ctx.int32_ty(0), idx2])
+                    cmp_key_element = b2.gep(cmp_key_ptr, [ctx.int32_ty(0), idx2])
+                    element_differs = b.fcmp_unordered('!=',
+                                                       b.load(var_key_element),
+                                                       b.load(cmp_key_element))
+                    key_differs = b2.load(key_differs_ptr)
+                    key_differs = b2.or_(key_differs, element_differs)
+                    b2.store(key_differs, key_differs_ptr)
+
+                key_differs = b.load(key_differs_ptr)
+                is_new_key = b.load(is_new_key_ptr)
+                is_new_key = b.and_(is_new_key, key_differs)
+                b.store(is_new_key, is_new_key_ptr)
+
+            # Add new key + val if does not exist yet
+            is_new_key = builder.load(is_new_key_ptr)
+            with builder.if_then(is_new_key):
+                write_idx = builder.load(wr_ptr)
+
+                store_key_ptr = builder.gep(keys_ptr, [ctx.int32_ty(0), write_idx])
+                store_val_ptr = builder.gep(vals_ptr, [ctx.int32_ty(0), write_idx])
+
+                builder.store(builder.load(var_key_ptr), store_key_ptr)
+                builder.store(builder.load(var_val_ptr), store_val_ptr)
+
+                # Update counters
+                write_idx = builder.add(write_idx, write_idx.type(1))
+                write_idx = builder.urem(write_idx, write_idx.type(max_entries))
+                builder.store(write_idx, wr_ptr)
+
+                count = builder.load(count_ptr)
+                count = builder.add(count, count.type(1))
+                builder.store(count, count_ptr)
+
+        return builder
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -559,50 +964,72 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                     format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
 
     def _validate(self):
+        '''Validate distance_function, selection_function and memory store'''
         distance_function = self.distance_function
+        test_var = [self.defaults.variable[KEYS], self.defaults.variable[VALS]]
         if isinstance(distance_function, type):
-            distance_function = distance_function()
+            distance_function = distance_function(default_variable=test_var)
             fct_msg = 'Function type'
         else:
+            distance_function.defaults.variable = test_var
+            distance_function._instantiate_value()
             fct_msg = 'Function'
         try:
-            test = [[0,0],[0,0]]
-            result = distance_function(test)
-            if not np.isscalar(result):
+            distance_result = distance_function(test_var)
+            if not np.isscalar(distance_result):
                 raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
-                                    format(repr(DISTANCE_FUNCTION), self.__name__.__class__, result))
+                                    format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
         except:
             raise FunctionError("{} specified for {} arg of {} ({}) "
                                 "must accept a list with two 1d arrays or a 2d array as its argument".
-                                format(fct_msg, repr(DISTANCE_FUNCTION), self.__name__.__class__,
+                                format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
                                        distance_function))
 
+        # Default to full memory
         selection_function = self.selection_function
+        test_var = np.asfarray([distance_result if i==0
+                                else np.zeros_like(distance_result)
+                                for i in range(self.get_current_function_param('max_entries'))])
         if isinstance(selection_function, type):
-            selection_function = selection_function()
-            fct_msg = 'Function type'
+            selection_function = selection_function(default_variable=test_var)
+            fct_string = 'Function type'
         else:
-            fct_msg = 'Function'
+            selection_function.defaults.variable = test_var
+            selection_function._instantiate_value()
+            fct_string = 'Function'
         try:
-            test = np.array([0,1,2,3])
-            result = np.array(selection_function(test))
-            if result.shape != test.shape or len(np.flatnonzero(result))>1:
-                raise FunctionError("Value returned by {} specified for {} ({}) "
-                                    "must return an array of the same length it receives with one nonzero value".
-                                    format(repr(SELECTION_FUNCTION), self.__name__.__class__, result))
-        except:
-            raise FunctionError("{} specified for {} arg of {} ({}) must accept a 1d array "
-                                "must accept a list with two 1d arrays or a 2d array as its argument".
-                                format(fct_msg, repr(SELECTION_FUNCTION), self.__name__.__class__,
-                                       selection_function))
+            result = np.asarray(selection_function(test_var))
+        except e:
+            raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+                                f'({selection_function}) must accept a 1d array as its argument')
+        if result.shape != test_var.shape:
+            raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
+                                f'({result}) must return an array of the same length it receives')
 
     def _initialize_previous_value(self, initializer, execution_context=None):
-        initializer = initializer or []
-        previous_value = OrderedDict(initializer)
+        '''Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
 
-        self.parameters.previous_value.set(previous_value, execution_context, override=True)
+        - Validate, if initializer is specified, it is a 3d array
+            (must be done here rather than in validate_params as it is needed to initialize previous_value
+        - Insure that it has exactly 2 items in outer dimension (axis 0)
+            and that all items in each of those two items are all arrays
+        '''
+        # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
-        return previous_value
+        previous_value = np.ndarray(shape=(2, 0))
+        if len(initializer) == 0:
+            return previous_value
+        else:
+            # Set key_size and val_size if this is the first entry
+            self.parameters.previous_value.set(previous_value, execution_context, override=True)
+            self.parameters.key_size.set(len(initializer[0][KEYS]), execution_context)
+            self.parameters.val_size.set(len(initializer[0][VALS]), execution_context)
+            for entry in initializer:
+                if not self._store_memory(np.array(entry), execution_context):
+                    warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
+                                  f"that has the same key as a previous one, while 'duplicate_keys'==False; "
+                                  f"that entry has been skipped")
+            return self._memory
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
@@ -618,13 +1045,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
         """
         reinitialize(<new_dictionary> default={})
 
-        Clears the dict in `previous_value <DND.previous_value>`.
+        Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reinitialize or if the `initializer <DND.initializer>` attribute contains a
-        value besides [], then that value is used to start the new dict in `previous_value <DND.previous_value>`.
-        Otherwise, the new `previous_value <DND.previous_value>` dict starts out empty.
+        If an argument is passed into reinitialize or if the `initializer <ContentAddressableMemory.initializer>` attribute contains a
+        value besides [], then that value is used to start the new memory in `previous_value <ContentAddressableMemory.previous_value>`.
+        Otherwise, the new `previous_value <ContentAddressableMemory.previous_value>` memory starts out empty.
 
-        `value <DND.value>` takes on the same value as  `previous_value <DND.previous_value>`.
+        `value <ContentAddressableMemory.value>` takes on the same value as  `previous_value <ContentAddressableMemory.previous_value>`.
         """
 
         # no arguments were passed in -- use current values of initializer attributes
@@ -641,9 +1068,9 @@ class DND(MemoryFunction):  # --------------------------------------------------
                                 "without any arguments, in which case the current initializer value will be used to "
                                 "reinitialize previous_value".format(args, self.name))
 
-        if reinitialization_value is None or reinitialization_value == []:
+        if reinitialization_value == []:
             self.get_previous_value(execution_context).clear()
-            value = dict()
+            value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         else:
             value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
@@ -657,17 +1084,17 @@ class DND(MemoryFunction):  # --------------------------------------------------
                  params=None,
                  context=None):
         """
-        Return value of entry in `dict <DND.dict>` best matched by first item of `variable <DND.variable>`, then add
-        `variable <DND.variable>` to `dict <DND.dict>`.
-
-        If the length of `dict <DND.dict>` exceeds `max_entries <DND.max_entries>`, generate an error.
+        Return entry in `memory <ContentAddressableMemory.memory>` that key of which best matches first item of
+        `variable <ContentAddressableMemory.variable>` (query key), then add `variable
+        <ContentAddressableMemory.variable>` to `memory <ContentAddressableMemory.memory>` (see `above
+        <ContentAddressableMemory_Execution>` for additional details).
 
         Arguments
         ---------
 
         variable : list or 2d array : default class_defaults.variable
            first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
-           with key, is added to `dict <DND.dict>`.
+           with key, is added to `memory <ContentAddressableMemory.memory>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -677,12 +1104,13 @@ class DND(MemoryFunction):  # --------------------------------------------------
         Returns
         -------
 
-        value of entry that best matches first item of `variable <DND.variable>`  : 1d array
+        value of entry that best matches first item of `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        key = variable[0]
-        value = variable[1]
+        key = variable[KEYS]
+        # if len(variable)==2:
+        val = variable[VALS]
 
         retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, execution_id)).astype(float)
         storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, execution_id)).astype(float)
@@ -690,68 +1118,72 @@ class DND(MemoryFunction):  # --------------------------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
 
-        # If this is an initialization run, leave dict empty (don't want to count it as an execution step),
+        # get random state
+        random_state = self.get_current_function_param('random_state', execution_id)
+
+        # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
-        # Set key_size if this is the first entry
-        if not self.get_previous_value(execution_id):
+        # Set key_size and val_size if this is the first entry
+        if len(self.get_previous_value(execution_id)[KEYS]) == 0:
             self.parameters.key_size.set(len(key), execution_id)
+            self.parameters.val_size.set(len(val), execution_id)
 
         # Retrieve value from current dict with key that best matches key
-        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > np.random.rand()):
-            ret_val = self.get_memory(key, execution_id)
+        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
+            memory = self.get_memory(key, execution_id)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            ret_val = np.zeros_like(self.defaults.variable)
-            # if self.context.initialization_status == ContextFlags.INITIALIZING:
-            #     ret_val = np.zeros_like(self.defaults.variable)
-            # else:
-            #     ret_val = None
-
+            memory = [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
         # Store variable to dict:
         if noise:
             key += noise
-        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > np.random.rand()):
+        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, execution_id)
 
-        return self.convert_output_type(ret_val)
+        # Return 3d array with keys and vals as lists
+        # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
+        #                       end up with array of arrays, rather than array of lists
+        ret_val = np.array([list(memory[0]),[]])
+        ret_val[1] = list(memory[1])
+        return ret_val
 
     @tc.typecheck
     def _validate_memory(self, memory:tc.any(list, np.ndarray), execution_id):
 
         # memory must be list or 2d array with 2 items
         if len(memory) != 2 and not all(np.array(i).ndim == 1 for i in memory):
-            raise FunctionError("Attempt to store memory in {} ({}) that does not have 2 1d arrays".
-                                format(self.__class__.__name__, memory))
+            raise FunctionError(f"Attempt to store memory in {self.__class__.__name__} ({memory}) "
+                                f"that is not a 2d array with two items ([[key],[value]])")
 
-        self._validate_key(memory[0], execution_id)
+        self._validate_key(memory[KEYS], execution_id)
 
     @tc.typecheck
     def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
         if len(key) != self.parameters.key_size.get(execution_id):
-            raise FunctionError("Length of {} to store in {} must be same as others in the dict ({})".
-                                format(repr('key'), self.__class__.__name__, self._key_size))
+            raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
+                                f"must be same as others in the dict ({self.parameters.key_size.get(execution_id)})")
 
     @tc.typecheck
-    def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id):
+    def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id=None):
         """get_memory(query_key, execution_id=None)
 
-        Retrieve memory from `dict <DND.dict>` based on `distance_function <DND.distance_function>` and
-        `selection_function <DND.selection_function>`.
+        Retrieve memory from `memory <ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>` and
+        `selection_function <ContentAddressableMemory.selection_function>`.
 
         Arguments
         ---------
         query_key : list or 1d array
-            must be same length as key(s) of any existing entries in `dict <DND.dict>`.
+            must be same length as key(s) of any existing entries in `memory <ContentAddressableMemory.memory>`.
 
         Returns
         -------
-        value and key for item retrieved : 2d array
+        value and key for item retrieved : 2d array as list
             if no retrieval occurs, returns appropriately shaped zero-valued array.
 
         """
@@ -759,65 +1191,178 @@ class DND(MemoryFunction):  # --------------------------------------------------
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
 
         self._validate_key(query_key, execution_id)
-        # if no memory, return the zero vector
-        # if len(self.dict) == 0 or self.retrieval_prob == 0.0:
-        if len(self.dict) == 0:
-            return np.zeros_like(self.defaults.variable)
-        # compute similarity(query_key, memory m ) for all m
-        memory_dict = self.get_previous_value(execution_id)
-        distances = [self.distance_function([query_key, list(m)]) for m in memory_dict.keys()]
-        # get the best-match memory (one with the only non-zero value in the array)
-        selection_array = self.selection_function(distances)
-        index_of_selected_item = int(np.flatnonzero(selection_array))
-        best_match_key = list(memory_dict.keys())[index_of_selected_item]
-        best_match_val = list(memory_dict.values())[index_of_selected_item]
+        _memory = self.get_previous_value(execution_id)
 
-        return [best_match_val, best_match_key]
+        # if no memory, return the zero vector
+        if len(_memory[KEYS]) == 0:
+            zeros_key = [0] * self.key_size
+            zeros_val = [0] * self.val_size
+            return [zeros_key, zeros_val]
+
+        # Get distances between query_key and all keys in memory
+        distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
+
+        # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
+        selection_array = self.selection_function(distances)
+        indices_of_selected_items = np.flatnonzero(selection_array)
+
+        # Single key identified
+        if len(indices_of_selected_items)==1:
+            index_of_selected_item = int(np.flatnonzero(selection_array))
+        # More than one key identified
+        else:
+            selected_keys = _memory[KEYS]
+            # Check for any duplicate keys in matches and, if they are not allowed, return zeros
+            if (not self.duplicate_keys
+                    and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
+                            for other in indices_of_selected_items[1:])):
+                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
+                                  f'{self.owner.name} even though {repr("duplicate_keys")} is False')
+                return [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
+            if self.equidistant_keys_select == RANDOM:
+                index_of_selected_item = choice(indices_of_selected_items)
+            elif self.equidistant_keys_select == OLDEST:
+                index_of_selected_item = indices_of_selected_items[0]
+            elif self.equidistant_keys_select == NEWEST:
+                index_of_selected_item = indices_of_selected_items[-1]
+            else:
+                assert False, f'PROGRAM ERROR:  bad specification ({self.equidistant_keys_select}) for  ' \
+                    f'\'equidistant_keys_select parameter of {self.name} for {self.owner.name}'
+        best_match_key = _memory[KEYS][index_of_selected_item]
+        best_match_val = _memory[VALS][index_of_selected_item]
+
+        # Return as list of lists
+        return [list(best_match_key), list(best_match_val)]
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
-        """Save an key-value pair to `dict <DND.dict>`
+        """Save an key-value pair to `memory <ContentAddressableMemory.memory>`
 
         Arguments
         ---------
         memory : list or 2d array
             must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
-            the key must be the same length as key(s) of any existing entries in `dict <DND.dict>`.
+            the key must be the same length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
         """
 
         self._validate_memory(memory, execution_id)
 
-        key = memory[0]
-        val = memory[1]
+        key = list(memory[KEYS])
+        val = list(memory[VALS])
 
-        d = self.get_previous_value(execution_id) or {}
+        d = self.get_previous_value(execution_id)
 
-        if len(d) > self.max_entries:
-            d.pop(list(d.keys())[len(d)-1])
+        matches = [k for k in d[KEYS] if key==list(k)]
 
-        d.update({tuple(key):val})
+        # If dupliciate keys are not allowed and key matches any existing keys, don't store
+        if matches and self.duplicate_keys == False:
+            storage_succeeded = False
+
+        # If dupliciate_keys is specified as OVERWRITE, replace value for matching key:
+        elif matches and self.duplicate_keys == OVERWRITE:
+            if len(matches)>1:
+                raise FunctionError(f"Attempt to store item ({memory}) in {self.name} "
+                                    f"with 'duplicate_keys'='OVERWRITE' "
+                                    f"when there is more than one matching key in its memory; "
+                                    f"'duplicate_keys' may have previously been set to 'True'")
+            try:
+                index = d[KEYS].index(key)
+            except AttributeError:
+                index = d[KEYS].tolist().index(key)
+            except ValueError:
+                index = np.array(d[KEYS]).tolist().index(key)
+            d[VALS][index] = val
+            storage_succeeded = True
+
+        else:
+            # Append new key and value to their respective lists
+            keys = list(d[KEYS])
+            keys.append(key)
+            values = list(d[VALS])
+            values.append(val)
+
+            # Return 3d array with keys and vals as lists
+            d = [keys, values]
+            storage_succeeded = True
+
+        if len(d[KEYS]) > self.max_entries:
+            d = np.delete(d, [KEYS], axis=1)
+
         self.parameters.previous_value.set(d,execution_id)
+        self._memory = d
+
+        return storage_succeeded
 
     @tc.typecheck
-    def insert_memories(self, memories:tc.any(list, np.ndarray), execution_id=None):
-        """insert_memories(memories, execution_id=None)
-
-        add key-value pairs to `dict <DND.dict>`.
+    def add_to_memory(self, memories:tc.any(list, np.ndarray), execution_id=None):
+        """Add one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
 
         Arguments
         ---------
+
         memories : list or array
-            a list or array of 2d arrays, each of which must be a valid "memory" consisting of two items,
-            a key and a value, each of which is a list of numbers or 1d array;  the keys must all be the same
-            length and equal to the length as key(s) of any existing entries in `dict <DND.dict>`.
+            a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
+            consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
+            The keys must all be the same length and equal to the length as key(s) of any existing entries in `dict
+            <ContentAddressableMemory.dict>`.  Items are added to memory in the order listed.
         """
-        memories = np.array(memories)
-        if not 2 <= memories.ndim <= 3:
-            raise FunctionError("{} arg for {} method of {} must be a list or ndarray made up of 2d arrays".
-                                format(repr('memories'), repr('insert_memories'), self.__class__.__name ))
+        memories = self._parse_memories(memories, 'add_to_memory', execution_id)
+
         for memory in memories:
-            self.store_memory(memory[0], memory[1], execution_id)
+            self._store_memory(memory, execution_id)
+
+    @tc.typecheck
+    def delete_from_memory(self, memories:tc.any(list, np.ndarray), key_only:bool= True, execution_id=None):
+        """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
+
+        Arguments
+        ---------
+
+        memories : list or array
+            a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
+            consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
+
+        key_only :  bool : default True
+            if True, delete all memories with the same keys as those listed in **memories**;  if False,
+            delete only memories that have the same key *and* value as those listed in **memories**.
+
+        """
+        memories = self._parse_memories(memories, 'add_to_memory', execution_id)
+
+        keys = [list(k) for k in memories[0]]
+        vals = [list(k) for k in memories[0]]
+
+        for i, key in enumerate(keys):
+            for j, stored_key in enumerate(self._memory[KEYS]):
+                if key == list(stored_key):
+                    if key_only or vals[j] == list(self._memory[VALS][j]):
+                        memory_keys = np.delete(self._memory[KEYS],j,axis=0)
+                        memory_vals = np.delete(self._memory[VALS],j,axis=0)
+                        self._memory = np.array([list(memory_keys), list(memory_vals)])
+                        self.parameters.previous_value.set(self._memory, execution_id)
+
+    def _parse_memories(self, memories, method, execution_id=None):
+        '''Parse passing of single vs. multiple memories, validate memories, and return ndarray'''
+        memories = np.array(memories)
+        if not 1 <= memories.ndim <= 3:
+            raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
+                                f"must be a 2-item list or 2d array, or a list or 3d array containing those")
+
+        if (memories.ndim == 2 and memories.dtype != object) or (memories.ndim == 1 and memories.dtype == object):
+            memories = np.expand_dims(memories,axis=0)
+
+        for memory in memories:
+            self._validate_memory(memory, execution_id)
+
+        return memories
 
     @property
-    def dict(self):
-        return self.previous_value
+    def memory(self):
+        try:
+            # Return 3d array with keys and vals as lists
+            # IMPLEMENTATION NOTE:  array is used for multi-line printout
+            return np.array(list(zip(self._memory[KEYS],self._memory[VALS])))
+        except:
+            return np.array([])
+
+

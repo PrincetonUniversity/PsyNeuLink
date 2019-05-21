@@ -393,12 +393,11 @@ from collections import Iterable, namedtuple
 from typing import NamedTuple
 
 from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, SampleIterator
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.components.states.featureinputstate import FeatureInputState
 from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
@@ -406,11 +405,12 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
+from psyneulink.core.globals.sampleiterator import SampleIterator
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -436,15 +436,22 @@ class OptimizationControlMechanismError(Exception):
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(            \
     objective_mechanism=None,                   \
+    monitor_for_control=None,                   \
+    objective_mechanism=None,                   \
+    origin_objective_mechanism=False            \
+    terminal_objective_mechanism=False          \
     features=None,                              \
     feature_function=None,                      \
+    function=None,                              \
     agent_rep=None,                             \
     search_function=None,                       \
     search_termination_function=None,           \
     search_space=None,                          \
-    function=None,                              \
     control_signals=None,                       \
     modulation=ModulationParam.MULTIPLICATIVE,  \
+    combine_costs=np.sum,                       \
+    compute_reconfiguration_cost=None,          \
+    compute_net_outcome=lambda x,y:x-y,         \
     params=None,                                \
     name=None,                                  \
     prefs=None)
@@ -458,7 +465,7 @@ class OptimizationControlMechanism(ControlMechanism):
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
         specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
-        <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
+        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
     features : Mechanism, OutputState, Projection, dict, or list containing any of these
@@ -586,6 +593,13 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>` if its `save_values <OptimizationFunction.save_samples>` parameter
         is `True`;  otherwise list is empty.
 
+    search_statefulness : bool : True
+        if set to False, an `OptimizationControlMechanism`\\ 's `evaluation_function` will never run simulations; the
+        evaluations will simply execute in the original `execution context <_Execution_Contexts>`.
+
+        if set to True, `simulations <OptimizationControlMechanism_Execution>` will be created normally for each
+        `control allocation <control_allocation>`.
+
     name : str
         name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
@@ -619,6 +633,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
                     :default value: None
                     :type:
+
+                comp_execution_mode
+                    see `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>`
+
+                    :default value: `PYTHON`
+                    :type: str
 
                 control_allocation_search_space
                     see `control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>`
@@ -656,6 +676,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
 
+                search_statefulness
+                    see `search_statefulness <OptimizationControlMechanism.search_statefulness>`
+
+                    :default value: True
+                    :type: bool
+
                 search_termination_function
                     see `search_termination_function <OptimizationControlMechanism.search_termination_function>`
 
@@ -667,6 +693,8 @@ class OptimizationControlMechanism(ControlMechanism):
         feature_function = Parameter(None, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
+        comp_execution_mode = Parameter('Python', stateful=False, loggable=False)
+        search_statefulness = Parameter(True, stateful=False, loggable=False)
 
         agent_rep = Parameter(None, stateful=False, loggable=False)
 
@@ -686,40 +714,30 @@ class OptimizationControlMechanism(ControlMechanism):
                  agent_rep=None,
                  features: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  feature_function: tc.optional(tc.any(is_function_type)) = None,
-                 objective_mechanism: tc.optional(tc.any(ObjectiveMechanism, list)) = None,
-                 function: tc.optional(tc.any(is_function_type)) = None, num_estimates: int = 1,
+                 num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
-                 control_signals: tc.optional(tc.any(is_iterable, ParameterState, ControlSignal)) = None,
-                 modulation: tc.optional(_is_modulation_param) = ModulationParam.MULTIPLICATIVE, params=None, name=None,
-                 prefs: is_pref_set = None, **kwargs):
+                 search_statefulness=None,
+                 params=None,
+                 **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
 
-        if kwargs:
-                for i in kwargs.keys():
-                    raise OptimizationControlMechanismError("Unrecognized arg in constructor for {}: {}".
-                                                            format(self.__class__.__name__, repr(i)))
         self.agent_rep = agent_rep
         self.search_function = search_function
         self.search_termination_function = search_termination_function
         self.saved_samples = None
         self.saved_values = None
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(input_states=features,
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
+                                                  search_statefulness=search_statefulness,
                                                   params=params)
 
         super().__init__(system=None,
-                         # monitor_for_control=monitor_for_control,
-                         objective_mechanism=objective_mechanism,
-                         function=function,
-                         control_signals=control_signals,
-                         modulation=modulation,
                          params=params,
-                         name=name,
-                         prefs=prefs)
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Insure that specification of ObjectiveMechanism has projections to it'''
@@ -777,9 +795,10 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             if len(state.path_afferents) > 1:
-                raise OptimizationControlMechanismError("Invalid FeatureInputState on {}. {} should receive exactly one"
+                raise OptimizationControlMechanismError("Invalid {} on {}. {} should receive exactly one"
                                                         " projection, but it receives {} projections."
-                                                        .format(self.name, state.name, len(state.path_afferents)))
+                                                        .format(InputState.__name__, self.name, state.name,
+                                                                len(state.path_afferents)))
 
         # KAM Removed the exception below 11/6/2018 because it was rejecting valid
         # monitored_output_state spec on ObjectiveMechanism
@@ -792,16 +811,16 @@ class OptimizationControlMechanism(ControlMechanism):
         #                                                    request_set[OBJECTIVE_MECHANISM],
         #                                                    repr(MONITORED_OUTPUT_STATES)))
 
-    def _instantiate_control_signal(self, control_signal, context=None):
+    def _instantiate_output_states(self, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         OptimizationControlMechanism requires use of at least one of the cost options
         '''
-        control_signal = super()._instantiate_control_signal(control_signal, context)
+        super()._instantiate_output_states(context)
 
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
-            control_signal._instantiate_cost_attributes()
-        return control_signal
+        for control_signal in self.control_signals:
+            if control_signal.cost_options is None:
+                control_signal.cost_options = ControlSignalCosts.DEFAULTS
+                control_signal._instantiate_cost_attributes()
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
@@ -809,11 +828,11 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
-                                           OBJECTIVE_FUNCTION: self.evaluation_function,
-                                           # SEARCH_FUNCTION: self.search_function,
-                                           # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
-                                           SEARCH_SPACE: self.control_allocation_search_space
-                                           })
+                                    OBJECTIVE_FUNCTION: self.evaluation_function,
+                                    # SEARCH_FUNCTION: self.search_function,
+                                    # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
+                                    SEARCH_SPACE: self.control_allocation_search_space
+                                    })
 
         # test_local_search_space = self._get_control_allocation_grid_space
 
@@ -828,6 +847,24 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
+    def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
+        """ Update value for each InputState in self.input_states:
+
+        Call execute method for all (MappingProjection) Projections in InputState.path_afferents
+        Aggregate results (using InputState execute method)
+        Update InputState.value
+        """
+        # "Outcome"
+        outcome_input_state = self.input_state
+        outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
+        state_values = [np.atleast_2d(outcome_input_state.parameters.value.get(execution_id))]
+        for i in range(1, len(self.input_states)):
+            state = self.input_states[i]
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state_values.append(state.parameters.value.get(execution_id))
+
+        return np.array(state_values)
+
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
@@ -835,10 +872,6 @@ class OptimizationControlMechanism(ControlMechanism):
             return defaultControlAllocation
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
-        # # FIX: SHOULD get_feature_values BE A METHOD OF THE agent_rep OR THE OCM?
-        # # Get feature_values based on agent_rep
-        # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
-
         self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
@@ -847,32 +880,20 @@ class OptimizationControlMechanism(ControlMechanism):
             control_allocation = [c.defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
-        # KAM Commented out below 12/5/18 to see if it is indeed no longer needed now that control signals are stateful
-
-        # Assign default net_outcome if it is not yet specified (presumably first trial)
-        # # MODIFIED 1/23/19 OLD:
-        # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-        #          self.control_signals]
-        # try:
-        #     net_outcome = variable[0] - self.combine_costs(costs)
-        # except AttributeError:
-        #     net_outcome = [0]
-        # # FIX: END
-        # MODIFIED 1/23/19 NEW: [JDC]
-        net_outcome = self.parameters.net_outcome.get(execution_id)
-        # MODIFIED 1/23/19 END
-        #
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
-        try:
+        if hasattr(self.agent_rep, "adapt"):
+            # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
+            # have an adapt method, we also don't need to call the net_outcome getter
+            net_outcome = self.parameters.net_outcome.get(execution_id)
+
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
                                  control_allocation,
                                  net_outcome,
                                  execution_id=execution_id)
-        except AttributeError as e:
-            # If error is due to absence of adapt method, OK; otherwise, raise exception
-            if not 'has no attribute \'adapt\'' in e.args[0]:
-                raise AttributeError(e.args[0])
+
+        # freeze the values of current execution_id, because they can be changed in between simulations,
+        # and the simulations must start from the exact spot
+        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id, override=True)
 
         # Get control_allocation that optmizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -881,31 +902,34 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                                       execution_id=execution_id,
                                                                                       runtime_params=runtime_params,
                                                                                       context=context)
+
+        # clean up frozen values after execution
+        self.agent_rep._delete_contexts(self._get_frozen_execution_id(execution_id))
+
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
         if self.function.save_values:
             self.saved_values = saved_values
 
-        # Give agent_rep a chance to clean up
-        try:
-            self.agent_rep._after_agent_rep_execution(context=context)
-        except AttributeError as e:
-            # If error is due to absence of adapt method, OK; otherwise, raise exception
-            if not 'has no attribute \'_after_agent_rep_execution\'' in e.args[0]:
-                raise AttributeError(e.args[0])
         # Return optimal control_allocation
         return optimal_control_allocation
 
-    def _set_up_simulation(self, base_execution_id=None):
+    def _get_frozen_execution_id(self, execution_id=None):
+        return f'{execution_id}{EID_FROZEN}'
+
+    def _set_up_simulation(self, base_execution_id=None, control_allocation=None):
         sim_execution_id = self.get_next_sim_id(base_execution_id)
+
+        if control_allocation is not None:
+            sim_execution_id += f'-{control_allocation}'
 
         try:
             self.parameters.simulation_ids.get(base_execution_id).append(sim_execution_id)
         except AttributeError:
             self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
 
-        self.agent_rep._initialize_from_context(sim_execution_id, base_execution_id, override=False)
+        self.agent_rep._initialize_from_context(sim_execution_id, self._get_frozen_execution_id(base_execution_id), override=False)
 
         return sim_execution_id
 
@@ -924,16 +948,25 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
+        # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
-            sim_execution_id = self._set_up_simulation(execution_id)
+            # KDM 5/20/19: crudely using default here because it is a stateless parameter
+            # and there is a bug in setting parameter values on init, see TODO note above
+            # call to self._instantiate_defaults around component.py:1115
+            if self.defaults.search_statefulness:
+                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
+            else:
+                new_execution_id = execution_id
 
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              base_execution_id=execution_id,
-                                             execution_id=sim_execution_id,
-                                             context=self.function.parameters.context.get(execution_id)
+                                             execution_id=new_execution_id,
+                                             context=self.function.parameters.context.get(execution_id),
+                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id)
             )
+        # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
@@ -943,35 +976,6 @@ class OptimizationControlMechanism(ControlMechanism):
             )
 
         return result
-
-    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
-        '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
-        specified `control_allocation <ControlMechanism.control_allocation>`.
-
-        Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
-        <OptimizationControlMechanism.agent_rep>`.
-        '''
-
-        value = self.parameters.value.get(execution_id)
-        if value is None:
-            value = copy.deepcopy(self.defaults.value)
-
-        for i in range(len(control_allocation)):
-            value[i] = np.atleast_1d(control_allocation[i])
-
-        self.parameters.value.set(value, execution_id)
-        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
-                                   context=ContextFlags.COMPOSITION)
-
-    # @property
-    # def feature_values(self):
-    #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
-    #         return self.agent_rep._get_predicted_input()
-    #     else:
-    #         return np.array(np.array(self.variable[1:]).tolist())
-
-    # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
-    # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
 
     tc.typecheck
     def add_features(self, features):
@@ -992,7 +996,6 @@ class OptimizationControlMechanism(ControlMechanism):
         Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
         Assign functions specified in **feature_function** to InputStates for all features
-        Convert state_type of all entries to FeatureInputState (to allow functions other than LinearCombination)
         Return list of InputState specification dictionaries
         """
 
@@ -1010,17 +1013,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
-        # Convert state_type of InputStates used to shadow into state_type to FeatureInputState
-        #    to insure that their functions are allowed to be other than CombinationFunction,
-        #    and that they only receive on MappingProjection each
-        #        (since they might not be CombinationFunctions, can only accept variable with one item).
-        for feature in parsed_features:
-            if isinstance(feature, dict):
-                feature['state_type'] = FeatureInputState
-            else:
-                if not isinstance(feature, FeatureInputState):
-                    raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
-                                                            .format(self.name, feature))
         return parsed_features
 
     @property

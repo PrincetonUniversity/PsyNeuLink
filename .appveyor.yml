@@ -1,9 +1,3 @@
-branches:
-  only:
-    - master
-    - devel
-    - appveyor
-    - /.*-avy/
 version: '{build}'
 clone_depth: 25
 
@@ -11,15 +5,10 @@ environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
   PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
   matrix:
-  - PYTHON: Python35
-    EXTRA_ARGS: -m llvm
   - PYTHON: Python36
     EXTRA_ARGS: -m llvm
   - PYTHON: Python37
     EXTRA_ARGS: -m llvm
-  - PYTHON: Python35
-    ARCH: -x64
-    PYTORCH: cp35-cp35m
   - PYTHON: Python36
     ARCH: -x64
     PYTORCH: cp36-cp36m

@@ -670,6 +670,11 @@ def _error_signal_getter(owning_component=None, execution_id=None):
     except (TypeError, IndexError):
         return None
 
+def _learning_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
+    if hasattr(owning_component, "function") and owning_component.function:
+        if hasattr(owning_component.function.parameters, "learning_rate"):
+            owning_component.function.parameters.learning_rate.set(value, execution_id)
+    return value
 
 class LearningMechanism(AdaptiveMechanism_Base):
     """
@@ -915,7 +920,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     className = componentType
     suffix = " " + className
 
-    outputStateType = LearningSignal
+    outputStateTypes = LearningSignal
 
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
@@ -952,6 +957,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     :default value: True
                     :type: bool
 
+                learning_rate
+                    see `learning_rate <LearningMechanism.learning_rate>`
+
+                    :default value: None
+                    :type:
+
                 learning_signal
                     see `learning_signal <LearningMechanism.learning_signal>`
 
@@ -965,6 +976,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
+        learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
 
         learning_enabled = True
 
@@ -989,6 +1001,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
+                 in_composition=False,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -1004,7 +1017,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
 
-        # Assign args to params and functionParams dicts 
+        self.in_composition = in_composition
+
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(error_sources=error_sources,
                                                   function=function,
                                                   learning_signals=learning_signals,
@@ -1156,7 +1171,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
-        if self.error_sources:
+        if self.error_sources and not self.in_composition:
             self.error_matrices = [None] * len(self.error_sources)
             for i, error_source in enumerate(self.error_sources):
                 self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
@@ -1270,11 +1285,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         List[ndarray, ndarray] : summed learning_signal, summed error_signal
 
         """
-
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
+        # KAM added 3/27/19 to get past None error
+        if not self.error_matrices:
+            self.error_matrices = [[0.]]
+        error_matrices = np.array(self.error_matrices)
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
@@ -1285,7 +1303,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-
             variable[ERROR_OUTPUT_INDEX] = error_signal_input
             learning_signal, error_signal = super()._execute(
                 variable=variable,
@@ -1314,14 +1331,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @learning_enabled.setter
     def learning_enabled(self, assignment):
         self._learning_enabled = assignment
-
-    @property
-    def learning_rate(self):
-        return self.function.learning_rate
-
-    @learning_rate.setter
-    def learning_rate(self, assignment):
-        self.function.learning_rate = assignment
 
     @property
     def input_source(self):

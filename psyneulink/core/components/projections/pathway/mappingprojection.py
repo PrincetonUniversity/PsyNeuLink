@@ -508,7 +508,7 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
@@ -657,6 +657,12 @@ class MappingProjection(PathwayProjection_Base):
 
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.parameters.context.get(execution_id).string = context
+
+
+        if hasattr(self.context, "composition") and hasattr(self.context.composition, "has_learning") and self.context.composition.has_learning:
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+            self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
         return super()._execute(

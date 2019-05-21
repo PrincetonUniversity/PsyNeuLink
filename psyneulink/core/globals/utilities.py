@@ -84,6 +84,8 @@ CONTENTS
 * `make_readonly_property`
 * `get_class_attributes`
 * `insert_list`
+* `flatten_list`
+* `convert_to_list`
 * `get_global_seed`
 * `set_global_seed`
 
@@ -105,8 +107,8 @@ import numpy as np
 from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
-    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes',
+    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
+    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -1052,7 +1054,7 @@ class ContentAddressableList(UserList):
 
     IMPLEMENTATION NOTE:
         This class allows Components to be maintained in lists, while providing ordered storage
-        and the convenience access and assignment by name (e.g., akin to a dict).
+        and the convenience of access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
                 collections of states to other variables, such as lists of their values);
@@ -1108,6 +1110,7 @@ class ContentAddressableList(UserList):
     def __init__(self, component_type, key=None, list=None, name=None, **kwargs):
         self.component_type = component_type
         self.key = key or 'name'
+        self.component_type = component_type
         self.name = name or component_type.__name__
         if not isinstance(component_type, type):
             raise UtilitiesError("component_type arg for {} ({}) must be a class"
@@ -1217,6 +1220,19 @@ class ContentAddressableList(UserList):
             self.data.append(value)
         else:
             self.data[key] = value
+
+    def __add__(self, item):
+        try:
+            if self.component_type != item.component_type:
+                raise TypeError(f'Type mismatch {self.component_type} and {item.component_type}')
+
+            if self.key != item.key:
+                raise TypeError(f'Key mismatch {self.key} and {item.key}')
+
+        except AttributeError:
+            raise TypeError('ContentAddressableList can only be added to ContentAddressableList')
+
+        return ContentAddressableList(self.component_type, self.key, self.data + item.data, self.name)
 
     def copy(self):
         return self.data.copy()
@@ -1380,7 +1396,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
     if isinstance(arr, np.matrix):
         if arr.dtype == object:
-            return np.matrix([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
+            return np.asarray([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
         else:
             return arr
 
@@ -1404,6 +1420,15 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
+
+def convert_to_list(l):
+    if isinstance(l, list):
+        return l
+    else:
+        return [l]
+
+def flatten_list(l):
+    return [item for sublist in l for item in sublist]
 
 _seed = int(time.monotonic())
 def get_global_seed(offset=1):
@@ -1517,37 +1542,51 @@ def call_with_pruned_args(func, *args, **kwargs):
 
 class NodeRole(Enum):
     """
+    COMMENT:
+    Attributes
+    ----------
+    COMMENT
 
-    - ORIGIN
+    ORIGIN
         A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
 
-    - INPUT
+    INPUT
         A Node that receives external input. A Composition may have many `INPUT` Nodes.
 
-    - TERMINAL
+    TERMINAL
         A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
 
-    - OUTPUT
+    OUTPUT
         A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
         Composition may have many `OUTPUT` Nodes.
 
+    INTERNAL
+        A Node that is neither `ORIGIN` nor `TERMINAL`
+
+    OBJECTIVE
+        A Node that is the ObjectiveMechanism of a controller.
+
+    FEEDBACK_SENDER
+        A Node with one or more outgoing projections marked as "feedback". This means that the Node is at the end of a
+        pathway which would otherwise form a cycle.
+
+    FEEDBACK_RECEIVER
+        A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
+         pathway which would otherwise form a cycle.
+
+    CYCLE
+        A Node that belongs to a cycle.
 
     """
     ORIGIN = 0
-    INTERNAL = 1
-    CYCLE = 2
-    INITIALIZE_CYCLE = 3
-    TERMINAL = 4
-    SINGLETON = 5
-    MONITORED = 6
-    LEARNING = 7
-    TARGET = 8
-    RECURRENT_INIT = 9
-    OBJECTIVE = 10
-    INPUT = 11
-    OUTPUT = 12
-    RESULT = 13
-
+    INPUT = 1
+    TERMINAL = 2
+    OUTPUT = 3
+    INTERNAL = 4
+    OBJECTIVE = 5
+    FEEDBACK_SENDER = 6
+    FEEDBACK_RECEIVER = 7
+    CYCLE = 8
 
 def unproxy_weakproxy(proxy):
     """

@@ -362,7 +362,7 @@ computation will multiply the value of the primary OutputState of the Reward Mec
 *DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
 OutputState of the DDM Mechanism.
 
-See `ObjectiveMechanism <ObjectiveMechanism_Monitored_Output_States_Examples>` for additional examples of how to specify it's
+See `ObjectiveMechanism <ObjectiveMechanism_Monitor_Examples>` for additional examples of how to specify it's
 **monitored_output_states** argument, `ControlMechanism <ControlMechanism_Examples>` for additional examples of how to
 specify ControlMechanisms, and `System <System_Examples>` for how to specify the `controller <System.controller>`
 of a System.
@@ -486,7 +486,7 @@ class EVCControlMechanism(ControlMechanism):
     np.array]] : \
     default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
         specifies either an `ObjectiveMechanism` to use for the EVCControlMechanism or a list of the OutputStates it
-        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
+        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     prediction_mechanisms : Mechanism, Mechanism subclass, dict, (Mechanism subclass, dict) or list: \
@@ -797,13 +797,6 @@ class EVCControlMechanism(ControlMechanism):
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                control_signal_costs
-                    see `control_signal_costs <EVCControlMechanism.control_signal_costs>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
                 control_signal_search_space
                     see `control_signal_search_space <EVCControlMechanism.control_signal_search_space>`
 
@@ -882,7 +875,7 @@ class EVCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
                                                   origin_objective_mechanism=origin_objective_mechanism,

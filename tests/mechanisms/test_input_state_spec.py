@@ -8,6 +8,7 @@ from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import ProjectionError
+from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.states.inputstate import InputState, InputStateError
 from psyneulink.core.components.states.state import StateError
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
@@ -15,6 +16,9 @@ from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
+mismatches_more_input_states_than_default_variable_error_text = 'There are more InputStates specified'
+mismatches_fewer_input_states_than_default_variable_error_text = 'There are fewer InputStates specified'
+
 
 class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
@@ -22,7 +26,7 @@ class TestInputStateSpec:
     # InputState SPECIFICATIONS
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 1
+    # TEST 1a
     # Match of default_variable and specification of multiple InputStates by value and string
 
     def test_match_with_default_variable(self):
@@ -38,17 +42,95 @@ class TestInputStateSpec:
         # my_mech_2.execute()
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 2
+    # # TEST 1b
+    # # Match of default_variable and specification of multiple InputStates by value and string
+    #
+    # def test_match_with_default_variable(self):
+    #
+    #     T = TransferMechanism(
+    #         default_variable=[[0], [0]],
+    #         input_states=[[32, 24], 'HELLO']
+    #     )
+    #     assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+    #     assert len(T.input_states) == 2
+    #     assert T.input_states[1].name == 'HELLO'
+
+    # # ------------------------------------------------------------------------------------------------
+    # # TEST 2
+    # # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+    #
+    # # Deprecated this test as length of variable of each InputState should be allowed to vary from
+    # # corresponding item of Mechanism's default variable, so long as each is 1d and then number of InputStates
+    # # is consistent with number of items in Mechanism's default_variable (i.e., its length in axis 0).
+    #
+    # def test_mismatch_with_default_variable_error(self):
+    #
+    #     with pytest.raises(InputStateError) as error_text:
+    #         TransferMechanism(
+    #             default_variable=[[0], [0]],
+    #             input_states=[[32, 24], 'HELLO']
+    #         )
+    #     assert mismatches_default_variable_format_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2a
     # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
 
-    def test_mismatch_with_default_variable_error(self):
+    # Replacement for original TEST 2, which insures that the number InputStates specified corresponds to the
+    # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
+    def test_fewer_input_states_than_default_variable_error(self):
 
-        with pytest.raises(InputStateError) as error_text:
+        with pytest.raises(StateError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
-                input_states=[[32, 24], 'HELLO']
+                input_states=['HELLO']
             )
-        assert mismatches_default_variable_format_error_text in str(error_text.value)
+        assert mismatches_fewer_input_states_than_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2b
+    # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+
+    # Replacement for original TEST 2, which insures that the number InputStates specified corresponds to the
+    # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
+    def test_more_input_states_than_default_variable_error(self):
+
+        with pytest.raises(StateError) as error_text:
+            TransferMechanism(
+                default_variable=[[0], [0]],
+                input_states=[[32], [24], 'HELLO']
+            )
+        assert mismatches_more_input_states_than_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2c
+    # Mismatch between InputState variable specification and corresponding item of owner Mechanism's variable
+
+    # Replacement for original TEST 2, which insures that the number InputStates specified corresponds to the
+    # number of items in the Mechanism's default_variable (i.e., its length in axis 0).
+    def test_mismatch_num_input_states_with_default_variable_error(self):
+
+        with pytest.raises(MechanismError) as error_text:
+            TransferMechanism(
+                default_variable=[[0], [0]],
+                input_states=[[32]]
+            )
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
+
+    # ------------------------------------------------------------------------------------------------
+    # TEST 2d
+    # Mismatch between dimensionality of InputState variable owner Mechanism's variable
+
+    # FIX: This needs to be handled better in State._parse_state_spec (~Line 3018):
+    #      seems to be adding the two axis2 values
+    def test_mismatch_dim_input_states_with_default_variable_error(self):
+
+        with pytest.raises(StateError) as error_text:
+            TransferMechanism(
+                default_variable=[[0], [0]],
+                input_states=[[[32],[24]],'HELLO']
+            )
+        assert 'State value' in str(error_text.value) and 'does not match reference_value' in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -471,12 +553,28 @@ class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
     # TEST 32
 
-    def test_projection_with_matrix_and_sender_mismatches_default(self):
+    def tests_for_projection_with_matrix_and_sender_mismatches_default(self):
         with pytest.raises(MechanismError) as error_text:
             m = TransferMechanism(size=2)
             p = MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
             TransferMechanism(default_variable=[0, 0], input_states=[p])
         assert mismatches_specified_default_variable_error_text in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            m = TransferMechanism(size=3, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
+            p = MappingProjection(sender=m, matrix=[[0,0,0], [0,0,0]])
+            T = TransferMechanism(input_states=[p])
+        assert 'Specification of matrix and/or default_variable for LinearMatrix Function-0 is not valid. ' \
+               'The shapes of variable (1, 1) and matrix (2, 3) are not compatible for multiplication' \
+               in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            m2 = TransferMechanism(size=2, output_states=[pnl.TRANSFER_OUTPUT.MEAN])
+            p2 = MappingProjection(sender=m2, matrix=[[1,1,1],[1,1,1]])
+            T2 = TransferMechanism(input_states=[p2])
+        assert 'Specification of matrix and/or default_variable for LinearMatrix Function-1 is not valid. ' \
+               'The shapes of variable (1, 1) and matrix (2, 3) are not compatible for multiplication' \
+               in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 33

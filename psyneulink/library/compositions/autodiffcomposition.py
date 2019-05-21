@@ -716,9 +716,7 @@ class AutodiffComposition(Composition):
                 autodiff_stimuli=None,
                 do_logging=False,
                 scheduler_processing=None,
-                scheduler_learning=None,
                 termination_processing=None,
-                termination_learning=None,
                 call_before_time_step=None,
                 call_before_pass=None,
                 call_after_time_step=None,
@@ -728,6 +726,7 @@ class AutodiffComposition(Composition):
                 clamp_input=SOFT_CLAMP,
                 targets=None,
                 runtime_params=None,
+                skip_initialization=False,
                 bin_execute=False,
                 context=None
                 ):
@@ -766,9 +765,7 @@ class AutodiffComposition(Composition):
         # learning not enabled. execute as a normal composition
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler_processing=scheduler_processing,
-                                                        scheduler_learning=scheduler_learning,
                                                         termination_processing=termination_processing,
-                                                        termination_learning=termination_learning,
                                                         call_before_time_step=call_before_time_step,
                                                         call_before_pass=call_before_pass,
                                                         call_after_time_step=call_after_time_step,
@@ -776,8 +773,8 @@ class AutodiffComposition(Composition):
                                                         execution_id=execution_id,
                                                         base_execution_id=base_execution_id,
                                                         clamp_input=clamp_input,
-                                                        targets=targets,
                                                         runtime_params=runtime_params,
+                                                        skip_initialization=skip_initialization,
                                                         bin_execute=bin_execute,
                                                         context=context)
 
@@ -787,9 +784,7 @@ class AutodiffComposition(Composition):
         inputs=None,
         do_logging=False,
         scheduler_processing=None,
-        scheduler_learning=None,
         termination_processing=None,
-        termination_learning=None,
         execution_id=None,
         num_trials=1,
         call_before_time_step=None,
@@ -799,7 +794,6 @@ class AutodiffComposition(Composition):
         call_before_trial=None,
         call_after_trial=None,
         clamp_input=SOFT_CLAMP,
-        targets=None,
         bin_execute=False,
         initial_values=None,
         reinitialize_values=None,
@@ -840,9 +834,7 @@ class AutodiffComposition(Composition):
         else:
             return super(AutodiffComposition, self).run(inputs=inputs,
                                                     scheduler_processing=scheduler_processing,
-                                                    scheduler_learning=scheduler_learning,
                                                     termination_processing=termination_processing,
-                                                    termination_learning=termination_learning,
                                                     execution_id=execution_id,
                                                     num_trials=num_trials,
                                                     call_before_time_step=call_before_time_step,
@@ -852,7 +844,6 @@ class AutodiffComposition(Composition):
                                                     call_before_trial=call_before_trial,
                                                     call_after_trial=call_after_trial,
                                                     clamp_input=clamp_input,
-                                                    targets=targets,
                                                     bin_execute=bin_execute,
                                                     initial_values=initial_values,
                                                     reinitialize_values=reinitialize_values,

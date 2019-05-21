@@ -27,6 +27,7 @@ __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_N
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import \
     Function, Function_Base, MULTIPLICATIVE_PARAM, FunctionError, ADDITIVE_PARAM
@@ -39,6 +40,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+from psyneulink.core.globals.utilities import get_global_seed
 
 
 MAX_VS_NEXT = 'max_vs_next'
@@ -222,8 +224,15 @@ class OneHot(SelectionFunction):
                     :default value: `MAX_VAL`
                     :type: str
 
+                random_state
+                    see `random_state <OneHot.random_state>`
+
+                    :default value: None
+                    :type:
+
         """
         mode = Parameter(MAX_VAL, stateful=False)
+        random_state = Parameter(None, stateful=True)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -242,12 +251,21 @@ class OneHot(SelectionFunction):
                  mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
                                MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
                                PROB, PROB_INDICATOR)=MAX_VAL,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState(np.asarray([seed]))
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["random_state"]
+
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(mode=mode,
+                                                  random_state=random_state,
                                                   params=params)
 
         reset_default_variable_flexibility = False
@@ -288,6 +306,103 @@ class OneHot(SelectionFunction):
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+
+    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out):
+        idx_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(ctx.int32_ty(0), idx_ptr)
+
+        if self.mode in {PROB, PROB_INDICATOR}:
+            rng_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+            dice_ptr = builder.alloca(ctx.float_ty)
+            mt_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
+            builder.call(rng_f, [mt_state_ptr, dice_ptr])
+            dice = builder.load(dice_ptr)
+            sum_ptr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty(-0.0), sum_ptr)
+            prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (builder, index):
+            idx = builder.load(idx_ptr)
+            prev_ptr = builder.gep(arg_in, [ctx.int32_ty(0), idx])
+            current_ptr = builder.gep(arg_in, [ctx.int32_ty(0), index])
+            prev = builder.load(prev_ptr)
+            current = builder.load(current_ptr)
+
+            prev_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), idx])
+            cur_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), index])
+            if self.mode not in {PROB, PROB_INDICATOR}:
+                fabs = ctx.get_builtin("fabs", [current.type])
+            if self.mode is MAX_VAL:
+                cmp_op = ">="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current
+            elif self.mode is MAX_ABS_VAL:
+                cmp_op = ">="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current
+            elif self.mode is MAX_INDICATOR:
+                cmp_op = ">="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current.type(1.0)
+            elif self.mode is MAX_ABS_INDICATOR:
+                cmp_op = ">="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current.type(1.0)
+            elif self.mode is MIN_VAL:
+                cmp_op = "<="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current
+            elif self.mode is MIN_ABS_VAL:
+                cmp_op = "<="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current
+            elif self.mode is MIN_INDICATOR:
+                cmp_op = "<="
+                cmp_prev = prev
+                cmp_curr = current
+                val = current.type(1.0)
+            elif self.mode is MIN_ABS_INDICATOR:
+                cmp_op = "<="
+                cmp_prev = builder.call(fabs, [prev])
+                cmp_curr = builder.call(fabs, [current])
+                val = current.type(1.0)
+            elif self.mode in {PROB, PROB_INDICATOR}:
+                # Update prefix sum
+                current_prob_ptr = builder.gep(prob_in, [ctx.int32_ty(0), index])
+                sum_old = builder.load(sum_ptr)
+                sum_new = builder.fadd(sum_old, builder.load(current_prob_ptr))
+                builder.store(sum_new, sum_ptr)
+
+                old_below = builder.fcmp_ordered("<=", sum_old, dice)
+                new_above = builder.fcmp_ordered("<", dice, sum_new)
+                cond = builder.and_(new_above, old_below)
+                cmp_prev = ctx.float_ty(1.0)
+                cmp_curr = builder.select(cond, cmp_prev, ctx.float_ty(0.0))
+                cmp_op = "=="
+                if self.mode is PROB:
+                    val = current
+                else:
+                    val = ctx.float_ty(1.0)
+            else:
+                assert False, "Unsupported mode: {}".format(self.mode)
+
+            # Make sure other elements are zeroed
+            builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
+
+            cmp_res = builder.fcmp_ordered(cmp_op, cmp_curr, cmp_prev)
+            with builder.if_then(cmp_res):
+                builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
+                builder.store(val, cur_res_ptr)
+                builder.store(index, idx_ptr)
+
+        return builder
 
     def function(self,
                  variable=None,
@@ -359,7 +474,8 @@ class OneHot(SelectionFunction):
             if not prob_dist.any():
                 return self.convert_output_type(v)
             cum_sum = np.cumsum(prob_dist)
-            random_value = np.random.uniform()
+            random_state = self.get_current_function_param("random_state", execution_id)
+            random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
             if self.mode is PROB:

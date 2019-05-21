@@ -91,7 +91,6 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -290,12 +289,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             Attributes
             ----------
 
-                learning_rate
-                    see `learning_rate <AutoAssociativeLearningMechanism.learning_rate>`
-
-                    :default value: None
-                    :type:
-
                 learning_signals
                     see `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`
 
@@ -309,7 +302,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                     :type: `ModulationParam`
 
         """
-        learning_rate = Parameter(None, modulable=True)
         learning_signals = None
         modulation = ModulationParam.ADDITIVE
 
@@ -338,7 +330,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_signals=learning_signals,
                                                   params=params)
@@ -367,6 +359,20 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         return variable
+    
+    def _instantiate_attributes_after_function(self, context=None):
+        super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
+        # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
+        # rate value passed into RecurrentTransfermechanism
+        if self.learning_rate:
+            self.function.learning_rate = self.learning_rate
+
+    def _instantiate_attributes_after_function(self, context=None):
+        super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
+        # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
+        # rate value passed into RecurrentTransfermechanism
+        if self.learning_rate:
+            self.function.learning_rate = self.learning_rate
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.

@@ -18,7 +18,8 @@
 Overview
 --------
 
-Functions that combine multiple items, yielding a result with the same shape as a single operand
+Functions that combine multiple items with the same shape, yielding a result with a single item that has the same
+shape as the individual items.
 
 All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
@@ -281,7 +282,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -664,7 +665,7 @@ class LinearCombination(
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -910,7 +911,7 @@ class LinearCombination(
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
         scale_type = scale_ptr.type.pointee
         if isinstance(scale_type, pnlvm.ir.ArrayType):
             if len(scale_type) == 1:
@@ -918,7 +919,7 @@ class LinearCombination(
             else:
                 scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
 
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
         offset_type = offset_ptr.type.pointee
         if isinstance(offset_type, pnlvm.ir.ArrayType):
             if len(offset_type) == 1:
@@ -926,10 +927,10 @@ class LinearCombination(
             else:
                 offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
-        exponent_param_ptr, builder = ctx.get_param_ptr(self, builder, params, EXPONENTS)
+        exponent_param_ptr = ctx.get_param_ptr(self, builder, params, EXPONENTS)
         exponent_type = exponent_param_ptr.type.pointee
 
-        weights_ptr, builder = ctx.get_param_ptr(self, builder, params, WEIGHTS)
+        weights_ptr = ctx.get_param_ptr(self, builder, params, WEIGHTS)
         weights_type = weights_ptr.type.pointee
 
         scale = ctx.float_ty(1.0) if isinstance(scale_type, pnlvm.ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
@@ -1271,7 +1272,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
@@ -1535,7 +1536,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts
-        # 
+        #
         params = self._assign_args_to_param_dicts(gamma=gamma,
                                                   params=params)
 

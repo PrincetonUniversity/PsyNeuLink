@@ -11,7 +11,7 @@
 """
 
 * `Linear`
-* `Exponential`
+* `Exponential`f
 * `Logistic`
 * `Tanh`
 * `ReLU`
@@ -39,7 +39,6 @@ All TransferFunctions have the following attributes:
 
 """
 
-import functools
 import numbers
 
 import numpy as np
@@ -144,7 +143,7 @@ class TransferFunction(Function_Base):
     def additive(self, val):
         setattr(self, self.additive_param, val)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -155,12 +154,11 @@ class TransferFunction(Function_Base):
             arg_in = builder.bitcast(arg_in, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
             arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "context":context}
-        inner = functools.partial(self._gen_llvm_transfer, **kwargs)
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state":state}
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
-            inner(*args)
+            self._gen_llvm_transfer(*args, **kwargs)
 
         return builder
 
@@ -293,7 +291,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(slope=slope,
                                                   intercept=intercept,
                                                   params=params)
@@ -304,11 +302,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr, builder = ctx.get_param_ptr(self, builder, params, SLOPE)
-        intercept_ptr, builder = ctx.get_param_ptr(self, builder, params, INTERCEPT)
+        slope_ptr = ctx.get_param_ptr(self, builder, params, SLOPE)
+        intercept_ptr = ctx.get_param_ptr(self, builder, params, INTERCEPT)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
@@ -544,7 +542,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   bias=bias,
                                                   scale=scale,
@@ -557,14 +555,14 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr, builder = ctx.get_param_ptr(self, builder, params, RATE)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        rate_ptr = ctx.get_param_ptr(self, builder, params, RATE)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -815,7 +813,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   x_0=x_0,
                                                   bias=bias,
@@ -829,15 +827,15 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1116,7 +1114,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   x_0=x_0,
                                                   bias=bias,
@@ -1130,32 +1128,31 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        val = builder.load(ptri)
-        val = builder.fadd(val, bias)
-        val = builder.fsub(val, x_0)
-        val = builder.fmul(val, gain)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fmul(val, scale)
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
+        exp_val = builder.load(ptri)
+        exp_val = builder.fadd(exp_val, bias)
+        exp_val = builder.fsub(exp_val, x_0)
+        exp_val = builder.fmul(exp_val, gain)
+        exp_val = builder.fadd(exp_val, offset)
+        exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+        val = builder.call(exp_f, [exp_val])
+        val1 = builder.fsub(val.type(1), val)
+        val2 = builder.fadd(val.type(1), val)
+        val = builder.fdiv(val1, val2)
 
         builder.store(val, ptro)
 
@@ -1244,14 +1241,17 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `function <ReLU.function>` returns rectified linear tranform of `variable <ReLU.variable>`:
 
     .. math::
-        gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise
+        x = gain*(variable - bias)
+
+    .. math::
+        max(x, leak * x)
 
     Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
 
     `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
 
     .. math::
-        gain\ if\ input > 0,\ leak\ otherwise
+        gain\ if\ input > 0,\ gain*leak\ otherwise
 
     Arguments
     ---------
@@ -1259,13 +1259,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         specifies a template for the value to be transformed.
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it, if (variable - bias) is greater than 0.
+        from it.
     bias : float : default 0.0
-        specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
-        result is greater than 0 and multiplying by either gain or leak based on the result.
+        specifies a value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it if (variable - bias) is lesser than or equal to 0.
+        specifies a scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1283,14 +1281,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     variable : number or array
         contains value to be transformed.
     gain : float : default 1.0
-        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is greater than 0.
+        value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
+        from it.
     bias : float : default 0.0
-        value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
-        greater than 0 and multiplying by either gain or leak based on the result.
+        value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is lesser than or equal to 0.
+        scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1348,7 +1344,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
                                                   leak=leak,
@@ -1389,16 +1385,19 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS, execution_id)
         leak = self.get_current_function_param(LEAK, execution_id)
 
-        result = np.maximum(gain * (variable - bias), bias, leak * (variable - bias))
+        # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
+        x = gain * (variable - bias)
+        result = np.maximum(x, leak*x)
+
         return self.convert_output_type(result)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        leak_ptr, builder = ctx.get_param_ptr(self, builder, params, LEAK)
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        leak_ptr = ctx.get_param_ptr(self, builder, params, LEAK)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1410,11 +1409,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         var = builder.load(ptri)
         val = builder.fsub(var, bias)
         val1 = builder.fmul(val, gain)
-        val2 = builder.fmul(val, leak)
+        val2 = builder.fmul(val1, leak)
 
-        val = builder.call(max_f, [val1, bias])
-        # TODO: WHat is the third param to np.maximum
-        # val = builder.call(max_f, [val, val2])
+        val = builder.call(max_f, [val1, val2])
 
         builder.store(val, ptro)
 
@@ -1440,7 +1437,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self.get_current_function_param(LEAK, execution_id)
 
         if (input > 0): return gain
-        else: return leak
+        else: return gain*leak
 
 
 class Gaussian(TransferFunction):  # -----------------------------------------------------------------------------------
@@ -1593,7 +1590,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(standard_deviation=standard_deviation,
                                                   bias=bias,
                                                   scale=scale,
@@ -1606,43 +1603,40 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        standard_deviation_ptr, builder = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        standard_deviation_ptr = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
 
-        numerator = builder.load(ptri)
-        numerator = builder.fsub(bias, numerator)
-        numerator = builder.fmul(numerator, numerator)
-        numerator = builder.fneg(numerator)
+        var = builder.load(ptri)
+        exp_num = builder.fsub(var, bias)
+        exp_num = builder.fmul(exp_num, exp_num)
+        exp_num = builder.fsub(exp_num.type(0), exp_num)
 
-        denom = builder.fmul(standard_deviation, standard_deviation)
-        denom = builder.fmul(2, denom)
-        numerator = builder.fdiv(denom, numerator)
-        numerator = builder.call(exp_f, [numerator])
+        exp_denom = builder.fmul(standard_deviation, standard_deviation)
+        exp_denom = builder.fmul(exp_denom.type(2), exp_denom)
+        exp = builder.fdiv(exp_num, exp_denom)
+        numerator = builder.call(exp_f, [exp])
 
         from math import pi
-        denom = ctx.float_ty(2 * pi)
-        denom = builder.fmul(standard_deviation, denom)
-        denom = builder.sqrtpd(denom)
-        val = builder.fdiv(denom,numerator)
+        denom = builder.fmul(standard_deviation.type(2 * pi), standard_deviation)
+        denom = builder.call(sqrt_f, [denom])
+        val = builder.fdiv(numerator, denom)
 
         val = builder.fmul(scale, val)
         val = builder.fadd(offset, val)
-
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
 
         builder.store(val, ptro)
 
@@ -1828,36 +1822,35 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             Attributes
             ----------
 
-                variable
-                    see `variable <SoftMax.variable>`
+                bias
+                    see `bias <GaussianDistort.bias>`
 
-                    :default value: numpy.array(0.)
-                    :type: numpy.ndarray
-                    :read only: True
+                    :default value: 0.0
+                    :type: float
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
+                offset
+                    see `offset <GaussianDistort.offset>`
 
-                    :default value: (0, 1)
-                    :type: <class 'tuple'>
+                    :default value: 0.0
+                    :type: float
 
-                gain
-                    see `gain <SoftMax.gain>`
+                random_state
+                    see `random_state <GaussianDistort.random_state>`
+
+                    :default value: None
+                    :type:
+
+                scale
+                    see `scale <GaussianDistort.scale>`
+
+                    :default value: 0.0
+                    :type: float
+
+                variance
+                    see `variance <GaussianDistort.variance>`
 
                     :default value: 1.0
                     :type: float
-
-                output
-                    see `output <SoftMax.output>`
-
-                    :default value: `ALL`
-                    :type: str
-
-                per_item
-                    see `per_item <SoftMax.per_item>`
-
-                    :default value: True
-                    :type: bool
 
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -1898,24 +1891,14 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _get_context_struct_type(self, ctx):
-        rand = pnlvm.builtins.get_mersenne_twister_state_struct(ctx)
-        return pnlvm.ir.LiteralStructType([rand])
-
-    def _get_context_initializer(self, execution_id):
-        random_state = self.get_current_function_param('random_state', execution_id)
-        # The array offset strips away numpy's 'MT19937' string identifier
-        rand_state = random_state.get_state()[1:]
-        return pnlvm.execution._tupleize([rand_state])
-
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, context):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        variance_ptr, builder = ctx.get_param_ptr(self, builder, params, VARIANCE)
-        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        variance_ptr = ctx.get_param_ptr(self, builder, params, VARIANCE)
+        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1923,9 +1906,9 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        rand_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
         normal_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_normal")
-        builder.call(normal_f, [rand_state, rvalp])
+        builder.call(normal_f, [rand_state_ptr, rvalp])
 
         rval = builder.load(rvalp)
         rval = builder.fmul(rval, variance)
@@ -2178,7 +2161,7 @@ class SoftMax(TransferFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   per_item=per_item,
                                                   output=output,
@@ -2211,9 +2194,8 @@ class SoftMax(TransferFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
-    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
+    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
@@ -2247,21 +2229,22 @@ class SoftMax(TransferFunction):
 
     def __gen_llvm_apply(self, ctx, builder, params, _, arg_in, arg_out):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(0), exp_sum_ptr)
+        builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
         max_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(float('-inf')), max_ptr)
+        builder.store(max_ptr.type.pointee('-inf'), max_ptr)
 
         max_ind_ptr = builder.alloca(ctx.int32_ty)
-        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
+        builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
+        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
-        inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
-
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
-            inner(*args)
+            self.__gen_llvm_exp_sum_max(*args, ctx=ctx, vi=arg_in,
+                                        max_ptr=max_ptr, gain=gain,
+                                        max_ind_ptr=max_ind_ptr,
+                                        exp_sum_ptr=exp_sum_ptr)
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         exp_sum = builder.load(exp_sum_ptr)
@@ -2270,10 +2253,12 @@ class SoftMax(TransferFunction):
 
         if output_type == ALL:
             kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
-            inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
-                inner(*args)
+                self.__gen_llvm_exp_div(*args, **kwargs)
         elif output_type == MAX_VAL:
+            # zero out the output array
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
+                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.get_builtin("exp", [ctx.float_ty])
             orig_val = builder.load(ptri)
@@ -2282,6 +2267,9 @@ class SoftMax(TransferFunction):
             val = builder.fdiv(val, exp_sum)
             builder.store(val, ptro)
         elif output_type == MAX_INDICATOR:
+            # zero out the output array
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
+                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             builder.store(ctx.float_ty(1), ptro)
 
         return builder
@@ -2562,7 +2550,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   params=params)
 
@@ -2678,7 +2666,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #   variable (sender): width/cols/outer index
                         #   kwReceiver param: height/rows/inner index
 
-                        weight_matrix = np.matrix(param_value)
+                        weight_matrix = np.atleast_2d(param_value)
                         if 'U' in repr(weight_matrix.dtype):
                             raise FunctionError("Non-numeric entry in MATRIX "
                                                 "specification ({}) for the {} "
@@ -2739,7 +2727,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                     elif isinstance(param_value, str):
                         try:
-                            param_value = np.matrix(param_value)
+                            param_value = np.atleast_2d(param_value)
                         except (ValueError, TypeError) as error_msg:
                             raise FunctionError("Error in string specification ({}) of the matrix "
                                                 "for the {} function of {}: {})".
@@ -2859,11 +2847,16 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
+    def _get_output_struct_type(self, ctx):
+        # FIXME: self.defaults.value reports incorrect shape (scalar)
+        default_val = np.atleast_1d(self.defaults.value)
+        return ctx.convert_python_struct_to_llvm_ir(default_val)
+
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
         assert self.defaults.variable.ndim == 1
 
-        matrix, builder = ctx.get_param_ptr(self, builder, params, MATRIX)
+        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])

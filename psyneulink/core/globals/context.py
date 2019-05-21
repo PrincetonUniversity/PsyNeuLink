@@ -92,7 +92,7 @@ Class Reference
 
 """
 
-import aenum
+import enum
 import warnings
 
 from collections import namedtuple
@@ -119,7 +119,7 @@ class ContextError(Exception):
         self.error_value = error_value
 
 
-class ContextFlags(aenum.IntFlag):
+class ContextFlags(enum.IntFlag):
     """Used to identify the initialization and execution status of a `Component <Component>`.
 
     Used when a Component's `value <Component.value>` or one of its attributes is being accessed.
@@ -264,7 +264,7 @@ SOURCE_FLAGS = {ContextFlags.CONSTRUCTOR,
                 ContextFlags.COMPOSITION}
 
 # For backward compatibility
-class ContextStatus(aenum.IntFlag):
+class ContextStatus(enum.IntFlag):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
@@ -611,11 +611,8 @@ def _get_time(component, context_flags, execution_id=None):
     # if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
         if component.prev_context:
             context_flags = component.prev_context.flags
-            execution_context = component.prev_context.string
         else:
             context_flags = ContextFlags.UNSET
-    else:
-        execution_context = component.context.string
 
     system = ref_mech.parameters.context.get(execution_id).composition
 

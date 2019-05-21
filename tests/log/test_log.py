@@ -1,5 +1,6 @@
 import numpy as np
 import psyneulink as pnl
+import pytest
 
 from collections import OrderedDict
 
@@ -974,3 +975,122 @@ class TestClearLog:
         sys_log_dict = log_dict_PJ[SYS.default_execution_id]
         assert np.allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[0], [1]]))
+
+    @pytest.mark.parametrize(
+        'insertion_eids, deletion_eids, log_is_empty',
+        [
+            (['execution_id'], 'execution_id', True),     # fails if string handling not correct due to str being Iterable
+            (['execution_id'], ['execution_id'], True),
+        ]
+    )
+    def test_clear_log_arguments(self, insertion_eids, deletion_eids, log_is_empty):
+        t = pnl.TransferMechanism()
+        c = pnl.Composition()
+        c.add_node(t)
+
+        t.parameters.value.log_condition = True
+
+        for eid in insertion_eids:
+            c.run({t: 0}, execution_id=eid)
+
+        t.parameters.value.clear_log(deletion_eids)
+
+        if log_is_empty:
+            assert len(t.parameters.value.log) == 0
+        else:
+            assert len(t.parameters.value.log) != 0
+
+
+class TestFiltering:
+
+    @pytest.fixture(scope='module')
+    def node_logged_in_simulation(self):
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(
+            output_states=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE], name='reward')
+        Decision = pnl.DDM(
+            function=pnl.DriftDiffusionAnalytical(
+                drift_rate=(1.0, pnl.ControlProjection(
+                    function=pnl.Linear,
+                    control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})
+                ),
+                threshold=(1.0, pnl.ControlProjection(
+                    function=pnl.Linear,
+                    control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})
+                ),
+                noise=0.5,
+                starting_point=0,
+                t0=0.45
+            ),
+            output_states=[
+                pnl.DECISION_VARIABLE,
+                pnl.RESPONSE_TIME,
+                pnl.PROBABILITY_UPPER_THRESHOLD],
+            name='Decision'
+        )
+
+        comp = pnl.Composition(name="evc")
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
+        comp.add_linear_processing_pathway(task_execution_pathway)
+
+        comp.add_controller(
+            controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[Input.input_state, reward.input_state],
+                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                    monitor=[
+                        reward,
+                        Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
+                        (Decision.output_states[pnl.RESPONSE_TIME], -1, 1)
+                    ]
+                ),
+                function=pnl.GridSearch(),
+                control_signals=[
+                    ("drift_rate", Decision),
+                    ("threshold", Decision)
+                ]
+            )
+        )
+
+        comp.enable_controller = True
+
+        comp._analyze_graph()
+
+        stim_list_dict = {
+            Input: [0.5, 0.123],
+            reward: [20, 20]
+        }
+
+        Input.parameters.value.log_condition = True
+
+        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
+
+        return Input
+
+    def test_node_has_logged_sims(self, node_logged_in_simulation):
+        for logged_value, eid_dict in node_logged_in_simulation.log.logged_entries.items():
+            for eid in eid_dict:
+                if pnl.EID_SIMULATION in str(eid):
+                    return
+        else:
+            assert False, 'No simulation execution_id found in log'
+
+    def test_nparray(self, node_logged_in_simulation):
+        for eid in node_logged_in_simulation.log.nparray(exclude_sims=True)[0]:
+            assert pnl.EID_SIMULATION not in str(eid)
+
+    def test_nparray_dictionary(self, node_logged_in_simulation):
+        for eid in node_logged_in_simulation.log.nparray_dictionary(exclude_sims=True):
+            assert pnl.EID_SIMULATION not in str(eid)
+
+    def test_csv(self, node_logged_in_simulation):
+        full_csv = node_logged_in_simulation.log.csv(exclude_sims=True)
+
+        # get each row, excluding header
+        for row in full_csv.split('\n')[1:]:
+            # if present in a row, execution_id will be in the first cell
+            assert pnl.EID_SIMULATION not in row.replace("'", '').split(',')[0]

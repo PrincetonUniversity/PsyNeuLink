@@ -259,35 +259,34 @@ class TestRecurrentTransferMechanismInputs:
 
 class TestRecurrentTransferMechanismMatrix:
 
-    def test_recurrent_mech_matrix_keyword_spec(self):
+    @pytest.mark.parametrize("matrix", MATRIX_KEYWORD_VALUES)
+    def test_recurrent_mech_matrix_keyword_spec(self, matrix):
 
-        for m in MATRIX_KEYWORD_VALUES:
-            if m == RANDOM_CONNECTIVITY_MATRIX:
-                continue
-            R = RecurrentTransferMechanism(
-                name='R',
-                size=4,
-                matrix=m
-            )
-            val = R.execute([10, 10, 10, 10])
-            np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
-            np.testing.assert_allclose(R.recurrent_projection.matrix, get_matrix(m, R.size[0], R.size[0]))
+        if matrix == RANDOM_CONNECTIVITY_MATRIX:
+            pytest.skip("Random test")
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=4,
+            matrix=matrix
+        )
+        val = R.execute([10, 10, 10, 10])
+        np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
+        np.testing.assert_allclose(R.recurrent_projection.matrix, get_matrix(matrix, R.size[0], R.size[0]))
 
-    def test_recurrent_mech_matrix_other_spec(self):
+    @pytest.mark.parametrize("matrix", [np.matrix('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4'])
+    def test_recurrent_mech_matrix_other_spec(self, matrix):
 
-        specs = [np.matrix('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4']
-        for m in specs:
-            R = RecurrentTransferMechanism(
-                name='R',
-                size=2,
-                matrix=m
-            )
-            val = R.execute([10, 10])
-            np.testing.assert_allclose(val, [[10., 10.]])
-            assert isinstance(R.matrix, np.ndarray)
-            np.testing.assert_allclose(R.matrix, [[1, 2], [3, 4]])
-            np.testing.assert_allclose(R.recurrent_projection.matrix, [[1, 2], [3, 4]])
-            assert isinstance(R.recurrent_projection.matrix, np.ndarray)
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=2,
+            matrix=matrix
+        )
+        val = R.execute([10, 10])
+        np.testing.assert_allclose(val, [[10., 10.]])
+        assert isinstance(R.matrix, np.ndarray)
+        np.testing.assert_allclose(R.matrix, [[1, 2], [3, 4]])
+        np.testing.assert_allclose(R.recurrent_projection.matrix, [[1, 2], [3, 4]])
+        assert isinstance(R.recurrent_projection.matrix, np.ndarray)
 
     def test_recurrent_mech_matrix_auto_spec(self):
         R = RecurrentTransferMechanism(
@@ -912,6 +911,39 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.14353079, 0.14353079, 0.11036307, 0.1]
             ]
         )
+
+    def test_recurrent_mech_change_learning_rate(self):
+        R = RecurrentTransferMechanism(size=4,
+                                       function=Linear,
+                                       enable_learning=True,
+                                       learning_rate=0.1
+                                       )
+
+        p = Process(pathway=[R])
+        s = System(processes=[p])
+        assert R.learning_rate == 0.1
+        assert R.learning_mechanism.learning_rate == 0.1
+        # assert R.learning_mechanism.function.learning_rate == 0.1
+
+        s.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
+        matrix_1 = [[0., 1.1, 1.1, 1.1],
+                    [1.1, 0., 1.1, 1.1],
+                    [1.1, 1.1, 0., 1.1],
+                    [1.1, 1.1, 1.1, 0.]]
+        assert np.allclose(R.recurrent_projection.mod_matrix, matrix_1)
+        print(R.recurrent_projection.mod_matrix)
+        R.learning_rate = 0.9
+
+        assert R.learning_rate == 0.9
+        assert R.learning_mechanism.learning_rate == 0.9
+        # assert R.learning_mechanism.function.learning_rate == 0.9
+        s.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
+        matrix_2 = [[0., 1.911125, 1.911125, 1.911125],
+                    [1.911125, 0., 1.911125, 1.911125],
+                    [1.911125, 1.911125, 0., 1.911125],
+                    [1.911125, 1.911125, 1.911125, 0.]]
+        # assert np.allclose(R.recurrent_projection.mod_matrix, matrix_2)
+        print(R.recurrent_projection.mod_matrix)
 
     def test_recurrent_mech_with_learning_warning(self):
         R = RecurrentTransferMechanism(size=2,
