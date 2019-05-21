@@ -208,13 +208,16 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 *Function*
 ~~~~~~~~~~
 
-A ControlMechanism's `function <ControlMechanism.function>` uses the `value <InputState.value>` of its
-*OUTCOME* `InputState` (`outcome <ControlMechanism.outcome>` to generate an `control_allocation
-<ControlMechanism.control_allocation>`.  By default, each item of the `control_allocation
-<ControlMechanism.control_allocation>` is assigned as the `allocation <ControlSignal.allocation>` of the corresponding
-`ControlSignal` in `control_signals <ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may
-assign values differently (for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
-
+A ControlMechanism's `function <ControlMechanism.function>` uses `outcome <ControlMechanism.outcome>`
+(the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
+<ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+each item of `modulatory_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
+the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. Thus,
+by default, the ControlMechanism distributes its input as the allocation to each of its `control_signals
+<ControlMechanism.control_signals>. However, this behavior can be modified either by specifying a different
+`function <ControlMechanism.function>`, and/or by specifying that individual ControlSignals  reference different
+items in `control_allocation` as their allocation (i.e., the value of their `variable <ControlSignal.variable>`.
 
 .. _ControlMechanism_Output:
 

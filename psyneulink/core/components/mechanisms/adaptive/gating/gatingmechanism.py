@@ -86,13 +86,16 @@ as the input to the GatingMechanism's `function <GatingMechanism.function>`.
 *Function*
 ~~~~~~~~~~
 
-A GatingMechanism's `function <GatingMechanism.function>` uses the `value <InputState.value>` of its `primary
-InputState  <InputState_Primary>` to generate an `gating_allocation <GatingMechanism.gating_allocation>`.  The default
-`function <GatingMechanism.function>` for a GatingMechanism is a `Linear` identity function, that simply takes
-the `value <InputState.value>` of its `primary InputState <InputState_Primary>` and assigns this as the single item
-of its `gating_allocation <GatingMechanism.gating_allocation>`.  This can be replaced by a `Function` that generates
-a `gating_allocation <GatingMechanism.gating_allocation>` with multiple values, which may be useful if the GatingMechanism
-is assigned more than one `GatingSignal`.
+A GatingMechanism's `function <GatingMechanism.function>` uses `outcome <GatingMechanism.outcome>`
+(the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `gating_allocation
+<GatingMechanism.gating_allocation>`.  By default, `function <GatingMechanism.function>` is assigned
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+each item of `modulatory_allocation <GatingMechanism.gating_allocation>`.  Each of these items is assigned as
+the allocation for the corresponding  `GatingSignal` in `gating_signals <GatingMechanism.gating_signals>`. Thus, 
+by default, the GatingMechanism distributes its input as the allocation to each of its `gating_signals  
+<GatingMechanism.gating_signals>. However, this behavior can be modified either by specifying a different 
+`function <GatingMechanism.function>`, and/or by specifying that individual GatingSignals  reference different 
+items in `gating_allocation` as their allocation (i.e., the value of their `variable <GatingSignal.variable>`.
 
 .. _GatingMechanism_Output:
 

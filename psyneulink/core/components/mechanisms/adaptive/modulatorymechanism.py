@@ -202,13 +202,17 @@ ModulatoryMechanism's `function <ModulatoryMechanism.function>`, that determines
 *Function*
 ~~~~~~~~~~
 
-A ModulatoryMechanism's `function <ModulatoryMechanism.function>` uses the `value <InputState.value>` of its
-*OUTCOME* `InputState` (`outcome <ModulatoryMechanism.outcome>`) to generate a `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`.  By default, each item of the `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>` is assigned as the `allocation` for the corresponding
-`ControlSignal` or `GatingSignal` in `modulatory_signals <ModulatoryMechanism.modulatory_signals>`;
-however, subtypes of ModulatoryMechanism may assign values differently (for example, they may assign a single value to
-all of the `modulatory_signals <ModulatoryMechanism.modulatory_signals>` of a given type.
+A ModulatoryMechanism's `function <ModulatoryMechanism.function>` uses `outcome <ModulatoryMechanism.outcome>`
+(the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `modulatory_allocation
+<ModulatoryMechanism.modulatory_allocation>`.  By default, `function <ModulatoryMechanism.function>` is assigned
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+each item of `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.  Each of these items is assigned as
+the allocation for the corresponding  `ControlSignal` or `GatingSignal` in `modulatory_signals
+<ModulatoryMechanism.modulatory_signals>`. Thus, by default, ModulatoryMechanism distributes its input as the
+allocation to each of its `modulatory_signals  <ModulatoryMechanism.modulatory_signals>. However, this behavior can
+be modified either by specifying a different `function <ModulatoryMechanism.function>`, and/or by specifying that
+individual ControlSignals and/or GatingSignals reference different items in `modulatory_allocation` as their
+allocation (i.e., the value of their `variable <ModulatorySignal.variable>`.
 
 .. _ModulatoryMechanism_Output:
 
