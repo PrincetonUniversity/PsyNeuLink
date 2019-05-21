@@ -430,25 +430,14 @@ def _control_allocation_setter(value, owning_component=None, execution_id=None):
     return value
 
 def _gating_allocation_getter(owning_component=None, execution_id=None):
-    # try:
-    #     return np.array([c.parameters.variable.get(execution_id) for c in owning_component.gating_signals])
-    # except TypeError:
-    #     return defaultGatingAllocation
     try:
         gating_signal_indices = [owning_component.modulatory_signals.index(g)
                                   for g in owning_component.gating_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
-    # MODIFIED 5/18/19 OLD:
     except (TypeError):
-    # # MODIFIED 5/18/19 NEW: [JDC]
-    # except (TypeError, ValueError):
-    # MODIFIED 5/18/19 END
         return defaultGatingAllocation
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
-    # for c in owning_component.gating_signals:
-    #     c.parameters.variable.set(value, execution_id)
-    # return value
     gating_signal_indices = [owning_component.modulatory_signals.index(c)
                               for c in owning_component.gating_signals]
     if len(value)!=len(gating_signal_indices):
