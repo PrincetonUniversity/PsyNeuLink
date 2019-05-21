@@ -46,7 +46,7 @@ to the Composition: it is used to control all of the parameters that have been `
 all of the other Components in the Composition are executed, including any other ControlMechanisms that belong to it
 (see `Composition Execution <Composition_Execution>`).  A ControlMechanism can be assigned as the `controller
 <Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
-constructor, or by specifying the Composition as the **composition       ** argument of either the ControlMechanism's
+constructor, or by specifying the Composition as the **composition** argument of either the ControlMechanism's
 constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>` method. A Composition's `controller
 <Composition.controller>` and its associated Components can be displayed using the Composition's `show_graph
 <Composition.show_graph>` method with its **show_control** argument assigned as `True`.

@@ -4793,6 +4793,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id=None,
             context=None,
             execution_mode=False,
+            return_results=False
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `controller <Composition.controller>` in order to return the
@@ -4807,7 +4808,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Run Composition in "SIMULATION" context
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
-        self.run(inputs=inputs,
+        results = self.run(inputs=inputs,
                  execution_id=execution_id,
                  runtime_params=runtime_params,
                  num_trials=num_simulation_trials,
@@ -4825,12 +4826,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Update input states in order to get correct value for "outcome" (from objective mech)
         self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
-        outcome = self.controller.input_state.parameters.value.get(execution_id)
+        outcome = self.controller.input_state.parameters.value.get(execution_id) or [0]
 
         # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
         net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
-        return net_outcome
+        if return_results:
+            return net_outcome, results
+        else:
+            return net_outcome
 
     def disable_all_history(self):
         '''
