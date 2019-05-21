@@ -3801,15 +3801,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
-                if self.controller:
+                if self.controller and not bin_execute:
                     self.controller.parameters.context.get(
                         execution_id).execution_phase = ContextFlags.PROCESSING
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller.apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
+
                 if bin_execute:
-                    data = self._get_flattened_controller_output(execution_id)
-                    _comp_ex.insert_node_output(self.controller, data)
+                    _comp_ex.freeze_values()
+                    _comp_ex.execute_node(self.controller)
 
         # extract result here
         if bin_execute:
