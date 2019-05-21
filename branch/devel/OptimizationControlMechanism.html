@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.2+37.gea95755 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.2+38.gb97b5a4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+37.gea95755',
+              VERSION:'0.5.3.2+38.gb97b5a4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+37
+                0.5.3.2+38
               </div>
             
           
@@ -523,6 +523,15 @@ is <code class="xref any docutils literal"><span class="pre">True</span></code>;
 <dd><p><em>list</em> – contains values of <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> associated with all samples of
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> evaluated by by <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if its <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> parameter
 is <code class="xref any docutils literal"><span class="pre">True</span></code>;  otherwise list is empty.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.search_statefulness">
+<code class="descname">search_statefulness</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.search_statefulness" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool : True</em> – if set to False, an <a class="reference internal" href="#"><span class="doc">OptimizationControlMechanism</span></a>’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evaluation_function</span></code></a> will never run simulations; the
+evaluations will simply execute in the original <code class="xref any docutils literal"><span class="pre">execution</span> <span class="pre">context</span></code>.</p>
+<p>if set to True, <a class="reference internal" href="#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> will be created normally for each
+<a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control</span> <span class="pre">allocation</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
