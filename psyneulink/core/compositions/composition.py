@@ -2059,18 +2059,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        # # MODIFIED 5/18/19 OLD:
-        # objective_mechanism = None
-        # if self.controller and self.enable_controller:
-        #     objective_mechanism = self.controller.objective_mechanism
-        #     self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
-        # MODIFIED 5/18/19 NEW: [JDC]
         objective_mechanism = None
         if self.controller and self.enable_controller and self.controller.objective_mechanism:
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
-        # MODIFIED 5/18/19 END
-
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler_processing.consideration_queue:
