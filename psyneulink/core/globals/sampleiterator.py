@@ -160,11 +160,12 @@ class SampleSpec():
                  custom_spec = None
                  ):
 
-        if custom_spec:
+        self.custom_spec = custom_spec
+
+        if self.custom_spec:
             # Assumes receiver of SampleIterator will get this and know what to do with it,
             #   therefore no other attributes are needed and, to avoid confusion, they should not be available;
             #   so just assign and return.
-            self.custom_spec = custom_spec
             return
 
         self._precision = precision or SAMPLE_SPEC_PRECISION
