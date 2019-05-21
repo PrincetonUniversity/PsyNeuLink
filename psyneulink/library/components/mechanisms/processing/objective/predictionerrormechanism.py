@@ -336,7 +336,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         delta = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
-        delta = delta[1:]
+        delta = delta[0][1:]
+        # delta = delta[1:]
         delta = np.append(delta, 0)
-
         return delta

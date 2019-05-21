@@ -175,8 +175,7 @@ and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is 
 when all Components have run at least once within the trial, and the termination condition for a `RUN` is
 when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
 by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
-**termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing),
-or its **termination_learning** argument to terminate the execution of learning::
+**termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing)::
 
     System.run(
         ...,
