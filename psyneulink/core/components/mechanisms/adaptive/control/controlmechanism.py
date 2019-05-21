@@ -17,21 +17,6 @@ a **modulatory_signals** argument.  It also lacks any attributes related to gati
 identical to its parent class, ModulatoryMechanism.
 
 COMMENT:
-using only `ControlSignals
-<ControlSignal>` and not `Gating
-an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the parameter(s) of one or more
-`Components <Component>` in response to an evaluative signal received from its `objective_mechanism
-<ControlMechanism.objective_mechanism>`.  The `objective_mechanism
-<ControlMechanism.objective_mechanism>` monitors a specified set of OutputStates, and from these generates the
-evaluative signal that is used by the ControlMechanism's `function <ControlMechanism.function>` to calculate a
-`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
-<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to
-that modulate the parameters of other Mechanisms' `function <Mechanism.function>` (see `ControlSignal_Modulation` for a
-more detailed description of how modulation operates). A ControlMechanism can modulate only Components in the
-`Composition` to which it belongs. The OutputStates monitored by the ControlMechanism's `objective_mechanism
-<ControlMechanism.objective_mechanism>` and the parameters it modulates can be listed using its `show
-<ControlMechanism.show>` method.
-
 .. _ControlMechanism_System_Controller:
 
 *ControlMechanisms and a Composition*
@@ -46,7 +31,7 @@ to the Composition: it is used to control all of the parameters that have been `
 all of the other Components in the Composition are executed, including any other ControlMechanisms that belong to it
 (see `Composition Execution <Composition_Execution>`).  A ControlMechanism can be assigned as the `controller
 <Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
-constructor, or by specifying the Composition as the **composition       ** argument of either the ControlMechanism's
+constructor, or by specifying the Composition as the **composition** argument of either the ControlMechanism's
 constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>` method. A Composition's `controller
 <Composition.controller>` and its associated Components can be displayed using the Composition's `show_graph
 <Composition.show_graph>` method with its **show_control** argument assigned as `True`.
@@ -68,7 +53,7 @@ ControlMechanism's constructor, or in the **monitor** argument of the constructo
 itself.  The parameters to be controlled by the  ControlMechanism are specified in the **control_signals** argument
 (see `ControlMechanism_Control_Signals` below).
 
-VERIFY FOR Composition:
+VERIFY FOR Composition
 If the
 ControlMechanism is created automatically by a System (as its `controller <System.controller>`), then the specification
 of OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components
@@ -267,7 +252,6 @@ controls, which are then used in the subsequent `TRIAL` of execution.
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
 COMMENT
-
 
 .. _ControlMechanism_Examples:
 
