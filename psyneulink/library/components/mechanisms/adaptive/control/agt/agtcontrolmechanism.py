@@ -146,7 +146,6 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.core.compositions.composition import MonitoredOutputStatesOption
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism

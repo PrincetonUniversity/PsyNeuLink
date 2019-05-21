@@ -46,7 +46,7 @@ to the Composition: it is used to control all of the parameters that have been `
 all of the other Components in the Composition are executed, including any other ControlMechanisms that belong to it
 (see `Composition Execution <Composition_Execution>`).  A ControlMechanism can be assigned as the `controller
 <Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
-constructor, or by specifying the Composition as the **composition** argument of either the ControlMechanism's
+constructor, or by specifying the Composition as the **composition       ** argument of either the ControlMechanism's
 constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>` method. A Composition's `controller
 <Composition.controller>` and its associated Components can be displayed using the Composition's `show_graph
 <Composition.show_graph>` method with its **show_control** argument assigned as `True`.
@@ -208,13 +208,16 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 *Function*
 ~~~~~~~~~~
 
-A ControlMechanism's `function <ControlMechanism.function>` uses the `value <InputState.value>` of its
-*OUTCOME* `InputState` (`outcome <ControlMechanism.outcome>` to generate an `control_allocation
-<ControlMechanism.control_allocation>`.  By default, each item of the `control_allocation
-<ControlMechanism.control_allocation>` is assigned as the `allocation <ControlSignal.allocation>` of the corresponding
-`ControlSignal` in `control_signals <ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may
-assign values differently (for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
-
+A ControlMechanism's `function <ControlMechanism.function>` uses `outcome <ControlMechanism.outcome>`
+(the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
+<ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+each item of `modulatory_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
+the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. Thus,
+by default, the ControlMechanism distributes its input as the allocation to each of its `control_signals
+<ControlMechanism.control_signals>. However, this behavior can be modified either by specifying a different
+`function <ControlMechanism.function>`, and/or by specifying that individual ControlSignals  reference different
+items in `control_allocation` as their allocation (i.e., the value of their `variable <ControlSignal.variable>`.
 
 .. _ControlMechanism_Output:
 
@@ -337,28 +340,22 @@ Class Reference
 
 """
 
-import copy
-import itertools
 import numpy as np
-import threading
 import typecheck as tc
 import warnings
 
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
-from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EID_SIMULATION, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.defaults import defaultControlAllocation
+from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, PROJECTION_TYPE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable
@@ -392,9 +389,38 @@ def _is_control_spec(spec):
     else:
         return False
 
+
 class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+# MODIFIED 5/18/19 NEW: [JDC]
+def _control_allocation_getter(owning_component=None, execution_id=None):
+    return owning_component.modulatory_allocation
+
+def _control_allocation_setter(value, owning_component=None, execution_id=None):
+    owning_component.parameters.modulatory_allocation.set(np.array(value), execution_id)
+    return value
+
+def _gating_allocation_getter(owning_component=None, execution_id=None):
+    from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
+    from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
+                                f"consider using a {GatingMechanism.__name__} instead, "
+                                f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
+                                f"{GatingSignal.__name__}s are needed.")
+
+
+def _gating_allocation_setter(value, owning_component=None, execution_id=None, **kwargs):
+    from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
+    from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
+                                f"consider using a {GatingMechanism.__name__} instead, "
+                                f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
+                                f"{GatingSignal.__name__}s are needed.")
+# MODIFIED 5/18/19 END
+
 
 class ControlMechanism(ModulatoryMechanism):
     """
@@ -628,9 +654,31 @@ class ControlMechanism(ModulatoryMechanism):
     #     kp<pref>: <setting>...}
 
     # # MODIFIED 5/18/19 NEW: [JDC]
-    # class Parameters(ModulatoryMechanism.Parameters):
-    #     # This suppresses the inclusion of gating_allocation (inherited from ModulatoryMechanism) in a ControlMechanism
-    #     gating_allocation = None
+    # Override control_allocatdion and suppress gating_allocation
+    class Parameters(ModulatoryMechanism.Parameters):
+        """
+            Attributes
+            ----------
+
+                control_allocation
+                    see `control_allocation <ControlMechanism.control_allocation>
+
+                    :default value: defaultControlAllocation
+                    :type:
+                    :read only: True
+
+        """
+        # This must be a list, as there may be more than one (e.g., one per control_signal)
+        value = Parameter(np.array(defaultControlAllocation), aliases='modulatory_allocation')
+        control_allocation = Parameter(np.array(defaultControlAllocation),
+                                      getter=_control_allocation_getter,
+                                      setter=_control_allocation_setter,
+                                      read_only=True)
+
+        gating_allocation = Parameter(NotImplemented,
+                                      getter=_gating_allocation_getter,
+                                      setter=_gating_allocation_setter,
+                                      read_only=True)
     # MODIFIED 5/18/19 END
 
     @tc.typecheck
@@ -639,7 +687,7 @@ class ControlMechanism(ModulatoryMechanism):
                  size=None,
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 objective_mechanism=None,
+                 objective_mechanism=True,
                  function=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -676,14 +724,6 @@ class ControlMechanism(ModulatoryMechanism):
                                                name=name,
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
-
-        # FIX: 5/18/19 - REMOVE WHEN DONE REFACTORING
-        assert True
-        self.parameters.__delattr__('gating_allocation')
-        assert True
-        # FIX: 5/16/19 - DELETE ATTRIBUTES/PARAMS RELATED TO GATING OR MODULATORY STUFF HERE:
-        # modulatory_signals, modulatory_projections, modulatory_allocation -> control_signal
-        # DELETE gating_signals, gating_projections, gating_allocation
 
     def _instantiate_control_signal(self, control_signal, context):
         return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
@@ -810,6 +850,7 @@ class ControlMechanism(ModulatoryMechanism):
                                           context=context,
                                           execution_id=execution_id)
 
+    # Override control_signals
     @property
     def control_signals(self):
         try:
@@ -822,3 +863,22 @@ class ControlMechanism(ModulatoryMechanism):
     @control_signals.setter
     def control_signals(self, value):
         self._modulatory_signals = value
+
+    # Suppress gating_signals
+    @property
+    def gating_signals(self):
+        from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
+        from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+        raise ControlMechanismError(f"'gating_signals' attribute is not implemented on {self.name} (a "
+                                    f"{self.__class__.__name__}); consider using a {GatingMechanism.__name__} instead, "
+                                    f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
+                                    f"{GatingSignal.__name__}s are needed.")
+
+    @gating_signals.setter
+    def gating_signals(self, value):
+        from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
+        from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+        raise ControlMechanismError(f"'gating_signals' attribute is not implemented on {self.name} (a "
+                                    f"{self.__class__.__name__}); consider using a {GatingMechanism.__name__} instead, "
+                                    f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
+                                    f"{GatingSignal.__name__}s are needed.")
