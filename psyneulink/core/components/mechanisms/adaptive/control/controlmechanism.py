@@ -394,8 +394,6 @@ class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-
-# MODIFIED 5/18/19 NEW: [JDC]
 def _control_allocation_getter(owning_component=None, execution_id=None):
     return owning_component.modulatory_allocation
 
@@ -419,7 +417,6 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None, *
                                 f"consider using a {GatingMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
-# MODIFIED 5/18/19 END
 
 
 class ControlMechanism(ModulatoryMechanism):
@@ -653,7 +650,6 @@ class ControlMechanism(ModulatoryMechanism):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # # MODIFIED 5/18/19 NEW: [JDC]
     # Override control_allocatdion and suppress gating_allocation
     class Parameters(ModulatoryMechanism.Parameters):
         """
@@ -679,7 +675,6 @@ class ControlMechanism(ModulatoryMechanism):
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)
-    # MODIFIED 5/18/19 END
 
     @tc.typecheck
     def __init__(self,
