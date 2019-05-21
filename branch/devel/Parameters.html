@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+34.gdac34b4 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+37.gea95755 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+34.gdac34b4',
+              VERSION:'0.5.3.2+37.gea95755',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+34
+                0.5.3.2+37
               </div>
             
           
@@ -453,21 +453,6 @@ default_value will be returned instead</td>
 </div>
 <div class="section" id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="psyneulink.core.globals.parameters.parse_execution_context">
-<code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">parse_execution_context</code><span class="sig-paren">(</span><em>execution_context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.parse_execution_context" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>execution_context</strong> – An execution context (execution_id, Composition)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the execution_id associated with <strong>execution_context</strong></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Defaults">
 <em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Defaults</code><span class="sig-paren">(</span><em>owner</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Defaults" title="Permalink to this definition">¶</a></dt>
@@ -500,7 +485,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Parameter">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>read_only=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>read_only=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.default_value">
 <code class="descname">default_value</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.default_value" title="Permalink to this definition">¶</a></dt>
@@ -741,6 +726,21 @@ get or set the default value of the associated <code class="xref py py-class doc
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.Parameter.history_min_length">
+<code class="descname">history_min_length</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.history_min_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>the minimum length of the stored history. generally this does not need to be
+overridden, but is used to indicate if parameter history is necessary to computation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default:</th><td class="field-body">0</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.fallback_default">
 <code class="descname">fallback_default</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.fallback_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter’s default_value will be returned instead</p>
@@ -770,10 +770,9 @@ are no longer needed for computation; if True, the values should be saved for la
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.globals.parameters.Parameter.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets <em>default_value</em> to the value specified in its <a class="reference internal" href="#"><span class="doc">Parameters</span></a> class declaration, or
-inherits from parent <a class="reference internal" href="#"><span class="doc">Parameters</span></a> classes if it is not explicitly specified.</p>
+<dt id="psyneulink.core.globals.parameters.Parameter.clear_log">
+<code class="descname">clear_log</code><span class="sig-paren">(</span><em>execution_ids=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.clear_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the log of this Parameter for every execution_id in <strong>execution_ids</strong></p>
 </dd></dl>
 
 <dl class="method">
@@ -790,6 +789,20 @@ If no execution_context is specified, attributes on the associated <a class="ref
 <li><strong>kwargs</strong> – any additional arguments to be passed to this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>’s <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.getter" title="psyneulink.core.globals.parameters.Parameter.getter"><code class="xref any py py-attr docutils literal"><span class="pre">getter</span></code></a> if it exists</li>
 </ul>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.globals.parameters.Parameter.get_delta">
+<code class="descname">get_delta</code><span class="sig-paren">(</span><em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the difference between the current value and previous value of <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>execution_context</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>execution_context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the execution_id for which the value is stored; if a Composition, uses <strong>execution_context</strong>.default_execution_id</td>
 </tr>
 </tbody>
 </table>
@@ -814,17 +827,10 @@ If no execution_context is specified, attributes on the associated <a class="ref
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.globals.parameters.Parameter.get_delta">
-<code class="descname">get_delta</code><span class="sig-paren">(</span><em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_delta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the difference between the current value and previous value of <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>execution_context</strong></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>execution_context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the execution_id for which the value is stored; if a Composition, uses <strong>execution_context</strong>.default_execution_id</td>
-</tr>
-</tbody>
-</table>
+<dt id="psyneulink.core.globals.parameters.Parameter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets <em>default_value</em> to the value specified in its <a class="reference internal" href="#"><span class="doc">Parameters</span></a> class declaration, or
+inherits from parent <a class="reference internal" href="#"><span class="doc">Parameters</span></a> classes if it is not explicitly specified.</p>
 </dd></dl>
 
 <dl class="method">
@@ -849,12 +855,6 @@ If no execution_context is specified, attributes on the associated <a class="ref
 </table>
 </dd></dl>
 
-<dl class="method">
-<dt id="psyneulink.core.globals.parameters.Parameter.clear_log">
-<code class="descname">clear_log</code><span class="sig-paren">(</span><em>execution_ids=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.clear_log" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the log of this Parameter for every execution_id in <strong>execution_ids</strong></p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -868,6 +868,21 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
 <dt id="psyneulink.core.globals.parameters.ParametersBase">
 <em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">ParametersBase</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.ParametersBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for inner <a class="reference internal" href="#"><span class="doc">Parameters</span></a> classes on Components (see <code class="xref any docutils literal"><span class="pre">Component.Parameters</span></code> for example)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.parameters.parse_execution_context">
+<code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">parse_execution_context</code><span class="sig-paren">(</span><em>execution_context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.parse_execution_context" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>execution_context</strong> – An execution context (execution_id, Composition)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the execution_id associated with <strong>execution_context</strong></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
