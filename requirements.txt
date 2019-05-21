@@ -3,4 +3,5 @@ numpy<1.16
 pillow
 typecheck-decorator==1.2
 llvmlite
+GPy==1.9.6
 elfi
