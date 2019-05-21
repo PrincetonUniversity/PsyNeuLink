@@ -1013,25 +1013,27 @@ class OptimizationControlMechanism(ControlMechanism):
         comp_input = builder.alloca(sim_f.args[3].type.pointee, num_features)
         for i in range(num_features):
             src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
-            # destination is array of structs of inputs
+            # destination is a struct of 2d arrays
             dst = builder.gep(comp_input, [ctx.int32_ty(i), ctx.int32_ty(0), ctx.int32_ty(0)])
             builder.store(builder.load(src), dst)
 
-        comp_in_count = builder.alloca(ctx.int32_ty)
-        builder.store(comp_in_count.type.pointee(num_features), comp_in_count)
 
         # determine simulation counts
-        num_estimates = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        num_estimates = builder.load(num_estimates)
+        num_estimates_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        num_estimates = builder.load(num_estimates_ptr)
 
-        # if the parameter value is 0 use the size of feature vector
+        # if num_estimates is 0, run 1 trial
         param_is_zero = builder.icmp_unsigned("==", num_estimates,
                                                     ctx.int32_ty(0))
-        num_sims = builder.select(param_is_zero, ctx.int32_ty(num_features),
+        num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
                                                  num_estimates)
 
         comp_out_count = builder.alloca(ctx.int32_ty)
         builder.store(num_sims, comp_out_count)
+
+        # We only provide one input
+        comp_in_count = builder.alloca(ctx.int32_ty)
+        builder.store(comp_in_count.type.pointee(1), comp_in_count)
 
         # Simulations don't store output
         comp_output = sim_f.args[4].type(None)
