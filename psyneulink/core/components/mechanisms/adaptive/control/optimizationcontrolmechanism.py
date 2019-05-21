@@ -976,7 +976,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   control_allocation,
                                                   self.parameters.num_estimates.get(execution_id),
                                                   base_execution_id=execution_id,
-                                                  execution_id=sim_execution_id,
+                                                  execution_id=new_execution_id,
                                                   context=self.function.parameters.context.get(execution_id),
                                                   execution_mode=self.parameters.comp_execution_mode.get(execution_id),
                                                   return_results=True)
