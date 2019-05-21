@@ -1943,9 +1943,7 @@ class State_Base(State):
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
-        # MODIFIED 5/4/18 OLD:
         self._path_proj_values = []
-        # MODIFIED 5/4/18 END
         for value in self._mod_proj_values:
             self._mod_proj_values[value] = []
 
@@ -1960,9 +1958,7 @@ class State_Base(State):
         modulatory_override = False
 
         # Get values of all Projections
-        # MODIFIED 5/4/18 NEW:
         variable = []
-        # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
 
             # Only update if sender has also executed in this round
@@ -2020,11 +2016,8 @@ class State_Base(State):
             # into separate methods
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
-                # MODIFIED 5/4/18 OLD:
                 self._path_proj_values.append(projection_value)
-                # MODIFIED 5/4/18 NEW:
                 variable.append(projection_value)
-                # MODIFIED 5/4/18 END
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
@@ -3125,19 +3118,6 @@ def _get_state_for_socket(owner,
     # Otherwise, return list of allowable State types for projection_socket (if state_spec is a Projection type)
     if _is_projection_spec(state_spec):
 
-        # # MODIFIED 11/25/17 OLD:
-        # # These specifications require that a particular State be specified to assign its default Projection type
-        # if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))
-        #     and state_type is 'MULTIPLE'):
-        #     raise StateError("PROGRAM ERROR: Projection specified ({}) for object "
-        #                      "that has multiple possible States {}) for the specified socket ({}).".
-        #                      format(state_spec, state_types, projection_socket))
-        # proj_spec = _parse_projection_spec(state_spec, owner=owner, state_type=state_type)
-        # if isinstance(proj_spec, Projection):
-        #     proj_type = proj_spec.__class__
-        # else:
-        #     proj_type = proj_spec[PROJECTION_TYPE]
-        # MODIFIED 11/25/17 NEW:
         # These specifications require that a particular State be specified to assign its default Projection type
         if ((is_matrix(state_spec) or (isinstance(state_spec, dict) and not PROJECTION_TYPE in state_spec))):
             for st in state_types:
@@ -3155,7 +3135,6 @@ def _get_state_for_socket(owner,
                 proj_type = proj_spec.__class__
             else:
                 proj_type = proj_spec[PROJECTION_TYPE]
-        # MODIFIED 11/25/17 END:
 
         # Get State type if it is appropriate for the specified socket of the
         #  Projection's type

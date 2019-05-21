@@ -1650,13 +1650,12 @@ def _parse_connection_specs(connectee_state_type,
                 if not any(issubclass(connects_with_state, state_type)
                            for connects_with_state in allowed):
                     spec = projection_spec or state_type.__name__
-                    raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
-                                          "{} with {} of {} ; should be one of the following: {}".
-                                          format(spec,
-                                                 state_type.__name__,
-                                                 connectee_state_type.__name__,
-                                                 owner.name,
-                                                 ", ".join([c.__name__ for c in connects_with])))
+                    raise ProjectionError(f"Projection specification (\'{spec}\') for an incompatible connection: "
+                                          f"{state_type.__name__} with {connectee_state_type.__name__} of {owner.name};"
+                                          f" spec should be one of the following: "
+                                          f"{' or '.join([r for r in state_type.canReceive])}, "
+                                          f" or connectee should be one of the following: "
+                                          f"{' or '.join([c.__name__ for c in connects_with])},")
 
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification

@@ -111,7 +111,7 @@ To create new Parameters, reference this example of a new class *B*
 
         ::
 
-            def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
+            def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
                 try:
                     return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
                 except TypeError:

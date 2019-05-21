@@ -528,6 +528,7 @@ class ParameterState(State_Base):
     connectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
     projectionSocket = SENDER
     modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    canReceive = modulators
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -652,32 +653,6 @@ class ParameterState(State_Base):
 
         elif isinstance(state_specific_spec, tuple):
 
-            # # MODIFIED 11/25/17 OLD:
-            # tuple_spec = state_specific_spec
-            # state_spec = tuple_spec[0]
-            #
-            # # Get connection (afferent Projection(s)) specification from tuple
-            # PROJECTIONS_INDEX = len(tuple_spec)-1
-            # # Get projection_spec and parse
-            # try:
-            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            # except IndexError:
-            #     projections_spec = None
-            #
-            # if projections_spec:
-            #     try:
-            #         params_dict[PROJECTIONS] = _parse_connection_specs(self,
-            #                                                            owner=owner,
-            #                                                            connections=projections_spec)
-            #     except ParameterStateError:
-            #         raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
-            #                               "for {} ({}) is not a recognized specification".
-            #                               format(PROJECTIONS_INDEX,
-            #                                      ParameterState.__name__,
-            #                                      owner.name,
-            #                                      projections_spec))
-
-            # MODIFIED 11/25/17 NEW:
             tuple_spec = state_specific_spec
 
             # GET STATE_SPEC (PARAM VALUE) AND ASSIGN PROJECTIONS_SPEC **********************************************
@@ -807,7 +782,6 @@ class ParameterState(State_Base):
                                                  Mechanism.__name__,
                                                  ModulatorySignal.__name__,
                                                  Projection.__name__))
-            # MODIFIED 11/25/17 END
 
         elif state_specific_spec is not None:
             raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".

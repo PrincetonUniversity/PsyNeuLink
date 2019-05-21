@@ -935,6 +935,8 @@ class OutputState(State_Base):
     connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL]
+    canReceive = modulators
+
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

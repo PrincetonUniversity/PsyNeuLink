@@ -11,7 +11,7 @@
 """
 
 * `Linear`
-* `Exponential`
+* `Exponential`f
 * `Logistic`
 * `Tanh`
 * `ReLU`

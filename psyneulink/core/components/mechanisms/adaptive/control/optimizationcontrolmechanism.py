@@ -811,16 +811,16 @@ class OptimizationControlMechanism(ControlMechanism):
         #                                                    request_set[OBJECTIVE_MECHANISM],
         #                                                    repr(MONITORED_OUTPUT_STATES)))
 
-    def _instantiate_control_signal(self, control_signal, context=None):
+    def _instantiate_output_states(self, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         OptimizationControlMechanism requires use of at least one of the cost options
         '''
-        control_signal = super()._instantiate_control_signal(control_signal, context)
+        super()._instantiate_output_states(context)
 
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
-            control_signal._instantiate_cost_attributes()
-        return control_signal
+        for control_signal in self.control_signals:
+            if control_signal.cost_options is None:
+                control_signal.cost_options = ControlSignalCosts.DEFAULTS
+                control_signal._instantiate_cost_attributes()
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
