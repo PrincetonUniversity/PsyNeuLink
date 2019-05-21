@@ -37,7 +37,7 @@ def test_gating():
 
     comp.run(
         num_trials=4,
-        inputs=stim_list,
+        inputs=stim_list
     )
 
     expected_results = [

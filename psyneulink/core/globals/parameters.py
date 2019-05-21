@@ -111,7 +111,7 @@ To create new Parameters, reference this example of a new class *B*
 
         ::
 
-            def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
+            def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
                 try:
                     return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
                 except TypeError:
@@ -560,6 +560,12 @@ class Parameter(types.SimpleNamespace):
 
             :default: 1
 
+        history_min_length
+            the minimum length of the stored history. generally this does not need to be
+            overridden, but is used to indicate if parameter history is necessary to computation
+
+            :default: 0
+
         fallback_default
             if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter's default_value will be returned instead
 
@@ -608,6 +614,7 @@ class Parameter(types.SimpleNamespace):
         log_condition=LogCondition.OFF,
         history=None,
         history_max_length=1,
+        history_min_length=0,
         fallback_default=False,
         retain_old_simulation_data=False,
         _owner=None,
@@ -642,6 +649,7 @@ class Parameter(types.SimpleNamespace):
             log_condition=log_condition,
             history=history,
             history_max_length=history_max_length,
+            history_min_length=history_min_length,
             fallback_default=fallback_default,
             retain_old_simulation_data=retain_old_simulation_data,
             _inherited=_inherited,
@@ -1024,6 +1032,8 @@ class Parameter(types.SimpleNamespace):
         super().__setattr__('default_value', value)
 
     def _set_history_max_length(self, value):
+        if value < self.history_min_length:
+            raise ParameterError(f'Parameter {self._owner._owner}.{self.name} requires history of length at least {self.history_min_length}.')
         super().__setattr__('history_max_length', value)
         for execution_id in self.history:
             self.history[execution_id] = collections.deque(self.history[execution_id], maxlen=value)

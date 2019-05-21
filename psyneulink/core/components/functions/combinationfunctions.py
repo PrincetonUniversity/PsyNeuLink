@@ -18,7 +18,8 @@
 Overview
 --------
 
-Functions that combine multiple items, yielding a result with the same shape as a single operand
+Functions that combine multiple items with the same shape, yielding a result with a single item that has the same
+shape as the individual items.
 
 All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;

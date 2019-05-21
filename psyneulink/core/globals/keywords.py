@@ -795,10 +795,13 @@ PREDICTION_MECHANISMS = "prediction_mechanisms"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
+
+MODULATORY_SIGNALS = 'modulatory_signals'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
 CONTROLLED_PARAMS = 'CONTROLLED_PARAMS'
 CONTROL_PROJECTIONS = 'ControlProjections'
+GATING_SIGNALS = 'gating_signals'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
 COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
