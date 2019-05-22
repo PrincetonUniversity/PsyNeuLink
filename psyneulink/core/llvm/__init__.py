@@ -61,12 +61,11 @@ class LLVMBinaryFunction:
         params = []
         self.__byref_arg_types = []
         for a in f.args:
+            param_type = _convert_llvm_ir_to_ctype(a.type)
             if type(a.type) is ir.PointerType:
                 # remember pointee type for easier initialization
                 byref_type = _convert_llvm_ir_to_ctype(a.type.pointee)
-                param_type = ctypes.POINTER(byref_type)
             else:
-                param_type = _convert_llvm_ir_to_ctype(a.type)
                 byref_type = None
 
             self.__byref_arg_types.append(byref_type)
