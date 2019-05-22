@@ -1014,7 +1014,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(num_features):
             src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
             # destination is a struct of 2d arrays
-            dst = builder.gep(comp_input, [ctx.int32_ty(i), ctx.int32_ty(0), ctx.int32_ty(0)])
+            dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0)])
             builder.store(builder.load(src), dst)
 
 
