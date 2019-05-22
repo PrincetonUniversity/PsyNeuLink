@@ -1577,6 +1577,8 @@ class NodeRole(Enum):
     CYCLE
         A Node that belongs to a cycle.
 
+    LEARNING
+        A Node that is only executed when learning is enabled.
     """
     ORIGIN = 0
     INPUT = 1
@@ -1587,6 +1589,7 @@ class NodeRole(Enum):
     FEEDBACK_SENDER = 6
     FEEDBACK_RECEIVER = 7
     CYCLE = 8
+    LEARNING = 9
 
 def unproxy_weakproxy(proxy):
     """
